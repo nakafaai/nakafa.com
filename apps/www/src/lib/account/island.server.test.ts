@@ -127,6 +127,19 @@ describe("islandScreenHandler", () => {
     });
   });
 
+  it("fails the screen when the island cannot be read, instead of opening an emptied world", async () => {
+    sessionWith(Option.some("token"));
+    mocks.preloadConfectQuery.mockImplementation((ref) =>
+      ref === island.queries.own
+        ? Effect.fail({ _tag: "PreloadFailed" })
+        : Effect.succeed(account)
+    );
+    const cause = await failureOf(
+      islandScreenHandler({ data: { locale: "en" } })
+    );
+    expect(cause).toMatchObject({ _tag: "PreloadFailed" });
+  });
+
   it("starts a learner with no island yet at the first level, and always names a next level", async () => {
     sessionWith(Option.some("token"));
     answerQueries([

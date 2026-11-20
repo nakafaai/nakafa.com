@@ -54,6 +54,7 @@ import { CHUNKS, SEA_LEVEL } from "@/lib/island/world";
 export function IslandStage({ size }: { size: number }) {
   const store = useRequired(GameStoreContext, "IslandStage");
   const [failed, setFailed] = useState(false);
+  const [context, setContext] = useState(0);
   return failed ? (
     <p className="text-paper absolute inset-0 grid place-items-center p-8 text-center">
       WebGL2
@@ -62,6 +63,8 @@ export function IslandStage({ size }: { size: number }) {
     <canvas
       className="absolute inset-0 block size-full touch-none select-none [image-rendering:pixelated]"
       data-testid="island-stage"
+      // A canvas whose WebGL context came back starts over on a new one: the world lives in the store, so nothing built is lost.
+      key={context}
       onContextMenu={(event) => event.preventDefault()}
       ref={(canvas) => {
         if (canvas === null) {
@@ -72,7 +75,9 @@ export function IslandStage({ size }: { size: number }) {
           setFailed(true);
           return;
         }
-        return start(canvas, painter.value, store, size);
+        return start(canvas, painter.value, store, size, () =>
+          setContext((value) => value + 1)
+        );
       }}
     />
   );
@@ -83,7 +88,8 @@ function start(
   canvas: HTMLCanvasElement,
   painter: Painter,
   store: GameStoreApi,
-  size: number
+  size: number,
+  restart: () => void
 ) {
   let orbit: Orbit = openingOrbit(
     size,
@@ -408,6 +414,11 @@ function start(
   });
   resize.observe(canvas);
 
+  // The browser gives a lost context back only to a page that asked to keep it.
+  const keep = (event: Event) => event.preventDefault();
+  canvas.addEventListener("webglcontextlost", keep);
+  canvas.addEventListener("webglcontextrestored", restart);
+
   const input = bindInput(canvas, store, {
     camera: () => ({ goal, orbit }),
     drag: showCursor,
@@ -438,6 +449,8 @@ function start(
   return () => {
     cancelAnimationFrame(frame);
     resize.disconnect();
+    canvas.removeEventListener("webglcontextlost", keep);
+    canvas.removeEventListener("webglcontextrestored", restart);
     unsubscribe();
     input.release();
     painter.release();

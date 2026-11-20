@@ -26,6 +26,8 @@ const localeRoute = getRouteApi("/$locale");
  */
 export const Route = createFileRoute("/$locale/island")({
   ssr: false,
+  // A world read on an earlier visit is older than what the learner built since, so every entry reads it again.
+  gcTime: 0,
   beforeLoad: async ({ location, params }) => {
     if (!(await isSignedIn())) {
       const resolution = resolvePostAuthIntent(location.href, params.locale);
@@ -69,6 +71,8 @@ function IslandPage() {
         <Suspense fallback={null}>
           <IslandGame
             edits={screen.edits}
+            // A world another tab or device changed is read again, and the game starts over on what the server holds.
+            key={screen.version}
             level={screen.level}
             onLeave={() => {
               if (router.history.canGoBack()) {
