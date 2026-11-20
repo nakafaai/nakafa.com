@@ -7,17 +7,29 @@ import {
   faded,
   figure,
   head,
+  INK,
   kindAt,
   line,
-  outlined,
   PEARL,
   path,
+  rounded,
   smile,
-  torso,
 } from "@repo/mascot/kit";
 import { Array as Arr } from "effect";
 
-/** The insects, the spider, and the snail: the small ones that crawl and fly. */
+/** Two antennae curling out from the top of a head, each with a knob. */
+function antennae(color: string, dx: number, top: number) {
+  return both((side) => [
+    line(
+      `M${100 + side * 12},66 C${100 + side * 16},44 ${100 + side * (dx - 6)},${top + 10} ${100 + side * dx},${top}`,
+      color,
+      5
+    ),
+    ellipse(100 + side * dx, top, 7, 7, color),
+  ]);
+}
+
+/** The small creatures: the ones that buzz, flutter, crawl, and spin. */
 export const bug = {
   bee: {
     colors: [
@@ -26,23 +38,21 @@ export const bug = {
     ],
     draw: (kit) =>
       figure(
+        // Wings, raised behind the shoulders.
         both((side) => [
-          line(
-            `M${100 + side * 16},56 Q${100 + side * 20},34 ${100 + side * 34},28`,
-            kit.ink,
-            4.6
-          ),
-          ellipse(100 + side * 36, 27, 5.4, 5.4, kit.ink),
+          ellipse(100 + side * 58, 70, 30, 40, kit.second, side * 30),
         ]),
-        both((side) =>
-          ellipse(100 + side * 62, 146, 24, 36, kit.second, side * 22)
+        antennae(INK, 34, 20),
+        // A fuzzy round body in bands.
+        ellipse(100, 120, 72, 76, kit.body),
+        path(
+          "M30,150 C60,160 140,160 170,150 C168,162 164,172 158,180 C130,188 70,188 42,180 C36,172 32,162 30,150 Z",
+          INK
         ),
-        torso(kit.body),
-        path("M53,152 L147,152 L151,170 L49,170 Z", kit.ink),
-        path("M46,184 L154,184 L156,200 L44,200 Z", kit.ink),
-        head(kit.body),
-        eyes(kit, 24, 96),
-        smile(110, 10, 9, kit.ink)
+        path("M54,196 C80,202 120,202 146,196 L140,212 L60,212 Z", INK),
+        both((side) => ellipse(100 + side * 46, 128, 10, 6, "#f4a3a8")),
+        smile(128, 10, 6, kit.ink),
+        eyes(kit, 28, 108, 8)
       ),
   },
   beetle: {
@@ -52,27 +62,27 @@ export const bug = {
     ],
     draw: (kit) =>
       figure(
+        antennae(INK, 34, 26),
+        // The shell, two wing cases with spots, parted down the middle.
+        ellipse(100, 168, 82, 70, kit.body),
+        line("M100,120 L100,240", INK, 4),
         both((side) => [
-          line(
-            `M${100 + side * 14},52 Q${100 + side * 18},30 ${100 + side * 34},24`,
-            kit.ink,
-            4.6
-          ),
-          ellipse(100 + side * 36, 23, 5.4, 5.4, kit.ink),
+          ellipse(100 + side * 34, 150, 13, 13, INK),
+          ellipse(100 + side * 58, 186, 11, 11, INK),
+          ellipse(100 + side * 22, 196, 10, 10, INK),
         ]),
-        path(
-          "M20,200 C20,144 54,108 100,108 C146,108 180,144 180,200 Z",
-          kit.body
-        ),
-        line("M100,112 L100,200", kit.ink, 4),
-        both((side) => [
-          ellipse(100 + side * 40, 150, 11, 11, kit.ink),
-          ellipse(100 + side * 26, 186, 8, 8, kit.ink),
-          ellipse(100 + side * 64, 184, 7, 7, kit.ink),
-        ]),
-        ellipse(100, 86, 44, 40, kit.second),
-        eyes(kit, 20, 84),
-        smile(96, 10, 8, kit.ink)
+        // The dark head, with pale cheeks and a pale smile.
+        head(INK, 50, 44, 100),
+        smile(116, 9, 6, kit.second),
+        both((side) =>
+          eye(
+            kindAt(kit.eyes, side),
+            100 + side * 22 + kit.look,
+            96,
+            7.4,
+            kit.second
+          )
+        )
       ),
   },
   dragonfly: {
@@ -83,25 +93,24 @@ export const bug = {
     ],
     draw: (kit) =>
       figure(
+        // Four long wings, spread level.
         both((side) => [
-          ellipse(100 + side * 54, 100, 50, 17, kit.second, side * -18),
-          ellipse(100 + side * 50, 132, 42, 14, kit.second, side * 14),
+          ellipse(100 + side * 58, 118, 52, 16, kit.second, side * -12),
+          ellipse(100 + side * 56, 146, 46, 14, kit.second, side * 14),
+          faded(0.2, [
+            line(`M${100 + side * 20},122 L${100 + side * 104},104`, INK, 2.4),
+            line(`M${100 + side * 20},144 L${100 + side * 96},162`, INK, 2.4),
+          ]),
         ]),
-        ellipse(100, 172, 11, 52, kit.body),
-        line("M91,150 H109 M92,166 H108 M93,182 H107", kit.second, 2.8),
-        ellipse(100, 120, 18, 22, kit.body),
-        ellipse(100, 86, 28, 24, kit.body),
-        both((side) => [
-          ellipse(100 + side * 17, 80, 15, 16, kit.second),
-          eye(
-            kindAt(kit.eyes, side),
-            100 + side * 17 + kit.look,
-            82,
-            5.2,
-            kit.ink
-          ),
-        ]),
-        smile(98, 6, 4.6, kit.ink)
+        // The long body in segments, down to the bottom edge.
+        Arr.map([150, 170, 190, 210], (y) => ellipse(100, y, 14, 12, kit.body)),
+        ellipse(100, 132, 22, 20, kit.body),
+        // A round head with great eyes that wrap round it.
+        ellipse(100, 88, 46, 38, kit.body),
+        both((side) => ellipse(100 + side * 26, 80, 26, 26, kit.body)),
+        both((side) => ellipse(100 + side * 26, 80, 19, 19, PEARL)),
+        smile(108, 8, 5, kit.ink),
+        eyes(kit, 26, 80, 10)
       ),
   },
   butterfly: {
@@ -112,24 +121,30 @@ export const bug = {
     ],
     draw: (kit) =>
       figure(
+        // Four wings: big ones above, small ones below, each with its spots.
         both((side) => [
-          ellipse(100 + side * 54, 98, 44, 56, kit.body, side * -12),
-          ellipse(100 + side * 58, 94, 21, 28, kit.second, side * -12),
-          ellipse(100 + side * 46, 164, 32, 36, kit.body, side * 14),
-          ellipse(100 + side * 50, 164, 14, 17, kit.second, side * 14),
-        ]),
-        both((side) => [
-          line(
-            `M${100 + side * 9},72 Q${100 + side * 20},46 ${100 + side * 30},40`,
-            kit.ink,
-            3.6
+          rounded(
+            `M${100 + side * 10},120 C${100 + side * 20},64 ${100 + side * 60},28 ${100 + side * 90},40 C${100 + side * 108},50 ${100 + side * 100},102 ${100 + side * 62},128 Z`,
+            kit.body,
+            8
           ),
-          ellipse(100 + side * 30, 40, 4.2, 4.2, kit.ink),
+          rounded(
+            `M${100 + side * 10},130 C${100 + side * 40},128 ${100 + side * 84},134 ${100 + side * 86},170 C${100 + side * 86},196 ${100 + side * 50},198 ${100 + side * 28},178 Z`,
+            kit.body,
+            8
+          ),
+          ellipse(100 + side * 64, 76, 18, 20, kit.second),
+          ellipse(100 + side * 54, 166, 13, 13, kit.second),
+          ellipse(100 + side * 82, 56, 6, 6, PEARL),
         ]),
-        ellipse(100, 164, 17, 56, kit.second),
-        ellipse(100, 94, 27, 25, kit.second),
-        eyes(kit, 10, 90, 4.8),
-        smile(101, 6, 5, kit.ink)
+        antennae(INK, 28, 30),
+        // The slender body and its round head.
+        ellipse(100, 150, 12, 50, INK),
+        head(INK, 30, 28, 96),
+        smile(106, 6, 4, PEARL),
+        both((side) =>
+          eye(kindAt(kit.eyes, side), 100 + side * 13 + kit.look, 92, 5, PEARL)
+        )
       ),
   },
   spider: {
@@ -141,43 +156,34 @@ export const bug = {
     draw: (kit) =>
       figure(
         // The thread it hangs from.
-        faded(0.7, [line("M100,0 L100,70", PEARL, 3)]),
-        // Eight legs, each bent at a knee above its foot.
-        Arr.flatMap(
-          [
-            [64, 126, 32, 66, 16, 100],
-            [62, 138, 24, 108, 8, 142],
-            [64, 150, 28, 148, 14, 184],
-            [70, 160, 44, 184, 36, 212],
-          ],
-          ([hipX, hipY, kneeX, kneeY, footX, footY]) =>
-            both((side) =>
-              line(
-                `M${100 + side * (100 - hipX)},${hipY} L${100 + side * (100 - kneeX)},${kneeY} L${100 + side * (100 - footX)},${footY}`,
-                kit.body,
-                8.5
-              )
-            )
+        line("M100,-10 L100,60", PEARL, 3),
+        // Eight legs, each bent at the knee.
+        both((side) =>
+          Arr.map([0, 1, 2, 3], (index) => {
+            const y = 96 + index * 22;
+            const knee = 100 + side * (74 + (index % 2) * 6);
+            return line(
+              `M${100 + side * 40},${y} L${knee},${y - 30 + index * 8} L${100 + side * (96 + index * 2)},${y + 14 + index * 10}`,
+              kit.body,
+              10
+            );
+          })
         ),
-        // The round abdomen with its mark, then the head in front of it.
-        ellipse(100, 170, 50, 46, kit.body),
-        path("M100,150 L114,172 L100,196 L86,172 Z", kit.second),
-        ellipse(100, 108, 46, 42, kit.body),
-        both((side) => [
-          ellipse(100 + side * 18 + kit.look, 104, 14, 15, kit.second),
-          ellipse(100 + side * 30, 80, 5, 5, kit.second),
-          ellipse(100 + side * 12, 74, 3.6, 3.6, kit.second),
-        ]),
+        // The round abdomen, marked, below a round head.
+        ellipse(100, 168, 52, 46, kit.body),
+        rounded("M100,148 L114,166 L100,186 L86,166 Z", kit.second, 6),
+        ellipse(100, 106, 52, 46, kit.body),
+        both((side) => ellipse(100 + side * 14, 80, 4.4, 4.4, kit.second)),
+        smile(124, 9, 5, kit.second),
         both((side) =>
           eye(
             kindAt(kit.eyes, side),
-            100 + side * 18 + kit.look,
+            100 + side * 22 + kit.look,
             104,
-            6,
-            kit.ink
+            9,
+            kit.second
           )
-        ),
-        smile(124, 8, 6, kit.ink)
+        )
       ),
   },
   snail: {
@@ -188,28 +194,37 @@ export const bug = {
     ],
     draw: (kit) =>
       figure(
-        ellipse(132, 126, 58, 58, kit.second),
-        line(
-          "M132,130 C120,130 118,114 132,112 C152,110 160,140 136,150 C104,160 86,124 108,100",
+        // The soft foot along the bottom.
+        rounded(
+          "M8,200 C10,178 30,168 60,168 L180,168 C196,170 204,186 204,200 Z",
           kit.body,
-          7
+          6
         ),
-        line("M62,92 L56,58", kit.body, 9),
-        line("M90,90 L98,56", kit.body, 9),
-        ellipse(55, 50, 12, 12, kit.body),
-        ellipse(99, 48, 12, 12, kit.body),
+        // The shell, a spiral on its back.
+        ellipse(124, 120, 62, 60, kit.second),
+        line(
+          "M126,122 C126,110 140,108 144,118 C150,132 134,146 118,140 C98,132 100,104 120,96 C144,86 168,104 166,130 C164,156 138,172 112,164",
+          "#f4e6ce",
+          8
+        ),
+        // The head, raised on its neck, and the eyes on their stalks.
         path(
-          "M14,200 C16,176 36,164 70,164 L186,164 C194,176 194,190 192,200 Z",
+          "M28,200 C26,170 30,140 40,118 C50,100 76,100 80,122 C84,146 82,176 86,200 Z",
           kit.body
         ),
-        ellipse(76, 122, 38, 44, kit.body),
-        eye(kindAt(kit.eyes, -1), 55 + kit.look, 50, 5.4, kit.ink),
-        eye(kindAt(kit.eyes, 1), 99 + kit.look, 48, 5.4, kit.ink),
-        outlined(
-          "M62,124 Q76,134 90,124 Q76,142 62,124 Z",
-          kit.ink,
-          kit.ink,
-          2.6
+        both((side) =>
+          line(`M${56 + side * 8},106 L${56 + side * 14},64`, kit.body, 8)
+        ),
+        both((side) => ellipse(56 + side * 14, 62, 11, 11, kit.body)),
+        line("M46,140 Q56,148 66,140", kit.ink, 3.4),
+        both((side) =>
+          eye(
+            kindAt(kit.eyes, side),
+            56 + side * 14 + kit.look,
+            62,
+            6.4,
+            kit.ink
+          )
         )
       ),
   },

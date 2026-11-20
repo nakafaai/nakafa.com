@@ -1,25 +1,57 @@
 import type { Design } from "@repo/mascot/kit";
 import {
-  belly,
   blob,
   both,
+  chest,
   ellipse,
   eye,
   eyes,
   faded,
   figure,
+  grin,
   head,
+  INK,
   kindAt,
   line,
+  mew,
   nose,
   PEARL,
+  PINK,
   path,
   pointEars,
   roundEars,
+  rounded,
+  shoulders,
   smile,
-  torso,
 } from "@repo/mascot/kit";
 import { Array as Arr } from "effect";
+
+/** The cheek tufts of a cat: a point on each side under the eyes. */
+function tufts(fill: string, y = 122) {
+  return both((side) =>
+    blob(
+      [
+        100 + side * 52,
+        y - 18,
+        100 + side * 72,
+        y + 6,
+        100 + side * 46,
+        y + 14,
+      ],
+      fill,
+      10
+    )
+  );
+}
+
+/** Three short stripes on the forehead, in a darker tone of the body. */
+function brow(width = 7) {
+  return faded(0.22, [
+    line("M100,52 L100,66", INK, width),
+    line("M84,55 L87,66", INK, width - 1),
+    line("M116,55 L113,66", INK, width - 1),
+  ]);
+}
 
 /** The meat eaters on land, and the seals and walruses that hunt in the sea. */
 export const carnivore = {
@@ -31,14 +63,16 @@ export const carnivore = {
     ],
     draw: (kit) =>
       figure(
-        pointEars(kit.body, kit.second),
-        torso(kit.body),
-        head(kit.body),
-        ellipse(100, 114, 34, 26, kit.second),
-        belly(kit.second),
-        eyes(kit, 26, 94),
-        blob([95, 106, 105, 106, 100, 111], kit.ink, 3),
-        smile(116, 9, 8, kit.ink)
+        pointEars(kit.body, PINK, 56, 26, 66),
+        shoulders(kit.body, 58),
+        chest(kit.second, 28),
+        tufts(kit.body),
+        head(kit.body, 64, 54, 106),
+        brow(),
+        both((side) => ellipse(100 + side * 12, 130, 15, 12, kit.second)),
+        eyes(kit, 27, 104),
+        nose(121, 7, 5, PINK),
+        mew(128, 9, kit.ink)
       ),
   },
   bear: {
@@ -49,14 +83,14 @@ export const carnivore = {
     ],
     draw: (kit) =>
       figure(
-        roundEars(kit.body, kit.second, 46, 52, 19),
-        torso(kit.body),
-        head(kit.body),
-        ellipse(100, 116, 26, 20, kit.second),
-        belly(kit.second),
-        eyes(kit, 28, 92),
-        nose(108, 8, 6, kit.ink),
-        smile(118, 8, 7, kit.ink)
+        roundEars(kit.body, kit.second, 50, 58, 21),
+        shoulders(kit.body, 64),
+        head(kit.body, 64, 56, 106),
+        ellipse(100, 132, 27, 21, kit.second),
+        eyes(kit, 27, 104),
+        nose(122, 10, 8, kit.ink),
+        line("M100,124 L100,132", kit.ink, 3.2),
+        grin(132, 8, 2.4, kit.ink)
       ),
   },
   fox: {
@@ -66,17 +100,22 @@ export const carnivore = {
     ],
     draw: (kit) =>
       figure(
-        pointEars(kit.body, kit.ink),
-        torso(kit.body),
-        head(kit.body),
-        path(
-          "M42,104 C60,96 86,104 100,124 C114,104 140,96 158,104 C156,134 132,150 100,150 C68,150 44,134 42,104 Z",
-          kit.second
+        pointEars(kit.body, INK, 60, 18, 66),
+        shoulders(kit.body, 56),
+        chest(kit.second, 26),
+        rounded(
+          "M100,52 C132,52 156,66 160,92 L174,126 L148,132 C136,150 118,160 100,164 C82,160 64,150 52,132 L26,126 L40,92 C44,66 68,52 100,52 Z",
+          kit.body,
+          8
         ),
-        belly(kit.second),
-        eyes(kit, 28, 92),
-        nose(124, 7, 5.4, kit.ink),
-        smile(132, 7, 6, kit.ink)
+        rounded(
+          "M30,124 C56,114 82,120 100,138 C118,120 144,114 170,124 L148,132 C136,150 118,160 100,164 C82,160 64,150 52,132 Z",
+          kit.second,
+          8
+        ),
+        eyes(kit, 27, 100),
+        nose(138, 9, 7, kit.ink),
+        grin(147, 6, 2, kit.ink)
       ),
   },
   panda: {
@@ -86,20 +125,27 @@ export const carnivore = {
     ],
     draw: (kit) =>
       figure(
-        roundEars(kit.ink, null, 46, 52, 19),
-        torso(kit.body),
-        both((side) =>
-          ellipse(100 + side * 50, 178, 20, 34, kit.ink, side * 16)
+        roundEars(kit.ink, null, 50, 56, 21),
+        shoulders(kit.body, 66),
+        path(
+          "M34,200 C40,176 60,162 84,160 L116,160 C140,162 160,176 166,200 Z",
+          kit.ink
         ),
-        head(kit.body),
+        head(kit.body, 66, 56, 106),
         both((side) =>
-          ellipse(100 + side * 27, 98, 15, 19, kit.ink, side * 22)
+          ellipse(100 + side * 27, 106, 16, 21, kit.ink, side * 26)
         ),
         both((side) =>
-          eye("open", 100 + side * 26 + kit.look, 97, 5, kit.body)
+          eye(
+            kindAt(kit.eyes, side),
+            100 + side * 26 + kit.look,
+            104,
+            6,
+            kit.body
+          )
         ),
-        nose(118, 7, 5, kit.ink),
-        smile(126, 8, 7, kit.ink)
+        nose(126, 9, 7, kit.ink),
+        grin(135, 7, 2.2, kit.ink)
       ),
   },
   tiger: {
@@ -109,32 +155,33 @@ export const carnivore = {
     ],
     draw: (kit) =>
       figure(
-        roundEars(kit.body, kit.ink, 46, 52, 18),
-        torso(kit.body),
-        head(kit.body),
-        blob([100, 50, 96, 66, 104, 66], kit.ink, 4),
+        roundEars(kit.body, kit.second, 50, 60, 19),
+        shoulders(kit.body, 60),
+        chest(kit.second, 28),
+        tufts(kit.body, 128),
+        head(kit.body, 66, 56, 106),
+        blob([100, 50, 93, 66, 107, 66], kit.ink, 5),
         both((side) => [
           blob(
-            [100 + side * 22, 54, 100 + side * 18, 66, 100 + side * 26, 66],
+            [100 + side * 22, 54, 100 + side * 18, 70, 100 + side * 28, 68],
             kit.ink,
-            3.4
+            4
           ),
           blob(
-            [100 + side * 58, 96, 100 + side * 44, 100, 100 + side * 56, 104],
+            [100 + side * 66, 98, 100 + side * 46, 104, 100 + side * 64, 110],
             kit.ink,
-            3.4
+            4
           ),
           blob(
-            [100 + side * 56, 114, 100 + side * 44, 116, 100 + side * 52, 122],
+            [100 + side * 64, 120, 100 + side * 48, 124, 100 + side * 60, 130],
             kit.ink,
-            3.4
+            4
           ),
         ]),
-        ellipse(100, 118, 26, 19, kit.second),
-        belly(kit.second),
-        eyes(kit, 26, 92),
-        nose(110, 7, 5, kit.ink),
-        smile(119, 8, 7, kit.ink)
+        both((side) => ellipse(100 + side * 13, 131, 16, 13, kit.second)),
+        eyes(kit, 27, 104),
+        nose(122, 9, 7, PINK),
+        mew(129, 9, kit.ink)
       ),
   },
   lion: {
@@ -144,23 +191,24 @@ export const carnivore = {
     ],
     draw: (kit) =>
       figure(
-        Arr.makeBy(12, (index) => {
-          const angle = (index / 12) * Math.PI * 2;
+        Arr.makeBy(14, (index) => {
+          const angle = (index / 14) * Math.PI * 2;
           return ellipse(
-            100 + Math.cos(angle) * 54,
-            98 + Math.sin(angle) * 50,
-            22,
-            22,
+            100 + Math.cos(angle) * 66,
+            106 + Math.sin(angle) * 62,
+            26,
+            26,
             kit.second
           );
         }),
-        ellipse(100, 98, 56, 52, kit.second),
-        torso(kit.body, 50),
-        roundEars(kit.body, null, 34, 62, 13),
-        head(kit.body, 44, 42, 100),
-        eyes(kit, 19, 94),
-        nose(108, 7, 5, kit.ink),
-        smile(117, 8, 7, kit.ink)
+        ellipse(100, 106, 72, 68, kit.second),
+        shoulders(kit.body, 54, 156),
+        roundEars(kit.body, kit.second, 40, 62, 13),
+        head(kit.body, 48, 46, 110),
+        ellipse(100, 132, 22, 16, PEARL),
+        eyes(kit, 20, 106, 6.4),
+        nose(124, 9, 7, kit.ink),
+        mew(131, 8, kit.ink)
       ),
   },
   dog: {
@@ -171,17 +219,20 @@ export const carnivore = {
     ],
     draw: (kit) =>
       figure(
-        torso(kit.body),
-        head(kit.body),
-        both((side) =>
-          ellipse(100 + side * 54, 96, 17, 36, kit.second, side * 8)
-        ),
-        ellipse(100, 116, 28, 21, PEARL),
-        belly(PEARL),
-        eyes(kit, 25, 92),
-        nose(107, 8.4, 6, kit.ink),
-        smile(117, 8, 6, kit.ink),
-        ellipse(100, 128, 5.6, 7, "#ec9ab0")
+        shoulders(kit.body, 60),
+        head(kit.body, 62, 56, 104),
+        ellipse(124, 100, 21, 19, kit.second, 18),
+        both((side) => [
+          path(
+            `M${100 + side * 40},62 C${100 + side * 66},56 ${100 + side * 82},76 ${100 + side * 80},110 C${100 + side * 78},134 ${100 + side * 66},144 ${100 + side * 58},138 C${100 + side * 52},118 ${100 + side * 50},88 ${100 + side * 40},62 Z`,
+            kit.second
+          ),
+        ]),
+        ellipse(100, 132, 25, 19, PEARL),
+        eyes(kit, 25, 104),
+        nose(122, 11, 8, kit.ink),
+        smile(132, 9, 7, kit.ink),
+        ellipse(100, 143, 6, 7, PINK)
       ),
   },
   civet: {
@@ -191,45 +242,44 @@ export const carnivore = {
     ],
     draw: (kit) =>
       figure(
-        roundEars(kit.body, "#f4c7cf", 44, 50, 15),
-        torso(kit.body, 52),
-        belly(kit.second, 26, 156),
-        // Rows of spots down both flanks.
-        faded(0.55, [
-          ...both((side) => [
-            ellipse(100 + side * 40, 150, 6, 5, kit.ink),
-            ellipse(100 + side * 46, 170, 6.4, 5.4, kit.ink),
-            ellipse(100 + side * 36, 186, 6, 5, kit.ink),
-          ]),
-        ]),
-        // The head narrows to a long snout.
+        roundEars(kit.body, kit.second, 44, 60, 14),
+        shoulders(kit.body, 60),
+        both((side) =>
+          faded(0.5, [
+            ellipse(100 + side * 50, 174, 7, 6, kit.ink),
+            ellipse(100 + side * 56, 194, 7, 6, kit.ink),
+            ellipse(100 + side * 36, 192, 6, 5, kit.ink),
+          ])
+        ),
+        // The head narrows to a pointed snout.
         path(
-          "M44,86 C44,56 70,42 100,42 C130,42 156,56 156,86 C156,110 126,152 100,152 C74,152 44,110 44,86 Z",
+          "M40,92 C40,62 68,52 100,52 C132,52 160,62 160,92 C160,118 120,170 100,170 C80,170 40,118 40,92 Z",
           kit.body
         ),
-        // The mask: a dark band through the eyes, a pale blaze, and a pale spot under each eye.
+        // The mask: a dark patch round each eye that runs down to the snout,
+        // a pale blaze between them, and a pale spot under each eye.
         both((side) =>
           path(
-            `M${100 + side * 6},84 C${100 + side * 20},70 ${100 + side * 46},72 ${100 + side * 54},88 C${100 + side * 44},104 ${100 + side * 22},112 ${100 + side * 8},104 Z`,
+            `M${100 + side * 10},90 C${100 + side * 24},82 ${100 + side * 46},84 ${100 + side * 52},98 C${100 + side * 54},112 ${100 + side * 36},118 ${100 + side * 24},128 C${100 + side * 16},134 ${100 + side * 8},128 ${100 + side * 8},116 Z`,
             kit.ink
           )
         ),
-        ellipse(100, 70, 7, 20, kit.second),
+        ellipse(100, 82, 8, 24, kit.second),
         both((side) =>
-          ellipse(100 + side * 34, 112, 9, 6, kit.second, side * -24)
+          ellipse(100 + side * 46, 122, 10, 7, kit.second, side * -30)
         ),
         both((side) =>
           eye(
             kindAt(kit.eyes, side),
-            100 + side * 28 + kit.look,
-            90,
-            5.4,
+            100 + side * 30 + kit.look,
+            100,
+            6,
             kit.second
           )
         ),
-        ellipse(100, 128, 19, 22, kit.second),
-        nose(120, 7, 5, "#ec9ab0"),
-        line("M100,125 L100,132 M92,131 Q100,140 108,131", kit.ink, 2.8)
+        ellipse(100, 148, 16, 20, kit.second),
+        nose(152, 8, 6, kit.ink),
+        grin(161, 5, 1.6, kit.ink)
       ),
   },
   raccoon: {
@@ -239,18 +289,23 @@ export const carnivore = {
     ],
     draw: (kit) =>
       figure(
-        roundEars(kit.body, kit.ink, 46, 54, 17),
-        torso(kit.body),
-        head(kit.body),
-        ellipse(100, 118, 27, 21, kit.second),
-        ellipse(100, 70, 8, 16, kit.second),
+        roundEars(kit.body, kit.second, 50, 60, 19),
+        shoulders(kit.body, 62),
+        chest(kit.second, 26),
+        head(kit.body, 66, 56, 106),
         both((side) =>
-          ellipse(100 + side * 27, 96, 23, 15, kit.ink, side * 18)
+          ellipse(100 + side * 30, 84, 18, 9, kit.second, side * 12)
         ),
-        belly(kit.second),
-        eyes(kit, 26, 96, 5, PEARL),
-        nose(110, 6, 4.6, kit.ink),
-        smile(120, 8, 6, kit.ink)
+        path(
+          "M36,108 C44,92 70,90 100,100 C130,90 156,92 164,108 C156,124 128,124 100,116 C72,124 44,124 36,108 Z",
+          kit.ink
+        ),
+        ellipse(100, 134, 26, 20, kit.second),
+        both((side) =>
+          eye(kindAt(kit.eyes, side), 100 + side * 28 + kit.look, 107, 6, PEARL)
+        ),
+        nose(126, 8, 6, kit.ink),
+        grin(134, 7, 2.2, kit.ink)
       ),
   },
   seal: {
@@ -260,17 +315,22 @@ export const carnivore = {
     ],
     draw: (kit) =>
       figure(
-        torso(kit.body, 62),
-        head(kit.body, 58, 54, 96),
-        both((side) => ellipse(100 + side * 13, 116, 17, 15, kit.second)),
-        belly(kit.second, 34, 150),
+        path(
+          "M32,200 C30,150 40,110 52,86 C64,62 82,52 100,52 C118,52 136,62 148,86 C160,110 170,150 168,200 Z",
+          kit.body
+        ),
+        both((side) =>
+          ellipse(100 + side * 60, 184, 14, 30, kit.body, side * -24)
+        ),
+        both((side) => ellipse(100 + side * 14, 124, 18, 14, kit.second)),
         both((side) => [
-          ellipse(100 + side * 10, 114, 1.7, 1.7, kit.ink),
-          ellipse(100 + side * 17, 118, 1.7, 1.7, kit.ink),
-          ellipse(100 + side * 20, 111, 1.7, 1.7, kit.ink),
+          ellipse(100 + side * 10, 122, 2.2, 2.2, kit.ink),
+          ellipse(100 + side * 18, 126, 2.2, 2.2, kit.ink),
+          ellipse(100 + side * 20, 118, 2.2, 2.2, kit.ink),
         ]),
-        eyes(kit, 28, 90),
-        nose(105, 7, 5, kit.ink)
+        eyes(kit, 30, 98, 8),
+        nose(114, 8, 6, kit.ink),
+        grin(138, 6, 1.8, kit.ink)
       ),
   },
   walrus: {
@@ -280,26 +340,25 @@ export const carnivore = {
     ],
     draw: (kit) =>
       figure(
-        both((side) =>
-          ellipse(100 + side * 58, 178, 18, 32, kit.body, side * -16)
+        path(
+          "M26,200 C24,150 34,104 56,78 C70,62 84,56 100,56 C116,56 130,62 144,78 C166,104 176,150 174,200 Z",
+          kit.body
         ),
-        torso(kit.body, 62),
-        head(kit.body, 58, 52, 96),
         both((side) =>
           blob(
-            [100 + side * 11, 132, 100 + side * 21, 132, 100 + side * 15, 170],
+            [100 + side * 10, 136, 100 + side * 22, 136, 100 + side * 18, 186],
             PEARL,
-            7
+            9
           )
         ),
+        both((side) => ellipse(100 + side * 18, 124, 24, 20, kit.second)),
         both((side) => [
-          ellipse(100 + side * 20, 118, 25, 21, kit.second),
-          ellipse(100 + side * 13, 114, 2.1, 2.1, kit.ink),
-          ellipse(100 + side * 25, 111, 2.1, 2.1, kit.ink),
-          ellipse(100 + side * 21, 122, 2.1, 2.1, kit.ink),
+          ellipse(100 + side * 12, 120, 2.2, 2.2, kit.ink),
+          ellipse(100 + side * 24, 116, 2.2, 2.2, kit.ink),
+          ellipse(100 + side * 22, 128, 2.2, 2.2, kit.ink),
         ]),
-        eyes(kit, 27, 86, 5.6),
-        nose(104, 8.4, 5.6, kit.ink)
+        eyes(kit, 30, 92, 6),
+        nose(110, 9, 6, kit.ink)
       ),
   },
 } satisfies Record<string, Design>;

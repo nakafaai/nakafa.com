@@ -1,22 +1,28 @@
 import type { Design } from "@repo/mascot/kit";
 import {
-  belly,
   blob,
   both,
+  chest,
   ellipse,
   eyes,
+  faded,
   figure,
+  grin,
   head,
+  INK,
+  line,
+  mew,
   nose,
   PEARL,
+  PINK,
   path,
   roundEars,
-  smile,
+  rounded,
+  shoulders,
   spikes,
-  torso,
 } from "@repo/mascot/kit";
 
-/** The small mammals: the gnawers, the rabbit, the koala, and the bat. */
+/** The small mammals: the ones that hop, gnaw, climb, bristle, or fly at night. */
 export const small = {
   rabbit: {
     colors: [
@@ -26,16 +32,24 @@ export const small = {
     ],
     draw: (kit) =>
       figure(
-        both((side) => [
-          ellipse(100 + side * 24, 36, 15, 42, kit.body, side * 8),
-          ellipse(100 + side * 24, 38, 7, 30, kit.second, side * 8),
-        ]),
-        torso(kit.body),
-        head(kit.body, 56, 48, 102),
-        belly(kit.second),
-        eyes(kit, 24, 98),
-        nose(110, 4.6, 3.6, kit.ink),
-        smile(117, 8, 7, kit.ink)
+        // Long ears, one bent over at its tip.
+        ellipse(76, 40, 16, 40, kit.body, -8),
+        ellipse(76, 44, 8, 30, kit.second, -8),
+        path(
+          "M118,70 C116,40 122,16 138,10 C154,6 160,22 152,38 C146,50 138,58 134,72 Z",
+          kit.body
+        ),
+        path(
+          "M124,66 C124,44 130,26 140,20 C148,18 150,28 146,36 C140,46 134,56 132,68 Z",
+          kit.second
+        ),
+        shoulders(kit.body, 58),
+        chest(kit.second, 24),
+        head(kit.body, 60, 54, 110),
+        both((side) => ellipse(100 + side * 10, 132, 13, 11, PEARL)),
+        nose(124, 7, 5, PINK),
+        mew(130, 8, kit.ink),
+        eyes(kit, 27, 108)
       ),
   },
   hamster: {
@@ -45,14 +59,16 @@ export const small = {
     ],
     draw: (kit) =>
       figure(
-        roundEars(kit.body, kit.second, 42, 52, 14),
-        torso(kit.body, 60),
-        head(kit.body, 64, 54, 100),
-        both((side) => ellipse(100 + side * 30, 118, 26, 24, kit.second)),
-        belly(kit.second, 30, 150),
-        eyes(kit, 24, 92),
-        nose(108, 4.6, 3.6, kit.ink),
-        smile(114, 6, 6, kit.ink)
+        roundEars(kit.body, PINK, 48, 60, 16),
+        shoulders(kit.body, 70),
+        ellipse(100, 112, 72, 56, kit.body),
+        // Full cheek pouches and the pale muzzle between them.
+        both((side) => ellipse(100 + side * 36, 134, 34, 26, kit.second)),
+        ellipse(100, 132, 22, 22, kit.second),
+        ellipse(100, 80, 8, 18, kit.second),
+        nose(124, 6, 4.4, PINK),
+        mew(130, 7, kit.ink),
+        eyes(kit, 28, 104, 6.4)
       ),
   },
   mouse: {
@@ -62,13 +78,23 @@ export const small = {
     ],
     draw: (kit) =>
       figure(
-        roundEars(kit.body, kit.second, 50, 56, 28),
-        torso(kit.body, 50),
-        head(kit.body, 50, 46, 102),
-        belly(kit.second, 26, 152),
-        eyes(kit, 22, 98),
-        nose(112, 5.6, 4.4, kit.second),
-        smile(119, 7, 6, kit.ink)
+        roundEars(kit.body, kit.second, 54, 62, 32),
+        shoulders(kit.body, 56),
+        chest(PEARL, 24),
+        path(
+          "M100,64 C134,64 152,86 152,112 C152,136 126,160 100,164 C74,160 48,136 48,112 C48,86 66,64 100,64 Z",
+          kit.body
+        ),
+        faded(
+          0.35,
+          both((side) => [
+            line(`M${100 + side * 22},146 L${100 + side * 50},140`, INK, 2.4),
+            line(`M${100 + side * 22},152 L${100 + side * 48},156`, INK, 2.4),
+          ])
+        ),
+        nose(146, 8, 6, PINK),
+        grin(154, 5, 1.4, kit.ink, 2.8),
+        eyes(kit, 22, 116, 6.4)
       ),
   },
   squirrel: {
@@ -79,23 +105,40 @@ export const small = {
     ],
     draw: (kit) =>
       figure(
-        ellipse(160, 132, 34, 66, kit.body, 12),
-        ellipse(146, 66, 30, 30, kit.body),
-        ellipse(160, 128, 14, 46, kit.second, 12),
-        both((side) =>
-          blob(
-            [100 + side * 40, 62, 100 + side * 46, 32, 100 + side * 22, 52],
-            kit.body,
-            10
-          )
+        // The great tail, curled up behind one shoulder.
+        path(
+          "M130,200 C176,190 196,150 190,104 C186,70 166,46 140,44 C116,44 104,64 114,82 C128,76 148,82 154,104 C160,134 146,164 120,176 Z",
+          kit.body
         ),
-        torso(kit.body, 50),
-        head(kit.body, 54, 50, 98),
-        both((side) => ellipse(100 + side * 23, 114, 21, 18, kit.second)),
-        belly(kit.second, 26, 152),
-        eyes(kit, 24, 92),
-        nose(106, 5, 3.8, kit.ink),
-        path("M96,112 L104,112 L103,122 L97,122 Z", PEARL)
+        path(
+          "M150,92 C160,104 164,126 156,150 C150,166 140,176 128,182 C146,160 154,130 150,92 Z",
+          kit.second
+        ),
+        // Tufted ears.
+        both((side) => [
+          blob(
+            [100 + side * 22, 66, 100 + side * 40, 26, 100 + side * 54, 70],
+            kit.body,
+            12
+          ),
+          blob(
+            [100 + side * 34, 30, 100 + side * 40, 16, 100 + side * 46, 32],
+            kit.body,
+            5
+          ),
+          blob(
+            [100 + side * 32, 64, 100 + side * 40, 40, 100 + side * 48, 66],
+            kit.second,
+            5
+          ),
+        ]),
+        shoulders(kit.body, 50),
+        chest(kit.second, 24),
+        head(kit.body, 54, 50, 108),
+        both((side) => ellipse(100 + side * 28, 130, 22, 16, kit.second)),
+        nose(124, 6, 4.4, kit.ink),
+        mew(130, 7, kit.ink),
+        eyes(kit, 24, 106, 6.4)
       ),
   },
   porcupine: {
@@ -105,20 +148,17 @@ export const small = {
     ],
     draw: (kit) =>
       figure(
-        spikes(100, 108, 54, 80, 188, 352, 11, kit.body, 6),
-        path(
-          "M34,200 C30,150 46,96 100,96 C154,96 170,150 166,200 Z",
-          kit.body
-        ),
-        ellipse(100, 108, 60, 54, kit.body),
-        both((side) => ellipse(100 + side * 36, 82, 10, 10, kit.second)),
-        path(
-          "M56,200 C54,160 62,104 100,96 C138,104 146,160 144,200 Z",
-          kit.second
-        ),
-        eyes(kit, 20, 118),
-        nose(132, 6, 4.6, kit.ink),
-        smile(140, 7, 5, kit.ink)
+        // Quills fan out behind the head, each with a pale tip.
+        spikes(100, 116, 52, 98, 170, 370, 15, kit.second, 8),
+        spikes(100, 116, 46, 86, 170, 370, 15, kit.body, 8),
+        faded(0.2, spikes(100, 116, 40, 72, 178, 362, 13, INK, 4)),
+        shoulders(kit.body, 64),
+        head(kit.body, 56, 52, 112),
+        roundEars(kit.body, kit.second, 46, 82, 11),
+        ellipse(100, 128, 42, 34, kit.second),
+        nose(134, 10, 8, kit.ink),
+        grin(144, 6, 1.6, kit.ink),
+        eyes(kit, 22, 114, 6.4)
       ),
   },
   koala: {
@@ -128,13 +168,24 @@ export const small = {
     ],
     draw: (kit) =>
       figure(
-        roundEars(kit.body, kit.second, 58, 72, 28),
-        torso(kit.body),
-        head(kit.body, 56, 52),
-        belly(kit.second),
-        eyes(kit, 30, 96),
-        ellipse(100, 108, 12, 17, kit.ink),
-        smile(130, 8, 6, kit.ink)
+        // Great fluffy ears.
+        both((side) => [
+          ellipse(100 + side * 62, 76, 34, 32, kit.body),
+          ellipse(100 + side * 64, 80, 20, 18, kit.second),
+          ellipse(100 + side * 78, 64, 10, 10, kit.second),
+          ellipse(100 + side * 82, 82, 9, 9, kit.second),
+        ]),
+        shoulders(kit.body, 62),
+        chest(kit.second, 26),
+        head(kit.body, 60, 54, 108),
+        // The big dark nose.
+        rounded(
+          "M88,110 C88,100 112,100 112,110 L110,132 C108,142 92,142 90,132 Z",
+          kit.ink,
+          6
+        ),
+        grin(146, 7, 1.6, kit.ink),
+        eyes(kit, 30, 104, 6)
       ),
   },
   bat: {
@@ -144,58 +195,43 @@ export const small = {
     ],
     draw: (kit) =>
       figure(
+        // Wings, spread from the shoulders, scalloped between their fingers.
+        both((side) => [
+          path(
+            `M${100 + side * 30},160 C${100 + side * 60},130 ${100 + side * 86},118 ${100 + side * 104},124 L${100 + side * 100},200 L${100 + side * 30},200 Z`,
+            kit.body
+          ),
+          faded(0.22, [
+            line(`M${100 + side * 40},166 L${100 + side * 98},126`, INK, 3),
+            line(`M${100 + side * 44},176 L${100 + side * 86},172`, INK, 3),
+          ]),
+        ]),
+        // Big pointed ears.
         both((side) => [
           blob(
-            [100 + side * 52, 80, 100 + side * 58, 22, 100 + side * 18, 58],
+            [100 + side * 18, 70, 100 + side * 56, 12, 100 + side * 62, 90],
             kit.body,
             12
           ),
           blob(
-            [100 + side * 48, 68, 100 + side * 51, 40, 100 + side * 32, 58],
+            [100 + side * 32, 70, 100 + side * 54, 32, 100 + side * 54, 82],
             kit.second,
-            5
+            6
           ),
         ]),
+        shoulders(kit.body, 46),
+        head(kit.body, 56, 50, 110),
+        ellipse(100, 132, 24, 16, kit.second),
+        nose(126, 6, 4.4, kit.ink),
+        line("M88,134 Q100,142 112,134", kit.ink, 3),
         both((side) =>
-          blob(
-            [
-              100 + side * 36,
-              140,
-              100 + side * 96,
-              112,
-              100 + side * 86,
-              146,
-              100 + side * 96,
-              172,
-              100 + side * 82,
-              200,
-              100 + side * 36,
-              200,
-            ],
-            kit.body,
-            8
-          )
-        ),
-        torso(kit.body, 44),
-        head(kit.body, 50, 46, 100),
-        belly(kit.second, 22, 156),
-        eyes(kit, 22, 96),
-        nose(108, 4.4, 3.4, kit.ink),
-        smile(116, 10, 7, kit.ink),
-        both((side) =>
-          blob(
-            [
-              100 + side * 7 - 2,
-              122,
-              100 + side * 7 + 2,
-              122,
-              100 + side * 7,
-              128,
-            ],
+          rounded(
+            `M${100 + side * 6},138 L${100 + side * 12},138 L${100 + side * 9},146 Z`,
             PEARL,
             2
           )
-        )
+        ),
+        eyes(kit, 25, 108)
       ),
   },
 } satisfies Record<string, Design>;

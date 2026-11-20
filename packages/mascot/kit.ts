@@ -11,14 +11,11 @@ import { Array as Arr, Match, Schema } from "effect";
 /** The ink of every eye, mouth, and nose. */
 export const INK = "#15294f";
 
-/** The light that shines in an open eye. */
-const SHINE = "#ffffff";
-
-/** The soft pink of the cheeks under dark eyes. */
-const BLUSH = "#f48fb1";
-
 /** The pale white that several animals share. */
 export const PEARL = "#f6f4ef";
+
+/** The pink of an inner ear, a tongue, or a nose that is not ink. */
+export const PINK = "#f29bb2";
 
 /** What an animal marks in its drawing: the open eyes, which can follow the pointer. */
 export const Mark = Schema.Literal("eye");
@@ -41,7 +38,11 @@ const Kit = Schema.Struct({
   second: Schema.String,
 });
 
-/** One animal: its palettes as [body, second] colour pairs, and how to draw it. */
+/**
+ * One animal: its palettes as [body, second] colour pairs, and how to draw it.
+ * The body is the one colour that fills most of the animal; the second marks
+ * the one or two places that name it, such as a muzzle, a mane, or a shell.
+ */
 export interface Design {
   readonly colors: readonly (readonly [string, string])[];
   readonly draw: (kit: typeof Kit.Type) => readonly Layer[];
@@ -85,17 +86,12 @@ export function path(d: string, fill: string) {
   return drawPath({ d, fill });
 }
 
-/** A path whose corners an outline rounds. */
-export function outlined(
-  d: string,
-  fill: string,
-  color: string,
-  width: number
-) {
+/** A path whose corners an outline of its own fill rounds by `width`. */
+export function rounded(d: string, fill: string, width: number) {
   return drawPath({
     d,
     fill,
-    stroke: color,
+    stroke: fill,
     strokeLinejoin: "round",
     strokeWidth: width,
   });
@@ -132,43 +128,79 @@ export function faded(opacity: number, layers: readonly Layer[]) {
   return group(layers, { opacity });
 }
 
-/** The head: an ellipse on the centre line. */
-export function head(fill: string, rx = 60, ry = 52, cy = 98) {
+/**
+ * The head: an ellipse on the centre line. It is the largest shape of almost
+ * every animal, so the face still reads when the avatar is as small as a line
+ * of text.
+ */
+export function head(fill: string, rx: number, ry: number, cy: number) {
   return ellipse(100, cy, rx, ry, fill);
 }
 
-/** The torso, rising from the bottom edge to the shoulders. */
-export function torso(fill: string, half = 56) {
+/** The shoulders, rising from the bottom edge, as wide as `half` either side. */
+export function shoulders(fill: string, half: number, top = 146) {
   return path(
-    `M${100 - half},200 C${98 - half},170 ${108 - half},142 ${120 - half},126 L${80 + half},126 C${92 + half},142 ${102 + half},170 ${100 + half},200 Z`,
+    `M${100 - half},200 C${100 - half},${top + 18} ${118 - half},${top} 100,${top} C${82 + half},${top} ${100 + half},${top + 18} ${100 + half},200 Z`,
     fill
   );
 }
 
-/** The belly: a pale patch from the bottom edge up to `top`. */
-export function belly(fill: string, half = 30, top = 148) {
+/** A pale patch on the chest, rising from the bottom edge up to `top`. */
+export function chest(fill: string, half: number, top = 166) {
   return path(
-    `M${100 - half},200 C${100 - half},178 ${108 - half},${top + 4} 100,${top} C${92 + half},${top + 4} ${100 + half},178 ${100 + half},200 Z`,
+    `M${100 - half},200 C${100 - half},${top + 12} ${108 - half},${top} 100,${top} C${92 + half},${top} ${100 + half},${top + 12} ${100 + half},200 Z`,
     fill
   );
 }
 
-/** The nose: a small ellipse on the centre line. */
-export function nose(y: number, rx: number, ry: number, ink: string) {
-  return ellipse(100, y, rx, ry, ink);
+/** The nose: a rounded triangle on the centre line, wide `wide` and deep `deep`. */
+export function nose(y: number, wide: number, deep: number, ink: string) {
+  return blob(
+    [100 - wide, y - deep / 2, 100 + wide, y - deep / 2, 100, y + deep / 2],
+    ink,
+    Math.min(wide, deep) * 0.9
+  );
 }
 
-/** A mouth: a closed lens, drawn with an outline of its own colour. */
+/** A small closed smile, the same lens that Nina smiles with. */
 export function smile(y: number, wide: number, deep: number, ink: string) {
-  return outlined(
-    `M${100 - wide},${y} Q100,${tenth(y + deep * 0.62)} ${100 + wide},${y} Q100,${tenth(y + deep * 1.5)} ${100 - wide},${y} Z`,
+  return rounded(
+    `M${tenth(100 - wide)},${y} Q100,${tenth(y + deep * 0.5)} ${tenth(100 + wide)},${y} Q100,${tenth(y + deep * 1.6)} ${tenth(100 - wide)},${y} Z`,
     ink,
-    ink,
-    2.6
+    2.4
   );
 }
 
-/** One eye: an open eye with its shine, which follows the pointer, a smiling arc, or a sleeping arc. */
+/** A mouth drawn as a line, from `x0` to `x1` through a dip of `deep`. */
+export function grin(
+  y: number,
+  wide: number,
+  deep: number,
+  ink: string,
+  width = 3.2
+) {
+  return line(
+    `M${tenth(100 - wide)},${y} Q100,${tenth(y + deep * 2)} ${tenth(100 + wide)},${y}`,
+    ink,
+    width
+  );
+}
+
+/** The w of a cat's or a rabbit's mouth under its nose. */
+export function mew(y: number, wide: number, ink: string, width = 3.2) {
+  const half = tenth(wide / 2);
+  return line(
+    `M${tenth(100 - wide)},${y} Q${tenth(100 - half)},${tenth(y + half + 1)} 100,${y - 1} Q${tenth(100 + half)},${tenth(y + half + 1)} ${tenth(100 + wide)},${y}`,
+    ink,
+    width
+  );
+}
+
+/**
+ * One eye: an open eye, a plain dot of ink that follows the pointer, a smiling
+ * arc, or a sleeping arc. The arcs are as wide as the dot and as thick as it
+ * needs to stay a line at the smallest avatar.
+ */
 export function eye(
   kind: typeof Eyes.Type,
   x: number,
@@ -176,19 +208,20 @@ export function eye(
   r: number,
   ink: string
 ) {
+  const width = tenth(Math.max(3.4, r * 0.62));
   return Match.value(kind).pipe(
     Match.when("smile", () =>
       line(
-        `M${tenth(x - r)},${tenth(y + 2)} Q${tenth(x)},${tenth(y - r - 2)} ${tenth(x + r)},${tenth(y + 2)}`,
+        `M${tenth(x - r)},${tenth(y + r * 0.4)} Q${tenth(x)},${tenth(y - r * 1.2)} ${tenth(x + r)},${tenth(y + r * 0.4)}`,
         ink,
-        4.6
+        width
       )
     ),
     Match.when("asleep", () =>
       line(
-        `M${tenth(x - r)},${tenth(y - 1)} Q${tenth(x)},${tenth(y + r)} ${tenth(x + r)},${tenth(y - 1)}`,
+        `M${tenth(x - r)},${tenth(y - r * 0.2)} Q${tenth(x)},${tenth(y + r * 1.1)} ${tenth(x + r)},${tenth(y - r * 0.2)}`,
         ink,
-        4.6
+        width
       )
     ),
     Match.orElse(() =>
@@ -199,39 +232,13 @@ export function eye(
             cy: tenth(y),
             fill: ink,
             rx: tenth(r),
-            ry: tenth(r * 1.22),
+            ry: tenth(r * 1.2),
           }),
-          ...(ink === INK
-            ? [
-                drawEllipse({
-                  cx: tenth(x - r * 0.3),
-                  cy: tenth(y - r * 0.42),
-                  fill: SHINE,
-                  rx: tenth(r * 0.38),
-                  ry: tenth(r * 0.38),
-                }),
-              ]
-            : []),
         ],
         { mark: Mark.literal }
       )
     )
   );
-}
-
-/**
- * One cheek: a soft pink patch under an eye of size `r`, which every animal with
- * dark eyes wears, so each face looks warm whatever its colours.
- */
-function cheek(x: number, y: number, r: number) {
-  return drawEllipse({
-    cx: tenth(x),
-    cy: tenth(y),
-    fill: BLUSH,
-    opacity: 0.45,
-    rx: tenth(r * 1.15),
-    ry: tenth(r * 0.7),
-  });
 }
 
 /** What one side does when the eyes wink: the left eye smiles, the right stays open. */
@@ -247,16 +254,12 @@ export function eyes(
   kit: typeof Kit.Type,
   dx: number,
   y: number,
-  r = 6.4,
+  r = 7,
   ink = kit.ink
 ) {
-  return both((side) => {
-    const x = 100 + side * dx + kit.look;
-    const shown = eye(kindAt(kit.eyes, side), x, y, r, ink);
-    return ink === INK
-      ? [cheek(x + side * r * 1.1, y + r * 2.1, r), shown]
-      : shown;
-  });
+  return both((side) =>
+    eye(kindAt(kit.eyes, side), 100 + side * dx + kit.look, y, r, ink)
+  );
 }
 
 /** Round ears on both sides, each with an inner ear when `inner` is given. */
@@ -272,23 +275,52 @@ export function roundEars(
       ellipse(100 + side * dx, y, r, r, body),
       inner === null
         ? []
-        : ellipse(100 + side * dx, y + 1, r * 0.52, r * 0.52, inner)
+        : ellipse(
+            100 + side * (dx - r * 0.06),
+            y + r * 0.08,
+            r * 0.56,
+            r * 0.56,
+            inner
+          )
     )
   );
 }
 
-/** Pointed ears on both sides, each with an inner ear. */
-export function pointEars(body: string, inner: string) {
+/**
+ * Pointed ears on both sides, each with an inner ear: a rounded triangle whose
+ * tip stands `tip` from the centre line at height `top`.
+ */
+export function pointEars(
+  body: string,
+  inner: string,
+  tip = 54,
+  top = 30,
+  base = 64
+) {
   return both((side) => [
     blob(
-      [100 + side * 54, 82, 100 + side * 52, 36, 100 + side * 20, 58],
+      [
+        100 + side * 18,
+        base,
+        100 + side * tip,
+        top,
+        100 + side * 62,
+        base + 30,
+      ],
       body,
-      12
+      14
     ),
     blob(
-      [100 + side * 48, 70, 100 + side * 47, 50, 100 + side * 34, 60],
+      [
+        100 + side * 32,
+        base + 6,
+        100 + side * (tip - 2),
+        top + 14,
+        100 + side * 54,
+        base + 22,
+      ],
       inner,
-      5
+      6
     ),
   ]);
 }

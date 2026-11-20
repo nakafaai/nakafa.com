@@ -7,11 +7,15 @@ import {
   eye,
   eyes,
   figure,
+  grin,
   INK,
   kindAt,
   Mark,
+  mew,
+  nose,
   pointEars,
   roundEars,
+  smile,
   spikes,
 } from "@repo/mascot/kit";
 import { Array as Arr } from "effect";
@@ -81,43 +85,39 @@ describe("mascot/kit", () => {
   });
 
   describe("eyes", () => {
-    it("marks an open eye, and draws a smiling or sleeping eye as a line", () => {
-      // An open eye is its pupil and the shine in it, marked together, so the
-      // shine follows the pointer with the pupil.
-      expect(eye("open", 74, 94, 6.4, INK)).toEqual({
+    it("marks an open eye, a plain dot of ink, and draws a smiling or sleeping eye as a line", () => {
+      // An open eye is its pupil alone, marked, so it follows the pointer and
+      // stays a clean dot at the smallest avatar.
+      expect(eye("open", 74, 94, 7, INK)).toEqual({
         _tag: "g",
         children: [
-          { _tag: "ellipse", cx: 74, cy: 94, fill: INK, rx: 6.4, ry: 7.8 },
-          {
-            _tag: "ellipse",
-            cx: 72.1,
-            cy: 91.3,
-            fill: "#ffffff",
-            rx: 2.4,
-            ry: 2.4,
-          },
+          { _tag: "ellipse", cx: 74, cy: 94, fill: INK, rx: 7, ry: 8.4 },
         ],
         mark: Mark.literal,
       });
-      expect(eye("wink", 74, 94, 6.4, INK)).toHaveProperty("mark", "eye");
-      expect(eye("smile", 74, 94, 6.4, INK)).toEqual({
+      expect(eye("wink", 74, 94, 7, INK)).toHaveProperty("mark", "eye");
+      expect(eye("smile", 74, 94, 7, INK)).toEqual({
         _tag: "path",
-        d: "M67.6,96 Q74,85.6 80.4,96",
+        d: "M67,96.8 Q74,85.6 81,96.8",
         fill: "none",
         stroke: INK,
         strokeLinecap: "round",
         strokeLinejoin: "round",
-        strokeWidth: 4.6,
+        strokeWidth: 4.3,
       });
-      expect(eye("asleep", 74, 94, 6.4, INK)).toEqual({
+      expect(eye("asleep", 74, 94, 7, INK)).toEqual({
         _tag: "path",
-        d: "M67.6,93 Q74,100.4 80.4,93",
+        d: "M67,92.6 Q74,101.7 81,92.6",
         fill: "none",
         stroke: INK,
         strokeLinecap: "round",
         strokeLinejoin: "round",
-        strokeWidth: 4.6,
+        strokeWidth: 4.3,
       });
+    });
+
+    it("keeps the line of a small closed eye thick enough to read", () => {
+      expect(eye("smile", 74, 94, 4, INK)).toHaveProperty("strokeWidth", 3.4);
     });
 
     it("winks with the left eye only", () => {
@@ -128,63 +128,57 @@ describe("mascot/kit", () => {
       expect(kindAt("open", -1)).toBe("open");
     });
 
-    it("draws two open eyes that the pose shifts to the side, each above its cheek", () => {
-      const pair = eyes(kitWith("open", 2.6), 26, 94);
-      expect(pair).toMatchObject([
-        { _tag: "ellipse", cx: 69.6, cy: 107.4, opacity: 0.45 },
-        { _tag: "g", children: [{ cx: 76.6 }, { cx: 74.7 }], mark: "eye" },
-        { _tag: "ellipse", cx: 135.6, cy: 107.4, opacity: 0.45 },
-        { _tag: "g", children: [{ cx: 128.6 }, { cx: 126.7 }], mark: "eye" },
+    it("draws two open eyes that the pose shifts to the side, with no cheeks and no shine", () => {
+      expect(eyes(kitWith("open", 3), 26, 104)).toEqual([
+        eye("open", 77, 104, 7, INK),
+        eye("open", 129, 104, 7, INK),
       ]);
     });
 
     it("closes both eyes when they smile or sleep, and one when they wink, and marks only the open ones", () => {
-      // Every second shape is an eye; the shapes before them are the cheeks.
       const marks = (open: typeof Eyes.Type) =>
-        Arr.map(
-          Arr.filter(
-            eyes(kitWith(open), 26, 94),
-            (_, index) => index % 2 === 1
-          ),
-          (shape) => shape.mark
-        );
+        Arr.map(eyes(kitWith(open), 26, 104), (shape) => shape.mark);
+      expect(marks("open")).toEqual(["eye", "eye"]);
       expect(marks("smile")).toEqual([undefined, undefined]);
       expect(marks("asleep")).toEqual([undefined, undefined]);
       expect(marks("wink")).toEqual([undefined, "eye"]);
     });
 
-    it("takes its size and its ink from the animal when asked, and gives pale eyes no shine and no cheeks", () => {
-      const pale = eyes(kitWith("open"), 26, 96, 5, "#f6f4ef");
-      expect(pale).toEqual([
-        {
-          _tag: "g",
-          children: [
-            {
-              _tag: "ellipse",
-              cx: 74,
-              cy: 96,
-              fill: "#f6f4ef",
-              rx: 5,
-              ry: 6.1,
-            },
-          ],
-          mark: "eye",
-        },
-        {
-          _tag: "g",
-          children: [
-            {
-              _tag: "ellipse",
-              cx: 126,
-              cy: 96,
-              fill: "#f6f4ef",
-              rx: 5,
-              ry: 6.1,
-            },
-          ],
-          mark: "eye",
-        },
+    it("takes its size and its ink from the animal when asked", () => {
+      expect(eyes(kitWith("open"), 26, 96, 5, "#f6f4ef")).toEqual([
+        eye("open", 74, 96, 5, "#f6f4ef"),
+        eye("open", 126, 96, 5, "#f6f4ef"),
       ]);
+    });
+  });
+
+  describe("faces", () => {
+    it("draws a nose as a triangle pointing down, its corners rounded", () => {
+      expect(nose(120, 8, 6, INK)).toEqual({
+        _tag: "polygon",
+        fill: INK,
+        points: "92,117 108,117 100,123",
+        stroke: INK,
+        strokeLinejoin: "round",
+        strokeWidth: 5.4,
+      });
+    });
+
+    it("draws a smile as a closed lens and a grin and a mew as lines", () => {
+      expect(smile(130, 10, 6, INK)).toMatchObject({
+        _tag: "path",
+        d: "M90,130 Q100,133 110,130 Q100,139.6 90,130 Z",
+        fill: INK,
+      });
+      expect(grin(130, 10, 2, INK)).toMatchObject({
+        d: "M90,130 Q100,134 110,130",
+        fill: "none",
+        strokeWidth: 3.2,
+      });
+      expect(mew(128, 8, INK)).toMatchObject({
+        d: "M92,128 Q96,133 100,127 Q104,133 108,128",
+        fill: "none",
+      });
     });
   });
 
@@ -205,8 +199,8 @@ describe("mascot/kit", () => {
         "polygon",
         "polygon",
       ]);
-      expect(ears[0]).toMatchObject({ fill: "#ee8a4c", strokeWidth: 12 });
-      expect(ears[1]).toMatchObject({ fill: INK, strokeWidth: 5 });
+      expect(ears[0]).toMatchObject({ fill: "#ee8a4c", strokeWidth: 14 });
+      expect(ears[1]).toMatchObject({ fill: INK, strokeWidth: 6 });
     });
 
     it("draws one rounded triangle per spike, 4 wide unless told otherwise", () => {

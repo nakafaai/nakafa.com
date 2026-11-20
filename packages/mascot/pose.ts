@@ -4,15 +4,16 @@ import { Record, Schema } from "effect";
  * Where an animal stands. It rarely stands in the middle: it leans in from a
  * lower corner, or peeks over the bottom edge. A pose is a turn in degrees, a
  * scale, and a shift from the middle of the bottom edge, plus how far the eyes
- * look to the side.
+ * look to the side. The head fills most of the circle in every pose, and the
+ * edge cuts the shoulders, never the face.
  */
 export const POSES = {
-  right: { look: -2.6, size: 1.16, turn: -10, x: 34, y: 18 },
-  left: { look: 2.6, size: 1.16, turn: 10, x: -34, y: 18 },
-  center: { look: 0, size: 1.04, turn: 0, x: 0, y: 4 },
-  peek: { look: 0, size: 1.12, turn: 0, x: 0, y: 54 },
-  "peek-right": { look: -2.6, size: 1.14, turn: -14, x: 44, y: 46 },
-  "peek-left": { look: 2.6, size: 1.14, turn: 14, x: -44, y: 46 },
+  right: { look: -3, size: 1.06, turn: -8, x: 14, y: 12 },
+  left: { look: 3, size: 1.06, turn: 8, x: -14, y: 12 },
+  center: { look: 0, size: 1.02, turn: 0, x: 0, y: 6 },
+  peek: { look: 0, size: 1.08, turn: 0, x: 0, y: 44 },
+  "peek-right": { look: -3, size: 1.06, turn: -12, x: 22, y: 36 },
+  "peek-left": { look: 3, size: 1.06, turn: 12, x: -22, y: 36 },
 };
 
 /** The name of a pose. */

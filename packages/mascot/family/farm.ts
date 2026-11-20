@@ -1,23 +1,51 @@
 import type { Design } from "@repo/mascot/kit";
 import {
-  belly,
   blob,
   both,
   ellipse,
   eyes,
-  faded,
   figure,
+  grin,
   head,
   line,
-  nose,
   PEARL,
+  PINK,
   path,
+  rounded,
+  shoulders,
   smile,
-  torso,
 } from "@repo/mascot/kit";
 import { Array as Arr } from "effect";
 
-/** The animals of the farm: the ones that graze in a paddock or carry a load. */
+/** The pale horn of a cow or a goat. */
+const HORN = "#f0d38c";
+
+/** A ring of round curls about a centre, the wool of a sheep or an alpaca. */
+function curls(
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  count: number,
+  r: number,
+  fill: string,
+  from = 0,
+  to = 360
+) {
+  return Arr.makeBy(count, (index) => {
+    const angle =
+      ((from + ((to - from) * index) / Math.max(1, count - 1)) * Math.PI) / 180;
+    return ellipse(
+      cx + Math.cos(angle) * rx,
+      cy + Math.sin(angle) * ry,
+      r,
+      r,
+      fill
+    );
+  });
+}
+
+/** The animals of the farm and the field. */
 export const farm = {
   sheep: {
     colors: [
@@ -26,31 +54,18 @@ export const farm = {
     ],
     draw: (kit) =>
       figure(
-        torso(kit.body, 60),
-        both((side) => [
-          ellipse(100 + side * 46, 150, 22, 22, kit.body),
-          ellipse(100 + side * 28, 176, 24, 24, kit.body),
-        ]),
-        Arr.map(
-          [
-            [52, 96],
-            [60, 68],
-            [82, 50],
-            [118, 50],
-            [140, 68],
-            [148, 96],
-            [100, 44],
-          ],
-          ([x, y]) => ellipse(x, y, 24, 24, kit.body)
-        ),
-        head(kit.body, 50, 44, 100),
+        shoulders(kit.body, 66),
+        curls(100, 166, 56, 18, 6, 22, kit.body, 180, 360),
+        curls(100, 100, 56, 50, 12, 24, kit.body),
+        ellipse(100, 100, 58, 52, kit.body),
         both((side) =>
-          ellipse(100 + side * 50, 102, 17, 9, kit.second, side * -24)
+          ellipse(100 + side * 52, 112, 22, 11, kit.second, side * -24)
         ),
-        ellipse(100, 108, 36, 38, kit.second),
-        eyes(kit, 16, 102),
-        nose(120, 5, 3.6, kit.ink),
-        smile(126, 7, 6, kit.ink)
+        ellipse(100, 120, 36, 42, kit.second),
+        curls(100, 76, 26, 8, 5, 13, kit.body, 180, 360),
+        ellipse(100, 74, 26, 12, kit.body),
+        eyes(kit, 18, 116, 6.4),
+        smile(140, 7, 5, kit.ink)
       ),
   },
   cow: {
@@ -61,25 +76,33 @@ export const farm = {
     draw: (kit) =>
       figure(
         both((side) =>
-          blob(
-            [100 + side * 30, 56, 100 + side * 44, 34, 100 + side * 46, 58],
-            "#efd2a6",
-            8
+          rounded(
+            `M${100 + side * 30},64 C${100 + side * 44},62 ${100 + side * 56},52 ${100 + side * 60},34 C${100 + side * 66},50 ${100 + side * 60},70 ${100 + side * 40},78 Z`,
+            HORN,
+            5
           )
         ),
-        both((side) =>
-          ellipse(100 + side * 64, 84, 18, 10, kit.body, side * -22)
-        ),
-        torso(kit.body),
-        head(kit.body),
+        both((side) => [
+          ellipse(100 + side * 66, 92, 24, 12, kit.body, side * -20),
+          ellipse(100 + side * 66, 93, 14, 6, kit.second, side * -20),
+        ]),
+        shoulders(kit.body, 62),
         path(
-          "M118,50 C140,52 158,70 160,92 C146,96 128,90 122,74 C118,66 116,56 118,50 Z",
+          "M116,200 C118,184 132,174 150,176 C158,182 162,190 164,200 Z",
           kit.ink
         ),
-        ellipse(100, 124, 36, 22, kit.second),
-        belly(kit.second),
-        eyes(kit, 28, 92),
-        both((side) => ellipse(100 + side * 12, 124, 3.6, 4.6, kit.ink))
+        head(kit.body, 56, 56, 102),
+        // A patch over one eye and one over the crown.
+        rounded(
+          "M112,74 C128,64 150,72 154,92 C156,108 146,116 132,114 C118,112 108,96 112,74 Z",
+          kit.ink,
+          4
+        ),
+        rounded("M70,52 C80,48 92,52 92,60 C90,68 78,70 70,64 Z", kit.ink, 4),
+        ellipse(100, 140, 42, 28, kit.second),
+        both((side) => ellipse(100 + side * 16, 136, 5, 7, kit.ink)),
+        grin(152, 10, 1.8, kit.ink),
+        eyes(kit, 27, 100)
       ),
   },
   pig: {
@@ -89,24 +112,20 @@ export const farm = {
     ],
     draw: (kit) =>
       figure(
-        both((side) => [
-          blob(
-            [100 + side * 50, 72, 100 + side * 58, 40, 100 + side * 26, 54],
-            kit.body,
-            14
-          ),
-          blob(
-            [100 + side * 46, 62, 100 + side * 50, 48, 100 + side * 36, 56],
+        shoulders(kit.body, 64),
+        head(kit.body, 64, 56, 106),
+        // Ears that fold forward over the brow.
+        both((side) =>
+          rounded(
+            `M${100 + side * 26},58 C${100 + side * 44},40 ${100 + side * 66},40 ${100 + side * 72},50 C${100 + side * 70},70 ${100 + side * 58},86 ${100 + side * 44},88 Z`,
             kit.second,
-            5
-          ),
-        ]),
-        torso(kit.body),
-        head(kit.body),
-        ellipse(100, 116, 25, 18, kit.second),
-        both((side) => ellipse(100 + side * 9, 116, 3.6, 5.4, kit.ink)),
-        eyes(kit, 28, 90),
-        smile(138, 7, 5, kit.ink)
+            6
+          )
+        ),
+        ellipse(100, 130, 30, 22, kit.second),
+        both((side) => ellipse(100 + side * 11, 130, 5, 8, kit.ink)),
+        grin(155, 9, 1.8, kit.ink),
+        eyes(kit, 30, 100)
       ),
   },
   horse: {
@@ -119,20 +138,33 @@ export const farm = {
       figure(
         both((side) =>
           blob(
-            [100 + side * 42, 62, 100 + side * 46, 30, 100 + side * 26, 50],
+            [100 + side * 22, 64, 100 + side * 40, 18, 100 + side * 50, 70],
             kit.body,
-            11
+            12
           )
         ),
-        torso(kit.body),
-        head(kit.body, 48, 56, 100),
-        ellipse(100, 46, 20, 16, kit.second),
-        ellipse(86, 60, 12, 16, kit.second, 24),
-        ellipse(114, 60, 12, 16, kit.second, -24),
-        ellipse(100, 132, 31, 22, kit.second),
-        both((side) => ellipse(100 + side * 10, 132, 2.8, 3.8, kit.ink)),
-        eyes(kit, 27, 96),
-        line("M88,142 Q100,148 112,142", kit.ink, 3.6)
+        shoulders(kit.body, 56),
+        // The mane down the neck.
+        rounded(
+          "M128,64 C150,80 164,120 160,200 L136,200 C138,150 132,108 118,80 Z",
+          kit.ink,
+          6
+        ),
+        path(
+          "M100,46 C132,46 150,70 150,102 C150,130 142,168 100,168 C58,168 50,130 50,102 C50,70 68,46 100,46 Z",
+          kit.body
+        ),
+        // The forelock falling over the brow.
+        rounded(
+          "M82,46 C92,38 112,38 120,48 C118,64 108,74 96,78 C94,66 88,56 82,46 Z",
+          kit.ink,
+          6
+        ),
+        ellipse(100, 92, 7, 18, kit.second),
+        ellipse(100, 146, 36, 24, kit.second),
+        both((side) => ellipse(100 + side * 14, 142, 4, 6, kit.ink)),
+        grin(156, 9, 1.6, kit.ink),
+        eyes(kit, 27, 104)
       ),
   },
   goat: {
@@ -143,43 +175,34 @@ export const farm = {
     ],
     draw: (kit) =>
       figure(
-        // Ridged horns sweep up and back.
+        // Ridged horns sweeping back.
         both((side) => [
           line(
-            `M${100 + side * 20},54 C${100 + side * 24},26 ${100 + side * 46},14 ${100 + side * 62},22`,
+            `M${100 + side * 20},68 C${100 + side * 22},40 ${100 + side * 40},22 ${100 + side * 60},28`,
             kit.second,
-            13
-          ),
-          ...Arr.map([0.3, 0.55, 0.8], (at) =>
-            faded(0.22, [
-              ellipse(
-                100 + side * (22 + at * 32),
-                46 - at * 30,
-                2.2,
-                7,
-                kit.ink,
-                side * (20 + at * 50)
-              ),
-            ])
+            14
           ),
         ]),
-        // Leaf ears stand out sideways.
+        // Long ears, flat out to the side.
         both((side) => [
-          ellipse(100 + side * 58, 84, 24, 11, kit.body, side * 16),
-          ellipse(100 + side * 58, 85, 15, 5.6, "#f4c7cf", side * 16),
+          ellipse(100 + side * 64, 96, 28, 11, kit.body, side * -10),
+          ellipse(100 + side * 64, 97, 18, 5, PINK, side * -10),
         ]),
-        torso(kit.body, 46),
-        // The beard under the chin.
-        blob([88, 142, 112, 142, 100, 172], kit.second, 8),
-        // A long face, narrower at the muzzle.
+        shoulders(kit.body, 54),
         path(
-          "M56,84 C56,54 76,40 100,40 C124,40 144,54 144,84 C144,112 130,150 100,150 C70,150 56,112 56,84 Z",
+          "M100,54 C130,54 148,76 148,104 C148,132 128,166 100,166 C72,166 52,132 52,104 C52,76 70,54 100,54 Z",
           kit.body
         ),
-        faded(0.5, [ellipse(100, 128, 24, 19, kit.second)]),
-        eyes(kit, 24, 88),
-        path("M92,118 L108,118 L100,127 Z", kit.ink),
-        line("M100,127 L100,132 M91,131 Q100,141 109,131", kit.ink, 2.8)
+        // The beard.
+        rounded(
+          "M88,160 C92,176 96,186 100,192 C104,186 108,176 112,160 Z",
+          kit.second,
+          6
+        ),
+        ellipse(100, 142, 24, 20, PEARL),
+        both((side) => ellipse(100 + side * 9, 140, 3.4, 4.4, kit.ink)),
+        line("M100,144 L100,152 M93,152 Q100,158 107,152", kit.ink, 3),
+        eyes(kit, 26, 104)
       ),
   },
   alpaca: {
@@ -193,35 +216,29 @@ export const farm = {
         // Spear ears.
         both((side) => [
           blob(
-            [100 + side * 24, 44, 100 + side * 36, 6, 100 + side * 46, 44],
+            [100 + side * 24, 52, 100 + side * 36, 6, 100 + side * 48, 52],
             kit.body,
             10
           ),
           blob(
-            [100 + side * 31, 40, 100 + side * 36, 20, 100 + side * 41, 40],
-            "#f4c7cf",
+            [100 + side * 31, 46, 100 + side * 36, 22, 100 + side * 41, 46],
+            kit.second,
             4
           ),
         ]),
-        // The long woolly neck, a column of curls narrower than the head.
-        Arr.flatMap([204, 180, 156, 132], (y, row) =>
-          both((side) =>
-            ellipse(100 + side * (20 - row * 1.5), y, 24, 20, kit.body)
-          )
-        ),
-        // The topknot, three curls over the brow.
-        ellipse(82, 44, 19, 17, kit.body),
-        ellipse(118, 44, 19, 17, kit.body),
-        ellipse(100, 34, 21, 19, kit.body),
-        head(kit.body, 44, 42, 82),
-        both((side) => ellipse(100 + side * 42, 88, 13, 18, kit.body)),
+        // The long woolly neck, narrower than the head.
+        shoulders(kit.body, 46, 150),
+        curls(100, 176, 40, 6, 4, 20, kit.body, 180, 360),
+        curls(100, 100, 52, 48, 11, 22, kit.body),
+        ellipse(100, 100, 54, 50, kit.body),
+        // The topknot over the brow.
+        curls(100, 62, 22, 8, 3, 18, kit.body, 180, 360),
         // The small face in the wool.
-        ellipse(100, 90, 32, 31, kit.second),
-        faded(0.55, [ellipse(100, 90, 32, 31, PEARL)]),
-        ellipse(100, 104, 19, 14, PEARL),
-        eyes(kit, 17, 84, 5.6),
-        path("M94,98 L106,98 L100,104 Z", kit.ink),
-        line("M100,104 L100,107 M93,107 Q100,114 107,107", kit.ink, 2.6)
+        ellipse(100, 114, 34, 38, kit.second),
+        ellipse(100, 74, 22, 12, kit.body),
+        ellipse(100, 134, 18, 14, PEARL),
+        line("M100,128 L100,136 M93,138 Q100,143 107,138", kit.ink, 3),
+        eyes(kit, 17, 110, 6)
       ),
   },
 } satisfies Record<string, Design>;
