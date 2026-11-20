@@ -86,10 +86,14 @@ function cameraPlane(position: Vector, target: Vector) {
   };
 }
 
-/** One line or area of the still, in its appearance's color. */
+/**
+ * One line or area of the still, in its appearance's color. A dashed stroke is
+ * a region's strict edge, which the scene dashes too.
+ */
 const StillStrokeSchema = Schema.Struct({
   appearance: MathAppearanceSchema,
   closed: Schema.Boolean,
+  dashed: Schema.Boolean,
   filled: Schema.Boolean,
   id: Schema.String,
   points: Schema.Array(LinePointSchema),
@@ -117,24 +121,24 @@ function formulaStrokes(
   const stroke = (
     id: string,
     points: readonly SpacePoint[],
-    closed: boolean,
-    filled: boolean
+    { closed = false, dashed = false, filled = false } = {}
   ): StillStroke => ({
     appearance: shape.appearance,
     closed,
+    dashed,
     filled,
     id,
     points: Arr.map(points, flat),
   });
   if (shape.kind === "curve") {
-    return [stroke(shape.id, shape.points, false, false)];
+    return [stroke(shape.id, shape.points)];
   }
   if (shape.kind === "marker") {
     return [];
   }
   if (shape.kind === "region") {
-    return Arr.map(shape.boundary, ({ points }, index) =>
-      stroke(`${shape.id}:edge:${index}`, points, false, false)
+    return Arr.map(shape.boundary, ({ points, strict }, index) =>
+      stroke(`${shape.id}:edge:${index}`, points, { dashed: strict })
     );
   }
   if (shape.kind === "surface") {
@@ -153,9 +157,7 @@ function formulaStrokes(
           `${shape.id}:row:${row}`,
           Arr.getSomes(
             Arr.map(Arr.range(0, columns - 1), (column) => at(row, column))
-          ),
-          false,
-          false
+          )
         )
       ),
       ...Arr.map(every(columns), (column) =>
@@ -163,15 +165,13 @@ function formulaStrokes(
           `${shape.id}:column:${column}`,
           Arr.getSomes(
             Arr.map(Arr.range(0, rows - 1), (row) => at(row, column))
-          ),
-          false,
-          false
+          )
         )
       ),
     ];
   }
   return Arr.map(shape.faces, (points, index) =>
-    stroke(`${shape.id}:face:${index}`, points, true, true)
+    stroke(`${shape.id}:face:${index}`, points, { closed: true, filled: true })
   );
 }
 
@@ -209,6 +209,7 @@ export function drawStill(
     ...Arr.map(geometry.regions, (region) => ({
       appearance: region.appearance,
       closed: true,
+      dashed: false,
       filled: true,
       id: region.id,
       points: Arr.map(region.vertices, flat),
@@ -216,6 +217,7 @@ export function drawStill(
     ...Arr.map(geometry.paths, (path) => ({
       appearance: path.appearance,
       closed: false,
+      dashed: false,
       filled: false,
       id: path.id,
       points: Arr.map(path.points, flat),

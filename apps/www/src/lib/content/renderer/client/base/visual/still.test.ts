@@ -147,10 +147,11 @@ describe("the still of a MathVisual scene", () => {
     );
     expect(Arr.some(drawn.strokes, ({ id }) => id === "line")).toBe(true);
     expect(Arr.map(drawn.dots, ({ id }) => id)).toStrictEqual(["o", "tip"]);
-    // A region shades one area under its stroked edges.
+    // A region shades one area under its stroked edges, dashed where the inequality is strict, as the scene draws them.
     const edges = Arr.filter(drawn.strokes, ({ id }) => id.startsWith("half"));
     expect(edges.length).toBeGreaterThan(0);
     expect(Arr.every(edges, ({ filled }) => !filled)).toBe(true);
+    expect(Arr.every(edges, ({ dashed }) => dashed)).toBe(true);
     expect(Arr.map(drawn.areas, ({ id }) => id)).toStrictEqual(["half"]);
     expect(
       Arr.map(drawn.labels, ({ key, placement }) => [key, placement])
@@ -198,6 +199,8 @@ describe("the still of a MathVisual scene", () => {
       ) +
       Arr.reduce(drawn.strokes, 0, (sum, { points }) => sum + written(points));
     expect(bytes).toBeLessThan(60_000);
+    // Edges of inclusive inequalities stay solid, and so does every curve.
+    expect(Arr.some(drawn.strokes, ({ dashed }) => dashed)).toBe(false);
     // A flat line keeps its two ends, however many points sampled it.
     const [flat] = Arr.filter(drawn.strokes, ({ id }) => id === "flat");
     expect(flat?.points).toHaveLength(2);

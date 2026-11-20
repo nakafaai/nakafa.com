@@ -37,3 +37,9 @@ export const AXIS_COLORS = {
   y: "#16a34a",
   z: "#2563eb",
 } as const;
+
+/**
+ * The dash and gap of a region's strict edge, in scene units: the scene dashes
+ * the edge with them, and the still the server draws dashes it the same way.
+ */
+export const REGION_DASH = { dash: 0.18, gap: 0.12 } as const;
