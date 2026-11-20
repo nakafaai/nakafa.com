@@ -452,7 +452,8 @@ test("a cohort held by an archived class counts it and offers no delete, and a c
   const free = page.getByRole("row").filter({ hasText: "7Z" });
   await free.getByRole("button", { name: "More actions" }).click();
   await page.getByRole("menuitem", { name: "Delete" }).click();
-  const dialog = page.getByRole("dialog");
+  // The confirm is found by its name: the Add cohort dialog may still be leaving.
+  const dialog = page.getByRole("dialog", { name: "Delete 7Z?" });
   // The confirm's body shows the cohort it removes, and the header holds its close.
   await expect(dialog.getByText("7Z", { exact: true })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Close" })).toBeVisible();
