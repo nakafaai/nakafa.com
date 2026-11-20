@@ -6,6 +6,11 @@ import {
   DnaHelixLab,
 } from "@/lib/content/renderer/client/biology/cells";
 import {
+  BloodTypingLab,
+  CapillaryBedLab,
+  HeartCycleLab,
+} from "@/lib/content/renderer/client/biology/circulation";
+import {
   CarbonBudgetLab,
   ClimateObservationLab,
   CoralBleachLab,
@@ -23,6 +28,10 @@ import {
   GramStainLab,
   YogurtLab,
 } from "@/lib/content/renderer/client/biology/microbes";
+import {
+  NeuronImpulseLab,
+  SynapseLab,
+} from "@/lib/content/renderer/client/biology/nerve";
 import {
   MicroscopeLab,
   NephronLab,
@@ -171,5 +180,25 @@ export const biologyRenderers = [
   {
     name: biologyComponentNames.tropismLab,
     component: TropismLab,
+  },
+  {
+    name: biologyComponentNames.bloodTypingLab,
+    component: BloodTypingLab,
+  },
+  {
+    name: biologyComponentNames.capillaryBedLab,
+    component: CapillaryBedLab,
+  },
+  {
+    name: biologyComponentNames.heartCycleLab,
+    component: HeartCycleLab,
+  },
+  {
+    name: biologyComponentNames.neuronImpulseLab,
+    component: NeuronImpulseLab,
+  },
+  {
+    name: biologyComponentNames.synapseLab,
+    component: SynapseLab,
   },
 ] satisfies readonly RendererImplementation[];
