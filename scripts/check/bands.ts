@@ -18,7 +18,12 @@ const CONTROL_BANDS = HashSet.make("VisualCardToolbar", "VisualCardActions");
 /** An intrinsic element's tag starts lower case; a component's starts upper case. */
 const INTRINSIC_TAG_PATTERN = /^[a-z]/u;
 /** The intrinsic elements a reader operates. */
-const INTRINSIC_CONTROLS = HashSet.make("button", "input", "select", "textarea");
+const INTRINSIC_CONTROLS = HashSet.make(
+  "button",
+  "input",
+  "select",
+  "textarea"
+);
 /** The intrinsic elements that set out text: a list, a paragraph, a term list, a caption, a table or a heading. */
 const TEXT_ELEMENTS = HashSet.make(
   "blockquote",
@@ -98,7 +103,9 @@ function groupIssue(tag: string, item: Node): Option.Option<string> {
   if (!INTRINSIC_TAG_PATTERN.test(tag) || isControl(tag)) {
     return Option.none();
   }
-  return Arr.some(nodesBelow(item), (node) => Option.exists(tagOf(node), isControl))
+  return Arr.some(nodesBelow(item), (node) =>
+    Option.exists(tagOf(node), isControl)
+  )
     ? Option.none()
     : Option.some(`holds <${tag}>, which holds no control`);
 }

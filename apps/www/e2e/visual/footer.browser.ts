@@ -37,6 +37,62 @@ function readBands(card: Locator) {
   }));
 }
 
+/** What a reader operates: a button, a field, a choice, a slider or a link. */
+const INTERACTIVE =
+  'a[href], button, input, select, textarea, [role="checkbox"], [role="combobox"], [role="menuitem"], [role="radio"], [role="slider"], [role="spinbutton"], [role="switch"], [role="tab"]';
+
+/** What sets out text: a list, a paragraph, a term list, a caption, a table or a heading. */
+const TEXT_BLOCKS =
+  "blockquote, caption, dl, figcaption, h1, h2, h3, h4, h5, h6, li, ol, p, small, table, ul";
+
+/**
+ * Reads what the toolbar and actions bands of every visual card on the page
+ * hold besides controls: an item that holds no control, a text block, or words
+ * written straight into the band. Each finding names its band and its text.
+ */
+function readBandText(page: Page) {
+  return page
+    .locator(
+      '[data-slot="visual-card-toolbar"], [data-slot="visual-card-actions"]'
+    )
+    .evaluateAll(
+      (bands, selectors) =>
+        bands.flatMap((band) => {
+          const slot = band.getAttribute("data-slot");
+          const loose = Array.from(band.children).filter(
+            (child) =>
+              !(
+                child.matches(selectors.interactive) ||
+                child.querySelector(selectors.interactive)
+              )
+          );
+          const blocks = Array.from(band.querySelectorAll(selectors.blocks));
+          const words = Array.from(band.childNodes).filter(
+            (node) =>
+              node.nodeType === Node.TEXT_NODE &&
+              (node.textContent ?? "").trim() !== ""
+          );
+          return [...loose, ...blocks, ...words].map(
+            (node) =>
+              `${slot} ${node.nodeName}: ${(node.textContent ?? "").trim().slice(0, 60)}`
+          );
+        }),
+      { blocks: TEXT_BLOCKS, interactive: INTERACTIVE }
+    );
+}
+
+/**
+ * Proves the toolbar and the actions band of every visual card on the page
+ * hold only what a reader operates. A legend, a key, a readout or a note
+ * belongs in the footer, and a task in the header's description.
+ */
+const expectControlsOnlyInBands = Effect.fn(
+  "NakafaE2E.expectControlsOnlyInBands"
+)(function* (page: Page) {
+  const found = yield* Effect.promise(() => readBandText(page));
+  yield* Effect.sync(() => expect(found).toEqual([]));
+});
+
 /**
  * Proves a visual card is composed of its bands in order, with the visual alone
  * in its body: controls above it, actions and readouts under it.
@@ -95,7 +151,8 @@ const expectFullscreenEndsActions = Effect.fn(
 
 /**
  * Opens the animated lab and proves its bands are in order, its controls in
- * the toolbar above the visual, and its full screen action at the end.
+ * the toolbar above the visual, its full screen action at the end, and only
+ * controls in every card's toolbar and actions on the page.
  */
 const expectLabBands = Effect.fn("NakafaE2E.expectLabBands")(function* (
   page: Page
@@ -104,12 +161,13 @@ const expectLabBands = Effect.fn("NakafaE2E.expectLabBands")(function* (
   const card = yield* revealLab(page);
   yield* expectBandsInOrder(card);
   yield* expectFullscreenEndsActions(card);
+  yield* expectControlsOnlyInBands(page);
   yield* Effect.promise(() =>
     expect(card.locator(VISUAL_CARD_TOOLBAR)).toHaveCount(1)
   );
 });
 
-/** Opens a 3D scene and proves its bands are in order. */
+/** Opens a 3D scene and proves its bands are in order, with only controls in every card's toolbar and actions. */
 const expectSceneBands = Effect.fn("NakafaE2E.expectSceneBands")(function* (
   page: Page
 ) {
@@ -117,6 +175,7 @@ const expectSceneBands = Effect.fn("NakafaE2E.expectSceneBands")(function* (
   const { card } = yield* revealScene(page);
   yield* expectBandsInOrder(card);
   yield* expectFullscreenEndsActions(card);
+  yield* expectControlsOnlyInBands(page);
 });
 
 /**
