@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { calendarButton } from "@/e2e/support/date";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -22,7 +23,7 @@ const WIDTHS = [
  * after the one it shows, then the 15th. The field's text then holds the day, in the page's locale.
  */
 async function chooseThroughSelects(page: Page, field: Locator) {
-  await field.locator('[data-slot="date-picker-trigger"]').click();
+  await calendarButton(field).click();
   const calendar = page.locator('[data-slot="date-picker-content"]');
   await expect(calendar).toBeVisible();
   const year = calendar.getByRole("combobox", { name: "Year" });

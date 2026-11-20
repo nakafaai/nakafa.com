@@ -76,14 +76,16 @@ const overflowOf = (page: Page) =>
       }
     );
     // The header holds the path and two controls at most: a button standing alone, or one group of the
-    // actions that belong together, as the library's search and New folder do.
+    // actions that belong together, as the library's search and New folder do. The sidebar's toggle at its start
+    // belongs to the sidebar, not to the page.
     const header = document.querySelector('header[data-slot="page-header"]');
     const alone = Array.from(
       header?.querySelectorAll('[data-slot="button"]') ?? []
     ).filter(
       (button) =>
         button.closest("nav") === null &&
-        button.closest('[data-slot="button-group"]') === null
+        button.closest('[data-slot="button-group"]') === null &&
+        !button.matches('[data-sidebar="trigger"]')
     );
     const groups =
       header?.querySelectorAll('[data-slot="button-group"]').length ?? 0;
