@@ -15,15 +15,15 @@ import { CameraBounds } from "@repo/design-system/components/three/camera/framin
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { LAMP_COLORS } from "@repo/design-system/lib/material/lamp";
 import { Array as Arr } from "effect";
-import { type RefObject, useEffect, useMemo, useRef } from "react";
+import type { RefObject } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import type { MeshPhysicalMaterial, MeshStandardMaterial } from "three";
 import {
   AdditiveBlending,
   CatmullRomCurve3,
   Color,
   DoubleSide,
   LatheGeometry,
-  type MeshPhysicalMaterial,
-  type MeshStandardMaterial,
   ShaderMaterial,
   TubeGeometry,
   Vector2,

@@ -2,14 +2,16 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { DIE } from "@repo/design-system/components/contents/mathematics/dice/faces";
+import type {
+  Pose,
+  Throw,
+} from "@repo/design-system/components/contents/mathematics/dice/pose";
 import {
   airborne,
   FELT,
   gatherPose,
   lowestPoint,
-  type Pose,
   restPose,
-  type Throw,
   TRAVEL,
   tumblePose,
 } from "@repo/design-system/components/contents/mathematics/dice/pose";

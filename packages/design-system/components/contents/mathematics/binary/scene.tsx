@@ -1,8 +1,8 @@
 import { RoundedBox } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
+import type { Grouping } from "@repo/design-system/components/contents/mathematics/binary/bits";
 import {
-  type Grouping,
   groupsOf,
   lampCount,
   paddedSlots,
@@ -29,7 +29,8 @@ import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
-import { type ReactNode, useRef } from "react";
+import type { ReactNode } from "react";
+import { useRef } from "react";
 import type { PointLight } from "three";
 
 /** The distance between neighbouring lamps, in metres. */

@@ -1,12 +1,12 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import type { MarbleGroup } from "@repo/design-system/components/contents/mathematics/marble/draw";
 import {
   countOf,
   drawTrials,
   eventChance,
   jarOf,
-  type MarbleGroup,
   reduced,
   runningHits,
   totalOf,

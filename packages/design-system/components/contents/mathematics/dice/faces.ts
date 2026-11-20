@@ -1,8 +1,10 @@
+import type {
+  Quaternion,
+  Triple,
+} from "@repo/design-system/components/contents/mathematics/dice/turn";
 import {
   axisAngle,
   IDENTITY,
-  type Quaternion,
-  type Triple,
 } from "@repo/design-system/components/contents/mathematics/dice/turn";
 import { Array as Arr, Schema } from "effect";
 

@@ -23,7 +23,8 @@ import { GALTON_COLORS } from "@repo/design-system/lib/material/galton";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
 import { useLayoutEffect, useMemo, useRef } from "react";
-import { type InstancedMesh, Object3D } from "three";
+import type { InstancedMesh } from "three";
+import { Object3D } from "three";
 
 /** The least time between two readouts of the landed balls while the run plays, in seconds of the run. */
 const REPORT_EVERY = 0.15;

@@ -1,10 +1,8 @@
 import { RoundedBox } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
-import {
-  Instances,
-  type Placement,
-} from "@repo/design-system/components/contents/biology/instances";
+import type { Placement } from "@repo/design-system/components/contents/biology/instances";
+import { Instances } from "@repo/design-system/components/contents/biology/instances";
 import { GaltonBalls } from "@repo/design-system/components/contents/mathematics/galton/balls";
 import {
   BIN_FLOOR,
@@ -31,13 +29,13 @@ import { GlassMaterial } from "@repo/design-system/components/three/physical";
 import { GALTON_COLORS } from "@repo/design-system/lib/material/galton";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
+import type { Texture } from "three";
 import {
   DataTexture,
   LinearFilter,
   RepeatWrapping,
   Shape,
   SRGBColorSpace,
-  type Texture,
 } from "three";
 
 /** The frame's rails: 20 mm wide, the top rail 25 mm and the base rail 30 mm tall. */

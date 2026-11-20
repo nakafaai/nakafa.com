@@ -1,13 +1,13 @@
+import type { DiceCount } from "@repo/design-system/components/contents/mathematics/dice/odds";
 import {
-  type DiceCount,
   probabilityMath,
   probabilityOf,
 } from "@repo/design-system/components/contents/mathematics/dice/odds";
+import type { Roll } from "@repo/design-system/components/contents/mathematics/dice/roll";
 import {
   hitsOf,
   planRolls,
   ROLLS,
-  type Roll,
 } from "@repo/design-system/components/contents/mathematics/dice/roll";
 import { DiceScene } from "@repo/design-system/components/contents/mathematics/dice/scene";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
@@ -27,7 +27,8 @@ import {
 } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { type ReactNode, Suspense, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 /** The target's stack and number stand out in teal, the colour of its readouts. */
 const HIGHLIGHT = PLOT_COLORS.teal;

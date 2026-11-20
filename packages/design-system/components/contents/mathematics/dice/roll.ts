@@ -3,13 +3,11 @@ import {
   seededUniforms,
 } from "@repo/design-system/components/contents/mathematics/chance";
 import { FACES } from "@repo/design-system/components/contents/mathematics/dice/faces";
-import {
-  type DiceCount,
-  outcomes,
-} from "@repo/design-system/components/contents/mathematics/dice/odds";
+import type { DiceCount } from "@repo/design-system/components/contents/mathematics/dice/odds";
+import { outcomes } from "@repo/design-system/components/contents/mathematics/dice/odds";
+import type { Pose } from "@repo/design-system/components/contents/mathematics/dice/pose";
 import {
   gatherPose,
-  type Pose,
   restPose,
   ThrowSchema,
   tumblePose,

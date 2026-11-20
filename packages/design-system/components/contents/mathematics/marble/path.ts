@@ -1,8 +1,8 @@
 import type { DrawRule } from "@repo/design-system/components/contents/mathematics/marble/draw";
+import type { Slot } from "@repo/design-system/components/contents/mathematics/marble/jar";
 import {
   JAR,
   MARBLE_RADIUS,
-  type Slot,
 } from "@repo/design-system/components/contents/mathematics/marble/jar";
 import {
   progress,

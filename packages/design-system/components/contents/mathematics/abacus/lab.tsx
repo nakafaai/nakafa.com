@@ -25,7 +25,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 
 /**
  * The stage's floor sits just under the desk top, so the soft contact
@@ -99,15 +100,7 @@ export function AbacusBaseLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-        <div className="flex min-w-48 flex-1 flex-col gap-2">
-          <div className="flex items-center justify-between gap-4 text-sm">
-            <span>{labels.value}</span>
-            {showReadout ? (
-              <span className="shrink-0 tabular-nums">
-                <InlineMath math={quantity(shown, "", 0)} />
-              </span>
-            ) : null}
-          </div>
+        <div className="flex min-w-48 flex-1 items-center">
           <Slider
             aria-label={labels.value}
             max={largestValue(base)}

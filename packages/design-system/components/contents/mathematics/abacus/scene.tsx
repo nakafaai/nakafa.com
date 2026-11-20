@@ -29,7 +29,8 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { Array as Arr } from "effect";
 import { useLayoutEffect, useMemo, useRef } from "react";
-import { type InstancedMesh, Object3D } from "three";
+import type { InstancedMesh } from "three";
+import { Object3D } from "three";
 
 /** The most beads of one place drawn at once: a full spike of ten and a stack of ten in the air. */
 const MOST_BEADS = 20;

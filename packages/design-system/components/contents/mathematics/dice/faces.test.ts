@@ -8,10 +8,8 @@ import {
   FACES,
   pipPlacements,
 } from "@repo/design-system/components/contents/mathematics/dice/faces";
-import {
-  rotate,
-  type Triple,
-} from "@repo/design-system/components/contents/mathematics/dice/turn";
+import type { Triple } from "@repo/design-system/components/contents/mathematics/dice/turn";
+import { rotate } from "@repo/design-system/components/contents/mathematics/dice/turn";
 import { Array as Arr } from "effect";
 
 /** The dot product of two vectors. */

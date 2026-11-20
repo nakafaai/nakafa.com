@@ -1,14 +1,16 @@
+import type {
+  DrawEvent,
+  DrawRule,
+  Fraction,
+  MarbleColor,
+  MarbleGroup,
+  Trial,
+} from "@repo/design-system/components/contents/mathematics/marble/draw";
 import {
-  type DrawEvent,
-  type DrawRule,
   drawTrials,
   eventChance,
-  type Fraction,
   jarOf,
-  type MarbleColor,
-  type MarbleGroup,
   runningHits,
-  type Trial,
 } from "@repo/design-system/components/contents/mathematics/marble/draw";
 import { RUN_TRIALS } from "@repo/design-system/components/contents/mathematics/marble/run";
 import { MarbleScene } from "@repo/design-system/components/contents/mathematics/marble/scene";
@@ -31,7 +33,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, Suspense, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 /** The seed of the trials, so every learner sees the same draws. */
 const TRIAL_SEED = 1729;

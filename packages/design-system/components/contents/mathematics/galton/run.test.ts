@@ -2,9 +2,9 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { expectedCounts } from "@repo/design-system/components/contents/mathematics/galton/binomial";
+import type { BoardPoint } from "@repo/design-system/components/contents/mathematics/galton/board";
 import {
   BALL_RADIUS,
-  type BoardPoint,
   binCentre,
   contactPoint,
   dividerTop,

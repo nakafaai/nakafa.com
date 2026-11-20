@@ -29,7 +29,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 
 /** The biases the learner can give the board: leaning left, upright, leaning right. */
 const BIASES = [0.3, 0.5, 0.7] as const;
@@ -83,13 +84,7 @@ export function GaltonBoardLab({
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
-        <div className="flex min-w-48 flex-1 flex-col gap-2">
-          <div className="flex items-center justify-between gap-4 text-sm">
-            <span>{labels.rows}</span>
-            <span className="shrink-0 tabular-nums">
-              <InlineMath math={`n = ${rows}`} />
-            </span>
-          </div>
+        <div className="flex min-w-48 flex-1 items-center">
           <Slider
             aria-label={labels.rows}
             max={MAX_ROWS}
@@ -141,6 +136,10 @@ export function GaltonBoardLab({
 
       <VisualCardFooter>
         <VisualCardFacts>
+          <VisualFactTabular
+            label={labels.rows}
+            value={<InlineMath math={`n = ${rows}`} />}
+          />
           <VisualFactTabular
             label={labels.balls}
             value={<InlineMath math={quantity(landed, "", 0)} />}

@@ -19,13 +19,13 @@ import {
   slotAt,
   surfaceAt,
 } from "@repo/design-system/components/contents/mathematics/marble/path";
+import type { TallyUpdate } from "@repo/design-system/components/contents/mathematics/marble/props";
 import {
   JarLid,
   MarbleDish,
   MarbleJar,
   TALLY_COLUMNS,
   TallyBoard,
-  type TallyUpdate,
 } from "@repo/design-system/components/contents/mathematics/marble/props";
 import {
   RUN_SECONDS,
@@ -39,7 +39,8 @@ import { SurfaceMaterial } from "@repo/design-system/components/three/surface/ma
 import { MARBLE_COLORS } from "@repo/design-system/lib/material/marble";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import { useMemo, useRef } from "react";
-import { type Mesh, MeshPhysicalMaterial, SphereGeometry } from "three";
+import type { Mesh } from "three";
+import { MeshPhysicalMaterial, SphereGeometry } from "three";
 
 /** The seed of the jar's mix, so every learner sees the same jar. */
 const MIX_SEED = 20_261_120;

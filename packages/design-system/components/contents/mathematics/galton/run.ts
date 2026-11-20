@@ -1,7 +1,7 @@
 import { seededUniforms } from "@repo/design-system/components/contents/mathematics/chance";
+import type { BoardPoint } from "@repo/design-system/components/contents/mathematics/galton/board";
 import {
   BALL_RADIUS,
-  type BoardPoint,
   binCentre,
   contactPoint,
   MAX_ROWS,

@@ -9,14 +9,10 @@ import { SurfaceMaterial } from "@repo/design-system/components/three/surface/ma
 import { getColor } from "@repo/design-system/lib/color";
 import { MARBLE_COLORS } from "@repo/design-system/lib/material/marble";
 import { Array as Arr } from "effect";
-import { type Ref, useImperativeHandle, useMemo, useRef } from "react";
-import {
-  DoubleSide,
-  LatheGeometry,
-  type Material,
-  type Mesh,
-  Vector2,
-} from "three";
+import type { Ref } from "react";
+import { useImperativeHandle, useMemo, useRef } from "react";
+import type { Material, Mesh } from "three";
+import { DoubleSide, LatheGeometry, Vector2 } from "three";
 
 /** The tally board keeps the colours of this many trials, newest on the right. */
 export const TALLY_COLUMNS = 10;

@@ -1,15 +1,17 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import type {
+  Quaternion,
+  Triple,
+} from "@repo/design-system/components/contents/mathematics/dice/turn";
 import {
   axisAngle,
   IDENTITY,
   inverse,
   multiply,
-  type Quaternion,
   rotate,
   slerp,
-  type Triple,
 } from "@repo/design-system/components/contents/mathematics/dice/turn";
 import { Array as Arr } from "effect";
 

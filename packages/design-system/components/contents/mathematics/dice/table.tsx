@@ -12,16 +12,11 @@ import {
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { DICE_COLORS } from "@repo/design-system/lib/material/dice";
 import { Array as Arr } from "effect";
-import {
-  type Ref,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-} from "react";
+import type { Ref } from "react";
+import { useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import type { InstancedMesh } from "three";
 import {
   Color,
-  type InstancedMesh,
   Matrix4,
   MeshPhysicalMaterial,
   Quaternion,

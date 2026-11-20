@@ -1,21 +1,19 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { Die } from "@repo/design-system/components/contents/mathematics/dice/die";
-import {
-  type DiceCount,
-  outcomes,
-} from "@repo/design-system/components/contents/mathematics/dice/odds";
+import type { DiceCount } from "@repo/design-system/components/contents/mathematics/dice/odds";
+import { outcomes } from "@repo/design-system/components/contents/mathematics/dice/odds";
+import type { Roll } from "@repo/design-system/components/contents/mathematics/dice/roll";
 import {
   posesAt,
   ROLLS,
-  type Roll,
   runSeconds,
   settledBy,
   tally,
 } from "@repo/design-system/components/contents/mathematics/dice/roll";
 import { rackWidth } from "@repo/design-system/components/contents/mathematics/dice/stack";
+import type { ChipsHandle } from "@repo/design-system/components/contents/mathematics/dice/table";
 import {
   Chips,
-  type ChipsHandle,
   Rack,
   Tray,
 } from "@repo/design-system/components/contents/mathematics/dice/table";
