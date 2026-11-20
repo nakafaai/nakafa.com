@@ -58,18 +58,18 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "vitest@latest",
-    "5.1.0",
-    "The Effect 4 test adapter requires Vitest 5; @effect/vitest 4.1.2 admits >=5.0.0 <6.0.0.",
+    "5.1.1",
+    "The Effect 4 test adapter requires Vitest 5; @effect/vitest 4.1.4 admits >=5.0.0 <6.0.0. 5.1.1 is the latest release and the adopted one: fixes for fixture teardown, a new signal and reset assertion counts on each retry, --shard, coverage of untested files and stuck fork workers, and timeouts throw their own error classes. Checked 20 November 2026.",
   ],
   [
     "@vitest/coverage-istanbul@latest",
-    "5.1.0",
-    "Coverage must match the supported Vitest runner.",
+    "5.1.1",
+    "Coverage must match the supported Vitest runner; 5.1.1 peers vitest 5.1.1 exactly. Checked 20 November 2026.",
   ],
   [
     "@vitest/ui@latest",
-    "5.1.0",
-    "The test UI must match the supported Vitest runner.",
+    "5.1.1",
+    "The test UI must match the supported Vitest runner; 5.1.1 peers vitest 5.1.1 exactly. Checked 20 November 2026.",
   ],
   [
     "@nakafa/aksara-contracts@latest",
@@ -83,8 +83,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "ai@latest",
-    "7.0.173",
-    "AI SDK packages move as one reviewed cohort. 7.0.173 is the latest release and the adopted one (its changes are WorkflowAgent fixes and stable tool arguments across an approval replay, neither used here): @convex-dev/agent 0.7.9 peers ai ^7.0.129, the gateway provider 0.3.0 peers ^7.0.105, and the gateway module (confect/gateway) typechecks against it. From 7.0.171 a failed tool's error text reaches the client as the model received it, and the agent offers no redactToolErrors, so a Nina capability that breaks on a defect settles as a failure whose text names no cause (confect/nina/capability/progress.ts). Checked 14 November 2026.",
+    "7.0.177",
+    "AI SDK packages move as one reviewed cohort. 7.0.177 is the latest release and the adopted one (7.0.174 to 7.0.177 add batch output, extraction models in provider registries, a steering interrupt and one-pass validation of UI message metadata, and move @ai-sdk/provider to 4.0.39 and provider-utils to 5.0.82; none of these is used here): @convex-dev/agent 0.7.9 peers ai ^7.0.129, the gateway provider 0.3.0 peers ^7.0.105, and the gateway module (confect/gateway) typechecks against it. From 7.0.171 a failed tool's error text reaches the client as the model received it, and the agent offers no redactToolErrors, so a Nina capability that breaks on a defect settles as a failure whose text names no cause (confect/nina/capability/progress.ts). Checked 20 November 2026.",
   ],
   [
     "@convex-dev/ai-sdk-provider@latest",
@@ -92,9 +92,14 @@ export const REGISTRY_REVIEWS = [
     "The Convex AI gateway provider moves with the AI SDK cohort; each bump rechecks the gateway module (confect/gateway).",
   ],
   [
+    "@convex-dev/agent@latest",
+    "0.7.10",
+    "The backend stays on 0.7.9. 0.7.10 reads the recent window differently: when the window cuts the oldest order short and that order holds the prompt, it reads the order whole in a loop of pages instead of one bounded page (vercel/client/search.js), and it stores reasoning once in content, drops the unused memories table from its schema, and renders error-text and error-json tool results as output-error. The sealed module mirrors 0.7.9's window read step for step (confect/nina/sealed/context.ts), so a sealed thread reads what a plain one reads, and on 0.7.10 eighteen Nina tests fail across sealed/context, sealed/thread, sealed/turn, presentation, response, generation, messages/page and memory/tool: the follow-up suggestions call no model and the sealed window differs from the Agent's. The move ports the new window read into the sealed module and proves those suites again. Checked 20 November 2026.",
+  ],
+  [
     "@convex-dev/auth@latest",
-    "2.0.0",
-    "Convex Auth v2, the auth that Convex recommends for Convex apps: sessions, the Google method, and the username and password method that school accounts sign in with (confect/auth/core). 2.0.0 is the first stable v2 release. It offers no public custom sign-in method (convex/convex-auth#900), so agent grants are Nakafa's own tokens signed with ctx.auth.signJwt, and no component function deletes an OAuth account link or a stored password, so an account deletion leaves those two rows until a release adds one. Checked 13 November 2026.",
+    "2.1.0",
+    "Convex Auth v2, the auth that Convex recommends for Convex apps: sessions, the Google method, and the username and password method that school accounts sign in with (confect/auth/core). 2.1.0 is the latest release and the adopted one. It adds deleteUser to the OAuth components, which the last step of an account deletion calls for the Google component (confect/auth/deletion/finalize), and hands the ID token's hd claim to the user callbacks as profile.hostedDomain, which GoogleProfile names because the callbacks' argument validator refuses a field it does not name (confect/auth/methods). The core keeps the session lifetimes in a one-row ttlConfig table, read at each session start and refresh and written only when a lifetime changes. It offers no public custom sign-in method (convex/convex-auth#900), so agent grants are Nakafa's own tokens signed with ctx.auth.signJwt, and the password component has no deletion by user yet (convex/convex-auth#924), so a deleted school account's password hash stays until a release adds one. Checked 20 November 2026.",
   ],
   [
     "@react-three/fiber@latest",
@@ -103,13 +108,18 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@polar-sh/sdk@latest",
-    "1.1.0",
-    "The backend stays on 1.0.2. 1.1.0 adds optional OpenTelemetry and ioredis peers, and its lazily loaded Outpost chunk (dist/client-ClFbcLTm.mjs, reached by an import() in the client chunk) imports @opentelemetry/api, resources, sdk-trace, sdk-metrics and otlp-transformer statically, so the Convex bundler must resolve packages the SDK declares optional, and the local deploy fails. The other changes (track() for metering, undefined for an empty-body success, a User-Agent header) need nothing here. Move when an SDK release loads those peers only when telemetry is configured. Checked 13 November 2026.",
+    "1.3.1",
+    "The backend stays on 1.0.2. 1.3.1 moves the Outpost and its OpenTelemetry, ioredis and @vercel/oidc imports to the @polar-sh/sdk/outpost subpath, which nothing here imports, so the cause of the 1.1.0 hold is gone. But @polar-sh/sdk/2026-10, whose createPolarCore, errors and webhooks the billing client and the Polar webhook route import (confect/billing/polar, confect/routes/polar.ts), statically imports the metering chunk dist/client-Os3zkUrE.mjs, which imports node:timers/promises (sdk/typescript/src/metering/buffered.ts). Convex bundles the default runtime for the browser platform, so the HTTP router cannot resolve it and the deploy fails; 1.1.0 carried the same import in dist/client-Bz9G1UDp.mjs. Move when a release keeps node: built-ins out of the 2026-10 entry. Checked 20 November 2026.",
   ],
   [
     "convex-test@latest",
-    "0.0.71",
-    "The backend suites stay on 0.0.70. 0.0.71 rejects a document over 1 MiB on insert, patch and replace, as Convex does, and fixes getFunctionMetadata visibility. Three content release tests build 2 to 8 MiB rows to reach page ceilings: the proof page's first row (one document, so it cannot pass PROOF_PAGE_BYTES), the artifact proof batch (reachable only across many rows of at most 1 MiB), and the rollback page's first record (two artifacts and two projections, within about 1 KB of MAX_ROLLBACK_PAGE_BYTES at Convex's limit). The move rewrites those tests with documents Convex accepts and removes the branches the limit makes unreachable, in the content release module. Checked 13 November 2026.",
+    "0.0.73",
+    'The backend suites stay on 0.0.70. 0.0.71 rejects a document over 1 MiB on insert, patch and replace, as Convex does. 0.0.72 makes a scheduled mutation that cancels itself throw under convex 1.50, which no Nakafa mutation does, accepts future function references, and raises the convex peer to ^1.46.0. 0.0.73 counts rows that a pagination filter rejects toward transaction read limits. None relaxes the 1 MiB check. Three content release tests still build rows Convex refuses: in contentRelease/proof/read.test.ts, "rejects a first proof row that cannot advance the bounded page" uses one 4.2 MB row, though one row cannot pass PROOF_PAGE_BYTES, and "rejects corrupt artifact evidence: oversized" uses one 8 MiB artifact, though ARTIFACT_PROOF_PAGE_BYTES is reachable only across nine or more artifacts of at most 1 MiB in one batch; in contentRelease/rollback.test.ts, "rejects a first record that cannot advance the bounded page" uses two 2.1 MB artifacts, though a record of two artifacts and two projections stays within about 1 KB of MAX_ROLLBACK_PAGE_BYTES at Convex\'s limit. The move removes the first-row branches of proof/read.ts and rollback.ts with their tests, and rebuilds the artifact batch test from rows Convex accepts. Checked 20 November 2026.',
+  ],
+  [
+    "@convex-dev/workpool@latest",
+    "0.5.0",
+    "The backend stays on 0.4.16. Its one pool is the child that @convex-dev/workflow installs (workflow/workpool), and Workflow 0.5.0, the latest, peers @convex-dev/workpool ^0.4.16, which excludes 0.5.0. The backend's own declaration supplies vResultValidator to the privacy and invite completion handlers and decides which copy the Workflow component links. 0.5.0 orders queues by commit timestamp, requires convex 1.47, migrates queued work itself, and cannot be downgraded; before it, each pool on 0.4.15 or later runs migrations:backfillPendingStartIds (npx convex run --component workflow/workpool migrations:backfillPendingStartIds). Move when a Workflow release admits 0.5, after that migration has run on every deployment. Checked 20 November 2026.",
   ],
   [
     "@types/node@26",

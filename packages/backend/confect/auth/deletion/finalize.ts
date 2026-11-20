@@ -1,7 +1,9 @@
+import { components } from "@repo/backend/confect/_generated/components";
 import authInternal from "@repo/backend/confect/_generated/refs/auth.server";
 import {
   DatabaseReader,
   DatabaseWriter,
+  MutationCtx,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
@@ -16,7 +18,8 @@ import { Duration, Effect, flow, Option } from "effect";
 /**
  * Finishes a deleted account: cancels the welcome email it was still owed and
  * erases that intent, deletes the agents it let in and releases its
- * Persons, one bounded batch per transaction, then replaces the profile with the tombstone that shared records
+ * Persons, one bounded batch per transaction, then erases its Google accounts
+ * in Convex Auth, replaces the profile with the tombstone that shared records
  * keep (`deletion/tombstone`) and starts the durable cleanup of everything else.
  * A run that finds more agents or Persons schedules the next one; an account that is not
  * deleted, or whose cleanup already started, is left as it is.
@@ -51,6 +54,12 @@ export const finalizeAccountDeletion = Effect.fn(
       );
       return;
     }
+    // A user holds one Google account row for each Google identity they signed
+    // in with, so the deletion reads only that person's rows (ADR 0009).
+    const ctx = yield* MutationCtx;
+    yield* Effect.promise(() =>
+      ctx.runMutation(components.authGoogle.provider.deleteUser, { userId })
+    );
     yield* (yield* DatabaseWriter)
       .table("users")
       .patch(userId, createDeletedUserTombstone(userId, deletedAt))

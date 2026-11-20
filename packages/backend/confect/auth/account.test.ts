@@ -15,6 +15,7 @@ const NOW = Date.UTC(2026, 10, 13, 9, 0, 0);
 function google(profile: {
   readonly email?: string;
   readonly emailVerified: boolean;
+  readonly hostedDomain?: string;
   readonly name?: string;
   readonly picture?: string;
 }) {
@@ -66,6 +67,21 @@ describe("auth/account", () => {
     await expect(
       t.query((ctx) => ctx.db.query("users").collect())
     ).resolves.toHaveLength(1);
+  });
+
+  it("signs a Google Workspace identity up and in, with the hosted domain its profile carries", async () => {
+    const t = createConvexTestWithAuth();
+    const method = google({
+      email: "guru@harapan.sch.id",
+      emailVerified: true,
+      hostedDomain: "harapan.sch.id",
+    });
+    const userId = await t.mutation(internal.auth.account.createGoogle, {
+      method,
+    });
+    await expect(
+      t.mutation(internal.auth.account.signInGoogle, { method, userId })
+    ).resolves.toBeNull();
   });
 
   it("makes a new account, with its welcome email asked for, for an address no live account holds", async () => {

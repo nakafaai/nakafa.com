@@ -116,8 +116,7 @@ describe("PostHog server reporting", () => {
           message: "Operational exception",
           name: "OperationalError(request)",
         }),
-        undefined,
-        properties
+        { properties }
       );
       expect(postHogMocks.captureExceptionImmediate).toHaveBeenCalledTimes(3);
       const encodedCalls = yield* Schema.encodeUnknownEffect(JsonTextSchema)(
@@ -144,10 +143,11 @@ describe("PostHog server reporting", () => {
 
       expect(postHogMocks.captureExceptionImmediate).toHaveBeenCalledWith(
         expect.anything(),
-        undefined,
         {
-          $raw_user_agent: "Mozilla/5.0 (compatible; Googlebot/2.1)",
-          source: "request",
+          properties: {
+            $raw_user_agent: "Mozilla/5.0 (compatible; Googlebot/2.1)",
+            source: "request",
+          },
         }
       );
     })
