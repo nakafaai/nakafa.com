@@ -11,12 +11,16 @@ import { Array as Arr, Match, Option, Schema } from "effect";
 const ShapeSchema = Schema.Literals(["circle", "square", "triangle"]);
 
 /** The paints a shape can wear. */
-const ColourSchema = Schema.Literals(["red", "blue", "yellow", "green"]);
+const ColorSchema = Schema.Literals(["red", "blue", "yellow", "green"]);
 
 /** What one tile shows: a whole number printed on it, or a painted shape standing on it. */
 const TileSchema = Schema.Union([
-  Schema.TaggedStruct("number", { value: Schema.Int }),
-  Schema.TaggedStruct("shape", { colour: ColourSchema, shape: ShapeSchema }),
+  Schema.Struct({ kind: Schema.Literal("number"), value: Schema.Int }),
+  Schema.Struct({
+    kind: Schema.Literal("shape"),
+    color: ColorSchema,
+    shape: ShapeSchema,
+  }),
 ]);
 export type Tile = typeof TileSchema.Type;
 
@@ -24,19 +28,19 @@ export type Tile = typeof TileSchema.Type;
  * A test a tile passes or fails. The number tests read a number tile: odd,
  * even, prime, a square number, a multiple of `of`, a factor of `of`, more
  * than `than`, or less than `than`. The shape tests read a shape tile: its
- * shape or its colour. A test of the other kind of tile fails.
+ * shape or its color. A test of the other kind of tile fails.
  */
 const TestSchema = Schema.Union([
-  Schema.TaggedStruct("odd", {}),
-  Schema.TaggedStruct("even", {}),
-  Schema.TaggedStruct("prime", {}),
-  Schema.TaggedStruct("square-number", {}),
-  Schema.TaggedStruct("multiple", { of: Schema.Int }),
-  Schema.TaggedStruct("factor", { of: Schema.Int }),
-  Schema.TaggedStruct("above", { than: Schema.Number }),
-  Schema.TaggedStruct("below", { than: Schema.Number }),
-  Schema.TaggedStruct("shape", { shape: ShapeSchema }),
-  Schema.TaggedStruct("colour", { colour: ColourSchema }),
+  Schema.Struct({ kind: Schema.Literal("odd") }),
+  Schema.Struct({ kind: Schema.Literal("even") }),
+  Schema.Struct({ kind: Schema.Literal("prime") }),
+  Schema.Struct({ kind: Schema.Literal("square-number") }),
+  Schema.Struct({ kind: Schema.Literal("multiple"), of: Schema.Int }),
+  Schema.Struct({ kind: Schema.Literal("factor"), of: Schema.Int }),
+  Schema.Struct({ kind: Schema.Literal("above"), than: Schema.Number }),
+  Schema.Struct({ kind: Schema.Literal("below"), than: Schema.Number }),
+  Schema.Struct({ kind: Schema.Literal("shape"), shape: ShapeSchema }),
+  Schema.Struct({ kind: Schema.Literal("color"), color: ColorSchema }),
 ]);
 export type Test = typeof TestSchema.Type;
 
@@ -52,15 +56,21 @@ const NamedTestSchema = Schema.Struct({
  * says every tile that passes `p` passes `q`.
  */
 const ClaimSchema = Schema.Union([
-  Schema.TaggedStruct("all", {
+  Schema.Struct({
+    kind: Schema.Literal("all"),
     predicate: NamedTestSchema,
-    subject: Schema.optional(NamedTestSchema),
+    subject: Schema.optionalKey(NamedTestSchema),
   }),
-  Schema.TaggedStruct("some", {
+  Schema.Struct({
+    kind: Schema.Literal("some"),
     predicate: NamedTestSchema,
-    subject: Schema.optional(NamedTestSchema),
+    subject: Schema.optionalKey(NamedTestSchema),
   }),
-  Schema.TaggedStruct("if", { p: NamedTestSchema, q: NamedTestSchema }),
+  Schema.Struct({
+    kind: Schema.Literal("if"),
+    p: NamedTestSchema,
+    q: NamedTestSchema,
+  }),
 ]);
 export type Claim = typeof ClaimSchema.Type;
 
@@ -121,40 +131,44 @@ function isSquare(value: number) {
 
 /** Whether a number test passes on one number. */
 function numberPasses(test: Test, value: number) {
-  return Match.valueTags(test, {
-    above: ({ than }) => value > than,
-    below: ({ than }) => value < than,
-    colour: () => false,
-    even: () => value % 2 === 0,
-    factor: ({ of }) => value !== 0 && of % value === 0,
-    multiple: ({ of }) => (of === 0 ? value === 0 : value % of === 0),
-    odd: () => Math.abs(value % 2) === 1,
-    prime: () => isPrime(value),
-    shape: () => false,
-    "square-number": () => isSquare(value),
-  });
+  return Match.value(test).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      above: ({ than }) => value > than,
+      below: ({ than }) => value < than,
+      color: () => false,
+      even: () => value % 2 === 0,
+      factor: ({ of }) => value !== 0 && of % value === 0,
+      multiple: ({ of }) => (of === 0 ? value === 0 : value % of === 0),
+      odd: () => Math.abs(value % 2) === 1,
+      prime: () => isPrime(value),
+      shape: () => false,
+      "square-number": () => isSquare(value),
+    })
+  );
 }
 
 /** Whether a tile passes a test. */
 export function passes(test: Test, tile: Tile): boolean {
-  return Match.valueTags(tile, {
-    number: ({ value }) => numberPasses(test, value),
-    shape: ({ colour, shape }) =>
-      (test._tag === "shape" && test.shape === shape) ||
-      (test._tag === "colour" && test.colour === colour),
-  });
+  return Match.value(tile).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      number: ({ value }) => numberPasses(test, value),
+      shape: ({ color, shape }) =>
+        (test.kind === "shape" && test.shape === shape) ||
+        (test.kind === "color" && test.color === color),
+    })
+  );
 }
 
 /** The first test of a claim, the subject or the condition, when it has one. */
 export function firstTest(claim: Claim) {
-  return claim._tag === "if"
+  return claim.kind === "if"
     ? Option.some(claim.p)
     : Option.fromUndefinedOr(claim.subject);
 }
 
 /** The second test of a claim, its predicate or its conclusion. */
 export function secondTest(claim: Claim) {
-  return claim._tag === "if" ? claim.q : claim.predicate;
+  return claim.kind === "if" ? claim.q : claim.predicate;
 }
 
 /** Whether one tile passes each test of a claim; a claim about every tile has no first test to fail. */
@@ -172,9 +186,9 @@ export function caseOf(claim: Claim, tile: Tile): Case {
 export function verdictOf(claim: Claim, tile: Tile): Verdict {
   const { p, q } = caseOf(claim, tile);
   if (!p) {
-    return claim._tag === "if" ? "safe" : "outside";
+    return claim.kind === "if" ? "safe" : "outside";
   }
-  if (claim._tag === "some") {
+  if (claim.kind === "some") {
     return q ? "proves" : "misses";
   }
   return q ? "fits" : "breaks";
@@ -185,11 +199,11 @@ export function verdictOf(claim: Claim, tile: Tile): Verdict {
  * the one that settles it first. A claim about every tile has no tile outside it.
  */
 export function verdictsOf(claim: Claim): readonly Verdict[] {
-  if (claim._tag === "if") {
+  if (claim.kind === "if") {
     return ["breaks", "fits", "safe"];
   }
   const inside: readonly Verdict[] =
-    claim._tag === "all" ? ["breaks", "fits"] : ["proves", "misses"];
+    claim.kind === "all" ? ["breaks", "fits"] : ["proves", "misses"];
   return claim.subject === undefined ? inside : [...inside, "outside"];
 }
 
@@ -200,7 +214,7 @@ export function verdictsOf(claim: Claim): readonly Verdict[] {
  * all, or a "some" with no example, until every tile has been checked.
  */
 export function deciderOf(claim: Claim, tiles: readonly Tile[]) {
-  const settles: Verdict = claim._tag === "some" ? "proves" : "breaks";
+  const settles: Verdict = claim.kind === "some" ? "proves" : "breaks";
   return Arr.findFirstIndex(
     tiles,
     (tile) => verdictOf(claim, tile) === settles
@@ -209,5 +223,5 @@ export function deciderOf(claim: Claim, tiles: readonly Tile[]) {
 
 /** Whether a claim is true of the tiles on the table. */
 export function holds(claim: Claim, tiles: readonly Tile[]) {
-  return Option.isSome(deciderOf(claim, tiles)) === (claim._tag === "some");
+  return Option.isSome(deciderOf(claim, tiles)) === (claim.kind === "some");
 }

@@ -51,7 +51,7 @@ const REACH = 0.5;
  * tiles with painted shapes, lie on a felt board, and a card behind them
  * states a claim about them: about all of them, about some of them, or "if
  * p, then q". Playing checks the tiles one by one. With `showAnswer`, each
- * checked tile gets a spot of its verdict's colour: a counterexample of
+ * checked tile gets a spot of its verdict's color: a counterexample of
  * "all" or "if" stands up in red, an example of "some" stands up in green,
  * a tile the claim says nothing about darkens, and a stamp on the card says
  * true or false as soon as one tile settles it. For an implication, the

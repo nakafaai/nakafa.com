@@ -4,9 +4,9 @@
  * ink, painted wooden shapes, a white card printed with the claim, and a
  * rubber stamp in red or green ink. On the case board of an implication, the
  * felt of each cell is dyed for what its case does to the claim. The spot
- * under a checked tile and the dot of the footer's key share one colour for
+ * under a checked tile and the dot of the footer's key share one color for
  * each verdict, named as the verdict is. A simulation that shows one of them takes its
- * colour from here, so it looks the same in every lesson.
+ * color from here, so it looks the same in every lesson.
  */
 export const COUNTEREXAMPLE_COLORS = {
   // The felt board and its oak frame, and the oak strips between the cells.
@@ -22,7 +22,7 @@ export const COUNTEREXAMPLE_COLORS = {
   // The claim card's stock and the ink it is printed in.
   card: "#f7f5ef",
   print: "#24272c",
-  // One colour for each verdict: a tile that breaks the claim, one that fits
+  // One color for each verdict: a tile that breaks the claim, one that fits
   // it or proves it, one that misses it, and one outside it or safe; and the
   // spot under a picked tile while the answer stays hidden.
   breaks: "#e5483f",

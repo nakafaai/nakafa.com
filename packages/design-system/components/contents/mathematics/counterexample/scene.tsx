@@ -45,7 +45,7 @@ import { Mesh, MeshBasicMaterial, MeshStandardMaterial } from "three";
 /** How much darker a tile outside the claim, or safe for it, becomes once it is checked. */
 const DIM = 0.45;
 
-/** How far the coloured spot under a tile reaches past the tile's edge. */
+/** How far the colored spot under a tile reaches past the tile's edge. */
 const SPOT = 0.008;
 
 /** The gap between the board's frame and the claim card. */
@@ -53,7 +53,7 @@ const CARD_GAP = 0.05;
 
 /**
  * Darkens every surface of one tile by `dim`, so a tile outside the claim
- * recedes and keeps its own colour. Each material keeps its own colour the
+ * recedes and keeps its own color. Each material keeps its own color the
  * first time it is shaded, so shading never drifts.
  */
 function shade(object: Group, dim: number) {
@@ -83,7 +83,7 @@ function ink(object: Group, opacity: number) {
  * The tiles on a felt board, the claim on a card behind them, and, for an
  * implication whose answer shows, the four cells of the case board. Playing
  * checks the tiles one by one: with the answer shown, each tile gets a spot
- * of its verdict's colour, a counterexample or an example stands up, a tile
+ * of its verdict's color, a counterexample or an example stands up, a tile
  * outside the claim darkens, and on the case board each tile is carried to
  * the cell of its case; the stamp comes down once the claim is settled.
  * Still, the scene shows every tile checked. With the answer hidden, playing
@@ -107,7 +107,7 @@ export function CounterexampleScene({
   readonly text: string;
   readonly tiles: readonly Tile[];
 }) {
-  const sorting = showAnswer && claim._tag === "if";
+  const sorting = showAnswer && claim.kind === "if";
   const verdicts = useMemo(
     () => Arr.map(tiles, (tile) => verdictOf(claim, tile)),
     [claim, tiles]

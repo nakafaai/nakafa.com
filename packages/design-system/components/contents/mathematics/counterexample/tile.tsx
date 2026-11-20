@@ -75,9 +75,9 @@ function NumberFace({ value }: { readonly value: number }) {
 function ShapeToken({
   tile,
 }: {
-  readonly tile: Extract<Tile, { _tag: "shape" }>;
+  readonly tile: Extract<Tile, { kind: "shape" }>;
 }) {
-  const color = COUNTEREXAMPLE_COLORS[tile.colour];
+  const color = COUNTEREXAMPLE_COLORS[tile.color];
   const y = TILE.height / 2 + SHAPE_HEIGHT / 2;
 
   if (tile.shape === "square") {
@@ -130,7 +130,7 @@ export function TileModel({ tile }: { readonly tile: Tile }) {
           roughness={0.55}
         />
       </RoundedBox>
-      {tile._tag === "number" ? (
+      {tile.kind === "number" ? (
         <NumberFace value={tile.value} />
       ) : (
         <ShapeToken tile={tile} />
