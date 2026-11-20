@@ -24,10 +24,10 @@ import {
   readGoogleClient,
   readOfferedConnectors,
 } from "@repo/backend/confect/connectors/google/client";
+import type { GoogleConnector } from "@repo/backend/confect/connectors/google/manifest";
 import {
   CALLBACK_PATH,
   GOOGLE_MANIFEST,
-  type GoogleConnector,
   grantsConnector,
   requestedScopes,
 } from "@repo/backend/confect/connectors/google/manifest";

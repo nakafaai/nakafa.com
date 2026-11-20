@@ -30,7 +30,8 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** What the sketch reads on every frame. */
 const BulbFrameSchema = Schema.Struct({

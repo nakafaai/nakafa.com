@@ -1,7 +1,12 @@
 import { Array as Arr, HashSet, Option } from "effect";
+import type {
+  Expression,
+  IfStatement,
+  Node,
+  SourceFile,
+  Statement,
+} from "tsrs/ast";
 import {
-  type Expression,
-  type IfStatement,
   isBinaryExpression,
   isBlock,
   isCaseClause,
@@ -14,9 +19,6 @@ import {
   isSourceFile,
   isStringLiteral,
   isSwitchStatement,
-  type Node,
-  type SourceFile,
-  type Statement,
   SyntaxKind,
 } from "tsrs/ast";
 import { candidate } from "#scripts/check/rules";

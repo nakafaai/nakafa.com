@@ -15,18 +15,20 @@ import { useRequired } from "@repo/design-system/hooks/required";
 import { createFramePace } from "@repo/design-system/lib/pace";
 import type { MoodSchema } from "@repo/mascot/nina/face";
 import { scene } from "@repo/mascot/nina/figure";
+import type { Life } from "@repo/mascot/nina/life";
 import {
   gazeAt,
-  type Life,
   press,
   retarget,
   start,
   step,
   view,
 } from "@repo/mascot/nina/life";
-import { homeOf, modeOf, type Options } from "@repo/mascot/nina/options";
+import type { Options } from "@repo/mascot/nina/options";
+import { homeOf, modeOf } from "@repo/mascot/nina/options";
 import { Array as Arr, Effect, Random } from "effect";
-import { cancelFrame, type FrameData, frame } from "motion";
+import type { FrameData } from "motion";
+import { cancelFrame, frame } from "motion";
 import {
   createContext,
   useEffect,

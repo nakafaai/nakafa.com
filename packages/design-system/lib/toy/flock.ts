@@ -1,12 +1,12 @@
 import { isCalm } from "@repo/design-system/lib/calm";
 import { boundsOf } from "@repo/design-system/lib/toy/dom";
+import type { Toy } from "@repo/design-system/lib/toy/flight";
 import {
   frameSeconds,
   homeward,
   isMoving,
   REST,
   step,
-  type Toy,
   transformOf,
 } from "@repo/design-system/lib/toy/flight";
 import { Array as Arr, Equal, MutableHashMap, Option } from "effect";

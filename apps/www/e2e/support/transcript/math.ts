@@ -1,12 +1,8 @@
 import type { MathRequestSchema } from "@repo/math/schema/request";
 import type { MathResultSchema } from "@repo/math/schema/result";
 import { Array as Arr, Option } from "effect";
-import {
-  type Card,
-  reply,
-  stored,
-  working,
-} from "@/e2e/support/transcript/message";
+import type { Card } from "@/e2e/support/transcript/message";
+import { reply, stored, working } from "@/e2e/support/transcript/message";
 
 /** A request and a result of the CAS, as the wire holds them. */
 type MathRequest = typeof MathRequestSchema.Encoded;

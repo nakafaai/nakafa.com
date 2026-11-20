@@ -4,7 +4,8 @@ import { afterEach, beforeAll, describe, expect, it } from "@effect/vitest";
 import { MAX_PUBLICATION_REQUEST_BYTES } from "@nakafa/aksara-contracts/transport/limits";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 
 const publicationPath = "/internal/content/releases";
 const polarName = "POLAR_WEBHOOK_SECRET";

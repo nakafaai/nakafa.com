@@ -1,4 +1,5 @@
-import { Diamond02Icon, type Tick01Icon } from "@hugeicons/core-free-icons";
+import type { Tick01Icon } from "@hugeicons/core-free-icons";
+import { Diamond02Icon } from "@hugeicons/core-free-icons";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
 import { Button } from "@repo/design-system/components/ui/button";
 import { CardContent } from "@repo/design-system/components/ui/card";

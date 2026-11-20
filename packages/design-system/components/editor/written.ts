@@ -1,5 +1,6 @@
 import { richOptions } from "@repo/design-system/components/editor/extensions";
-import { type MathViews, mathExtensions } from "@repo/editor/math";
+import type { MathViews } from "@repo/editor/math";
+import { mathExtensions } from "@repo/editor/math";
 import type { NodeViewRenderer } from "@tiptap/core";
 
 /**

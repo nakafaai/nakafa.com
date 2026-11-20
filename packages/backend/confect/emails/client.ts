@@ -1,4 +1,5 @@
-import { Resend, type SendEmailOptions } from "@convex-dev/resend";
+import type { SendEmailOptions } from "@convex-dev/resend";
+import { Resend } from "@convex-dev/resend";
 import { isLoginAddress } from "@repo/backend/confect/identity/address";
 import { components } from "@repo/backend/convex/_generated/api";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";

@@ -7,11 +7,13 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import type {
+  RollbackPage,
+  RollbackRecord,
+} from "@nakafa/aksara-contracts/release/rollback/spec";
 import {
   canonicalizeRollbackPage,
   canonicalizeRollbackRecord,
-  type RollbackPage,
-  type RollbackRecord,
   RollbackRecordSchema,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
 import {

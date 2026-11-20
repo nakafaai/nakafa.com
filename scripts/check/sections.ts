@@ -1,5 +1,6 @@
 import { Array as Arr, String as Str } from "effect";
-import { isStringLiteralLikeNode, type SourceFile } from "tsrs/ast";
+import type { SourceFile } from "tsrs/ast";
+import { isStringLiteralLikeNode } from "tsrs/ast";
 import { descendants, namesModule } from "#scripts/check/source";
 
 /** The settings card, which only the Settings components import. */

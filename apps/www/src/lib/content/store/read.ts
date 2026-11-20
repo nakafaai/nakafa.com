@@ -1,10 +1,12 @@
 import "@tanstack/react-start/server-only";
-
-import { Cause, Duration, Effect, Option, Result, type Schema } from "effect";
+import type { Schema } from "effect";
+import { Cause, Duration, Effect, Option, Result } from "effect";
+import type {
+  ActiveContentIdentity,
+  ActiveContentReleaseId,
+  ContentSnapshotFamily,
+} from "@/lib/content/published/active";
 import {
-  type ActiveContentIdentity,
-  type ActiveContentReleaseId,
-  type ContentSnapshotFamily,
   expireActiveContentIdentity,
   loadActiveContentIdentity,
   readActiveContentIdentity,

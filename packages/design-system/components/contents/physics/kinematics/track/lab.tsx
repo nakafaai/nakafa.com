@@ -10,15 +10,15 @@ import {
   mix,
   vignette,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { Plan } from "@repo/design-system/components/contents/physics/canvas/town";
 import {
   fitPlan,
-  type Plan,
   paintWalker,
   planPoint,
 } from "@repo/design-system/components/contents/physics/canvas/town";
+import type { TrackStop } from "@repo/design-system/components/contents/physics/kinematics/track/lap";
 import {
   STRAIGHT,
-  type TrackStop,
   TrackStopSchema,
   trackDisplacement,
   trackPlace,
@@ -46,7 +46,8 @@ import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** The kerb radius and the width of one lane, in metres (World Athletics: 36.50 m and 1.22 m, eight lanes). */
 const KERB = 36.5;

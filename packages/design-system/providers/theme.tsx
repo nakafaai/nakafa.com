@@ -1,11 +1,14 @@
 import { useRequired } from "@repo/design-system/hooks/required";
+import type {
+  ThemeState,
+  ThemeStore,
+} from "@repo/design-system/lib/theme/store";
 import {
   connectThemeStore,
   createThemeStore,
-  type ThemeState,
-  type ThemeStore,
 } from "@repo/design-system/lib/theme/store";
-import { createContext, type ReactNode, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, useEffect, useState } from "react";
 import { useStore } from "zustand";
 
 const ThemeContext = createContext<ThemeStore | null>(null);

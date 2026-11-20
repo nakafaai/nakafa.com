@@ -4,8 +4,10 @@ import { Array as Arr, Option } from "effect";
 import { KIND, LOOK } from "@/lib/island/look";
 import { unitOf } from "@/lib/island/noise";
 import { isPlantBlock } from "@/lib/island/plants";
-import { leafToneOf, type Season } from "@/lib/island/season";
-import { blockAt, type Cells, cellOf } from "@/lib/island/world";
+import type { Season } from "@/lib/island/season";
+import { leafToneOf } from "@/lib/island/season";
+import type { Cells } from "@/lib/island/world";
+import { blockAt, cellOf } from "@/lib/island/world";
 
 const LEAVES = idOf("leaves");
 const FLOWERS = idOf("flowers");

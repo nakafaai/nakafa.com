@@ -1,5 +1,7 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Effect, type MutableList } from "effect";
+import type { Locator, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import type { MutableList } from "effect";
+import { Effect } from "effect";
 import { activate, press, visibleLink } from "@/e2e/support/input";
 import { pressPreloaded } from "@/e2e/support/navigation/prefetch";
 import { withObservedPageErrors } from "@/e2e/support/observe";

@@ -1,9 +1,6 @@
 import { Option } from "effect";
-import {
-  activate,
-  programOf,
-  type uploadMap,
-} from "@/components/island/buffers";
+import type { uploadMap } from "@/components/island/buffers";
+import { activate, programOf } from "@/components/island/buffers";
 import { createDrift } from "@/components/island/drift";
 import { createFall } from "@/components/island/fall";
 import { createNight } from "@/components/island/night";

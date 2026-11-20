@@ -1,8 +1,8 @@
 import { render } from "@react-email/render";
 import { Layout } from "@repo/email/layout";
+import type { PassEndingEmailInput } from "@repo/email/templates/pass/content";
 import {
   getPassEndingEmailCopy,
-  type PassEndingEmailInput,
   PassEndingEmailInputSchema,
 } from "@repo/email/templates/pass/content";
 import {

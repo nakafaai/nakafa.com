@@ -1,9 +1,9 @@
 import { OsmosisScene } from "@repo/design-system/components/contents/biology/osmosis/scene";
+import type { Strip } from "@repo/design-system/components/contents/biology/osmosis/tissue";
 import {
   changeAt,
   isotonicPoint,
   massAfter,
-  type Strip,
   tonicity,
 } from "@repo/design-system/components/contents/biology/osmosis/tissue";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
@@ -22,7 +22,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 
 /** The unit of a sucrose concentration, as KaTeX. */
 const MOLAR = "\\text{ mol dm}^{-3}";

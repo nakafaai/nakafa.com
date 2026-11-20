@@ -11,7 +11,8 @@ import {
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { isComposingKey } from "@repo/utilities/composition";
 import { Function as Fn, Option } from "effect";
-import { type ComponentProps, type ReactNode, use, useState } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { OfflineNote } from "@/components/shared/offline";
 import { useTenant } from "@/components/tenant/context";

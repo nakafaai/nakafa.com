@@ -1,5 +1,6 @@
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type MouseEventHandler } from "react";
+import type { MouseEventHandler } from "react";
+import { createContext } from "react";
 
 interface QuranInterpretationContextValue {
   isActive: boolean;

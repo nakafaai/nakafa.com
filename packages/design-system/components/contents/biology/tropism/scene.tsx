@@ -2,11 +2,13 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import { useRunClock } from "@repo/design-system/components/contents/biology/clock";
 import { BenchLamp } from "@repo/design-system/components/contents/biology/glassware";
+import type {
+  LightTreatment,
+  TropismSetup,
+} from "@repo/design-system/components/contents/biology/tropism/auxin";
 import {
   gravitySplit,
-  type LightTreatment,
   lightSplit,
-  type TropismSetup,
 } from "@repo/design-system/components/contents/biology/tropism/auxin";
 import {
   organTip,
@@ -21,8 +23,10 @@ import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
 import { Array as Arr } from "effect";
-import { type ReactNode, useMemo, useRef } from "react";
-import { type Group, Vector2 } from "three";
+import type { ReactNode } from "react";
+import { useMemo, useRef } from "react";
+import type { Group } from "three";
+import { Vector2 } from "three";
 
 /** How far apart the seedlings stand along the bench, in metres. */
 const GAP = 0.085;

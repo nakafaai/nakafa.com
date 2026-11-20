@@ -6,14 +6,8 @@ import type {
 } from "@repo/backend/confect/exams/import";
 import type { ImportPlaced } from "@repo/backend/confect/exams/imports.spec";
 import type { ImportSource } from "@repo/backend/confect/exams/reads.spec";
-import {
-  Array as Arr,
-  type Cause,
-  Effect,
-  Option,
-  type Result,
-  Schema,
-} from "effect";
+import type { Cause, Result } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { sendFile, storeExamImage } from "@/components/tenant/exams/image";
 import {
   alignFigures,

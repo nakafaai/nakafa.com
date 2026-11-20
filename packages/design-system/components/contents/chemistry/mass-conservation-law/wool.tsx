@@ -1,8 +1,8 @@
 import { useFrame } from "@react-three/fiber";
+import type { ScaleRig } from "@repo/design-system/components/contents/chemistry/bench";
 import {
   LabBench,
   Scale,
-  type ScaleRig,
 } from "@repo/design-system/components/contents/chemistry/bench";
 import { oxygenTakenBy } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/masses";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
@@ -34,18 +34,12 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr, Schema } from "effect";
-import {
-  type ReactNode,
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import type { BufferGeometry } from "three";
 import {
   AdditiveBlending,
   BufferAttribute,
-  type BufferGeometry,
   CatmullRomCurve3,
   Color,
   TubeGeometry,

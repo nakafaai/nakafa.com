@@ -1,4 +1,5 @@
-import { type BrowserContext, expect, type Page, test } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { seedConnection } from "@repo/backend/scripts/content/acceptance/connection";
 import { Effect } from "effect";
 import { runFixture } from "@/e2e/support/acceptance";

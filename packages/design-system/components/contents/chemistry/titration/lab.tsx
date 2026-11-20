@@ -1,17 +1,19 @@
 import { MathLines } from "@repo/design-system/components/contents/chemistry/lines";
 import { HandSlider } from "@repo/design-system/components/contents/chemistry/slider";
+import type {
+  Analyte,
+  Hue,
+  Indicator,
+  Titrant,
+  Titration,
+} from "@repo/design-system/components/contents/chemistry/titration/model";
 import {
-  type Analyte,
   analyteMoles,
   endPoint,
-  type Hue,
   hueAfter,
-  type Indicator,
   pairOf,
   phAfter,
   SOLUTE_FORMULA,
-  type Titrant,
-  type Titration,
 } from "@repo/design-system/components/contents/chemistry/titration/model";
 import {
   BURETTE_CAPACITY,
@@ -32,7 +34,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 import { useFormatter } from "use-intl";
 
 /** Numbers in a reading keep three significant figures, as SPM working does. */

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Fiber, MutableList, Result } from "effect";
 import { TestClock } from "effect/testing";
+import type { CasSolverNamespace } from "@/front/forward";
 import {
   CasEngineFailed,
   CasEngineTimedOut,
-  type CasSolverNamespace,
   forwardMath,
 } from "@/front/forward";
 

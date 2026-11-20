@@ -1,4 +1,5 @@
-import { type BrowserContext, expect, test } from "@playwright/test";
+import type { BrowserContext } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
 import {
   expectNoOverflow,

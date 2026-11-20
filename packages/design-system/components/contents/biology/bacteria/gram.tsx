@@ -1,10 +1,12 @@
 import { useFrame } from "@react-three/fiber";
 import { MicroscopeField } from "@repo/design-system/components/contents/biology/bacteria/field";
+import type {
+  Gram,
+  Hue,
+  StainStep,
+} from "@repo/design-system/components/contents/biology/bacteria/microbe";
 import {
-  type Gram,
-  type Hue,
   hueOf,
-  type StainStep,
   StainStepSchema,
   stainOf,
 } from "@repo/design-system/components/contents/biology/bacteria/microbe";
@@ -28,14 +30,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr, Schema } from "effect";
-import {
-  type ReactNode,
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import {
   CatmullRomCurve3,
   Color,

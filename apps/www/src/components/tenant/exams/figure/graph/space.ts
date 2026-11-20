@@ -3,11 +3,11 @@ import type { FormulaScope } from "@nakafa/aksara-contracts/math/formula/compile
 import { compileText } from "@nakafa/aksara-contracts/math/formula/plane";
 import type { MathVisual } from "@nakafa/aksara-contracts/math/visual";
 import { Array as Arr, Match, Option, Result } from "effect";
-import {
-  numberOf,
-  type ShapeDraft,
-  type ShapeKind,
+import type {
+  ShapeDraft,
+  ShapeKind,
 } from "@/components/tenant/exams/figure/graph/shapes";
+import { numberOf } from "@/components/tenant/exams/figure/graph/shapes";
 
 /** The objects a teacher puts in space, which MathVisual draws in three dimensions. */
 export const SPACE_KINDS: readonly ShapeKind[] = [

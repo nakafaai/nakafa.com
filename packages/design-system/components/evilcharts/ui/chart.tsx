@@ -1,24 +1,17 @@
 import type { EvilBrushCurveType } from "@repo/design-system/components/evilcharts/ui/brush-preview";
-import {
-  type AtLeastOneThemeColor,
-  type ChartConfig,
-  validateChartConfigColors,
+import type {
+  AtLeastOneThemeColor,
+  ChartConfig,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import { validateChartConfigColors } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { ChartStyle } from "@repo/design-system/components/evilcharts/ui/chart-style";
 import type { EvilBrushVariant } from "@repo/design-system/components/evilcharts/ui/evil-brush";
 import type { ChartSeriesCue } from "@repo/design-system/lib/charts/cue";
 import { cn } from "cn";
 import { Result } from "effect";
 import { domAnimation, LazyMotion, MotionConfig } from "motion/react";
-import {
-  type ComponentProps,
-  type ComponentType,
-  createContext,
-  type ReactNode,
-  use,
-  useId,
-  useMemo,
-} from "react";
+import type { ComponentProps, ComponentType, ReactNode } from "react";
+import { createContext, use, useId, useMemo } from "react";
 import { ResponsiveContainer } from "recharts";
 
 /** Options of the zoom brush, set once by the chart root and read by the brush parts. */

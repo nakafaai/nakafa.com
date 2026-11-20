@@ -3,9 +3,9 @@ import {
   HardDriveIcon,
   SparklesIcon,
 } from "@hugeicons/core-free-icons";
+import type { SchoolAddOnKey } from "@repo/backend/confect/billing/tiers";
 import {
   SCHOOL_CREDIT_PACK_MONTHS,
-  type SchoolAddOnKey,
   schoolAddOns,
 } from "@repo/backend/confect/billing/tiers";
 import {

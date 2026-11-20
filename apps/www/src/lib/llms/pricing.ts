@@ -5,7 +5,8 @@ import {
 import { formatterOf } from "@repo/internationalization/src/formats";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Array as Arr, Effect } from "effect";
-import { createTranslator, type Locale } from "use-intl/core";
+import type { Locale } from "use-intl/core";
+import { createTranslator } from "use-intl/core";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
 import { pricingFaqNumbers } from "@/lib/marketing/faq";

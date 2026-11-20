@@ -1,20 +1,11 @@
 import { Array as Arr, Schema } from "effect";
 import type { Coat, Species } from "@/lib/island/models/coat";
-import {
-  type Crown,
-  earsOf,
-  eyesOf,
-  hornsOf,
-  tailOf,
-} from "@/lib/island/models/features";
-import {
-  type Face,
-  flexed,
-  mirrored,
-  rigged,
-  type Vec,
-} from "@/lib/island/models/parts";
-import { ball, type Ring, rod, slab, tube } from "@/lib/island/models/solids";
+import type { Crown } from "@/lib/island/models/features";
+import { earsOf, eyesOf, hornsOf, tailOf } from "@/lib/island/models/features";
+import type { Face, Vec } from "@/lib/island/models/parts";
+import { flexed, mirrored, rigged } from "@/lib/island/models/parts";
+import type { Ring } from "@/lib/island/models/solids";
+import { ball, rod, slab, tube } from "@/lib/island/models/solids";
 
 const Size = Schema.Struct({
   high: Schema.Finite,

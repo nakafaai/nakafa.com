@@ -1,8 +1,8 @@
 import { useThree } from "@react-three/fiber";
+import type { CombiningVolumesModeId } from "@repo/design-system/components/contents/chemistry/combining-volumes-law/data";
 import {
   COMBINING_VOLUMES_MODE_IDS,
   COMBINING_VOLUMES_SCENE_VIEW,
-  type CombiningVolumesModeId,
   getCombiningVolumesSceneColors,
   isCombiningVolumesModeId,
   WATER_VAPOR_MODE_ID,

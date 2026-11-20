@@ -1,7 +1,7 @@
 import { Match, Schema } from "effect";
+import type { Face } from "@/lib/island/models/parts";
 import {
   box,
-  type Face,
   flexed,
   meters as m,
   mirrored,

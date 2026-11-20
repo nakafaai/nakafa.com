@@ -1,8 +1,10 @@
 import type { BiologySceneColors } from "@repo/design-system/components/contents/biology/data";
 import { useRequired } from "@repo/design-system/hooks/required";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
-import { createContext, type ReactNode, useMemo } from "react";
-import { createStore, type ExtractState, useStore } from "zustand";
+import type { ReactNode } from "react";
+import { createContext, useMemo } from "react";
+import type { ExtractState } from "zustand";
+import { createStore, useStore } from "zustand";
 import { combine } from "zustand/middleware";
 
 /** Creates one biology lab's store, which holds the item its reader picked. */

@@ -2,11 +2,11 @@ import type { GenericId } from "@confect/core";
 import type { ReportCardsDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { gradeView } from "@repo/backend/confect/records/grade";
-import {
-  HashContent,
-  type ReportSubject,
-  type ReportView,
+import type {
+  ReportSubject,
+  ReportView,
 } from "@repo/backend/confect/records/report";
+import { HashContent } from "@repo/backend/confect/records/report";
 import { schemeOf } from "@repo/backend/confect/records/version";
 import { sha256Hex } from "@repo/utilities/digest";
 import { Array as Arr, Effect, Option, Order, Schema } from "effect";

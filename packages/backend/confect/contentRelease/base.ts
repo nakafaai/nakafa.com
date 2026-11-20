@@ -1,7 +1,7 @@
 import type { ContentReleaseManifest } from "@nakafa/aksara-contracts/release";
 import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/scope";
+import type { ContentSnapshotState } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
-  type ContentSnapshotState,
   hasSameContentSnapshots,
   invertContentSnapshots,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";

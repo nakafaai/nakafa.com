@@ -6,11 +6,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Array as Arr, Effect, Option } from "effect";
 import { useTranslations } from "use-intl";
-import {
-  type ComposerKey,
-  photosOf,
-  type TrayPhoto,
-} from "@/components/comments/draft";
+import type { ComposerKey, TrayPhoto } from "@/components/comments/draft";
+import { photosOf } from "@/components/comments/draft";
 import { useCommentDraft } from "@/components/comments/provider";
 
 /**

@@ -1,12 +1,10 @@
 import { Array as Arr, String as Str } from "effect";
+import type { Expression, SourceFile, VariableStatement } from "tsrs/ast";
 import {
-  type Expression,
   isCallExpression,
   isIdentifier,
   isPropertyAccessExpression,
   isVariableStatement,
-  type SourceFile,
-  type VariableStatement,
 } from "tsrs/ast";
 import { candidate } from "#scripts/check/rules";
 

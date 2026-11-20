@@ -4,12 +4,12 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { PaperView } from "@repo/backend/confect/exams/sittings/contract";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
+import type { SavedValue } from "@/components/exams/sitting/paper";
 import {
   changeSaved,
   mergePaper,
   nextVersionOf,
   paperCell,
-  type SavedValue,
   setSavedFlag,
   setSavedResponse,
 } from "@/components/exams/sitting/paper";

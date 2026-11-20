@@ -33,13 +33,8 @@ import {
   useEditorState,
 } from "@tiptap/react";
 import { cn } from "cn";
-import {
-  type ComponentProps,
-  createContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import type { ComponentProps } from "react";
+import { createContext, useEffect, useMemo, useState } from "react";
 
 /** The names of an answer's toolbar and of the formula editor its formulas open. */
 interface AnswerLabels {

@@ -333,6 +333,27 @@ describe("integrations/webhooks revoke", () => {
       })
   );
 
+  it.effect("ends a webhook whose cursor is already gone", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const { clientId, webhook } = yield* seeded(fixture);
+      const names = { clientId, slug: nf, webhookId: webhook.id };
+      yield* fixture.run(
+        Effect.gen(function* () {
+          const cursor = yield* cursorOf(webhook.id, fixture.tenants.nf, null);
+          yield* (yield* DatabaseWriter)
+            .table("journalCursors")
+            .delete(Option.getOrThrow(cursor)._id)
+            .pipe(Effect.orDie);
+        })
+      );
+      yield* fixture.as("admin").mutation(revoke, names);
+
+      const row = yield* fixture.run(stored(webhook.id));
+      expect(row).toMatchObject({ secret: null, status: "revoked" });
+    })
+  );
+
   it.effect(
     "ends with its client: revoking the client ends every webhook",
     () =>

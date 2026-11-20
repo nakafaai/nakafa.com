@@ -1,5 +1,6 @@
 import { RegisteredConvexFunction } from "@confect/server";
-import { type EmailStatus, Resend } from "@convex-dev/resend";
+import type { EmailStatus } from "@convex-dev/resend";
+import { Resend } from "@convex-dev/resend";
 import resendTest from "@convex-dev/resend/test";
 import workflowTest from "@convex-dev/workflow/test";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
@@ -15,7 +16,8 @@ import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Array as Arr, Effect, Order } from "effect";
 
 const testResend = new Resend(components.resend, {

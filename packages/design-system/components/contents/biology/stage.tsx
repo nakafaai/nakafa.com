@@ -1,6 +1,6 @@
 import { useThree } from "@react-three/fiber";
+import type { BiologyItemStore } from "@repo/design-system/components/contents/biology/context";
 import {
-  type BiologyItemStore,
   BiologyLabProvider,
   useBiologyItemSelection,
   useBiologyView,
@@ -10,7 +10,8 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
-import { type ReactNode, Suspense } from "react";
+import type { ReactNode } from "react";
+import { Suspense } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.3;
 

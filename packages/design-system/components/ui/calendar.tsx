@@ -23,12 +23,12 @@ import {
 import type { Locale } from "@repo/internationalization/src/locale";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
-import { type ComponentProps, type Ref, useCallback } from "react";
+import type { ComponentProps, Ref } from "react";
+import { useCallback } from "react";
+import type { DayButton, MonthCaption } from "react-day-picker";
 import {
-  type DayButton,
   DayPicker,
   getDefaultClassNames,
-  type MonthCaption,
   useDayPicker,
 } from "react-day-picker";
 import { de } from "react-day-picker/locale/de";

@@ -13,11 +13,8 @@ import session from "@repo/backend/confect/middleware/session.impl";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { unitAuthority } from "@repo/backend/confect/tenancy/authority";
 import { NpsnInvalid, NpsnTaken } from "@repo/backend/confect/tenancy/errors";
-import {
-  Npsn,
-  UNIT_LIMIT,
-  type UnitStatus,
-} from "@repo/backend/confect/tenancy/schema";
+import type { UnitStatus } from "@repo/backend/confect/tenancy/schema";
+import { Npsn, UNIT_LIMIT } from "@repo/backend/confect/tenancy/schema";
 import { edit } from "@repo/backend/confect/tenancy/units.edit";
 import spec from "@repo/backend/confect/tenancy/units.spec";
 import { addUnit } from "@repo/backend/confect/tenancy/write/unit";

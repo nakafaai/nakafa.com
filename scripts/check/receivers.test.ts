@@ -1,6 +1,7 @@
 import { afterEach, assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect, Record as Rec } from "effect";
-import { Checker, type Project } from "tsrs/sync";
+import type { Project } from "tsrs/sync";
+import { Checker } from "tsrs/sync";
 import { arrayCall } from "#scripts/check/calls";
 import { receiverVerdicts } from "#scripts/check/receivers";
 import { descendants } from "#scripts/check/source";

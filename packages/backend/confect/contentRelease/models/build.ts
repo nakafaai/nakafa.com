@@ -14,10 +14,8 @@ import {
 } from "@repo/backend/confect/contentRelease/model";
 import { getReadModelImpact } from "@repo/backend/confect/contentRelease/models/impact";
 import { firstModelPhase } from "@repo/backend/confect/contentRelease/models/phase";
-import {
-  type ModelSlots,
-  selectModelSlots,
-} from "@repo/backend/confect/contentRelease/models/selection";
+import type { ModelSlots } from "@repo/backend/confect/contentRelease/models/selection";
+import { selectModelSlots } from "@repo/backend/confect/contentRelease/models/selection";
 import { alternateModelSlot } from "@repo/backend/confect/contentRelease/models/slot";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { Clock, Duration, Effect } from "effect";

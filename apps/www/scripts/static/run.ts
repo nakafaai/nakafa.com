@@ -15,11 +15,8 @@
 import { NodeRuntime } from "@effect/platform-node";
 import { Array as Arr, Effect, Fiber, Formatter, Schema } from "effect";
 import { createServer, createServerModuleRunner } from "vite";
-import {
-  PagesListed,
-  type RunnerMessage,
-  WriteArtifacts,
-} from "#www/static.config";
+import type { RunnerMessage } from "#www/static.config";
+import { PagesListed, WriteArtifacts } from "#www/static.config";
 
 /** The build module that Vite's runner loads, by its own types. */
 type StaticBuild = typeof import("@/scripts/static/build");

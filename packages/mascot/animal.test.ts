@@ -9,7 +9,8 @@ import { primate } from "@repo/mascot/family/primate";
 import { reptile } from "@repo/mascot/family/reptile";
 import { small } from "@repo/mascot/family/small";
 import { wild } from "@repo/mascot/family/wild";
-import { type Design, INK } from "@repo/mascot/kit";
+import type { Design } from "@repo/mascot/kit";
+import { INK } from "@repo/mascot/kit";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Number as Num, Order, Record as Rec } from "effect";
 

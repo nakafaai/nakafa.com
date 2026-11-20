@@ -1,7 +1,5 @@
-import {
-  type ContentHead,
-  ContentHeadSchema,
-} from "@nakafa/aksara-contracts/release/head";
+import type { ContentHead } from "@nakafa/aksara-contracts/release/head";
+import { ContentHeadSchema } from "@nakafa/aksara-contracts/release/head";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
@@ -14,18 +12,14 @@ import {
 } from "@repo/backend/confect/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { hasProofTransactionHeadroom } from "@repo/backend/confect/contentRelease/proof/budget";
-import {
-  type catalogCursorValidator,
-  catalogPageValidator,
-} from "@repo/backend/confect/contentRelease/proof/catalog.spec";
+import type { catalogCursorValidator } from "@repo/backend/confect/contentRelease/proof/catalog.spec";
+import { catalogPageValidator } from "@repo/backend/confect/contentRelease/proof/catalog.spec";
 import {
   completedReceipt,
   stagedEvidence,
 } from "@repo/backend/confect/contentRelease/receipt";
-import {
-  type contentHeadValidator,
-  PROOF_PAGE_LIMIT,
-} from "@repo/backend/confect/contentRelease/spec";
+import type { contentHeadValidator } from "@repo/backend/confect/contentRelease/spec";
+import { PROOF_PAGE_LIMIT } from "@repo/backend/confect/contentRelease/spec";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { resolveContentHead } from "@repo/backend/content/publication/projection";
 import { Array as Arr, Effect, Schema } from "effect";

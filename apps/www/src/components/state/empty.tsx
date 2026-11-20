@@ -8,7 +8,8 @@ import {
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import type { ReactNode } from "react";
 import { NINA_SIZE } from "@/components/state/size";
 

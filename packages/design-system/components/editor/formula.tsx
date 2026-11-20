@@ -3,14 +3,15 @@ import {
   FormulaMarkup,
 } from "@repo/design-system/components/editor/edit";
 import { useRequired } from "@repo/design-system/hooks/required";
+import type { ReactNodeViewProps } from "@tiptap/react";
 import {
   NodeViewWrapper,
-  type ReactNodeViewProps,
   ReactNodeViewRenderer,
   useEditorState,
 } from "@tiptap/react";
 import { Option } from "effect";
-import { type ComponentProps, createContext, type ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { createContext } from "react";
 
 /** The names of the formula editor, which the page gives the formulas of its editor. */
 type FormulaLabels = ComponentProps<typeof FormulaEdit>["labels"];

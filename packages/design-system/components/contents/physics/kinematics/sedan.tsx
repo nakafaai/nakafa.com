@@ -1,17 +1,12 @@
 import { getColor } from "@repo/design-system/lib/color";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr } from "effect";
-import {
-  type Ref,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-} from "react";
+import type { Ref } from "react";
+import { useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import type { Group } from "three";
 import {
   DataTexture,
   ExtrudeGeometry,
-  type Group,
   MeshPhysicalMaterial,
   MeshStandardMaterial,
   Shape,

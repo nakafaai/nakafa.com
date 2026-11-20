@@ -11,7 +11,8 @@ import { bodyFaces } from "@/lib/island/models/kinds";
 import { boundsOf } from "@/lib/island/models/parts";
 import { terrainOf } from "@/lib/island/terrain";
 import { roam, wildBodies, wildOf } from "@/lib/island/wild";
-import { type Cells, cellOf, emptyCells, SEA_LEVEL } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { cellOf, emptyCells, SEA_LEVEL } from "@/lib/island/world";
 
 const DAY = 20_400;
 

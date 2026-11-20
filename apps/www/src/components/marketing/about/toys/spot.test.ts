@@ -1,7 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, HashSet, Option } from "effect";
 import { within } from "@/components/marketing/about/toys/place";
-import { type GapSpot, gapSpots } from "@/components/marketing/about/toys/spot";
+import type { GapSpot } from "@/components/marketing/about/toys/spot";
+import { gapSpots } from "@/components/marketing/about/toys/spot";
 
 /** The box the layer measures for the part: 400 by 200, starting at 100, 100. */
 const box = () => ({

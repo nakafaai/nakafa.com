@@ -1,4 +1,5 @@
-import { Agent, type UsageHandler } from "@convex-dev/agent";
+import type { UsageHandler } from "@convex-dev/agent";
+import { Agent } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
@@ -7,12 +8,8 @@ import { limitDeadline } from "@repo/backend/confect/nina/capability/deadline";
 import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";
 import { createPrompt } from "@repo/backend/confect/nina/prompt/assemble";
 import { encodePrettyJsonText, JsonTextSchema } from "@repo/utilities/json";
-import {
-  NoSuchToolError,
-  Output,
-  type ToolCallRepairFunction,
-  type ToolSet,
-} from "ai";
+import type { ToolCallRepairFunction, ToolSet } from "ai";
+import { NoSuchToolError, Output } from "ai";
 import { Effect, Option, Schema } from "effect";
 
 type MathRepairOptions = Omit<

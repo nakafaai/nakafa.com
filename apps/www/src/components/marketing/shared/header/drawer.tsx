@@ -3,7 +3,8 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { lazy } from "@repo/design-system/lib/lazy";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 
 /** The code of the menu's sheet, which a wide screen never opens and a phone needs only once the Menu button is near a press. */

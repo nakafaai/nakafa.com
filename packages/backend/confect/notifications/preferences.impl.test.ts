@@ -8,11 +8,8 @@ import {
   nf,
   period,
 } from "@repo/backend/test/classroom";
-import {
-  scheduledJobs,
-  TENANCY_NOW,
-  type tenancyFixture,
-} from "@repo/backend/test/tenancy";
+import type { tenancyFixture } from "@repo/backend/test/tenancy";
+import { scheduledJobs, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Option, String as Str } from "effect";
 
 type Fixture = Effect.Success<typeof tenancyFixture>;

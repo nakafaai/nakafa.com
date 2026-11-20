@@ -1,11 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Fiber, Layer, Result } from "effect";
-import {
-  HttpClient,
-  type HttpClientRequest,
-  HttpClientResponse,
-} from "effect/http";
+import type { HttpClientRequest } from "effect/http";
+import { HttpClient, HttpClientResponse } from "effect/http";
 import { TestClock } from "effect/testing";
 import { requestWeatherJson } from "@/lib/weather/transport";
 

@@ -4,18 +4,16 @@ import {
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import {
   CurriculumNodeKeySchema,
-  type CurriculumRoute,
   CurriculumRouteSchema,
 } from "@nakafa/aksara-contracts/program/curriculum";
 import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/snapshot/hash";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
-import {
-  type ContentSnapshotRow,
-  canonicalizeContentSnapshotRow,
-} from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import type { LearningContextInput } from "@repo/backend/confect/contents/context";
 import type schema from "@repo/backend/convex/schema";

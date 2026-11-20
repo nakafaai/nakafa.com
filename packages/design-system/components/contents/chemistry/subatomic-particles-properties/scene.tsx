@@ -8,13 +8,15 @@ import {
   createPath,
   createQuadraticPath,
 } from "@repo/design-system/components/contents/chemistry/path";
+import type {
+  SubatomicMassBar,
+  SubatomicParticlePropertiesColors,
+  SubatomicParticlePropertiesModeId,
+} from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/data";
 import {
   CHARGE_MODE_ID,
   LOCATION_MODE_ID,
   MASS_MODE_ID,
-  type SubatomicMassBar,
-  type SubatomicParticlePropertiesColors,
-  type SubatomicParticlePropertiesModeId,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/data";
 import type { SubatomicParticlePropertiesLabProps } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/lab";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -22,7 +24,8 @@ import { getThreeParticleLabelFontSize } from "@repo/design-system/components/th
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr } from "effect";
-import { createContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createContext } from "react";
 import { Vector3 } from "three";
 
 const PATH_POINT_COUNT = 44;

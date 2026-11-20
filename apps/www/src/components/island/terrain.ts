@@ -14,7 +14,8 @@ import type { islesMesh } from "@/lib/island/isles";
 import { CLIP } from "@/lib/island/matrix";
 import type { meshChunk } from "@/lib/island/mesh";
 import { DEEP } from "@/lib/island/terrain";
-import { type Cells, CHUNKS, SEA_LEVEL } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { CHUNKS, SEA_LEVEL } from "@/lib/island/world";
 
 /** The texture unit the column map takes while the blocks are drawn: the atlas holds 0, the depth under the water 1, the wind's lean map 2. */
 const COLUMNS = 3;

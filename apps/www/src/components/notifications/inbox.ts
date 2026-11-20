@@ -1,9 +1,6 @@
 import type { Ref } from "@confect/core";
-import {
-  type PaginatedQueryItem,
-  PaginatedQueryResult,
-  usePaginatedQuery,
-} from "@confect/react";
+import type { PaginatedQueryItem } from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { INBOX_PAGE_SIZE } from "@repo/backend/client/notifications/list";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import type { Option } from "effect";

@@ -1,7 +1,7 @@
+import type { AtomSymbolSampleId } from "@repo/design-system/components/contents/chemistry/atom-symbol/data";
 import {
   ATOM_SYMBOL_SAMPLE_IDS,
   ATOM_SYMBOL_SAMPLES,
-  type AtomSymbolSampleId,
   CARBON_12_ID,
   isAtomSymbolSampleId,
 } from "@repo/design-system/components/contents/chemistry/atom-symbol/data";

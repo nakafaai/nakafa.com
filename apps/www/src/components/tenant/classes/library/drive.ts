@@ -2,10 +2,8 @@ import type { Ref } from "@confect/core";
 import type connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { LIBRARY_ACCEPT } from "@repo/backend/confect/classroom/library/item";
 import { Array as Arr, Data, Effect, Option, Schema } from "effect";
-import {
-  type DriveFile,
-  PickedFile,
-} from "@/components/tenant/classes/library/draft";
+import type { DriveFile } from "@/components/tenant/classes/library/draft";
+import { PickedFile } from "@/components/tenant/classes/library/draft";
 
 /** Google's script that loads its Picker. The page loads it only when a teacher opens Drive. */
 const PICKER_SCRIPT = "https://apis.google.com/js/api.js";

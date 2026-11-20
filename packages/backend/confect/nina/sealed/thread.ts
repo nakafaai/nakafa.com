@@ -4,10 +4,8 @@ import type {
   QueryCtx,
 } from "@repo/backend/confect/_generated/services";
 import { openRows } from "@repo/backend/confect/nina/sealed/open";
-import {
-  SealedReadError,
-  type ThreadArgs,
-} from "@repo/backend/confect/nina/sealed.spec";
+import type { ThreadArgs } from "@repo/backend/confect/nina/sealed.spec";
+import { SealedReadError } from "@repo/backend/confect/nina/sealed.spec";
 import { Effect } from "effect";
 
 /**

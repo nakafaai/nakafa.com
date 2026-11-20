@@ -1,7 +1,7 @@
+import type { Locale } from "@repo/internationalization/src/locale";
 import {
   DEFAULT_LOCALE,
   decodeLocale,
-  type Locale,
   LocaleSchema,
 } from "@repo/internationalization/src/locale";
 import { SITE_ORIGIN } from "@repo/seo/origin";

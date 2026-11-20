@@ -55,10 +55,8 @@ import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
-import {
-  type ChildItem,
-  withdrawChange,
-} from "@/components/tenant/guardian/change";
+import type { ChildItem } from "@/components/tenant/guardian/change";
+import { withdrawChange } from "@/components/tenant/guardian/change";
 import { GuardianGrades } from "@/components/tenant/guardian/grades";
 import {
   AskDialog,

@@ -2,10 +2,8 @@ import { Ref } from "@confect/core";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { limitWrites } from "@repo/backend/confect/nina/memory/quota";
-import {
-  MEMORY_WRITES_PER_MINUTE,
-  type NinaMemoryDraft,
-} from "@repo/backend/confect/nina/memory.spec";
+import type { NinaMemoryDraft } from "@repo/backend/confect/nina/memory.spec";
+import { MEMORY_WRITES_PER_MINUTE } from "@repo/backend/confect/nina/memory.spec";
 import {
   createMemoryTest,
   sessionRequired,

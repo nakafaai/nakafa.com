@@ -2,11 +2,11 @@ import type {
   Point,
   Rung,
 } from "@repo/design-system/components/contents/biology/dna/ladder";
-import {
-  type Base,
-  complementOf,
-  type Nucleic,
+import type {
+  Base,
+  Nucleic,
 } from "@repo/design-system/components/contents/biology/dna/strand";
+import { complementOf } from "@repo/design-system/components/contents/biology/dna/strand";
 import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { createContext, use } from "react";
 import { Matrix4, Quaternion, Vector3 } from "three";

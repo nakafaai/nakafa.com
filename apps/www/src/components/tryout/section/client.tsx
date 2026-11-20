@@ -2,44 +2,41 @@ import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import { Option } from "effect";
-import { type ComponentProps, type ReactNode, useState } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { useState } from "react";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useNow } from "@/components/player/now";
 import type { TryoutBody } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
-import {
-  type TryoutFinish,
-  useTryoutFinish,
-} from "@/components/tryout/player/finish";
+import type { TryoutFinish } from "@/components/tryout/player/finish";
+import { useTryoutFinish } from "@/components/tryout/player/finish";
 import { TryoutRunningPlayer } from "@/components/tryout/player/opening";
 import {
   TryoutFinishedPlace,
   TryoutReviewFrame,
 } from "@/components/tryout/review/frame";
 import { useTryoutLeave } from "@/components/tryout/route/leave";
+import type { TryoutPageAddress } from "@/components/tryout/route/path";
 import {
   getTryoutPublicPath,
   getTryoutPublicPathHref,
-  type TryoutPageAddress,
 } from "@/components/tryout/route/path";
 import {
   TryoutStartProvider,
   useTryoutStartPhase,
 } from "@/components/tryout/runtime/start";
+import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 import {
   getActiveTryoutAttempt,
   getTryoutRuntimeState,
   isTryoutRuntimeRunning,
   isTryoutStateLive,
   selectActionAttempt,
-  type TryoutRuntimeState,
 } from "@/components/tryout/runtime/state";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
-import {
-  type TryoutStartDestination,
-  TryoutSummaryAction,
-} from "@/components/tryout/section/action";
+import type { TryoutStartDestination } from "@/components/tryout/section/action";
+import { TryoutSummaryAction } from "@/components/tryout/section/action";
 import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
 import { TryoutSectionPageHeader } from "@/components/tryout/section/header";
 import type {

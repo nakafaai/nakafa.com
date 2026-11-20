@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { UserSettingsRole } from "@/components/user/settings/role";
-import { type CurrentUser, useViewer } from "@/lib/identity/client";
+import type { CurrentUser } from "@/lib/identity/client";
+import { useViewer } from "@/lib/identity/client";
 
 /**
  * Renders the learning section: the role card, then the curriculum card that

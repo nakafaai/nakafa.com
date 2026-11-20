@@ -8,12 +8,12 @@ import { newChoiceAnswers } from "@repo/backend/confect/exams/blank";
 import { ExamFull } from "@repo/backend/confect/exams/errors";
 import { MAX_EXAM_QUESTIONS } from "@repo/backend/confect/exams/exam";
 import { insertIndex, placeAt } from "@repo/backend/confect/exams/order";
+import type { questionValidator } from "@repo/backend/confect/exams/question";
 import {
   EMPTY_PROMPT_TEXT,
   encodeAnswers,
   NEW_QUESTION_POINTS,
   NEW_QUESTION_TEMPLATE,
-  type questionValidator,
 } from "@repo/backend/confect/exams/question";
 import { Clock, Effect, Option } from "effect";
 

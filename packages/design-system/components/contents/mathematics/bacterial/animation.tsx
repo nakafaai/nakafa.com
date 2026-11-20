@@ -3,8 +3,8 @@ import {
   BacterialSpeeds,
   BacterialTimeProvider,
 } from "@repo/design-system/components/contents/mathematics/bacterial/controls";
+import type { BacterialFormulaType } from "@repo/design-system/components/contents/mathematics/bacterial/growth";
 import {
-  type BacterialFormulaType,
   BacterialGrowthFrameInputSchema,
   getBacterialGrowthFrame,
 } from "@repo/design-system/components/contents/mathematics/bacterial/growth";
@@ -13,8 +13,8 @@ import {
   NO_DIVISION,
   stepDivision,
 } from "@repo/design-system/components/contents/mathematics/bacterial/sketch";
+import type { BacteriaStore } from "@repo/design-system/components/contents/mathematics/bacterial/store";
 import {
-  type BacteriaStore,
   createBacteriaStore,
   shownGeneration,
 } from "@repo/design-system/components/contents/mathematics/bacterial/store";
@@ -35,7 +35,8 @@ import { useRequired } from "@repo/design-system/hooks/required";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { createContext, type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 

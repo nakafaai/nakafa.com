@@ -1,9 +1,9 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import {
   chosenOptions,
-  type ExamResponse,
   madePairs,
   markedCells,
   NO_RESPONSE,
@@ -12,7 +12,8 @@ import {
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Option, Schema } from "effect";
-import { memo, type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
+import { memo, useMemo } from "react";
 import {
   keepResponse,
   useChooseAnswer,

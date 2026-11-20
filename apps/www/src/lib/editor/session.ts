@@ -5,7 +5,8 @@ import type {
 } from "@repo/backend/confect/editor/view";
 import type { Node, Schema as ProseSchema } from "@tiptap/pm/model";
 import type { EditorState, Transaction } from "@tiptap/pm/state";
-import { type Effect, type Ref, Schema, type Semaphore } from "effect";
+import type { Effect, Ref, Semaphore } from "effect";
+import { Schema } from "effect";
 
 /** A call to the server that failed for a reason the loop does not decide: the network, a denied access, a refused read, or a refused batch. */
 export class SyncFailed extends Schema.TaggedError<

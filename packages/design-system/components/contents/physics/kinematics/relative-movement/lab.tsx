@@ -2,6 +2,10 @@ import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car";
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import { formatSignedRoundedSpeedMath } from "@repo/design-system/components/contents/physics/kinematics/math";
+import type {
+  RelativeMovementCaseId,
+  RelativeMovementState,
+} from "@repo/design-system/components/contents/physics/kinematics/relative-movement/data";
 import {
   getRelativeMovementState,
   isRelativeMovementCaseId,
@@ -10,8 +14,6 @@ import {
   RELATIVE_MOVEMENT_OBSERVER_CAR_MODEL_PATH,
   RELATIVE_MOVEMENT_SCENE,
   RELATIVE_MOVEMENT_TARGET_CAR_MODEL_PATH,
-  type RelativeMovementCaseId,
-  type RelativeMovementState,
 } from "@repo/design-system/components/contents/physics/kinematics/relative-movement/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";

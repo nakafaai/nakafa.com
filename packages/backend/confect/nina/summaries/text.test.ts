@@ -1,8 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  type DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
+import type { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import {
   openSummary,
   sealSummary,

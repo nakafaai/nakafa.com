@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { Titration } from "@repo/design-system/components/contents/chemistry/titration/model";
 import {
   analyteMoles,
   endPoint,
@@ -6,7 +7,6 @@ import {
   levelFor,
   pairOf,
   phAfter,
-  type Titration,
 } from "@repo/design-system/components/contents/chemistry/titration/model";
 
 /** SPM Kimia set 1, question 6: diluted sodium hydroxide against sulfuric acid. */

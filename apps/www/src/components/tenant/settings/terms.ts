@@ -3,12 +3,12 @@ import type { OptimisticLocalStore, OptimisticUpdate } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Array as Arr, Option, Schema } from "effect";
+import type { Period } from "@/components/tenant/settings/state";
 import {
   draftText,
   editPeriod,
   insertPeriod,
   isFirstPage,
-  type Period,
   setPeriodStatus,
 } from "@/components/tenant/settings/state";
 import { changeLoaded, withPage } from "@/lib/data/loaded";

@@ -2,11 +2,13 @@ import { FunctionImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
+import type {
+  GraduationCohort,
+  GraduationElsewhere,
+  GraduationOverview,
+} from "@repo/backend/confect/records/graduation";
 import {
   GraduationAction,
-  type GraduationCohort,
-  type GraduationElsewhere,
-  type GraduationOverview,
   suggestedDate,
 } from "@repo/backend/confect/records/graduation";
 import {

@@ -7,18 +7,14 @@ import {
   makeProgramSnapshotRow,
 } from "@nakafa/aksara-contracts/program/snapshot/hash";
 import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
-import {
-  type ContentSnapshotRow,
-  canonicalizeContentSnapshotRow,
-} from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { READ_MODEL_DOCUMENT_LIMIT } from "@repo/backend/confect/contentRelease/document";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import schema from "@repo/backend/convex/schema";
-import {
-  makeProgramSnapshotData,
-  type ProgramSnapshotData,
-} from "@repo/backend/test/program/snapshot";
+import type { ProgramSnapshotData } from "@repo/backend/test/program/snapshot";
+import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import { stageTestRow } from "@repo/backend/test/snapshot/stage";
 import { convexTest } from "convex-test";
 import { Effect } from "effect";

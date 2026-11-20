@@ -7,15 +7,8 @@ import {
 } from "@repo/design-system/components/ui/mention";
 import { isEnterOutsideComposition } from "@repo/design-system/lib/keyboard";
 import { Array as Arr, Number as Num, Option } from "effect";
-import {
-  type KeyboardEvent,
-  type RefObject,
-  type SyntheticEvent,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import type { KeyboardEvent, RefObject, SyntheticEvent } from "react";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { caretRect } from "@/components/tenant/classes/forum/caret";
 import {

@@ -1,7 +1,8 @@
 import { attributesOf } from "@repo/design-system/lib/attribute";
 import type { Shape } from "@repo/mascot/shape";
 import { Array as Arr } from "effect";
-import { createElement, type ReactElement, type SVGAttributes } from "react";
+import type { ReactElement, SVGAttributes } from "react";
+import { createElement } from "react";
 
 /** What a mark adds to its element: any SVG attribute, and any `data-` attribute. */
 export type MarkAttributes = SVGAttributes<SVGElement> &

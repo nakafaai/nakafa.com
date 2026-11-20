@@ -39,7 +39,8 @@ import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** The room the camera frames, in metres from the launcher. */
 const ROOM = { bottom: -0.25, left: -0.6, right: 4.6, top: 2.6 } as const;

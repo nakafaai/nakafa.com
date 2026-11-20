@@ -1,13 +1,13 @@
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect, Schema } from "effect";
+import type { ActiveContentReleaseId } from "@/lib/content/published/active";
 import {
-  type ActiveContentReleaseId,
   expireActiveContentIdentity,
   loadActiveContentIdentity,
 } from "@/lib/content/published/active";
+import type { PublishedProjectionIdentity } from "@/lib/content/published/errors";
 import {
   PublishedProjectionError,
-  type PublishedProjectionIdentity,
   PublishedReleaseMismatchError,
 } from "@/lib/content/published/errors";
 

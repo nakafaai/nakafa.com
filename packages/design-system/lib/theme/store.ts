@@ -1,5 +1,9 @@
+import type {
+  ConcreteTheme,
+  ThemeAppearance,
+  ThemeChoice,
+} from "@repo/design-system/lib/theme/registry";
 import {
-  type ConcreteTheme,
   concreteThemeValues,
   DEFAULT_THEME,
   getThemeAppearance,
@@ -8,11 +12,10 @@ import {
   resolveThemeChoice,
   THEME_SHEET_PATH,
   THEME_STORAGE_KEY,
-  type ThemeAppearance,
-  type ThemeChoice,
 } from "@repo/design-system/lib/theme/registry";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import { createStore, type StoreApi } from "zustand";
+import type { StoreApi } from "zustand";
+import { createStore } from "zustand";
 
 /** The query that matches while the system asks for a dark appearance. */
 const DARK_SYSTEM_QUERY = "(prefers-color-scheme: dark)";

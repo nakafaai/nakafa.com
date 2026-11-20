@@ -1,5 +1,6 @@
 import { lazyRouteComponent } from "@tanstack/react-router";
-import { type ComponentProps, Suspense } from "react";
+import type { ComponentProps } from "react";
+import { Suspense } from "react";
 
 /** The review's code, which reaches KaTeX and the Markdown reader. */
 const LazyTryoutReview = lazyRouteComponent(

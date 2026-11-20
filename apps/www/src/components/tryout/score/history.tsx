@@ -16,7 +16,8 @@ import {
 import { rowLineVariants } from "@repo/design-system/lib/row";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageHeaderLabel } from "@/components/shared/page/header";

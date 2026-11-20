@@ -21,7 +21,8 @@ import {
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 
 const DEFAULT_INPUT = 5;

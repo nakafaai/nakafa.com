@@ -8,10 +8,8 @@ import { deleteFile } from "@repo/backend/confect/bucket/file";
 import { Class } from "@repo/backend/confect/classroom/access";
 import { UploadGone } from "@repo/backend/confect/classroom/forum/errors";
 import type { messageField } from "@repo/backend/confect/classroom/forum/message";
-import {
-  type PollDraft,
-  pollField,
-} from "@repo/backend/confect/classroom/forum/poll";
+import type { PollDraft } from "@repo/backend/confect/classroom/forum/poll";
+import { pollField } from "@repo/backend/confect/classroom/forum/poll";
 import type { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { sealText } from "@repo/backend/confect/vault/text";

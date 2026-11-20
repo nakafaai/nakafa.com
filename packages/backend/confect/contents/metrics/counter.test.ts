@@ -1,10 +1,8 @@
 import { RegisteredConvexFunction } from "@confect/server";
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import {
-  buildMetricsBatch,
-  type PopularityCounterDelta,
-} from "@repo/backend/confect/contents/metrics/batch";
+import type { PopularityCounterDelta } from "@repo/backend/confect/contents/metrics/batch";
+import { buildMetricsBatch } from "@repo/backend/confect/contents/metrics/batch";
 import { applyPopularityCounter } from "@repo/backend/confect/contents/metrics/counter";
 import { learningPopularityRankings } from "@repo/backend/confect/contents/rankings";
 import { registerLearningPopularityAggregate } from "@repo/backend/confect/test.helpers";

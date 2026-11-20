@@ -1,4 +1,5 @@
-import { type AnyExtension, Node, type NodeViewRenderer } from "@tiptap/core";
+import type { AnyExtension, NodeViewRenderer } from "@tiptap/core";
+import { Node } from "@tiptap/core";
 import { Array as Arr, Option, Schema } from "effect";
 
 /** An attribute that holds a JSON value, which the DOM keeps as JSON text. */

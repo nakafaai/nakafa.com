@@ -1,5 +1,6 @@
 import { BASE, NINA, PAGE, PAPER, POP, WHITE } from "@repo/mascot/color";
-import { circle, group, path, rect, type Shape } from "@repo/mascot/shape";
+import type { Shape } from "@repo/mascot/shape";
+import { circle, group, path, rect } from "@repo/mascot/shape";
 import { sparkle } from "@repo/mascot/sparkle";
 import type { Mark } from "@repo/mascot/thing/mark";
 import type { ThingName } from "@repo/mascot/thing/name";

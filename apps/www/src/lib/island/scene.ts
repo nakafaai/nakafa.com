@@ -1,6 +1,7 @@
 import { Array as Arr, Option } from "effect";
 import { bodiesOf, joined, seaBodies } from "@/lib/island/bodies";
-import { type Animal, herdOf, wander } from "@/lib/island/life";
+import type { Animal } from "@/lib/island/life";
+import { herdOf, wander } from "@/lib/island/life";
 import { plantBodies } from "@/lib/island/plants";
 import { reefBodies, reefOf } from "@/lib/island/reef";
 import { folkIndex, isAsleep, keepDay } from "@/lib/island/routine";

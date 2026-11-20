@@ -34,7 +34,8 @@ import { getColor } from "@repo/design-system/lib/color";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** The widest swing, in radians. */
 const AMPLITUDE = 0.2;

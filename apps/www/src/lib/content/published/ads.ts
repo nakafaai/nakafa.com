@@ -1,6 +1,7 @@
 import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
 import { Array as Arr } from "effect";
-import { createElement, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createElement } from "react";
 import { AdSlot } from "@/components/ads/slot";
 import type { AdUnit } from "@/lib/ads/account";
 import { adSlotIndices } from "@/lib/ads/placement";

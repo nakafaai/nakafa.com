@@ -1,5 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Effect, type Result, Schema } from "effect";
+import type { Result } from "effect";
+import { Effect, Schema } from "effect";
 
 /** What the server answers for a reserved file: the R2 address its bytes go to, and the file's ID. */
 const Reserved = Schema.Struct({

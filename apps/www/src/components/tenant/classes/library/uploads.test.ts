@@ -2,10 +2,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
 import type { LibraryItem } from "@/components/tenant/classes/library/optimistic";
+import type { LibraryUpload } from "@/components/tenant/classes/library/uploads";
 import {
   arrivedUploads,
   createLibraryUploads,
-  type LibraryUpload,
   pendingUploads,
 } from "@/components/tenant/classes/library/uploads";
 

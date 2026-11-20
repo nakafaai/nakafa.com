@@ -1,5 +1,6 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect, FileSystem, Path, Schema } from "effect";
 import { readPlaceholder } from "@/e2e/support/placeholder";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";

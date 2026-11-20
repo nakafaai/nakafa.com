@@ -1,8 +1,8 @@
 import { readCookie } from "@repo/internationalization/src/cookie";
+import type { Locale } from "@repo/internationalization/src/locale";
 import {
   decodeLocale,
   LOCALE_COOKIE,
-  type Locale,
   VISITOR_LOCALE,
 } from "@repo/internationalization/src/locale";
 import { Array as Arr, Option, Order, Schema } from "effect";

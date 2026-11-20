@@ -1,13 +1,13 @@
 import { classify } from "@repo/backend/confect/gateway/classify";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
 import { decisionDeadline } from "@repo/backend/confect/gateway/purpose";
-import {
-  type Experimental_DecisionModel as DecisionModelOrId,
-  type Experimental_DecisionQuestion as DecisionQuestion,
-  type Experimental_DecisionResult as DecisionResult,
-  type Experimental_DecisionState as DecisionState,
-  experimental_decide,
+import type {
+  Experimental_DecisionModel as DecisionModelOrId,
+  Experimental_DecisionQuestion as DecisionQuestion,
+  Experimental_DecisionResult as DecisionResult,
+  Experimental_DecisionState as DecisionState,
 } from "ai";
+import { experimental_decide } from "ai";
 import { Effect } from "effect";
 
 /**

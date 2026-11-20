@@ -1,16 +1,20 @@
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
+import type {
+  RollbackPage,
+  RollbackRecord,
+} from "@nakafa/aksara-contracts/release/rollback/spec";
 import {
   MAX_ROLLBACK_PAGE_BYTES,
   MAX_ROLLBACK_PAGE_RECORDS,
-  type RollbackPage,
   RollbackPageRequestSchema,
-  type RollbackRecord,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
+import type {
+  RoutePage,
+  RouteRollbackRecord,
+} from "@nakafa/aksara-contracts/release/route/page";
 import {
   MAX_ROUTE_PAGE_RECORDS,
-  type RoutePage,
   RoutePageRequestSchema,
-  type RouteRollbackRecord,
 } from "@nakafa/aksara-contracts/release/route/page";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";

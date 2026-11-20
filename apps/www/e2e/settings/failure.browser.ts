@@ -1,8 +1,9 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import type { Changes } from "@/e2e/support/changes";
 import {
   ANSWER_MILLISECONDS,
-  type Changes,
   live,
   reloadUntil,
   saved,

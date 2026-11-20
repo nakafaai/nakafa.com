@@ -1,7 +1,5 @@
-import {
-  type RichText,
-  RichTextSchema,
-} from "@nakafa/aksara-contracts/assessment/inline";
+import type { RichText } from "@nakafa/aksara-contracts/assessment/inline";
+import { RichTextSchema } from "@nakafa/aksara-contracts/assessment/inline";
 import { Array as Arr, Predicate, Record as Rec, Schema } from "effect";
 
 /** Checks whether a prop value is rich text: the inline nodes of a document. */

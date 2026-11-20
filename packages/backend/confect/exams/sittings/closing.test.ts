@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
+import type { SittingFixture } from "@repo/backend/test/sittings";
 import {
   admittedOf,
   attemptRow,
@@ -12,7 +13,6 @@ import {
   keyedSchool,
   OPENS_AT,
   openedSitting,
-  type SittingFixture,
   scheduleSitting,
   seedAttempt,
   sittingRow,

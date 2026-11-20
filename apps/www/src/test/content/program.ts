@@ -6,10 +6,8 @@ import {
   makeProgramSnapshot,
   makeProgramSnapshotRow,
 } from "@nakafa/aksara-contracts/program/snapshot/hash";
-import {
-  type ContentSnapshotManifest,
-  canonicalizeContentSnapshotRow,
-} from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { ContentSnapshotManifest } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import {
   inheritContentSnapshots,
   replaceContentSnapshot,

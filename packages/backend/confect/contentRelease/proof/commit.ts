@@ -16,10 +16,8 @@ import {
   decodeProofJson,
   decodeReleaseJson,
 } from "@repo/backend/confect/contentRelease/parse";
-import {
-  ROLLBACK_RETENTION_MS,
-  type statusValidator,
-} from "@repo/backend/confect/contentRelease/spec";
+import type { statusValidator } from "@repo/backend/confect/contentRelease/spec";
+import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
 import { Clock, Effect } from "effect";
 
 type ReleaseStatus = typeof statusValidator.Type;

@@ -1,8 +1,8 @@
 import { render } from "@react-email/render";
 import { Layout } from "@repo/email/layout";
+import type { InviteEmailInput } from "@repo/email/templates/invite/content";
 import {
   getInviteEmailCopy,
-  type InviteEmailInput,
   InviteEmailInputSchema,
 } from "@repo/email/templates/invite/content";
 import {

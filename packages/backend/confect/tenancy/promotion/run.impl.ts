@@ -2,11 +2,11 @@ import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { TenantPromotionsDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import {
-  DatabaseReader,
-  type DatabaseWriter,
-  type Scheduler,
+import type {
+  DatabaseWriter,
+  Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { promotionLocked } from "@repo/backend/confect/tenancy/authority";
@@ -26,10 +26,10 @@ import {
   placeApply,
   placeUndo,
 } from "@repo/backend/confect/tenancy/promotion/place";
+import type { StepOutcome } from "@repo/backend/confect/tenancy/promotion/progress";
 import {
   IDLE_PROGRESS,
   nextStepOf,
-  type StepOutcome,
 } from "@repo/backend/confect/tenancy/promotion/progress";
 import { update } from "@repo/backend/confect/tenancy/promotion/row";
 import spec from "@repo/backend/confect/tenancy/promotion/run.spec";

@@ -1,12 +1,12 @@
 import { useMediaQuery } from "@mantine/hooks";
 import { useThree } from "@react-three/fiber";
+import type { SubatomicParticlePropertiesModeId } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/data";
 import {
   CHARGE_MODE_ID,
   getSubatomicParticlePropertiesColors,
   isSubatomicParticlePropertiesModeId,
   SUBATOMIC_PARTICLE_PROPERTIES_MODE_IDS,
   SUBATOMIC_PARTICLE_PROPERTIES_VIEW_CONFIG,
-  type SubatomicParticlePropertiesModeId,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/data";
 import {
   SubatomicParticlePropertiesScene,

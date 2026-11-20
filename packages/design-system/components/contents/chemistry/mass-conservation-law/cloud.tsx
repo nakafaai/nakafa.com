@@ -1,10 +1,10 @@
 import { Instance, Instances } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import type { ScaleRig } from "@repo/design-system/components/contents/chemistry/bench";
 import {
   Beaker,
   LabBench,
   Scale,
-  type ScaleRig,
 } from "@repo/design-system/components/contents/chemistry/bench";
 import {
   COMPOUND,
@@ -35,21 +35,10 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr } from "effect";
-import {
-  type ReactNode,
-  type Ref,
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-} from "react";
-import {
-  Color,
-  type Group,
-  type InstancedMesh,
-  type Mesh,
-  MeshPhysicalMaterial,
-} from "three";
+import type { ReactNode, Ref } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
+import type { Group, InstancedMesh, Mesh } from "three";
+import { Color, MeshPhysicalMaterial } from "three";
 
 /** The pour takes three seconds; the cloud then settles for five. */
 const POUR = 3;

@@ -1,8 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  APP_LOCALE_CODES,
-  type AppLocaleCode,
-} from "@nakafa/aksara-contracts/locale";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import de from "@repo/internationalization/dictionaries/de.json" with {
   type: "json",
 };
@@ -16,6 +14,7 @@ import ms from "@repo/internationalization/dictionaries/ms.json" with {
   type: "json",
 };
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
+import type { ToastCopyTextSchema } from "@repo/internationalization/src/test.toast";
 import {
   characterCount,
   lineCount,
@@ -24,7 +23,6 @@ import {
   TOAST_DESCRIPTION_LINES,
   TOAST_TITLE_LINE_CHARACTERS,
   TOAST_TITLE_LINES,
-  type ToastCopyTextSchema,
 } from "@repo/internationalization/src/test.toast";
 import {
   ToastValueKeySchema,

@@ -6,15 +6,13 @@ import { cn } from "cn";
 import { Effect, Fiber, Option, Result } from "effect";
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  type ChatContextValue,
-  ChatValueProvider,
-} from "@/components/ai/chat/context";
+import type { ChatContextValue } from "@/components/ai/chat/context";
+import { ChatValueProvider } from "@/components/ai/chat/context";
 import { ChatFeedContext } from "@/components/ai/chat/feed";
 import { ChatHeader } from "@/components/ai/chat/header";
+import type { ReaderView } from "@/components/ai/chat/reading";
 import {
   ReaderReadError,
-  type ReaderView,
   readerView,
   withOlderPage,
 } from "@/components/ai/chat/reading";

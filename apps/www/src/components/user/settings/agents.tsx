@@ -1,9 +1,5 @@
-import {
-  type OptimisticUpdate,
-  QueryResult,
-  useMutation,
-  useQuery,
-} from "@confect/react";
+import type { OptimisticUpdate } from "@confect/react";
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Unlink03Icon } from "@hugeicons/core-free-icons";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import { Button } from "@repo/design-system/components/ui/button";

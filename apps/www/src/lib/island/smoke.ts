@@ -1,7 +1,8 @@
 import { AIR, idOf } from "@repo/backend/confect/island/blocks";
 import { HEIGHT, SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
-import { blockAt, type Cells } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { blockAt } from "@/lib/island/world";
 
 const BRICK = idOf("brick");
 const ROOFS = [idOf("roof"), idOf("slate")];

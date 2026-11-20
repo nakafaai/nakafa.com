@@ -11,7 +11,8 @@ import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { cn } from "cn";
 import { Schema } from "effect";
-import { Toaster as Sonner, type ToasterProps } from "sonner";
+import type { ToasterProps } from "sonner";
+import { Toaster as Sonner } from "sonner";
 
 const ToasterStyleSchema = Schema.Struct({
   "--border-radius": Schema.String,

@@ -1,4 +1,5 @@
 import { Array as Arr, HashSet, Option, Result } from "effect";
+import type { JsxAttributes, Node, SourceFile } from "tsrs/ast";
 import {
   isArrowFunction,
   isBlock,
@@ -12,9 +13,6 @@ import {
   isJsxSelfClosingElement,
   isStringLiteral,
   isStringLiteralLikeNode,
-  type JsxAttributes,
-  type Node,
-  type SourceFile,
 } from "tsrs/ast";
 import { nodesBelow, tagText } from "#scripts/check/drilling";
 

@@ -2,10 +2,8 @@ import type { ClassroomLibraryDoc } from "@repo/backend/confect/_generated/docs"
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Class } from "@repo/backend/confect/classroom/access";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
-import {
-  type LibraryView,
-  libraryField,
-} from "@repo/backend/confect/classroom/library/item";
+import type { LibraryView } from "@repo/backend/confect/classroom/library/item";
+import { libraryField } from "@repo/backend/confect/classroom/library/item";
 import { starredBy } from "@repo/backend/confect/classroom/library/star";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { openText } from "@repo/backend/confect/vault/text";

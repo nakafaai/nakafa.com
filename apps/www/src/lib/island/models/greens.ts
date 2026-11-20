@@ -1,5 +1,6 @@
 import { Array as Arr } from "effect";
-import { type Bloom, leafOf, rosetteOf } from "@/lib/island/models/blooms";
+import type { Bloom } from "@/lib/island/models/blooms";
+import { leafOf, rosetteOf } from "@/lib/island/models/blooms";
 import type { Face } from "@/lib/island/models/parts";
 import { ball, rod, tube } from "@/lib/island/models/solids";
 

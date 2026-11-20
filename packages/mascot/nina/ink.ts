@@ -1,5 +1,6 @@
 import { NINA, TEXT } from "@repo/mascot/color";
-import { at, type Place } from "@repo/mascot/nina/point";
+import type { Place } from "@repo/mascot/nina/point";
+import { at } from "@repo/mascot/nina/point";
 import { path } from "@repo/mascot/shape";
 import { Array as Arr } from "effect";
 

@@ -19,13 +19,8 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { elementById } from "@repo/design-system/lib/element";
 import { Array as Arr, Option } from "effect";
-import {
-  type MouseEvent,
-  type ReactElement,
-  type ReactNode,
-  useEffect,
-  useRef,
-} from "react";
+import type { MouseEvent, ReactElement, ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { TocProvider, useToc } from "@/components/shared/outline/context";
 import { revealOffset } from "@/components/shared/outline/reading";

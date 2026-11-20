@@ -39,7 +39,8 @@ import { textDirection } from "@repo/internationalization/src/direction";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect, Option } from "effect";
-import { createContext, type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, Suspense, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { Authenticated } from "@/components/auth/gate";
 import { ShellLocksContext } from "@/components/sidebar/locks";
@@ -48,9 +49,9 @@ import { useMenuWarm } from "@/components/sidebar/menu/warm";
 import { SidebarToggle } from "@/components/sidebar/toggle";
 import { TenantAccountItems } from "@/components/tenant/account";
 import { DrawnClasses } from "@/components/tenant/classes/nav";
+import type { TenantValue } from "@/components/tenant/context";
 import {
   TenantContext,
-  type TenantValue,
   useTenant,
   ViewerPreloadContext,
 } from "@/components/tenant/context";

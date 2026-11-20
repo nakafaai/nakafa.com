@@ -10,7 +10,8 @@ import {
 } from "@hugeicons/core-free-icons";
 import { barLine, objectBar } from "@repo/design-system/components/editor/bar";
 import { RichEditorControl } from "@repo/design-system/components/editor/tools";
-import { type Editor, findParentNode } from "@tiptap/core";
+import type { Editor } from "@tiptap/core";
+import { findParentNode } from "@tiptap/core";
 import type { EditorState, Selection } from "@tiptap/pm/state";
 import { useCurrentEditor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";

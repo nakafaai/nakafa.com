@@ -7,26 +7,28 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
+import type {
+  ActiveAppLocaleCode,
+  AppLocaleCode,
+  ArtifactLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
 import {
   ACTIVE_APP_LOCALE_CODES,
-  type ActiveAppLocaleCode,
   ActiveAppLocaleCodeSchema,
-  type AppLocaleCode,
   AppLocaleSchema,
-  type ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import {
   CONTENT_RELEASE_FORMAT,
   SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
+import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import {
   ContentSnapshotKindSchema,
-  type PublicationScope,
   PublicationScopeSchema,
 } from "@nakafa/aksara-contracts/release/snapshot/scope";
+import type { ContentSnapshotSet } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
-  type ContentSnapshotSet,
   ContentSnapshotSetSchema,
   inheritContentSnapshots,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";

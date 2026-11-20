@@ -1,4 +1,5 @@
-import { Agent, createTool, type UsageHandler } from "@convex-dev/agent";
+import type { UsageHandler } from "@convex-dev/agent";
+import { Agent, createTool } from "@convex-dev/agent";
 import { researchMaxSources } from "@repo/backend/client/nina/research";
 import { components } from "@repo/backend/confect/_generated/components";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";

@@ -1,11 +1,8 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import {
-  ANSWER_MILLISECONDS,
-  type Changes,
-  reloadUntil,
-  saved,
-} from "@/e2e/support/changes";
+import type { Changes } from "@/e2e/support/changes";
+import { ANSWER_MILLISECONDS, reloadUntil, saved } from "@/e2e/support/changes";
 import { readBounds, swipeDown } from "@/e2e/support/input";
 import {
   confirmDelete,

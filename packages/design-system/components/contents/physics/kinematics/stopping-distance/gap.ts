@@ -1,5 +1,5 @@
+import type { Stop } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/motion";
 import {
-  type Stop,
   stopPosition,
   stoppingTime,
   stopSpeed,

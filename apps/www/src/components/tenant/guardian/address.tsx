@@ -13,10 +13,8 @@ import { Option, Schema, String as Str } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
-import {
-  type LinkItem,
-  readdressLinkChange,
-} from "@/components/tenant/guardian/change";
+import type { LinkItem } from "@/components/tenant/guardian/change";
+import { readdressLinkChange } from "@/components/tenant/guardian/change";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**

@@ -9,13 +9,8 @@ import {
 } from "@repo/design-system/components/ui/picker";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
-import {
-  createContext,
-  type ReactElement,
-  Suspense,
-  use,
-  useState,
-} from "react";
+import type { ReactElement } from "react";
+import { createContext, Suspense, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { CountryFlagIcon } from "@/components/shared/flag";
 

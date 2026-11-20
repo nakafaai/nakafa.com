@@ -1,9 +1,9 @@
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import type { StatusTone } from "@repo/design-system/lib/status";
 import {
   BAND_STATUS_BADGES,
   STATUS_BADGES,
-  type StatusTone,
 } from "@repo/design-system/lib/status";
 import type { ComponentProps } from "react";
 

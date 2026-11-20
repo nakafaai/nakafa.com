@@ -3,9 +3,9 @@ import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
+import type { LOCALES } from "@repo/internationalization/src/locale";
 import {
   DEFAULT_LOCALE,
-  type LOCALES,
   LocaleSchema,
 } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, HashSet, Record as Rec, Schema } from "effect";

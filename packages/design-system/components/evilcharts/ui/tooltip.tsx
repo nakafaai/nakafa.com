@@ -1,18 +1,22 @@
 import { useChart } from "@repo/design-system/components/evilcharts/ui/chart";
 import { getChartPayloadStringValue } from "@repo/design-system/components/evilcharts/ui/chart-payload";
+import type {
+  TooltipIndicator,
+  TooltipLabelProps,
+} from "@repo/design-system/components/evilcharts/ui/tooltip-item";
 import {
-  type TooltipIndicator,
   TooltipItem,
   TooltipItemContext,
   TooltipLabel,
-  type TooltipLabelProps,
 } from "@repo/design-system/components/evilcharts/ui/tooltip-item";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type * as React from "react";
 import { createContext, use } from "react";
-import { type DefaultTooltipContentProps, Tooltip } from "recharts";
+import type { DefaultTooltipContentProps } from "recharts";
+import { Tooltip } from "recharts";
 import type {
   NameType,
   ValueType,

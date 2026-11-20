@@ -5,12 +5,12 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Effect, Record as Rec, Result } from "effect";
 import { useRef, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import {
-  type ReadRow,
-  readDapodikSheet,
-  type SheetProblem,
-  type SheetRead,
+import type {
+  ReadRow,
+  SheetProblem,
+  SheetRead,
 } from "@/components/tenant/roster/dapodik";
+import { readDapodikSheet } from "@/components/tenant/roster/dapodik";
 import {
   isBundleFile,
   readOneRoster,

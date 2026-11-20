@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
+import type { ChatView } from "@repo/backend/confect/chats/view";
 import {
-  type ChatView,
   chatViewValidator,
   readerChat,
 } from "@repo/backend/confect/chats/view";

@@ -11,9 +11,9 @@ import {
   spotlight,
   vignette,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { StrobeShot } from "@repo/design-system/components/contents/physics/kinematics/strobe/flash";
 import {
   STROBE_SHOTS,
-  type StrobeShot,
   StrobeShotSchema,
   strobeBalls,
   strobeFacts,

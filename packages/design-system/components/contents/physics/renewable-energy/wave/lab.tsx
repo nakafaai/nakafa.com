@@ -10,9 +10,9 @@ import {
   paintSky,
   paintSun,
 } from "@repo/design-system/components/contents/physics/renewable-energy/scenery/outdoor";
+import type { Sea } from "@repo/design-system/components/contents/physics/renewable-energy/wave/swell";
 import {
   SEA_STATES,
-  type Sea,
   SeaSchema,
   surfaceHeight,
   wavelength,
@@ -41,7 +41,8 @@ import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** How much sea the view spans, in metres. */
 const VIEW_METRES = 320;

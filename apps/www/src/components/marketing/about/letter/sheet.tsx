@@ -1,5 +1,6 @@
 import { useIntersection } from "@mantine/hooks";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /**
  * The founder's note as it comes on screen. Once a third of it shows, it is

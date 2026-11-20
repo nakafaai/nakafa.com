@@ -36,28 +36,28 @@ Measured on the dev deployment on 8 October 2026. Requests went to
 `https://ai-gateway.convex.dev/v1` with `getServiceToken("ai-gateway")`, the
 path `convexGateway` uses.
 
-| Probe | Result |
-| --- | --- |
-| `GET /models` | 200. `google/gemini-3.5-flash-lite` and `google/gemini-3.7-flash` are listed. |
-| Plain chat on `google/gemini-3.5-flash-lite` | 200 in 722 ms. `usage.cost` holds the US dollar cost of the call. |
-| Plain chat on `google/gemini-3.7-flash` | 200 in 2312 ms. |
-| `reasoning_effort: "high"` on `gemini-3.7-flash` | 200. 357 reasoning tokens, and the reasoning summary comes back in `message.reasoning` without asking for it. `"low"` gives 189 reasoning tokens, no setting gives 377. |
-| `reasoning_effort: "minimal"` on `gemini-3.5-flash-lite` | 200, 0 reasoning tokens. `"none"` is rejected with 400 ("Reasoning is mandatory for this endpoint and cannot be disabled."). |
-| `reasoning_effort` `low` and `high` on `google/gemini-3.5-flash-lite`, plain | 200. 290 reasoning tokens for `low` and 577 for `high` (`liteLow.json`, `liteHigh.json`). |
-| `reasoning_effort` `low` and `high` on `google/gemini-3.5-flash-lite` with a required function tool | 200. 0 reasoning tokens for `low` and 96 for `high`, and the tool call comes back (`liteLowTool.json`, `liteHighTool.json`). |
-| Function tools, `tool_choice: "required"`, and a tool result sent back | On `google/gemini-3.5-flash-lite` with no effort set, and on `google/gemini-3.7-flash` with `reasoning_effort: "high"`: 200 for both steps. No step sends reasoning details back. |
-| `response_format` with a strict JSON schema | 200, valid JSON. |
-| Streaming with `stream_options.include_usage` | 200. The last chunk carries `usage` with `cost`. Reasoning arrives in `delta.reasoning`. |
-| Streaming with no `stream_options`, the request the adapter sends | 200. The last chunk still carries `usage` with `cost`, on both models (`streamPlainLite.json`, `streamPlainPro.json`, `streamPlainLiteLow.json`), so a streamed answer records its tokens and cost. |
-| A PDF as a `file` part with a data URL, a PNG as an `image_url` data URL | 200, both read correctly. |
-| A PNG and a JPEG, 96 by 96 pixels, by Convex storage URL | 200 for the PNG and the JPEG on `google/gemini-3.5-flash-lite`, and 200 for the JPEG on `google/gemini-3.7-flash` (`pngStored96.json`, `jpgStored96.json`, `jpgStored96Pro.json`). |
-| A PDF by Convex storage URL in a `file` part | 200. The gateway reads it (`pdfStored.json`). |
-| An image URL on another host (Wikimedia Commons) | 400: the gateway's fetch of the image received a 400 status code (`imageUrl.json`). |
-| `provider` | 400 `unsupported_parameter` with `param` `provider` and type `invalid_request_error`: "The `provider` parameter is not supported. Convex selects how a request is served." Measured (`rejectedProvider.json`). |
-| `route`, `models`, `transforms`, `plugins`, `preset` | Documented as rejected with `unsupported_parameter` on Chat Completions, with no message given. Not probed. |
-| Unknown model | 400 `{ "error": { "message": "... is not a valid model ID", "code": 400 } }`. |
-| `tools: [{ type: "google_search" }]` and `web_search_options` | Ignored: the answer shows no search. Google Search grounding does not pass through this gateway. |
-| The `:online` model suffix and the `openrouter:web_search` server tool | 200 with 3 and 2 annotations. `usage.cost` is 0.0282192 and 0.0282317 US dollars per call (`searchOnline.json`, `searchServerTool.json`). Not adopted, see Consequences. |
+| Probe                                                                                               | Result                                                                                                                                                                                                         |
+| --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /models`                                                                                       | 200. `google/gemini-3.5-flash-lite` and `google/gemini-3.7-flash` are listed.                                                                                                                                  |
+| Plain chat on `google/gemini-3.5-flash-lite`                                                        | 200 in 722 ms. `usage.cost` holds the US dollar cost of the call.                                                                                                                                              |
+| Plain chat on `google/gemini-3.7-flash`                                                             | 200 in 2312 ms.                                                                                                                                                                                                |
+| `reasoning_effort: "high"` on `gemini-3.7-flash`                                                    | 200. 357 reasoning tokens, and the reasoning summary comes back in `message.reasoning` without asking for it. `"low"` gives 189 reasoning tokens, no setting gives 377.                                        |
+| `reasoning_effort: "minimal"` on `gemini-3.5-flash-lite`                                            | 200, 0 reasoning tokens. `"none"` is rejected with 400 ("Reasoning is mandatory for this endpoint and cannot be disabled.").                                                                                   |
+| `reasoning_effort` `low` and `high` on `google/gemini-3.5-flash-lite`, plain                        | 200. 290 reasoning tokens for `low` and 577 for `high` (`liteLow.json`, `liteHigh.json`).                                                                                                                      |
+| `reasoning_effort` `low` and `high` on `google/gemini-3.5-flash-lite` with a required function tool | 200. 0 reasoning tokens for `low` and 96 for `high`, and the tool call comes back (`liteLowTool.json`, `liteHighTool.json`).                                                                                   |
+| Function tools, `tool_choice: "required"`, and a tool result sent back                              | On `google/gemini-3.5-flash-lite` with no effort set, and on `google/gemini-3.7-flash` with `reasoning_effort: "high"`: 200 for both steps. No step sends reasoning details back.                              |
+| `response_format` with a strict JSON schema                                                         | 200, valid JSON.                                                                                                                                                                                               |
+| Streaming with `stream_options.include_usage`                                                       | 200. The last chunk carries `usage` with `cost`. Reasoning arrives in `delta.reasoning`.                                                                                                                       |
+| Streaming with no `stream_options`, the request the adapter sends                                   | 200. The last chunk still carries `usage` with `cost`, on both models (`streamPlainLite.json`, `streamPlainPro.json`, `streamPlainLiteLow.json`), so a streamed answer records its tokens and cost.            |
+| A PDF as a `file` part with a data URL, a PNG as an `image_url` data URL                            | 200, both read correctly.                                                                                                                                                                                      |
+| A PNG and a JPEG, 96 by 96 pixels, by Convex storage URL                                            | 200 for the PNG and the JPEG on `google/gemini-3.5-flash-lite`, and 200 for the JPEG on `google/gemini-3.7-flash` (`pngStored96.json`, `jpgStored96.json`, `jpgStored96Pro.json`).                             |
+| A PDF by Convex storage URL in a `file` part                                                        | 200. The gateway reads it (`pdfStored.json`).                                                                                                                                                                  |
+| An image URL on another host (Wikimedia Commons)                                                    | 400: the gateway's fetch of the image received a 400 status code (`imageUrl.json`).                                                                                                                            |
+| `provider`                                                                                          | 400 `unsupported_parameter` with `param` `provider` and type `invalid_request_error`: "The `provider` parameter is not supported. Convex selects how a request is served." Measured (`rejectedProvider.json`). |
+| `route`, `models`, `transforms`, `plugins`, `preset`                                                | Documented as rejected with `unsupported_parameter` on Chat Completions, with no message given. Not probed.                                                                                                    |
+| Unknown model                                                                                       | 400 `{ "error": { "message": "... is not a valid model ID", "code": 400 } }`.                                                                                                                                  |
+| `tools: [{ type: "google_search" }]` and `web_search_options`                                       | Ignored: the answer shows no search. Google Search grounding does not pass through this gateway.                                                                                                               |
+| The `:online` model suffix and the `openrouter:web_search` server tool                              | 200 with 3 and 2 annotations. `usage.cost` is 0.0282192 and 0.0282317 US dollars per call (`searchOnline.json`, `searchServerTool.json`). Not adopted, see Consequences.                                       |
 
 An 8 by 8 pixel PNG was refused by the provider both by Convex storage URL
 (`imageStored.json`, 400) and as a data URL (`imageData.json`, 400), so the
@@ -83,23 +83,23 @@ input tokens, output free). A request holds 64k tokens. The AI SDK warned
 `The feature "providerOptions.convexGateway" is not supported` on every call:
 the evaluation model of 0.2.1 sends no `provider` field.
 
-| Message (shortened) | lasting | private |
-| --- | --- | --- |
-| id: grade 12 science, wants ITB informatics next year | 0.95 | 0.03 |
-| id: what is the derivative of x^3 sin x | 0.03 | 0.01 |
-| en: understands better with a worked example first | 0.92 | 0.01 |
-| en: explain photosynthesis | 0.06 | 0.01 |
-| de: exam on 3 November, integrals are hard | 0.97 | 0.03 |
-| de: derivative of e^x | 0.04 | 0.01 |
-| ja: third year of high school, Tokyo University next year, probability is hard | 0.97 | 0.03 |
-| ja: how to solve a quadratic equation | 0.04 | 0.01 |
-| ar: grade 11, organic chemistry is very hard | 0.95 | 0.02 |
-| jv: grade 11, prefers learning with pictures | 0.93 | 0.02 |
-| id: please explain again, still confused | 0.16 | 0.01 |
-| id: an email address and a phone number | 0.06 | 0.93 |
-| id: has diabetes and misses school, wants a study plan | 0.80 | 0.98 |
-| id: thanks | 0.04 | 0.01 |
-| es: prefers step by step, gets lost in long formulas | 0.92 | 0.01 |
+| Message (shortened)                                                            | lasting | private |
+| ------------------------------------------------------------------------------ | ------- | ------- |
+| id: grade 12 science, wants ITB informatics next year                          | 0.95    | 0.03    |
+| id: what is the derivative of x^3 sin x                                        | 0.03    | 0.01    |
+| en: understands better with a worked example first                             | 0.92    | 0.01    |
+| en: explain photosynthesis                                                     | 0.06    | 0.01    |
+| de: exam on 3 November, integrals are hard                                     | 0.97    | 0.03    |
+| de: derivative of e^x                                                          | 0.04    | 0.01    |
+| ja: third year of high school, Tokyo University next year, probability is hard | 0.97    | 0.03    |
+| ja: how to solve a quadratic equation                                          | 0.04    | 0.01    |
+| ar: grade 11, organic chemistry is very hard                                   | 0.95    | 0.02    |
+| jv: grade 11, prefers learning with pictures                                   | 0.93    | 0.02    |
+| id: please explain again, still confused                                       | 0.16    | 0.01    |
+| id: an email address and a phone number                                        | 0.06    | 0.93    |
+| id: has diabetes and misses school, wants a study plan                         | 0.80    | 0.98    |
+| id: thanks                                                                     | 0.04    | 0.01    |
+| es: prefers step by step, gets lost in long formulas                           | 0.92    | 0.01    |
 
 The two questions were `lasting` ("The learner states something about
 themselves that will still matter in later study sessions: their grade or
@@ -367,14 +367,14 @@ thresholds in the catalog were set from what that command printed on 12 October
   documented errors classify as below. The page documents no 402 and no 429
   response, so the classifier reads those by status alone.
 
-  | Status | Code | Reason | Documented type |
-  | --- | --- | --- | --- |
-  | 401 | `invalid_api_key` | `auth` | `invalid_request_error` |
-  | 400 | `unsupported_endpoint` | `invalid` | not documented |
-  | 400 | `unsupported_parameter` | `invalid` | `invalid_request_error` for `provider` only |
-  | 400 | `too_many_inputs` | `invalid` | not documented |
-  | 413 | `request_too_large` | `too-large` | not documented |
-  | 502, 503 | `upstream_error` | `unavailable` | not documented |
+  | Status   | Code                    | Reason        | Documented type                             |
+  | -------- | ----------------------- | ------------- | ------------------------------------------- |
+  | 401      | `invalid_api_key`       | `auth`        | `invalid_request_error`                     |
+  | 400      | `unsupported_endpoint`  | `invalid`     | not documented                              |
+  | 400      | `unsupported_parameter` | `invalid`     | `invalid_request_error` for `provider` only |
+  | 400      | `too_many_inputs`       | `invalid`     | not documented                              |
+  | 413      | `request_too_large`     | `too-large`   | not documented                              |
+  | 502, 503 | `upstream_error`        | `unavailable` | not documented                              |
 
   The error body is `{ "error": { "message", "type", "code", "param" } }`, and
   `param` appears only when present. Provider validation errors, such as an

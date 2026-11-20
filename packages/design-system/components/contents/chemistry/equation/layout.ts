@@ -1,15 +1,15 @@
 import type { getReaction } from "@repo/design-system/components/contents/chemistry/equation/catalog";
-import {
-  getMolecule,
-  type MoleculeId,
-} from "@repo/design-system/components/contents/chemistry/molecule/catalog";
+import type { MoleculeId } from "@repo/design-system/components/contents/chemistry/molecule/catalog";
+import { getMolecule } from "@repo/design-system/components/contents/chemistry/molecule/catalog";
 import { ElementSymbolSchema } from "@repo/design-system/components/contents/chemistry/molecule/elements";
+import type {
+  Bond,
+  Point,
+} from "@repo/design-system/components/contents/chemistry/molecule/geometry";
 import {
   AtomSchema,
-  type Bond,
   BondSchema,
   length,
-  type Point,
   PointSchema,
 } from "@repo/design-system/components/contents/chemistry/molecule/geometry";
 import { Array as Arr, Data, Option, Order, Result, Schema } from "effect";

@@ -1,9 +1,5 @@
-import {
-  type Browser,
-  type BrowserContextOptions,
-  expect,
-  test,
-} from "@playwright/test";
+import type { Browser, BrowserContextOptions } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };

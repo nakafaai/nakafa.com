@@ -7,11 +7,8 @@ import { useState } from "react";
 import { IslandHud } from "@/components/island/hud";
 import { IslandSound } from "@/components/island/sound";
 import { IslandStage } from "@/components/island/stage";
-import {
-  createGameStore,
-  GameStoreContext,
-  type Progress,
-} from "@/components/island/store";
+import type { Progress } from "@/components/island/store";
+import { createGameStore, GameStoreContext } from "@/components/island/store";
 import { IslandSync } from "@/components/island/sync";
 import { IslandWeather } from "@/components/island/weather";
 import { seasonNow } from "@/lib/island/season";

@@ -1,12 +1,12 @@
 import { HeadSha } from "@repo/testing/proof";
 import { Array as Arr, Duration, Effect, Schema } from "effect";
 import { runEntry } from "#scripts/entry";
+import type { Verdict } from "#scripts/gate/github";
 import {
   awaitVerdict,
   GateError,
   POLL,
   startingMoment,
-  type Verdict,
 } from "#scripts/gate/github";
 import { writeOutput } from "#scripts/output";
 import { gh, REPOSITORY } from "#scripts/proof/client";

@@ -13,7 +13,8 @@ import {
 } from "@repo/backend/confect/editor/size";
 import { refusal } from "@repo/backend/confect/tenancy/errors";
 import { utf8Bytes } from "@repo/utilities/text";
-import { getDocumentSize, type Value } from "convex/values";
+import type { Value } from "convex/values";
+import { getDocumentSize } from "convex/values";
 import { Effect, Schema, SchemaTransformation } from "effect";
 
 /**

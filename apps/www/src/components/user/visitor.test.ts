@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import type { VisitorListState } from "@/components/user/visitor";
 import {
   appendVisitorPage,
   failNextVisitorPage,
@@ -7,7 +8,6 @@ import {
   requestNextVisitorPage,
   startVisitorList,
   syncVisitorList,
-  type VisitorListState,
   visitorListView,
 } from "@/components/user/visitor";
 

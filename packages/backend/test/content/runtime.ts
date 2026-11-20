@@ -1,17 +1,15 @@
 import { RegisteredConvexFunction } from "@confect/server";
 import { assert } from "@effect/vitest";
-import {
-  type ContentFamily,
-  ContentFamilySchema,
-} from "@nakafa/aksara-contracts/content";
+import type { ContentFamily } from "@nakafa/aksara-contracts/content";
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import {
   ContentKeySchema,
   CorpusSourcePathSchema,
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
-  type ActiveAppLocaleCode,
   ActiveAppLocaleSchema,
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";

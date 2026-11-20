@@ -29,7 +29,8 @@ import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** The two liquids the block floats in. */
 const LiquidSchema = Schema.Literals(["water", "other"]);

@@ -2,8 +2,8 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import type { CompactionCycle } from "@repo/backend/confect/contentRelease/compact/cycle";
 import {
-  type CompactionCycle,
   ensureCompactionRow,
   isCompactionIdle,
   isSequence,

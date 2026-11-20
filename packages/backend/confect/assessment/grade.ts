@@ -1,14 +1,14 @@
 import { matchesAnswerKey } from "@nakafa/aksara-contracts/assessment/answer";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import type { ScoringRule } from "@nakafa/aksara-contracts/assessment/scoring";
 import {
   pointsForWrongParts,
-  type ScoringRule,
   scoreCeiling,
 } from "@nakafa/aksara-contracts/assessment/scoring";
 import { matchesNumber } from "@repo/backend/confect/assessment/number";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import {
   chosenOptions,
-  type ExamResponse,
   isAnswered,
   isTextResponse,
   madePairs,

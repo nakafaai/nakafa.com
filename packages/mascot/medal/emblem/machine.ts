@@ -1,5 +1,7 @@
-import { type Ink, stroke } from "@repo/mascot/medal/ink";
-import { circle, path, rect, type Shape } from "@repo/mascot/shape";
+import type { Ink } from "@repo/mascot/medal/ink";
+import { stroke } from "@repo/mascot/medal/ink";
+import type { Shape } from "@repo/mascot/shape";
+import { circle, path, rect } from "@repo/mascot/shape";
 import { sparkle } from "@repo/mascot/sparkle";
 import { Array as Arr } from "effect";
 

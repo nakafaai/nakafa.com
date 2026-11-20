@@ -7,8 +7,8 @@ import {
   fade,
   vignette,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { Graph } from "@repo/design-system/components/contents/physics/canvas/plot";
 import {
-  type Graph,
   graphX,
   graphY,
   paintCurve,
@@ -16,17 +16,19 @@ import {
   paintGraphDot,
   paintSlopeLine,
 } from "@repo/design-system/components/contents/physics/canvas/plot";
+import type { Road } from "@repo/design-system/components/contents/physics/canvas/scene";
 import {
   paintCar,
   paintLandscape,
   paintRoad,
-  type Road,
   roadX,
 } from "@repo/design-system/components/contents/physics/canvas/scene";
+import type {
+  Trip,
+  TripGraph,
+} from "@repo/design-system/components/contents/physics/kinematics/secant/trip";
 import {
   changeOver,
-  type Trip,
-  type TripGraph,
   TripGraphSchema,
   TripSchema,
   tripDuration,
@@ -56,7 +58,8 @@ import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** Simulated seconds per wall second: a 20 s commute plays in 10 s. */
 const PLAY_RATE = 2;

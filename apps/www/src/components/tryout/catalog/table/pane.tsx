@@ -17,10 +17,8 @@ import {
   TryoutStartProvider,
 } from "@/components/tryout/runtime/start";
 import { TryoutSectionRows } from "@/components/tryout/set/rows";
-import {
-  StartTryoutButton,
-  type StartTryoutRequest,
-} from "@/components/tryout/set/start";
+import type { StartTryoutRequest } from "@/components/tryout/set/start";
+import { StartTryoutButton } from "@/components/tryout/set/start";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 /**

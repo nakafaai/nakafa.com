@@ -1,11 +1,12 @@
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { Array as Arr, type Option } from "effect";
+import type { Option } from "effect";
+import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
-import {
-  type InboxFirstPage,
-  type InboxScope,
-  useInbox,
+import type {
+  InboxFirstPage,
+  InboxScope,
 } from "@/components/notifications/inbox";
+import { useInbox } from "@/components/notifications/inbox";
 import { NotificationRow } from "@/components/notifications/row";
 import { useInboxTopic } from "@/components/notifications/tabs";
 import { inTopic } from "@/components/notifications/topic";

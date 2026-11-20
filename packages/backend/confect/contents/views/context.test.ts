@@ -2,15 +2,11 @@ import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
-import {
-  type MaterialLessonProjection,
-  MaterialLessonProjectionSchema,
-} from "@nakafa/aksara-contracts/projection/material";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import {
-  type LearningContextInput,
-  toLearningContextQuery,
-} from "@repo/backend/confect/contents/context";
+import type { LearningContextInput } from "@repo/backend/confect/contents/context";
+import { toLearningContextQuery } from "@repo/backend/confect/contents/context";
 import { resolveLearningContext } from "@repo/backend/confect/contents/views/context";
 import { validateIncomingContentTarget } from "@repo/backend/confect/contents/views/target";
 import { convexModules } from "@repo/backend/confect/test.setup";

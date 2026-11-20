@@ -14,7 +14,8 @@ import {
 import { TestClock } from "effect/testing";
 import { POLL, verdictOf, waitAfter } from "#scripts/gate/github";
 import { formatGate, parseGateArguments, runGate } from "#scripts/gate/main";
-import { type Answer, scriptedShell } from "#scripts/test.shell";
+import type { Answer } from "#scripts/test.shell";
+import { scriptedShell } from "#scripts/test.shell";
 
 const SHA = "a".repeat(40);
 const URL = "https://github.com/nakafaai/nakafa.com/actions/runs/9";

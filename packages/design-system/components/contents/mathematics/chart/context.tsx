@@ -1,6 +1,7 @@
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Schema } from "effect";
-import { createContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createContext } from "react";
 
 /** One series of a chart, with the name and the color its legend shows. */
 const ChartSeriesSchema = Schema.Struct({

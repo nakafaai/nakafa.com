@@ -6,10 +6,8 @@ import {
 import { findComment } from "@repo/backend/confect/comments/rows";
 import { queueReplyMail } from "@repo/backend/confect/notifications/mail";
 import { scheduleAccountPush } from "@repo/backend/confect/notifications/schedule";
-import {
-  type ReplyRow,
-  replyView,
-} from "@repo/backend/confect/notifications/schema";
+import type { ReplyRow } from "@repo/backend/confect/notifications/schema";
+import { replyView } from "@repo/backend/confect/notifications/schema";
 import { photoOf } from "@repo/backend/confect/users/picture";
 import { Array as Arr, Effect, Option, Struct } from "effect";
 

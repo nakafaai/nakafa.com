@@ -6,11 +6,8 @@ import { cursorOf } from "@repo/backend/confect/journal/store";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { unitAuthority } from "@repo/backend/confect/tenancy/authority";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
-import {
-  scheduledJobs,
-  slugOf,
-  type tenancyFixture,
-} from "@repo/backend/test/tenancy";
+import type { tenancyFixture } from "@repo/backend/test/tenancy";
+import { scheduledJobs, slugOf } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Option } from "effect";
 
 export type Fixture = Effect.Success<typeof tenancyFixture>;

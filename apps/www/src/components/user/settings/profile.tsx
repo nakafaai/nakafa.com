@@ -5,7 +5,8 @@ import { UserSettingsDeleteAccount } from "@/components/user/settings/deletion";
 import { UserSettingsName } from "@/components/user/settings/name";
 import { UserSettingsPicture } from "@/components/user/settings/picture";
 import { UserSettingsUsername } from "@/components/user/settings/username";
-import { type CurrentUser, useViewer } from "@/lib/identity/client";
+import type { CurrentUser } from "@/lib/identity/client";
+import { useViewer } from "@/lib/identity/client";
 
 /**
  * The profile settings of the account the server read. The live account

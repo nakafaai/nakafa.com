@@ -5,9 +5,11 @@ import {
   INDONESIAN_APP_LOCALE_CODE,
   MALAY_APP_LOCALE_CODE,
 } from "@nakafa/aksara-contracts/locale";
+import type {
+  QuranEmbeddedSourceId,
+  QuranExternalSourceId,
+} from "@nakafa/aksara-contracts/quran/identity";
 import {
-  type QuranEmbeddedSourceId,
-  type QuranExternalSourceId,
   quranReadingSourceIds,
   quranTafsirSourceId,
   quranTranslationSourceId,

@@ -5,11 +5,8 @@ import {
   FIXTURE_TRACK,
   fixtureSetPath,
 } from "@repo/backend/test/assessment/catalog";
-import {
-  TRYOUT_NOW,
-  type TryoutWorld,
-  tryoutWorld,
-} from "@repo/backend/test/tryout/world";
+import type { TryoutWorld } from "@repo/backend/test/tryout/world";
+import { TRYOUT_NOW, tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Effect, Struct } from "effect";
 
 const identity = { ...FIXTURE_TRACK, locale: "id" as const, setKey: "set-1" };

@@ -1,7 +1,8 @@
 import { SPAN } from "@repo/backend/confect/island/world";
 import { HashSet, MutableHashSet } from "effect";
 import { KIND, LOOK } from "@/lib/island/look";
-import { type Cells, CHUNK, CHUNKS } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { CHUNK, CHUNKS } from "@/lib/island/world";
 
 /** The six neighbours of a cell, as steps of its index. */
 const STEPS = [1, -1, SPAN, -SPAN, SPAN * SPAN, -SPAN * SPAN] as const;

@@ -12,33 +12,26 @@ import {
   Result,
 } from "effect";
 import { useState } from "react";
-import { createPainter, type Painter } from "@/components/island/draw";
+import type { Painter } from "@/components/island/draw";
+import { createPainter } from "@/components/island/draw";
 import { createFox } from "@/components/island/fox";
 import { bindInput } from "@/components/island/input";
 import { cursorOf } from "@/components/island/picture";
 import { createRod } from "@/components/island/rod";
-import {
-  type GameStoreApi,
-  GameStoreContext,
-  heldOf,
-} from "@/components/island/store";
+import type { GameStoreApi } from "@/components/island/store";
+import { GameStoreContext, heldOf } from "@/components/island/store";
+import type { Orbit } from "@/lib/island/camera";
 import {
   clampOrbit,
   easeOrbit,
   easeShare,
-  type Orbit,
   openingOrbit,
   turnOrbit,
 } from "@/lib/island/camera";
 import { hoeOf, ripeningOf, sownOf, waterOf } from "@/lib/island/farming";
 import { flatQuads } from "@/lib/island/flat";
-import {
-  fadeSpin,
-  isSpinning,
-  type Point,
-  type Spin,
-  STILL_SPIN,
-} from "@/lib/island/gesture";
+import type { Point, Spin } from "@/lib/island/gesture";
+import { fadeSpin, isSpinning, STILL_SPIN } from "@/lib/island/gesture";
 import { islesMesh } from "@/lib/island/isles";
 import { itemPlanOf, turnOf } from "@/lib/island/items";
 import { changedChunks, glowOf } from "@/lib/island/light";
@@ -49,7 +42,8 @@ import { RUNGS, stepLadder, TOP_RUNG } from "@/lib/island/quality";
 import { castRay } from "@/lib/island/ray";
 import { livedOf, rerootedOf, sceneBodies, sceneOf } from "@/lib/island/scene";
 import { hourOf, lightOf } from "@/lib/island/sky";
-import { type Cells, CHUNKS, SEA_LEVEL } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { CHUNKS, SEA_LEVEL } from "@/lib/island/world";
 
 /**
  * The island's world on the whole screen (ADR 0047, D1, D2 and D5): the canvas

@@ -2,7 +2,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
-import { DISTANCE, type Orbit } from "@/lib/island/camera";
+import type { Orbit } from "@/lib/island/camera";
+import { DISTANCE } from "@/lib/island/camera";
 import { viewProjectionOf } from "@/lib/island/matrix";
 import { portraitOf } from "@/lib/island/portrait";
 import { shoreOf } from "@/lib/island/terrain";

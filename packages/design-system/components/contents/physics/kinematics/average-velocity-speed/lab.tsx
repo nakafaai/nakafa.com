@@ -1,7 +1,7 @@
+import type { AverageVelocitySpeedCaseId } from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/data";
 import {
   AVERAGE_VELOCITY_SPEED_CASE_IDS,
   AVERAGE_VELOCITY_SPEED_COLORS,
-  type AverageVelocitySpeedCaseId,
   getAverageVelocitySpeedState,
   isAverageVelocitySpeedCaseId,
 } from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/data";
@@ -33,7 +33,8 @@ import {
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
-import { type ReactNode, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { useMemo, useState } from "react";
 
 interface AverageVelocitySpeedLabProps {
   decimalSeparator?: DecimalSeparator;

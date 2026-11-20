@@ -4,10 +4,8 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { accountNotice } from "@repo/backend/confect/notifications/account";
 import { partsOf } from "@repo/backend/confect/notifications/detail";
 import { NotificationCursorInvalid } from "@repo/backend/confect/notifications/errors";
-import {
-  HELD_SCHOOL_LIMIT,
-  type HeldSchool,
-} from "@repo/backend/confect/notifications/held";
+import type { HeldSchool } from "@repo/backend/confect/notifications/held";
+import { HELD_SCHOOL_LIMIT } from "@repo/backend/confect/notifications/held";
 import {
   isAccountRow,
   isSchoolRow,

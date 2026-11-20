@@ -10,19 +10,17 @@ import { snapshotOf } from "@repo/backend/confect/editor/store";
 import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/blank";
 import { encodeAnswers, encodeKey } from "@repo/backend/confect/exams/question";
 import type { EnterOutcome } from "@repo/backend/confect/exams/sittings/contract";
+import type { SignalKind } from "@repo/backend/confect/exams/sittings/schema";
 import {
   RoomName,
-  type SignalKind,
   SittingGroup,
 } from "@repo/backend/confect/exams/sittings/schema";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
 import { nf, paragraphText } from "@repo/backend/test/editor";
-import { type ExamAuthor, examBy } from "@repo/backend/test/exams";
-import {
-  scheduledJobs,
-  TENANCY_NOW,
-  type tenancyFixture,
-} from "@repo/backend/test/tenancy";
+import type { ExamAuthor } from "@repo/backend/test/exams";
+import { examBy } from "@repo/backend/test/exams";
+import type { tenancyFixture } from "@repo/backend/test/tenancy";
+import { scheduledJobs, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import {
   Array as Arr,
   Effect,

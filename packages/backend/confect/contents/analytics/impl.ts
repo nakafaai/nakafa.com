@@ -4,10 +4,10 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import type { ScheduleContentAnalyticsPartitionArgs } from "@repo/backend/confect/contents/analytics/spec";
 import {
   InvalidContentAnalyticsPartitionError,
   invalidContentAnalyticsPartitionCode,
-  type ScheduleContentAnalyticsPartitionArgs,
   toContentAnalyticsIoError,
 } from "@repo/backend/confect/contents/analytics/spec";
 import {

@@ -4,10 +4,8 @@ import type {
 } from "@nakafa/aksara-contracts/assessment/catalog";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { tryoutSetIdentityOf } from "@repo/backend/confect/tryouts/route";
-import {
-  readSetFacts,
-  type SetFacts,
-} from "@repo/backend/content/tryout/facts";
+import type { SetFacts } from "@repo/backend/content/tryout/facts";
+import { readSetFacts } from "@repo/backend/content/tryout/facts";
 import {
   descriptionOf,
   toPublicExam,

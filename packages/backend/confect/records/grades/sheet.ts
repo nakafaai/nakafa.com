@@ -2,7 +2,8 @@ import { FunctionImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Class } from "@repo/backend/confect/classroom/access";
-import { type GradeLine, gradeView } from "@repo/backend/confect/records/grade";
+import type { GradeLine } from "@repo/backend/confect/records/grade";
+import { gradeView } from "@repo/backend/confect/records/grade";
 import spec from "@repo/backend/confect/records/grades.spec";
 import {
   schemeForEntry,

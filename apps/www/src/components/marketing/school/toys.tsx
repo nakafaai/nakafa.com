@@ -1,10 +1,8 @@
 import { Array as Arr } from "effect";
 import { ToyAnimal } from "@/components/marketing/about/toys/animal";
 import { gap } from "@/components/marketing/about/toys/gap";
-import {
-  ToyOverlay,
-  type ToyPlacement,
-} from "@/components/marketing/about/toys/layer";
+import type { ToyPlacement } from "@/components/marketing/about/toys/layer";
+import { ToyOverlay } from "@/components/marketing/about/toys/layer";
 import { NinaToy } from "@/components/marketing/about/toys/nina";
 import { within } from "@/components/marketing/about/toys/place";
 import {

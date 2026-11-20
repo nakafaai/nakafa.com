@@ -1,5 +1,11 @@
 import { RoundedBox } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
+import type {
+  ModernPeriodicTableFocusId,
+  ModernPeriodicTableSceneColors,
+  ModernPeriodicTableSceneLabels,
+  PeriodicElementEntry,
+} from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
 import {
   GROUP_ONE_FOCUS_ID,
   getModernPeriodicTableCategoryColor,
@@ -7,13 +13,9 @@ import {
   MAIN_PERIODIC_TABLE_ROWS,
   METALLOID_FOCUS_ID,
   MODERN_PERIODIC_TABLE_FOCI,
-  type ModernPeriodicTableFocusId,
-  type ModernPeriodicTableSceneColors,
-  type ModernPeriodicTableSceneLabels,
   NOBLE_GAS_FOCUS_ID,
   PERIOD_THREE_FOCUS_ID,
   PERIODIC_SERIES_ROWS,
-  type PeriodicElementEntry,
   SERIES_MARKER_CATEGORY_ID,
   TRANSITION_FOCUS_ID,
 } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
@@ -26,7 +28,8 @@ import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/const
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr } from "effect";
-import { createContext, type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
+import { createContext, useMemo } from "react";
 import { useStore } from "zustand";
 
 const GROUP_COUNT = 18;

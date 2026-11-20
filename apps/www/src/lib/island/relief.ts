@@ -3,7 +3,8 @@ import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
 import { KIND, LOOK } from "@/lib/island/look";
 import { smoothOf, unitOf } from "@/lib/island/noise";
-import { blockAt, type Cells, cellOf, SEA_LEVEL } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { blockAt, cellOf, SEA_LEVEL } from "@/lib/island/world";
 
 const WATER = idOf("water");
 const SAND = idOf("sand");

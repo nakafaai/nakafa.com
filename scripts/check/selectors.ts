@@ -1,6 +1,6 @@
 import { Array as Arr, HashSet, Result } from "effect";
+import type { Expression, Node, SourceFile } from "tsrs/ast";
 import {
-  type Expression,
   isArrayLiteralExpression,
   isAsExpression,
   isBinaryExpression,
@@ -16,8 +16,6 @@ import {
   isParenthesizedExpression,
   isReturnStatement,
   isStringLiteral,
-  type Node,
-  type SourceFile,
 } from "tsrs/ast";
 import { isFunctionValue } from "#scripts/check/scope";
 import { children, descendants } from "#scripts/check/source";

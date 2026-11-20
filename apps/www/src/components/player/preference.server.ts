@@ -1,9 +1,9 @@
 import { setCookie } from "@tanstack/react-start/server";
 import { Effect } from "effect";
+import type { PlayerMode } from "@/components/player/mode";
 import {
   PLAYER_MODE_COOKIE,
   PLAYER_MODE_MAX_AGE,
-  type PlayerMode,
 } from "@/components/player/mode";
 import { serverHandler } from "@/lib/server/fn";
 

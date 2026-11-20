@@ -2,14 +2,8 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { AttachmentKind } from "@repo/backend/confect/classroom/forum/attachment";
 import { LIBRARY_BYTE_LIMIT } from "@repo/backend/confect/classroom/library/file";
 import { ImageType } from "@repo/editor/upload";
-import {
-  Data,
-  Effect,
-  Number as Num,
-  Option,
-  type Result,
-  Schema,
-} from "effect";
+import type { Result } from "effect";
+import { Data, Effect, Number as Num, Option, Schema } from "effect";
 import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 import { schoolCall } from "@/components/tenant/write";
 

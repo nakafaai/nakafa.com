@@ -34,8 +34,8 @@ import {
 import { known, lookup, paused } from "@repo/backend/confect/nina/memory/turn";
 import { list, state } from "@repo/backend/confect/nina/memory/view";
 import { writeMemories } from "@repo/backend/confect/nina/memory/write";
+import type { NinaMemoryDraft } from "@repo/backend/confect/nina/memory.spec";
 import spec, {
-  type NinaMemoryDraft,
   NinaMemoryRejected,
 } from "@repo/backend/confect/nina/memory.spec";
 import { requestPortrait } from "@repo/backend/confect/nina/portrait/store";

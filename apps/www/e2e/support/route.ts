@@ -1,9 +1,5 @@
-import {
-  type APIResponse,
-  expect,
-  type Page,
-  type Route,
-} from "@playwright/test";
+import type { APIResponse, Page, Route } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Deferred, Effect, MutableList, Semaphore } from "effect";
 import { servedTimeoutMilliseconds } from "@/e2e/support/timeout";
 

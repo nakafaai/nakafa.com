@@ -5,14 +5,8 @@ import type {
 } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import {
-  Array as Arr,
-  Clock,
-  Effect,
-  Option,
-  type Result,
-  Schema,
-} from "effect";
+import type { Result } from "effect";
+import { Array as Arr, Clock, Effect, Option, Schema } from "effect";
 import { schoolCall } from "@/components/tenant/write";
 import { changeLoaded } from "@/lib/data/loaded";
 

@@ -1,15 +1,17 @@
 import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import type {
+  CombiningVolumesElement,
+  CombiningVolumesGasModel,
+  CombiningVolumesModeId,
+  CombiningVolumesMoleculeKind,
+  CombiningVolumesSceneColors,
+  CombiningVolumesSceneLabelsSchema,
+  CombiningVolumesScenePoint,
+} from "@repo/design-system/components/contents/chemistry/combining-volumes-law/data";
 import {
   COMBINING_VOLUMES_MODELS,
-  type CombiningVolumesElement,
   CombiningVolumesElementSchema,
-  type CombiningVolumesGasModel,
-  type CombiningVolumesModeId,
-  type CombiningVolumesMoleculeKind,
-  type CombiningVolumesSceneColors,
-  type CombiningVolumesSceneLabelsSchema,
-  type CombiningVolumesScenePoint,
   CombiningVolumesScenePointSchema,
 } from "@repo/design-system/components/contents/chemistry/combining-volumes-law/data";
 import {
@@ -24,7 +26,8 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { GlassMaterial } from "@repo/design-system/components/three/physical";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, HashMap, Option, Schema } from "effect";
-import { createContext, type ReactNode, useRef } from "react";
+import type { ReactNode } from "react";
+import { createContext, useRef } from "react";
 import type { Group } from "three";
 
 const REACTANTS_X = -1.05;

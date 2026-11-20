@@ -1,10 +1,10 @@
-import {
-  type ExposedSignInFn,
-  type RefreshSessionFn,
-  type RequestHandler,
-  type SignOutFn,
-  setupConvexAuthServer,
+import type {
+  ExposedSignInFn,
+  RefreshSessionFn,
+  RequestHandler,
+  SignOutFn,
 } from "@convex-dev/auth/ssr";
+import { setupConvexAuthServer } from "@convex-dev/auth/ssr";
 import { siteUrlKeys } from "@repo/site/keys";
 import { makeFunctionReference } from "convex/server";
 import { Array as Arr, Effect } from "effect";

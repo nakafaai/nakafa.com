@@ -2,7 +2,8 @@ import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
 import "@tanstack/react-start/server-only";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Effect, type Schema } from "effect";
+import type { Schema } from "effect";
+import { Effect } from "effect";
 import type {
   ActiveContentReleaseId,
   ContentSnapshotFamily,

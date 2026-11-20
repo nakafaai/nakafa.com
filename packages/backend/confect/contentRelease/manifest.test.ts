@@ -2,10 +2,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { EMPTY_RESULT_CATALOG_DIGEST } from "@nakafa/aksara-contracts/release/result/spec";
-import {
-  type PublicationScope,
-  PublicationScopeSchema,
-} from "@nakafa/aksara-contracts/release/snapshot/scope";
+import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/scope";
+import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -15,14 +13,15 @@ import {
   testReleaseJson,
   testRendererJson,
 } from "@repo/backend/test/content/release";
+import type { TestIdentity } from "@repo/backend/test/content/state";
 import {
   insertTestState,
   insertZeroRelease,
-  type TestIdentity,
   zeroReleaseJson,
 } from "@repo/backend/test/content/state";
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Array as Arr, Effect, Schema } from "effect";
 
 const stageRelease = internal.contentRelease.manifest.stageRelease;

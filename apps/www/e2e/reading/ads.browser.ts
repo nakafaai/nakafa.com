@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { AD_SCRIPT_PATH } from "@repo/backend/scripts/content/acceptance/ads";
 import { seedXendit } from "@repo/backend/scripts/content/acceptance/xendit";
 import { Array as Arr, Effect, Schema } from "effect";

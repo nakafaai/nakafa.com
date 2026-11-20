@@ -21,11 +21,8 @@ import {
   FlowWires,
   useFlowPlay,
 } from "@/components/marketing/school/flow/stage";
-import {
-  type Size,
-  travel,
-  wire,
-} from "@/components/marketing/school/flow/wire";
+import type { Size } from "@/components/marketing/school/flow/wire";
+import { travel, wire } from "@/components/marketing/school/flow/wire";
 import {
   FeatureProduct,
   FeatureRow,

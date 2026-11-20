@@ -2,10 +2,10 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Option, Result, String as Str } from "effect";
+import type { WwwHeader } from "@/lib/security/headers";
 import {
   createWwwHeaders,
   renderHeadersFile,
-  type WwwHeader,
   WwwHeaderLineTooLong,
 } from "@/lib/security/headers";
 

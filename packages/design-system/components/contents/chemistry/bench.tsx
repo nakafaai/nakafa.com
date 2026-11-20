@@ -7,14 +7,8 @@ import {
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr } from "effect";
-import {
-  type ReactNode,
-  type Ref,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-} from "react";
+import type { ReactNode, Ref } from "react";
+import { useEffect, useImperativeHandle, useMemo, useRef } from "react";
 import { ExtrudeGeometry, Shape, Vector2 } from "three";
 
 /**

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
+import type { PageBox } from "@/components/tenant/exams/reorder";
 import {
   dropIndex,
   edgeScroll,
-  type PageBox,
   placeOf,
   siblingShift,
   steppedIndex,

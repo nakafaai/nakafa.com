@@ -1,13 +1,13 @@
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import {
-  type ArticleProjection,
   ArticleProjectionSchema,
   canonicalizeArticleProjection,
 } from "@nakafa/aksara-contracts/projection/article";
 import { Effect, Schema } from "effect";
+import type { PublishedProjectionIdentity } from "@/lib/content/published/errors";
 import {
   PublishedProjectionError,
-  type PublishedProjectionIdentity,
   PublishedReleaseMismatchError,
 } from "@/lib/content/published/errors";
 

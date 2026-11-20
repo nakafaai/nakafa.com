@@ -11,7 +11,8 @@ import {
   testRollbackJson,
   testUpsertJson,
 } from "@repo/backend/test/content/release";
-import { getDocumentSize, type Value } from "convex/values";
+import type { Value } from "convex/values";
+import { getDocumentSize } from "convex/values";
 import { Array as Arr, Schema } from "effect";
 
 /** One stored version or item naming an artifact at a release sequence. */

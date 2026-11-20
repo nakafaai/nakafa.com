@@ -12,7 +12,8 @@ import { REST_FRAMES } from "@repo/design-system/components/pool/physics";
 import { CHECKED_POOLS } from "@repo/design-system/components/pool/test.fixture";
 import { Array as Arr } from "effect";
 import type { FrameData } from "motion";
-import { createElement, Fragment, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createElement, Fragment } from "react";
 import { createRoot } from "react-dom/client";
 
 /** The place of a member's center in the pool's transform, as the drive writes it. */

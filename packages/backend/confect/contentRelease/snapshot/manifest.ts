@@ -1,7 +1,5 @@
-import {
-  type ContentSnapshotManifest,
-  contentSnapshotId,
-} from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { ContentSnapshotManifest } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { contentSnapshotId } from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
@@ -14,10 +12,8 @@ import {
   decodeReleaseJson,
   decodeSnapshotJson,
 } from "@repo/backend/confect/contentRelease/parse";
-import {
-  ROLLBACK_RETENTION_MS,
-  type snapshotReceiptValidator,
-} from "@repo/backend/confect/contentRelease/spec";
+import type { snapshotReceiptValidator } from "@repo/backend/confect/contentRelease/spec";
+import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
 import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
 import type { WithoutSystemFields } from "convex/server";
 import { Clock, Effect } from "effect";

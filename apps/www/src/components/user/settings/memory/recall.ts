@@ -1,10 +1,8 @@
 import { usePaginatedQuery, useQuery } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import { useConvexAuth } from "@/components/auth/convex";
-import {
-  MEMORY_PAGE,
-  type MemoryPage,
-} from "@/components/user/settings/memory/list";
+import type { MemoryPage } from "@/components/user/settings/memory/list";
+import { MEMORY_PAGE } from "@/components/user/settings/memory/list";
 import { readingOf } from "@/components/user/settings/memory/reading";
 
 /**

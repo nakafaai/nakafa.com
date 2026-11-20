@@ -1,7 +1,7 @@
 import type { GenericId } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import {
-  type ExamResponse,
   NO_RESPONSE,
   typedText,
 } from "@repo/backend/confect/assessment/response";

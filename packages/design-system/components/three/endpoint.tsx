@@ -1,16 +1,14 @@
 import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import {
-  clipOpenLineEnds,
-  type LineEndpoints,
-} from "@repo/design-system/lib/geometry/endpoint";
+import type { LineEndpoints } from "@repo/design-system/lib/geometry/endpoint";
+import { clipOpenLineEnds } from "@repo/design-system/lib/geometry/endpoint";
 import { Array as Arr } from "effect";
-import { type ComponentProps, type ComponentRef, useMemo, useRef } from "react";
+import type { ComponentProps, ComponentRef } from "react";
+import { useMemo, useRef } from "react";
+import type { Mesh, MeshBasicMaterial } from "three";
 import {
   InterleavedBufferAttribute,
   Matrix4,
-  type Mesh,
-  type MeshBasicMaterial,
   Quaternion,
   Vector3,
 } from "three";

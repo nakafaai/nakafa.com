@@ -2,7 +2,8 @@ import { Archive02Icon, Megaphone01Icon } from "@hugeicons/core-free-icons";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "cn";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 import { useTranslations } from "use-intl";
 import {
   pageBodyVariants,

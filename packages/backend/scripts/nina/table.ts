@@ -1,9 +1,5 @@
-import {
-  CHAT_AGENT,
-  type ChatStep,
-  elapsedMillis,
-  type GateTurn,
-} from "@repo/backend/scripts/nina/verdict";
+import type { ChatStep, GateTurn } from "@repo/backend/scripts/nina/verdict";
+import { CHAT_AGENT, elapsedMillis } from "@repo/backend/scripts/nina/verdict";
 import { Array as Arr, Option, Predicate, Schema, String as Str } from "effect";
 
 /** One printed line of the table: an agent's row of the usage record, or the total. */

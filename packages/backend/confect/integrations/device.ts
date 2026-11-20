@@ -5,12 +5,14 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { integrationAuthority } from "@repo/backend/confect/integrations/authority";
 import { DeviceUnknown } from "@repo/backend/confect/integrations/errors";
+import type {
+  DevicePoll,
+  DeviceStart,
+} from "@repo/backend/confect/integrations/schema";
 import {
   DEVICE_INTERVAL,
   DEVICE_SECONDS,
   DEVICE_TOKEN_SECONDS,
-  type DevicePoll,
-  type DeviceStart,
   UserCode,
 } from "@repo/backend/confect/integrations/schema";
 import { storeToken } from "@repo/backend/confect/integrations/token";

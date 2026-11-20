@@ -8,7 +8,8 @@ import {
   POP,
   SOFT_PINK,
 } from "@repo/mascot/color";
-import { at, type Place } from "@repo/mascot/nina/point";
+import type { Place } from "@repo/mascot/nina/point";
+import { at } from "@repo/mascot/nina/point";
 import { tenth } from "@repo/mascot/round";
 import { circle, group, path, rect } from "@repo/mascot/shape";
 import { sparkle } from "@repo/mascot/sparkle";

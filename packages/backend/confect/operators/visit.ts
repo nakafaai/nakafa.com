@@ -12,13 +12,13 @@ import { endGrant } from "@repo/backend/confect/access/grant";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { visitAuthority } from "@repo/backend/confect/operators/authority";
 import { OperatorHasPerson } from "@repo/backend/confect/operators/errors";
-import {
-  type ApprovedVisit,
-  OPERATOR_PERSON_NAME,
-  type VisitEndReason,
-  type VisitState,
-  type VisitStateView,
+import type {
+  ApprovedVisit,
+  VisitEndReason,
+  VisitState,
+  VisitStateView,
 } from "@repo/backend/confect/operators/schema";
+import { OPERATOR_PERSON_NAME } from "@repo/backend/confect/operators/schema";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import type { PersonStatus } from "@repo/backend/confect/tenancy/schema";

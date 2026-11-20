@@ -5,13 +5,13 @@ import { useEffect, useSyncExternalStore } from "react";
 import { useTranslations } from "use-intl";
 import { keptStorage } from "@/components/player/storage";
 import { useLiveSession } from "@/components/providers/live";
+import type { TryoutActionNameKey } from "@/components/tryout/set/kept";
 import {
   KEPT_NAME_SCRIPT,
   keepActionName,
   keepAttemptLabel,
   readKeptAttempt,
   readKeptName,
-  type TryoutActionNameKey,
   TryoutActionNameSchema,
 } from "@/components/tryout/set/kept";
 import { hasSignedInHint } from "@/lib/auth/hint";

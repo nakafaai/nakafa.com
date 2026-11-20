@@ -1,7 +1,5 @@
-import {
-  type MarkdownFrameVariant,
-  markdownFrameVariants,
-} from "@repo/design-system/components/markdown/frame";
+import type { MarkdownFrameVariant } from "@repo/design-system/components/markdown/frame";
+import { markdownFrameVariants } from "@repo/design-system/components/markdown/frame";
 import { reactMdxComponents } from "@repo/design-system/components/markdown/react/mdx";
 import { readMarkdownBlocks } from "@repo/design-system/lib/markdown/blocks";
 import { rehypeDirection } from "@repo/design-system/lib/markdown/direction";

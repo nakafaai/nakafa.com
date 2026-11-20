@@ -24,10 +24,8 @@ import { DPA_VERSION } from "@repo/backend/confect/tenancy/contract";
 import { accountPersonName } from "@repo/backend/confect/tenancy/create";
 import { FoundingRefused } from "@repo/backend/confect/tenancy/errors";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
-import {
-  type StartRequest,
-  startZone,
-} from "@repo/backend/confect/tenancy/start";
+import type { StartRequest } from "@repo/backend/confect/tenancy/start";
+import { startZone } from "@repo/backend/confect/tenancy/start";
 import { createUnit } from "@repo/backend/confect/tenancy/write/unit";
 import { schoolYear } from "@repo/backend/confect/tenancy/year";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";

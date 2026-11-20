@@ -2,7 +2,8 @@ import { NAKAFA_GET_CONTENT_TOOL } from "@repo/backend/test/mcp/descriptors/cont
 import { NAKAFA_GET_QURAN_REFERENCE_TOOL } from "@repo/backend/test/mcp/descriptors/quran";
 import { NAKAFA_SEARCH_CONTENT_TOOL } from "@repo/backend/test/mcp/descriptors/search";
 import { NAKAFA_GET_TAXONOMY_TOOL } from "@repo/backend/test/mcp/descriptors/taxonomy";
-import { type McpCase, modernPost } from "@repo/backend/test/mcp/harness";
+import type { McpCase } from "@repo/backend/test/mcp/harness";
+import { modernPost } from "@repo/backend/test/mcp/harness";
 import { JSON_RESPONSE_HEADERS } from "@repo/backend/test/mcp/headers";
 
 /** Discovery and list answers: the server identity, and every tool, prompt, resource, and template. */

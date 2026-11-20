@@ -1,8 +1,5 @@
-import {
-  BLOCK_KEYS,
-  type BlockKey,
-  idOf,
-} from "@repo/backend/confect/island/blocks";
+import type { BlockKey } from "@repo/backend/confect/island/blocks";
+import { BLOCK_KEYS, idOf } from "@repo/backend/confect/island/blocks";
 import { PLANT_KEYS } from "@repo/backend/confect/island/flora";
 import { Array as Arr, Schema } from "effect";
 import { PLANT_SLOT, SLOTS, TileName } from "@/lib/island/atlas";

@@ -9,7 +9,8 @@ import {
 import { KIND, LOOK } from "@/lib/island/look";
 import { unitOf } from "@/lib/island/noise";
 import { WANG_SET } from "@/lib/island/tiles/wang";
-import { blockAt, type Cells, cellOf, SEA_LEVEL } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { blockAt, cellOf, SEA_LEVEL } from "@/lib/island/world";
 
 /**
  * The ground of the island (ADR 0047, D39): what tops each column, and how a

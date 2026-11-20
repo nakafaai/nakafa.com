@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { composerOf } from "@/e2e/support/attachment";
 import { OPENED_CHAT, onThePage } from "@/e2e/support/chat";
 import { promptWith } from "@/e2e/support/sheet";

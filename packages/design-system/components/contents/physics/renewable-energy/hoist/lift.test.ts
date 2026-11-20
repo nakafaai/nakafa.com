@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { Motor } from "@repo/design-system/components/contents/physics/renewable-energy/hoist/lift";
 import {
   CRATE_WEIGHT,
   crateHeight,
@@ -7,7 +8,6 @@ import {
   liftSpeed,
   liftTime,
   MOTOR_POWER,
-  type Motor,
 } from "@repo/design-system/components/contents/physics/renewable-energy/hoist/lift";
 
 /** The work the rope has done on the crate after `time` seconds, in joules. */

@@ -1,5 +1,6 @@
 import { Effect } from "effect";
-import { readParts, type VerticalMetricsSchema } from "@/scripts/quran/woff";
+import type { VerticalMetricsSchema } from "@/scripts/quran/woff";
+import { readParts } from "@/scripts/quran/woff";
 
 /** Reads the three metrics stored at an offset of a face's stream. */
 const metricsAt = (

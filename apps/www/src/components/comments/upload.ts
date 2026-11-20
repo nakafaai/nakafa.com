@@ -1,7 +1,8 @@
 import { Id } from "@repo/backend/confect/_generated/id";
 import { COMMENT_PHOTO_BYTE_LIMIT } from "@repo/backend/confect/comments/photo";
 import { ImageType } from "@repo/editor/upload";
-import { Data, Effect, Option, type Result, Schema } from "effect";
+import type { Result } from "effect";
+import { Data, Effect, Option, Schema } from "effect";
 import { isPhoto, shrinkPhoto } from "@/components/tenant/classes/forum/upload";
 
 /** The file of the bucket that one reservation names. */

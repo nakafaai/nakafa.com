@@ -1,5 +1,6 @@
 import { unitOf } from "@/lib/island/noise";
-import { type Ramp, type Tone, toneOf } from "@/lib/island/palette";
+import type { Ramp, Tone } from "@/lib/island/palette";
+import { toneOf } from "@/lib/island/palette";
 import {
   blankTile,
   cellsOf,

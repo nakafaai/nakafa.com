@@ -1,8 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import {
-  type AgentContext,
-  AgentCurriculumPreferenceSchema,
-} from "@repo/backend/confect/nina/contract/agent";
+import type { AgentContext } from "@repo/backend/confect/nina/contract/agent";
+import { AgentCurriculumPreferenceSchema } from "@repo/backend/confect/nina/contract/agent";
 import { NinaContextPackSchema } from "@repo/backend/confect/nina/contract/pack";
 import { NinaSuggestions } from "@repo/backend/confect/nina/contract/suggestions";
 import { NinaUsageTotal } from "@repo/backend/confect/nina/contract/usage";

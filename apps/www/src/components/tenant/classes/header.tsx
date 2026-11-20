@@ -1,6 +1,7 @@
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr } from "effect";
-import { createContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createContext } from "react";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { ClassTabs } from "@/components/tenant/classes/tabs";

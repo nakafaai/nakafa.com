@@ -1,20 +1,18 @@
+import type { PlanePoint } from "@nakafa/aksara-contracts/math/base";
 import {
   MathLabelPlacementSchema,
-  type PlanePoint,
   PlanePointSchema,
 } from "@nakafa/aksara-contracts/math/base";
 import type { FormulaScope } from "@nakafa/aksara-contracts/math/formula/compile";
-import {
-  type PlaneFormulaPoint,
-  PlaneFormulaPointSchema,
-} from "@nakafa/aksara-contracts/math/formula/field";
+import type { PlaneFormulaPoint } from "@nakafa/aksara-contracts/math/formula/field";
+import { PlaneFormulaPointSchema } from "@nakafa/aksara-contracts/math/formula/field";
 import { Array as Arr, Match, Option, Schema } from "effect";
+import type { ShapeDraft } from "@/components/tenant/exams/figure/graph/shapes";
 import {
   cornersOf,
   inequalitiesOf,
   numberOf,
   pointOf,
-  type ShapeDraft,
   valueAt,
 } from "@/components/tenant/exams/figure/graph/shapes";
 

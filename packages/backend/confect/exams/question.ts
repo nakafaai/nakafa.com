@@ -1,11 +1,7 @@
-import {
-  type Interaction,
-  InteractionSchema,
-} from "@nakafa/aksara-contracts/assessment/interaction";
-import {
-  type InteractionKey,
-  InteractionKeySchema,
-} from "@nakafa/aksara-contracts/assessment/key";
+import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
+import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
+import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import { InteractionKeySchema } from "@nakafa/aksara-contracts/assessment/key";
 import { DefaultRuleSchema } from "@nakafa/aksara-contracts/assessment/scoring";
 import type { ExamQuestionsDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
@@ -15,7 +11,8 @@ import {
   ALL_OR_NOTHING,
   takesScoring,
 } from "@repo/backend/confect/exams/scoring";
-import { type Array as Arr, Effect, Match, Option, Schema } from "effect";
+import type { Array as Arr } from "effect";
+import { Effect, Match, Option, Schema } from "effect";
 
 /**
  * The templates a question may take (K23): a single-answer multiple choice

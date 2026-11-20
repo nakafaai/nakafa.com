@@ -1,5 +1,6 @@
 import { Array as Arr } from "effect";
-import { type ReactNode, useEffect, useRef } from "react";
+import type { ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import type { PlayerCellModel } from "@/components/player/model";
 import { keepVisible } from "@/components/player/navigator/scroll";

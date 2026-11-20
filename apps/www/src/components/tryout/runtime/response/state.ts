@@ -1,9 +1,9 @@
 import type { Ref } from "@confect/core";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import {
   chosenOptions,
-  type ExamResponse,
   isAnswered,
   markedCells,
 } from "@repo/backend/confect/assessment/response";

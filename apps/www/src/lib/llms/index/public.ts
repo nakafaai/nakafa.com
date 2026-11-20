@@ -1,17 +1,11 @@
 import { NAKAFA_MCP_ENDPOINT } from "@repo/contents/agent/constants";
-import {
-  PUBLIC_ROUTE_SURFACES,
-  type PublicRouteSurface,
-} from "@repo/contents/route/surface";
+import type { PublicRouteSurface } from "@repo/contents/route/surface";
+import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { LOCALES } from "@repo/internationalization/src/locale";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import type { Locale } from "use-intl";
-import {
-  BASE_URL,
-  type LlmsSection,
-  llmsRouteUrl,
-  SECTION_LABELS,
-} from "@/lib/llms/constants";
+import type { LlmsSection } from "@/lib/llms/constants";
+import { BASE_URL, llmsRouteUrl, SECTION_LABELS } from "@/lib/llms/constants";
 import { getLocaleLabel, stripLlmsRouteExtension } from "@/lib/llms/format";
 import { renderLlmsIndexText } from "@/lib/llms/index/render";
 import { CONTENT_USE_POLICY } from "@/lib/seo/license";

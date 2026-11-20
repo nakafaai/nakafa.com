@@ -2,11 +2,8 @@ import type { OptimisticUpdate } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import { DateTime, Option } from "effect";
-import {
-  type ListNotification,
-  markPageRead,
-  markRowRead,
-} from "@/components/notifications/state";
+import type { ListNotification } from "@/components/notifications/state";
+import { markPageRead, markRowRead } from "@/components/notifications/state";
 
 /** Changes the page of every loaded inbox list, so each open list shows the change. */
 export function changeLists(

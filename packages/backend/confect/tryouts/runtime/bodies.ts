@@ -1,22 +1,14 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { readExplanation } from "@repo/backend/confect/tryouts/rows";
-import {
-  isTryoutReviewPreviewQuestion,
-  type readTryoutSectionContentAccess,
-} from "@repo/backend/confect/tryouts/runtime/content";
-import {
-  type PlacedQuestion,
-  readPlacedQuestion,
-} from "@repo/backend/confect/tryouts/runtime/question";
-import {
-  type TryoutQuestionBody,
-  TryoutQuestionBodyText,
-} from "@repo/backend/confect/tryouts/runtime/spec";
-import {
-  type PlacedQuestionVersion,
-  placeVersion,
-} from "@repo/backend/confect/tryouts/runtime/version";
+import type { readTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/content";
+import { isTryoutReviewPreviewQuestion } from "@repo/backend/confect/tryouts/runtime/content";
+import type { PlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
+import { readPlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
+import type { TryoutQuestionBody } from "@repo/backend/confect/tryouts/runtime/spec";
+import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
+import type { PlacedQuestionVersion } from "@repo/backend/confect/tryouts/runtime/version";
+import { placeVersion } from "@repo/backend/confect/tryouts/runtime/version";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
 /** What a section's review opens: every answer, or the leading questions' only. */

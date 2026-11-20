@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
+import type { SittingFixture } from "@repo/backend/test/sittings";
 import {
   attemptRow,
   CLOSES_AT as CLOSES,
@@ -11,7 +12,6 @@ import {
   jobStateOf,
   OPENS_AT as OPENS,
   openedSitting,
-  type SittingFixture,
 } from "@repo/backend/test/sittings";
 import {
   actedAt,

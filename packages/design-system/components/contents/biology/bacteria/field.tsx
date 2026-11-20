@@ -1,7 +1,8 @@
 import { OrthographicCamera } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
-import { type ReactNode, useEffect, useMemo } from "react";
+import type { ReactNode } from "react";
+import { useEffect, useMemo } from "react";
 import { DataTexture } from "three";
 
 /**

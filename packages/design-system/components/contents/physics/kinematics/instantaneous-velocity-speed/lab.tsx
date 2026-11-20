@@ -1,5 +1,9 @@
 import { useFrame } from "@react-three/fiber";
 import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car";
+import type {
+  InstantaneousSpeedCaseId,
+  InstantaneousVelocitySpeedState,
+} from "@repo/design-system/components/contents/physics/kinematics/instantaneous-velocity-speed/data";
 import {
   DEFAULT_INSTANTANEOUS_SPEED_CASE_ID,
   getInstantaneousVelocitySpeedState,
@@ -8,8 +12,6 @@ import {
   INSTANTANEOUS_SPEED_CASES,
   INSTANTANEOUS_SPEED_COLORS,
   INSTANTANEOUS_SPEED_SCENE,
-  type InstantaneousSpeedCaseId,
-  type InstantaneousVelocitySpeedState,
   isInstantaneousSpeedCaseId,
 } from "@repo/design-system/components/contents/physics/kinematics/instantaneous-velocity-speed/data";
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";

@@ -1,9 +1,7 @@
 import { Option } from "effect";
 import { readPlayerModeParam } from "@/components/player/mode";
-import {
-  readTryoutRouteAttemptCapability,
-  type TryoutRouteSearchParams,
-} from "@/components/tryout/route/path";
+import type { TryoutRouteSearchParams } from "@/components/tryout/route/path";
+import { readTryoutRouteAttemptCapability } from "@/components/tryout/route/path";
 
 /**
  * Reads the attempt capability and the player view of one address. Either one

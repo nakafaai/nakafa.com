@@ -8,15 +8,15 @@ Accepted on 9 November 2026.
 
 The owner's layout rule is one sentence: every page reads header, body and an optional footer, a pane opens at the right edge of the screen and never inside the body, the body is never wider than the header, and try-out, exam sitting, School and consumer pages share one experience. The code decided each part of that sentence per page family. Measured on main `c056dfb99b`, `apps/www/src/components/shared` held:
 
-| Part | Modules |
-| --- | --- |
-| Width | `content/width.ts` (the one width source), `content/frame.tsx` (`PageFrame`, `LayoutContent`) |
-| Page box | `material/frame.tsx` (`LayoutMaterial`, a flex `div`), `material/content.tsx` (`LayoutMaterialContent`) |
+| Part       | Modules                                                                                                                                                                                                                      |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Width      | `content/width.ts` (the one width source), `content/frame.tsx` (`PageFrame`, `LayoutContent`)                                                                                                                                |
+| Page box   | `material/frame.tsx` (`LayoutMaterial`, a flex `div`), `material/content.tsx` (`LayoutMaterialContent`)                                                                                                                      |
 | Header row | `breadcrumb/frame.tsx` (`BreadcrumbHeaderFrame`), the row of `tenant/header.tsx` (`SchoolHeader`, a second sticky row with its own trigger), and `content/header.tsx` (`HeaderContent`, a title that called itself a header) |
-| Body | `LayoutContent`, `table/frame.tsx` (`TablePageBody`) |
-| Footer | `content/footer.tsx` (`FooterContent`) |
-| Right edge | `panes.tsx` with `panes/side.tsx` (a fixed pane that narrows `main`), and `outline/panel.tsx` (a right sidebar that pads its own provider) |
-| Failure | `failure.tsx` (`DataFailure`) and `state/failure.tsx` (`LoadFailure`) |
+| Body       | `LayoutContent`, `table/frame.tsx` (`TablePageBody`)                                                                                                                                                                         |
+| Footer     | `content/footer.tsx` (`FooterContent`)                                                                                                                                                                                       |
+| Right edge | `panes.tsx` with `panes/side.tsx` (a fixed pane that narrows `main`), and `outline/panel.tsx` (a right sidebar that pads its own provider)                                                                                   |
+| Failure    | `failure.tsx` (`DataFailure`) and `state/failure.tsx` (`LoadFailure`)                                                                                                                                                        |
 
 Every route composed four to six of these by hand (`LayoutMaterial > SidebarRightProvider > LayoutMaterialContent > header, LayoutContent, FooterContent`), School pages composed a different four, and the player, the try-out shell, the Quran and Nina each passed their own `contentClassName` into the shared row. The defects the owner kept finding, a body wider than its header and a pane inside the body, came from those seams.
 
@@ -26,13 +26,13 @@ Three interfaces were designed in parallel (design it twice): the smallest surfa
 
 D1. `apps/www/src/components/shared/page/` owns the frame of every page of the app and of School. A route fills slots and decides nothing about layout: no width, gutter, sticky offset or pane position is written outside this folder.
 
-| Slot | Part | Replaces |
-| --- | --- | --- |
-| Root | `Page` (`width`: `page`, the default, up to 7xl, or `column`, 3xl) | `PageFrame`, `LayoutMaterial`, `LayoutMaterialContent` |
-| Header | `PageHeader`, with `PageActions` (the end zone), `PageCenter` (a centred zone, the player's timer) and `PageHeaderLabel` | `BreadcrumbHeaderFrame`, the row of `SchoolHeader`, every `contentClassName` |
-| Body | `PageBody` (flow), `PageList` (one full-height card), `PageCanvas` (edge to edge, the exam editor) | `LayoutContent`, `TablePageBody` |
-| Footer | `PageFooter`, with the line above a reading page's comments | `FooterContent` |
-| Right edge | `PagePane` (a detail opened by a press), `PageOutline` (the reading outline) | `PanesDetail`, `SidebarRightPanel` |
+| Slot       | Part                                                                                                                     | Replaces                                                                     |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| Root       | `Page` (`width`: `page`, the default, up to 7xl, or `column`, 3xl)                                                       | `PageFrame`, `LayoutMaterial`, `LayoutMaterialContent`                       |
+| Header     | `PageHeader`, with `PageActions` (the end zone), `PageCenter` (a centred zone, the player's timer) and `PageHeaderLabel` | `BreadcrumbHeaderFrame`, the row of `SchoolHeader`, every `contentClassName` |
+| Body       | `PageBody` (flow), `PageList` (one full-height card), `PageCanvas` (edge to edge, the exam editor)                       | `LayoutContent`, `TablePageBody`                                             |
+| Footer     | `PageFooter`, with the line above a reading page's comments                                                              | `FooterContent`                                                              |
+| Right edge | `PagePane` (a detail opened by a press), `PageOutline` (the reading outline)                                             | `PanesDetail`, `SidebarRightPanel`                                           |
 
 D2. The width has one source, `page/width.ts`. The consumer shell centers the contents of its header, body and footer at up to 3xl. The header and footer rules span the available page from edge to edge. School keeps the wider workspace frame and can choose a narrower reading body. `scripts/check/frame.ts` rejects a page width written by hand anywhere else.
 

@@ -1,6 +1,6 @@
+import type { Reading } from "@repo/design-system/components/contents/biology/photosynthesis/light";
 import {
   farthestDistance,
-  type Reading,
   relativeIntensity,
 } from "@repo/design-system/components/contents/biology/photosynthesis/light";
 import {
@@ -27,7 +27,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 
 /**
  * Hydrilla in a boiling tube of water, standing in a water bath that keeps

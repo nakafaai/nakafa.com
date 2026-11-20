@@ -14,11 +14,11 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { ensureDocumentSize } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import type { ReleaseRole } from "@repo/backend/confect/contentRelease/model";
 import {
   loadIdentityItem,
   loadItem,
   loadVersion,
-  type ReleaseRole,
 } from "@repo/backend/confect/contentRelease/model";
 import { publicationLayer } from "@repo/backend/content/publication/confect";
 import { contentHead } from "@repo/backend/content/publication/projection";

@@ -36,11 +36,8 @@ import {
   LinesProvider,
 } from "@/components/player/lines/board";
 import { ChoiceTable } from "@/components/player/table";
-import {
-  type Choice,
-  isChoice,
-  type OptionLabel,
-} from "@/components/tenant/exams/answer";
+import type { Choice, OptionLabel } from "@/components/tenant/exams/answer";
+import { isChoice } from "@/components/tenant/exams/answer";
 import { keyPairs, matchOf } from "@/components/tenant/exams/match";
 import type { Question } from "@/components/tenant/exams/optimistic";
 import { useExam, useExamLocked } from "@/components/tenant/exams/provider";

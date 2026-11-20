@@ -1,7 +1,5 @@
-import {
-  type ContentSnapshotManifest,
-  contentSnapshotId,
-} from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { ContentSnapshotManifest } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { contentSnapshotId } from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { decodeSnapshotJson } from "@repo/backend/confect/contentRelease/parse";

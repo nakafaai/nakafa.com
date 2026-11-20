@@ -11,12 +11,8 @@ import {
 } from "@/components/comments/mutation";
 import { useCommentDraft } from "@/components/comments/provider";
 import { useCommentsSlug } from "@/components/comments/slug";
-import {
-  type CommentAuthor,
-  type CommentRow,
-  draftComment,
-  threadOf,
-} from "@/components/comments/state";
+import type { CommentAuthor, CommentRow } from "@/components/comments/state";
+import { draftComment, threadOf } from "@/components/comments/state";
 import { reportClientException } from "@/lib/analytics/client";
 import { useViewer } from "@/lib/identity/client";
 

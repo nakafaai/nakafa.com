@@ -3,9 +3,9 @@ import "@tanstack/react-start/server-only";
 import { semanticMdxComponents } from "@repo/design-system/lib/markdown/semantic";
 import type { MDXComponents } from "@repo/design-system/types/markdown";
 import { Array as Arr, Effect, Option, Record as Rec } from "effect";
+import type { RendererSelection } from "@/lib/content/renderer/selection";
 import {
   RendererImplementationMissing,
-  type RendererSelection,
   selectRendererImplementations,
 } from "@/lib/content/renderer/selection";
 

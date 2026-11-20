@@ -21,17 +21,13 @@ import { NEW_FORMULA } from "@repo/editor/math";
 import { cn } from "cn";
 import { Effect, Fiber, Option, Schema } from "effect";
 import type * as MathLive from "mathlive";
-import {
-  type ComponentProps,
-  createContext,
-  type KeyboardEvent,
-  type ReactNode,
-  type RefObject,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
+import type {
+  ComponentProps,
+  KeyboardEvent,
+  ReactNode,
+  RefObject,
 } from "react";
+import { createContext, useEffect, useMemo, useRef, useState } from "react";
 
 /** MathLive, which an editor needs only when its popover opens, so no page's first JavaScript holds it. */
 class MathLiveUnavailable extends Schema.TaggedError<

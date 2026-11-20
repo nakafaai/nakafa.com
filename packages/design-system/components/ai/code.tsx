@@ -12,14 +12,8 @@ import { getCodeFileExtension } from "@repo/design-system/lib/code/extension";
 import { downloadFile } from "@repo/design-system/lib/files/download";
 import { cn } from "cn";
 import { Effect, Schema } from "effect";
-import {
-  type ComponentProps,
-  createContext,
-  type ReactNode,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { createContext, useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 
 /** One code sample and the language it is written in. */

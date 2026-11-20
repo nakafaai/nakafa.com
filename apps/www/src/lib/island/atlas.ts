@@ -38,7 +38,8 @@ import {
   tuftTile,
   waterTile,
 } from "@/lib/island/tiles/nature";
-import { type Pixels, TILE } from "@/lib/island/tiles/paint";
+import type { Pixels } from "@/lib/island/tiles/paint";
+import { TILE } from "@/lib/island/tiles/paint";
 import { emptyShape, markBody, paintShape } from "@/lib/island/tiles/shape";
 import { bobberTile } from "@/lib/island/tiles/tools";
 import { WANG_SET, wangTile } from "@/lib/island/tiles/wang";

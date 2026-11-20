@@ -1,7 +1,5 @@
-import {
-  type Point3,
-  Point3Schema,
-} from "@repo/design-system/lib/geometry/point";
+import type { Point3 } from "@repo/design-system/lib/geometry/point";
+import { Point3Schema } from "@repo/design-system/lib/geometry/point";
 import { Array as Arr, Schema } from "effect";
 
 const CuboidDimensionsSchema = Schema.Struct({

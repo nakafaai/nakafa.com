@@ -4,9 +4,9 @@ import {
   anchorOf,
   objectOf,
 } from "@/components/tenant/exams/figure/graph/object";
+import type { ShapeDraft } from "@/components/tenant/exams/figure/graph/shapes";
 import {
   newShape,
-  type ShapeDraft,
   ShapeKind,
 } from "@/components/tenant/exams/figure/graph/shapes";
 

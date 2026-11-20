@@ -1,5 +1,6 @@
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
-import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import {
   Array as Arr,
   Clock,

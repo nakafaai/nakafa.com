@@ -1,11 +1,11 @@
 import type { TenantCohortsDoc } from "@repo/backend/confect/_generated/docs";
 import { cohortNameKey } from "@repo/backend/confect/tenancy/cohort";
 import type { PromotionPlanIssue } from "@repo/backend/confect/tenancy/errors";
-import {
-  type PromotionCreated,
-  PromotionDestination,
-  type PromotionTarget,
+import type {
+  PromotionCreated,
+  PromotionTarget,
 } from "@repo/backend/confect/tenancy/promotion/schema";
+import { PromotionDestination } from "@repo/backend/confect/tenancy/promotion/schema";
 import { Array as Arr, Option } from "effect";
 
 /**

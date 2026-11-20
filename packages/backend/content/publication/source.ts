@@ -2,7 +2,8 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import type { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import type { TableNames } from "@repo/backend/convex/_generated/dataModel";
 import type { SystemFields } from "convex/server";
-import { Context, type Effect, type Option } from "effect";
+import type { Effect, Option } from "effect";
+import { Context } from "effect";
 
 /** Immutable content values do not depend on a database-generated identity. */
 export type PublicationRow<Table extends TableNames> = Omit<

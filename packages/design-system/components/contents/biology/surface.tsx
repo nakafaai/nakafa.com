@@ -1,12 +1,13 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { valueNoise } from "@repo/design-system/components/contents/simulation/grain";
 import { Array as Arr } from "effect";
-import { type RefObject, useEffect, useMemo } from "react";
+import type { RefObject } from "react";
+import { useEffect, useMemo } from "react";
+import type { Object3D } from "three";
 import {
   DoubleSide,
   FrontSide,
   MeshPhysicalMaterial,
-  type Object3D,
   Plane,
   SphereGeometry,
   Vector3,

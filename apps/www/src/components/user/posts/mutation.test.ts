@@ -12,11 +12,8 @@ import {
   removeFromLists,
   unlikeInLists,
 } from "@/components/user/posts/mutation";
-import {
-  type ListPost,
-  likePost,
-  updatePost,
-} from "@/components/user/posts/state";
+import type { ListPost } from "@/components/user/posts/state";
+import { likePost, updatePost } from "@/components/user/posts/state";
 
 const postId = Schema.decodeUnknownSync(Id("posts"));
 const AUTHOR = Schema.decodeUnknownSync(Id("users"))("author");

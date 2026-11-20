@@ -1,11 +1,10 @@
 import { Array as Arr } from "effect";
+import type { Node, SourceFile } from "tsrs/ast";
 import {
   isAsyncKeyword,
   isAwaitExpression,
   isForOfStatement,
   isFunctionLikeDeclaration,
-  type Node,
-  type SourceFile,
 } from "tsrs/ast";
 import { insideHandler } from "#scripts/check/handler";
 import { candidate } from "#scripts/check/rules";

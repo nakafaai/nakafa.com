@@ -1,7 +1,8 @@
 import { Array as Arr } from "effect";
 import { ATLAS_SIZE, atlasPixels } from "@/lib/island/atlas";
 import { mipsOf } from "@/lib/island/mips";
-import { repaintFor, type Season } from "@/lib/island/season";
+import type { Season } from "@/lib/island/season";
+import { repaintFor } from "@/lib/island/season";
 import { TILE } from "@/lib/island/tiles/paint";
 
 /**

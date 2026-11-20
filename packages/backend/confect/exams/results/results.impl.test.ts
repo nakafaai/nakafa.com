@@ -4,6 +4,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
+import type { SittingFixture } from "@repo/backend/test/sittings";
 import {
   attemptRow,
   CLOSES_AT,
@@ -13,7 +14,6 @@ import {
   keyedSchool,
   OPENS_AT,
   openedSitting,
-  type SittingFixture,
   scheduleSitting,
   sittingRow,
 } from "@repo/backend/test/sittings";

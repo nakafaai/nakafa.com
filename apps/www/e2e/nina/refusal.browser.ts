@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
 import de from "@repo/internationalization/dictionaries/de.json" with {
   type: "json",

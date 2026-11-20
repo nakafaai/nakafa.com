@@ -1,6 +1,7 @@
 import { CURRICULUM_NAMESPACES } from "@nakafa/aksara-contracts/program/curriculum";
 import { MATERIAL_PUBLIC_NAMESPACES } from "@nakafa/aksara-contracts/projection/material";
-import { LOCALES, type Locale } from "@repo/internationalization/src/locale";
+import type { Locale } from "@repo/internationalization/src/locale";
+import { LOCALES } from "@repo/internationalization/src/locale";
 import { Array as Arr, Option, Record as Rec } from "effect";
 
 /**

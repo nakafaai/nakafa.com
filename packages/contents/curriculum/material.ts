@@ -18,10 +18,8 @@ import {
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
 import { SPARE_ICONS } from "@repo/contents/curriculum/spare";
-import {
-  isPresentedMaterialDomain,
-  type PresentedMaterialDomain,
-} from "@repo/contents/taxonomy";
+import type { PresentedMaterialDomain } from "@repo/contents/taxonomy";
+import { isPresentedMaterialDomain } from "@repo/contents/taxonomy";
 import { Array as Arr } from "effect";
 
 /** One Hugeicons drawing, as every icon of the product is stored. */

@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { MutableList, Option } from "effect";
 import { CONVEX_SOCKET, decodeGiven } from "@/e2e/support/frames";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";

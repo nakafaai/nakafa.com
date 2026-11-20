@@ -22,7 +22,8 @@ import {
   beginFixture,
   stageUpsertFixture,
 } from "@repo/backend/test/content/verify";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Array as Arr } from "effect";
 
 vi.mock("@repo/backend/confect/contentRelease/proof/budget", { spy: true });

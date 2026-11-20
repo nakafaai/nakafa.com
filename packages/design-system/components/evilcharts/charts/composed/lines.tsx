@@ -1,6 +1,6 @@
 import type { StyleProps } from "@repo/design-system/components/evilcharts/charts/composed/bars";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
-  type ChartConfig,
   getChartColorVariable,
   getChartSeriesId,
   getColorsCount,

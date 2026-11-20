@@ -9,7 +9,8 @@ import { canOpenInsight } from "@/components/tenant/insight/access";
 import { PageRecovery } from "@/components/tenant/read/recovery";
 import { canOpenReports } from "@/components/tenant/reports/access";
 import { TenantShell } from "@/components/tenant/shell";
-import { canManageSchool, roleOf, type SchoolFrame } from "@/lib/tenant/frame";
+import type { SchoolFrame } from "@/lib/tenant/frame";
+import { canManageSchool, roleOf } from "@/lib/tenant/frame";
 
 /**
  * A member's school: the app's providers and the school shell around every page of the school. It

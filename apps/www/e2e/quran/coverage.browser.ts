@@ -1,8 +1,7 @@
-import {
-  type ActiveAppLocaleCode,
-  ActiveAppLocaleCodeSchema,
-} from "@nakafa/aksara-contracts/locale";
-import { expect, type Page, test } from "@playwright/test";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect, HashSet, Record as Rec, Schema } from "effect";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";

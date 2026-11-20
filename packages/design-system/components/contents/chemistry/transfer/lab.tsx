@@ -3,11 +3,13 @@ import { getAtomSceneColors } from "@repo/design-system/components/contents/chem
 import { MathLines } from "@repo/design-system/components/contents/chemistry/lines";
 import { ELEMENTS } from "@repo/design-system/components/contents/chemistry/molecule/elements";
 import { HandSlider } from "@repo/design-system/components/contents/chemistry/slider";
+import type {
+  IonAtom,
+  PairId,
+} from "@repo/design-system/components/contents/chemistry/transfer/ions";
 import {
   getPair,
-  type IonAtom,
   ionTex,
-  type PairId,
   PairIdSchema,
   shellsAfterGain,
   shellsAfterLoss,
@@ -39,14 +41,8 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { getColor } from "@repo/design-system/lib/color";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr, Option, Schema } from "effect";
-import {
-  createRef,
-  type ReactNode,
-  Suspense,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { createRef, Suspense, useMemo, useRef, useState } from "react";
 import type { Mesh } from "three";
 import { useFormatter } from "use-intl";
 

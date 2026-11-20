@@ -1,13 +1,15 @@
 import { useMutation } from "@confect/react";
 import { Calendar03Icon, Invoice01Icon } from "@hugeicons/core-free-icons";
 import billing from "@repo/backend/confect/_generated/refs/billing";
+import type {
+  PlanPeriod,
+  SchoolOrder,
+} from "@repo/backend/confect/billing/quote";
 import {
-  type PlanPeriod,
   remainingShare,
   SCHOOL_ACCOUNT_LIMIT,
   SCHOOL_ACCOUNT_PRESETS,
   SchoolLineKey,
-  type SchoolOrder,
 } from "@repo/backend/confect/billing/quote";
 import {
   SchoolPaidTierKey,
@@ -43,11 +45,8 @@ import { useTenant } from "@/components/tenant/context";
 import { SelectField } from "@/components/tenant/settings/select";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { formatMinorAmount } from "@/lib/billing/plan";
-import {
-  orderQuote,
-  type SchoolBilling,
-  schoolPayChange,
-} from "@/lib/billing/school";
+import type { SchoolBilling } from "@/lib/billing/school";
+import { orderQuote, schoolPayChange } from "@/lib/billing/school";
 
 const isMonths = Schema.is(SchoolPeriod);
 

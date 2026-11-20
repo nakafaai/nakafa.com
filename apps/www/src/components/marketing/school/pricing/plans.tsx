@@ -4,10 +4,12 @@ import {
   SparklesIcon,
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
+import type {
+  SchoolPaidTierKey,
+  SchoolTierKey,
+} from "@repo/backend/confect/billing/tiers";
 import {
   SCHOOL_TRIAL_DAYS,
-  type SchoolPaidTierKey,
-  type SchoolTierKey,
   schoolMonthlyAfterDiscount,
   schoolTiers,
 } from "@repo/backend/confect/billing/tiers";

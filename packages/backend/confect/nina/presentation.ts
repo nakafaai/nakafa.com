@@ -1,4 +1,5 @@
-import { Agent, type UsageHandler } from "@convex-dev/agent";
+import type { UsageHandler } from "@convex-dev/agent";
+import { Agent } from "@convex-dev/agent";
 import {
   MAX_TITLE_LENGTH,
   NinaTitle,

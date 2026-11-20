@@ -3,10 +3,8 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { periodAuthority } from "@repo/backend/confect/tenancy/authority";
-import {
-  type PeriodStatus,
-  periodView,
-} from "@repo/backend/confect/tenancy/period";
+import type { PeriodStatus } from "@repo/backend/confect/tenancy/period";
+import { periodView } from "@repo/backend/confect/tenancy/period";
 import spec from "@repo/backend/confect/tenancy/periods.spec";
 import { reactivatePeriod } from "@repo/backend/confect/tenancy/write/period";
 import { Effect, Struct } from "effect";

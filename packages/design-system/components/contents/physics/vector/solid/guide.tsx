@@ -1,4 +1,5 @@
-import { type ReactNode, useLayoutEffect, useRef } from "react";
+import type { ReactNode } from "react";
+import { useLayoutEffect, useRef } from "react";
 import type { Group } from "three";
 
 /**

@@ -9,10 +9,8 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import {
-  type MermaidRenderConfig,
-  renderMermaid,
-} from "@repo/design-system/lib/mermaid/render";
+import type { MermaidRenderConfig } from "@repo/design-system/lib/mermaid/render";
+import { renderMermaid } from "@repo/design-system/lib/mermaid/render";
 import { sizeSvg } from "@repo/design-system/lib/mermaid/size";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";

@@ -1,6 +1,7 @@
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { createContext, type ReactNode, use } from "react";
+import type { ReactNode } from "react";
+import { createContext, use } from "react";
 
 /**
  * The picture a scene stands on until its first frame is drawn, such as the

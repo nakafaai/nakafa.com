@@ -3,7 +3,8 @@ import type {
   LogoReservation,
   LogoReserved,
 } from "@repo/backend/confect/tenancy/schema";
-import { Effect, type Result, Schema } from "effect";
+import type { Result } from "effect";
+import { Effect, Schema } from "effect";
 import { logoAnswerOutcome } from "@/components/tenant/logo";
 
 /** The school kept no logo, because the server refused the file it was given. */

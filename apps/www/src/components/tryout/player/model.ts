@@ -1,9 +1,7 @@
 import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import { Array as Arr, HashMap, Option } from "effect";
-import {
-  type PlayerQuestionModel,
-  projectQuestions,
-} from "@/components/player/model";
+import type { PlayerQuestionModel } from "@/components/player/model";
+import { projectQuestions } from "@/components/player/model";
 import type { TryoutBody } from "@/components/tryout/content/body";
 import { isAnsweredQuestion } from "@/components/tryout/runtime/response/state";
 import type { TryoutRuntimeQuestion } from "@/components/tryout/runtime/types";

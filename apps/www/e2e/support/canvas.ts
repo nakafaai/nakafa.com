@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Duration, Effect, Schema } from "effect";
 
 const VISUAL_ASSERTION_TIMEOUT = 5000;

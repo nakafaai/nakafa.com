@@ -2,9 +2,10 @@ import type { Ref } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { Clock, Effect, type Result, Schema } from "effect";
+import type { Result } from "effect";
+import { Clock, Effect, Schema } from "effect";
+import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
 import {
-  type ForumMessage,
   openUpdate,
   replyUpdate,
   sendUpdate,

@@ -10,7 +10,8 @@ import {
   useGround,
 } from "@repo/design-system/components/three/stage/terrain";
 import { getColor } from "@repo/design-system/lib/color";
-import { type ReactNode, useEffect, useMemo } from "react";
+import type { ReactNode } from "react";
+import { useEffect, useMemo } from "react";
 import { BufferAttribute, BufferGeometry } from "three";
 
 /**

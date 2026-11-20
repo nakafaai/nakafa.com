@@ -8,12 +8,10 @@ import { INVITE_TERM } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, DateTime, Duration, Option, Schema } from "effect";
 import { changeInviteLists } from "@/components/tenant/settings/mutation";
+import type { Invite, Login, Member } from "@/components/tenant/settings/state";
 import {
   draftText,
-  type Invite,
   isFirstPage,
-  type Login,
-  type Member,
   withoutItem,
 } from "@/components/tenant/settings/state";
 import { changeLoaded, withPage } from "@/lib/data/loaded";

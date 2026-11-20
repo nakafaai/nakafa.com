@@ -1,30 +1,22 @@
 import { useReducedMotion } from "@mantine/hooks";
-import {
-  AnimatedDashedStroke,
-  type AreaAnimationType,
-  AreaPaint,
-  type AreaVariant,
+import type {
+  AreaAnimationType,
+  AreaVariant,
 } from "@repo/design-system/components/evilcharts/charts/area/paint";
 import {
-  type CurveType,
-  useAreaChart,
-} from "@repo/design-system/components/evilcharts/charts/area-chart";
+  AnimatedDashedStroke,
+  AreaPaint,
+} from "@repo/design-system/components/evilcharts/charts/area/paint";
+import type { CurveType } from "@repo/design-system/components/evilcharts/charts/area-chart";
+import { useAreaChart } from "@repo/design-system/components/evilcharts/charts/area-chart";
 import {
   getChartSeriesPaint,
   getColorsCount,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
-import {
-  ChartDot,
-  type DotVariant,
-} from "@repo/design-system/components/evilcharts/ui/dot";
-import {
-  Children,
-  type ComponentProps,
-  type FC,
-  isValidElement,
-  type ReactNode,
-  useId,
-} from "react";
+import type { DotVariant } from "@repo/design-system/components/evilcharts/ui/dot";
+import { ChartDot } from "@repo/design-system/components/evilcharts/ui/dot";
+import type { ComponentProps, FC, ReactNode } from "react";
+import { Children, isValidElement, useId } from "react";
 import { Area as RechartsArea } from "recharts";
 
 const STROKE_WIDTH = 0.8;

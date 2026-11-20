@@ -1,24 +1,20 @@
 import type { ContentKey } from "@nakafa/aksara-contracts/ids";
 import type { ArtifactLocale } from "@nakafa/aksara-contracts/locale";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
-import {
-  type ContentTreeChild,
-  type ContentTreeElement,
-  type ContentTreeProps,
-  type ContentTreeValue,
-  contentTreeComponentNames,
+import type {
+  ContentTreeChild,
+  ContentTreeElement,
+  ContentTreeProps,
+  ContentTreeValue,
 } from "@nakafa/aksara-contracts/tree";
+import { contentTreeComponentNames } from "@nakafa/aksara-contracts/tree";
 import { headingIdOf } from "@repo/contents/toc";
 import { baseComponentNames } from "@repo/design-system/lib/markdown/names";
 import { mathTailVariants } from "@repo/design-system/lib/prose";
 import type { MDXComponents } from "@repo/design-system/types/markdown";
 import { Array as Arr, Effect, Option, Predicate, Record as Rec } from "effect";
-import {
-  createElement,
-  Fragment,
-  type ReactElement,
-  type ReactNode,
-} from "react";
+import type { ReactElement, ReactNode } from "react";
+import { createElement, Fragment } from "react";
 import { splitTouching } from "@/lib/content/renderer/glue";
 import { takesLocale } from "@/lib/content/renderer/locale";
 import { inPropType } from "@/lib/content/renderer/prop";

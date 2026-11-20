@@ -7,15 +7,13 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Effect } from "effect";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useAuthSession } from "@/components/auth/session";
 import { SchoolMark } from "@/components/tenant/mark";
-import {
-  type KnownSchool,
-  loadKnownSchoolsText,
-  readKnownSchools,
-} from "@/lib/identity/schools";
+import type { KnownSchool } from "@/lib/identity/schools";
+import { loadKnownSchoolsText, readKnownSchools } from "@/lib/identity/schools";
 import { schoolOrigin } from "@/lib/routing/school/host";
 
 /** One school of the account menu: its mark and its name, as a link to the school's own address. */

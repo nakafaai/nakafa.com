@@ -2,10 +2,12 @@ import { Effect, Fiber, Option, Result } from "effect";
 import { useEffect, useState } from "react";
 import { useLocale } from "use-intl";
 import { isActiveLocale } from "@/lib/i18n/active";
+import type {
+  ContentSearchResultItem,
+  SearchAnswers,
+} from "@/lib/search/answer";
 import {
-  type ContentSearchResultItem,
   requestSearch,
-  type SearchAnswers,
   SearchReadError,
   settleSearch,
   startSearch,

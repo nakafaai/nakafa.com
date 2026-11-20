@@ -15,10 +15,8 @@ import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/st
 import { isLoginAddress } from "@repo/backend/confect/identity/address";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
-import {
-  bindPerson,
-  type ClaimedAccount,
-} from "@repo/backend/confect/tenancy/claim";
+import type { ClaimedAccount } from "@repo/backend/confect/tenancy/claim";
+import { bindPerson } from "@repo/backend/confect/tenancy/claim";
 import { CLAIM_PAGE_SIZE } from "@repo/backend/confect/tenancy/claims";
 import spec from "@repo/backend/confect/tenancy/claims.spec";
 import {

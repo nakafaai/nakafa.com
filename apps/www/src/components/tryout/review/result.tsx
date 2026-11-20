@@ -10,8 +10,8 @@ import { PlayerReviewGrid } from "@/components/player/navigator/review";
 import { usePlayer } from "@/components/player/provider";
 import { splitTime } from "@/components/player/time";
 import { PaneFact, PaneFacts } from "@/components/shared/page/pane";
+import type { createExplainedStore } from "@/components/tryout/review/context";
 import {
-  type createExplainedStore,
   TryoutExplainedContext,
   TryoutReviewContext,
 } from "@/components/tryout/review/context";

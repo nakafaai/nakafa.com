@@ -21,10 +21,8 @@ import {
   renderArticleArtifact,
 } from "@/lib/content/published/article";
 import { ContentExecutionError } from "@/lib/content/published/errors";
-import {
-  type PublishedContentInput,
-  readPublishedContent,
-} from "@/lib/content/published/exchange";
+import type { PublishedContentInput } from "@/lib/content/published/exchange";
+import { readPublishedContent } from "@/lib/content/published/exchange";
 import { previewProjection } from "@/test/manifest";
 import { makePublishedParts } from "@/test/parts";
 import {

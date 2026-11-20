@@ -10,11 +10,11 @@ The owner saw the production home page red on a phone-sized Lighthouse run while
 
 Default Lighthouse slows the CPU by 4. This Mac measures a benchmark index of 3,204 to 3,716, so a 4x run here scored 98 while a 12x run reproduced the red the owner saw. Measured on production `/id`, 31 October 2026:
 
-| Run | Score | Blocking time | Main thread |
-| --- | --- | --- | --- |
-| Simulated, 4x, on the Mac | 98 | 130 ms | 3.8 s |
-| Simulated, 12x, on the Mac | 71 | 1.7 to 2.1 s | 16 s |
-| DevTools throttling, 4x | none: the page never went idle | none | 32.8 s |
+| Run                        | Score                          | Blocking time | Main thread |
+| -------------------------- | ------------------------------ | ------------- | ----------- |
+| Simulated, 4x, on the Mac  | 98                             | 130 ms        | 3.8 s       |
+| Simulated, 12x, on the Mac | 71                             | 1.7 to 2.1 s  | 16 s        |
+| DevTools throttling, 4x    | none: the page never went idle | none          | 32.8 s      |
 
 Four causes held that main thread:
 
@@ -45,10 +45,10 @@ D9. A page boots in a few files (13 November 2026). Google's renderer, which AdS
 
 The copies and the order wrappers add text that compression removes, so a graph that warms other pages decodes more while it transfers the same or less. Two decoded limits of `apps/www/e2e/budget/javascript.browser.ts` moved; each keeps the spec's headroom (the measurement plus 6%, rounded up to the next thousand), and no encoded limit moved. Before is the spec's baseline of 8 November 2026, after the Chromium run of 13 November:
 
-| Graph | Encoded before | Encoded after | Decoded before | Decoded after | Decoded limit |
-| --- | --- | --- | --- | --- | --- |
-| Indonesian Quran, normal prefetch | 833,187 | 822,414 | 2,306,088 | 2,456,884 | 2,445,000 to 2,605,000 |
-| English Memory, signed in | 1,049,988 | 1,049,197 | 2,944,185 | 3,156,362 | 3,121,000 to 3,346,000 |
+| Graph                             | Encoded before | Encoded after | Decoded before | Decoded after | Decoded limit          |
+| --------------------------------- | -------------- | ------------- | -------------- | ------------- | ---------------------- |
+| Indonesian Quran, normal prefetch | 833,187        | 822,414       | 2,306,088      | 2,456,884     | 2,445,000 to 2,605,000 |
+| English Memory, signed in         | 1,049,988      | 1,049,197     | 2,944,185      | 3,156,362     | 3,121,000 to 3,346,000 |
 
 Lighthouse on a GitHub runner, mobile, at a slowdown scaled to the runner, median of five runs: script requests fell from 356 to 423 to 32 to 40 on the home page, School, a lesson and the Quran, and main-thread time fell 15 to 33%.
 
@@ -56,14 +56,14 @@ D10. A static page preloads only what its first paint runs (15 November 2026). T
 
 D11. A lesson's first visual draws with MathVisual (15 November 2026). The retired lesson visuals moved onto MathVisual (#2385 and the Aksara content it pins), and every visual serves every content kind, by the owner's rule of 15 November 2026. So the measured lesson, Hyperbola, draws its first visual card with MathVisual's renderer, which the budget counts because the card is near enough to the first screen to load. D9 measured the Quran and Memory graphs again and left the lesson at 3,524,499 decoded bytes, 0.6% under its 3,545,000 limit instead of the spec's 6%. Measured on the production build of 15 November 2026 against D9's own build, the lesson grew by 94,630 decoded bytes:
 
-| Owner | Decoded bytes |
-| --- | --- |
-| MathVisual: its renderer, its 3D names and its slider | 49,185 |
-| The order wrappers of D9's copied chunks | 36,447 |
-| Base UI's composite, copied into five chunks | 14,188 |
-| Icons, the sibling crumbs, the mascot and the flags | 28,656 |
-| Modules that left the graph | -38,215 |
-| Line breaks, which no source map attributes | 4,369 |
+| Owner                                                 | Decoded bytes |
+| ----------------------------------------------------- | ------------- |
+| MathVisual: its renderer, its 3D names and its slider | 49,185        |
+| The order wrappers of D9's copied chunks              | 36,447        |
+| Base UI's composite, copied into five chunks          | 14,188        |
+| Icons, the sibling crumbs, the mascot and the flags   | 28,656        |
+| Modules that left the graph                           | -38,215       |
+| Line breaks, which no source map attributes           | 4,369         |
 
 The composite copies are a known cost of D9's inlined common chunks, which keep every page under Google's render cap; this change does not touch them. The same day, the School form's language field moved out of the language menu's module into `apps/www/src/components/tenant/settings/language.tsx`: a chunk holds whole modules, so every header and sidebar that drew the menu had loaded the field's Select, Field and their Base UI internals. That took the English pricing graph from 2,059,999 to 2,002,367 decoded bytes and the homepage from 2,704,059 to 2,639,727, both under their limits again. The lesson, at 1,160,551 encoded and 3,619,129 decoded bytes, takes a decoded limit of 3,837,000 by D9's rule: the measurement plus 6%, rounded up to the next thousand. Its encoded limit holds.
 
@@ -71,11 +71,11 @@ D12. A long page skips each part once, and a jump lays out the parts above its t
 
 D13. A formula that mounts only in the browser carries the markup the server drew (16 November 2026). Since #2475 a lesson's data carries each formula's TeX, and a formula the browser hydrates keeps the server's markup, so a page's first load runs no KaTeX. A scene's labels never hydrate: MathVisual's `labels`, the quadratic room's side labels and the other content nodes a scene draws mount in its canvas overlay, which only the browser renders. Each one drew itself with KaTeX, so the measured lesson, Hyperbola, loaded KaTeX (77,493 bytes gzip) for the nine labels of its first visual card. The content tree now renders every element inside another renderer's prop with the component its renderer marks for a prop (`IN_PROP` in `apps/www/src/lib/content/renderer/prop.ts`), and a formula there carries the markup `drawMath` drew for it, which `FormulaDrawing` shows as it mounts. `drawMath` stays the one drawer, and the body's formulas still carry only their TeX. On the production build of 16 November 2026 with #2578 applied:
 
-| | Before | After |
-| --- | --- | --- |
+|                                 | Before                            | After                             |
+| ------------------------------- | --------------------------------- | --------------------------------- |
 | Lesson graph, encoded / decoded | 1,240,806 / 3,885,821, 76 scripts | 1,162,484 / 3,625,112, 74 scripts |
-| Hyperbola HTML, decoded / gzip | 582,684 / 71,384 | 618,566 / 73,560 |
-| Static answers, all 822 files | 46,526,579 bytes | 49,716,782 bytes |
+| Hyperbola HTML, decoded / gzip  | 582,684 / 71,384                  | 618,566 / 73,560                  |
+| Static answers, all 822 files   | 46,526,579 bytes                  | 49,716,782 bytes                  |
 
 The lesson's limits hold. The 219 answers whose content draws a formula in a prop grew, by at most 35,158 bytes before compression, the price of drawing a label without KaTeX; a page drawn in the browser still loads KaTeX for the body's formulas when it shows them.
 
@@ -83,12 +83,12 @@ D14. A WebGL scene on a lesson's first screen waits for the reader's first gestu
 
 D15. Motion loads with the parts that move (16 November 2026). The root document and `DesignSystemProvider` each wrapped every page in Motion's `MotionConfig` for its reduced-motion policy, and `lib/attribute.ts` read two SVG helpers from the `motion` barrel. Under `strictExecutionOrder` (D9) that one root import kept 198 of motion-dom's 252 modules and 82 of framer-motion's 179 in the boot chunk, drag, layout and scroll included, though no first paint moves anything. Each part that animates a transform now sets the policy itself (the chart's reveal, as the ancient atom and sequence labs already did; the streak reads `useReducedMotion`), the other islands animate only opacity, path length or a scroll-bound style, and `attribute.ts` keeps the 23 SVG names itself. Measured on the production build of `fdb589be51` behind a Brotli proxy, Lighthouse mobile at 12x CPU, median of 5:
 
-| | Before | After |
-| --- | --- | --- |
-| Boot chunk, decoded | 1,304,596 | 1,130,507 |
-| Sign-in first JavaScript, transfer | 490,592 | 435,174 |
-| School landing first JavaScript, transfer | 707,687 | 676,394 |
-| Home, article, Quran, search, transfer | 852,332 / 762,513 / 746,537 / 707,749 | 855,847 / 765,794 / 749,716 / 711,006 |
+|                                           | Before                                | After                                 |
+| ----------------------------------------- | ------------------------------------- | ------------------------------------- |
+| Boot chunk, decoded                       | 1,304,596                             | 1,130,507                             |
+| Sign-in first JavaScript, transfer        | 490,592                               | 435,174                               |
+| School landing first JavaScript, transfer | 707,687                               | 676,394                               |
+| Home, article, Quran, search, transfer    | 852,332 / 762,513 / 746,537 / 707,749 | 855,847 / 765,794 / 749,716 / 711,006 |
 
 A page whose links warm a `_main` page (D3) still loads Motion within the window, now as its own chunks, about 3 KB more. Performance scores moved within the run-to-run spread (sign-in 81 to 85 before, 86 after).
 

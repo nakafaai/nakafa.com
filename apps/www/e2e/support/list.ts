@@ -1,11 +1,9 @@
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Array as Arr, Effect, String as Str } from "effect";
 import { MEMORY_PAGE } from "@/components/user/settings/memory/list";
-import {
-  ANSWER_MILLISECONDS,
-  type Changes,
-  saved,
-} from "@/e2e/support/changes";
+import type { Changes } from "@/e2e/support/changes";
+import { ANSWER_MILLISECONDS, saved } from "@/e2e/support/changes";
 import { EMPTY, editorOf, opened } from "@/e2e/support/memory";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 

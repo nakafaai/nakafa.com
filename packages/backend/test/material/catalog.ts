@@ -3,14 +3,10 @@ import {
   ReleaseIdSchema,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
-import {
-  ACTIVE_APP_LOCALE_CODES,
-  type ActiveAppLocaleCode,
-} from "@nakafa/aksara-contracts/locale";
-import {
-  canonicalizeMaterialProjection,
-  type MaterialLessonProjection,
-} from "@nakafa/aksara-contracts/projection/material";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -26,10 +22,10 @@ import {
   TEST_RELEASE_ID,
   testTextHash,
 } from "@repo/backend/test/content/release";
+import type { TestIdentity } from "@repo/backend/test/content/state";
 import {
   insertTestState,
   insertZeroRelease,
-  type TestIdentity,
 } from "@repo/backend/test/content/state";
 import {
   insertRuntimeBinding,

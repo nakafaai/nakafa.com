@@ -11,9 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
-import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { anotherMascot } from "@repo/mascot/candidates";
-import { Array as Arr, Effect, Option, type Result, Schema } from "effect";
+import type { Result } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
 import {
   CardSection,

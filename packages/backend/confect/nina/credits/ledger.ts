@@ -23,10 +23,8 @@ import {
   getCreditResetGrantTransaction,
   resolveEffectiveCreditState,
 } from "@repo/backend/confect/credits/state";
-import {
-  NinaCreditError,
-  type NinaCreditHold,
-} from "@repo/backend/confect/nina/credits/schema";
+import type { NinaCreditHold } from "@repo/backend/confect/nina/credits/schema";
+import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
 import { Array as Arr, Clock, Effect, Option, Struct } from "effect";
 
 // Admission quota is independent of refundable credits. Five starts may burst;

@@ -27,12 +27,12 @@ import {
   testProofRenderer,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
+import type { TestIdentity } from "@repo/backend/test/content/state";
 import {
   insertAbortedRelease,
   insertActiveRelease,
   insertTestState,
   insertZeroRelease,
-  type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
 import { Array as Arr, Effect, Schema } from "effect";

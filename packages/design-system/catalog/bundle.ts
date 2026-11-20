@@ -1,7 +1,8 @@
 import tailwindcss from "@tailwindcss/vite";
 import { Array as Arr, Data, Effect } from "effect";
 import { build } from "vite";
-import { type GLOBALS, shimName } from "#catalog/entry";
+import type { GLOBALS } from "#catalog/entry";
+import { shimName } from "#catalog/entry";
 
 /** A Vite build of the page's scripts that failed. */
 class BundleError extends Data.TaggedError("BundleError")<{

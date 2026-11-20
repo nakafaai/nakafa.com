@@ -1,12 +1,11 @@
 import { Schema } from "effect";
+import type { Face, Rig } from "@/lib/island/models/parts";
 import {
   box,
-  type Face,
   flexed,
   loft,
   meters as m,
   mirrored,
-  type Rig,
   rgb,
   rigged,
 } from "@/lib/island/models/parts";

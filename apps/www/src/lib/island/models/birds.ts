@@ -1,12 +1,8 @@
 import { Array as Arr } from "effect";
 import type { Coat, Species } from "@/lib/island/models/coat";
 import { eyesOf } from "@/lib/island/models/features";
-import {
-  type Face,
-  mirrored,
-  rigged,
-  type Vec,
-} from "@/lib/island/models/parts";
+import type { Face, Vec } from "@/lib/island/models/parts";
+import { mirrored, rigged } from "@/lib/island/models/parts";
 import { ball, rod, slab, tube } from "@/lib/island/models/solids";
 
 /** A head at `at` of radius `r` with its eyes, a beak `long` toward `tip`, and a tuft when the species has a crest. */

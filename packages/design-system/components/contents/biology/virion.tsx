@@ -1,19 +1,17 @@
 import { useGLTF } from "@react-three/drei";
 import { SARS_COV_2_VIRION_ASSET } from "@repo/design-system/components/contents/biology/assets";
-import {
-  BiologyLabFrame,
-  type BiologyLabProps,
-} from "@repo/design-system/components/contents/biology/lab";
+import type { BiologyLabProps } from "@repo/design-system/components/contents/biology/lab";
+import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { VIRION_COLORS } from "@repo/design-system/lib/material/virion";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
+import type { Group } from "three";
 import {
   Box3,
   Color,
   Float32BufferAttribute,
-  type Group,
   Mesh,
   MeshPhysicalMaterial,
   Vector3,

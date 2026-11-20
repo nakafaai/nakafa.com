@@ -1,7 +1,7 @@
 import { Line, RoundedBox } from "@react-three/drei";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
+import type { Panel } from "@repo/design-system/components/contents/physics/vector/solar/flux";
 import {
-  type Panel,
   PanelSchema,
   panelPower,
 } from "@repo/design-system/components/contents/physics/vector/solar/flux";
@@ -31,7 +31,8 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
-import { type ReactNode, Suspense, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 /** The height of the panel's centre above the grass, in metres. */
 const CENTRE = 1.1;

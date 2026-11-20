@@ -5,8 +5,8 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import type { ArticleCategory } from "@nakafa/aksara-contracts/projection/article";
 import {
-  type ArticleCategory,
   ArticleCategorySchema,
   ArticleCategoryTitleSchema,
   ArticleMetadataSchema,

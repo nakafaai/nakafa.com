@@ -10,11 +10,8 @@ import {
 } from "effect";
 import { SecureRandom } from "effect/crypto";
 import { Base64Url } from "effect/encoding";
-import {
-  HttpClient,
-  HttpClientRequest,
-  type HttpClientResponse,
-} from "effect/http";
+import type { HttpClientResponse } from "effect/http";
+import { HttpClient, HttpClientRequest } from "effect/http";
 
 /** Google's authorization, token, and revocation endpoints, from its OpenID configuration. */
 const AUTHORIZE_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";

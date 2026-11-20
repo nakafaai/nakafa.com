@@ -4,12 +4,12 @@ import {
 } from "@repo/design-system/components/editor/marks";
 import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
 import { linkVariants } from "@repo/design-system/lib/prose";
-import {
-  type EditorOptions,
-  Extension,
-  type MarkdownToken,
-  type NodeViewRenderer,
+import type {
+  EditorOptions,
+  MarkdownToken,
+  NodeViewRenderer,
 } from "@tiptap/core";
+import { Extension } from "@tiptap/core";
 import { Highlight } from "@tiptap/extension-highlight";
 import { OrderedList, TaskItem, TaskList } from "@tiptap/extension-list";
 import { Underline } from "@tiptap/extension-underline";

@@ -1,7 +1,5 @@
-import {
-  type ContentFamily,
-  ContentFamilySchema,
-} from "@nakafa/aksara-contracts/content";
+import type { ContentFamily } from "@nakafa/aksara-contracts/content";
+import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import type { ContentReleaseManifest } from "@nakafa/aksara-contracts/release";
 import type { PublicationScope } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import type { Docs } from "@repo/backend/confect/_generated/docs";

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { Eyes } from "@repo/mascot/kit";
 import {
   blob,
   both,
-  type Eyes,
   ellipse,
   eye,
   eyes,

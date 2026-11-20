@@ -1,4 +1,5 @@
-import { expect, type Page, type Route, test } from "@playwright/test";
+import type { Page, Route } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Deferred, Effect, MutableList, Schema } from "effect";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 import { signInLearner } from "@/e2e/support/learner";

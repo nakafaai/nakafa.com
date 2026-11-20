@@ -18,10 +18,10 @@ import {
   testRouteJson,
   testUpsertJson,
 } from "@repo/backend/test/content/release";
+import type { TestIdentity } from "@repo/backend/test/content/state";
 import {
   insertTestState,
   insertZeroRelease,
-  type TestIdentity,
 } from "@repo/backend/test/content/state";
 import type { TestConvex } from "convex-test";
 import { Array as Arr, DateTime, Effect } from "effect";

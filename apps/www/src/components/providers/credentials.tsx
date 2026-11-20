@@ -1,5 +1,6 @@
 import { useRequired } from "@repo/design-system/hooks/required";
-import { ConvexProvider, type ConvexReactClient } from "convex/react";
+import type { ConvexReactClient } from "convex/react";
+import { ConvexProvider } from "convex/react";
 import {
   ConvexSessionCredentials,
   ConvexSessionRelease,

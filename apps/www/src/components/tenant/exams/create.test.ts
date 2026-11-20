@@ -1,12 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Array as Arr, Option, Schema } from "effect";
+import type { ViewerUnit } from "@/components/tenant/exams/create";
 import {
   choiceKey,
   creatableUnits,
   defaultChoice,
   scopeChoices,
-  type ViewerUnit,
 } from "@/components/tenant/exams/create";
 
 const unitId = Schema.decodeUnknownSync(Id("tenantUnits"));

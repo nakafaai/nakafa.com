@@ -1,7 +1,7 @@
+import type { McpCase } from "@repo/backend/test/mcp/harness";
 import {
   jsonBody,
   MCP_CLIENT_META,
-  type McpCase,
   modernPost,
 } from "@repo/backend/test/mcp/harness";
 import {

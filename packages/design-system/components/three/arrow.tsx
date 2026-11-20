@@ -1,15 +1,15 @@
 import { Line } from "@react-three/drei";
-import {
-  THREE_DIAGRAM_MINIMUM_FONT_SIZE,
-  type ThreeFontSize,
-} from "@repo/design-system/components/three/data/constants";
+import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
+import { THREE_DIAGRAM_MINIMUM_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { GRAPH_ARROW_SEGMENTS } from "@repo/design-system/components/three/data/quality";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Predicate } from "effect";
-import { createContext, type ReactNode, useMemo } from "react";
-import { type Color, Quaternion, Vector3 } from "three";
+import type { ReactNode } from "react";
+import { createContext, useMemo } from "react";
+import type { Color } from "three";
+import { Quaternion, Vector3 } from "three";
 
 const ARROW_SEGMENT_OFFSET = 0.2;
 

@@ -4,12 +4,8 @@ import type { EditorState } from "@tiptap/pm/state";
 import type { Step } from "@tiptap/pm/transform";
 import { Array as Arr, Effect, Option, Ref, Schema } from "effect";
 import { getVersion, sendableSteps } from "prosemirror-collab";
-import {
-  type EditorClosed,
-  type Memory,
-  StepRejected,
-  type SyncSession,
-} from "@/lib/editor/session";
+import type { EditorClosed, Memory, SyncSession } from "@/lib/editor/session";
+import { StepRejected } from "@/lib/editor/session";
 import {
   addStep,
   readDocument,

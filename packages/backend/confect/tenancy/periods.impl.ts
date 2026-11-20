@@ -16,10 +16,8 @@ import {
   unitAuthority,
 } from "@repo/backend/confect/tenancy/authority";
 import { PeriodActive } from "@repo/backend/confect/tenancy/errors";
-import {
-  type PeriodStatus,
-  periodView,
-} from "@repo/backend/confect/tenancy/period";
+import type { PeriodStatus } from "@repo/backend/confect/tenancy/period";
+import { periodView } from "@repo/backend/confect/tenancy/period";
 import {
   checkPeriodDates,
   edit,

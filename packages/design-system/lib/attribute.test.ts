@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Drawing } from "@repo/design-system/components/ui/drawing";
 import { attributeName, attributesOf } from "@repo/design-system/lib/attribute";
+import type { Shape } from "@repo/mascot/shape";
 import {
   circle,
   ellipse,
@@ -8,7 +9,6 @@ import {
   path,
   polygon,
   rect,
-  type Shape,
 } from "@repo/mascot/shape";
 import { Array as Arr, Option, Order, Record as Rec } from "effect";
 import { createElement } from "react";

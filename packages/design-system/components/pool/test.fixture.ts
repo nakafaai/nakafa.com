@@ -7,11 +7,8 @@ import {
   poolMembers,
   poolStarts,
 } from "@repo/design-system/components/pool/member";
-import {
-  move,
-  tick,
-  type World,
-} from "@repo/design-system/components/pool/physics";
+import type { World } from "@repo/design-system/components/pool/physics";
+import { move, tick } from "@repo/design-system/components/pool/physics";
 import { createWorld } from "@repo/design-system/components/pool/place";
 import {
   finishSettle,

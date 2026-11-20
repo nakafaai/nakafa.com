@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { BillingAccountId } from "@repo/backend/confect/billing/accounts";
+import type { BillingSubscriptionState } from "@repo/backend/confect/billing/subscriptions";
 import {
   applySubscriptionState,
-  type BillingSubscriptionState,
   readSubscription,
 } from "@repo/backend/confect/billing/subscriptions";
 import {

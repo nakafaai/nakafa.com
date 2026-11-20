@@ -1,7 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
 import { classFindings } from "#scripts/check/classes";
-import { parseSources, type RepositorySource } from "#scripts/check/source";
+import type { RepositorySource } from "#scripts/check/source";
+import { parseSources } from "#scripts/check/source";
 
 const VIEW = "apps/www/src/components/example.tsx";
 const RULE =

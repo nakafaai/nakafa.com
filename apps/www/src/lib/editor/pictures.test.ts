@@ -3,11 +3,8 @@ import { EditorState } from "@tiptap/pm/state";
 import { EditorView } from "@tiptap/pm/view";
 import { MutableList } from "effect";
 import { assessmentSchema } from "@/lib/editor/assessment";
-import {
-  assetIdsOf,
-  type ExamAssetIdValue,
-  pictureIdsPlugin,
-} from "@/lib/editor/pictures";
+import type { ExamAssetIdValue } from "@/lib/editor/pictures";
+import { assetIdsOf, pictureIdsPlugin } from "@/lib/editor/pictures";
 
 /** One image node of the assessment schema, which names an asset. */
 const picture = (asset: unknown) =>

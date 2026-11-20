@@ -4,9 +4,9 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import type { ModelBuildWaitPolicy } from "@repo/backend/confect/contentRelease/ingress/models";
 import {
   ModelBuildCoordinator,
-  type ModelBuildWaitPolicy,
   modelBuildCoordinatorLayer,
   waitForModelBuild,
 } from "@repo/backend/confect/contentRelease/ingress/models";
@@ -24,9 +24,9 @@ import {
 } from "@repo/backend/test/activation/fixture";
 import { testRendererJson } from "@repo/backend/test/content/release";
 import { convexTest } from "convex-test";
+import type { Context } from "effect";
 import {
   Array as Arr,
-  type Context,
   Data,
   Duration,
   Effect,

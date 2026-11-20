@@ -1,17 +1,15 @@
 import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
-import {
-  Instances,
-  type Placement,
-} from "@repo/design-system/components/contents/biology/instances";
-import {
-  BiologyLabFrame,
-  type BiologyLabProps,
-  type BiologySceneProps,
+import type { Placement } from "@repo/design-system/components/contents/biology/instances";
+import { Instances } from "@repo/design-system/components/contents/biology/instances";
+import type {
+  BiologyLabProps,
+  BiologySceneProps,
 } from "@repo/design-system/components/contents/biology/lab";
+import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab";
 import { FloatingGroup } from "@repo/design-system/components/contents/biology/motion";
+import type { Branch } from "@repo/design-system/components/contents/biology/mould/mycelium";
 import {
   BEANS,
-  type Branch,
   myceliumOf,
   rhizoidsOf,
   surfaceAt,

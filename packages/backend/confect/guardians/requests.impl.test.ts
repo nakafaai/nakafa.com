@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { nf } from "@repo/backend/test/classroom";
+import type { Fixture } from "@repo/backend/test/guardians";
 import {
   asStaffSchool,
-  type Fixture,
   NISN,
   setRoster,
   signInGuardian,

@@ -1,4 +1,5 @@
-import { expect, type Page, type WebSocketRoute } from "@playwright/test";
+import type { Page, WebSocketRoute } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { encodeJsonText } from "@repo/utilities/json";
 import {
   Array as Arr,
@@ -12,6 +13,7 @@ import {
   Result,
   String as Str,
 } from "effect";
+import type { GivenSchema, SentSchema } from "@/e2e/support/frames";
 import {
   CONVEX_SOCKET,
   changeAnswersIn,
@@ -20,13 +22,11 @@ import {
   encodeAuthError,
   encodeRefusal,
   failQueriesIn,
-  type GivenSchema,
   isCall,
   isMutation,
   later,
   leavesOpen,
   momentOf,
-  type SentSchema,
 } from "@/e2e/support/frames";
 
 /** How long a step waits for the server to answer a change. */

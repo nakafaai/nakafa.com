@@ -1,5 +1,6 @@
 import { Array as Arr, Result } from "effect";
-import { isStringLiteralLikeNode, type SourceFile } from "tsrs/ast";
+import type { SourceFile } from "tsrs/ast";
+import { isStringLiteralLikeNode } from "tsrs/ast";
 import { descendants, namesModule } from "#scripts/check/source";
 
 /** The generated refs of the whole backend contract, which a browser module that imports it ships in full. */

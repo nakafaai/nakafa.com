@@ -5,12 +5,12 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { client, inMutation } from "@repo/backend/test/client";
 import { describeGate } from "@repo/backend/test/gate";
 import { Failure } from "@repo/backend/test/gate/world";
+import type { TryoutGateWorld } from "@repo/backend/test/tryout/gate";
 import {
   choiceGrade,
   GATE_NOW,
   insertAnswer,
   seedTryoutGate,
-  type TryoutGateWorld,
   tryoutRefusals,
   tryoutStale,
 } from "@repo/backend/test/tryout/gate";

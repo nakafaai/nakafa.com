@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Deferred, Duration, Effect, MutableList } from "effect";
 import {
   PRELOADED_FONT_SELECTOR,

@@ -9,13 +9,15 @@ import {
 import { ALL_OR_NOTHING } from "@repo/backend/confect/exams/scoring";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Function as Fn, Option } from "effect";
+import type {
+  Question,
+  QuestionId,
+} from "@/components/tenant/exams/optimistic";
 import {
   addQuestionUpdate,
   copyQuestionUpdate,
   moveUpdate,
   placeholderQuestion,
-  type Question,
-  type QuestionId,
   removeUpdate,
 } from "@/components/tenant/exams/optimistic";
 import {

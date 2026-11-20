@@ -10,7 +10,8 @@ import {
   Sink,
   Stream,
 } from "effect";
-import { type ChildProcess, ChildProcessSpawner } from "effect/process";
+import type { ChildProcess } from "effect/process";
+import { ChildProcessSpawner } from "effect/process";
 
 const encodeLine = Schema.encodeUnknownSync(
   Schema.fromJsonString(Schema.Unknown)

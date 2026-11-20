@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  type AnalyticsIdentityAuthorization,
-  type AnalyticsTier,
-  filterAuthorizedAnalyticsEvent,
+import type {
+  AnalyticsIdentityAuthorization,
+  AnalyticsTier,
 } from "@repo/analytics/posthog/identity";
+import { filterAuthorizedAnalyticsEvent } from "@repo/analytics/posthog/identity";
 import type { CaptureResult } from "posthog-js";
 
 const USER_ID = "user-1";

@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Array as Arr, Effect, Number as Num, Schema } from "effect";
 import { VISUAL_CARD } from "@/e2e/support/selector";
 

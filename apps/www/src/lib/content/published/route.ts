@@ -2,10 +2,8 @@ import type { Ref } from "@confect/core";
 import "@tanstack/react-start/server-only";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import {
-  type AppLocale,
-  AppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
+import type { AppLocale } from "@nakafa/aksara-contracts/locale";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   ContentProjectionSchema,
   familyForProjection,

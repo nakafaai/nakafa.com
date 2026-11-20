@@ -2,7 +2,8 @@ import { idOf } from "@repo/backend/confect/island/blocks";
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr } from "effect";
 import { furnishingsOf, stampItem, stampParts } from "@/lib/island/items";
-import { type Cells, cellOf, SEA_LEVEL } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { cellOf, SEA_LEVEL } from "@/lib/island/world";
 
 /** The middle of the world, where the village's well stands. */
 const MIDDLE = SPAN / 2;

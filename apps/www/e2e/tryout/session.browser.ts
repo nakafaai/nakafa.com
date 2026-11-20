@@ -1,6 +1,8 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect, MutableRef } from "effect";
-import { type Changes, saved } from "@/e2e/support/changes";
+import type { Changes } from "@/e2e/support/changes";
+import { saved } from "@/e2e/support/changes";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import {
   entrySetHref,

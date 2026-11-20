@@ -4,10 +4,9 @@ import guardians from "@repo/backend/confect/_generated/refs/guardians";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { Option, Schema } from "effect";
+import type { ChildItem, LinkItem } from "@/components/tenant/guardian/change";
 import {
-  type ChildItem,
   inviteParentChange,
-  type LinkItem,
   readdressLinkChange,
   revokeLinkChange,
   startLinkChange,

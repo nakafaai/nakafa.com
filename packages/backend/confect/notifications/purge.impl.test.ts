@@ -6,10 +6,10 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { releaseTenantPeople } from "@repo/backend/confect/auth/deletion/release";
 import { purgeInbox } from "@repo/backend/confect/notifications/purge";
+import type { Fixture } from "@repo/backend/test/inbox";
 import {
   claim,
   consumeSchool,
-  type Fixture,
   inviteAt,
   NOW,
   nf,

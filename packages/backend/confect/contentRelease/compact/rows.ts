@@ -10,12 +10,12 @@ import {
 } from "@repo/backend/confect/contentRelease/model";
 import { retainOrphanedArtifacts } from "@repo/backend/confect/contentRelease/retention";
 import { compactSnapshots } from "@repo/backend/confect/contentRelease/snapshot/cleanup";
+import type { compactionPhaseValidator } from "@repo/backend/confect/contentRelease/spec";
 import {
   COMPACTION_HEAD_COUNT,
   COMPACTION_ITEM_COUNT,
   COMPACTION_PAGE_BYTES,
   COMPACTION_PAGE_COUNT,
-  type compactionPhaseValidator,
 } from "@repo/backend/confect/contentRelease/spec";
 import { Array as Arr, Effect, flow, MutableHashSet, Schema } from "effect";
 

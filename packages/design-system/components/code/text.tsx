@@ -1,6 +1,7 @@
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { Fragment, type HTMLAttributes } from "react";
+import type { HTMLAttributes } from "react";
+import { Fragment } from "react";
 
 type CodeBlockTextProps = HTMLAttributes<HTMLDivElement> & {
   children: string;

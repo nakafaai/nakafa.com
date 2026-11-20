@@ -4,11 +4,11 @@ import {
   fade,
   vignette,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { Road } from "@repo/design-system/components/contents/physics/canvas/scene";
 import {
   paintCar,
   paintLandscape,
   paintRoad,
-  type Road,
 } from "@repo/design-system/components/contents/physics/canvas/scene";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
 import { apparentRain } from "@repo/design-system/components/contents/physics/kinematics/rain/drops";
@@ -36,7 +36,8 @@ import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** The two observers a learner can watch the rain from. */
 const FrameSchema = Schema.Literals(["ground", "car"]);

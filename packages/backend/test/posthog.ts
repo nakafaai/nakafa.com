@@ -1,7 +1,8 @@
 import posthogTest from "@posthog/convex/test";
 import type schema from "@repo/backend/convex/schema";
 import { internalActionGeneric } from "convex/server";
-import { type Infer, v } from "convex/values";
+import type { Infer } from "convex/values";
+import { v } from "convex/values";
 import type { TestConvex } from "convex-test";
 
 /** The arguments PostHog's capture action receives, as Convex validates them. */

@@ -1,10 +1,12 @@
 import { PeriodicPropertiesCanvas } from "@repo/design-system/components/contents/chemistry/periodic-properties/canvas";
+import type {
+  PeriodicPropertiesFactLabels,
+  PeriodicPropertyModeId,
+} from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
 import {
   ATOMIC_RADIUS_MODE_ID,
   isPeriodicPropertyModeId,
   PERIODIC_PROPERTY_MODE_IDS,
-  type PeriodicPropertiesFactLabels,
-  type PeriodicPropertyModeId,
 } from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
 import {
   ToggleGroup,

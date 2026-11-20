@@ -4,10 +4,8 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 import type { LearningContextStorage } from "@repo/backend/confect/contents/context";
 import { getContentAnalyticsPartition } from "@repo/backend/confect/contents/partitions";
 import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
-import {
-  type createConvexTestWithAuth,
-  seedAuthenticatedUser,
-} from "@repo/backend/confect/test.helpers";
+import type { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
+import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { FUNCTION_MATERIAL } from "@repo/backend/test/content/material";
 import {

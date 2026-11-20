@@ -1,12 +1,14 @@
 import { isCorrectGrade } from "@repo/backend/confect/tryouts/response/answer";
 import { estimateIrtScore } from "@repo/backend/confect/tryouts/runtime/estimate";
 import type { TryoutIrtSource } from "@repo/backend/confect/tryouts/runtime/irt/items";
+import type {
+  AttemptScore,
+  ScoredAnswer,
+} from "@repo/backend/confect/tryouts/runtime/result";
 import {
-  type AttemptScore,
   countCorrect,
   getRawPercentage,
   getScoreStatus,
-  type ScoredAnswer,
 } from "@repo/backend/confect/tryouts/runtime/result";
 import { Array as Arr, Effect, HashMap, Option, Tuple } from "effect";
 

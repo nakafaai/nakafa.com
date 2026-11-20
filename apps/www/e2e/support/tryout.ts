@@ -1,5 +1,7 @@
-import { expect, type Locator, type Page } from "@playwright/test";
-import { Effect, type MutableList } from "effect";
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
+import type { MutableList } from "effect";
+import { Effect } from "effect";
 import { activate, visibleLink } from "@/e2e/support/input";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { appRoutes } from "@/e2e/support/route";

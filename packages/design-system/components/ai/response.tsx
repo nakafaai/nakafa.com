@@ -1,7 +1,5 @@
-import {
-  MarkdownBlock,
-  type MarkdownContentProps,
-} from "@repo/design-system/components/markdown/content";
+import type { MarkdownContentProps } from "@repo/design-system/components/markdown/content";
+import { MarkdownBlock } from "@repo/design-system/components/markdown/content";
 import { markdownFrameVariants } from "@repo/design-system/components/markdown/frame";
 import { readMarkdownBlocks } from "@repo/design-system/lib/markdown/blocks";
 import { normalizeText } from "@repo/design-system/lib/markdown/normalize";

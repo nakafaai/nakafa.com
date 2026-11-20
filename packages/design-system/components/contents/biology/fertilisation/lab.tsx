@@ -1,6 +1,6 @@
+import type { Stage } from "@repo/design-system/components/contents/biology/fertilisation/gametes";
 import {
   pollinationNeeds,
-  type Stage,
   seedChromosomes,
   stageAt,
 } from "@repo/design-system/components/contents/biology/fertilisation/gametes";
@@ -20,7 +20,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 
 /**
  * Double fertilisation in a flower cut lengthwise. The lesson names how many

@@ -2,14 +2,17 @@ import { useMutation } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
 import { randomUuid } from "@repo/utilities/uuid";
-import { DateTime, Effect, Option, Record as Rec, type Result } from "effect";
+import type { Result } from "effect";
+import { DateTime, Effect, Option, Record as Rec } from "effect";
 import { reportMemoryFailure } from "@/components/user/settings/memory/failure";
+import type {
+  Memory,
+  MemoryDraft,
+} from "@/components/user/settings/memory/list";
 import {
   draftArgs,
   draftOf,
   learnerMemory,
-  type Memory,
-  type MemoryDraft,
   pendingId,
 } from "@/components/user/settings/memory/list";
 import {

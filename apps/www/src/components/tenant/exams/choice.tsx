@@ -11,10 +11,9 @@ import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { ChoiceGroup } from "@/components/exams/sitting/reason";
+import type { Choice, OptionLabel } from "@/components/tenant/exams/answer";
 import {
-  type Choice,
   keyWithoutOption,
-  type OptionLabel,
   withOptionAdded,
   withOptionLabel,
   withOptionRemoved,

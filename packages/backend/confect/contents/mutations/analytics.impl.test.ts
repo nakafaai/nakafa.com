@@ -17,7 +17,8 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import type { TransactionMetrics } from "convex/server";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Array as Arr, Record as Rec } from "effect";
 
 /** Capacity retained after the final group for lease and scheduler writes. */

@@ -2,7 +2,8 @@ import { threeSceneFrameVariants } from "@repo/design-system/components/three/sc
 import { AXIS_COLORS, REGION_DASH } from "@repo/design-system/lib/plot";
 import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
-import { type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
+import { useMemo } from "react";
 import { useFormatter } from "use-intl";
 import { resolveMathAppearance } from "@/lib/content/renderer/client/base/visual/palette";
 import type { MathSceneProps } from "@/lib/content/renderer/client/base/visual/render";

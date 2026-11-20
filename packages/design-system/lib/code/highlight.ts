@@ -1,12 +1,12 @@
 import { preserveShikiLineBreaks } from "@repo/design-system/lib/code/lines";
 import { DEFAULT_CODE_THEMES } from "@repo/design-system/lib/code/theme";
-import {
-  type CodeOptionsMultipleThemes,
-  createHighlighterCore,
-  type HighlighterCore,
-  type LanguageInput,
-  type ThemeInput,
+import type {
+  CodeOptionsMultipleThemes,
+  HighlighterCore,
+  LanguageInput,
+  ThemeInput,
 } from "@shikijs/core";
+import { createHighlighterCore } from "@shikijs/core";
 import {
   transformerNotationDiff,
   transformerNotationErrorLevel,

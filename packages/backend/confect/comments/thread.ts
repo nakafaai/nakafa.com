@@ -1,8 +1,6 @@
 import type { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import {
-  type CommentDoc,
-  findComment,
-} from "@repo/backend/confect/comments/rows";
+import type { CommentDoc } from "@repo/backend/confect/comments/rows";
+import { findComment } from "@repo/backend/confect/comments/rows";
 import { Effect } from "effect";
 
 /**

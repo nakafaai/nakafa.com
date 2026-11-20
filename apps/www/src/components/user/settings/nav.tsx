@@ -20,13 +20,12 @@ import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
 import { SettingsBack } from "@/components/shared/settings/return";
-import { Link, type LinkTarget, useLeafRoutePath } from "@/lib/routing/link";
+import type { LinkTarget } from "@/lib/routing/link";
+import { Link, useLeafRoutePath } from "@/lib/routing/link";
 import { HOME_TARGET } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
-import {
-  type UserSettingsLabelKey,
-  userSettingsGroups,
-} from "@/lib/settings/routes";
+import type { UserSettingsLabelKey } from "@/lib/settings/routes";
+import { userSettingsGroups } from "@/lib/settings/routes";
 
 /** The icon of each section. A section added without one does not compile. */
 const sectionIcons: Record<

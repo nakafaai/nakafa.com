@@ -9,11 +9,9 @@ import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import type { BufferGeometry, Group, InstancedMesh } from "three";
 import {
-  type BufferGeometry,
   CatmullRomCurve3,
-  type Group,
-  type InstancedMesh,
   LatheGeometry,
   Matrix4,
   Quaternion,

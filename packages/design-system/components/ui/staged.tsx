@@ -1,4 +1,5 @@
-import { type ComponentProps, useLayoutEffect } from "react";
+import type { ComponentProps } from "react";
+import { useLayoutEffect } from "react";
 
 /** How many drawers are open on the page, since a drawer can open over another. */
 let openDrawers = 0;

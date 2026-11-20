@@ -7,12 +7,12 @@ import {
 import { newChoiceAnswers } from "@repo/backend/confect/exams/blank";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
+import type { SittingFixture } from "@repo/backend/test/sittings";
 import {
   deviceOf,
   enterOk,
   OPENS_AT,
   openedSitting,
-  type SittingFixture,
 } from "@repo/backend/test/sittings";
 import {
   actedAt,

@@ -2,13 +2,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { idOf } from "@repo/backend/confect/island/blocks";
 import { Array as Arr, Option } from "effect";
-import {
-  type Animal,
-  groundOf,
-  herdOf,
-  suitsOf,
-  wander,
-} from "@/lib/island/life";
+import type { Animal } from "@/lib/island/life";
+import { groundOf, herdOf, suitsOf, wander } from "@/lib/island/life";
 import { terrainOf } from "@/lib/island/terrain";
 import { cellOf, emptyCells } from "@/lib/island/world";
 

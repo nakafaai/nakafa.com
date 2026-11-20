@@ -4,7 +4,8 @@ import editors from "@repo/backend/confect/_generated/refs/editor";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { ConvexReactClient } from "convex/react";
 import { Effect, Schema } from "effect";
-import { SyncFailed, type SyncTransport } from "@/lib/editor/session";
+import type { SyncTransport } from "@/lib/editor/session";
+import { SyncFailed } from "@/lib/editor/session";
 
 /** The Convex calls the sync loop makes, which the editor's React client provides. */
 type Client = Pick<ConvexReactClient, "mutation" | "query">;

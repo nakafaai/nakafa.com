@@ -7,12 +7,14 @@ import {
   StarField,
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/background";
 import { measureRocketMotionBounds } from "@repo/design-system/components/contents/physics/kinematics/acceleration/bounds";
+import type {
+  AccelerationCaseId,
+  AccelerationMotionState,
+} from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import {
   ACCELERATION_LAB_SCENE,
   ACCELERATION_ROCKET_MODEL_PATH,
   ACCELERATION_ROCKET_MOTION,
-  type AccelerationCaseId,
-  type AccelerationMotionState,
   getAccelerationLoopTime,
   getAccelerationPositionSample,
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";

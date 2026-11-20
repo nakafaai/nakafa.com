@@ -1,11 +1,7 @@
 import type { EvilBrushRange } from "@repo/design-system/components/evilcharts/ui/evil-brush";
 import { Schema } from "effect";
-import {
-  type PointerEvent as ReactPointerEvent,
-  type RefObject,
-  useCallback,
-  useRef,
-} from "react";
+import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
+import { useCallback, useRef } from "react";
 
 const DragTypeSchema = Schema.Literals(["left", "right", "middle"]);
 type DragType = typeof DragTypeSchema.Type;

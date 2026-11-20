@@ -1,15 +1,13 @@
 import "@tanstack/react-start/server-only";
 
 import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
+import type { GitCommitSha } from "@nakafa/aksara-contracts/ids";
 import {
-  type GitCommitSha,
   GitCommitShaSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
-import {
-  type AppLocale,
-  AppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
+import type { AppLocale } from "@nakafa/aksara-contracts/locale";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spec";
 import { PublicContentRuntimeFoundSchema } from "@nakafa/aksara-contracts/runtime/spec";
 import { projectMdxForAgentMarkdown } from "@repo/contents/llms/mdx";
@@ -23,11 +21,8 @@ import {
 import { getRawAksaraUrl } from "@/lib/content/repository";
 import { readContentStore } from "@/lib/content/store/read";
 import { BASE_URL } from "@/lib/llms/constants";
-import {
-  buildHeader,
-  getMdxDescription,
-  type MarkdownCitation,
-} from "@/lib/llms/format";
+import type { MarkdownCitation } from "@/lib/llms/format";
+import { buildHeader, getMdxDescription } from "@/lib/llms/format";
 
 /** Exact public content identity required for agent-facing markdown. */
 const PublishedMarkdownInputSchema = Schema.Struct({

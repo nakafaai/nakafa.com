@@ -5,12 +5,8 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { makeBucket, stubBucket } from "@repo/backend/test/bucket";
 import { nf } from "@repo/backend/test/editor";
 import { examFile, PNG } from "@repo/backend/test/exams";
-import {
-  deviceOf,
-  enterOk,
-  openedSitting,
-  type SittingFixture,
-} from "@repo/backend/test/sittings";
+import type { SittingFixture } from "@repo/backend/test/sittings";
+import { deviceOf, enterOk, openedSitting } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 

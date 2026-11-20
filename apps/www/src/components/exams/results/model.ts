@@ -1,6 +1,8 @@
+import type {
+  ExamPair,
+  ExamResponse,
+} from "@repo/backend/confect/assessment/response";
 import {
-  type ExamPair,
-  type ExamResponse,
   isCellsResponse,
   isPairsResponse,
   isTextResponse,

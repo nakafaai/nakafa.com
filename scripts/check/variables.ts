@@ -1,13 +1,12 @@
 import { Array as Arr, Effect, Result } from "effect";
-import {
-  type BindingElement,
-  type Expression,
-  isBindingElement,
-  isVariableDeclaration,
-  type Node,
-  type SourceFile,
-  type VariableDeclaration,
+import type {
+  BindingElement,
+  Expression,
+  Node,
+  SourceFile,
+  VariableDeclaration,
 } from "tsrs/ast";
+import { isBindingElement, isVariableDeclaration } from "tsrs/ast";
 import { assignmentsTo } from "#scripts/check/assignments";
 import type { parseSources } from "#scripts/check/source";
 

@@ -1,6 +1,6 @@
 import type { Ref } from "@confect/core";
+import type { PaginatedQueryItem } from "@confect/react";
 import {
-  type PaginatedQueryItem,
   PaginatedQueryResult,
   useMutation,
   usePaginatedQuery,
@@ -27,7 +27,8 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEnd } from "@/components/shared/table/pages";
-import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import type { StatusLook } from "@/components/shared/table/status";
+import { TableStatus } from "@/components/shared/table/status";
 import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";

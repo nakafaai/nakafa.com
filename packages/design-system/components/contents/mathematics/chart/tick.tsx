@@ -3,12 +3,8 @@ import {
   TICK_GUTTER,
 } from "@repo/design-system/components/contents/mathematics/chart/axis";
 import { Array as Arr } from "effect";
-import {
-  Text,
-  usePlotArea,
-  useXAxisTicks,
-  type XAxisTickContentProps,
-} from "recharts";
+import type { XAxisTickContentProps } from "recharts";
+import { Text, usePlotArea, useXAxisTicks } from "recharts";
 
 /** The slant of a label that its band is too narrow to hold upright, steep enough that the first label stays inside the chart. */
 const SLANT = -60;

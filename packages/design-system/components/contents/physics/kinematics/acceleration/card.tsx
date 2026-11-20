@@ -2,10 +2,12 @@ import {
   AccelerationLabelsProvider,
   useAccelerationLabels,
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/context";
+import type {
+  AccelerationCaseId,
+  AccelerationLabels,
+} from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import {
   ACCELERATION_CASES,
-  type AccelerationCaseId,
-  type AccelerationLabels,
   DEFAULT_ACCELERATION_CASE_ID,
   getAccelerationCaseById,
   isAccelerationCaseId,

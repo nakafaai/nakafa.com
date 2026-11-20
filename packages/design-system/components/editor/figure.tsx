@@ -1,12 +1,10 @@
 import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
 import { useRequired } from "@repo/design-system/hooks/required";
-import {
-  type NodeViewProps,
-  NodeViewWrapper,
-  ReactNodeViewRenderer,
-} from "@tiptap/react";
+import type { NodeViewProps } from "@tiptap/react";
+import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import { cn } from "cn";
-import { type ComponentType, createContext, type ReactNode, use } from "react";
+import type { ComponentType, ReactNode } from "react";
+import { createContext, use } from "react";
 
 /** What the caller's figure reads: its attributes, the editor that holds it, and its place in the document. */
 interface FigureNodeValue {

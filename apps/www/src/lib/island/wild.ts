@@ -7,7 +7,8 @@ import { KIND, LOOK } from "@/lib/island/look";
 import { schoolOf } from "@/lib/island/models/ocean";
 import { unitOf } from "@/lib/island/noise";
 import { shoreOf } from "@/lib/island/terrain";
-import { blockAt, type Cells, SEA_LEVEL } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { blockAt, SEA_LEVEL } from "@/lib/island/world";
 
 /** How many of each home's species a day brings to the island. */
 const VISITORS = { bloom: 4, land: 6, sea: 6, shore: 3, sky: 5 } as const;

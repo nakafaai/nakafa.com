@@ -14,12 +14,12 @@ import { Array as Arr, Effect, Option, Ref, Schema } from "effect";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { push } from "@/lib/editor/send";
 import { startSync, tick } from "@/lib/editor/sync";
+import type { Refusal } from "@/test/sync";
 import {
   DOCUMENT_INVALID,
   FOLD_PENDING,
   makePort,
   makeServer,
-  type Refusal,
   textOf,
   typeText,
 } from "@/test/sync";

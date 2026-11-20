@@ -4,7 +4,8 @@ import {
 } from "@repo/design-system/components/ui/drawer";
 import { monospace } from "@repo/design-system/lib/monospace";
 import { cn } from "cn";
-import { type ReactNode, useRef } from "react";
+import type { ReactNode } from "react";
+import { useRef } from "react";
 import { useTranslations } from "use-intl";
 import { PlayerTools } from "@/components/player/navigator/tools";
 import { usePlayer } from "@/components/player/provider";

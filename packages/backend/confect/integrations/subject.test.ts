@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { readsSubject } from "@repo/backend/confect/integrations/subject";
-import { type Fixture, seeded } from "@repo/backend/test/hooks";
+import type { Fixture } from "@repo/backend/test/hooks";
+import { seeded } from "@repo/backend/test/hooks";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Effect, Schema } from "effect";
 

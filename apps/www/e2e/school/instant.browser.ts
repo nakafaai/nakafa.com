@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect, MutableList } from "effect";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 import { recordServerFunctionCalls } from "@/e2e/support/requests";

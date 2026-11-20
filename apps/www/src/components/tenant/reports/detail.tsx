@@ -40,10 +40,8 @@ import { EmptyNina } from "@/components/state/nina";
 import { useTenant } from "@/components/tenant/context";
 import { menuOf } from "@/components/tenant/reports/access";
 import { useReportActions } from "@/components/tenant/reports/actions";
-import {
-  type ReportLine,
-  writeChange,
-} from "@/components/tenant/reports/change";
+import type { ReportLine } from "@/components/tenant/reports/change";
+import { writeChange } from "@/components/tenant/reports/change";
 import { checkAddress } from "@/components/tenant/reports/check";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";

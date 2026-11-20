@@ -1,6 +1,6 @@
 import { Array as Arr, Tuple } from "effect";
+import type { ImportSpecifier, Node, SourceFile } from "tsrs/ast";
 import {
-  type ImportSpecifier,
   isExportDeclaration,
   isExportSpecifier,
   isIdentifier,
@@ -9,8 +9,6 @@ import {
   isNamedImports,
   isPropertyAccessExpression,
   isStringLiteral,
-  type Node,
-  type SourceFile,
 } from "tsrs/ast";
 import { loadsImport } from "#scripts/check/kinds";
 

@@ -1,7 +1,7 @@
 import { render } from "@react-email/render";
 import { Layout } from "@repo/email/layout";
+import type { DigestEmailInput } from "@repo/email/templates/digest/content";
 import {
-  type DigestEmailInput,
   DigestEmailInputSchema,
   getDigestEmailCopy,
 } from "@repo/email/templates/digest/content";

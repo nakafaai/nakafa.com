@@ -3,16 +3,15 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { releaseTenantPeople } from "@repo/backend/confect/auth/deletion/release";
+import type { Fixture, PersonId } from "@repo/backend/test/inbox";
 import {
   addPerson,
   claim,
   consumeSchool,
-  type Fixture,
   insertRows,
   inviteAt,
   NOW,
   nf,
-  type PersonId,
   schoolViews,
   storedRows,
 } from "@repo/backend/test/inbox";

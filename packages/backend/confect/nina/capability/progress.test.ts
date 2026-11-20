@@ -9,8 +9,8 @@ import {
   ChatStep,
   makeChatStep,
 } from "@repo/backend/confect/nina/capability/deadline";
+import type { CapabilityArtifact } from "@repo/backend/confect/nina/capability/progress";
 import {
-  type CapabilityArtifact,
   specialistResult,
   streamCapability,
 } from "@repo/backend/confect/nina/capability/progress";

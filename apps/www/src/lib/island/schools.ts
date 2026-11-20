@@ -7,7 +7,8 @@ import { unitOf } from "@/lib/island/noise";
 import type { Spot } from "@/lib/island/reef";
 import { outOf, shoreOf } from "@/lib/island/terrain";
 import { seabedOf } from "@/lib/island/wild";
-import { type Cells, SEA_LEVEL } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { SEA_LEVEL } from "@/lib/island/world";
 
 /**
  * The reef's own residents (ADR 0047, D50), there every day whatever wild

@@ -1,6 +1,6 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
   ActiveAppLocaleCodeSchema,
-  type AppLocaleCode,
   ENGLISH_APP_LOCALE_CODE,
   GERMAN_APP_LOCALE_CODE,
   INDONESIAN_APP_LOCALE_CODE,

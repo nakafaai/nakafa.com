@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
   axisValueToPercentFormatter,
-  type ChartConfig,
   distributeColors,
   getChartColorVariable,
   getChartColorVariableName,

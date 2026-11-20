@@ -4,8 +4,8 @@ import {
   mcpToolOutputSchema,
   runMcpTool,
 } from "@repo/backend/agent/mcp/result";
+import type { McpObjectContract } from "@repo/backend/agent/mcp/schema";
 import {
-  type McpObjectContract,
   toMcpInputSchema,
   toMcpOutputSchema,
 } from "@repo/backend/agent/mcp/schema";
@@ -128,6 +128,9 @@ const forbidden = new NakafaAgentInputError({
     "Ask the school's Admin to open this read to the integration client.",
 });
 
+/** The refusal of every read tool whose answer is not a page. */
+const refuse = () => forbidden;
+
 /** The tool error of a request whose rows do not read as students. */
 const invalidRows = new NakafaAgentInputError({
   cause: "A row does not read as a student.",
@@ -206,7 +209,7 @@ const registerSchoolTools = Effect.fn("integrations.tools.register")(
             const answer = yield* runQuery(reads.periods, { clientId }).pipe(
               Effect.orDie
             );
-            return yield* pageOr(answer, () => forbidden);
+            return yield* pageOr(answer, refuse);
           })
         ),
       tool: yield* readOnlyTool({
@@ -235,7 +238,7 @@ const registerSchoolTools = Effect.fn("integrations.tools.register")(
               numItems: PAGE_LIMIT,
               period,
             }).pipe(Effect.orDie);
-            return yield* pageOr(answer, () => forbidden);
+            return yield* pageOr(answer, refuse);
           })
         ),
       tool: yield* readOnlyTool({
@@ -264,7 +267,7 @@ const registerSchoolTools = Effect.fn("integrations.tools.register")(
               numItems: PAGE_LIMIT,
               status,
             }).pipe(Effect.orDie);
-            return yield* pageOr(answer, () => forbidden);
+            return yield* pageOr(answer, refuse);
           })
         ),
       tool: yield* readOnlyTool({
@@ -293,7 +296,7 @@ const registerSchoolTools = Effect.fn("integrations.tools.register")(
               numItems: PAGE_LIMIT,
               period,
             }).pipe(Effect.orDie);
-            return yield* pageOr(answer, () => forbidden);
+            return yield* pageOr(answer, refuse);
           })
         ),
       tool: yield* readOnlyTool({
@@ -400,7 +403,7 @@ const registerSchoolTools = Effect.fn("integrations.tools.register")(
               cursor,
               numItems: PAGE_LIMIT,
             }).pipe(Effect.orDie);
-            return yield* pageOr(answer, () => forbidden);
+            return yield* pageOr(answer, refuse);
           })
         ),
       tool: yield* readOnlyTool({
@@ -429,7 +432,7 @@ const registerSchoolTools = Effect.fn("integrations.tools.register")(
               numItems: PAGE_LIMIT,
               period,
             }).pipe(Effect.orDie);
-            return yield* pageOr(answer, () => forbidden);
+            return yield* pageOr(answer, refuse);
           })
         ),
       tool: yield* readOnlyTool({

@@ -12,10 +12,8 @@ import {
   resolveQuestionFocus,
   retainQuestionFocus,
 } from "@repo/backend/confect/nina/focus";
-import {
-  type NinaPageInput,
-  NinaTurnError,
-} from "@repo/backend/confect/nina/turns.spec";
+import type { NinaPageInput } from "@repo/backend/confect/nina/turns.spec";
+import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { articleLayer } from "@repo/backend/content/article/confect";
 import { materialLayer } from "@repo/backend/content/material/confect";
 import { resolveMaterialRoute } from "@repo/backend/content/material/route";

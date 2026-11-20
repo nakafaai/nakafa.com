@@ -14,12 +14,12 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { nextRepliers } from "@repo/backend/confect/classroom/forum/face";
 import { messageField } from "@repo/backend/confect/classroom/forum/message";
+import type { NinaAsk } from "@repo/backend/confect/classroom/forum/nina";
 import {
   FORUM_INSTRUCTIONS,
   HISTORY_LIMIT,
   NINA_NAME,
   NinaAnswer,
-  type NinaAsk,
   promptOf,
   REPLY_CREDITS,
 } from "@repo/backend/confect/classroom/forum/nina";

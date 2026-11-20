@@ -3,12 +3,12 @@ import { Class } from "@repo/backend/confect/classroom/access";
 import { classAuthority } from "@repo/backend/confect/classroom/authority";
 import { TaskPointsFixed } from "@repo/backend/confect/classroom/errors";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
-import {
-  type LatePolicy,
-  type TaskCategory,
-  type TaskTargets,
-  taskField,
+import type {
+  LatePolicy,
+  TaskCategory,
+  TaskTargets,
 } from "@repo/backend/confect/classroom/tasks/schema";
+import { taskField } from "@repo/backend/confect/classroom/tasks/schema";
 import { classTask } from "@repo/backend/confect/classroom/tasks/views";
 import { classTargets } from "@repo/backend/confect/classroom/tasks/write";
 import { Member } from "@repo/backend/confect/middleware/member.spec";

@@ -6,15 +6,16 @@ import { lazy } from "@repo/design-system/lib/lazy";
 import { cva } from "class-variance-authority";
 import { Schema } from "effect";
 import { delay } from "motion";
+import type { ReactNode } from "react";
 import {
   createContext,
-  type ReactNode,
   Suspense,
   useEffect,
   useEffectEvent,
   useState,
 } from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
+import type { StoreApi } from "zustand";
+import { createStore, useStore } from "zustand";
 
 /** The time between two letters of what the learner asks. */
 const TYPE_EVERY_MS = 32;

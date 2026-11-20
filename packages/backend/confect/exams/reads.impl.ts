@@ -21,9 +21,8 @@ import {
   ImportPageRefused,
   ImportUnread,
 } from "@repo/backend/confect/exams/import";
-import spec, {
-  type ImportSource,
-} from "@repo/backend/confect/exams/reads.spec";
+import type { ImportSource } from "@repo/backend/confect/exams/reads.spec";
+import spec from "@repo/backend/confect/exams/reads.spec";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { GatewayLive } from "@repo/backend/confect/gateway/live";
 import member from "@repo/backend/confect/middleware/member.impl";
@@ -33,7 +32,8 @@ import { createEffectSchema } from "@repo/backend/confect/nina/contract/sdk";
 import { meterOf } from "@repo/backend/confect/spend/meter";
 import type { Claim } from "@repo/backend/confect/spend/schema";
 import { IMAGE_BYTE_LIMIT } from "@repo/editor/upload";
-import { generateText, Output, type UserContent } from "ai";
+import type { UserContent } from "ai";
+import { generateText, Output } from "ai";
 import { Array as Arr, Effect, Layer, Option } from "effect";
 
 /** The bytes at the start of an image that `imageTypeOf` reads. */

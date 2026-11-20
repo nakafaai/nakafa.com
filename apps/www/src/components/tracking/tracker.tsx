@@ -4,7 +4,8 @@ import type { LearningContextInput } from "@repo/backend/confect/contents/contex
 import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
 import type { Locale } from "@repo/backend/confect/lib/validators/contents";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
+import { createContext } from "react";
 import type { Locale as RouteLocale } from "use-intl";
 import { SignedInIsland } from "@/components/providers/island";
 import { useRecordContentView } from "@/lib/content/views/record";

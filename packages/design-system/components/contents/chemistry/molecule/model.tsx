@@ -1,19 +1,21 @@
+import type { ElementSymbol } from "@repo/design-system/components/contents/chemistry/molecule/elements";
+import { ELEMENTS } from "@repo/design-system/components/contents/chemistry/molecule/elements";
+import type {
+  Bond,
+  Point,
+} from "@repo/design-system/components/contents/chemistry/molecule/geometry";
 import {
-  ELEMENTS,
-  type ElementSymbol,
-} from "@repo/design-system/components/contents/chemistry/molecule/elements";
-import {
-  type Bond,
   dot,
   length,
   PICOMETRES_PER_UNIT,
-  type Point,
   scale,
   subtract,
 } from "@repo/design-system/components/contents/chemistry/molecule/geometry";
 import { Array as Arr } from "effect";
-import { type RefObject, useLayoutEffect, useRef } from "react";
-import { type Group, Matrix4, type Mesh, Vector3 } from "three";
+import type { RefObject } from "react";
+import { useLayoutEffect, useRef } from "react";
+import type { Group, Mesh } from "three";
+import { Matrix4, Vector3 } from "three";
 
 /** How a molecule is drawn: atoms on sticks, or atoms at their true size. */
 export type ModelStyle = "ball" | "fill";

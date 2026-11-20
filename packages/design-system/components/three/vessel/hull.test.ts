@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { HullLines } from "@repo/design-system/components/three/vessel/hull";
 import {
   deckAt,
   deckEdge,
-  type HullLines,
   halfAt,
   hullGeometry,
   stationAt,

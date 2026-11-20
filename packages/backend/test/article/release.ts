@@ -2,9 +2,9 @@ import {
   ContentKeySchema,
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
+import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/article";
 import {
   ArticleCategorySchema,
-  type ArticleProjection,
   ArticleProjectionSchema,
   ArticleRouteSlugSchema,
   canonicalizeArticleProjection,

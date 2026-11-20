@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import type { Walker } from "@repo/design-system/components/contents/biology/epidemic/spread";
 import {
   contactFactor,
   crowdOf,
@@ -11,7 +12,6 @@ import {
   reproductionOf,
   SPREAD,
   SQUARE,
-  type Walker,
   walk,
 } from "@repo/design-system/components/contents/biology/epidemic/spread";
 import { Array as Arr, Option } from "effect";

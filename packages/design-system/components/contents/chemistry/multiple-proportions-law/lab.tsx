@@ -1,10 +1,10 @@
 import { useThree } from "@react-three/fiber";
 import { getAtomSceneColors } from "@repo/design-system/components/contents/chemistry/color";
+import type { MultipleProportionsModeId } from "@repo/design-system/components/contents/chemistry/multiple-proportions-law/data";
 import {
   isMultipleProportionsModeId,
   MULTIPLE_PROPORTIONS_MODE_IDS,
   MULTIPLE_PROPORTIONS_SCENE_VIEW,
-  type MultipleProportionsModeId,
   WATER_PEROXIDE_MODE_ID,
 } from "@repo/design-system/components/contents/chemistry/multiple-proportions-law/data";
 import {

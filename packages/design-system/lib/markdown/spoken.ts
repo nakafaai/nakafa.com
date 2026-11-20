@@ -1,6 +1,7 @@
 import { Array as Arr, Result, String as Str } from "effect";
 import renderA11yString from "katex/contrib/render-a11y-string";
-import { Lexer, type Token } from "marked";
+import type { Token } from "marked";
+import { Lexer } from "marked";
 
 /** A formula on its own line, between `$$` delimiters. */
 const BLOCK_FORMULA = /\$\$(?<tex>[^$]+)\$\$/gu;

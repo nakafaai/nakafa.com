@@ -1,11 +1,11 @@
 import { Line } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { MathLines } from "@repo/design-system/components/contents/chemistry/lines";
+import type { SampleId } from "@repo/design-system/components/contents/chemistry/spectrometer/isotopes";
 import {
   averageMass,
   getSample,
   pathRadius,
-  type SampleId,
   SampleIdSchema,
 } from "@repo/design-system/components/contents/chemistry/spectrometer/isotopes";
 import {
@@ -39,8 +39,10 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
-import { createRef, type ReactNode, Suspense, useMemo, useState } from "react";
-import { Color, DoubleSide, type Mesh } from "three";
+import type { ReactNode } from "react";
+import { createRef, Suspense, useMemo, useState } from "react";
+import type { Mesh } from "three";
+import { Color, DoubleSide } from "three";
 import { useFormatter } from "use-intl";
 
 /** The path radius of an ion of mass 20, in scene units; heavier ions turn wider. */

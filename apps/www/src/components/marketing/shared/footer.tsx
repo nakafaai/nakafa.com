@@ -21,18 +21,14 @@ import { useTranslations } from "use-intl";
 import { PrivacyChoicesFooterItem } from "@/components/analytics/choices";
 import { FooterAction } from "@/components/marketing/shared/footer/action";
 import { FooterArt } from "@/components/marketing/shared/footer/art";
-import {
-  HEADER_SECTIONS,
-  type HeaderLink,
-  type HeaderSection,
+import type {
+  HeaderLink,
+  HeaderSection,
 } from "@/components/marketing/shared/header/sections";
+import { HEADER_SECTIONS } from "@/components/marketing/shared/header/sections";
 import type { PageNavigation } from "@/lib/content/page/navigation";
-import {
-  Link,
-  type LinkPreload,
-  type LinkTarget,
-  TargetLink,
-} from "@/lib/routing/link";
+import type { LinkPreload, LinkTarget } from "@/lib/routing/link";
+import { Link, TargetLink } from "@/lib/routing/link";
 import { PublicPathLink } from "@/lib/routing/public/link";
 import { CONTRIBUTOR_TARGET } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";

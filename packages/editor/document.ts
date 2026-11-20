@@ -2,16 +2,10 @@ import { figureExtensions } from "@repo/editor/figure";
 import { groupExtensions } from "@repo/editor/group";
 import { Highlight } from "@repo/editor/highlight";
 import { imageExtensions } from "@repo/editor/image";
-import {
-  type MathViews,
-  mathExtensions,
-  NO_MATH_VIEWS,
-} from "@repo/editor/math";
-import {
-  type AnyExtension,
-  getSchema,
-  type NodeViewRenderer,
-} from "@tiptap/core";
+import type { MathViews } from "@repo/editor/math";
+import { mathExtensions, NO_MATH_VIEWS } from "@repo/editor/math";
+import type { AnyExtension, NodeViewRenderer } from "@tiptap/core";
+import { getSchema } from "@tiptap/core";
 import { Bold } from "@tiptap/extension-bold";
 import { Code } from "@tiptap/extension-code";
 import { Italic } from "@tiptap/extension-italic";

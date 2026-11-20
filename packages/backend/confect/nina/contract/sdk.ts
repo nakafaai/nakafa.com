@@ -1,5 +1,6 @@
 import { asSchema, jsonSchema } from "ai";
-import { type JsonSchema, Schema, Struct } from "effect";
+import type { JsonSchema } from "effect";
+import { Schema, Struct } from "effect";
 
 /** Converts an Effect schema into an AI SDK schema with Effect validation. */
 export const createEffectSchema = <A, I>(

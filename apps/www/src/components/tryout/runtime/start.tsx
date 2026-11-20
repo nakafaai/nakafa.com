@@ -1,13 +1,9 @@
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Schema } from "effect";
-import {
-  createContext,
-  type ReactNode,
-  useEffect,
-  useEffectEvent,
-  useState,
-} from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
+import type { ReactNode } from "react";
+import { createContext, useEffect, useEffectEvent, useState } from "react";
+import type { StoreApi } from "zustand";
+import { createStore, useStore } from "zustand";
 
 /**
  * Where the start of one try-out page stands: idle; starting an attempt that opens no section, while

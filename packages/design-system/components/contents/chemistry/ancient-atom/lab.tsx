@@ -1,7 +1,9 @@
+import type {
+  AncientAtomLevelId,
+  AncientAtomLevelLabels,
+} from "@repo/design-system/components/contents/chemistry/ancient-atom/data";
 import {
   ANCIENT_ATOM_LEVELS,
-  type AncientAtomLevelId,
-  type AncientAtomLevelLabels,
   WHOLE_MATTER_LEVEL_ID,
 } from "@repo/design-system/components/contents/chemistry/ancient-atom/data";
 import {

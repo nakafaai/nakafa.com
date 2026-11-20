@@ -4,12 +4,12 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
+import type { SittingFixture } from "@repo/backend/test/sittings";
 import {
   CLOSES_AT as CLOSES,
   deviceOf,
   enterOk,
   openedSitting,
-  type SittingFixture,
 } from "@repo/backend/test/sittings";
 import {
   suspend,

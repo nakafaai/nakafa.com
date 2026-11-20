@@ -4,9 +4,11 @@ import { ARM, LEG } from "@repo/mascot/nina/body";
 import { WHOLE_BOX } from "@repo/mascot/nina/box";
 import { EDGES } from "@repo/mascot/nina/edge";
 import { legCurve } from "@repo/mascot/nina/figure";
-import { bend, type Curve, cubic, slope, wide } from "@repo/mascot/nina/limb";
+import type { Curve } from "@repo/mascot/nina/limb";
+import { bend, cubic, slope, wide } from "@repo/mascot/nina/limb";
 import type { Place } from "@repo/mascot/nina/point";
-import { type Pose, PoseSchema, REST } from "@repo/mascot/nina/pose";
+import type { Pose } from "@repo/mascot/nina/pose";
+import { PoseSchema, REST } from "@repo/mascot/nina/pose";
 import { Array as Arr, Record as Rec, Schema } from "effect";
 
 type Girth = typeof ARM;

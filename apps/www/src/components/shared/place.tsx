@@ -1,14 +1,10 @@
 import { useDebouncedCallback } from "@mantine/hooks";
 import { useMessageScroller } from "@shadcn/react/message-scroller";
 import { Array as Arr, Effect, Option } from "effect";
-import {
-  type RefObject,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
-import { type ChatPlace, keepPlace, readPlace } from "@/lib/scroll/place";
+import type { RefObject } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { ChatPlace } from "@/lib/scroll/place";
+import { keepPlace, readPlace } from "@/lib/scroll/place";
 
 /** How close to the newest edge, in pixels, the reader still stands at it, as the scroller's own edge does. */
 const END_SLACK = 8;

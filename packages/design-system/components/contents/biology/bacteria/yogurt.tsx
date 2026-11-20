@@ -35,7 +35,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
-import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import type { Group, Mesh, MeshPhysicalMaterial } from "three";
 
 /** Eight hours in the yoghurt maker. */

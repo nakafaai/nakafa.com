@@ -3,13 +3,11 @@ import {
   SpacePointSchema,
 } from "@nakafa/aksara-contracts/math/base";
 import type { FormulaScope } from "@nakafa/aksara-contracts/math/formula/compile";
-import {
-  type FormulaReadout,
-  isPlaneFormulaPoint,
-} from "@nakafa/aksara-contracts/math/formula/field";
+import type { FormulaReadout } from "@nakafa/aksara-contracts/math/formula/field";
+import { isPlaneFormulaPoint } from "@nakafa/aksara-contracts/math/formula/field";
+import type { FormulaGeometry } from "@nakafa/aksara-contracts/math/formula/plane";
 import {
   compileText,
-  type FormulaGeometry,
   planeFormulaGeometry,
   planeFormulaPoint,
 } from "@nakafa/aksara-contracts/math/formula/plane";
@@ -22,10 +20,10 @@ import type {
   SpacePoint,
   SpaceVisual,
 } from "@/lib/content/renderer/client/base/visual/scene";
+import type { VisualProjection } from "@/lib/content/renderer/client/base/visual/transform";
 import {
   projectVisualFrame,
   sampleProjector,
-  type VisualProjection,
 } from "@/lib/content/renderer/client/base/visual/transform";
 
 const PointsSchema = Schema.Array(SpacePointSchema);

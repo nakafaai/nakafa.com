@@ -36,20 +36,12 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr } from "effect";
-import {
-  type ReactNode,
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import type { InstancedMesh, Mesh, MeshStandardMaterial } from "three";
 import {
   CatmullRomCurve3,
   DataTexture,
-  type InstancedMesh,
-  type Mesh,
-  type MeshStandardMaterial,
   RepeatWrapping,
   TubeGeometry,
   Vector3,

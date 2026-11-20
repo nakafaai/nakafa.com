@@ -1,9 +1,11 @@
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { CHAT_LIST_PAGE_SIZE } from "@repo/backend/client/chats/list";
 import { appendRows } from "@repo/backend/scripts/content/acceptance/import";
 import { Array as Arr, Clock, Effect, Schedule, Schema } from "effect";
 import { runFixture } from "@/e2e/support/acceptance";
-import { type Changes, trackChanges } from "@/e2e/support/changes";
+import type { Changes } from "@/e2e/support/changes";
+import { trackChanges } from "@/e2e/support/changes";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";

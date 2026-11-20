@@ -3,11 +3,11 @@ import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import type { TestIdentity } from "@repo/backend/test/content/state";
 import {
   insertTestState,
   insertZeroRelease,
   patchStoredOriginRelease,
-  type TestIdentity,
 } from "@repo/backend/test/content/state";
 import { convexTest } from "convex-test";
 

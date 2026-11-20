@@ -1,8 +1,8 @@
 import { RoundedBox } from "@react-three/drei";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
 import { FixedArrow } from "@repo/design-system/components/contents/physics/vector/solid/arrow";
+import type { Grip } from "@repo/design-system/components/contents/physics/vector/wrench/torque";
 import {
-  type Grip,
   GripSchema,
   wrenchTorque,
 } from "@repo/design-system/components/contents/physics/vector/wrench/torque";
@@ -11,10 +11,8 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import type { CoordinateTuple } from "@repo/design-system/components/three/frame";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import {
-  type Placement,
-  Repeat,
-} from "@repo/design-system/components/three/repeat";
+import type { Placement } from "@repo/design-system/components/three/repeat";
+import { Repeat } from "@repo/design-system/components/three/repeat";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
@@ -33,7 +31,8 @@ import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
-import { type ReactNode, Suspense, useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { DoubleSide, LatheGeometry, Vector2 } from "three";
 
 /** The height of the wheel's hub above the floor, in metres. */

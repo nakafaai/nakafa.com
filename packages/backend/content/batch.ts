@@ -1,8 +1,8 @@
+import type { PublicContentRuntimeResponse } from "@nakafa/aksara-contracts/runtime/spec";
 import {
   MAX_PUBLIC_RUNTIME_REQUEST_BYTES,
   MAX_PUBLIC_RUNTIME_RESPONSE_BYTES,
   PublicContentRuntimeRequestSchema,
-  type PublicContentRuntimeResponse,
   PublicContentRuntimeResponseSchema,
 } from "@nakafa/aksara-contracts/runtime/spec";
 import { encodeJsonText } from "@repo/utilities/json";

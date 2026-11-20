@@ -7,10 +7,8 @@ import {
 } from "@nakafa/aksara-contracts/release";
 import { ContentRouteItemSchema } from "@nakafa/aksara-contracts/release/route/spec";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
-import {
-  type PublicationRequest,
-  PublicationRequestSchema,
-} from "@nakafa/aksara-contracts/transport/request";
+import type { PublicationRequest } from "@nakafa/aksara-contracts/transport/request";
+import { PublicationRequestSchema } from "@nakafa/aksara-contracts/transport/request";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import {
   PublicationFailureDefect,

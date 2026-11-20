@@ -1,7 +1,7 @@
+import type { RefreshSessionFn } from "@convex-dev/auth/ssr";
 import {
   decodeAccessToken,
   httpCookies,
-  type RefreshSessionFn,
   ServerAuthSession,
 } from "@convex-dev/auth/ssr";
 import { siteUrlKeys } from "@repo/site/keys";
@@ -11,7 +11,8 @@ import {
   setResponseHeader,
 } from "@tanstack/react-start/server";
 import { ConvexHttpClient } from "convex/browser";
-import { type FunctionReference, makeFunctionReference } from "convex/server";
+import type { FunctionReference } from "convex/server";
+import { makeFunctionReference } from "convex/server";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import {
   hasSessionCookie,

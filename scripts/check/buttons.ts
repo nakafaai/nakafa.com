@@ -1,4 +1,5 @@
 import { Array as Arr, HashSet, Option } from "effect";
+import type { JsxAttributes, Node, SourceFile } from "tsrs/ast";
 import {
   isCallExpression,
   isIdentifier,
@@ -7,9 +8,6 @@ import {
   isObjectLiteralExpression,
   isPropertyAssignment,
   isStringLiteralLikeNode,
-  type JsxAttributes,
-  type Node,
-  type SourceFile,
 } from "tsrs/ast";
 import { nodesBelow } from "#scripts/check/drilling";
 import {

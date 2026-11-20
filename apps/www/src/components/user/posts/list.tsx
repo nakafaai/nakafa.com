@@ -16,10 +16,10 @@ import { useAgeClock } from "@/components/user/ages";
 import { FeedEmpty, FeedNotice } from "@/components/user/feed";
 import { useVisitorList } from "@/components/user/paging";
 import { PostComposer } from "@/components/user/posts/composer";
+import type { PostsView } from "@/components/user/posts/live";
 import {
   failedView,
   livePostsArgs,
-  type PostsView,
   postsView,
 } from "@/components/user/posts/live";
 import {

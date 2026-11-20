@@ -1,6 +1,8 @@
 import { Array as Arr, Schema } from "effect";
-import { type ReactNode, useLayoutEffect, useRef } from "react";
-import { type InstancedMesh, Object3D } from "three";
+import type { ReactNode } from "react";
+import { useLayoutEffect, useRef } from "react";
+import type { InstancedMesh } from "three";
+import { Object3D } from "three";
 
 /** Three numbers along x, y and z. */
 const TripleSchema = Schema.Tuple([

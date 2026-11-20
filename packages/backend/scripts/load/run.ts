@@ -3,7 +3,8 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { RunConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import { audit, StoredAnswer } from "@repo/backend/scripts/load/ledger";
 import { readServerRun } from "@repo/backend/scripts/load/logs";
-import { type LoadPlan, scriptOf } from "@repo/backend/scripts/load/plan";
+import type { LoadPlan } from "@repo/backend/scripts/load/plan";
+import { scriptOf } from "@repo/backend/scripts/load/plan";
 import { runProctor } from "@repo/backend/scripts/load/proctor";
 import { Recorder, timed } from "@repo/backend/scripts/load/recorder";
 import {
@@ -15,6 +16,7 @@ import { seedRun } from "@repo/backend/scripts/load/seed";
 import { spreadByName } from "@repo/backend/scripts/load/stats";
 import { runStudent } from "@repo/backend/scripts/load/student";
 import type { Wire } from "@repo/backend/scripts/load/wire";
+import type { Scope } from "effect";
 import {
   Array as Arr,
   Clock,
@@ -26,7 +28,6 @@ import {
   HashSet,
   Option,
   Schema,
-  type Scope,
   Stream,
 } from "effect";
 

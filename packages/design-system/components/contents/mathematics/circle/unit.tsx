@@ -36,7 +36,8 @@ import {
   getTan,
 } from "@repo/math/angles";
 import { Option } from "effect";
-import { createContext, type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, Suspense, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 
 /** The scene loads once the card asks for it, and its frame holds the place meanwhile. */

@@ -3,10 +3,8 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import {
-  JOURNAL_COMMIT_LAG,
-  type Position,
-} from "@repo/backend/confect/journal/cursor";
+import type { Position } from "@repo/backend/confect/journal/cursor";
+import { JOURNAL_COMMIT_LAG } from "@repo/backend/confect/journal/cursor";
 import type {
   ConsumedChangeType,
   JournalConsumer,

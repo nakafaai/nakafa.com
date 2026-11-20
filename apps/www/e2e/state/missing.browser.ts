@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import de from "@repo/internationalization/dictionaries/standalone/de.json" with {
   type: "json",
 };

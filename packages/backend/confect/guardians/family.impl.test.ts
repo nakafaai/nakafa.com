@@ -13,9 +13,9 @@ import {
   period,
   teach,
 } from "@repo/backend/test/classroom";
+import type { Fixture } from "@repo/backend/test/guardians";
 import {
   asStaffSchool,
-  type Fixture,
   linkRow,
   NISN,
   setRoster,

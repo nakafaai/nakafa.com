@@ -1,6 +1,7 @@
 import { Array as Arr, MutableHashMap, Option } from "effect";
 import { BODY_STRIDE } from "@/lib/island/bodies";
-import { type Model, modelFaces, modelKey } from "@/lib/island/models/kinds";
+import type { Model } from "@/lib/island/models/kinds";
+import { modelFaces, modelKey } from "@/lib/island/models/kinds";
 import { flatten, MODEL_STRIDE } from "@/lib/island/models/parts";
 
 /** How many bodies of one model the GPU first makes room for; a model with more doubles its room. */

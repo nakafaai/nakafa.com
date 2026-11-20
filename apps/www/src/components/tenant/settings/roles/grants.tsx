@@ -1,9 +1,5 @@
-import {
-  type PaginatedQueryItem,
-  QueryResult,
-  useMutation,
-  usePaginatedQuery,
-} from "@confect/react";
+import type { PaginatedQueryItem } from "@confect/react";
+import { QueryResult, useMutation, usePaginatedQuery } from "@confect/react";
 import {
   Delete02Icon,
   UserEdit01Icon,

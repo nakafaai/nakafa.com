@@ -39,8 +39,8 @@ import {
   MotionConfig,
 } from "motion/react";
 import { div as MotionDiv } from "motion/react-m";
+import type { ReactNode } from "react";
 import {
-  type ReactNode,
   useCallback,
   useDeferredValue,
   useEffect,

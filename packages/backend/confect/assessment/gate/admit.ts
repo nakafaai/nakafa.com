@@ -10,20 +10,20 @@ import {
   SectionClosed,
   Stale,
 } from "@repo/backend/confect/assessment/gate/refusal";
-import {
-  type Rule,
-  rules,
-  type Version,
+import type {
+  Rule,
+  Version,
 } from "@repo/backend/confect/assessment/gate/rules";
-import {
-  type Answerable,
-  type Attempt,
-  acceptsWrites,
-  type Binding,
-  type Candidate,
-  type DeviceId,
-  type Store,
+import { rules } from "@repo/backend/confect/assessment/gate/rules";
+import type {
+  Answerable,
+  Attempt,
+  Binding,
+  Candidate,
+  DeviceId,
+  Store,
 } from "@repo/backend/confect/assessment/gate/store";
+import { acceptsWrites } from "@repo/backend/confect/assessment/gate/store";
 import { Clock, Effect, Number as Num, Option } from "effect";
 
 /** Refuses one write with the first admission rule it failed. */

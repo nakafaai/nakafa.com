@@ -3,10 +3,8 @@ import type {
   CurriculumRouteRecordSchema,
   LearningProgramRecordSchema,
 } from "@nakafa/aksara-contracts/program/snapshot/row";
-import {
-  type ContentSnapshotRow,
-  contentSnapshotId,
-} from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { contentSnapshotId } from "@nakafa/aksara-contracts/release/snapshot/data";
 import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { snapshotRowCount } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {

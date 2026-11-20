@@ -1,7 +1,7 @@
+import type { ReleaseId } from "@nakafa/aksara-contracts/ids";
 import {
   ContentKeySchema,
   CorpusSourcePathSchema,
-  type ReleaseId,
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { digestProjections } from "@nakafa/aksara-contracts/projection/digest";

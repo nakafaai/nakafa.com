@@ -9,7 +9,8 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Effect } from "effect";
-import { type ReactNode, useState, useTransition } from "react";
+import type { ReactNode } from "react";
+import { useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { readQuestionIds } from "@/components/player/ids";
 import {

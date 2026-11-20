@@ -1,6 +1,7 @@
 import type { AccelerationLabels } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createContext } from "react";
 
 const AccelerationLabelsContext = createContext<AccelerationLabels | null>(
   null

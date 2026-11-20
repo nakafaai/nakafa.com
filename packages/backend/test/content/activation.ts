@@ -1,8 +1,8 @@
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import {
   ContentReleaseManifestSchema,
   RollbackSignedContentReleaseSchema,
-  type SignedContentRelease,
 } from "@nakafa/aksara-contracts/release";
 import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { encodeRendererJson } from "@repo/backend/confect/contentRelease/wire";

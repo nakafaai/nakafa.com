@@ -1,10 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
+import type { StaticCall } from "@/lib/static/calls";
 import {
   appendStaticCalls,
   readStaticCalls,
   readStaticFile,
-  type StaticCall,
   staticDataPath,
   toStaticFile,
 } from "@/lib/static/calls";

@@ -16,9 +16,9 @@ import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { getRouteApi } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Array as Arr, Effect, Match, Option, Result, Schema } from "effect";
+import type { ReactNode } from "react";
 import {
   createContext,
-  type ReactNode,
   use,
   useOptimistic,
   useRef,
@@ -38,13 +38,12 @@ import { StartContext } from "@/components/tenant/start/context";
 import { useSaveStartAnswer } from "@/components/tenant/start/draft";
 import { StartNameQuestion } from "@/components/tenant/start/name";
 import { StartOpening } from "@/components/tenant/start/opening";
+import type { StartDraft, StartItem } from "@/components/tenant/start/state";
 import {
   levelsOf,
   namesOwnLevels,
   resumeItem,
   START_ITEMS,
-  type StartDraft,
-  type StartItem,
   startRequest,
   unitName,
 } from "@/components/tenant/start/state";

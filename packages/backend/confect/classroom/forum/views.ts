@@ -16,15 +16,11 @@ import {
   replierFaces,
 } from "@repo/backend/confect/classroom/forum/faces";
 import { readMark } from "@repo/backend/confect/classroom/forum/mark";
-import {
-  type MentionView,
-  mentionedPeople,
-} from "@repo/backend/confect/classroom/forum/mention";
+import type { MentionView } from "@repo/backend/confect/classroom/forum/mention";
+import { mentionedPeople } from "@repo/backend/confect/classroom/forum/mention";
 import { messageField } from "@repo/backend/confect/classroom/forum/message";
-import {
-  type PollView,
-  pollField,
-} from "@repo/backend/confect/classroom/forum/poll";
+import type { PollView } from "@repo/backend/confect/classroom/forum/poll";
+import { pollField } from "@repo/backend/confect/classroom/forum/poll";
 import { titleField } from "@repo/backend/confect/classroom/forum/thread";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { readTenantKeys } from "@repo/backend/confect/vault/keys";

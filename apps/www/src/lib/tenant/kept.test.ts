@@ -3,10 +3,10 @@ import { TenantProfile } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { reportClientException } from "@/lib/analytics/client";
 import { KEPT_SCHOOL_KEY } from "@/lib/auth/keys";
+import type { KeptFrame } from "@/lib/tenant/kept";
 import {
   dropKeptFrame,
   isSameFrame,
-  type KeptFrame,
   keptFrameFor,
   loadKeptFrameText,
   saveKeptFrame,

@@ -1,7 +1,7 @@
+import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
 import {
   createOperationalException,
   decodeOperationalExceptionProperties,
-  type OperationalExceptionProperties,
 } from "@repo/analytics/posthog/exception";
 import { Array as Arr, MutableRef, Option } from "effect";
 import type { PostHog } from "posthog-js";

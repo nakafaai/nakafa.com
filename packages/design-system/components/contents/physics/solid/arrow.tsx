@@ -1,5 +1,7 @@
-import { type Ref, useImperativeHandle, useRef } from "react";
-import { type Group, Quaternion, Vector3 } from "three";
+import type { Ref } from "react";
+import { useImperativeHandle, useRef } from "react";
+import type { Group } from "three";
+import { Quaternion, Vector3 } from "three";
 
 /** Moves a vector arrow: where it starts, and the vector it draws, in scene units. */
 export interface VectorArrowHandle {

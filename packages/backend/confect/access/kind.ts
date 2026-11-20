@@ -1,7 +1,9 @@
-import { Id, type TableNames } from "@repo/backend/confect/_generated/id";
+import type { TableNames } from "@repo/backend/confect/_generated/id";
+import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Rule } from "@repo/backend/confect/access/schema";
-import { Array as Arr, type Record, Schema, Struct } from "effect";
+import type { Record } from "effect";
+import { Array as Arr, Schema, Struct } from "effect";
 
 /**
  * What a lane adds to a kind: the `source.verb` actions evaluated on its

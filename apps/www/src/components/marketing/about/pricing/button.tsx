@@ -13,10 +13,11 @@ import {
   useState,
   useTransition,
 } from "react";
-import { type Locale, useLocale, useTranslations } from "use-intl";
+import type { Locale } from "use-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { createStore } from "zustand";
+import type { PricingButtonVariant } from "@/components/marketing/about/pricing/action";
 import {
-  type PricingButtonVariant,
   PricingButtonVariantContext,
   PricingPressContext,
   usePricingButtonVariant,

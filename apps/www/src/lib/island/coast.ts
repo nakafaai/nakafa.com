@@ -1,7 +1,8 @@
 import { SPAN } from "@repo/backend/confect/island/world";
 import { skylineOf } from "@/lib/island/ground";
 import { KIND, LOOK } from "@/lib/island/look";
-import { blockAt, type Cells, SEA_LEVEL } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { blockAt, SEA_LEVEL } from "@/lib/island/world";
 
 /** How many steps of the coast map make a block: its distances are kept in sixteenths, the art pixel's own size, up to sixteen blocks. */
 export const COAST_STEPS = 16;

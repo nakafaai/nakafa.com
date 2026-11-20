@@ -1,4 +1,5 @@
-import { type Browser, expect, test } from "@playwright/test";
+import type { Browser } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import {
   createSchool,

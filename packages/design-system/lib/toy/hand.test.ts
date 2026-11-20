@@ -1,11 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import { isMoving, REST } from "@repo/design-system/lib/toy/flight";
+import type { Hold } from "@repo/design-system/lib/toy/hand";
 import {
   carry,
   drag,
   follow,
   grab,
-  type Hold,
   release,
   sendHome,
   still,

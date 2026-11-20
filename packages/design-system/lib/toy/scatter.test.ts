@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import type { Place } from "@repo/design-system/lib/toy/scatter";
 import {
   createScatter,
   MISSING,
-  type Place,
   placed as spotAt,
   WAITING,
 } from "@repo/design-system/lib/toy/scatter";

@@ -40,10 +40,8 @@ import {
   personAuthority,
   placementOf,
 } from "@repo/backend/confect/tenancy/authority";
-import {
-  bindPerson,
-  type ClaimedAccount,
-} from "@repo/backend/confect/tenancy/claim";
+import type { ClaimedAccount } from "@repo/backend/confect/tenancy/claim";
+import { bindPerson } from "@repo/backend/confect/tenancy/claim";
 import {
   accountPersonName,
   createPerson,

@@ -1,9 +1,5 @@
-import {
-  type PaginatedQueryItem,
-  QueryResult,
-  useMutation,
-  usePaginatedQuery,
-} from "@confect/react";
+import type { PaginatedQueryItem } from "@confect/react";
+import { QueryResult, useMutation, usePaginatedQuery } from "@confect/react";
 import {
   Archive02Icon,
   Calendar03Icon,
@@ -21,7 +17,8 @@ import { tableColumns } from "@/components/shared/table/columns";
 import { DataTable } from "@/components/shared/table/data";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
-import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import type { StatusLook } from "@/components/shared/table/status";
+import { TableStatus } from "@/components/shared/table/status";
 import { TableTitle } from "@/components/shared/table/title";
 import {
   TableFiltersProvider,
@@ -41,10 +38,8 @@ import {
 import { SettingsTablePage } from "@/components/tenant/settings/section";
 import { isDraft } from "@/components/tenant/settings/state";
 import { createPeriodChange } from "@/components/tenant/settings/terms";
-import {
-  SchoolUnitChoice,
-  type UnitId,
-} from "@/components/tenant/settings/unit";
+import type { UnitId } from "@/components/tenant/settings/unit";
+import { SchoolUnitChoice } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 

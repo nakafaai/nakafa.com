@@ -16,21 +16,10 @@ import {
 } from "@repo/design-system/components/contents/biology/surface";
 import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
-import {
-  type ReactNode,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-} from "react";
-import {
-  CatmullRomCurve3,
-  type InstancedMesh,
-  Matrix4,
-  Plane,
-  TubeGeometry,
-  Vector3,
-} from "three";
+import type { ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import type { InstancedMesh } from "three";
+import { CatmullRomCurve3, Matrix4, Plane, TubeGeometry, Vector3 } from "three";
 
 /** A bacillus at scene scale: about 0.6 wide and 1.6 long, the proportions of Escherichia coli (0.8 by 2 µm). */
 const BACILLUS = { length: 1, radius: 0.3 } as const;

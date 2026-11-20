@@ -1,14 +1,14 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { AttemptRefused } from "@repo/backend/confect/assessment/gate/refusal";
 import { endings, refusals, rejections } from "@repo/backend/test/gate/cases";
-import {
-  type Caller,
-  type Change,
-  type Failure,
-  Observed,
-  type Pick,
-  type Target,
+import type {
+  Caller,
+  Change,
+  Failure,
+  Pick,
+  Target,
 } from "@repo/backend/test/gate/world";
+import { Observed } from "@repo/backend/test/gate/world";
 import { Effect, Match, Option } from "effect";
 
 /** A write the gate admits. */

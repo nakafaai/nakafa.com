@@ -1,4 +1,5 @@
-import { expect, type Locator } from "@playwright/test";
+import type { Locator } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",

@@ -1,12 +1,14 @@
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import type {
+  ProjectileMotionState,
+  ProjectileScenarioId,
+} from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import {
   getProjectileLoopSample,
   getProjectilePoint,
   PROJECTILE_ASSET_PATHS,
   PROJECTILE_SCENE,
-  type ProjectileMotionState,
-  type ProjectileScenarioId,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { Ocean } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/ocean";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
@@ -14,14 +16,8 @@ import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Record as Rec } from "effect";
 import { useMemo, useRef } from "react";
-import {
-  CatmullRomCurve3,
-  type Group,
-  Mesh,
-  type MeshBasicMaterial,
-  type PointLight,
-  Vector3,
-} from "three";
+import type { Group, MeshBasicMaterial, PointLight } from "three";
+import { CatmullRomCurve3, Mesh, Vector3 } from "three";
 
 const PIRATE_COLORS = {
   flashCore: PLOT_COLORS.amber,

@@ -1,7 +1,5 @@
-import {
-  ActiveAppLocaleCodeSchema,
-  type AppLocaleCode,
-} from "@nakafa/aksara-contracts/locale";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { NAKAFA_MARK } from "@repo/backend/confect/pdf/mark";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { SITE_ORIGIN } from "@repo/seo/origin";

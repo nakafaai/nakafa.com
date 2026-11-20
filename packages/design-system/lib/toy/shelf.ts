@@ -1,5 +1,6 @@
 import { TOY_ATTRIBUTE } from "@repo/design-system/lib/toy/dom";
-import { createDrag, type Reactions } from "@repo/design-system/lib/toy/drag";
+import type { Reactions } from "@repo/design-system/lib/toy/drag";
+import { createDrag } from "@repo/design-system/lib/toy/drag";
 import { createFlock } from "@repo/design-system/lib/toy/flock";
 import { sendHome, still } from "@repo/design-system/lib/toy/hand";
 import { Equal, MutableHashMap } from "effect";

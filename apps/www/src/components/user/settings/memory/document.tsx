@@ -13,8 +13,10 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { isEnterOutsideComposition } from "@repo/design-system/lib/keyboard";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { type Option, String as Str } from "effect";
-import { type ComponentProps, Suspense, use, useRef, useState } from "react";
+import type { Option } from "effect";
+import { String as Str } from "effect";
+import type { ComponentProps } from "react";
+import { Suspense, use, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { MemoryDeleteDialog } from "@/components/user/settings/memory/delete";
 import {
@@ -26,11 +28,11 @@ import {
   memoryNeighbour,
   NO_NEIGHBOUR,
 } from "@/components/user/settings/memory/focus";
-import {
-  isBlank,
-  type Memory,
-  type MemoryDraft,
+import type {
+  Memory,
+  MemoryDraft,
 } from "@/components/user/settings/memory/list";
+import { isBlank } from "@/components/user/settings/memory/list";
 import {
   loadEditorPreviewModule,
   loadRichEditorModule,

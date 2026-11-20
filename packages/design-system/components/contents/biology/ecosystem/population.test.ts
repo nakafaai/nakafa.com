@@ -1,10 +1,10 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import type { Herd } from "@repo/design-system/components/contents/biology/ecosystem/population";
 import {
   balanceOf,
   FIELD,
-  type Herd,
   historyOf,
   rateOf,
   stepOf,

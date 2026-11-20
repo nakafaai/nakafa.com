@@ -20,10 +20,10 @@ import {
   runMemory,
 } from "@repo/backend/confect/nina/memory/tool";
 import { provider } from "@repo/backend/test/gateway";
+import type { createNinaTest } from "@repo/backend/test/nina";
 import {
   answerCalls,
   appendNinaTurn,
-  type createNinaTest,
   ninaRecallModel,
 } from "@repo/backend/test/nina";
 import { createMemoryTest } from "@repo/backend/test/nina/memory";

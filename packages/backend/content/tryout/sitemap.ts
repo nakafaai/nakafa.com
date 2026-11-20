@@ -3,10 +3,8 @@ import {
   CONTENT_SITEMAP_ROUTE_PAGE_SIZE,
   compareSitemapPaths,
 } from "@repo/backend/confect/contentRelease/sitemap";
-import {
-  loadTryoutCatalog,
-  type PublishedCatalog,
-} from "@repo/backend/content/tryout/catalog";
+import type { PublishedCatalog } from "@repo/backend/content/tryout/catalog";
+import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
 import {
   indexPublishedCatalog,
   isPublishedLanding,

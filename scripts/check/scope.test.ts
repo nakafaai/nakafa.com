@@ -1,12 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect, Order } from "effect";
-import {
-  type Identifier,
-  isCallExpression,
-  isIdentifier,
-  type Node,
-  type SourceFile,
-} from "tsrs/ast";
+import type { Identifier, Node, SourceFile } from "tsrs/ast";
+import { isCallExpression, isIdentifier } from "tsrs/ast";
 import { boundFunctions } from "#scripts/check/scope";
 import { descendants, parseSources } from "#scripts/check/source";
 

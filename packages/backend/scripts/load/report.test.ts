@@ -1,11 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Audit } from "@repo/backend/scripts/load/ledger";
 import { BLUEPRINT_PLAN } from "@repo/backend/scripts/load/plan";
-import {
-  type LoadReport,
-  markdownOf,
-  passes,
-} from "@repo/backend/scripts/load/report";
+import type { LoadReport } from "@repo/backend/scripts/load/report";
+import { markdownOf, passes } from "@repo/backend/scripts/load/report";
 import type { Spread } from "@repo/backend/scripts/load/stats";
 
 /** A latency whose percentiles all read `p95`. */

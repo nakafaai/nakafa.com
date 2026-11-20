@@ -4,10 +4,8 @@ import {
   SECTION_TEXT_CHARS,
 } from "@repo/backend/confect/contents/sections/limits";
 import type { SectionFields } from "@repo/backend/confect/contents/sections/schema";
-import {
-  type DocumentSection,
-  splitSections,
-} from "@repo/backend/confect/contents/sections/split";
+import type { DocumentSection } from "@repo/backend/confect/contents/sections/split";
+import { splitSections } from "@repo/backend/confect/contents/sections/split";
 import { embeddingModelId } from "@repo/backend/confect/gateway/model";
 import { Array as Arr, String as Str } from "effect";
 

@@ -11,10 +11,8 @@ import {
   Target01Icon,
 } from "@hugeicons/core-free-icons";
 import { Array as Arr, Match } from "effect";
-import {
-  SCHOOL_FEATURES,
-  type SchoolFeature,
-} from "@/components/marketing/school/features/list";
+import type { SchoolFeature } from "@/components/marketing/school/features/list";
+import { SCHOOL_FEATURES } from "@/components/marketing/school/features/list";
 import type { LinkTarget } from "@/lib/routing/link";
 import {
   ARTICLES_TARGET,

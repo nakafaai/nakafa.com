@@ -26,10 +26,8 @@ import { lastGradeOf } from "@repo/backend/confect/tenancy/grades";
 import { destinationIssue } from "@repo/backend/confect/tenancy/promotion/destination";
 import spec from "@repo/backend/confect/tenancy/promotion/moves.spec";
 import { PLANNABLE, update } from "@repo/backend/confect/tenancy/promotion/row";
-import {
-  PROMOTION_MOVE_LIMIT,
-  type PromotionDestination,
-} from "@repo/backend/confect/tenancy/promotion/schema";
+import type { PromotionDestination } from "@repo/backend/confect/tenancy/promotion/schema";
+import { PROMOTION_MOVE_LIMIT } from "@repo/backend/confect/tenancy/promotion/schema";
 import { view } from "@repo/backend/confect/tenancy/promotion/view";
 import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
 

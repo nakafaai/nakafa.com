@@ -1,8 +1,6 @@
 import { landAt } from "@repo/design-system/components/contents/biology/climate/shore";
-import {
-  Instances,
-  type Placement,
-} from "@repo/design-system/components/contents/biology/instances";
+import type { Placement } from "@repo/design-system/components/contents/biology/instances";
+import { Instances } from "@repo/design-system/components/contents/biology/instances";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { Array as Arr } from "effect";

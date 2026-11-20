@@ -5,6 +5,10 @@ import {
   formatRoundedSecondMath,
 } from "@repo/design-system/components/contents/physics/kinematics/math";
 import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
+import type {
+  UniformCircularMotionPeriod,
+  UniformCircularMotionState,
+} from "@repo/design-system/components/contents/physics/kinematics/uniform-circular-motion/data";
 import {
   formatCircularMotionDecimal,
   getUniformCircularMotionState,
@@ -14,8 +18,6 @@ import {
   UNIFORM_CIRCULAR_MOTION_COLORS,
   UNIFORM_CIRCULAR_MOTION_PERIODS,
   UNIFORM_CIRCULAR_MOTION_SCENE,
-  type UniformCircularMotionPeriod,
-  type UniformCircularMotionState,
 } from "@repo/design-system/components/contents/physics/kinematics/uniform-circular-motion/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";

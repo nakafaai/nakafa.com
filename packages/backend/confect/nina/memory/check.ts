@@ -1,9 +1,7 @@
 import { endOfDay } from "@repo/backend/confect/nina/memory/day";
 import { hasWords } from "@repo/backend/confect/nina/memory/match";
-import {
-  NinaMemoryCandidate,
-  type NinaMemoryClaim,
-} from "@repo/backend/confect/nina/memory.spec";
+import type { NinaMemoryClaim } from "@repo/backend/confect/nina/memory.spec";
+import { NinaMemoryCandidate } from "@repo/backend/confect/nina/memory.spec";
 import { Array as Arr, Option, Schema, String as Str } from "effect";
 
 type Claim = typeof NinaMemoryClaim.Type;

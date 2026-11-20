@@ -1,6 +1,6 @@
 import { LocalDeploymentJson } from "@repo/backend/scripts/content/acceptance/deployment";
+import type { AcceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import {
-  type AcceptanceRuntimeError,
   acceptanceRuntimeError,
   sanitizeAcceptanceCommandError,
 } from "@repo/backend/scripts/content/acceptance/error";

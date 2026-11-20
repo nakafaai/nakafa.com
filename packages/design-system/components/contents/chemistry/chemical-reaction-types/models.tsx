@@ -3,8 +3,8 @@ import {
   useChemicalReactionTypeScene,
   useChemicalReactionTypeSelection,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/context";
+import type { ChemicalReactionTypeScenePoint } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
 import {
-  type ChemicalReactionTypeScenePoint,
   COMBUSTION_TYPE_ID,
   GAS_TYPE_ID,
   PRECIPITATE_TYPE_ID,

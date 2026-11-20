@@ -1,8 +1,10 @@
 import { extractText, isTool } from "@convex-dev/agent";
+import type {
+  Message,
+  MessageDoc,
+  MessageWithMetadata,
+} from "@convex-dev/agent/validators";
 import {
-  type Message,
-  type MessageDoc,
-  type MessageWithMetadata,
   vMessage,
   vProviderMetadata,
   vReasoningDetails,
@@ -17,7 +19,8 @@ import type { VaultField } from "@repo/backend/confect/vault/schema";
 import { VaultError } from "@repo/backend/confect/vault/schema";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
 import { encodeJsonText } from "@repo/utilities/json";
-import { convexToJson, type JSONValue, jsonToConvex, v } from "convex/values";
+import type { JSONValue } from "convex/values";
+import { convexToJson, jsonToConvex, v } from "convex/values";
 import { parse } from "convex-helpers/validators";
 import { Array as Arr, Effect, Record, Schema, Struct } from "effect";
 

@@ -1,12 +1,12 @@
 import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { ParabolicMotionProvider } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/context";
+import type { ParabolicLaunchId } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import {
   DEFAULT_PARABOLIC_LAUNCH_ID,
   formatAngleMath,
   getParabolicMotionState,
   isParabolicLaunchId,
   PARABOLIC_LAUNCHES,
-  type ParabolicLaunchId,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import { getParabolicFacts } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/facts";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -28,7 +28,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 /** The scene loads once the lab asks for it, and its frame holds the place meanwhile. */
 const ParabolicMovementStage = lazy(() =>

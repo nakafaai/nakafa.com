@@ -1,11 +1,8 @@
 import { Array as Arr, Schema } from "effect";
-import {
-  type Face,
-  normalOf,
-  type Rgb,
-  type Vec,
-} from "@/lib/island/models/parts";
-import { colorOf, type Ramp, type Tone } from "@/lib/island/palette";
+import type { Face, Rgb, Vec } from "@/lib/island/models/parts";
+import { normalOf } from "@/lib/island/models/parts";
+import type { Ramp, Tone } from "@/lib/island/palette";
+import { colorOf } from "@/lib/island/palette";
 
 /**
  * One ring of a tube (ADR 0047, D21): its middle, and its half width and half

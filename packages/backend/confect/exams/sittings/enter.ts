@@ -1,13 +1,11 @@
 import type { ExamSittingsDoc } from "@repo/backend/confect/_generated/docs";
-import {
-  type DatabaseReader,
-  DatabaseWriter,
-  type MutationCtx,
+import type {
+  DatabaseReader,
+  MutationCtx,
 } from "@repo/backend/confect/_generated/services";
-import {
-  type Entrance,
-  makeEntry,
-} from "@repo/backend/confect/assessment/gate/enter";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import type { Entrance } from "@repo/backend/confect/assessment/gate/enter";
+import { makeEntry } from "@repo/backend/confect/assessment/gate/enter";
 import {
   TokenRefused,
   TooManyTries,
@@ -18,11 +16,8 @@ import {
   mayEnter,
   sittingLocked,
 } from "@repo/backend/confect/exams/sittings/eligibility";
-import {
-  type HeldAttempt,
-  heldOf,
-  readSitting,
-} from "@repo/backend/confect/exams/sittings/held";
+import type { HeldAttempt } from "@repo/backend/confect/exams/sittings/held";
+import { heldOf, readSitting } from "@repo/backend/confect/exams/sittings/held";
 import {
   countFailedTry,
   deviceMayTry,

@@ -1,4 +1,5 @@
-import { own, type Row } from "@repo/backend/test/judgment/label";
+import type { Row } from "@repo/backend/test/judgment/label";
+import { own } from "@repo/backend/test/judgment/label";
 import type { Array as Arr } from "effect";
 
 /** Notes in the learner's own voice and language with nothing private: both judgments should keep them. */

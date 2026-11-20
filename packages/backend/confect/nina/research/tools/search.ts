@@ -1,8 +1,8 @@
 import type { CapabilityProgress } from "@repo/backend/confect/nina/capability/progress";
 import { planSearchQueries } from "@repo/backend/confect/nina/research/query";
+import type { WebSearchOutput } from "@repo/backend/confect/nina/research/schema";
 import {
   researchProviderConcurrency,
-  type WebSearchOutput,
   webSearchMaxQueries,
 } from "@repo/backend/confect/nina/research/schema";
 import { formatWebSearchOutput } from "@repo/backend/confect/nina/research/search/format";

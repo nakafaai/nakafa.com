@@ -14,7 +14,8 @@ import {
 } from "@repo/design-system/components/three/physical";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr } from "effect";
-import { createContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createContext } from "react";
 
 const BEAKER_RADIUS = 0.36;
 const BEAKER_HEIGHT = 1;

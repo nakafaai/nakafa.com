@@ -40,7 +40,8 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
 /** The virions drifting toward the cell. */

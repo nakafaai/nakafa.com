@@ -1,4 +1,5 @@
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect } from "effect";
 

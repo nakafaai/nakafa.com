@@ -1,48 +1,47 @@
 import type { AreaAnimationType } from "@repo/design-system/components/evilcharts/charts/area/paint";
-import {
-  type ChartBrushOptions,
-  ChartContainer,
-} from "@repo/design-system/components/evilcharts/ui/chart";
+import type { ChartBrushOptions } from "@repo/design-system/components/evilcharts/ui/chart";
+import { ChartContainer } from "@repo/design-system/components/evilcharts/ui/chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
   axisValueToPercentFormatter,
-  type ChartConfig,
   getLoadingData,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
+import type { EvilBrushRange } from "@repo/design-system/components/evilcharts/ui/evil-brush";
 import {
   EvilBrush,
-  type EvilBrushRange,
   useEvilBrush,
 } from "@repo/design-system/components/evilcharts/ui/evil-brush";
+import type { ChartLegendVariant } from "@repo/design-system/components/evilcharts/ui/legend";
 import {
   ChartLegend,
   ChartLegendContent,
-  type ChartLegendVariant,
 } from "@repo/design-system/components/evilcharts/ui/legend";
 import { LegendItemContext } from "@repo/design-system/components/evilcharts/ui/legend-item";
 import { LoadingArea } from "@repo/design-system/components/evilcharts/ui/loading";
 import { LoadingIndicator } from "@repo/design-system/components/evilcharts/ui/loading-indicator";
 import { RevealAnimationSchema } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
+import type {
+  TooltipRoundness,
+  TooltipVariant,
+} from "@repo/design-system/components/evilcharts/ui/tooltip";
 import {
   ChartTooltip,
   ChartTooltipContent,
   ChartTooltipContext,
-  type TooltipRoundness,
-  type TooltipVariant,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import { Schema } from "effect";
+import type { ComponentProps, ReactNode } from "react";
 import {
-  type ComponentProps,
   createContext,
-  type ReactNode,
   use,
   useCallback,
   useId,
   useMemo,
   useState,
 } from "react";
+import type { Area as RechartsArea } from "recharts";
 import {
   CartesianGrid,
-  type Area as RechartsArea,
   AreaChart as RechartsAreaChart,
   XAxis as RechartsXAxis,
   YAxis as RechartsYAxis,

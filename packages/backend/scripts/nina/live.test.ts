@@ -1,10 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { ConvexCli } from "@repo/backend/scripts/development/cli";
-import {
-  Deployment,
-  type Question,
-} from "@repo/backend/scripts/nina/deployment";
+import type { Question } from "@repo/backend/scripts/nina/deployment";
+import { Deployment } from "@repo/backend/scripts/nina/deployment";
 import { DeploymentLive } from "@repo/backend/scripts/nina/live";
 import {
   ACCOUNT_SEED,

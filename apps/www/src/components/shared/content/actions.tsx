@@ -20,13 +20,8 @@ import { lazy } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect } from "effect";
-import {
-  type ReactNode,
-  Suspense,
-  useLayoutEffect,
-  useRef,
-  useTransition,
-} from "react";
+import type { ReactNode } from "react";
+import { Suspense, useLayoutEffect, useRef, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import {
   readOpenContentCopySource,

@@ -1,7 +1,12 @@
 import { Array as Arr, HashSet, Option, Record as Rec, Result } from "effect";
+import type {
+  ExpressionWithTypeArguments,
+  Identifier,
+  Node,
+  PropertyAccessExpression,
+  SourceFile,
+} from "tsrs/ast";
 import {
-  type ExpressionWithTypeArguments,
-  type Identifier,
   isBinaryExpression,
   isCallExpression,
   isClassDeclaration,
@@ -21,13 +26,11 @@ import {
   isStringLiteral,
   isStringLiteralLikeNode,
   isVariableDeclaration,
-  type Node,
-  type PropertyAccessExpression,
-  type SourceFile,
   SyntaxKind,
 } from "tsrs/ast";
 import { loadsImport } from "#scripts/check/kinds";
-import { candidate, type Rule } from "#scripts/check/rules";
+import type { Rule } from "#scripts/check/rules";
+import { candidate } from "#scripts/check/rules";
 import type { Binding } from "#scripts/check/source";
 import { unwrapped, wrapped } from "#scripts/check/wrapper";
 

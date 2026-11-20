@@ -1,6 +1,8 @@
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type ReactNode, useState } from "react";
-import { createStore, type ExtractState, useStore } from "zustand";
+import type { ReactNode } from "react";
+import { createContext, useState } from "react";
+import type { ExtractState } from "zustand";
+import { createStore, useStore } from "zustand";
 import { combine } from "zustand/middleware";
 
 /** A reaction lab opens on its reactants, with the faint products ahead of them. */

@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import { Array as Arr, Effect, MutableList } from "effect";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";

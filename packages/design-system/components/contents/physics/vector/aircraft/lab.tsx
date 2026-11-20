@@ -35,7 +35,8 @@ import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { useMemo, useState } from "react";
 
 /** Pixels the land slides per second for each km/h over the ground, so the motion reads without racing. */
 const LAND_RATE = 0.06;

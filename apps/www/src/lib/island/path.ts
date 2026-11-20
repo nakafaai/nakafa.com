@@ -3,7 +3,8 @@ import { Array as Arr, Option } from "effect";
 import { KIND, LOOK } from "@/lib/island/look";
 import { isPassable } from "@/lib/island/plants";
 import { SCALE } from "@/lib/island/scale";
-import { blockAt, type Cells } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { blockAt } from "@/lib/island/world";
 
 /** Whether a cell lets a body through: air, or a plant low enough to walk among. */
 function isOpenCell(cells: Cells, x: number, y: number, z: number) {

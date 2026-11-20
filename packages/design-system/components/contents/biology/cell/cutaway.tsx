@@ -1,7 +1,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
+import type { CellKind } from "@repo/design-system/components/contents/biology/cell/anatomy";
 import {
   BUD_MINUTES,
-  type CellKind,
   CellKindSchema,
   lengthOf,
   scaleBar,
@@ -45,7 +45,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Schema } from "effect";
-import { type ReactNode, Suspense, useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 
 /** Played, a budding cycle of 90 minutes takes 15 seconds. */
 const MINUTES_PER_SECOND = 6;

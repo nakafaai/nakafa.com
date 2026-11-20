@@ -5,15 +5,11 @@ import {
   EMBED_RETRY_DELAY_MS,
 } from "@repo/backend/confect/contents/sections/limits";
 import type { SectionDraft } from "@repo/backend/confect/contents/sections/schema";
-import {
-  type GatewayFailure,
-  routingFacts,
-} from "@repo/backend/confect/gateway/failure";
+import type { GatewayFailure } from "@repo/backend/confect/gateway/failure";
+import { routingFacts } from "@repo/backend/confect/gateway/failure";
 import { Gateway } from "@repo/backend/confect/gateway/handle";
-import {
-  type EmbeddingModelId,
-  embeddingModelId,
-} from "@repo/backend/confect/gateway/model";
+import type { EmbeddingModelId } from "@repo/backend/confect/gateway/model";
+import { embeddingModelId } from "@repo/backend/confect/gateway/model";
 import {
   Array as Arr,
   Duration,

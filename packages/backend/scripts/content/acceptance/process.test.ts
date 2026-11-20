@@ -33,7 +33,8 @@ import {
   Stream,
 } from "effect";
 import { FetchHttpClient } from "effect/http";
-import { type ChildProcess, ChildProcessSpawner } from "effect/process";
+import type { ChildProcess } from "effect/process";
+import { ChildProcessSpawner } from "effect/process";
 import { TestClock } from "effect/testing";
 
 /** The fetch that Effect's client calls in place of the global one. */

@@ -22,7 +22,8 @@ import {
 } from "@repo/design-system/lib/prose";
 import type { HeadingTag } from "@repo/design-system/types/markdown";
 import { Extension } from "@tiptap/core";
-import { DOMSerializer, type Node } from "@tiptap/pm/model";
+import type { Node } from "@tiptap/pm/model";
+import { DOMSerializer } from "@tiptap/pm/model";
 import { Plugin } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { cn } from "cn";

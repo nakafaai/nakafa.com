@@ -13,10 +13,8 @@ import {
   Stream,
 } from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
-import {
-  type EffectSourceConfig,
-  SourceIdentity,
-} from "#scripts/effect/source";
+import type { EffectSourceConfig } from "#scripts/effect/source";
+import { SourceIdentity } from "#scripts/effect/source";
 
 export const IDENTITY = "scripts/effect/source.json";
 export const INSTALLED = "node_modules/effect/package.json";

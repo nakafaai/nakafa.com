@@ -4,11 +4,8 @@ import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { client } from "@repo/backend/test/client";
-import {
-  TRYOUT_NOW,
-  type TryoutWorld,
-  tryoutWorld,
-} from "@repo/backend/test/tryout/world";
+import type { TryoutWorld } from "@repo/backend/test/tryout/world";
+import { TRYOUT_NOW, tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect, Schema } from "effect";
 
 const MARKS = { blank: 0, correct: 4, wrong: -1 };

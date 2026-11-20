@@ -1,7 +1,8 @@
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { stepVariants } from "@/components/marketing/school/features/step";

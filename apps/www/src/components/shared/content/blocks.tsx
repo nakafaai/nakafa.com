@@ -1,20 +1,14 @@
 "use client";
 
+import type { RegisteredRouter } from "@tanstack/react-router";
 import {
-  type RegisteredRouter,
   useElementScrollRestoration,
   useHydrated,
   useRouter,
 } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
-import {
-  Children,
-  type ReactNode,
-  startTransition,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { Children, startTransition, useEffect, useMemo, useState } from "react";
 
 /** The blocks a move draws in its first frame, which fill two screens of a phone and more than one of a desktop. */
 const FIRST_BLOCKS = 12;

@@ -11,7 +11,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option } from "effect";
-import { createContext, type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageList } from "@/components/shared/page/body";
@@ -47,10 +48,10 @@ import { DataFailure, LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
 import { WithAction } from "@/components/tenant/action";
 import { useTenant } from "@/components/tenant/context";
+import type { LinkItem } from "@/components/tenant/guardian/link";
 import {
   GuardianLinkActions,
   GuardianLinkMenu,
-  type LinkItem,
 } from "@/components/tenant/guardian/link";
 import { WaitingRequests } from "@/components/tenant/guardian/requests";
 import { GuardianLinkStartDialog } from "@/components/tenant/guardian/start";

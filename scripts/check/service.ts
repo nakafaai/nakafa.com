@@ -1,4 +1,5 @@
 import { Array as Arr, HashSet } from "effect";
+import type { Node, SourceFile } from "tsrs/ast";
 import {
   isCallExpression,
   isClassDeclaration,
@@ -6,8 +7,6 @@ import {
   isIdentifier,
   isObjectLiteralExpression,
   isPropertyAssignment,
-  type Node,
-  type SourceFile,
   SyntaxKind,
 } from "tsrs/ast";
 import {

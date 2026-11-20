@@ -9,12 +9,8 @@ import type {
   PromotionSource,
   PromotionTarget,
 } from "@repo/backend/confect/tenancy/promotion/schema";
-import {
-  grantRole,
-  scheduledJobs,
-  slugOf,
-  type tenancyFixture,
-} from "@repo/backend/test/tenancy";
+import type { tenancyFixture } from "@repo/backend/test/tenancy";
+import { grantRole, scheduledJobs, slugOf } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Option } from "effect";
 
 /** The Confect program fixture of the tenancy tests, one seeded school per test. */

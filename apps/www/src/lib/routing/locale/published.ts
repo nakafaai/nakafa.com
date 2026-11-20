@@ -1,10 +1,8 @@
 import { isRenderableCurriculumLevel } from "@nakafa/aksara-contracts/program/curriculum";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import {
-  type Locale,
-  LocaleSchema,
-} from "@repo/internationalization/src/locale";
+import type { Locale } from "@repo/internationalization/src/locale";
+import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import {
   readPublishedArticleCategory,

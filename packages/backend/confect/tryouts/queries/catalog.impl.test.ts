@@ -4,7 +4,8 @@ import { createConvexTestWithAuth } from "@repo/backend/confect/test.helpers";
 import type { CatalogNodeKeys } from "@repo/backend/confect/tryouts/catalog/rows";
 import { catalogNodeIdentity } from "@repo/backend/confect/tryouts/catalog/rows";
 import { client } from "@repo/backend/test/client";
-import { type TryoutWorld, tryoutWorld } from "@repo/backend/test/tryout/world";
+import type { TryoutWorld } from "@repo/backend/test/tryout/world";
+import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect, Struct } from "effect";
 
 const catalog = tryouts.queries.catalog;

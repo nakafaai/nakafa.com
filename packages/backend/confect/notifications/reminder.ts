@@ -4,10 +4,8 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { scheduleAccountPush } from "@repo/backend/confect/notifications/schedule";
-import {
-  type ReminderRow,
-  reminderView,
-} from "@repo/backend/confect/notifications/schema";
+import type { ReminderRow } from "@repo/backend/confect/notifications/schema";
+import { reminderView } from "@repo/backend/confect/notifications/schema";
 import { Effect, Option, Struct } from "effect";
 
 /**

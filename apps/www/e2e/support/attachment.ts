@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import de from "@repo/internationalization/dictionaries/de.json" with {
   type: "json",
 };
@@ -6,7 +7,8 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect, Schema } from "effect";
-import { type ChatLocale, openChatPage } from "@/e2e/support/chat";
+import type { ChatLocale } from "@/e2e/support/chat";
+import { openChatPage } from "@/e2e/support/chat";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 

@@ -1,8 +1,6 @@
 import { Instance, Instances, Line } from "@react-three/drei";
-import {
-  THREE_DIAGRAM_MINIMUM_FONT_SIZE,
-  type ThreeFontSize,
-} from "@repo/design-system/components/three/data/constants";
+import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
+import { THREE_DIAGRAM_MINIMUM_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import {
   GRAPH_ARROW_SEGMENTS,
   GRAPH_POINT_SEGMENTS,
@@ -15,14 +13,10 @@ import {
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { resolveArrowSize } from "@repo/design-system/lib/geometry/arrow";
-import {
-  type LineEndpoints,
-  resolveLineEndpoints,
-} from "@repo/design-system/lib/geometry/endpoint";
-import {
-  type LineMarkerIndices,
-  resolveLineMarkers,
-} from "@repo/design-system/lib/geometry/markers";
+import type { LineEndpoints } from "@repo/design-system/lib/geometry/endpoint";
+import { resolveLineEndpoints } from "@repo/design-system/lib/geometry/endpoint";
+import type { LineMarkerIndices } from "@repo/design-system/lib/geometry/markers";
+import { resolveLineMarkers } from "@repo/design-system/lib/geometry/markers";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import {
   Array as Arr,
@@ -31,12 +25,8 @@ import {
   MutableList,
   Option,
 } from "effect";
-import {
-  type ComponentProps,
-  createContext,
-  type ReactNode,
-  useMemo,
-} from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { createContext, useMemo } from "react";
 import {
   CatmullRomCurve3,
   Color,

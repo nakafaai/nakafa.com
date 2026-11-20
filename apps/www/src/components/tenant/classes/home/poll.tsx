@@ -14,10 +14,8 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { PageHeaderLabel } from "@/components/shared/page/header";
 import { NewPoll, PollCard } from "@/components/tenant/classes/forum/poll";
-import {
-  type ClassPost,
-  votePostUpdate,
-} from "@/components/tenant/classes/home/optimistic";
+import type { ClassPost } from "@/components/tenant/classes/home/optimistic";
+import { votePostUpdate } from "@/components/tenant/classes/home/optimistic";
 import { publishPost } from "@/components/tenant/classes/home/publish";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { useViewerQuery } from "@/components/tenant/context";

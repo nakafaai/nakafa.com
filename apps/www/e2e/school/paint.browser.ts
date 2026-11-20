@@ -1,10 +1,5 @@
-import {
-  type BrowserContext,
-  expect,
-  type Locator,
-  type Page,
-  test,
-} from "@playwright/test";
+import type { BrowserContext, Locator, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 import { waitForQuiet } from "@/e2e/support/quiet";

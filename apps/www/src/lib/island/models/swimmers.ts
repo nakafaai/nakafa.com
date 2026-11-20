@@ -1,14 +1,10 @@
 import { Array as Arr } from "effect";
 import type { Coat, Species } from "@/lib/island/models/coat";
 import { eyesOf } from "@/lib/island/models/features";
-import {
-  type Face,
-  mirrored,
-  type Rig,
-  rigged,
-  type Vec,
-} from "@/lib/island/models/parts";
-import { ball, type Ring, rod, slab, tube } from "@/lib/island/models/solids";
+import type { Face, Rig, Vec } from "@/lib/island/models/parts";
+import { mirrored, rigged } from "@/lib/island/models/parts";
+import type { Ring } from "@/lib/island/models/solids";
+import { ball, rod, slab, tube } from "@/lib/island/models/solids";
 
 /** How a fish's body departs from the common torpedo: taller, rounder, or with long fins. */
 const BUILDS: Partial<Record<Species["key"], readonly [number, number]>> = {

@@ -1,14 +1,10 @@
 import { useRequired } from "@repo/design-system/hooks/required";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt/submission";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  type ComponentProps,
-  createContext,
-  type ReactNode,
-  useEffect,
-  useState,
-} from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
+import type { ComponentProps, ReactNode } from "react";
+import { createContext, useEffect, useState } from "react";
+import type { StoreApi } from "zustand";
+import { createStore, useStore } from "zustand";
 import { NinaHeldAttach } from "@/components/ai/attachment";
 import type { useChatAdmission } from "@/components/ai/chat/admission";
 import { useStartChat } from "@/components/ai/chat/start";

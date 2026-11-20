@@ -1,7 +1,7 @@
 import type { ConvexCall } from "@repo/backend/scripts/content/acceptance/convex";
+import type { DevelopmentCliError } from "@repo/backend/scripts/development/cli";
 import {
   ConvexCli,
-  type DevelopmentCliError,
   requireDevelopment,
   runConvex,
 } from "@repo/backend/scripts/development/cli";

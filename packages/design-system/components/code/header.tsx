@@ -3,10 +3,8 @@ import {
   codeHeaderVariants,
   codeLabelVariants,
 } from "@repo/design-system/components/code/variants";
-import {
-  type ProgrammingIcon,
-  SimpleIcon,
-} from "@repo/design-system/components/icons/simple";
+import type { ProgrammingIcon } from "@repo/design-system/components/icons/simple";
+import { SimpleIcon } from "@repo/design-system/components/icons/simple";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
@@ -15,10 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
-import {
-  type CodeBlockData,
-  useCodeBlock,
-} from "@repo/design-system/lib/code/context";
+import type { CodeBlockData } from "@repo/design-system/lib/code/context";
+import { useCodeBlock } from "@repo/design-system/lib/code/context";
 import { filenameIconMap } from "@repo/design-system/lib/code/icons";
 import { cn } from "cn";
 import { Array as Arr, Option, Record as Rec } from "effect";

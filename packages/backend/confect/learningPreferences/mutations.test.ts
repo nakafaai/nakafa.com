@@ -7,8 +7,8 @@ import {
   ActiveAppLocaleListSchema,
   ActiveAppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
+import type { LearningProgram } from "@nakafa/aksara-contracts/program/spec";
 import {
-  type LearningProgram,
   LearningProgramKeySchema,
   LearningProgramSchema,
 } from "@nakafa/aksara-contracts/program/spec";

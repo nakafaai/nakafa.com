@@ -16,10 +16,8 @@ import {
   assignHomeroomChange,
   unassignHomeroomChange,
 } from "@/components/tenant/settings/moves";
-import {
-  type PersonId,
-  SchoolTeacherPicker,
-} from "@/components/tenant/settings/people";
+import type { PersonId } from "@/components/tenant/settings/people";
+import { SchoolTeacherPicker } from "@/components/tenant/settings/people";
 import type { CohortDetail } from "@/components/tenant/settings/state";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 

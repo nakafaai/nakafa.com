@@ -2,10 +2,10 @@ import { RegisteredConvexFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
 import { MaterialDomainSchema } from "@nakafa/aksara-contracts/material/domain";
 import confectSchema from "@repo/backend/confect/_generated/schema";
+import type { LearningContextStorage } from "@repo/backend/confect/contents/context";
 import {
   createCanonicalLearningContext,
   createContextKey,
-  type LearningContextStorage,
 } from "@repo/backend/confect/contents/context";
 import { upsertUserRecent } from "@repo/backend/confect/contents/views/recent";
 import type { ContentViewTarget } from "@repo/backend/confect/contents/views/target";

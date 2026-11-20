@@ -1,10 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Option, Result } from "effect";
 import { emptyDraft, figureOf } from "@/components/tenant/exams/figure/form";
+import type { GraphDraft } from "@/components/tenant/exams/figure/graph/draft";
 import {
   emptyGraph,
   figureDraftOf,
-  type GraphDraft,
   graphOf,
   previewOf,
   propsOf,

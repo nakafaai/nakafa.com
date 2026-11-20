@@ -8,9 +8,9 @@ import {
   spotlight,
   vignette,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { Orbit } from "@repo/design-system/components/contents/physics/kinematics/orbit/satellite";
 import {
   EARTH_RADIUS,
-  type Orbit,
   OrbitSchema,
   orbitMotion,
 } from "@repo/design-system/components/contents/physics/kinematics/orbit/satellite";
@@ -40,7 +40,8 @@ import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** Every orbit plays one lap in this many wall seconds, whatever its real period. */
 const LAP_SECONDS = 8;

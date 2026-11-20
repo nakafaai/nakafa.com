@@ -17,8 +17,10 @@ import type { EditorView } from "@tiptap/pm/view";
 import { useConvex } from "convex/react";
 import { Effect, Fiber, Option, Ref } from "effect";
 import { sendableSteps } from "prosemirror-collab";
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import { type StoreApi, useStore } from "zustand";
+import type { ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { StoreApi } from "zustand";
+import { useStore } from "zustand";
 import { RICH_EXTENSIONS } from "@/components/tenant/exams/extensions";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { refusePaste } from "@/components/tenant/exams/picture";
@@ -27,10 +29,8 @@ import { useExam, useExamLive } from "@/components/tenant/exams/provider";
 import { ExamReadBoundary } from "@/components/tenant/exams/read";
 import { ExamDocumentWiringProvider } from "@/components/tenant/exams/rich";
 import { ExamSteps } from "@/components/tenant/exams/steps";
-import {
-  createPromptSync,
-  type PromptSync,
-} from "@/components/tenant/exams/sync";
+import type { PromptSync } from "@/components/tenant/exams/sync";
+import { createPromptSync } from "@/components/tenant/exams/sync";
 import { reportClientException } from "@/lib/analytics/client";
 import { closeEditor } from "@/lib/editor/close";
 import { convexTransport } from "@/lib/editor/convex";

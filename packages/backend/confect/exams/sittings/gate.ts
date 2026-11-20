@@ -5,10 +5,10 @@ import type {
   TenantPeopleDoc,
 } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
+import type { Scheduler } from "@repo/backend/confect/_generated/services";
 import {
   DatabaseReader,
   DatabaseWriter,
-  type Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import examAnswers from "@repo/backend/confect/_generated/tables/examAnswers";
 import examAttempts from "@repo/backend/confect/_generated/tables/examAttempts";

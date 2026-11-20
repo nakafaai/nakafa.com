@@ -34,7 +34,8 @@ import { useMissedPress } from "@repo/design-system/hooks/press";
 import { formatBytes } from "@repo/internationalization/src/formats";
 import { cn } from "cn";
 import { Array as Arr, Option, Record as Rec } from "effect";
-import { type ReactNode, useId, useState } from "react";
+import type { ReactNode } from "react";
+import { useId, useState } from "react";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { SchoolAmount } from "@/components/marketing/school/pricing/price";
 import {

@@ -2,10 +2,8 @@ import { MAX_PUBLICATION_REQUEST_BYTES } from "@nakafa/aksara-contracts/transpor
 import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
 import { ActionRunner } from "@repo/backend/confect/_generated/services";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
-import {
-  type HttpBodyError,
-  readJsonBody,
-} from "@repo/backend/confect/contentRelease/http/body";
+import type { HttpBodyError } from "@repo/backend/confect/contentRelease/http/body";
+import { readJsonBody } from "@repo/backend/confect/contentRelease/http/body";
 import {
   bearerToken,
   matchesHttpSecret,

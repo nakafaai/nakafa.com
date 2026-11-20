@@ -5,7 +5,8 @@ import { Origin } from "@repo/design-system/components/three/origin";
 import { Polygon } from "@repo/design-system/components/three/polygon";
 import { AXIS_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Result } from "effect";
-import { type ComponentProps, type ReactNode, useMemo } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { useMemo } from "react";
 import { useFormatter } from "use-intl";
 import { resolveVisualAxes } from "@/lib/content/renderer/client/base/visual/axes";
 import {

@@ -6,22 +6,15 @@ import { SidebarInset } from "@repo/design-system/components/ui/sidebar-shell";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { useHydrated } from "@tanstack/react-router";
 import { Effect } from "effect";
-import {
-  createContext,
-  type Dispatch,
-  type ReactNode,
-  type SetStateAction,
-  use,
-  useLayoutEffect,
-  useState,
-} from "react";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
+import { createContext, use, useLayoutEffect, useState } from "react";
 import { keptStorage } from "@/components/player/storage";
 import { ShellLocksContext } from "@/components/sidebar/locks";
+import type { PrepaintLock } from "@/components/sidebar/prepaint";
 import {
   forgetPrepaintLock,
   PREPAINT_LOCK_ATTRIBUTE,
   PREPAINT_LOCK_SCRIPT,
-  type PrepaintLock,
   releasePrepaintLock,
   rememberPrepaintLock,
 } from "@/components/sidebar/prepaint";

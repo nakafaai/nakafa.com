@@ -1,8 +1,5 @@
-import {
-  blocksOf,
-  type Keyed,
-  keyed,
-} from "@repo/design-system/components/editor/blocks";
+import type { Keyed } from "@repo/design-system/components/editor/blocks";
+import { blocksOf, keyed } from "@repo/design-system/components/editor/blocks";
 import {
   editorTask,
   editorTaskWords,
@@ -20,7 +17,8 @@ import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
 import { linkVariants } from "@repo/design-system/lib/prose";
 import { Array as Arr, Match, String as Str } from "effect";
 import type { Token, Tokens } from "marked-tiptap";
-import { type ReactNode, useId } from "react";
+import type { ReactNode } from "react";
+import { useId } from "react";
 
 /**
  * The saved Markdown of a text, drawn as the rich editor draws it: the same bar,

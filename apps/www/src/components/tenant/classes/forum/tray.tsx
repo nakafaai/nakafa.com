@@ -24,10 +24,8 @@ import {
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";
-import {
-  type TrayFile,
-  uploadAttachment,
-} from "@/components/tenant/classes/forum/upload";
+import type { TrayFile } from "@/components/tenant/classes/forum/upload";
+import { uploadAttachment } from "@/components/tenant/classes/forum/upload";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /** The longest name a message keeps. */

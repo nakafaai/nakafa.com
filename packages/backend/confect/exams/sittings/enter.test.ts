@@ -7,6 +7,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
 import { archiveUnit } from "@repo/backend/test/exams";
+import type { SittingFixture } from "@repo/backend/test/sittings";
 import {
   attemptRow,
   CLOSES_AT as CLOSES,
@@ -17,7 +18,6 @@ import {
   keyedSchool,
   OPENS_AT as OPENS,
   openedSitting,
-  type SittingFixture,
   scheduleSitting,
   seedPlacement,
 } from "@repo/backend/test/sittings";

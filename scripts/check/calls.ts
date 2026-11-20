@@ -1,10 +1,10 @@
 import { HashSet, Result } from "effect";
+import type { Node } from "tsrs/ast";
 import {
   isCallExpression,
   isElementAccessExpression,
   isPropertyAccessExpression,
   isStringLiteralLikeNode,
-  type Node,
 } from "tsrs/ast";
 import type { Rule } from "#scripts/check/rules";
 import { unwrapped } from "#scripts/check/wrapper";

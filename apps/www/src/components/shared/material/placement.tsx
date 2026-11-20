@@ -1,27 +1,25 @@
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option } from "effect";
-import {
-  createContext,
-  type ReactNode,
-  useLayoutEffect,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { createContext, useLayoutEffect, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { BreadcrumbHeaderPath } from "@/components/shared/breadcrumb/header";
 import { PaginationContent } from "@/components/shared/content/pagination";
 import { PageOutlineHeader } from "@/components/shared/page/outline";
+import type {
+  MaterialNavigationPage,
+  MaterialPlacement,
+} from "@/lib/content/material/navigation";
 import {
-  type MaterialNavigationPage,
-  type MaterialPlacement,
   readMaterialNavigation,
   readMaterialPath,
 } from "@/lib/content/material/navigation";
+import type { PlacementStore } from "@/lib/content/material/placement";
 import {
   createPlacementStore,
   findPlacement,
   keepPlacement,
-  type PlacementStore,
   placementHint,
 } from "@/lib/content/material/placement";
 import {

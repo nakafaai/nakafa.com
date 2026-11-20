@@ -16,11 +16,8 @@ import {
   Tuple,
 } from "effect";
 import type { Locale } from "use-intl";
-import {
-  type ArtworkIdentity,
-  resolveSocialArtwork,
-  resolveStaticArtwork,
-} from "@/lib/og/artwork";
+import type { ArtworkIdentity } from "@/lib/og/artwork";
+import { resolveSocialArtwork, resolveStaticArtwork } from "@/lib/og/artwork";
 
 /**
  * The image of one entity's card, such as SNBT's or a TKA subject's, which

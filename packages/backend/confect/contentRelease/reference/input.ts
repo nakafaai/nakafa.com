@@ -1,12 +1,10 @@
+import type { LearningGraphFamily } from "@nakafa/aksara-contracts/graph/family";
 import {
   classifyLearningGraphAssetId,
-  type LearningGraphFamily,
   LearningGraphFamilySchema,
 } from "@nakafa/aksara-contracts/graph/family";
-import {
-  type ActiveAppLocale,
-  ActiveAppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocale } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { materialPublicNamespace } from "@nakafa/aksara-contracts/projection/material";
 import type { ContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/spec";
 import { LocaleSchema } from "@repo/contents/content";
@@ -54,11 +52,9 @@ export const resolveReferenceInput = Effect.fn(
     if (Option.isNone(owner)) {
       return null;
     }
-    // An asset of a declared locale that Nakafa does not serve yet has no current page, as an unknown asset has none.
+    // Every declared locale is active, so the asset's locale is one Nakafa serves. A declared locale
+    // that is not active yet fails the `satisfies` below, and its asset then answers null here.
     const { appLocale, family } = owner.value;
-    if (!Schema.is(ActiveAppLocaleSchema)(appLocale)) {
-      return null;
-    }
     return {
       ...input,
       appLocale,

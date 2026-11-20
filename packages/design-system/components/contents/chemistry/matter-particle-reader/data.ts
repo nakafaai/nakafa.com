@@ -1,8 +1,6 @@
 import type { getAtomSceneColors } from "@repo/design-system/components/contents/chemistry/color";
-import {
-  type ElementName,
-  ElementNameSchema,
-} from "@repo/design-system/components/contents/chemistry/element";
+import type { ElementName } from "@repo/design-system/components/contents/chemistry/element";
+import { ElementNameSchema } from "@repo/design-system/components/contents/chemistry/element";
 import { Array as Arr, Schema } from "effect";
 
 export const ATOM_MODE_ID = "atom";

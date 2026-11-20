@@ -3,11 +3,8 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { NotificationView } from "@repo/backend/confect/notifications/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
-import {
-  type ListNotification,
-  markPageRead,
-  markRowRead,
-} from "@/components/notifications/state";
+import type { ListNotification } from "@/components/notifications/state";
+import { markPageRead, markRowRead } from "@/components/notifications/state";
 
 const notificationId = Schema.decodeUnknownSync(Id("notifications"));
 

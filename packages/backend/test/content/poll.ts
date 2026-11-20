@@ -1,5 +1,6 @@
 import workflowTest from "@convex-dev/workflow/test";
-import { ReleaseIdSchema, type Sha256Hash } from "@nakafa/aksara-contracts/ids";
+import type { Sha256Hash } from "@nakafa/aksara-contracts/ids";
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import type { ProofStatus } from "@repo/backend/confect/contentRelease/proof/poll";

@@ -1,9 +1,7 @@
 import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { assert, describe, expect, it } from "@effect/vitest";
-import {
-  type ContentSnapshotRow,
-  canonicalizeContentSnapshotRow,
-} from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import {
   inheritContentSnapshots,
   replaceContentSnapshot,
@@ -18,9 +16,9 @@ import {
   TEST_RELEASE_ID,
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
+import type { ProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import {
   makeProgramSnapshotData,
-  type ProgramSnapshotData,
   readProgramStage,
   stageProgramSnapshot,
 } from "@repo/backend/test/program/snapshot";

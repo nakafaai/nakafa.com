@@ -1,11 +1,5 @@
-import {
-  type Browser,
-  expect,
-  type Locator,
-  type Page,
-  type TestInfo,
-  test,
-} from "@playwright/test";
+import type { Browser, Locator, Page, TestInfo } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import {
   createSchool,

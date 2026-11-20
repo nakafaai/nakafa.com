@@ -8,8 +8,8 @@ import {
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import { readCommentPlace } from "@repo/backend/confect/comments/place";
 import spec from "@repo/backend/confect/comments/queries.spec";
+import type { CommentDoc } from "@repo/backend/confect/comments/rows";
 import {
-  type CommentDoc,
   findComment,
   isCommentLikedBy,
 } from "@repo/backend/confect/comments/rows";

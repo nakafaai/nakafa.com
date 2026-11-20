@@ -7,10 +7,8 @@ import {
   GlassTube,
   Trestle,
 } from "@repo/design-system/components/contents/biology/glassware";
-import {
-  dropTravel,
-  type Tube,
-} from "@repo/design-system/components/contents/biology/respirometer/gas";
+import type { Tube } from "@repo/design-system/components/contents/biology/respirometer/gas";
+import { dropTravel } from "@repo/design-system/components/contents/biology/respirometer/gas";
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { InlineMath } from "@repo/design-system/components/markdown/math";

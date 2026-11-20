@@ -16,10 +16,8 @@ import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { startLinkChange } from "@/components/tenant/guardian/change";
-import {
-  type PersonId,
-  SchoolStudentPicker,
-} from "@/components/tenant/settings/people";
+import type { PersonId } from "@/components/tenant/settings/people";
+import { SchoolStudentPicker } from "@/components/tenant/settings/people";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 
 /**

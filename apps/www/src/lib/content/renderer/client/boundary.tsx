@@ -1,4 +1,5 @@
-import { Activity, type ComponentType, Suspense } from "react";
+import type { ComponentType } from "react";
+import { Activity, Suspense } from "react";
 import { SETTLED_RENDERER } from "@/lib/static/settle";
 
 /**

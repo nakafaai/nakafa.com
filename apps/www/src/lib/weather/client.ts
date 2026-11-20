@@ -2,10 +2,8 @@ import { getCountryName } from "@repo/design-system/lib/locale/country";
 import { timeOperation } from "@repo/utilities/logging/effect";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { weatherKeys } from "@/lib/weather/keys";
-import {
-  type CurrentWeatherSummary,
-  OpenWeatherCurrentResponseSchema,
-} from "@/lib/weather/schema";
+import type { CurrentWeatherSummary } from "@/lib/weather/schema";
+import { OpenWeatherCurrentResponseSchema } from "@/lib/weather/schema";
 import { requestWeatherJson } from "@/lib/weather/transport";
 
 export class WeatherConfigurationError extends Schema.TaggedError<

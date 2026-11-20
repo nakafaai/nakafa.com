@@ -6,8 +6,13 @@ import {
   Option,
   pipe,
 } from "effect";
+import type {
+  Expression,
+  Node,
+  ObjectBindingPattern,
+  VariableDeclaration,
+} from "tsrs/ast";
 import {
-  type Expression,
   isAwaitExpression,
   isCallExpression,
   isElementAccessExpression,
@@ -20,16 +25,10 @@ import {
   isStringLiteral,
   isStringLiteralLikeNode,
   isVariableDeclaration,
-  type Node,
-  type ObjectBindingPattern,
   SyntaxKind,
-  type VariableDeclaration,
 } from "tsrs/ast";
-import {
-  convexTestBoundary,
-  type Symbols,
-  symbolAt,
-} from "#scripts/check/convex";
+import type { Symbols } from "#scripts/check/convex";
+import { convexTestBoundary, symbolAt } from "#scripts/check/convex";
 import { unwrapped } from "#scripts/check/wrapper";
 
 const EFFECT_RUNNERS = HashSet.fromIterable(

@@ -1,12 +1,12 @@
 import { Instance, Instances } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import type { ScaleRig } from "@repo/design-system/components/contents/chemistry/bench";
 import {
   Flask,
   FlaskLiquid,
   flaskRadiusAt,
   LabBench,
   Scale,
-  type ScaleRig,
 } from "@repo/design-system/components/contents/chemistry/bench";
 import {
   carbonDioxideFrom,
@@ -42,7 +42,8 @@ import { getColor } from "@repo/design-system/lib/color";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr, Schema } from "effect";
-import { type ReactNode, Suspense, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useRef, useState } from "react";
 import type { Group, InstancedMesh, Mesh, Object3D } from "three";
 
 /** Whether the flask stays open to the air or is closed with a stopper. */

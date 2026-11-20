@@ -1,4 +1,5 @@
-import { type MathViews, mathExtensions } from "@repo/editor/math";
+import type { MathViews } from "@repo/editor/math";
+import { mathExtensions } from "@repo/editor/math";
 import type {
   AnyExtension,
   JSONContent,

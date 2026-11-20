@@ -1,7 +1,8 @@
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr, Effect, Predicate } from "effect";
-import { createTranslator, type Locale } from "use-intl/core";
+import type { Locale } from "use-intl/core";
+import { createTranslator } from "use-intl/core";
 import { contributors } from "@/lib/data/contributor";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";

@@ -1,6 +1,6 @@
+import type { BillingOfferKey } from "@repo/backend/confect/billing/catalog";
 import {
   BillingCurrency,
-  type BillingOfferKey,
   BillingOfferRailSchema,
   billingOffer,
   billingOfferPrice,

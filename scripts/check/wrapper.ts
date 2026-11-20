@@ -1,9 +1,9 @@
+import type { Node } from "tsrs/ast";
 import {
   isAsExpression,
   isNonNullExpression,
   isParenthesizedExpression,
   isSatisfiesExpression,
-  type Node,
 } from "tsrs/ast";
 
 /**

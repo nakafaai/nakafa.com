@@ -19,14 +19,15 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Clock, Effect, Schema, String as Str } from "effect";
-import { type FormEvent, type ReactNode, useId, useState } from "react";
+import type { FormEvent, ReactNode } from "react";
+import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
 import { PageHeaderLabel } from "@/components/shared/page/header";
 import { RowItems } from "@/components/shared/table/menu";
+import type { LibraryFolder } from "@/components/tenant/classes/library/folder";
 import {
   addLibraryFolder,
-  type LibraryFolder,
   moveFolderUpdate,
   renameFolderUpdate,
   starFolderUpdate,

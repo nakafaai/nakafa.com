@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The avatar of the account button in the sidebar footer, which holds the animal until a photo loads. */

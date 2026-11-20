@@ -1,11 +1,8 @@
 import { useRequired } from "@repo/design-system/hooks/required";
 import { useSyncExternalStore } from "react";
 import { useAuthSessionStore } from "@/components/auth/session";
-import {
-  type ConvexAuth,
-  ConvexAuthContext,
-  readConvexAuth,
-} from "@/lib/auth/convex";
+import type { ConvexAuth } from "@/lib/auth/convex";
+import { ConvexAuthContext, readConvexAuth } from "@/lib/auth/convex";
 
 /**
  * Selects one part of the Convex authentication state.

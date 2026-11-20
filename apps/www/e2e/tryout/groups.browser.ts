@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { groupHref, trackHref } from "@/e2e/support/tryout";
 
 /** Indonesia's page, which holds SNBT and TKA. */

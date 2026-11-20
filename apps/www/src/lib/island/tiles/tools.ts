@@ -1,4 +1,5 @@
-import { type Ink, rowsTile } from "@/lib/island/tiles/paint";
+import type { Ink } from "@/lib/island/tiles/paint";
+import { rowsTile } from "@/lib/island/tiles/paint";
 
 /** The colors the tools are drawn in. */
 const LEGEND: Readonly<Record<string, Ink>> = {

@@ -1,15 +1,13 @@
 import { useFrame } from "@react-three/fiber";
+import type { SpinPeriod } from "@repo/design-system/components/contents/physics/kinematics/wheel/spin";
 import {
   REFLECTOR_RADIUS,
-  type SpinPeriod,
   SpinPeriodSchema,
   spinAt,
   VALVE_RADIUS,
 } from "@repo/design-system/components/contents/physics/kinematics/wheel/spin";
-import {
-  VectorArrow,
-  type VectorArrowHandle,
-} from "@repo/design-system/components/contents/physics/solid/arrow";
+import type { VectorArrowHandle } from "@repo/design-system/components/contents/physics/solid/arrow";
+import { VectorArrow } from "@repo/design-system/components/contents/physics/solid/arrow";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -35,8 +33,10 @@ import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
-import { type ReactNode, type Ref, Suspense, useRef, useState } from "react";
-import { type Group, Vector3 } from "three";
+import type { ReactNode, Ref } from "react";
+import { Suspense, useRef, useState } from "react";
+import type { Group } from "three";
+import { Vector3 } from "three";
 
 /** How high the axle stands above the floor, in metres. */
 const AXLE_HEIGHT = 0.42;

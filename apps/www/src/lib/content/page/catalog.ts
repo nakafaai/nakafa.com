@@ -1,10 +1,8 @@
 import { DEFAULT_LOCALE } from "@repo/internationalization/src/locale";
 import "@tanstack/react-start/server-only";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import {
-  type ActiveAppLocaleCode,
-  AppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   canonicalizePublicPageProjection,
   PublicPageProjectionSchema,

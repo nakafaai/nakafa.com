@@ -109,7 +109,7 @@
     "seroval-plugins": "1.8.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.7",
+    "@biomejs/biome": "2.6.8",
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "^3.0.3",
     "@effect/platform-node": "catalog:",
@@ -125,7 +125,7 @@
     "sigstore": "5.0.1",
     "tsrs": "catalog:",
     "turbo": "2.11.13",
-    "ultracite": "8.2.0",
+    "ultracite": "8.3.1",
     "vitest": "catalog:"
   },
   "packageManager": "bun@1.4.5",

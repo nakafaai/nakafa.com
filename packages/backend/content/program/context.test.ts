@@ -4,18 +4,16 @@ import {
   PublicPathSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import {
   CurriculumNodeKeySchema,
-  type CurriculumRoute,
   CurriculumRouteSchema,
 } from "@nakafa/aksara-contracts/program/curriculum";
 import { makeCurriculumSnapshotRow } from "@nakafa/aksara-contracts/program/snapshot/hash";
 import { LearningProgramKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
-import {
-  type ContentSnapshotRow,
-  canonicalizeContentSnapshotRow,
-} from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import refs from "@repo/backend/confect/_generated/refs";
 import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
@@ -26,10 +24,10 @@ import {
 } from "@repo/backend/content/program/context";
 import { makeMaterialProjection } from "@repo/backend/test/content/material";
 import { insertMaterialProjection } from "@repo/backend/test/material/catalog";
+import type { ProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import {
   activateProgramSnapshot,
   makeProgramSnapshotData,
-  type ProgramSnapshotData,
 } from "@repo/backend/test/program/snapshot";
 import { stageTestRow } from "@repo/backend/test/snapshot/stage";
 import { Effect } from "effect";

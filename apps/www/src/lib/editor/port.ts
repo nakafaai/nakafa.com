@@ -3,7 +3,8 @@ import { EditorState } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import { Array as Arr, Effect, Ref } from "effect";
 import { collab, getVersion } from "prosemirror-collab";
-import { EditorClosed, type EditorPort } from "@/lib/editor/session";
+import type { EditorPort } from "@/lib/editor/session";
+import { EditorClosed } from "@/lib/editor/session";
 
 /** The key of the collab plugin, which every plugin that `collab()` makes carries. */
 const COLLAB_KEY = collab().spec.key;

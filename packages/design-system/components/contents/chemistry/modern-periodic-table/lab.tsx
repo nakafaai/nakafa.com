@@ -1,4 +1,9 @@
 import { ModernPeriodicTableCanvas } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/canvas";
+import type {
+  ModernPeriodicTableFocusId,
+  PeriodicElementCategoryId,
+  PeriodicSeriesRowKey,
+} from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
 import {
   GROUP_ONE_FOCUS_ID,
   getModernPeriodicTableCategoryColor,
@@ -6,10 +11,7 @@ import {
   getPeriodicElementCategoryCount,
   isModernPeriodicTableFocusId,
   MODERN_PERIODIC_TABLE_FOCUS_IDS,
-  type ModernPeriodicTableFocusId,
   PERIODIC_ELEMENT_CATEGORY_IDS,
-  type PeriodicElementCategoryId,
-  type PeriodicSeriesRowKey,
 } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
 import { createModernPeriodicTableFocusStore } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/store";
 import {

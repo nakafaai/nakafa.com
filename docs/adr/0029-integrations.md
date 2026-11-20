@@ -62,16 +62,16 @@ written against it.
   as the actor. The actor union of the tenant entry takes a member for an
   integration client in the change that adds the first client write.
 
-| Surface | Address | Credential | Status |
-| --- | --- | --- | --- |
-| Public REST | `api.nakafa.com/v1` | None | Live |
-| Public MCP | `mcp.nakafa.com/mcp` | None | Live |
-| Public CLI | `@nakafa/cli` 0.1.1 | None | Live, read only |
-| School REST | `harapan.nakafa.com/api/v1` | A bearer token | Built |
-| School MCP | `harapan.nakafa.com/mcp` | A bearer token | Built |
-| School CLI | `nakafa login harapan.nakafa.com` | Device authorization | Built |
-| Webhooks | The receiver's address | An HMAC signature | Built |
-| Exports | CSV and XLSX files | The caller's token or session | Built |
+| Surface     | Address                           | Credential                    | Status          |
+| ----------- | --------------------------------- | ----------------------------- | --------------- |
+| Public REST | `api.nakafa.com/v1`               | None                          | Live            |
+| Public MCP  | `mcp.nakafa.com/mcp`              | None                          | Live            |
+| Public CLI  | `@nakafa/cli` 0.1.1               | None                          | Live, read only |
+| School REST | `harapan.nakafa.com/api/v1`       | A bearer token                | Built           |
+| School MCP  | `harapan.nakafa.com/mcp`          | A bearer token                | Built           |
+| School CLI  | `nakafa login harapan.nakafa.com` | Device authorization          | Built           |
+| Webhooks    | The receiver's address            | An HMAC signature             | Built           |
+| Exports     | CSV and XLSX files                | The caller's token or session | Built           |
 
 The public addresses stay keyless and never accept a school path (ADR 0006,
 ADR 0026). An export is made by a reader behind `decide`, so it holds exactly
@@ -109,10 +109,10 @@ and schemas of the school API. Everything else comes from it.
 
 ### Calling the school API: clients, devices, and tokens
 
-| Caller | Flow | Holds | Acts as |
-| --- | --- | --- | --- |
+| Caller                 | Flow                                                | Holds                                                                                                          | Acts as                                                                                                               |
+| ---------------------- | --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | An integration, an app | OAuth 2.0 client credentials (RFC 6749 section 4.4) | A client ID and a secret. The secret is random, shown once, and stored only as a hash in `integrationClients`. | The client. It holds the Integration role over its tenant or one unit, limited to the actions on its list (ADR 0012). |
-| The CLI | Device authorization (RFC 8628) | A token on the device | The Person who approved it, with that Person's grants, limited to the actions the CLI needs |
+| The CLI                | Device authorization (RFC 8628)                     | A token on the device                                                                                          | The Person who approved it, with that Person's grants, limited to the actions the CLI needs                           |
 
 - A token is short-lived and is bound to the resource it was issued for
   (RFC 8707). `/api/v1` accepts only a token issued for it, and `/mcp` only one
@@ -188,32 +188,32 @@ the device and is never printed.
 
 ### Webhooks
 
-| Part | Rule |
-| --- | --- |
-| Source | The journal. Each webhook has its own cursor over the published changes (ADR 0016), kept the way the notify consumer keeps its cursor (`journalCursors`, ADR 0027), so there is no second cursor table. |
-| Payload | The published change and its subject reference: IDs, enums, and reason codes. It holds no names, emails, or text, because the journal holds none. A receiver that needs more reads it through the REST API with its own token. |
-| Client | A webhook is made for one integration client. A change is delivered only when that client could read its subject, and the check runs at delivery (ADR 0016). |
-| Signature | HMAC-SHA256 over the timestamp, a dot, and the body |
-| Secret | Sealed with the school key (ADR 0030) and not hashed, because the server must sign with it |
-| Replay | A receiver rejects a timestamp older than 5 minutes (target) |
-| Retries | Up to 8 attempts in 24 hours, with growing delays (target) |
-| Delivery log | One row for each attempt, in `integrationDeliveries` |
-| Idempotency | Every attempt of a change carries the same event ID |
+| Part             | Rule                                                                                                                                                                                                                                                                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Source           | The journal. Each webhook has its own cursor over the published changes (ADR 0016), kept the way the notify consumer keeps its cursor (`journalCursors`, ADR 0027), so there is no second cursor table.                                                                              |
+| Payload          | The published change and its subject reference: IDs, enums, and reason codes. It holds no names, emails, or text, because the journal holds none. A receiver that needs more reads it through the REST API with its own token.                                                       |
+| Client           | A webhook is made for one integration client. A change is delivered only when that client could read its subject, and the check runs at delivery (ADR 0016).                                                                                                                         |
+| Signature        | HMAC-SHA256 over the timestamp, a dot, and the body                                                                                                                                                                                                                                  |
+| Secret           | Sealed with the school key (ADR 0030) and not hashed, because the server must sign with it                                                                                                                                                                                           |
+| Replay           | A receiver rejects a timestamp older than 5 minutes (target)                                                                                                                                                                                                                         |
+| Retries          | Up to 8 attempts in 24 hours, with growing delays (target)                                                                                                                                                                                                                           |
+| Delivery log     | One row for each attempt, in `integrationDeliveries`                                                                                                                                                                                                                                 |
+| Idempotency      | Every attempt of a change carries the same event ID                                                                                                                                                                                                                                  |
 | Receiver address | HTTPS only. A public address only. No redirect is followed. The judgment of addresses is the one of the research scrape guard (`judgeAddress` in `packages/backend/confect/nina/research/url.ts`, which `tools/safety.ts` in the same research folder calls), shared and not copied. |
-| Deadline | Each attempt has a deadline that covers the body, and the response is read up to a size cap (ADR 0020). |
+| Deadline         | Each attempt has a deadline that covers the body, and the response is read up to a size cap (ADR 0020).                                                                                                                                                                              |
 
 The receiver address rule keeps a webhook from being used to reach Nakafa's own
 network.
 
 ### API hygiene
 
-| Rule | What | Number |
-| --- | --- | --- |
-| Idempotency | Every POST of the REST API carries `Idempotency-Key`. The token endpoint is not part of it. A repeat with the same key and request returns the first result. The same key with another request gets 422, a repeat still running gets 409, and a missing key gets 400. The record is written by the mutation that makes the change, and a scheduled sweep deletes it, because queries do not read the clock (ADR 0011). | Kept 24 hours (target) |
-| Pagination | By cursor, not by page number | 100 rows a page (target) |
-| Rate limit | For each client, through the rate-limit component, with the remaining quota in response headers. A refusal is 429 with `Retry-After`, as in the public API. | 600 requests a minute (target, not measured) |
-| Documentation | OpenAPI generated from the definition of the routes | One source |
-| Embed | A one-time token in an iframe, with `frame-ancestors` for each school, built from the school's list of domains | Waits for that list (see below) |
+| Rule          | What                                                                                                                                                                                                                                                                                                                                                                                                                   | Number                                       |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| Idempotency   | Every POST of the REST API carries `Idempotency-Key`. The token endpoint is not part of it. A repeat with the same key and request returns the first result. The same key with another request gets 422, a repeat still running gets 409, and a missing key gets 400. The record is written by the mutation that makes the change, and a scheduled sweep deletes it, because queries do not read the clock (ADR 0011). | Kept 24 hours (target)                       |
+| Pagination    | By cursor, not by page number                                                                                                                                                                                                                                                                                                                                                                                          | 100 rows a page (target)                     |
+| Rate limit    | For each client, through the rate-limit component, with the remaining quota in response headers. A refusal is 429 with `Retry-After`, as in the public API.                                                                                                                                                                                                                                                            | 600 requests a minute (target, not measured) |
+| Documentation | OpenAPI generated from the definition of the routes                                                                                                                                                                                                                                                                                                                                                                    | One source                                   |
+| Embed         | A one-time token in an iframe, with `frame-ancestors` for each school, built from the school's list of domains                                                                                                                                                                                                                                                                                                         | Waits for that list (see below)              |
 
 The statuses for `Idempotency-Key` follow the IETF draft
 `draft-ietf-httpapi-idempotency-key-header-07`. That draft has expired and is not
@@ -230,19 +230,19 @@ the school's own domains for later, so embed waits for them.
 An inbound standard forms the roster and the classes. An outbound standard
 carries grades. No standard reaches around `decide`.
 
-| Standard | Direction | What Nakafa does | Owner |
-| --- | --- | --- | --- |
-| OneRoster 1.2 | Roster in, results out | CSV import first, then the REST service for rosters and results | This ADR. The CSV import follows the file import rules of ADR 0015. |
-| LTI 1.3 Advantage | Launch, deep linking, grades, members | Nakafa is the tool and the school's learning system is the platform | This ADR |
-| QTI 3.0 | Items in and out | A codec over the response contract and the item model | This ADR and ADR 0031 |
-| CASE 1.1 | Competencies | Competencies as framework items, linked to the curriculum | Later |
-| CLR 2.0 and Open Badges 3.0 | Records and badges out | Across countries, a later step | Later |
-| xAPI and Caliper | Analytics out | Only when a learning record store asks. The version is not chosen. | Later |
-| Google Classroom | Roster in | Read-only connector | ADR 0015 |
-| Microsoft Graph Education | Roster in, assignment grades out | After Google. The school's administrator gives consent. | Later |
-| Clever and ClassLink | Roster in | Through OneRoster | Later |
-| Microsoft Entra ID and SAML | School identity | After Google | ADR 0009 |
-| VIDIS | Identity | Germany. The protocol is not named yet. | ADR 0032 |
+| Standard                    | Direction                             | What Nakafa does                                                    | Owner                                                               |
+| --------------------------- | ------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| OneRoster 1.2               | Roster in, results out                | CSV import first, then the REST service for rosters and results     | This ADR. The CSV import follows the file import rules of ADR 0015. |
+| LTI 1.3 Advantage           | Launch, deep linking, grades, members | Nakafa is the tool and the school's learning system is the platform | This ADR                                                            |
+| QTI 3.0                     | Items in and out                      | A codec over the response contract and the item model               | This ADR and ADR 0031                                               |
+| CASE 1.1                    | Competencies                          | Competencies as framework items, linked to the curriculum           | Later                                                               |
+| CLR 2.0 and Open Badges 3.0 | Records and badges out                | Across countries, a later step                                      | Later                                                               |
+| xAPI and Caliper            | Analytics out                         | Only when a learning record store asks. The version is not chosen.  | Later                                                               |
+| Google Classroom            | Roster in                             | Read-only connector                                                 | ADR 0015                                                            |
+| Microsoft Graph Education   | Roster in, assignment grades out      | After Google. The school's administrator gives consent.             | Later                                                               |
+| Clever and ClassLink        | Roster in                             | Through OneRoster                                                   | Later                                                               |
+| Microsoft Entra ID and SAML | School identity                       | After Google                                                        | ADR 0009                                                            |
+| VIDIS                       | Identity                              | Germany. The protocol is not named yet.                             | ADR 0032                                                            |
 
 Nakafa follows these specifications and claims no 1EdTech certification.
 1EdTech lists products that passed its certification, and a claim waits until a
@@ -430,21 +430,21 @@ The 14 files that imported `convex-helpers` (a fifteenth left with the earlier a
 
 ## Implementation Status
 
-| Part | Status |
-| --- | --- |
-| Public REST `api.nakafa.com/v1` and the OpenAPI document | Live |
-| Public MCP `mcp.nakafa.com/mcp` | Live |
-| `@nakafa/cli` 0.1.1 | Live, public and read only |
-| `effect/http-api` in Nakafa code | Used by the school API (`confect/integrations/api.ts`), 26 October 2026 |
-| `integrationClients` and the client registry (the amendment of 14 October 2026) | Built, with no route yet |
-| `confect/integrations` (the `HttpApi` definition) | Planned, program wave C |
-| School REST | Built, 26 October 2026: the token endpoint, the bearer check, and the roster reads (see the amendment of that day) |
-| School MCP and the CLI login | Planned, program wave C |
-| Webhooks | Built, 31 October 2026 (see the amendment of that day) |
-| Exports | Built, 31 October 2026 (see the amendment of that day) |
-| LTI, the OneRoster REST service, and the QTI codec | Planned, program wave C |
-| The OneRoster CSV import | Built, 31 October 2026: the browser reads the zip as it reads a Dapodik file (ADR 0015), and `roster/imports:applySourced` applies the rows. A student's roster row keeps the blind of their `sourcedId` under the school key, so a later file names the same student, and teachers stay out of the import. |
-| `hono@4.13.13` in `bun.lock` | Removed on 26 October 2026. `bun.lock` keeps only the peer declaration of `convex-helpers`, `bun install --frozen-lockfile` accepts it, and `RETIRED_LOCK_PACKAGES` in `scripts/dependencies/policy.ts` fails the dependency policy when the lock resolves `hono` again. |
+| Part                                                                            | Status                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public REST `api.nakafa.com/v1` and the OpenAPI document                        | Live                                                                                                                                                                                                                                                                                                        |
+| Public MCP `mcp.nakafa.com/mcp`                                                 | Live                                                                                                                                                                                                                                                                                                        |
+| `@nakafa/cli` 0.1.1                                                             | Live, public and read only                                                                                                                                                                                                                                                                                  |
+| `effect/http-api` in Nakafa code                                                | Used by the school API (`confect/integrations/api.ts`), 26 October 2026                                                                                                                                                                                                                                     |
+| `integrationClients` and the client registry (the amendment of 14 October 2026) | Built, with no route yet                                                                                                                                                                                                                                                                                    |
+| `confect/integrations` (the `HttpApi` definition)                               | Planned, program wave C                                                                                                                                                                                                                                                                                     |
+| School REST                                                                     | Built, 26 October 2026: the token endpoint, the bearer check, and the roster reads (see the amendment of that day)                                                                                                                                                                                          |
+| School MCP and the CLI login                                                    | Planned, program wave C                                                                                                                                                                                                                                                                                     |
+| Webhooks                                                                        | Built, 31 October 2026 (see the amendment of that day)                                                                                                                                                                                                                                                      |
+| Exports                                                                         | Built, 31 October 2026 (see the amendment of that day)                                                                                                                                                                                                                                                      |
+| LTI, the OneRoster REST service, and the QTI codec                              | Planned, program wave C                                                                                                                                                                                                                                                                                     |
+| The OneRoster CSV import                                                        | Built, 31 October 2026: the browser reads the zip as it reads a Dapodik file (ADR 0015), and `roster/imports:applySourced` applies the rows. A student's roster row keeps the blind of their `sourcedId` under the school key, so a later file names the same student, and teachers stay out of the import. |
+| `hono@4.13.13` in `bun.lock`                                                    | Removed on 26 October 2026. `bun.lock` keeps only the peer declaration of `convex-helpers`, `bun install --frozen-lockfile` accepts it, and `RETIRED_LOCK_PACKAGES` in `scripts/dependencies/policy.ts` fails the dependency policy when the lock resolves `hono` again.                                    |
 
 ## Amendment: Decided on 14 October 2026
 

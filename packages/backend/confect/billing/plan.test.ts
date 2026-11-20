@@ -1,9 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import {
-  applyPlanChange,
-  type PlanSource,
-} from "@repo/backend/confect/billing/plan";
+import type { PlanSource } from "@repo/backend/confect/billing/plan";
+import { applyPlanChange } from "@repo/backend/confect/billing/plan";
 import { PlanSyncIoError } from "@repo/backend/confect/billing/spec";
 import {
   createBillingTestConvex,

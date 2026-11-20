@@ -1,13 +1,8 @@
 import { expect } from "@playwright/test";
 import { MEMORY_CAPABILITY } from "@repo/backend/confect/nina/capability/spec";
 import { PROVIDER_METADATA } from "@repo/backend/confect/nina/reader";
-import {
-  Array as Arr,
-  Option,
-  Record as Rec,
-  type Result,
-  Schema,
-} from "effect";
+import type { Result } from "effect";
+import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import type { Changes } from "@/e2e/support/changes";
 
 /**

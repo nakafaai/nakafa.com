@@ -3,7 +3,8 @@
 import { afterAll, describe, expect, it } from "@effect/vitest";
 import { richOptions } from "@repo/design-system/components/editor/extensions";
 import { plainText } from "@repo/design-system/components/editor/plain";
-import { Editor, type JSONContent, type NodeViewRenderer } from "@tiptap/core";
+import type { JSONContent, NodeViewRenderer } from "@tiptap/core";
+import { Editor } from "@tiptap/core";
 import { Array as Arr, Function as Fn, Result, String as Str } from "effect";
 
 /**

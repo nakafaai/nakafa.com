@@ -19,8 +19,8 @@ import {
   paintFerry,
   paintSea,
 } from "@repo/design-system/components/contents/physics/vector/bearing/sea";
+import type { Course } from "@repo/design-system/components/contents/physics/vector/bearing/voyage";
 import {
-  type Course,
   CoursesSchema,
   voyageCorners,
   voyageDisplacement,
@@ -43,7 +43,8 @@ import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { useMemo, useState } from "react";
 
 /** What the sketch reads on every frame: the voyage's legs. */
 const VoyageFrameSchema = Schema.Struct({ courses: CoursesSchema });

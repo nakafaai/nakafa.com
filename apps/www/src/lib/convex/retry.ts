@@ -1,12 +1,5 @@
-import {
-  Effect,
-  Exit,
-  Fiber,
-  MutableRef,
-  Option,
-  Schema,
-  type Scope,
-} from "effect";
+import type { Scope } from "effect";
+import { Effect, Exit, Fiber, MutableRef, Option, Schema } from "effect";
 
 /**
  * Where the open wait stands: still waiting for the server, answered and holding

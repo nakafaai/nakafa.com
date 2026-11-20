@@ -1,9 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useChemicalReactionTypeScene } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/context";
-import {
-  type ChemicalReactionTypeScenePoint,
-  ChemicalReactionTypeScenePointSchema,
-} from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
+import type { ChemicalReactionTypeScenePoint } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
+import { ChemicalReactionTypeScenePointSchema } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
 import {
   BEAKER_CONTENT_BOTTOM_Y,
   Particle,

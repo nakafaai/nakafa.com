@@ -11,12 +11,12 @@ import {
 } from "@repo/backend/confect/notifications/schema";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import { Email } from "@repo/backend/confect/tenancy/schema";
+import type { tenancyFixture } from "@repo/backend/test/tenancy";
 import {
   invitePerson,
   journal,
   scheduledJobs,
   slugOf,
-  type tenancyFixture,
 } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 

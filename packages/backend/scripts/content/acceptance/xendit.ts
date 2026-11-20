@@ -4,10 +4,8 @@ import {
   readRows,
 } from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import {
-  type AcceptanceMode,
-  decodeModeArguments,
-} from "@repo/backend/scripts/content/acceptance/mode";
+import type { AcceptanceMode } from "@repo/backend/scripts/content/acceptance/mode";
+import { decodeModeArguments } from "@repo/backend/scripts/content/acceptance/mode";
 import { encodeJsonText } from "@repo/utilities/json";
 import { randomUuid } from "@repo/utilities/uuid";
 import {

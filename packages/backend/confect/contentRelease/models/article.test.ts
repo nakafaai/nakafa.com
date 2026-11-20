@@ -9,7 +9,8 @@ import schema from "@repo/backend/convex/schema";
 import { categorizedArticle } from "@repo/backend/test/article/release";
 import { insertModelBuild } from "@repo/backend/test/content/model";
 import { insertRuntimeArticles } from "@repo/backend/test/content/runtime";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Array as Arr, Effect } from "effect";
 
 async function reconcile(

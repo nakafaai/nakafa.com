@@ -1,9 +1,7 @@
 import { Gateway } from "@repo/backend/confect/gateway/handle";
 import { boundText } from "@repo/backend/confect/nina/budget";
-import {
-  type JudgmentName,
-  judgments,
-} from "@repo/backend/confect/nina/judgment/catalog";
+import type { JudgmentName } from "@repo/backend/confect/nina/judgment/catalog";
+import { judgments } from "@repo/backend/confect/nina/judgment/catalog";
 import { Effect, Record as Rec, Struct } from "effect";
 
 /** Tokens of one text that the decision model reads. */

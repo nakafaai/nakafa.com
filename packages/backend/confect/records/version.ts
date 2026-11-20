@@ -3,10 +3,12 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import type {
+  GradingScheme,
+  gradingSchemeValidator,
+} from "@repo/backend/confect/records/scheme";
 import {
   DEFAULT_GRADING_SCHEME,
-  type GradingScheme,
-  type gradingSchemeValidator,
   normalizeScheme,
 } from "@repo/backend/confect/records/scheme";
 import { Clock, Effect, Option } from "effect";

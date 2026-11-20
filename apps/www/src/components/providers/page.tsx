@@ -1,7 +1,8 @@
 import { useTimeout, useWindowEvent } from "@mantine/hooks";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { Effect, Fiber, Option } from "effect";
-import { type ReactNode, Suspense, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { PageAnalytics } from "@/components/analytics/mount";
 import { AuthSessionContext } from "@/components/auth/context";
 import { useSignedInHint } from "@/components/auth/session";
@@ -12,11 +13,8 @@ import {
 import { NavigationWarmth } from "@/components/shared/warm";
 import { clientEnv } from "@/env.public";
 import { ConvexAuthContext } from "@/lib/auth/convex";
-import {
-  createLiveSessionStore,
-  type LiveSessionStore,
-  startLiveSession,
-} from "@/lib/auth/live";
+import type { LiveSessionStore } from "@/lib/auth/live";
+import { createLiveSessionStore, startLiveSession } from "@/lib/auth/live";
 import { PageNavigationProvider } from "@/lib/content/page/context";
 import type { PageNavigation } from "@/lib/content/page/navigation";
 import { POINTER_DOWN_ATTRIBUTE } from "@/lib/press/prepaint";

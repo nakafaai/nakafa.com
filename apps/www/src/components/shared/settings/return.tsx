@@ -11,12 +11,16 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { type AnyRouter, useNavigate, useRouter } from "@tanstack/react-router";
+import type { AnyRouter } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Array as Arr, Option, String as Str } from "effect";
-import { createContext, type ReactNode, useEffect, useState } from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
+import type { ReactNode } from "react";
+import { createContext, useEffect, useState } from "react";
+import type { StoreApi } from "zustand";
+import { createStore, useStore } from "zustand";
 import { isTyping } from "@/components/shared/typing";
-import { Link, type LinkTarget } from "@/lib/routing/link";
+import type { LinkTarget } from "@/lib/routing/link";
+import { Link } from "@/lib/routing/link";
 
 /**
  * The address the browser shows for the page on screen, when it is no settings

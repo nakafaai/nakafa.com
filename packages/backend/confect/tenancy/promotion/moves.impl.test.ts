@@ -1,9 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
-import {
-  PROMOTION_MOVE_LIMIT,
-  type PromotionDestination,
-} from "@repo/backend/confect/tenancy/promotion/schema";
+import type { PromotionDestination } from "@repo/backend/confect/tenancy/promotion/schema";
+import { PROMOTION_MOVE_LIMIT } from "@repo/backend/confect/tenancy/promotion/schema";
 import {
   crowd,
   nf,

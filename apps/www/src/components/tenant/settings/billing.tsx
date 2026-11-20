@@ -27,11 +27,11 @@ import { SchoolInvoicesCard } from "@/components/tenant/settings/invoices";
 import { SchoolOrderDialog } from "@/components/tenant/settings/order";
 import { SchoolSeatsDialog } from "@/components/tenant/settings/seats";
 import { SettingsPage } from "@/components/tenant/settings/section";
+import type { SchoolBilling } from "@/lib/billing/school";
 import {
   openInvoice,
   paidPlan,
   planActionKey,
-  type SchoolBilling,
   transferMailto,
 } from "@/lib/billing/school";
 

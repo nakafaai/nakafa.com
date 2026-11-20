@@ -1,16 +1,12 @@
 import { MaterialDomainSchema } from "@nakafa/aksara-contracts/material/domain";
 import type { ArticleProjection } from "@nakafa/aksara-contracts/projection/article";
-import {
-  MaterialKeySchema,
-  type MaterialLessonProjection,
-} from "@nakafa/aksara-contracts/projection/material";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import { MaterialKeySchema } from "@nakafa/aksara-contracts/projection/material";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { loadRouteBinding } from "@repo/backend/confect/contentRelease/model";
 import { learningGraphIdentityValidator } from "@repo/backend/confect/contents/graph";
-import {
-  type RecordContentViewArgs,
-  toContentViewIoError,
-} from "@repo/backend/confect/contents/views/spec";
+import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
+import { toContentViewIoError } from "@repo/backend/confect/contents/views/spec";
 import { localeValidator } from "@repo/backend/confect/lib/validators/contents";
 import { articleLayer } from "@repo/backend/content/article/confect";
 import { loadArticleOwner } from "@repo/backend/content/article/owner";

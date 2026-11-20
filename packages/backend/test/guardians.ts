@@ -5,7 +5,8 @@ import { Nisn } from "@repo/backend/confect/roster/schema";
 import { Email } from "@repo/backend/confect/tenancy/schema";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
 import { nf } from "@repo/backend/test/classroom";
-import { grantRole, type tenancyFixture } from "@repo/backend/test/tenancy";
+import type { tenancyFixture } from "@repo/backend/test/tenancy";
+import { grantRole } from "@repo/backend/test/tenancy";
 import { Effect, Schema } from "effect";
 
 /** The fixture `tenancyFixture` seeds, which the guardian tests extend. */

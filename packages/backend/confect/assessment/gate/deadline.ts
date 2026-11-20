@@ -1,7 +1,5 @@
-import {
-  type Attempt,
-  acceptsWrites,
-} from "@repo/backend/confect/assessment/gate/store";
+import type { Attempt } from "@repo/backend/confect/assessment/gate/store";
+import { acceptsWrites } from "@repo/backend/confect/assessment/gate/store";
 import { Clock, Effect } from "effect";
 
 /** How late a deadline step may run before a sweep sends it again, so a step that is only slow is not doubled. */

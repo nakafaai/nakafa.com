@@ -1,4 +1,5 @@
-import { type ReactNode, use } from "react";
+import type { ReactNode } from "react";
+import { use } from "react";
 import { PlayerTimer, PlayerTimerCard } from "@/components/player/timer";
 import { ShellLock } from "@/components/sidebar/lock";
 import { TryoutContentContext } from "@/components/tryout/content/context";

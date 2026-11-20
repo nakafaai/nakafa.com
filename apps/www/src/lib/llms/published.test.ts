@@ -9,10 +9,8 @@ import { Data, Effect } from "effect";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { readPublishedContent } from "@/lib/content/published/exchange";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
-import {
-  type PublishedMarkdownInput,
-  readPublishedText,
-} from "@/lib/llms/published";
+import type { PublishedMarkdownInput } from "@/lib/llms/published";
+import { readPublishedText } from "@/lib/llms/published";
 import { activateTestRelease } from "@/test/active";
 import {
   previewMetadata,

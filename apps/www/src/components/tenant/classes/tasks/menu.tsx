@@ -18,9 +18,9 @@ import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { RowItems, RowOpen } from "@/components/shared/table/menu";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { EditTaskDialog } from "@/components/tenant/classes/tasks/edit";
+import type { ClassTask } from "@/components/tenant/classes/tasks/optimistic";
 import {
   archiveUpdate,
-  type ClassTask,
   removeUpdate,
   restoreUpdate,
 } from "@/components/tenant/classes/tasks/optimistic";

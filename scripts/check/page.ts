@@ -1,4 +1,6 @@
-import { Array as Arr, type Effect, HashSet, Option, Result } from "effect";
+import type { Effect } from "effect";
+import { Array as Arr, HashSet, Option, Result } from "effect";
+import type { Node, SourceFile } from "tsrs/ast";
 import {
   isArrowFunction,
   isCallExpression,
@@ -11,11 +13,10 @@ import {
   isSourceFile,
   isStringLiteral,
   isVariableDeclaration,
-  type Node,
-  type SourceFile,
 } from "tsrs/ast";
 import { imports } from "#scripts/check/kinds";
-import { descendants, type parseSources } from "#scripts/check/source";
+import type { parseSources } from "#scripts/check/source";
+import { descendants } from "#scripts/check/source";
 import { wrapped } from "#scripts/check/wrapper";
 
 const PLAYWRIGHT_PATTERN = /^@playwright\/test$/u;

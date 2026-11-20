@@ -2,15 +2,12 @@ import { describe, expect, it } from "@effect/vitest";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import { Array as Arr, Data, Deferred, Effect, Fiber, Ref } from "effect";
 import { TestClock } from "effect/testing";
-import {
-  emptyLabel,
-  type OptionLabel,
-  withOptionLabel,
-} from "@/components/tenant/exams/answer";
+import type { OptionLabel } from "@/components/tenant/exams/answer";
+import { emptyLabel, withOptionLabel } from "@/components/tenant/exams/answer";
+import type { QuestionDraft } from "@/components/tenant/exams/writer";
 import {
   isUnrefused,
   makeQuestionWriter,
-  type QuestionDraft,
   SaveDropped,
 } from "@/components/tenant/exams/writer";
 

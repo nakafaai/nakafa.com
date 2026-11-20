@@ -1,24 +1,20 @@
 "use client";
 
+import type { ConvexReactClient } from "convex/react";
 import {
   ConvexProvider as ConvexClientProvider,
-  type ConvexReactClient,
   useConvex,
 } from "convex/react";
 import { Effect, Exit, Function as Fn, Option, Scope } from "effect";
-import {
-  type ReactNode,
-  useEffect,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import type { ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { AuthSessionProvider } from "@/components/auth/follow";
 import { useAuthSession } from "@/components/auth/session";
 import { readAuthClient } from "@/lib/auth/client";
+import type { ConvexAuthStore } from "@/lib/auth/convex";
 import {
   authenticateConvex,
   ConvexAuthContext,
-  type ConvexAuthStore,
   ConvexTokenReadError,
   createConvexAuthStore,
   hasSettledSignedOut,

@@ -1,10 +1,10 @@
 import { tenth } from "@repo/mascot/round";
+import type { Shape } from "@repo/mascot/shape";
 import {
   ellipse as drawEllipse,
   path as drawPath,
   group,
   polygon,
-  type Shape,
 } from "@repo/mascot/shape";
 import { Array as Arr, Match, Schema } from "effect";
 

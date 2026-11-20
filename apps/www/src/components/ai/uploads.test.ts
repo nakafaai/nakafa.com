@@ -15,10 +15,10 @@ import {
   Schema,
 } from "effect";
 import { TestClock } from "effect/testing";
+import type { UploadStore } from "@/components/ai/uploads";
 import {
   giveBackRefusedUploads,
   releaseUploads,
-  type UploadStore,
   uploadAttachments,
 } from "@/components/ai/uploads";
 

@@ -16,8 +16,8 @@ import {
 } from "@repo/backend/confect/acceptance/seed";
 import { assignRole } from "@repo/backend/confect/access/grant";
 import { classAuthority } from "@repo/backend/confect/classroom/authority";
+import type { ClassSubject } from "@repo/backend/confect/classroom/class";
 import {
-  type ClassSubject,
   classNameKey,
   classNameOf,
   classSlugOf,

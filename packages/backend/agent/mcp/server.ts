@@ -7,8 +7,10 @@ import {
   NAKAFA_MCP_SERVER_NAME,
   NAKAFA_MCP_SERVER_VERSION,
 } from "@repo/contents/agent/constants";
-import { type Context, Effect, Layer } from "effect";
-import { McpProtocol, type McpSchema, McpServer } from "effect/ai";
+import type { Context } from "effect";
+import { Effect, Layer } from "effect";
+import type { McpSchema } from "effect/ai";
+import { McpProtocol, McpServer } from "effect/ai";
 
 const SERVER_INSTRUCTIONS =
   "Use Nakafa for cited educational content, lessons, articles, try-outs, and reviewed Quran references. Search first. Pass content_id to the content tool only when the result includes markdown_url. Cite try-out catalog results by URL without requesting private attempt content. Every capability is public and read-only.";

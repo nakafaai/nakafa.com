@@ -1,10 +1,8 @@
 import type { Ref } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type nina from "@repo/backend/confect/_generated/refs/nina";
-import {
-  MEMORY_PAGE_LIMIT,
-  type NinaMemoryView,
-} from "@repo/backend/confect/nina/memory.spec";
+import type { NinaMemoryView } from "@repo/backend/confect/nina/memory.spec";
+import { MEMORY_PAGE_LIMIT } from "@repo/backend/confect/nina/memory.spec";
 import { plainText } from "@repo/design-system/components/editor/plain";
 import { Array as Arr, Option, Schema, String as Str, Struct } from "effect";
 

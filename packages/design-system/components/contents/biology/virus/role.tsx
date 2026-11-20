@@ -1,9 +1,7 @@
 import { BacillusBacteriumModel } from "@repo/design-system/components/contents/biology/bacteria/parts";
 import { useBiologyItemSelection } from "@repo/design-system/components/contents/biology/context";
-import {
-  BiologyLabFrame,
-  type BiologyLabProps,
-} from "@repo/design-system/components/contents/biology/lab";
+import type { BiologyLabProps } from "@repo/design-system/components/contents/biology/lab";
+import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab";
 import {
   EnvelopeMaterial,
   useBumpySphere,

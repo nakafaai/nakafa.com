@@ -1,11 +1,10 @@
 import type { Id } from "@repo/backend/confect/_generated/id";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type ReactNode, use, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, use, useState } from "react";
 import type { StoreApi } from "zustand";
-import {
-  createLibraryUploads,
-  type LibraryUploads,
-} from "@/components/tenant/classes/library/uploads";
+import type { LibraryUploads } from "@/components/tenant/classes/library/uploads";
+import { createLibraryUploads } from "@/components/tenant/classes/library/uploads";
 
 /** The files a class page is adding, which the header's dialog and the library share. */
 const UploadsContext = createContext<StoreApi<LibraryUploads> | null>(null);

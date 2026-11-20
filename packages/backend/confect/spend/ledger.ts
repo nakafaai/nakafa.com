@@ -9,13 +9,10 @@ import {
   MAX_CREDIT_LOTS,
 } from "@repo/backend/confect/credits/constants";
 import { schoolCreditsOf } from "@repo/backend/confect/credits/pool";
-import { vendorOf, type Work } from "@repo/backend/confect/spend/rates";
-import {
-  type Claim,
-  type Escrow,
-  type Payer,
-  SpendRefused,
-} from "@repo/backend/confect/spend/schema";
+import type { Work } from "@repo/backend/confect/spend/rates";
+import { vendorOf } from "@repo/backend/confect/spend/rates";
+import type { Claim, Escrow, Payer } from "@repo/backend/confect/spend/schema";
+import { SpendRefused } from "@repo/backend/confect/spend/schema";
 import {
   Array as Arr,
   Clock,

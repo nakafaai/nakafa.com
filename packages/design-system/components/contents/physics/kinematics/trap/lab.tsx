@@ -8,8 +8,8 @@ import {
   spotlight,
   vignette,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { Graph } from "@repo/design-system/components/contents/physics/canvas/plot";
 import {
-  type Graph,
   graphX,
   graphY,
   paintCurve,
@@ -17,17 +17,17 @@ import {
   paintGraphDot,
   paintSlopeLine,
 } from "@repo/design-system/components/contents/physics/canvas/plot";
+import type { Road } from "@repo/design-system/components/contents/physics/canvas/scene";
 import {
   paintCar,
   paintLandscape,
   paintRoad,
-  type Road,
   roadX,
 } from "@repo/design-system/components/contents/physics/canvas/scene";
+import type { TrapGap } from "@repo/design-system/components/contents/physics/kinematics/trap/gates";
 import {
   TRAP_ACCELERATION,
   TRAP_CENTRE,
-  type TrapGap,
   TrapGapSchema,
   trapArrival,
   trapPosition,
@@ -54,7 +54,8 @@ import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** How far the track runs, in metres: past the widest trap. */
 const TRACK = 80;

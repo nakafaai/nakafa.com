@@ -1,8 +1,6 @@
 import { splitLocalePathname } from "@repo/internationalization/src/href";
-import {
-  decodeLocale,
-  type Locale,
-} from "@repo/internationalization/src/locale";
+import type { Locale } from "@repo/internationalization/src/locale";
+import { decodeLocale } from "@repo/internationalization/src/locale";
 import { notFound } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import { MAIN_HOST_SCHOOL_PAGES } from "@/lib/ownership/route";

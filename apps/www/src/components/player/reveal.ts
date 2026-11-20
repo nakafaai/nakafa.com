@@ -1,5 +1,6 @@
 import { Option } from "effect";
-import { type RefObject, useEffectEvent, useLayoutEffect } from "react";
+import type { RefObject } from "react";
+import { useEffectEvent, useLayoutEffect } from "react";
 import { findArticle } from "@/components/player/article";
 import { usePlayer } from "@/components/player/provider";
 

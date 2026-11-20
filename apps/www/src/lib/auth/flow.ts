@@ -1,5 +1,6 @@
 import { Effect, Fiber, Predicate } from "effect";
-import { type AuthConvex, readAuthClient } from "@/lib/auth/client";
+import type { AuthConvex } from "@/lib/auth/client";
+import { readAuthClient } from "@/lib/auth/client";
 
 /**
  * Reports whether Google's last return to the page failed, for as long as the

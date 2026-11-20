@@ -29,14 +29,8 @@ import {
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { pressMainAction } from "@repo/design-system/lib/dialog";
 import { cva } from "class-variance-authority";
-import {
-  type ComponentProps,
-  createContext,
-  type KeyboardEvent,
-  type ReactNode,
-  use,
-  useRef,
-} from "react";
+import type { ComponentProps, KeyboardEvent, ReactNode } from "react";
+import { createContext, use, useRef } from "react";
 
 interface Props {
   /**

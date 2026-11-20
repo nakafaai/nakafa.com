@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { ContentSearchRankDocument } from "@repo/backend/confect/contents/search/rank";
 import {
-  type ContentSearchRankDocument,
   matchesContentSearchQuery,
   rankContentSearchDocuments,
 } from "@repo/backend/confect/contents/search/rank";

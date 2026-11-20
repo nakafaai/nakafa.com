@@ -3,7 +3,8 @@ import {
   ActiveAppLocaleCodeSchema,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { LOCALES, type Locale } from "@repo/internationalization/src/locale";
+import type { Locale } from "@repo/internationalization/src/locale";
+import { LOCALES } from "@repo/internationalization/src/locale";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import {
   Array as Arr,
@@ -43,10 +44,8 @@ import { readSitemapFiles } from "@/lib/sitemap/files";
 import { checkDiagrams, readCharts } from "@/lib/static/diagram";
 import { readStaticPagePaths } from "@/lib/static/pages";
 import { PrerenderedPagesJson } from "@/lib/static/prerender";
-import {
-  listSocialImageSources,
-  type SocialImageSource,
-} from "@/lib/static/social";
+import type { SocialImageSource } from "@/lib/static/social";
+import { listSocialImageSources } from "@/lib/static/social";
 import { readRuntimeConfig } from "@/runtime";
 import { renderSocialImage } from "@/scripts/static/social";
 

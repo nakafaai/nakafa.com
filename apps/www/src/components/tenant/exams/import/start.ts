@@ -1,10 +1,8 @@
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Match, MutableRef, Option, Schema } from "effect";
 import { ImportFileRefused } from "@/components/tenant/exams/import/file";
-import {
-  type ImportProgress,
-  runImport,
-} from "@/components/tenant/exams/import/run";
+import type { ImportProgress } from "@/components/tenant/exams/import/run";
+import { runImport } from "@/components/tenant/exams/import/run";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** A toast that stays until the import replaces it with its result. */

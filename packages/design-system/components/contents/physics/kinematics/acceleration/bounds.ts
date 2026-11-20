@@ -4,7 +4,8 @@ import type {
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import type { CoordinateFrame } from "@repo/design-system/components/three/frame";
 import { Effect, Schema } from "effect";
-import { Box3, type Group, Matrix4, Vector3 } from "three";
+import type { Group } from "three";
+import { Box3, Matrix4, Vector3 } from "three";
 
 const RocketScaleSchema = Schema.Struct({ scale: Schema.Finite });
 type RocketPose = Pick<

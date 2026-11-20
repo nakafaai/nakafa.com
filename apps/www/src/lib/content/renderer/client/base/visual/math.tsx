@@ -10,7 +10,8 @@ import {
   VisualCardBody,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
-import { type ReactNode, useId } from "react";
+import type { ReactNode } from "react";
+import { useId } from "react";
 
 import { DeferredMathScene } from "@/lib/content/renderer/client/base/visual/deferred";
 import { MathReadouts } from "@/lib/content/renderer/client/base/visual/readouts";

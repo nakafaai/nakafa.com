@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { wholeHeight } from "@repo/design-system/components/nina/height";
 import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",

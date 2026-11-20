@@ -1,7 +1,5 @@
-import {
-  type MaterialLessonProjection,
-  MaterialLessonProjectionSchema,
-} from "@nakafa/aksara-contracts/projection/material";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import type { ContentPagination } from "@repo/contents/content";
 import { encodeMaterialContextHint } from "@repo/contents/route/material/context";
 import { Array as Arr, Option, Order, Schema } from "effect";

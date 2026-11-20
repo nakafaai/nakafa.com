@@ -1,7 +1,5 @@
-import {
-  type ArticleRouteSlug,
-  ArticleRouteSlugSchema,
-} from "@nakafa/aksara-contracts/projection/article";
+import type { ArticleRouteSlug } from "@nakafa/aksara-contracts/projection/article";
+import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,

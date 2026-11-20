@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { act, createElement } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import type { Root } from "react-dom/client";
+import { createRoot } from "react-dom/client";
+import type { AnalyticsConsent } from "@/lib/analytics/consent";
 import {
-  type AnalyticsConsent,
   keepConsentAnswer,
   useAnalyticsConsent,
 } from "@/lib/analytics/consent";

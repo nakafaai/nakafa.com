@@ -11,9 +11,9 @@ import {
   BillingRowMissing,
   RailMismatch,
 } from "@repo/backend/confect/billing/spec";
+import type { BillingSubscriptionState } from "@repo/backend/confect/billing/subscriptions";
 import {
   applySubscriptionState,
-  type BillingSubscriptionState,
   readSubscriptionByXenditPlan,
 } from "@repo/backend/confect/billing/subscriptions";
 import {

@@ -1,6 +1,7 @@
 import { SPAN } from "@repo/backend/confect/island/world";
 import { Array as Arr, Option } from "effect";
-import { type Animal, FOLK, SPEED, suitsOf, wander } from "@/lib/island/life";
+import type { Animal } from "@/lib/island/life";
+import { FOLK, SPEED, suitsOf, wander } from "@/lib/island/life";
 import { unitOf } from "@/lib/island/noise";
 import { SPOTS } from "@/lib/island/village";
 import type { Cells } from "@/lib/island/world";

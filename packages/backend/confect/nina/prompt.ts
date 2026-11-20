@@ -13,11 +13,11 @@ import {
 import { resolveNinaContext } from "@repo/backend/confect/nina/context";
 import type { NinaPage } from "@repo/backend/confect/nina/contract/turn";
 import { readMessage } from "@repo/backend/confect/nina/sealed/message";
-import {
-  type NinaInput,
-  type NinaPageInput,
-  NinaTurnError,
+import type {
+  NinaInput,
+  NinaPageInput,
 } from "@repo/backend/confect/nina/turns.spec";
+import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { cleanSlug } from "@repo/utilities/slug";
 import type { ModelMessage } from "ai";
 import { Array as Arr, Effect } from "effect";

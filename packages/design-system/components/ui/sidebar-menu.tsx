@@ -9,7 +9,8 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type { ComponentProps, ReactElement } from "react";
 

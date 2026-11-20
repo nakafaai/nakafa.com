@@ -1,5 +1,6 @@
 import type { ModernPeriodicTableFocusId } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
-import { createStore, type ExtractState } from "zustand";
+import type { ExtractState } from "zustand";
+import { createStore } from "zustand";
 import { combine } from "zustand/middleware";
 
 /** Creates one lab's store, which holds the table focus its reader picked. */

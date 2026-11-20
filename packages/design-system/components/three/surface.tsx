@@ -1,18 +1,10 @@
 import { useThree } from "@react-three/fiber";
-import {
-  gridMesh,
-  type MeshGrid,
-  meshGeometry,
-} from "@repo/design-system/lib/geometry/mesh";
+import type { MeshGrid } from "@repo/design-system/lib/geometry/mesh";
+import { gridMesh, meshGeometry } from "@repo/design-system/lib/geometry/mesh";
 import type { Point3 } from "@repo/design-system/lib/geometry/point";
 import { useEffect, useMemo } from "react";
-import {
-  type ColorRepresentation,
-  DoubleSide,
-  MeshStandardMaterial,
-  Plane,
-  Vector3,
-} from "three";
+import type { ColorRepresentation } from "three";
+import { DoubleSide, MeshStandardMaterial, Plane, Vector3 } from "three";
 
 /** The six planes that keep a surface inside its frame box. */
 function frameClipping(min: Point3, max: Point3) {

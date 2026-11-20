@@ -11,6 +11,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { STUDENT_RESULT_LIMIT } from "@repo/backend/confect/exams/sittings/mine";
 import { nf } from "@repo/backend/test/editor";
+import type { SittingFixture } from "@repo/backend/test/sittings";
 import {
   CLOSES_AT as CLOSES,
   deviceOf,
@@ -20,7 +21,6 @@ import {
   mentions,
   OPENS_AT as OPENS,
   openedSitting,
-  type SittingFixture,
   scheduleSitting,
   seedPlacement,
   sittingRow,

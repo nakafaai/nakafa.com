@@ -1,4 +1,5 @@
-import { type BrowserContext, expect, type Page, test } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { setLargeText } from "@/e2e/support/footer";
 import { expectNoOverflow } from "@/e2e/support/layout";

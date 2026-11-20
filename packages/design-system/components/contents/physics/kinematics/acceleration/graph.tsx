@@ -1,8 +1,6 @@
 import { useAccelerationLabels } from "@repo/design-system/components/contents/physics/kinematics/acceleration/context";
-import {
-  type AccelerationCase,
-  getMotionPoints,
-} from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
+import type { AccelerationCase } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
+import { getMotionPoints } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import { formatTooltipTime } from "@repo/design-system/components/contents/physics/kinematics/tooltip";
 import { Line } from "@repo/design-system/components/evilcharts/charts/line/series";
 import {

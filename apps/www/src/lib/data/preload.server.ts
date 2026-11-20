@@ -1,8 +1,5 @@
-import {
-  type AnyPublicQuery,
-  type Args,
-  runWithCodec,
-} from "@confect/core/Ref";
+import type { AnyPublicQuery, Args } from "@confect/core/Ref";
+import { runWithCodec } from "@confect/core/Ref";
 import {
   RetryableNetworkAttempt,
   retryNetworkAttempt,

@@ -23,10 +23,8 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  editItemUpdate,
-  type LibraryItem,
-} from "@/components/tenant/classes/library/optimistic";
+import type { LibraryItem } from "@/components/tenant/classes/library/optimistic";
+import { editItemUpdate } from "@/components/tenant/classes/library/optimistic";
 import { useFolderList } from "@/components/tenant/classes/library/tree";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";

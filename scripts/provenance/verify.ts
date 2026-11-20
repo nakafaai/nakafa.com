@@ -1,7 +1,7 @@
 import { Array as Arr, Effect, Schema } from "effect";
+import type { ProvenanceExpectation } from "#scripts/provenance/schema";
 import {
   AuditSchema,
-  type ProvenanceExpectation,
   ProvenanceStatementSchema,
   ProvenanceVerificationError,
   SLSA_PREDICATE,

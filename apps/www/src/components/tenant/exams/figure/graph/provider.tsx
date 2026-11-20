@@ -1,11 +1,11 @@
 import { useRequired } from "@repo/design-system/hooks/required";
-import { createContext, type ReactNode, useState } from "react";
-import { type StoreApi, useStore } from "zustand";
+import type { ReactNode } from "react";
+import { createContext, useState } from "react";
+import type { StoreApi } from "zustand";
+import { useStore } from "zustand";
 import type { GraphDraft } from "@/components/tenant/exams/figure/graph/draft";
-import {
-  createGraphStore,
-  type GraphState,
-} from "@/components/tenant/exams/figure/graph/store";
+import type { GraphState } from "@/components/tenant/exams/figure/graph/store";
+import { createGraphStore } from "@/components/tenant/exams/figure/graph/store";
 
 const BuilderContext = createContext<StoreApi<GraphState> | null>(null);
 

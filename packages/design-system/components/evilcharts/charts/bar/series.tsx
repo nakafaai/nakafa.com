@@ -1,6 +1,6 @@
 import { useReducedMotion } from "@mantine/hooks";
+import type { BarVariant } from "@repo/design-system/components/evilcharts/charts/bar/paint";
 import {
-  type BarVariant,
   BufferHatchedPattern,
   ColorGradient,
   DuotonePattern,
@@ -10,16 +10,15 @@ import {
   StrippedPattern,
 } from "@repo/design-system/components/evilcharts/charts/bar/paint";
 import { CustomBar } from "@repo/design-system/components/evilcharts/charts/bar/shape";
-import {
-  type BarAnimationType,
-  useBarChart,
-} from "@repo/design-system/components/evilcharts/charts/bar-chart";
+import type { BarAnimationType } from "@repo/design-system/components/evilcharts/charts/bar-chart";
+import { useBarChart } from "@repo/design-system/components/evilcharts/charts/bar-chart";
 import {
   getChartSeriesId,
   getColorsCount,
 } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import { useOrderedReveal } from "@repo/design-system/components/evilcharts/ui/reveal-animation";
-import { type ComponentProps, useId } from "react";
+import type { ComponentProps } from "react";
+import { useId } from "react";
 import { Bar as RechartsBar } from "recharts";
 
 const STACK_ID = "evil-stacked";

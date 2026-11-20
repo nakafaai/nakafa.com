@@ -163,10 +163,10 @@ and called `generateText` through the gateway provider with the zero retention
 options. The gateway answered with a canned completion, so no model call was billed
 and the answer of the gateway was not measured.
 
-| Call | Input | Result | Time |
-| --- | --- | --- | --- |
-| Text only, at the call limit | 362,440 characters of Indonesian prose, four characters a token of `NINA_CALL_LIMIT` | ok | 55 ms |
-| One PDF of 1 MiB through the document path | 1,048,576 bytes | ok | 124 ms |
+| Call                                       | Input                                                                                | Result | Time   |
+| ------------------------------------------ | ------------------------------------------------------------------------------------ | ------ | ------ |
+| Text only, at the call limit               | 362,440 characters of Indonesian prose, four characters a token of `NINA_CALL_LIMIT` | ok     | 55 ms  |
+| One PDF of 1 MiB through the document path | 1,048,576 bytes                                                                      | ok     | 124 ms |
 
 The text call at the call limit ran in the default runtime without running out of
 memory. The 1 MiB PDF also passed, but the probe did not measure larger documents,

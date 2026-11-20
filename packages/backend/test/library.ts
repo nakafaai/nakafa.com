@@ -1,6 +1,7 @@
 import type { GenericId } from "@confect/core";
 import refs from "@repo/backend/confect/_generated/refs";
-import { type makeBucket, upload } from "@repo/backend/test/bucket";
+import type { makeBucket } from "@repo/backend/test/bucket";
+import { upload } from "@repo/backend/test/bucket";
 import {
   forumClass,
   keyedFixture,

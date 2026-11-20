@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { ShardResult } from "@repo/testing/proof";
 import {
   combineShards,
   proofFailures,
   reportFailures,
-  type ShardResult,
 } from "@repo/testing/proof";
 import { Effect, Schema } from "effect";
 

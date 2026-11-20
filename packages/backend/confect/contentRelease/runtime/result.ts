@@ -1,7 +1,5 @@
-import {
-  type ContentRuntimeFailureCodeSchema,
-  ContentRuntimeFailureSchema,
-} from "@nakafa/aksara-contracts/runtime/result";
+import type { ContentRuntimeFailureCodeSchema } from "@nakafa/aksara-contracts/runtime/result";
+import { ContentRuntimeFailureSchema } from "@nakafa/aksara-contracts/runtime/result";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Result, Schema } from "effect";
 

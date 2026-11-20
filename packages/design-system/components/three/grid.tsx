@@ -1,13 +1,14 @@
 import { Grid, Line } from "@react-three/drei";
-import {
-  type CoordinateFrame,
-  createGridGeometry,
-  type GridPlaneGeometry,
+import type {
+  CoordinateFrame,
+  GridPlaneGeometry,
 } from "@repo/design-system/components/three/frame";
+import { createGridGeometry } from "@repo/design-system/components/three/frame";
 import type { Point3 } from "@repo/design-system/lib/geometry/point";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
-import { type ColorRepresentation, DoubleSide } from "three";
+import type { ColorRepresentation } from "three";
+import { DoubleSide } from "three";
 
 interface GridPlaneProps {
   readonly cellColor: ColorRepresentation;

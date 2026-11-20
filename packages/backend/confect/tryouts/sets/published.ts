@@ -8,20 +8,16 @@ import { isTryoutProgressWithinReadBudget } from "@repo/backend/confect/tryouts/
 import { tryoutSetIdentityOf } from "@repo/backend/confect/tryouts/route";
 import { readAttemptDestination } from "@repo/backend/confect/tryouts/runtime/attempt/destination";
 import { readOwnedAttemptById } from "@repo/backend/confect/tryouts/runtime/lookup";
-import {
-  type PublishedSetRow,
-  paginatePublishedSets,
-} from "@repo/backend/confect/tryouts/sets/page";
+import type { PublishedSetRow } from "@repo/backend/confect/tryouts/sets/page";
+import { paginatePublishedSets } from "@repo/backend/confect/tryouts/sets/page";
 import { setLevelRank } from "@repo/backend/confect/tryouts/sets/query";
 import type {
   ListArgs,
   TrackIdentity,
 } from "@repo/backend/confect/tryouts/sets/spec";
 import { emptySetPage } from "@repo/backend/confect/tryouts/sets/spec";
-import {
-  loadTryoutCatalog,
-  type PublishedCatalog,
-} from "@repo/backend/content/tryout/catalog";
+import type { PublishedCatalog } from "@repo/backend/content/tryout/catalog";
+import { loadTryoutCatalog } from "@repo/backend/content/tryout/catalog";
 import { readSetFacts } from "@repo/backend/content/tryout/facts";
 import {
   readPublishedSetSections,

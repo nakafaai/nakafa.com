@@ -1,6 +1,6 @@
 import { isOpen, keyOf } from "@repo/backend/confect/island/blocks";
+import type { Edit } from "@repo/backend/confect/island/world";
 import {
-  type Edit,
   footprintOf,
   MAX_EDITS,
   mergeEdits,

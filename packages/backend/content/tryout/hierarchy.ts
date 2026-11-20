@@ -1,8 +1,8 @@
+import type { CatalogRow } from "@nakafa/aksara-contracts/assessment/catalog";
 import {
   CatalogCountrySchema,
   CatalogExamSchema,
   CatalogGroupSchema,
-  type CatalogRow,
   CatalogSectionSchema,
   CatalogSetSchema,
   CatalogTrackSchema,

@@ -14,13 +14,8 @@ import {
   riseOf,
 } from "@/lib/island/relief";
 import { layVillage, VILLAGE } from "@/lib/island/village";
-import {
-  blockAt,
-  type Cells,
-  cellOf,
-  emptyCells,
-  SEA_LEVEL,
-} from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { blockAt, cellOf, emptyCells, SEA_LEVEL } from "@/lib/island/world";
 
 const GRASS = idOf("grass");
 const DIRT = idOf("dirt");

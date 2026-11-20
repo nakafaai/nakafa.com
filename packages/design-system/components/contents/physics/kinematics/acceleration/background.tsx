@@ -2,7 +2,8 @@ import { CameraBounds } from "@repo/design-system/components/three/camera/framin
 import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
-import { type ReactNode, useMemo } from "react";
+import type { ReactNode } from "react";
+import { useMemo } from "react";
 
 const SPACE_COLORS = {
   atmosphere: PLOT_COLORS.violet,

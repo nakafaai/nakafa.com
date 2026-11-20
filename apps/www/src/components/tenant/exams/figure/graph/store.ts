@@ -2,21 +2,21 @@ import type { FigureAttrs } from "@nakafa/aksara-contracts/assessment/figure";
 import { Array as Arr, Option, Result } from "effect";
 import { createStore } from "zustand";
 import { figureOf } from "@/components/tenant/exams/figure/form";
+import type { GraphDraft } from "@/components/tenant/exams/figure/graph/draft";
 import {
   figureDraftOf,
-  type GraphDraft,
   previewOf,
 } from "@/components/tenant/exams/figure/graph/draft";
+import type { SliderDraft } from "@/components/tenant/exams/figure/graph/plane";
 import {
   freeName,
   newSlider,
-  type SliderDraft,
 } from "@/components/tenant/exams/figure/graph/plane";
-import {
-  newShape,
-  type ShapeDraft,
-  type ShapeKind,
+import type {
+  ShapeDraft,
+  ShapeKind,
 } from "@/components/tenant/exams/figure/graph/shapes";
+import { newShape } from "@/components/tenant/exams/figure/graph/shapes";
 
 /**
  * The graph a dialog writes and the edits a teacher makes to it. Every edit lands at once, so the preview follows

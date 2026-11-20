@@ -1,11 +1,9 @@
 import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import type { VectorArrowHandle } from "@repo/design-system/components/contents/physics/solid/arrow";
+import { VectorArrow } from "@repo/design-system/components/contents/physics/solid/arrow";
+import type { Hop } from "@repo/design-system/components/contents/physics/vector/drone/flight";
 import {
-  VectorArrow,
-  type VectorArrowHandle,
-} from "@repo/design-system/components/contents/physics/solid/arrow";
-import {
-  type Hop,
   hopCorners,
   hopPoint,
   pathLength,
@@ -25,7 +23,8 @@ import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { useRef } from "react";
-import { type Group, Vector3 } from "three";
+import type { Group } from "three";
+import { Vector3 } from "three";
 
 /** How fast the drone flies its path, in m/s. */
 const FLIGHT_SPEED = 3;

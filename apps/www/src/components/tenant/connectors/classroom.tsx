@@ -31,9 +31,8 @@ import { TableFiltersProvider } from "@/components/shared/table/toolbar";
 import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
+import type { Course, Preview } from "@/components/tenant/connectors/courses";
 import {
-  type Course,
-  type Preview,
   useCourses,
   useLoadCourses,
 } from "@/components/tenant/connectors/courses";

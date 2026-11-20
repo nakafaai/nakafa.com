@@ -26,7 +26,8 @@ import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
 import { RowItems } from "@/components/shared/table/menu";
 import { TableEnd } from "@/components/shared/table/pages";
-import { type StatusLook, TableStatus } from "@/components/shared/table/status";
+import type { StatusLook } from "@/components/shared/table/status";
+import { TableStatus } from "@/components/shared/table/status";
 import {
   useServerSearch,
   useTableFilters,

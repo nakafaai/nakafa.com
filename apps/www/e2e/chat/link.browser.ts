@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { AuthFailure, AuthReadError } from "@repo/backend/confect/auth/spec";
 import { ChatShareReadError } from "@repo/backend/confect/chats/access/spec";
 import en from "@repo/internationalization/dictionaries/en.json" with {

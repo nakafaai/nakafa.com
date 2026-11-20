@@ -1,7 +1,5 @@
-import {
-  type Placement,
-  PlacementSchema,
-} from "@repo/design-system/components/contents/chemistry/molecule/geometry";
+import type { Placement } from "@repo/design-system/components/contents/chemistry/molecule/geometry";
+import { PlacementSchema } from "@repo/design-system/components/contents/chemistry/molecule/geometry";
 import { Array as Arr, HashMap, Option, Record, Schema } from "effect";
 
 /** The organic molecules of the SPM carbon compounds and polymers chapters. */

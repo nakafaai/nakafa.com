@@ -1,7 +1,5 @@
-import {
-  type DecimalSeparator,
-  formatTrimmedNumber,
-} from "@repo/design-system/components/contents/physics/kinematics/number";
+import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
+import { formatTrimmedNumber } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Number as Num, Schema } from "effect";
 

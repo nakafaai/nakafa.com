@@ -1,5 +1,7 @@
-import { type Ink, stroke } from "@repo/mascot/medal/ink";
-import { circle, ellipse, path, rect, type Shape } from "@repo/mascot/shape";
+import type { Ink } from "@repo/mascot/medal/ink";
+import { stroke } from "@repo/mascot/medal/ink";
+import type { Shape } from "@repo/mascot/shape";
+import { circle, ellipse, path, rect } from "@repo/mascot/shape";
 import { Array as Arr } from "effect";
 
 /** Four tiles of the four operations: mathematics. */

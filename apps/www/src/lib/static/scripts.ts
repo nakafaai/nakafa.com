@@ -1,5 +1,6 @@
 import { Array as Arr, HashSet, Result, Schema } from "effect";
-import { type BuiltChunk, readFirstLoad } from "#www/src/lib/static/chunks";
+import type { BuiltChunk } from "#www/src/lib/static/chunks";
+import { readFirstLoad } from "#www/src/lib/static/chunks";
 
 /** Every link that preloads a JavaScript module. */
 export const MODULE_PRELOAD = /<link\b[^>]*\brel="modulepreload"[^>]*>/gu;

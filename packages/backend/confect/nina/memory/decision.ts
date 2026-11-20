@@ -4,10 +4,8 @@ import { QueryRunner } from "@repo/backend/confect/_generated/services";
 import { judge } from "@repo/backend/confect/nina/judgment/ask";
 import { noteText } from "@repo/backend/confect/nina/judgment/note";
 import { judgmentFailure } from "@repo/backend/confect/nina/memory/failure";
-import {
-  MEMORY_CAPTURE_LIMIT,
-  type NinaMemoryCandidate,
-} from "@repo/backend/confect/nina/memory.spec";
+import type { NinaMemoryCandidate } from "@repo/backend/confect/nina/memory.spec";
+import { MEMORY_CAPTURE_LIMIT } from "@repo/backend/confect/nina/memory.spec";
 import { Array as Arr, Effect, String as Str } from "effect";
 
 /**

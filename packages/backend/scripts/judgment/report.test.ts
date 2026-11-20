@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { Point } from "@repo/backend/scripts/judgment/report";
 import {
   balance,
   bestThreshold,
@@ -6,7 +7,6 @@ import {
   failureLine,
   histogram,
   judgmentTable,
-  type Point,
   wrongly,
 } from "@repo/backend/scripts/judgment/report";
 import { Array as Arr } from "effect";

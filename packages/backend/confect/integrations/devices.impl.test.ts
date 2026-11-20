@@ -6,7 +6,8 @@ import {
   DEVICE_SECONDS,
   DEVICE_TOKEN_SECONDS,
 } from "@repo/backend/confect/integrations/schema";
-import { createClient, type Fixture } from "@repo/backend/test/api";
+import type { Fixture } from "@repo/backend/test/api";
+import { createClient } from "@repo/backend/test/api";
 import { denied, nf } from "@repo/backend/test/classroom";
 import {
   actedAt,

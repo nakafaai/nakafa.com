@@ -4,10 +4,8 @@ import {
   Sha256HashSchema,
 } from "@nakafa/aksara-contracts/ids";
 import { hashContentProjection } from "@nakafa/aksara-contracts/projection/hash";
-import {
-  canonicalizeMaterialProjection,
-  type MaterialLessonProjection,
-} from "@nakafa/aksara-contracts/projection/material";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import { MutationCtx } from "@repo/backend/confect/_generated/services";
 import { deriveMaterialTopicReference } from "@repo/backend/confect/contentRelease/material/topic";
 import {

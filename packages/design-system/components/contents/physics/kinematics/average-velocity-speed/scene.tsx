@@ -1,22 +1,26 @@
 import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import type {
+  AverageVelocitySpeedCaseId,
+  AverageVelocitySpeedState,
+  WorldPoint2,
+} from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/data";
 import {
   AVERAGE_VELOCITY_SPEED_CAMERA,
   AVERAGE_VELOCITY_SPEED_COLORS,
   AVERAGE_VELOCITY_SPEED_SCENE,
-  type AverageVelocitySpeedCaseId,
-  type AverageVelocitySpeedState,
   getAverageMotionRoutePoints,
   getAverageMotionRouteSample,
   toWorldPoint,
   toWorldRoutePoint,
-  type WorldPoint2,
 } from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/data";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useMemo, useRef } from "react";
-import { CatmullRomCurve3, type Group, Vector3 } from "three";
+import type { ReactNode } from "react";
+import { Suspense, useMemo, useRef } from "react";
+import type { Group } from "three";
+import { CatmullRomCurve3, Vector3 } from "three";
 
 const TRACK_Y = 0.18;
 const PAD_Y = 0.06;

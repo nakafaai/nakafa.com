@@ -5,9 +5,9 @@ import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { ServiceCard } from "@/components/connectors/card";
+import type { DirectoryEntry } from "@/components/connectors/directory";
 import {
   DirectoryCategory,
-  type DirectoryEntry,
   holderOf,
   isShown,
 } from "@/components/connectors/directory";

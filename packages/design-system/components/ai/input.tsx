@@ -6,23 +6,20 @@ import {
   LocalAttachmentsContext,
   usePromptInputAttachments,
 } from "@repo/design-system/lib/prompt/context";
-import {
-  type PromptInputMessage,
-  submitPromptInput,
-} from "@repo/design-system/lib/prompt/submission";
+import type { PromptInputMessage } from "@repo/design-system/lib/prompt/submission";
+import { submitPromptInput } from "@repo/design-system/lib/prompt/submission";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import {
-  type ChangeEventHandler,
-  type ClipboardEventHandler,
-  type ComponentProps,
-  type FormEvent,
-  type FormEventHandler,
-  type HTMLAttributes,
-  type KeyboardEventHandler,
-  useEffect,
-  useRef,
+import type {
+  ChangeEventHandler,
+  ClipboardEventHandler,
+  ComponentProps,
+  FormEvent,
+  FormEventHandler,
+  HTMLAttributes,
+  KeyboardEventHandler,
 } from "react";
+import { useEffect, useRef } from "react";
 
 /**
  * Props for a prompt form with locally owned attachments. The refused files of

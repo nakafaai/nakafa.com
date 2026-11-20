@@ -1,7 +1,8 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Array as Arr, Effect } from "effect";
 import { effectFindings } from "#scripts/check/effect";
-import { parseSources, type RepositorySource } from "#scripts/check/source";
+import type { RepositorySource } from "#scripts/check/source";
+import { parseSources } from "#scripts/check/source";
 
 /** Lists the Effect-native findings of one module as `line rule`. */
 const findings = Effect.fn("ErrorPolicyTest.findings")(function* (

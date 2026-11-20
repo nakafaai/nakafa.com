@@ -9,6 +9,7 @@ import {
   vignette,
   withShadow,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { Motor } from "@repo/design-system/components/contents/physics/renewable-energy/hoist/lift";
 import {
   CRATE_WEIGHT,
   crateHeight,
@@ -17,7 +18,6 @@ import {
   liftSpeed,
   liftTime,
   MOTOR_POWER,
-  type Motor,
   MotorSchema,
 } from "@repo/design-system/components/contents/physics/renewable-energy/hoist/lift";
 import {
@@ -49,7 +49,8 @@ import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** How long the crate rests on the platform before the run starts again, in seconds. */
 const HOLD_SECONDS = 1.4;

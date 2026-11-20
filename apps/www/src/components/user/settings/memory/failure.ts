@@ -1,5 +1,6 @@
 import { NinaMemoryRejected } from "@repo/backend/confect/nina/memory.spec";
-import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Schema } from "effect";
 import { reportClientException } from "@/lib/analytics/client";
 

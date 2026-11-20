@@ -1,6 +1,7 @@
 import type { EndReason } from "@repo/backend/confect/assessment/gate/end";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
-import { type Effect, type Option, Schema } from "effect";
+import type { Effect, Option } from "effect";
+import { Schema } from "effect";
 
 /** A device session of one attempt, as the web names it: one per sitting for the student's browser. */
 export const DeviceId = Schema.NonEmptyString;

@@ -1,10 +1,5 @@
-import {
-  type Bounds,
-  isMoving,
-  REST,
-  step,
-  type Toy,
-} from "@repo/design-system/lib/toy/flight";
+import type { Bounds, Toy } from "@repo/design-system/lib/toy/flight";
+import { isMoving, REST, step } from "@repo/design-system/lib/toy/flight";
 import { createToys } from "@repo/design-system/lib/toy/shelf";
 import { Array as Arr, MutableList, Option, Record as Rec } from "effect";
 

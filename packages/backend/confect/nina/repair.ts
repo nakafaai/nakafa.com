@@ -1,4 +1,5 @@
-import { Agent, type UsageHandler } from "@convex-dev/agent";
+import type { UsageHandler } from "@convex-dev/agent";
+import { Agent } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { ActionCtx } from "@repo/backend/confect/_generated/services";
@@ -7,7 +8,8 @@ import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capabil
 import type { UsageAgent } from "@repo/backend/confect/nina/contract/usage";
 import type { NinaToolSet } from "@repo/backend/confect/nina/step";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { NoSuchToolError, Output, type ToolCallRepairFunction } from "ai";
+import type { ToolCallRepairFunction } from "ai";
+import { NoSuchToolError, Output } from "ai";
 import { Array as Arr, Effect, Schema } from "effect";
 
 class NinaRepairError extends Schema.TaggedError<

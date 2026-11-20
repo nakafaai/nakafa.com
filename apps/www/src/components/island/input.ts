@@ -1,23 +1,21 @@
 import { Array as Arr, MutableHashMap, Option, Record as Rec } from "effect";
 import type { GameStoreApi } from "@/components/island/store";
+import type { Orbit } from "@/lib/island/camera";
 import {
-  type Orbit,
   panOrbit,
   turnOrbit,
   zoomOrbit,
   zoomToward,
 } from "@/lib/island/camera";
+import type { Point, Press, Spin } from "@/lib/island/gesture";
 import {
   DRAG,
   distanceOf,
   followSpin,
   isTap,
   LONG_PRESS,
-  type Point,
-  type Press,
   pinchOf,
   releaseSpin,
-  type Spin,
   STILL_SPIN,
   wheelZoomOf,
 } from "@/lib/island/gesture";

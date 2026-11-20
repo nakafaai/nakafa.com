@@ -4,10 +4,8 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import {
-  PracticeError,
-  type PracticeTarget,
-} from "@repo/backend/confect/practice/sessions.spec";
+import type { PracticeTarget } from "@repo/backend/confect/practice/sessions.spec";
+import { PracticeError } from "@repo/backend/confect/practice/sessions.spec";
 import { loadActiveAssessment } from "@repo/backend/confect/tryouts/active";
 import { chooseStartLanguage } from "@repo/backend/confect/tryouts/language";
 import { freezeAttempt } from "@repo/backend/confect/tryouts/start/freeze";

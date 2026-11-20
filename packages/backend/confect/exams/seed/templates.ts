@@ -16,10 +16,8 @@ import {
   NEW_QUESTION_POINTS,
   QuestionTemplate,
 } from "@repo/backend/confect/exams/question";
-import {
-  placeSeeded,
-  type SeededExam,
-} from "@repo/backend/confect/exams/seed/place";
+import type { SeededExam } from "@repo/backend/confect/exams/seed/place";
+import { placeSeeded } from "@repo/backend/confect/exams/seed/place";
 import { paragraphsDocument } from "@repo/backend/confect/exams/seed/prompt";
 import { Array as Arr, Effect, Schema } from "effect";
 

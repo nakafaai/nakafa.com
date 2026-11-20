@@ -5,10 +5,8 @@ import {
   VILLAGE,
 } from "@repo/design-system/components/contents/biology/climate/sea";
 import { landAt } from "@repo/design-system/components/contents/biology/climate/shore";
-import {
-  Instances,
-  type Placement,
-} from "@repo/design-system/components/contents/biology/instances";
+import type { Placement } from "@repo/design-system/components/contents/biology/instances";
+import { Instances } from "@repo/design-system/components/contents/biology/instances";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { ROAD_COLORS } from "@repo/design-system/lib/material/road";

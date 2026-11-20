@@ -2,8 +2,8 @@ import { matchesAnswerKey } from "@nakafa/aksara-contracts/assessment/answer";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { matchesNumber } from "@repo/backend/confect/assessment/number";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import {
-  type ExamResponse,
   NO_RESPONSE,
   typedText,
 } from "@repo/backend/confect/assessment/response";

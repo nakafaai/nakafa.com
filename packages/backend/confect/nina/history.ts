@@ -8,7 +8,8 @@ import {
 } from "@repo/backend/confect/nina/budget";
 import { LearningCapabilityNameSchema } from "@repo/backend/confect/nina/capability/spec";
 import { encodeJsonText } from "@repo/utilities/json";
-import { type ModelMessage, pruneMessages, type ToolResultPart } from "ai";
+import type { ModelMessage, ToolResultPart } from "ai";
+import { pruneMessages } from "ai";
 import { Array as Arr, MutableHashSet, Option, Schema } from "effect";
 
 /** Earlier evidence keeps this much text once its turn outgrows the budget. */

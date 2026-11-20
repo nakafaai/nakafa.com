@@ -4,7 +4,8 @@ import {
   pictureVariants,
 } from "@repo/design-system/lib/prose";
 import { cn } from "cn";
-import { type ComponentProps, memo } from "react";
+import type { ComponentProps } from "react";
+import { memo } from "react";
 
 const DEFAULT_MARKDOWN_IMAGE_WIDTH = 720;
 const DEFAULT_MARKDOWN_IMAGE_HEIGHT = 520;

@@ -13,7 +13,8 @@ import {
   tableAnswers,
 } from "@repo/backend/confect/exams/blank";
 import { reasonAnswers } from "@repo/backend/confect/exams/reason";
-import { type Array as Arr, Schema } from "effect";
+import type { Array as Arr } from "effect";
+import { Schema } from "effect";
 
 /** A key that marks the given options of the choice `choice` correct. */
 const choiceKey = (first: string, ...rest: string[]): InteractionKey => ({

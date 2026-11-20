@@ -1,8 +1,6 @@
 import { Effect, FileSystem, Path } from "effect";
-import {
-  type VerticalMetricsSchema,
-  writeFaceMetrics,
-} from "@/scripts/quran/woff";
+import type { VerticalMetricsSchema } from "@/scripts/quran/woff";
+import { writeFaceMetrics } from "@/scripts/quran/woff";
 
 /**
  * Amiri Quran's vertical metrics for one line of Arabic beside other things, a

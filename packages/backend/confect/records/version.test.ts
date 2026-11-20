@@ -4,10 +4,8 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import {
-  type Band,
-  DEFAULT_GRADING_SCHEME,
-} from "@repo/backend/confect/records/scheme";
+import type { Band } from "@repo/backend/confect/records/scheme";
+import { DEFAULT_GRADING_SCHEME } from "@repo/backend/confect/records/scheme";
 import { schemeInForce, schemeOf } from "@repo/backend/confect/records/version";
 import { tenancyFixture } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";

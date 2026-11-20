@@ -3,9 +3,9 @@
 import { useRequired } from "@repo/design-system/hooks/required";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Effect } from "effect";
+import type { ReactNode } from "react";
 import {
   createContext,
-  type ReactNode,
   useEffect,
   useEffectEvent,
   useLayoutEffect,
@@ -14,7 +14,8 @@ import {
 } from "react";
 import { useAdmissionGate } from "@/components/ai/chat/admission";
 import { useAi } from "@/components/ai/context";
-import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
+import type { NinaDraft } from "@/components/ai/submission";
+import { useNinaSubmission } from "@/components/ai/submission";
 
 const AskContext = createContext<((prompt: NinaDraft) => void) | null>(null);
 

@@ -1,4 +1,5 @@
-import { Agent, type UsageHandler } from "@convex-dev/agent";
+import type { UsageHandler } from "@convex-dev/agent";
+import { Agent } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
@@ -24,11 +25,13 @@ import {
 import { knownLine } from "@repo/backend/confect/nina/memory/line";
 import { readSaid } from "@repo/backend/confect/nina/memory/said";
 import { topicsOf } from "@repo/backend/confect/nina/memory/topics";
+import type {
+  NinaKnown,
+  NinaMemoryKind,
+} from "@repo/backend/confect/nina/memory.spec";
 import {
   MEMORY_CAPTURE_LIMIT,
-  type NinaKnown,
   NinaMemoryCapture,
-  type NinaMemoryKind,
 } from "@repo/backend/confect/nina/memory.spec";
 import { formatLearnerProfile } from "@repo/backend/confect/nina/prompt/learner";
 import { Output } from "ai";

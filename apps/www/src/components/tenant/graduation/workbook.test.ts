@@ -2,12 +2,14 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Nisn } from "@repo/backend/confect/roster/schema";
 import { Array as Arr, Schema } from "effect";
+import type {
+  GraduationOverview,
+  LedgerRow,
+  ReadinessRow,
+} from "@/components/tenant/graduation/workbook";
 import {
   fileStem,
-  type GraduationOverview,
-  type LedgerRow,
   ledgerWorkbook,
-  type ReadinessRow,
   readinessWorkbook,
 } from "@/components/tenant/graduation/workbook";
 

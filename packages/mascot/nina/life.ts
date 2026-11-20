@@ -1,11 +1,12 @@
-import { type Look, LookSchema, MoodSchema } from "@repo/mascot/nina/face";
+import type { Look } from "@repo/mascot/nina/face";
+import { LookSchema, MoodSchema } from "@repo/mascot/nina/face";
 import { appear } from "@repo/mascot/nina/figure";
+import type { Options } from "@repo/mascot/nina/options";
 import {
   BEHAVIORS,
   BehaviorSchema,
   homeOf,
   modeOf,
-  type Options,
 } from "@repo/mascot/nina/options";
 import type { Pose } from "@repo/mascot/nina/pose";
 import {

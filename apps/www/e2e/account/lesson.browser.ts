@@ -1,4 +1,5 @@
-import { type BrowserContextOptions, expect, test } from "@playwright/test";
+import type { BrowserContextOptions } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { DateTime, Effect } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
 import { postComment } from "@/e2e/support/comments";

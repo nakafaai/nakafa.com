@@ -12,12 +12,12 @@ import { classSlugOf } from "@repo/backend/confect/classroom/class";
 import type { ClientKey } from "@repo/backend/confect/classroom/forum/message";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import { classRoster } from "@repo/backend/confect/classroom/roster";
-import {
-  type LatePolicy,
-  type TaskCategory,
-  type TaskTargets,
-  taskField,
+import type {
+  LatePolicy,
+  TaskCategory,
+  TaskTargets,
 } from "@repo/backend/confect/classroom/tasks/schema";
+import { taskField } from "@repo/backend/confect/classroom/tasks/schema";
 import { scheduleTaskNotices } from "@repo/backend/confect/notifications/tasks";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { sealText } from "@repo/backend/confect/vault/text";

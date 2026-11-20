@@ -1,9 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, MutableRef, Option } from "effect";
-import {
-  emptyGraph,
-  type GraphDraft,
-} from "@/components/tenant/exams/figure/graph/draft";
+import type { GraphDraft } from "@/components/tenant/exams/figure/graph/draft";
+import { emptyGraph } from "@/components/tenant/exams/figure/graph/draft";
 import { createGraphStore } from "@/components/tenant/exams/figure/graph/store";
 
 /** A builder over a named, described graph, which starts with one function, and the graphs it wrote. */

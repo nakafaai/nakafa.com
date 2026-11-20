@@ -5,10 +5,10 @@ import {
   AnswersDoNotFit,
   RevisionStale,
 } from "@repo/backend/confect/exams/errors";
+import type { QuestionTemplate } from "@repo/backend/confect/exams/question";
 import {
   encodeAnswers,
   encodeKey,
-  type QuestionTemplate,
   questionView,
   templateLabels,
 } from "@repo/backend/confect/exams/question";

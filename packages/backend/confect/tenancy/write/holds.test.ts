@@ -19,6 +19,7 @@ import {
   term,
 } from "@repo/backend/test/holds";
 import { tenancyFixture } from "@repo/backend/test/tenancy";
+import type { SchemaAST } from "effect";
 import {
   Array as Arr,
   Effect,
@@ -26,7 +27,6 @@ import {
   Option,
   Order,
   Record as Rec,
-  type SchemaAST,
 } from "effect";
 
 /**

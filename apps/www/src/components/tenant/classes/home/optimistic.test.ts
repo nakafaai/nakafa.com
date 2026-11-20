@@ -3,9 +3,9 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
+import type { ClassPost } from "@/components/tenant/classes/home/optimistic";
 import {
   archivePostUpdate,
-  type ClassPost,
   editPostUpdate,
   pinPostUpdate,
   publishUpdate,

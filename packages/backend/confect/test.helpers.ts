@@ -17,7 +17,8 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
 import { registerPostHog } from "@repo/backend/test/posthog";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 
 /** The lifetimes of a test session, as `auth/core` configures them. */
 const TEST_SESSION_LIFETIMES = {

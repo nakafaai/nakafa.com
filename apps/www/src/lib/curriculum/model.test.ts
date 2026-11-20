@@ -3,8 +3,8 @@ import { Effect, Struct } from "effect";
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
+import type { CurriculumRouteModel } from "@/lib/curriculum/model";
 import {
-  type CurriculumRouteModel,
   readRuntimeCurriculumBreadcrumbs,
   readRuntimeCurriculumCatalog,
   readRuntimeCurriculumOptions,

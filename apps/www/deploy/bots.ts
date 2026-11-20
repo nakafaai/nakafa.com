@@ -1,4 +1,5 @@
-import { BotManagement, type Zone } from "@alchemy.run/cloudflare";
+import type { Zone } from "@alchemy.run/cloudflare";
+import { BotManagement } from "@alchemy.run/cloudflare";
 import { Effect } from "effect";
 
 /**

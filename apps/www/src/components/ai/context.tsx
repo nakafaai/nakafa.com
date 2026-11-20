@@ -2,10 +2,12 @@
 
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Option } from "effect";
-import { createContext, type ReactNode, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, useEffect, useState } from "react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
-import { type AiStoreApi, createAiStore } from "@/components/ai/store/create";
+import type { AiStoreApi } from "@/components/ai/store/create";
+import { createAiStore } from "@/components/ai/store/create";
 import type { AiStore } from "@/components/ai/store/types";
 import { useAuthSession } from "@/components/auth/session";
 import { useLiveSession } from "@/components/providers/live";

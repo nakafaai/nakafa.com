@@ -4,8 +4,8 @@ import {
   MutationCtx as MutationCtxService,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import type { CleanupSource } from "@repo/backend/confect/privacy/spec";
 import {
-  type CleanupSource,
   toPrivacyCleanupError,
   tryPrivacyCleanup,
 } from "@repo/backend/confect/privacy/spec";

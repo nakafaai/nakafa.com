@@ -20,13 +20,8 @@ import {
 } from "@repo/design-system/lib/sidebar/persistence";
 import { cn } from "cn";
 import { Effect } from "effect";
-import {
-  type ComponentProps,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import type { ComponentProps } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 /**
  * Default shortcut that toggles the sidebar: Mod with a letter and Shift.

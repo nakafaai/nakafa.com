@@ -1,8 +1,6 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import {
-  type BillingOfferKey,
-  billingOffer,
-} from "@repo/backend/confect/billing/catalog";
+import type { BillingOfferKey } from "@repo/backend/confect/billing/catalog";
+import { billingOffer } from "@repo/backend/confect/billing/catalog";
 import { polarOfferOf } from "@repo/backend/confect/billing/polar/catalog";
 import type { PolarSubscriptionSource } from "@repo/backend/confect/billing/polar/payload";
 import type { billingSubscriptionStatusValidator } from "@repo/backend/confect/billing/schema";

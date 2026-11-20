@@ -1,5 +1,6 @@
 import { Array as Arr, DateTime, Option, Schema } from "effect";
-import { blendLab, greyedLab, type Rgb } from "@/lib/island/oklab";
+import type { Rgb } from "@/lib/island/oklab";
+import { blendLab, greyedLab } from "@/lib/island/oklab";
 import { rgbOf } from "@/lib/island/palette";
 
 const Color = Schema.Tuple([Schema.Finite, Schema.Finite, Schema.Finite]);

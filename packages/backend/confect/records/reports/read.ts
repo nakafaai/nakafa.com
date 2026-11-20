@@ -10,12 +10,12 @@ import {
   reportOf,
   reportView,
 } from "@repo/backend/confect/records/card";
-import {
-  ReportAction,
-  type ReportCohort,
-  type ReportDetail,
-  type ReportLine,
+import type {
+  ReportCohort,
+  ReportDetail,
+  ReportLine,
 } from "@repo/backend/confect/records/report";
+import { ReportAction } from "@repo/backend/confect/records/report";
 import spec from "@repo/backend/confect/records/reports.spec";
 import { Cohort } from "@repo/backend/confect/tenancy/access";
 import { cohortAuthority } from "@repo/backend/confect/tenancy/authority";

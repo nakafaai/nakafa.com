@@ -1,7 +1,7 @@
+import type { RunConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import {
   LocalConvex,
   localConvexLayer,
-  type RunConvex,
 } from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import {
@@ -9,10 +9,8 @@ import {
   writeFixture,
 } from "@repo/backend/scripts/content/acceptance/fixture";
 import { seedInvitedMember } from "@repo/backend/scripts/content/acceptance/member";
-import {
-  type AcceptanceMode,
-  decodeModeArguments,
-} from "@repo/backend/scripts/content/acceptance/mode";
+import type { AcceptanceMode } from "@repo/backend/scripts/content/acceptance/mode";
+import { decodeModeArguments } from "@repo/backend/scripts/content/acceptance/mode";
 import { Duration, Effect, Option, Schedule, Schema } from "effect";
 
 /** The invite and the Person that the invite function wrote. */

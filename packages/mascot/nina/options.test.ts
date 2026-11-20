@@ -2,7 +2,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { ActSchema } from "@repo/mascot/nina/act";
 import { EdgeSchema } from "@repo/mascot/nina/edge";
 import { BEHAVIORS, homeOf, modeOf, moodOf } from "@repo/mascot/nina/options";
-import { type Pose, REST } from "@repo/mascot/nina/pose";
+import type { Pose } from "@repo/mascot/nina/pose";
+import { REST } from "@repo/mascot/nina/pose";
 import { Array as Arr, Record as Rec } from "effect";
 
 /** A pose of an act that has a face of its own. */

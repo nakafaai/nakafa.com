@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Array as Arr, Duration, Effect, Option } from "effect";
 import { waitForStableCanvas } from "@/e2e/support/canvas";
 import { scrollToElement } from "@/e2e/support/input";

@@ -1,14 +1,13 @@
+import type { Bounds, Point, Toy } from "@repo/design-system/lib/toy/flight";
 import {
-  type Bounds,
   fence,
   lean,
-  type Point,
   PointSchema,
   REST,
-  type Toy,
   ToySchema,
 } from "@repo/design-system/lib/toy/flight";
-import { Number as Num, type Option, Schema } from "effect";
+import type { Option } from "effect";
+import { Number as Num, Schema } from "effect";
 
 /** One reading of the pointer: where it is in the window, and when, in milliseconds. */
 const SampleSchema = Schema.Struct({

@@ -3,7 +3,8 @@ import { ink, line } from "@repo/mascot/nina/ink";
 import type { Mark } from "@repo/mascot/nina/mark";
 import { at } from "@repo/mascot/nina/point";
 import { tenth } from "@repo/mascot/round";
-import { ellipse, path, type Shape } from "@repo/mascot/shape";
+import type { Shape } from "@repo/mascot/shape";
+import { ellipse, path } from "@repo/mascot/shape";
 import { Schema } from "effect";
 
 /** The ways her mouth is drawn. */

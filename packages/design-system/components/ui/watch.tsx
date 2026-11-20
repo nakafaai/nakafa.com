@@ -1,5 +1,6 @@
 import { watch } from "@repo/design-system/lib/watch";
-import { type ReactNode, useEffect, useRef } from "react";
+import type { ReactNode } from "react";
+import { useEffect, useRef } from "react";
 
 /**
  * The eyes of every animal and of Nina inside it look toward the pointer, a

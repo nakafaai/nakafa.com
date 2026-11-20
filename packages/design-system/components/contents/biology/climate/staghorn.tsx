@@ -1,5 +1,5 @@
+import type { Colony } from "@repo/design-system/components/contents/biology/climate/coral";
 import {
-  type Colony,
   CoralliteMaterial,
   TissueMaterial,
   useTissuePaint,
@@ -10,9 +10,9 @@ import { hashUnit } from "@repo/design-system/components/contents/simulation/gra
 import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { Array as Arr, Option } from "effect";
 import { useEffect, useMemo } from "react";
+import type { BufferGeometry } from "three";
 import {
   BufferAttribute,
-  type BufferGeometry,
   CatmullRomCurve3,
   MathUtils,
   Quaternion,

@@ -2,10 +2,10 @@ import type { GenericId } from "@confect/core";
 import { QueryResult, useAction, useMutation, useQuery } from "@confect/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import type { QuestionMedia } from "@repo/backend/confect/exams/media";
 import {
   AUDIO_BYTE_LIMIT,
   MEDIA_MAX,
-  type QuestionMedia,
   videoIdOf,
 } from "@repo/backend/confect/exams/media";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -27,7 +27,8 @@ import {
   Option,
   String as Str,
 } from "effect";
-import { type ComponentProps, useId, useState, useTransition } from "react";
+import type { ComponentProps } from "react";
+import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { PaperMedia } from "@/components/exams/sitting/media";
 import { mediaUpdate } from "@/components/tenant/exams/attached";

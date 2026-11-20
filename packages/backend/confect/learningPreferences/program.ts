@@ -4,11 +4,11 @@ import {
   readLearningPreferenceByUserId,
   setPreferredCurriculumProgram,
 } from "@repo/backend/confect/learningPreferences/impl";
+import type { curriculumProgramOptionValidator } from "@repo/backend/confect/learningPreferences/schema";
 import {
   CurriculumPreferenceError,
   curriculumPreferenceIoFailedCode,
   curriculumProgramNotFoundCode,
-  type curriculumProgramOptionValidator,
 } from "@repo/backend/confect/learningPreferences/schema";
 import type { Locale } from "@repo/backend/confect/lib/validators/contents";
 import { readVerifiedProgramCatalog } from "@repo/backend/content/program/catalog";

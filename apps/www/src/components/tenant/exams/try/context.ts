@@ -2,7 +2,8 @@ import type { GenericId } from "@confect/core";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { createContext } from "react";
-import { type StoreApi, useStore } from "zustand";
+import type { StoreApi } from "zustand";
+import { useStore } from "zustand";
 import type { ExamTry } from "@/components/tenant/exams/try/store";
 
 /** The exam of the try, which the try page provides. */

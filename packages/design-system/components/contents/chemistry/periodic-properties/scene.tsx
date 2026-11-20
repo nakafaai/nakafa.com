@@ -1,11 +1,13 @@
 import { Line } from "@react-three/drei";
+import type {
+  PeriodicPropertiesSceneColors,
+  PeriodicPropertyMode,
+  PeriodicPropertyModeId,
+  PeriodicPropertySample,
+} from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
 import {
   getPeriodicPropertyModeColor,
   PERIODIC_PROPERTY_MODES,
-  type PeriodicPropertiesSceneColors,
-  type PeriodicPropertyMode,
-  type PeriodicPropertyModeId,
-  type PeriodicPropertySample,
 } from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow";
@@ -13,7 +15,8 @@ import type { ThreeFontSize } from "@repo/design-system/components/three/data/co
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option } from "effect";
-import { createContext, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { createContext } from "react";
 
 const PERIOD_Z = -1.18;
 const PERIOD_STEP = 0.78;

@@ -1,18 +1,15 @@
 import { Array as Arr, Equal, HashSet, Option, Result, Schema } from "effect";
+import type { Node } from "tsrs/ast";
 import {
   isBinaryExpression,
   isConditionalExpression,
   isIdentifier,
   isJsxExpression,
   isParenthesizedExpression,
-  type Node,
   SyntaxKind,
 } from "tsrs/ast";
-import {
-  type Component,
-  componentGraph,
-  componentKey,
-} from "#scripts/check/components";
+import type { Component } from "#scripts/check/components";
+import { componentGraph, componentKey } from "#scripts/check/components";
 import { nodesBelow } from "#scripts/check/drilling";
 import { opening } from "#scripts/check/jsx";
 import { place } from "#scripts/check/places";

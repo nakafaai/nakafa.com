@@ -17,11 +17,8 @@ import {
 import { Array as Arr, Schema } from "effect";
 import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  type NumberSetting,
-  ToleranceKind,
-  withNumber,
-} from "@/components/tenant/exams/number";
+import type { NumberSetting } from "@/components/tenant/exams/number";
+import { ToleranceKind, withNumber } from "@/components/tenant/exams/number";
 
 /** The most characters a number or a unit takes in the teacher's layer, as long as a number is written. */
 const NUMBER_LENGTH_MAX = 40;

@@ -1,6 +1,7 @@
 import type { Mark } from "@repo/mascot/nina/mark";
 import { tenth } from "@repo/mascot/round";
-import { circle, group, path, rect, type Shape } from "@repo/mascot/shape";
+import type { Shape } from "@repo/mascot/shape";
+import { circle, group, path, rect } from "@repo/mascot/shape";
 
 /** One thing she holds or stands by, as its shapes around its own origin. */
 export type Parts = readonly Shape<Mark>[];

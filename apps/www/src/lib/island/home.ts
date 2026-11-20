@@ -4,7 +4,8 @@ import { Array as Arr, MutableHashMap, Option, Result } from "effect";
 import type { Edit } from "@/lib/island/edits";
 import { COTTAGE, houseParts } from "@/lib/island/items";
 import { KIND, LOOK } from "@/lib/island/look";
-import { type Cells, cellOf, SEA_LEVEL } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { cellOf, SEA_LEVEL } from "@/lib/island/world";
 
 /**
  * The learner's own home (ADR 0047, D17): the village's north-west cottage,

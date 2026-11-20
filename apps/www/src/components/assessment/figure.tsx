@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  type FigureAttrs,
-  FigureAttrsSchema,
-} from "@nakafa/aksara-contracts/assessment/figure";
+import type { FigureAttrs } from "@nakafa/aksara-contracts/assessment/figure";
+import { FigureAttrsSchema } from "@nakafa/aksara-contracts/assessment/figure";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { Option, Schema } from "effect";
 import { Suspense } from "react";

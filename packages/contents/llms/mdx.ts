@@ -19,7 +19,8 @@ import type {
 } from "mdast-util-mdx-jsx";
 import remarkMdx from "remark-mdx";
 import remarkParse from "remark-parse";
-import { type Processor, unified } from "unified";
+import type { Processor } from "unified";
+import { unified } from "unified";
 
 const PROCESSOR = configureMdxProcessor(unified().use(remarkParse));
 const COMPONENT_PROP_LIMIT = 1200;

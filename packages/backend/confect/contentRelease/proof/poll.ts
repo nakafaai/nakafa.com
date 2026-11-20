@@ -5,20 +5,18 @@ import {
   MutationCtx as MutationCtxService,
   QueryCtx as QueryCtxService,
 } from "@repo/backend/confect/_generated/services";
-import {
-  type ReleaseError,
-  releaseFail,
-} from "@repo/backend/confect/contentRelease/error";
+import type { ReleaseError } from "@repo/backend/confect/contentRelease/error";
+import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadStaged } from "@repo/backend/confect/contentRelease/model";
 import {
   decodeProofJson,
   decodeReleaseJson,
 } from "@repo/backend/confect/contentRelease/parse";
-import {
-  proofFailureValidator,
-  type proofPollValidator,
-  type proofStatusValidator,
+import type {
+  proofPollValidator,
+  proofStatusValidator,
 } from "@repo/backend/confect/contentRelease/proof/spec";
+import { proofFailureValidator } from "@repo/backend/confect/contentRelease/proof/spec";
 import { stagedEvidence } from "@repo/backend/confect/contentRelease/receipt";
 import { beginVerification } from "@repo/backend/confect/contentRelease/verify";
 import { workflow } from "@repo/backend/confect/workflow";

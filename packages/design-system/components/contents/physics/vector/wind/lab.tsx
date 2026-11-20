@@ -28,7 +28,8 @@ import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** What the sketch reads on every frame: the wind. */
 const BreezeFrameSchema = Schema.Struct({ breeze: BreezeSchema });

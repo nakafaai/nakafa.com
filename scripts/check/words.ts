@@ -7,16 +7,18 @@ import {
   Result,
   Schema,
 } from "effect";
+import type {
+  Node,
+  ObjectLiteralExpression,
+  PropertyAssignment,
+  PropertyNameLiteral,
+  SourceFile,
+} from "tsrs/ast";
 import {
   isObjectLiteralExpression,
   isPropertyAssignment,
   isPropertyNameLiteral,
   isStringLiteral,
-  type Node,
-  type ObjectLiteralExpression,
-  type PropertyAssignment,
-  type PropertyNameLiteral,
-  type SourceFile,
 } from "tsrs/ast";
 import { children } from "#scripts/check/source";
 

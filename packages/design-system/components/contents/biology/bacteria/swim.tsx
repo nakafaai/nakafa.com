@@ -1,6 +1,6 @@
+import type { Swimmer } from "@repo/design-system/components/contents/biology/bacteria/microbe";
 import {
   SWIM,
-  type Swimmer,
   stepSwimmer,
 } from "@repo/design-system/components/contents/biology/bacteria/microbe";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
@@ -23,7 +23,8 @@ import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** The dish is 400 µm across; the sugar crystal lies at its right edge. */
 const DISH = 400;

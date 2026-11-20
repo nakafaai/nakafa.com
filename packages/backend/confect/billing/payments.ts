@@ -5,10 +5,8 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { findAccount } from "@repo/backend/confect/billing/accounts";
-import {
-  BillingRail,
-  type billingPaymentValidator,
-} from "@repo/backend/confect/billing/schema";
+import type { billingPaymentValidator } from "@repo/backend/confect/billing/schema";
+import { BillingRail } from "@repo/backend/confect/billing/schema";
 import { Array as Arr, Effect, Option, Order, Schema } from "effect";
 
 type BillingPaymentInput = typeof billingPaymentValidator.Type;

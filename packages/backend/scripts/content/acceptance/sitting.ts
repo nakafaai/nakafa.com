@@ -6,10 +6,8 @@ import {
   SittingFixture,
   writeFixture,
 } from "@repo/backend/scripts/content/acceptance/fixture";
-import {
-  type AcceptanceMode,
-  decodeModeArguments,
-} from "@repo/backend/scripts/content/acceptance/mode";
+import type { AcceptanceMode } from "@repo/backend/scripts/content/acceptance/mode";
+import { decodeModeArguments } from "@repo/backend/scripts/content/acceptance/mode";
 import { Effect, Schema } from "effect";
 
 /**

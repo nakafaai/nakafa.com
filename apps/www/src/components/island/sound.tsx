@@ -3,7 +3,8 @@
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, DateTime, Option } from "effect";
 import { createPatter } from "@/components/island/patter";
-import { type GameStoreApi, GameStoreContext } from "@/components/island/store";
+import type { GameStoreApi } from "@/components/island/store";
+import { GameStoreContext } from "@/components/island/store";
 import { createTread } from "@/components/island/tread";
 import { callOf, voicesOf } from "@/lib/island/chorus";
 import { unitOf } from "@/lib/island/noise";

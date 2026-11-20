@@ -26,7 +26,8 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { Array as Arr } from "effect";
 import { createRef, useMemo } from "react";
-import { Color, DoubleSide, type Mesh, Vector2 } from "three";
+import type { Mesh } from "three";
+import { Color, DoubleSide, Vector2 } from "three";
 
 /** Where the cathode stands on the tube's axis. */
 const CATHODE_X = -3.5;

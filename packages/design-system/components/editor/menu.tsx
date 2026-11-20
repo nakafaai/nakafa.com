@@ -19,12 +19,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
-import {
-  type ComponentProps,
-  type Ref,
-  useImperativeHandle,
-  useState,
-} from "react";
+import type { ComponentProps, Ref } from "react";
+import { useImperativeHandle, useState } from "react";
 
 /** The keys that the menu answers, which the suggestion passes it for each key the writer presses. */
 export interface SlashMenuHandle {

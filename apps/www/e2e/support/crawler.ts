@@ -1,4 +1,5 @@
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
 
 /** The head metadata, links, and structured data of one server document. */

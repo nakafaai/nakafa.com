@@ -2,8 +2,10 @@ import type { ParsedHeading } from "@repo/contents/toc";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { elementById } from "@repo/design-system/lib/element";
 import { Array as Arr, Equal, Option, Schema } from "effect";
-import { createContext, type ReactNode, useEffect, useState } from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
+import type { ReactNode } from "react";
+import { createContext, useEffect, useState } from "react";
+import type { StoreApi } from "zustand";
+import { createStore, useStore } from "zustand";
 import {
   outlineIds,
   readingHeading,

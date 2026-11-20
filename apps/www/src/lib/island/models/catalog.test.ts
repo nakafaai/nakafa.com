@@ -6,13 +6,8 @@ import { SPECIES } from "@/lib/island/fauna/species";
 import { plantFaces, speciesFaces } from "@/lib/island/models/catalog";
 import { PLANT_HEIGHTS } from "@/lib/island/models/heights";
 import { LENGTHS } from "@/lib/island/models/lengths";
-import {
-  boundsOf,
-  type Face,
-  flatten,
-  meters,
-  normalOf,
-} from "@/lib/island/models/parts";
+import type { Face } from "@/lib/island/models/parts";
+import { boundsOf, flatten, meters, normalOf } from "@/lib/island/models/parts";
 
 const ANIMALS = Arr.map(SPECIES, (species, index) => ({
   faces: speciesFaces(index),

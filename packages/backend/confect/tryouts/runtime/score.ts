@@ -2,10 +2,8 @@ import { ScoringStrategySchema } from "@nakafa/aksara-contracts/assessment/scori
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
-import {
-  type EndReason,
-  statusOf,
-} from "@repo/backend/confect/assessment/gate/end";
+import type { EndReason } from "@repo/backend/confect/assessment/gate/end";
+import { statusOf } from "@repo/backend/confect/assessment/gate/end";
 import { isAnswered } from "@repo/backend/confect/assessment/response";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/write";
@@ -15,15 +13,15 @@ import {
   toTryoutRuntimeError,
 } from "@repo/backend/confect/tryouts/runtime/error";
 import { scoreIrt } from "@repo/backend/confect/tryouts/runtime/irt";
+import type { TryoutIrtSource } from "@repo/backend/confect/tryouts/runtime/irt/items";
 import {
   loadAttemptIrtSource,
   loadSectionIrtSource,
-  type TryoutIrtSource,
   TryoutIrtSourceSchema,
 } from "@repo/backend/confect/tryouts/runtime/irt/items";
 import type { TryoutResponseIndex } from "@repo/backend/confect/tryouts/runtime/response";
+import type { AttemptScore } from "@repo/backend/confect/tryouts/runtime/result";
 import {
-  type AttemptScore,
   readScoredAnswers,
   scoreAnswers,
 } from "@repo/backend/confect/tryouts/runtime/result";

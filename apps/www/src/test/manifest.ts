@@ -5,17 +5,17 @@ import {
   SignedContentArtifactSchema,
 } from "@nakafa/aksara-contracts/content";
 import { makeLearningGraphIdentity } from "@nakafa/aksara-contracts/graph/identity";
+import type { Sha256Hash } from "@nakafa/aksara-contracts/ids";
 import {
   ContentKeySchema,
   CorpusSourcePathSchema,
   Ed25519SignatureSchema,
   GitCommitShaSchema,
-  type Sha256Hash,
   Sha256HashSchema,
   SigningKeyIdSchema,
 } from "@nakafa/aksara-contracts/ids";
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import {
-  type AppLocaleCode,
   AppLocaleSchema,
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";

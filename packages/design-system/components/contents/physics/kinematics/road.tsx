@@ -8,15 +8,10 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { getColor } from "@repo/design-system/lib/color";
 import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Array as Arr, Schema } from "effect";
-import {
-  type ReactNode,
-  type Ref,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-} from "react";
-import { DataTexture, type Group, RepeatWrapping, SRGBColorSpace } from "three";
+import type { ReactNode, Ref } from "react";
+import { useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import type { Group } from "three";
+import { DataTexture, RepeatWrapping, SRGBColorSpace } from "three";
 
 /**
  * A two-lane road at real scale, in metres: lanes of 3.5 m, a kerb, a

@@ -3,10 +3,10 @@ import {
   ChemicalReactionTypeSceneProvider,
   createChemicalReactionTypeStore,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/context";
+import type { ChemicalReactionTypeId } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
 import {
   CHEMICAL_REACTION_TYPE_IDS,
   CHEMICAL_REACTION_TYPES_SCENE_VIEW,
-  type ChemicalReactionTypeId,
   COMBUSTION_TYPE_ID,
   getChemicalReactionTypeSceneColors,
   isChemicalReactionTypeId,

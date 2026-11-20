@@ -9,10 +9,10 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { CURRENT_CONTENT_GENERATION } from "@repo/backend/confect/contentRelease/generation";
 import { TEST_DIGEST } from "@repo/backend/test/content/release";
+import type { TestIdentity } from "@repo/backend/test/content/state";
 import {
   insertTestState,
   insertZeroRelease,
-  type TestIdentity,
 } from "@repo/backend/test/content/state";
 
 export const CANDIDATE = {

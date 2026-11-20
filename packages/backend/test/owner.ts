@@ -1,7 +1,5 @@
-import {
-  type DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
+import type { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {

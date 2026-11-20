@@ -1,7 +1,5 @@
-import {
-  type MutationServices,
-  mutationLayer,
-} from "@confect/server/RegisteredConvexFunction";
+import type { MutationServices } from "@confect/server/RegisteredConvexFunction";
+import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import type { BillingOfferKey } from "@repo/backend/confect/billing/catalog";
 import { polarProductIdFor } from "@repo/backend/confect/billing/polar/catalog";

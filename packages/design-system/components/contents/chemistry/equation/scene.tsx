@@ -21,14 +21,10 @@ import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { useTheme } from "@repo/design-system/providers/theme";
-import { Array as Arr, Option, type Result } from "effect";
-import {
-  createRef,
-  type ReactNode,
-  type RefObject,
-  useMemo,
-  useRef,
-} from "react";
+import type { Result } from "effect";
+import { Array as Arr, Option } from "effect";
+import type { ReactNode, RefObject } from "react";
+import { createRef, useMemo, useRef } from "react";
 import type { Group, Mesh } from "three";
 
 /** A reaction laid out for the lab. */

@@ -2,7 +2,8 @@ import {
   NumberFormat,
   NumberFormatGroup,
 } from "@repo/design-system/components/ui/number-flow";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { useTranslations } from "use-intl";
 import { readTimeNotice, splitTime } from "@/components/player/time";
 import { PageCenter } from "@/components/shared/page/header";

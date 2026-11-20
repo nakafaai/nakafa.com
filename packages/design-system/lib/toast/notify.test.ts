@@ -10,7 +10,8 @@ import {
   ToastAction,
   ToastMessage,
 } from "@repo/design-system/lib/toast/message";
-import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Array as Arr, Effect } from "effect";
 import { createElement } from "react";

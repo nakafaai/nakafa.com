@@ -6,11 +6,8 @@ import {
 import { endOfDay } from "@repo/backend/confect/nina/memory/day";
 import { syncKeys } from "@repo/backend/confect/nina/memory/keys";
 import { sameWords } from "@repo/backend/confect/nina/memory/match";
-import {
-  MEMORY_FIELD,
-  type Opened,
-  openWith,
-} from "@repo/backend/confect/nina/memory/seal";
+import type { Opened } from "@repo/backend/confect/nina/memory/seal";
+import { MEMORY_FIELD, openWith } from "@repo/backend/confect/nina/memory/seal";
 import {
   isUnchanged,
   lostSeen,
@@ -20,11 +17,11 @@ import {
   confirmedAfterClear,
   readMemoryState,
 } from "@repo/backend/confect/nina/memory/store";
-import {
-  MEMORY_TOPIC_LIMIT,
-  type NinaMemoryCandidate,
-  type NinaMemorySeen,
+import type {
+  NinaMemoryCandidate,
+  NinaMemorySeen,
 } from "@repo/backend/confect/nina/memory.spec";
+import { MEMORY_TOPIC_LIMIT } from "@repo/backend/confect/nina/memory.spec";
 import { requestPortrait } from "@repo/backend/confect/nina/portrait/store";
 import { ensureLearnerKeys } from "@repo/backend/confect/vault/keys";
 import { sealText } from "@repo/backend/confect/vault/text";

@@ -17,7 +17,8 @@ import schema from "@repo/backend/convex/schema";
 import { testMaterialGraph } from "@repo/backend/test/content/material";
 import { testArticleGraph } from "@repo/backend/test/content/release";
 import { getOrThrow } from "convex-helpers/server/relationships";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Array as Arr, Effect } from "effect";
 
 const NOW = Date.parse("2026-01-01T00:00:00.000Z");

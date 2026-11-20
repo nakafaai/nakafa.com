@@ -8,7 +8,8 @@ import {
   useWindowRoom,
 } from "@repo/design-system/hooks/resizable";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Activity, createContext, use } from "react";
 import { useTranslations } from "use-intl";

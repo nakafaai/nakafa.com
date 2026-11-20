@@ -4,11 +4,8 @@ import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/w
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import { inMutation } from "@repo/backend/test/client";
-import {
-  TRYOUT_NOW,
-  type TryoutWorld,
-  tryoutWorld,
-} from "@repo/backend/test/tryout/world";
+import type { TryoutWorld } from "@repo/backend/test/tryout/world";
+import { TRYOUT_NOW, tryoutWorld } from "@repo/backend/test/tryout/world";
 import { ConvexError } from "convex/values";
 import { Effect, Struct } from "effect";
 
@@ -45,6 +42,39 @@ const write = (
   );
 
 describe("tryouts/progress", () => {
+  it.effect(
+    "breaks a tie of start times by creation, so an older attempt that started at once never replaces the newer",
+    () =>
+      Effect.gen(function* () {
+        const { attempt, world } = yield* seedAttempt;
+        const newerId = yield* Effect.promise(() =>
+          world.t.mutation((ctx) =>
+            ctx.db.insert("tryoutAttempts", {
+              ...Struct.omit(attempt, ["_creationTime", "_id"]),
+              attemptNumber: 2,
+            })
+          )
+        );
+        const newer = yield* readAttempt(world, newerId);
+        yield* write(world, {
+          attempt: newer,
+          publishedScore: null,
+          status: "in-progress",
+        });
+        yield* write(world, {
+          attempt,
+          publishedScore: 75,
+          status: "completed",
+          updatedAt: TRYOUT_NOW + 1,
+        });
+        expect(
+          yield* Effect.promise(() =>
+            world.t.query((ctx) => ctx.db.query("tryoutSetProgress").collect())
+          )
+        ).toMatchObject([{ attemptNumber: 2, latestAttemptId: newerId }]);
+      })
+  );
+
   it.effect(
     "keeps only the set's latest attempt, by start time, with its workflow rank",
     () =>

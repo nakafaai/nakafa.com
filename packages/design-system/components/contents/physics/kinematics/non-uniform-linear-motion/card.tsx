@@ -2,11 +2,13 @@ import {
   GlbbLabelsProvider,
   useGlbbLabels,
 } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/context";
+import type {
+  GlbbLabels,
+  GlbbScenarioId,
+} from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
 import {
   DEFAULT_GLBB_SCENARIO_ID,
   GLBB_SCENARIOS,
-  type GlbbLabels,
-  type GlbbScenarioId,
   getGlbbScenarioById,
   isGlbbScenarioId,
 } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";

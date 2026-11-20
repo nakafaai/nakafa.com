@@ -2,12 +2,12 @@ import { Search02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "cn";
-import {
-  type EmojiPickerListCategoryHeaderProps,
-  type EmojiPickerListEmojiProps,
-  type EmojiPickerListRowProps,
-  EmojiPicker as EmojiPickerPrimitive,
+import type {
+  EmojiPickerListCategoryHeaderProps,
+  EmojiPickerListEmojiProps,
+  EmojiPickerListRowProps,
 } from "frimousse";
+import { EmojiPicker as EmojiPickerPrimitive } from "frimousse";
 import type * as React from "react";
 import { useTranslations } from "use-intl";
 

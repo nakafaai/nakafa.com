@@ -1,8 +1,8 @@
 import integrationsInternal from "@repo/backend/confect/_generated/refs/integrations.server";
+import type { QueryRunner } from "@repo/backend/confect/_generated/services";
 import {
   Auth,
   MutationRunner,
-  type QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import {
   agentMcpEngine,

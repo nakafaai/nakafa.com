@@ -1,15 +1,8 @@
 import { Array as Arr, Match, Schema } from "effect";
-import {
-  type Face,
-  meters as m,
-  mirrored,
-  type Rgb,
-  type Rig,
-  rgb,
-  rigged,
-  type Vec,
-} from "@/lib/island/models/parts";
-import { type Ring, scaled, slab, tube } from "@/lib/island/models/solids";
+import type { Face, Rgb, Rig, Vec } from "@/lib/island/models/parts";
+import { meters as m, mirrored, rgb, rigged } from "@/lib/island/models/parts";
+import type { Ring } from "@/lib/island/models/solids";
+import { scaled, slab, tube } from "@/lib/island/models/solids";
 import { unitOf } from "@/lib/island/noise";
 
 /** The open sea's big swimmers (ADR 0047, D24), beside the lane's humpback whale. */

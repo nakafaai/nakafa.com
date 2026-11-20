@@ -8,15 +8,10 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
-import {
-  promptEmpty,
-  questionGap,
-  type ScheduleGap,
-} from "@repo/backend/confect/exams/parts";
-import {
-  type QuestionView,
-  questionView,
-} from "@repo/backend/confect/exams/question";
+import type { ScheduleGap } from "@repo/backend/confect/exams/parts";
+import { promptEmpty, questionGap } from "@repo/backend/confect/exams/parts";
+import type { QuestionView } from "@repo/backend/confect/exams/question";
+import { questionView } from "@repo/backend/confect/exams/question";
 import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
 import {
   QuestionsUnready,

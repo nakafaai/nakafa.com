@@ -1,6 +1,8 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { DateTime, Effect } from "effect";
-import { type Changes, live, reloadUntil, saved } from "@/e2e/support/changes";
+import type { Changes } from "@/e2e/support/changes";
+import { live, reloadUntil, saved } from "@/e2e/support/changes";
 import { writeMemory } from "@/e2e/support/list";
 import {
   confirmDelete,

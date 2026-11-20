@@ -1,7 +1,5 @@
-import {
-  type AssessmentRowKind,
-  AssessmentRowSchema,
-} from "@nakafa/aksara-contracts/assessment/snapshot";
+import type { AssessmentRowKind } from "@nakafa/aksara-contracts/assessment/snapshot";
+import { AssessmentRowSchema } from "@nakafa/aksara-contracts/assessment/snapshot";
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";

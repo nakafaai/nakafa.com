@@ -1,8 +1,6 @@
 import type { EvilBrushRange } from "@repo/design-system/components/evilcharts/ui/evil-brush";
-import {
-  type DragType,
-  useBrushDrag,
-} from "@repo/design-system/components/evilcharts/ui/evil-brush-drag";
+import type { DragType } from "@repo/design-system/components/evilcharts/ui/evil-brush-drag";
+import { useBrushDrag } from "@repo/design-system/components/evilcharts/ui/evil-brush-drag";
 import { Schema } from "effect";
 import type { RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";

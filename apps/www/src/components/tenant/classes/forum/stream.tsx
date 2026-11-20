@@ -36,10 +36,8 @@ import {
   opensRun,
 } from "@/components/tenant/classes/forum/marks";
 import { ForumMessageRow } from "@/components/tenant/classes/forum/message";
-import {
-  type ForumMessage,
-  markUpdate,
-} from "@/components/tenant/classes/forum/optimistic";
+import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
+import { markUpdate } from "@/components/tenant/classes/forum/optimistic";
 import {
   PlaceShownContext,
   useChannelScope,

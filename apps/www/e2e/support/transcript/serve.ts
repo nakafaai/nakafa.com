@@ -12,22 +12,16 @@ import {
   Option,
   Schema,
 } from "effect";
+import type { SentSchema } from "@/e2e/support/frames";
 import {
   answerQueriesIn,
   CONVEX_SOCKET,
   decodeSent,
   decodeTransition,
   encodeTransition,
-  type SentSchema,
 } from "@/e2e/support/frames";
-import {
-  type AskedQueries,
-  answerTo,
-  CONVERSATION,
-  noticeQueries,
-  type ServedMessage,
-  type Writing,
-} from "@/e2e/support/query";
+import type { AskedQueries, ServedMessage, Writing } from "@/e2e/support/query";
+import { answerTo, CONVERSATION, noticeQueries } from "@/e2e/support/query";
 import { THREAD } from "@/e2e/support/transcript/message";
 
 /** The socket of the page's realtime connection, as Playwright routes it. */

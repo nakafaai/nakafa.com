@@ -5,7 +5,8 @@ import {
   loadAttemptScoreResult,
 } from "@repo/backend/confect/tryouts/score/result";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { type TryoutWorld, tryoutWorld } from "@repo/backend/test/tryout/world";
+import type { TryoutWorld } from "@repo/backend/test/tryout/world";
+import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect, Result } from "effect";
 
 /** Reads a finished attempt's score and its first section's score, or the code either read fails with. */

@@ -1,14 +1,12 @@
 import { decodeLocale } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, Option } from "effect";
 import type { Locale } from "use-intl/core";
-import { BASE_URL, type LlmsSection } from "@/lib/llms/constants";
+import type { LlmsSection } from "@/lib/llms/constants";
+import { BASE_URL } from "@/lib/llms/constants";
 import { getContentPageLlmsEntries } from "@/lib/llms/content/entries";
 import { getContentListingLlmsEntries } from "@/lib/llms/content/listing";
-import {
-  getLlmsSections,
-  isLlmsSection,
-  type LlmsEntry,
-} from "@/lib/llms/entries";
+import type { LlmsEntry } from "@/lib/llms/entries";
+import { getLlmsSections, isLlmsSection } from "@/lib/llms/entries";
 import { getLocaleLabel, stripLlmsRouteExtension } from "@/lib/llms/format";
 import { getPublicLlmsSectionIndexLines } from "@/lib/llms/index/public";
 import {

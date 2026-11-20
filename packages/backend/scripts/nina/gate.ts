@@ -1,9 +1,7 @@
 import { purposes } from "@repo/backend/confect/gateway/purpose";
 import { TURN_DEADLINE } from "@repo/backend/confect/nina/deadline";
-import {
-  Deployment,
-  type Question,
-} from "@repo/backend/scripts/nina/deployment";
+import type { Question } from "@repo/backend/scripts/nina/deployment";
+import { Deployment } from "@repo/backend/scripts/nina/deployment";
 import { gateError } from "@repo/backend/scripts/nina/error";
 import { renderTable } from "@repo/backend/scripts/nina/table";
 import {

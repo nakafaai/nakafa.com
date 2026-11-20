@@ -1,12 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
+  ApiGradeDraft,
   SCHOOL_API_PATH,
   SchoolApi,
-  XLSX_TYPE,
 } from "@repo/backend/confect/integrations/api";
-import { createClient, type Fixture, issue } from "@repo/backend/test/api";
-import { cohort, nf, period } from "@repo/backend/test/classroom";
+import type { Fixture } from "@repo/backend/test/api";
+import {
+  createClient,
+  IssuedToken,
+  issue,
+  json,
+  postToken,
+  read,
+  tokenOf,
+} from "@repo/backend/test/api";
+import { cohort, forumClass, nf, period } from "@repo/backend/test/classroom";
 import { asStaffSchool } from "@repo/backend/test/guardians";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { encodeJsonText, encodePrettyJsonText } from "@repo/utilities/json";
@@ -47,113 +57,6 @@ const postDevice = (fixture: Fixture, form: Record<string, string>) =>
 const Page = Schema.Struct({
   data: Schema.Array(Schema.Unknown),
   next: Schema.NullOr(Schema.String),
-});
-
-/** The access token of an issued token answer. */
-const IssuedToken = Schema.Struct({ access_token: Schema.String });
-
-/** One JSON body of a response, as text the test decodes. */
-const json = (response: Response) =>
-  Effect.promise(() => response.text()).pipe(
-    Effect.flatMap(Schema.decodeEffect(Schema.fromJsonString(Schema.Unknown)))
-  );
-
-/** Asks the token endpoint for a token with a form body, as an integration does. */
-const postToken = (fixture: Fixture, form: Record<string, string>) =>
-  Effect.promise(() =>
-    fixture.fetch(`${SCHOOL_API_PATH}/token`, {
-      body: new URLSearchParams(form).toString(),
-      headers: { "content-type": "application/x-www-form-urlencoded" },
-      method: "POST",
-    })
-  );
-
-/** Reads one school API path with a bearer token, or none. */
-const read = (fixture: Fixture, path: string, token?: string) =>
-  Effect.promise(() =>
-    fixture.fetch(`${SCHOOL_API_PATH}${path}`, {
-      headers: token === undefined ? {} : { authorization: `Bearer ${token}` },
-    })
-  );
-
-/** A token of a client that holds `actions`, as the token endpoint answers it. */
-const tokenOf = Effect.fn("test.routes.token")(function* (
-  fixture: Fixture,
-  actions: Parameters<typeof createClient>[1]
-) {
-  const client = yield* createClient(fixture, actions);
-  const answer = yield* postToken(fixture, {
-    client_id: client.id,
-    client_secret: client.secret,
-    grant_type: "client_credentials",
-  });
-  const issued = yield* json(answer).pipe(
-    Effect.flatMap(Schema.decodeUnknownEffect(IssuedToken))
-  );
-  return issued.access_token;
-});
-
-describe("school API exports over HTTP", () => {
-  it.effect("serves a read as CSV and as XLSX to its bearer", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const token = yield* tokenOf(fixture, ["person.view"]);
-
-      const csv = yield* read(fixture, "/exports/csv/people", token);
-      expect(csv.status).toBe(200);
-      expect(csv.headers.get("content-type")).toContain("text/csv");
-      const text = yield* Effect.promise(() => csv.text());
-      expect(text.startsWith("id,name,status,account")).toBe(true);
-
-      const xlsx = yield* read(fixture, "/exports/xlsx/people", token);
-      expect(xlsx.status).toBe(200);
-      expect(xlsx.headers.get("content-type")).toBe(XLSX_TYPE);
-    })
-  );
-
-  it.effect(
-    "refuses a period's export without its period, and a closed read",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const token = yield* tokenOf(fixture, ["cohort.view"]);
-
-        expect(
-          (yield* read(fixture, "/exports/csv/placements", token)).status
-        ).toBe(403);
-        expect(
-          (yield* read(fixture, "/exports/csv/people", token)).status
-        ).toBe(403);
-      })
-  );
-
-  it.effect("exports the placements and the grades of a period", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const term = yield* period(fixture, fixture.units.smp);
-      const token = yield* tokenOf(fixture, [
-        "cohort.view",
-        "grade.export",
-        "period.view",
-      ]);
-
-      const placements = yield* read(
-        fixture,
-        `/exports/csv/placements?period=${term.id}`,
-        token
-      );
-      const grades = yield* read(
-        fixture,
-        `/exports/csv/grades?period=${term.id}`,
-        token
-      );
-      expect(placements.status).toBe(200);
-      expect(grades.status).toBe(200);
-      expect(yield* Effect.promise(() => grades.text())).toBe(
-        "periodId,classId,personId,value,releasedAt"
-      );
-    })
-  );
 });
 
 describe("school API records over HTTP", () => {
@@ -408,11 +311,17 @@ describe("school API over HTTP", () => {
   );
 });
 
-describe("school API roster import over HTTP", () => {
-  /** Posts one import with an `Idempotency-Key`, or none. */
-  const post = (fixture: Fixture, token: string, body: object, key?: string) =>
+describe("school API writes over HTTP", () => {
+  /** Posts one write to `path`, with an `Idempotency-Key` or none. */
+  const post = (
+    fixture: Fixture,
+    token: string,
+    path: string,
+    body: object,
+    key?: string
+  ) =>
     Effect.promise(() =>
-      fixture.fetch(`${SCHOOL_API_PATH}/roster/import`, {
+      fixture.fetch(`${SCHOOL_API_PATH}${path}`, {
         body: encodeJsonText(body),
         headers: {
           authorization: `Bearer ${token}`,
@@ -422,6 +331,9 @@ describe("school API roster import over HTTP", () => {
         method: "POST",
       })
     );
+
+  /** The path of a roster import. */
+  const IMPORT = "/roster/import";
 
   /** One student of an import. */
   const STUDENT = {
@@ -440,7 +352,7 @@ describe("school API roster import over HTTP", () => {
         const token = yield* tokenOf(fixture, ["period.view", "roster.import"]);
         const body = { period: term.id, rows: [STUDENT] };
 
-        const first = yield* post(fixture, token, body, "k1");
+        const first = yield* post(fixture, token, IMPORT, body, "k1");
         expect(first.status).toBe(200);
         expect(yield* json(first)).toEqual({
           added: 1,
@@ -448,14 +360,20 @@ describe("school API roster import over HTTP", () => {
           skipped: 0,
         });
 
-        const repeat = yield* post(fixture, token, body, "k1");
+        const repeat = yield* post(fixture, token, IMPORT, body, "k1");
         expect(yield* json(repeat)).toEqual({
           added: 1,
           changed: 0,
           skipped: 0,
         });
 
-        const other = yield* post(fixture, token, { ...body, rows: [] }, "k1");
+        const other = yield* post(
+          fixture,
+          token,
+          IMPORT,
+          { ...body, rows: [] },
+          "k1"
+        );
         expect(other.status).toBe(422);
       })
   );
@@ -471,16 +389,61 @@ describe("school API roster import over HTTP", () => {
         const closed = yield* tokenOf(fixture, ["period.view"]);
         const body = { period: term.id, rows: [STUDENT] };
 
-        expect((yield* post(fixture, token, body)).status).toBe(400);
+        expect((yield* post(fixture, token, IMPORT, body)).status).toBe(400);
         expect(
           (yield* post(
             fixture,
             token,
+            IMPORT,
             { ...body, rows: [{ ...STUDENT, nisn: "1" }] },
             "k2"
           )).status
         ).toBe(400);
-        expect((yield* post(fixture, closed, body, "k3")).status).toBe(403);
+        expect((yield* post(fixture, closed, IMPORT, body, "k3")).status).toBe(
+          403
+        );
+      })
+  );
+
+  it.effect(
+    "enters a draft grade, and refuses a student outside the class, a released grade and a closed client",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* asStaffSchool(fixture);
+        const term = yield* period(fixture, fixture.units.smp);
+        const { classId } = yield* forumClass(fixture, term.id, "X-1");
+        const token = yield* tokenOf(fixture, ["grade.import"]);
+        const { personId } = fixture.people.student;
+        const entry = { classId, personId, value: 88 };
+
+        const entered = yield* post(fixture, token, "/grades", entry);
+        expect(entered.status).toBe(200);
+        const draft = yield* json(entered).pipe(
+          Effect.flatMap(Schema.decodeUnknownEffect(ApiGradeDraft))
+        );
+        expect(draft.value).toBe(88);
+        const { personId: teacher } = fixture.people.teacher;
+        const outside = { ...entry, personId: teacher };
+        expect((yield* post(fixture, token, "/grades", outside)).status).toBe(
+          422
+        );
+        const gradeId = yield* Schema.decodeUnknownEffect(Id("classGrades"))(
+          draft.id
+        );
+        yield* fixture
+          .as("teacher")
+          .mutation(refs.public.records.grades.release, {
+            gradeId,
+            slug: nf,
+          });
+        expect((yield* post(fixture, token, "/grades", entry)).status).toBe(
+          422
+        );
+        const closed = yield* tokenOf(fixture, ["period.view"]);
+        expect((yield* post(fixture, closed, "/grades", entry)).status).toBe(
+          403
+        );
       })
   );
 });

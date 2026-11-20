@@ -1,13 +1,15 @@
 import { useFrame } from "@react-three/fiber";
 import { EyepieceView } from "@repo/design-system/components/contents/biology/microscope/eyepiece";
+import type {
+  Field,
+  Graticule,
+  Specimen,
+} from "@repo/design-system/components/contents/biology/microscope/optics";
 import {
   cellsAcross,
   divisionsSpanned,
   divisionValue,
-  type Field,
   fieldAt,
-  type Graticule,
-  type Specimen,
   totalMagnification,
 } from "@repo/design-system/components/contents/biology/microscope/optics";
 import { MicroscopeStand } from "@repo/design-system/components/contents/biology/microscope/stand";
@@ -32,7 +34,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useRef, useState } from "react";
 
 /** How long each objective stays in place while the card plays, in seconds. */
 const OBJECTIVE_HOLD = 2.4;

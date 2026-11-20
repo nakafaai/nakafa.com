@@ -1,4 +1,5 @@
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Array as Arr, Effect, Option } from "effect";
 import { loadMathFonts } from "@/e2e/support/fonts";
 import { activate } from "@/e2e/support/input";

@@ -35,11 +35,11 @@ import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
 import { useClassScope } from "@/components/tenant/classes/scope";
-import {
-  type ClassTask,
-  scoreUpdate,
-  type TaskWork,
+import type {
+  ClassTask,
+  TaskWork,
 } from "@/components/tenant/classes/tasks/optimistic";
+import { scoreUpdate } from "@/components/tenant/classes/tasks/optimistic";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 import { useKeptRows } from "@/lib/data/kept";

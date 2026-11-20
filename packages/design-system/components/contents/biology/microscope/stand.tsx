@@ -14,7 +14,8 @@ import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr, Option } from "effect";
 import { useMemo, useRef } from "react";
-import { CatmullRomCurve3, type Group, Vector3 } from "three";
+import type { Group } from "three";
+import { CatmullRomCurve3, Vector3 } from "three";
 
 /** Where the microscope stands on the bench, in metres. */
 const SPOT = [0.25, 0, 0.1] as const;

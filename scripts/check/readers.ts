@@ -5,6 +5,7 @@ import {
   Option,
   String as Str,
 } from "effect";
+import type { Node, SourceFile } from "tsrs/ast";
 import {
   isCallExpression,
   isExportDeclaration,
@@ -17,8 +18,6 @@ import {
   isNamespaceExport,
   isPropertyAccessExpression,
   isStringLiteralLikeNode,
-  type Node,
-  type SourceFile,
   SyntaxKind,
 } from "tsrs/ast";
 

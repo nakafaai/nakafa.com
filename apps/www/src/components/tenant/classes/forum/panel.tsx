@@ -14,10 +14,12 @@ import { SearchField } from "@repo/design-system/components/ui/search";
 import { Array as Arr, Number as Num, Option } from "effect";
 import { useId, useRef, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
+import type {
+  EmojiCategory,
+  EmojiEntry,
+  EmojiSection,
+} from "@/components/tenant/classes/forum/emoji";
 import {
-  type EmojiCategory,
-  type EmojiEntry,
-  type EmojiSection,
   emojiOf,
   emojiSections,
   gridRows,

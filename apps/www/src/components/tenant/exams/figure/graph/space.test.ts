@@ -1,10 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
-import {
-  newShape,
-  type ShapeDraft,
-  type ShapeKind,
+import type {
+  ShapeDraft,
+  ShapeKind,
 } from "@/components/tenant/exams/figure/graph/shapes";
+import { newShape } from "@/components/tenant/exams/figure/graph/shapes";
 import {
   SPACE_KINDS,
   spaceAnchorOf,

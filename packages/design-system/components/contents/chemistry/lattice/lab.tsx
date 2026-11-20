@@ -1,6 +1,6 @@
 import { useThree } from "@react-three/fiber";
+import type { CrystalId } from "@repo/design-system/components/contents/chemistry/lattice/crystal";
 import {
-  type CrystalId,
   CrystalIdSchema,
   countIons,
   getCrystal,
@@ -29,15 +29,10 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Option, Schema } from "effect";
-import {
-  type ReactNode,
-  Suspense,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { type InstancedMesh, Object3D } from "three";
+import type { ReactNode } from "react";
+import { Suspense, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { InstancedMesh } from "three";
+import { Object3D } from "three";
 import { useFormatter } from "use-intl";
 
 /** How many picometres one scene unit spans. */

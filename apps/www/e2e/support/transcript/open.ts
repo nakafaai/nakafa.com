@@ -1,9 +1,5 @@
-import {
-  type BrowserContext,
-  expect,
-  type Locator,
-  type Page,
-} from "@playwright/test";
+import type { BrowserContext, Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Effect, MutableRef, Option, Schema } from "effect";
 import { AI_STORAGE_KEY } from "@/components/ai/store/create";
 import { learnerOf } from "@/e2e/support/chat";
@@ -13,11 +9,10 @@ import { withObservedPageErrors } from "@/e2e/support/observe";
 import type { ServedMessage } from "@/e2e/support/query";
 import { SHEET_POPUP } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { exchange, type Part } from "@/e2e/support/transcript/message";
-import {
-  type FixtureChat,
-  serveConversation,
-} from "@/e2e/support/transcript/serve";
+import type { Part } from "@/e2e/support/transcript/message";
+import { exchange } from "@/e2e/support/transcript/message";
+import type { FixtureChat } from "@/e2e/support/transcript/serve";
+import { serveConversation } from "@/e2e/support/transcript/serve";
 import { serveIcons } from "@/e2e/support/transcript/web";
 
 /** The question that every fixture conversation starts from. */

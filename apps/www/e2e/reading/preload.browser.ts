@@ -1,4 +1,5 @@
-import { expect, type Request, test } from "@playwright/test";
+import type { Request } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";

@@ -1,5 +1,5 @@
+import type { CatalogRow } from "@nakafa/aksara-contracts/assessment/catalog";
 import {
-  type CatalogRow,
   CatalogRowSchema,
   SetLevelSchema,
 } from "@nakafa/aksara-contracts/assessment/catalog";

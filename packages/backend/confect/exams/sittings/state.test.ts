@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  decideProctorAction,
-  type ProctorAction,
-  type ProctoredState,
+import type {
+  ProctorAction,
+  ProctoredState,
 } from "@repo/backend/confect/exams/sittings/state";
+import { decideProctorAction } from "@repo/backend/confect/exams/sittings/state";
 import { Effect } from "effect";
 
 /** The refusal that an action gets, for the state and timing the test names. */

@@ -15,8 +15,10 @@ import {
   String as Str,
   Tuple,
 } from "effect";
-import { parseSources, type RepositorySource } from "#scripts/check/source";
-import { type Facts, listNames, moduleFacts } from "#scripts/check/translators";
+import type { RepositorySource } from "#scripts/check/source";
+import { parseSources } from "#scripts/check/source";
+import type { Facts } from "#scripts/check/translators";
+import { listNames, moduleFacts } from "#scripts/check/translators";
 
 const ROUTES_FOLDER = "apps/www/src/routes/";
 /** The file routes of the app, each a page or a layout that renders a module graph of its own. */

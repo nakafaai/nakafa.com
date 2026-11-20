@@ -1,5 +1,6 @@
 import type { SPECIES } from "@/lib/island/fauna/species";
-import { type Paint, type Spot, tint } from "@/lib/island/models/solids";
+import type { Paint, Spot } from "@/lib/island/models/solids";
+import { tint } from "@/lib/island/models/solids";
 
 /** One species of the island's catalog (ADR 0047, D11). */
 export type Species = (typeof SPECIES)[number];

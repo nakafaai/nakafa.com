@@ -1,4 +1,5 @@
-import { type McpCase, modernPost } from "@repo/backend/test/mcp/harness";
+import type { McpCase } from "@repo/backend/test/mcp/harness";
+import { modernPost } from "@repo/backend/test/mcp/harness";
 import { JSON_RESPONSE_HEADERS } from "@repo/backend/test/mcp/headers";
 
 /** Tool calls refused before any Nakafa read, and a call to a tool that does not exist. */

@@ -1,4 +1,5 @@
-import { type BrowserContext, expect, type Page } from "@playwright/test";
+import type { BrowserContext, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 

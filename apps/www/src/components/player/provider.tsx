@@ -2,9 +2,9 @@ import { useDebouncedCallback } from "@mantine/hooks";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { useRouter } from "@tanstack/react-router";
 import { Effect, Option } from "effect";
+import type { ReactNode } from "react";
 import {
   createContext,
-  type ReactNode,
   useEffect,
   useEffectEvent,
   useLayoutEffect,
@@ -18,11 +18,8 @@ import {
   replaceSearchParam,
 } from "@/components/player/address";
 import type { PlayerMode } from "@/components/player/mode";
-import {
-  createPlayerStore,
-  type PlayerStore,
-  type PlayerStoreApi,
-} from "@/components/player/store";
+import type { PlayerStore, PlayerStoreApi } from "@/components/player/store";
+import { createPlayerStore } from "@/components/player/store";
 import { Page } from "@/components/shared/page/frame";
 import { reportClientException } from "@/lib/analytics/client";
 

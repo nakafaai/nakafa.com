@@ -1,18 +1,20 @@
 "use client";
 
+import type { Locale } from "@repo/internationalization/src/locale";
 import {
   DEFAULT_LOCALE,
   decodeLocale,
-  type Locale,
 } from "@repo/internationalization/src/locale";
+import type {
+  ActiveOptions,
+  FileRoutesByPath,
+  LinkComponentProps,
+  LinkOptions,
+  RegisteredRouter,
+  RemoveTrailingSlashes,
+} from "@tanstack/react-router";
 import {
-  type ActiveOptions,
   createLink,
-  type FileRoutesByPath,
-  type LinkComponentProps,
-  type LinkOptions,
-  type RegisteredRouter,
-  type RemoveTrailingSlashes,
   useLocation,
   useMatches,
   useParams,
@@ -22,7 +24,8 @@ import {
 import { Array as Arr, Option } from "effect";
 import type { ComponentProps } from "react";
 import { canonicalHref } from "@/lib/routing/target";
-import { EXACT_ACTIVE_OPTIONS, type LOCALE_ROUTE } from "@/lib/routing/tree";
+import type { LOCALE_ROUTE } from "@/lib/routing/tree";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 import { useLinkDestination } from "@/lib/tryout/entry";
 
 /**

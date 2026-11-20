@@ -1,4 +1,5 @@
 import { Array as Arr } from "effect";
+import type { Node, ObjectLiteralExpression, PropertyName } from "tsrs/ast";
 import {
   isComputedPropertyName,
   isFunctionLikeDeclaration,
@@ -8,9 +9,6 @@ import {
   isShorthandPropertyAssignment,
   isSourceFile,
   isStringLiteral,
-  type Node,
-  type ObjectLiteralExpression,
-  type PropertyName,
 } from "tsrs/ast";
 import { boundFunctions, isFunctionValue } from "#scripts/check/scope";
 import { unwrapped } from "#scripts/check/wrapper";

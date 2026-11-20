@@ -1,4 +1,5 @@
-import { Array as Arr, type Option } from "effect";
+import type { Option } from "effect";
+import { Array as Arr } from "effect";
 import { baseRenderers } from "@/lib/content/renderer/registry/base";
 import { biologyRenderers } from "@/lib/content/renderer/registry/biology";
 import { chemistryRenderers } from "@/lib/content/renderer/registry/chemistry";

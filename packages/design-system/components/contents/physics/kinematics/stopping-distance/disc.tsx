@@ -12,9 +12,9 @@ import {
   temperatureRise,
   thermalColor,
 } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/heat";
+import type { Stop } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/motion";
 import {
   brakingTime,
-  type Stop,
   stopSpeed,
 } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/motion";
 import {
@@ -47,18 +47,12 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr, Option, Record as Rec } from "effect";
-import {
-  type ReactNode,
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import type { Group } from "three";
 import {
   BackSide,
   DataTexture,
-  type Group,
   MeshBasicMaterial,
   MeshStandardMaterial,
   RepeatWrapping,

@@ -1,5 +1,6 @@
 import { VisualPlaceSchema } from "@repo/design-system/components/visual/backdrop";
 import { playActions, STILL } from "@repo/design-system/components/visual/play";
+import type { Session } from "@repo/design-system/components/visual/session";
 import {
   closeSession,
   focusSession,
@@ -7,10 +8,10 @@ import {
   openSession,
   raiseSession,
   returnFocus,
-  type Session,
 } from "@repo/design-system/components/visual/session";
 import { Effect, Schema } from "effect";
-import { createStore, type ExtractState } from "zustand";
+import type { ExtractState } from "zustand";
+import { createStore } from "zustand";
 import { combine } from "zustand/middleware";
 
 /**

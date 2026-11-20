@@ -3,7 +3,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { STATUS_BADGES } from "@repo/design-system/lib/status";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
-import { statusLook, type TryoutProgress } from "@/components/tryout/progress";
+import type { TryoutProgress } from "@/components/tryout/progress";
+import { statusLook } from "@/components/tryout/progress";
 
 /** Renders the shared icon for one try-out workflow status. */
 function TryoutStatusIcon({ status }: { status: TryoutProgress }) {

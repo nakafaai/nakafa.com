@@ -15,7 +15,8 @@ import { BreadcrumbMenu } from "@/components/shared/breadcrumb/menu";
 import type { CrumbSiblings } from "@/components/shared/breadcrumb/pages";
 import { BreadcrumbSiblingsSegment } from "@/components/shared/breadcrumb/siblings";
 import { PageActions, PageHeader } from "@/components/shared/page/header";
-import { Link, type LinkTarget } from "@/lib/routing/link";
+import type { LinkTarget } from "@/lib/routing/link";
+import { Link } from "@/lib/routing/link";
 
 /**
  * Builds one segment of a breadcrumb path. A segment without a target is the

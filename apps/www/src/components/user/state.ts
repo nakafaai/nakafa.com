@@ -1,4 +1,5 @@
-import { photoOf, type UserPicture } from "@repo/backend/confect/users/picture";
+import type { UserPicture } from "@repo/backend/confect/users/picture";
+import { photoOf } from "@repo/backend/confect/users/picture";
 import { Struct } from "effect";
 
 /**

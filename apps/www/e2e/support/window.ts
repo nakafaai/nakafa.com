@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Array as Arr, Effect, MutableList, Option } from "effect";
 import { LAST_SERVER, NEWEST } from "@/e2e/support/list";
 import { MEMORY_PATH, memoryRow } from "@/e2e/support/memory";

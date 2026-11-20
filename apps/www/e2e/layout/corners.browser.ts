@@ -1,4 +1,5 @@
-import { expect, type Locator, test } from "@playwright/test";
+import type { Locator } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 /** Reading pages whose header joins the page's actions with the outline toggle, which leaves from 1280 px. */
 const PAGES = [

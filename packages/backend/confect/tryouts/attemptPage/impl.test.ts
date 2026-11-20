@@ -8,10 +8,10 @@ import type {
 import { TryoutQuestionBodyText } from "@repo/backend/confect/tryouts/runtime/spec";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { client } from "@repo/backend/test/client";
+import type { TryoutWorld } from "@repo/backend/test/tryout/world";
 import {
   startArgs,
   TRYOUT_NOW,
-  type TryoutWorld,
   tryoutWorld,
 } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Effect, Schema } from "effect";

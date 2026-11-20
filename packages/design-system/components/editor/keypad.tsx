@@ -3,9 +3,9 @@ import {
   ArrowRight01Icon,
   Delete02Icon,
 } from "@hugeicons/core-free-icons";
+import type { KeySet } from "@repo/design-system/components/editor/keys";
 import {
   KEY_SETS,
-  type KeySet,
   keyFace,
   SET_SIGNS,
 } from "@repo/design-system/components/editor/keys";

@@ -4,11 +4,8 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import type records from "@repo/backend/confect/_generated/refs/records";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option, Schema } from "effect";
-import {
-  type ReportLine,
-  stateChange,
-  writeChange,
-} from "@/components/tenant/reports/change";
+import type { ReportLine } from "@/components/tenant/reports/change";
+import { stateChange, writeChange } from "@/components/tenant/reports/change";
 
 const slug = Schema.decodeSync(TenantSlug)("sekolah");
 const cohortOf = Schema.decodeUnknownSync(Id("tenantCohorts"));

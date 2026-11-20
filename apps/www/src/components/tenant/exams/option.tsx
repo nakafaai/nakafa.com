@@ -13,21 +13,11 @@ import { useRequired } from "@repo/design-system/hooks/required";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Node } from "@tiptap/pm/model";
 import { Effect, Option } from "effect";
-import {
-  createContext,
-  Fragment,
-  type ReactNode,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { createContext, Fragment, useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  holdsLabel,
-  type OptionEdit,
-  type OptionLabel,
-  optionEditOf,
-} from "@/components/tenant/exams/answer";
+import type { OptionEdit, OptionLabel } from "@/components/tenant/exams/answer";
+import { holdsLabel, optionEditOf } from "@/components/tenant/exams/answer";
 import { RICH_EXTENSIONS } from "@/components/tenant/exams/extensions";
 import { useQuestionPage } from "@/components/tenant/exams/page";
 import { refusePaste } from "@/components/tenant/exams/picture";

@@ -1,10 +1,8 @@
 import { BrushDefinitions } from "@repo/design-system/components/evilcharts/ui/brush-paint";
+import type { ChartBrushOptions } from "@repo/design-system/components/evilcharts/ui/chart";
+import { useChart } from "@repo/design-system/components/evilcharts/ui/chart";
+import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
-  type ChartBrushOptions,
-  useChart,
-} from "@repo/design-system/components/evilcharts/ui/chart";
-import {
-  type ChartConfig,
   getChartSeriesId,
   getChartSeriesPaint,
   getColorsCount,

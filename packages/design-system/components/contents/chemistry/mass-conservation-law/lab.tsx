@@ -1,11 +1,11 @@
 import { useThree } from "@react-three/fiber";
+import type { MassConservationModeId } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/data";
 import {
   CLOSED_SYSTEM_MODE_ID,
   getMassConservationSceneColors,
   isMassConservationModeId,
   MASS_CONSERVATION_MODE_IDS,
   MASS_CONSERVATION_SCENE_VIEW,
-  type MassConservationModeId,
 } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/data";
 import { MassConservationScene } from "@repo/design-system/components/contents/chemistry/mass-conservation-law/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";

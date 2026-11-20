@@ -2,8 +2,8 @@ import { MathAppearanceSchema } from "@nakafa/aksara-contracts/math/base";
 import type { FormulaScope } from "@nakafa/aksara-contracts/math/formula/compile";
 import { Array as Arr, Option, Result, Schema } from "effect";
 import { resolveVisualAxes } from "@/lib/content/renderer/client/base/visual/axes";
+import type { FormulaShape } from "@/lib/content/renderer/client/base/visual/formula";
 import {
-  type FormulaShape,
   labelPoint,
   resolveFormulaShapes,
 } from "@/lib/content/renderer/client/base/visual/formula";
@@ -20,10 +20,8 @@ import {
   THIN_TOLERANCE,
   thinLine,
 } from "@/lib/content/renderer/client/base/visual/thin";
-import {
-  projectVisualPoint,
-  type VisualProjection,
-} from "@/lib/content/renderer/client/base/visual/transform";
+import type { VisualProjection } from "@/lib/content/renderer/client/base/visual/transform";
+import { projectVisualPoint } from "@/lib/content/renderer/client/base/visual/transform";
 import { resolveMathView } from "@/lib/content/renderer/client/base/visual/view";
 
 /** One point of the still, right and up from the camera's target, in scene units. */

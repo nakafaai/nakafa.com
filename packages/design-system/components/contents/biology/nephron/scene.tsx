@@ -10,7 +10,8 @@ import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { Array as Arr } from "effect";
 import { createRef, useMemo, useRef } from "react";
-import { CatmullRomCurve3, DoubleSide, type Mesh, Vector3 } from "three";
+import type { Mesh } from "three";
+import { CatmullRomCurve3, DoubleSide, Vector3 } from "three";
 
 /** A point of the nephron's drawing, in its own units of about a tenth of a millimetre. */
 type Point = readonly [number, number, number];

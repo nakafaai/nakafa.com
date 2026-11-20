@@ -8,10 +8,8 @@ import {
   sceneOf,
 } from "@/components/tenant/exams/figure/graph/plane";
 import { newShape } from "@/components/tenant/exams/figure/graph/shapes";
-import {
-  type GraphProps,
-  planeOf,
-} from "@/components/tenant/exams/figure/graph/stored";
+import type { GraphProps } from "@/components/tenant/exams/figure/graph/stored";
+import { planeOf } from "@/components/tenant/exams/figure/graph/stored";
 
 /**
  * What a teacher writes for a graph, as the fields hold it: every number as typed, so a value on its way never

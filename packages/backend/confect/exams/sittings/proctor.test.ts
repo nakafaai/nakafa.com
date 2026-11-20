@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import type { ReasonCode } from "@repo/backend/confect/exams/sittings/schema";
 import { nf } from "@repo/backend/test/editor";
+import type { SittingFixture } from "@repo/backend/test/sittings";
 import {
   admittedOf,
   attemptRow,
@@ -10,7 +11,6 @@ import {
   deviceOf,
   jobStateOf,
   openedSitting,
-  type SittingFixture,
   sittingRow,
 } from "@repo/backend/test/sittings";
 import {

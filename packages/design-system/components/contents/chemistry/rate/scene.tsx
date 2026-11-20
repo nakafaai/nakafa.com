@@ -5,9 +5,9 @@ import {
   GLASS_WALL,
   LabBench,
 } from "@repo/design-system/components/contents/chemistry/bench";
+import type { Solid } from "@repo/design-system/components/contents/chemistry/rate/curve";
 import {
   amountAt,
-  type Solid,
   TIME_SPAN,
 } from "@repo/design-system/components/contents/chemistry/rate/curve";
 import { InlineMath } from "@repo/design-system/components/markdown/math";

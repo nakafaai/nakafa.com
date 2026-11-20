@@ -12,8 +12,8 @@ import { lineMark } from "@repo/design-system/lib/mark";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { DateTime, Effect, Fiber, Schema } from "effect";
+import type { ComponentProps } from "react";
 import {
-  type ComponentProps,
   createContext,
   memo,
   useEffect,

@@ -1,11 +1,6 @@
 import { Array as Arr, Schema } from "effect";
-import {
-  type Face,
-  meters as m,
-  type Rig,
-  rigged,
-  type Vec,
-} from "@/lib/island/models/parts";
+import type { Face, Rig, Vec } from "@/lib/island/models/parts";
+import { meters as m, rigged } from "@/lib/island/models/parts";
 import {
   add,
   ball,

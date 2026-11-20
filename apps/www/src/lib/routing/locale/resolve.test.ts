@@ -3,10 +3,8 @@ import {
   PublicPathSchema,
   ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
-import {
-  type ActiveAppLocaleCode,
-  ActiveAppLocaleCodeSchema,
-} from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Effect, HashMap, Option, Schema } from "effect";
 import { resolveLocalizedNavigationHref } from "@/lib/routing/locale/resolve";
 import { previewIdProjection, previewProjection } from "@/test/manifest";

@@ -4,11 +4,11 @@ import {
 } from "@repo/design-system/components/contents/biology/bacteria/parts";
 import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
 import { useBiologyItemSelection } from "@repo/design-system/components/contents/biology/context";
-import {
-  BiologyLabFrame,
-  type BiologyLabProps,
-  type BiologySceneProps,
+import type {
+  BiologyLabProps,
+  BiologySceneProps,
 } from "@repo/design-system/components/contents/biology/lab";
+import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab";
 import { DnaDoubleHelix } from "@repo/design-system/components/contents/biology/parts";
 import { BacteriophageModel } from "@repo/design-system/components/contents/biology/virus/phage";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";

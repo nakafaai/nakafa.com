@@ -1,30 +1,19 @@
-import { type ThreeElements, useFrame, useThree } from "@react-three/fiber";
+import type { ThreeElements } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useCameraFraming } from "@repo/design-system/components/three/camera/framing";
+import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
 import {
   resolveThreeFontSize,
   THREE_DIAGRAM_MAXIMUM_FONT_SIZE,
   THREE_DIAGRAM_MINIMUM_FONT_SIZE,
-  type ThreeFontSize,
 } from "@repo/design-system/components/three/data/constants";
 import { SceneHtml } from "@repo/design-system/components/three/overlay";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { MutableHashMap } from "effect";
-import {
-  type ComponentProps,
-  createContext,
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-} from "react";
-import {
-  Color,
-  type Group,
-  MathUtils,
-  OrthographicCamera,
-  Vector3,
-} from "three";
+import type { ComponentProps, ReactNode } from "react";
+import { createContext, useCallback, useEffect, useMemo, useRef } from "react";
+import type { Group } from "three";
+import { Color, MathUtils, OrthographicCamera, Vector3 } from "three";
 
 type LabelAnchorX = "center" | "left" | "right";
 type LabelAnchorY = "bottom" | "middle" | "top";

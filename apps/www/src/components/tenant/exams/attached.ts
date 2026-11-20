@@ -2,13 +2,12 @@ import type { Ref } from "@confect/core";
 import type { OptimisticUpdate } from "@confect/react";
 import type exams from "@repo/backend/confect/_generated/refs/exams";
 import { Array as Arr, Option } from "effect";
-import {
-  changeExam,
-  type ExamView,
-  examQuery,
-  type Question,
-  type QuestionId,
+import type {
+  ExamView,
+  Question,
+  QuestionId,
 } from "@/components/tenant/exams/optimistic";
+import { changeExam, examQuery } from "@/components/tenant/exams/optimistic";
 
 /**
  * The readings a question may share: each reading another question of the exam holds, once, by the first

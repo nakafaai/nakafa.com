@@ -7,9 +7,15 @@ import {
   Result,
   String as Str,
 } from "effect";
+import type {
+  BindingElement,
+  Identifier,
+  NamedImportBindings,
+  Node,
+  ParameterDeclaration,
+  SourceFile,
+} from "tsrs/ast";
 import {
-  type BindingElement,
-  type Identifier,
   isBindingElement,
   isCallExpression,
   isFunctionDeclaration,
@@ -27,10 +33,6 @@ import {
   isStringLiteral,
   isVariableDeclaration,
   isVariableStatement,
-  type NamedImportBindings,
-  type Node,
-  type ParameterDeclaration,
-  type SourceFile,
   SyntaxKind,
 } from "tsrs/ast";
 import { COMPONENT_SET_DIRECTORIES } from "#scripts/check/exports";

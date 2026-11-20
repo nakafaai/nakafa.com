@@ -43,7 +43,8 @@ import type {
   TableRowProps,
 } from "@repo/design-system/types/markdown";
 import { cn } from "cn";
-import { type ComponentPropsWithoutRef, isValidElement } from "react";
+import type { ComponentPropsWithoutRef } from "react";
+import { isValidElement } from "react";
 
 type ContentLayoutProps = ComponentPropsWithoutRef<"div">;
 type MdxPreProps = PreProps & {

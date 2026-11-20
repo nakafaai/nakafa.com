@@ -9,6 +9,7 @@ import { choiceAnswers, textLabel } from "@repo/backend/confect/exams/blank";
 import { encodeAnswers } from "@repo/backend/confect/exams/question";
 import { nf } from "@repo/backend/test/editor";
 import { fillExam } from "@repo/backend/test/exams";
+import type { SittingFixture } from "@repo/backend/test/sittings";
 import {
   CLOSES_AT as CLOSES,
   deviceOf,
@@ -17,7 +18,6 @@ import {
   keyedSchool,
   OPENS_AT as OPENS,
   openedSitting,
-  type SittingFixture,
   scheduleSitting,
   sittingRow,
 } from "@repo/backend/test/sittings";

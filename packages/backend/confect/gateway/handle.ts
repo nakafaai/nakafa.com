@@ -1,27 +1,24 @@
 import { cachedPrefix } from "@repo/backend/confect/gateway/cache";
 import { classify } from "@repo/backend/confect/gateway/classify";
-import {
-  type Answers,
-  type DecisionModel,
-  decideWith,
-  type Question,
-  type State,
+import type {
+  Answers,
+  DecisionModel,
+  Question,
+  State,
 } from "@repo/backend/confect/gateway/decide";
+import { decideWith } from "@repo/backend/confect/gateway/decide";
 import { escrowed } from "@repo/backend/confect/gateway/escrow";
 import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
+import type { EmbeddingModelId } from "@repo/backend/confect/gateway/model";
 import {
   decisionModelId,
-  type EmbeddingModelId,
   embeddingDimensions,
   embeddingModelId,
   embeddingTimeoutMs,
   languageModel,
 } from "@repo/backend/confect/gateway/model";
-import {
-  type Deadline,
-  type Purpose,
-  purposes,
-} from "@repo/backend/confect/gateway/purpose";
+import type { Deadline, Purpose } from "@repo/backend/confect/gateway/purpose";
+import { purposes } from "@repo/backend/confect/gateway/purpose";
 import { Meter, metered } from "@repo/backend/confect/spend/meter";
 import {
   decisionCost,

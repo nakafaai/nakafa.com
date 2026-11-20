@@ -5,7 +5,8 @@ import { useId } from "react";
 import { SittingDocument } from "@/components/exams/sitting/document";
 import { usePaperLocked } from "@/components/exams/sitting/lock";
 import { ChoiceCheck, ChoiceRadio } from "@/components/player/choice";
-import { type Choice, toggleOption } from "@/components/player/response";
+import type { Choice } from "@/components/player/response";
+import { toggleOption } from "@/components/player/response";
 
 /**
  * The options of one choice, read from the paper. A single choice is a radio group, and a

@@ -2,11 +2,8 @@ import type { Interaction } from "@nakafa/aksara-contracts/assessment/interactio
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { CHOICE_OPTIONS_MAX } from "@repo/backend/confect/exams/question";
 import { Array as Arr, Option, Result } from "effect";
-import {
-  emptyLabel,
-  type OptionLabel,
-  withoutPart,
-} from "@/components/tenant/exams/answer";
+import type { OptionLabel } from "@/components/tenant/exams/answer";
+import { emptyLabel, withoutPart } from "@/components/tenant/exams/answer";
 
 /** The table interaction, which a true or false table holds. */
 type Table = Extract<Interaction, { kind: "matrix" }>;

@@ -6,7 +6,8 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { type ComponentProps, type ReactNode, useId, useState } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { useId, useState } from "react";
 import { useTranslations } from "use-intl";
 
 /**

@@ -1,5 +1,6 @@
 import { ConvexHttpClient } from "convex/browser";
-import { type FunctionReference, makeFunctionReference } from "convex/server";
+import type { FunctionReference } from "convex/server";
+import { makeFunctionReference } from "convex/server";
 import {
   Array as Arr,
   Effect,

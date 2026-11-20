@@ -3,17 +3,15 @@ import { GoogleIndexSubmitError } from "@/scripts/indexing/errors";
 import { getGoogleAccessToken } from "@/scripts/indexing/google/auth";
 import { getEligibleGoogleIndexingUrls } from "@/scripts/indexing/google/eligibility";
 import { submitUrlsToGoogle } from "@/scripts/indexing/google/submit";
+import type { SubmissionHistory } from "@/scripts/indexing/history";
 import {
   ensureSubmissionHistoryFolder,
   listUnsubmittedUrls,
   loadSubmissionHistory,
-  type SubmissionHistory,
   saveAcceptedUrls,
 } from "@/scripts/indexing/history";
-import {
-  forEachSiteIndexUrlBatch,
-  type SiteIndexManifestSummary,
-} from "@/scripts/indexing/manifest";
+import type { SiteIndexManifestSummary } from "@/scripts/indexing/manifest";
+import { forEachSiteIndexUrlBatch } from "@/scripts/indexing/manifest";
 import { INDEXING_HOST } from "@/scripts/indexing/paths";
 
 const RATE_LIMIT_DELAY = 1000;

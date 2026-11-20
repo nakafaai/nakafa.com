@@ -2,7 +2,8 @@ import { QueryResult, useQuery } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import editors from "@repo/backend/confect/_generated/refs/editor";
 import { useEffect, useEffectEvent } from "react";
-import { type StoreApi, useStore } from "zustand";
+import type { StoreApi } from "zustand";
+import { useStore } from "zustand";
 import { useExam } from "@/components/tenant/exams/provider";
 import type { PromptSync } from "@/components/tenant/exams/sync";
 

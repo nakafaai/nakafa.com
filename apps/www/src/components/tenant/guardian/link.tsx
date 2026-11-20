@@ -1,4 +1,5 @@
-import { type PaginatedQueryItem, useMutation } from "@confect/react";
+import type { PaginatedQueryItem } from "@confect/react";
+import { useMutation } from "@confect/react";
 import {
   CheckmarkBadge01Icon,
   Link01Icon,

@@ -1,7 +1,5 @@
-import {
-  ACTIVE_APP_LOCALE_CODES,
-  type ActiveAppLocaleCode as Locale,
-} from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode as Locale } from "@nakafa/aksara-contracts/locale";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { decodeAgentOutput } from "@repo/backend/agent/decode";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
 import contentReleasePublic from "@repo/backend/confect/_generated/refs/contentRelease";

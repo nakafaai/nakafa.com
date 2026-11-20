@@ -1,7 +1,8 @@
 import { PaginatedQueryResult } from "@confect/react";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr } from "effect";
-import { type ReactNode, useEffect, useEffectEvent } from "react";
+import type { ReactNode } from "react";
+import { useEffect, useEffectEvent } from "react";
 import { reloadPage } from "@/components/shared/reload";
 import { useNeedsEveryRow } from "@/components/shared/table/toolbar";
 import { TableWaitingContext } from "@/components/shared/table/waiting";

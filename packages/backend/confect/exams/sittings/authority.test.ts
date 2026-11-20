@@ -4,6 +4,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import type { ReasonCode } from "@repo/backend/confect/exams/sittings/schema";
 import { nf } from "@repo/backend/test/editor";
+import type { SittingFixture } from "@repo/backend/test/sittings";
 import {
   admittedOf,
   attemptRow,
@@ -13,7 +14,6 @@ import {
   keyedSchool,
   OPENS_AT,
   openedSitting,
-  type SittingFixture,
   scheduleSitting,
   seedAttempt,
   sittingRow,

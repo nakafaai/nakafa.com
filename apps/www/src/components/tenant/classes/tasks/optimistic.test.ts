@@ -3,15 +3,17 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
+import type {
+  ClassTask,
+  TaskWork,
+} from "@/components/tenant/classes/tasks/optimistic";
 import {
   archiveUpdate,
-  type ClassTask,
   editUpdate,
   removeUpdate,
   restoreUpdate,
   scoreUpdate,
   submitUpdate,
-  type TaskWork,
 } from "@/components/tenant/classes/tasks/optimistic";
 
 const slug = Schema.decodeSync(TenantSlug)("sekolah");

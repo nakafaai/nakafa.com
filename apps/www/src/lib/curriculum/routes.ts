@@ -1,7 +1,5 @@
-import {
-  type CurriculumRoute,
-  isRenderableCurriculumLevel,
-} from "@nakafa/aksara-contracts/program/curriculum";
+import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
+import { isRenderableCurriculumLevel } from "@nakafa/aksara-contracts/program/curriculum";
 import { PATHNAMES } from "@repo/internationalization/src/pathnames";
 import type { Locale } from "use-intl";
 import { curriculumTarget } from "@/lib/routing/target";

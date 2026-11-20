@@ -1,10 +1,8 @@
 import { useMutation } from "@confect/react";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import { Option } from "effect";
-import {
-  applyOnboardingAnswer,
-  type OnboardingProfile,
-} from "@/components/programs/onboarding/state";
+import type { OnboardingProfile } from "@/components/programs/onboarding/state";
+import { applyOnboardingAnswer } from "@/components/programs/onboarding/state";
 
 /** Returns a draft mutation that updates the subscribed profile immediately. */
 export function useSaveOnboardingAnswerMutation(

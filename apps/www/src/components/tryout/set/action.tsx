@@ -5,10 +5,8 @@ import type {
   SetPage,
   TryoutSetDestination,
 } from "@/components/tryout/set/model";
-import {
-  StartTryoutButton,
-  type StartTryoutRequest,
-} from "@/components/tryout/set/start";
+import type { StartTryoutRequest } from "@/components/tryout/set/start";
+import { StartTryoutButton } from "@/components/tryout/set/start";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 interface TryoutSetActionProps {

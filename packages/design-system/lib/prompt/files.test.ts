@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { PromptInputRefusal } from "@repo/design-system/lib/prompt/files";
 import {
   PromptInputFileConstraintError,
   PromptInputFileSchema,
-  type PromptInputRefusal,
   refusalsAfterSend,
   refusedFiles,
   validatePromptInputFiles,

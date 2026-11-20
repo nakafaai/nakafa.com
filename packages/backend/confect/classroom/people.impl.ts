@@ -2,9 +2,8 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { Class } from "@repo/backend/confect/classroom/access";
 import { classAccess } from "@repo/backend/confect/classroom/authority";
-import spec, {
-  type ClassPerson,
-} from "@repo/backend/confect/classroom/people.spec";
+import type { ClassPerson } from "@repo/backend/confect/classroom/people.spec";
+import spec from "@repo/backend/confect/classroom/people.spec";
 import {
   classRoster,
   classTeachers,

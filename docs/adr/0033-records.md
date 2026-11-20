@@ -107,12 +107,12 @@ import is a source and an export is a product of Records.
 
 The `grade` kind covers `classGrades`. Its relations and actions are these:
 
-| Action | Granted by | What it allows |
-| --- | --- | --- |
-| `grade.enter` | Subject teacher of the class | Writes a draft for a student of the class |
-| `grade.release` | Subject teacher of the class | Releases a draft, once, and journals `grade.released` |
-| `grade.view` | Subject teacher of the class | Reads every grade of the class, drafts included |
-| `grade.view` | Self, on the student's own row | Reads that row once it is released |
+| Action          | Granted by                     | What it allows                                        |
+| --------------- | ------------------------------ | ----------------------------------------------------- |
+| `grade.enter`   | Subject teacher of the class   | Writes a draft for a student of the class             |
+| `grade.release` | Subject teacher of the class   | Releases a draft, once, and journals `grade.released` |
+| `grade.view`    | Subject teacher of the class   | Reads every grade of the class, drafts included       |
+| `grade.view`    | Self, on the student's own row | Reads that row once it is released                    |
 
 `grade.enter` and `grade.list` are declared on the class, the subject that exists
 before its first grade does, so the class's own refusals apply to them. The
@@ -184,19 +184,19 @@ esbuild and then ran inside a V8 context with no Node globals (no `Buffer`, no
 `process`, no `require`). That approximates the Convex default runtime. The
 Convex runtime itself is checked by the first slice that imports each library.
 
-| Need | Candidate | Licence | Last release | Bare run | Measured | Decision |
-| --- | --- | --- | --- | --- | --- | --- |
-| PDF | jsPDF 4.2.1 | MIT | 17 Mar 2026 | Runs, 243 KB gzip neutral bundle | One A4 page with 40 text lines and a vector QR: median 4 to 30 ms (loaded machine), 39 KB uncompressed (`compress: true` in S5) | Chosen |
-| PDF | pdf-lib 1.17.1 | MIT | 6 Nov 2021 | Runs, 176 KB gzip, no fontkit | Median 42 to 48 ms, 4.7 KB output | Not chosen: no release in nearly five years |
-| PDF | pdfkit 0.20.2 | MIT | 30 Aug 2026 | Fails with "Invalid URL" when it runs | Median 8 ms, 4.1 KB output | Not chosen: fails the bare run |
-| PDF | pdfmake 0.3.12 | MIT | 17 Oct 2026 | Fails bundling for neutral (`events`, `fs`); browser only, 295 KB gzip | Not run in Node | Not chosen: no server path |
-| QR | uqr 0.1.3 | MIT | 3 Apr 2026 | Runs, 3.8 KB gzip, no dependencies | 40 of 40 codes decode to their input (jsQR 1.4.0, Apache-2.0); generation about 2 to 5 ms | Chosen |
-| QR | qrcode 1.5.4 | MIT | 5 Aug 2024 | Fails bundling for neutral (`util`, `stream`); browser only, 9.4 KB gzip | 40 of 40 decode; generation 1 to 4 ms | Not chosen: no server path |
-| XLSX | write-excel-file 4.1.1 and read-excel-file 9.3.12 | MIT | 8 Jun 2026 and 7 Oct 2026 | Runs both ways: a write and a read of a two-row sheet in the bare context | 5,000 rows by six columns: write 142 ms, read 87 ms, 150,884 bytes; 5,001 rows read back | Chosen |
-| XLSX | SheetJS xlsx 0.18.5 | Apache-2.0 | 24 Mar 2022 (newest on npm) | Runs, 93 KB gzip | 5,000 rows: write 115 ms, read 80 ms, 1,228,430 bytes | Not chosen: the newest npm release is four years old |
-| XLSX | ExcelJS 4.4.0 | MIT | 19 Oct 2023 (a prerelease followed on 20 Dec 2024) | Fails bundling for neutral (`stream`, `util`); browser 264 KB gzip | 5,000 rows: write 146 ms, read 88 ms, 157,909 bytes | Not chosen: no server path |
-| Web Push | @block65/webcrypto-web-push 2.0.0 | MIT | 3 Sep 2026 | Neutral bundle has no Node imports, 2.2 KB gzip, one dependency | Node WebCrypto: 4,096-byte encrypted body and a VAPID header with the `k` parameter | Chosen for the push change |
-| Web Push | web-push 3.6.7 | MPL-2.0 | 16 Jan 2024 | Fails bundling for neutral and browser (`http`, `https`, `net`) | Not run | Not chosen: Node only, file-level MPL |
+| Need     | Candidate                                         | Licence    | Last release                                       | Bare run                                                                  | Measured                                                                                                                        | Decision                                             |
+| -------- | ------------------------------------------------- | ---------- | -------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| PDF      | jsPDF 4.2.1                                       | MIT        | 17 Mar 2026                                        | Runs, 243 KB gzip neutral bundle                                          | One A4 page with 40 text lines and a vector QR: median 4 to 30 ms (loaded machine), 39 KB uncompressed (`compress: true` in S5) | Chosen                                               |
+| PDF      | pdf-lib 1.17.1                                    | MIT        | 6 Nov 2021                                         | Runs, 176 KB gzip, no fontkit                                             | Median 42 to 48 ms, 4.7 KB output                                                                                               | Not chosen: no release in nearly five years          |
+| PDF      | pdfkit 0.20.2                                     | MIT        | 30 Aug 2026                                        | Fails with "Invalid URL" when it runs                                     | Median 8 ms, 4.1 KB output                                                                                                      | Not chosen: fails the bare run                       |
+| PDF      | pdfmake 0.3.12                                    | MIT        | 17 Oct 2026                                        | Fails bundling for neutral (`events`, `fs`); browser only, 295 KB gzip    | Not run in Node                                                                                                                 | Not chosen: no server path                           |
+| QR       | uqr 0.1.3                                         | MIT        | 3 Apr 2026                                         | Runs, 3.8 KB gzip, no dependencies                                        | 40 of 40 codes decode to their input (jsQR 1.4.0, Apache-2.0); generation about 2 to 5 ms                                       | Chosen                                               |
+| QR       | qrcode 1.5.4                                      | MIT        | 5 Aug 2024                                         | Fails bundling for neutral (`util`, `stream`); browser only, 9.4 KB gzip  | 40 of 40 decode; generation 1 to 4 ms                                                                                           | Not chosen: no server path                           |
+| XLSX     | write-excel-file 4.1.1 and read-excel-file 9.3.12 | MIT        | 8 Jun 2026 and 7 Oct 2026                          | Runs both ways: a write and a read of a two-row sheet in the bare context | 5,000 rows by six columns: write 142 ms, read 87 ms, 150,884 bytes; 5,001 rows read back                                        | Chosen                                               |
+| XLSX     | SheetJS xlsx 0.18.5                               | Apache-2.0 | 24 Mar 2022 (newest on npm)                        | Runs, 93 KB gzip                                                          | 5,000 rows: write 115 ms, read 80 ms, 1,228,430 bytes                                                                           | Not chosen: the newest npm release is four years old |
+| XLSX     | ExcelJS 4.4.0                                     | MIT        | 19 Oct 2023 (a prerelease followed on 20 Dec 2024) | Fails bundling for neutral (`stream`, `util`); browser 264 KB gzip        | 5,000 rows: write 146 ms, read 88 ms, 157,909 bytes                                                                             | Not chosen: no server path                           |
+| Web Push | @block65/webcrypto-web-push 2.0.0                 | MIT        | 3 Sep 2026                                         | Neutral bundle has no Node imports, 2.2 KB gzip, one dependency           | Node WebCrypto: 4,096-byte encrypted body and a VAPID header with the `k` parameter                                             | Chosen for the push change                           |
+| Web Push | web-push 3.6.7                                    | MPL-2.0    | 16 Jan 2024                                        | Fails bundling for neutral and browser (`http`, `https`, `net`)           | Not run                                                                                                                         | Not chosen: Node only, file-level MPL                |
 
 Notes on the measurements. Timings come from a loaded laptop, so each figure is a
 median of 3 to 15 runs and swings by about two times between runs. The round trips
@@ -213,29 +213,29 @@ The blueprint's privacy table sets the rules, and K10 owns the final numbers.
 Where the blueprint gives no number, the data is kept for the school's contract,
 and it is deleted 30 days after the school leaves, after an export.
 
-| Data | Blueprint rule | Rule in this ADR |
-| --- | --- | --- |
-| Subject grades (`classGrades`) | During the school year, then only inside the report | Kept during the period. When the report is locked, the grade rows are removed with the period, and the locked report keeps the values |
-| Report cards and their PDFs | Kept by the legal basis of the country profile; the hash goes to the journal | Kept for the school's contract. Export, then deletion 30 days after the school leaves |
-| Grading schemes | Versioned per school | Kept for the school's contract. Versions stay, because grades refer to them |
-| Attendance (S3) | During the school year, then only aggregates | Rows removed with the period; aggregates kept in the report |
-| Consent evidence (ADR 0034) | Kept under the audit policy; not deleted before the audit period ends | Kept for the school's contract, and not deleted before the audit period ends |
-| Dapodik upload | Removed when the import ends | Removed when the import ends (ADR 0028) |
-| Dapodik export file | Not stated | Kept only while the school downloads it. Deleted 30 days after the school leaves |
-| Journal entries | One period per organisation (ADR 0016) | Unchanged |
+| Data                           | Blueprint rule                                                               | Rule in this ADR                                                                                                                      |
+| ------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Subject grades (`classGrades`) | During the school year, then only inside the report                          | Kept during the period. When the report is locked, the grade rows are removed with the period, and the locked report keeps the values |
+| Report cards and their PDFs    | Kept by the legal basis of the country profile; the hash goes to the journal | Kept for the school's contract. Export, then deletion 30 days after the school leaves                                                 |
+| Grading schemes                | Versioned per school                                                         | Kept for the school's contract. Versions stay, because grades refer to them                                                           |
+| Attendance (S3)                | During the school year, then only aggregates                                 | Rows removed with the period; aggregates kept in the report                                                                           |
+| Consent evidence (ADR 0034)    | Kept under the audit policy; not deleted before the audit period ends        | Kept for the school's contract, and not deleted before the audit period ends                                                          |
+| Dapodik upload                 | Removed when the import ends                                                 | Removed when the import ends (ADR 0028)                                                                                               |
+| Dapodik export file            | Not stated                                                                   | Kept only while the school downloads it. Deleted 30 days after the school leaves                                                      |
+| Journal entries                | One period per organisation (ADR 0016)                                       | Unchanged                                                                                                                             |
 
 ### Journal changes
 
 A draft is not journaled per write, as ADR 0016 keeps drafts out of the journal.
 Only the release and the lock are journaled.
 
-| Change | Subject | Holds | Published |
-| --- | --- | --- | --- |
-| `grade.released` | `grade` | IDs and the state `released` | Yes, to the notifications consumer and to webhooks |
-| `scheme.stored` | `tenant` | The ID of the stored version | No |
-| `report.locked` | `report` | IDs and the PDF hash | No, until the exports consumer exists |
-| `graduation.decided` | `period` | Nothing but the type (S6) | No |
-| `letter.locked` | `cohort` | The SKL's ID and its PDF hash (S6) | No |
+| Change               | Subject  | Holds                              | Published                                          |
+| -------------------- | -------- | ---------------------------------- | -------------------------------------------------- |
+| `grade.released`     | `grade`  | IDs and the state `released`       | Yes, to the notifications consumer and to webhooks |
+| `scheme.stored`      | `tenant` | The ID of the stored version       | No                                                 |
+| `report.locked`      | `report` | IDs and the PDF hash               | No, until the exports consumer exists              |
+| `graduation.decided` | `period` | Nothing but the type (S6)          | No                                                 |
+| `letter.locked`      | `cohort` | The SKL's ID and its PDF hash (S6) | No                                                 |
 
 ## Consequences
 
@@ -287,17 +287,17 @@ Only the release and the lock are journaled.
 
 ## Implementation Status
 
-| Part | Status |
-| --- | --- |
-| The decision and the libraries in this ADR | Recorded by S0 |
-| `confect/records`, `gradingSchemes`, and `classGrades` (grade entry and release, `grade.released`) | Built, S1 |
-| The Admin's scheme store (`schemes.store`, `scheme.stored`) and the built-in first version | Built, S1 |
-| The gradebook screen for a class (the Grades tab, `records/grades:sheet` and `:scheme`) | Built, S2 |
-| Attendance | Planned, S3 |
-| Report cards, the homeroom note, hand-in, approval, and lock (`records/reports`) | Built, S4, see the amendment below |
-| The report PDF with its hash and QR (`records/prints`), and the verification page (`records/checks`, `/{locale}/verify/{hash}`) | Built, S5, see the amendment below |
+| Part                                                                                                                                                                                              | Status                                          |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| The decision and the libraries in this ADR                                                                                                                                                        | Recorded by S0                                  |
+| `confect/records`, `gradingSchemes`, and `classGrades` (grade entry and release, `grade.released`)                                                                                                | Built, S1                                       |
+| The Admin's scheme store (`schemes.store`, `scheme.stored`) and the built-in first version                                                                                                        | Built, S1                                       |
+| The gradebook screen for a class (the Grades tab, `records/grades:sheet` and `:scheme`)                                                                                                           | Built, S2                                       |
+| Attendance                                                                                                                                                                                        | Planned, S3                                     |
+| Report cards, the homeroom note, hand-in, approval, and lock (`records/reports`)                                                                                                                  | Built, S4, see the amendment below              |
+| The report PDF with its hash and QR (`records/prints`), and the verification page (`records/checks`, `/{locale}/verify/{hash}`)                                                                   | Built, S5, see the amendment below              |
 | The graduation decision, the SKL with its PDF, hash, and QR (`records/graduations`, `records/letters`), the transcript data, the e-Ijazah readiness export, and the Dapodik export of report data | Built, S6, see the amendment of 31 October 2026 |
-| The import of a Dapodik upload in `confect/connectors` | Planned, ADR 0015 |
+| The import of a Dapodik upload in `confect/connectors`                                                                                                                                            | Planned, ADR 0015                               |
 
 ## Amendment: Report Cards And Their Check, 26 October 2026
 
@@ -331,13 +331,12 @@ The report shows the released grades of the student's classes in the cohort, the
 homeroom note, and the approval date. The learning description from the subject teacher,
 attendance, and the extracurricular activities join with S3. Who may act:
 
-| Action | Who |
-| --- | --- |
-| List a class group's reports, read a report | Its homeroom teacher, the principal, the Admin |
-| Write the note, hand in, take back | The homeroom teacher |
-| Approve | The principal (ADR 0012: not the Deputy) |
-| Open the report pages from the sidebar (`report.open` on a unit) | Teachers, principals, Admins |
-
+| Action                                                           | Who                                            |
+| ---------------------------------------------------------------- | ---------------------------------------------- |
+| List a class group's reports, read a report                      | Its homeroom teacher, the principal, the Admin |
+| Write the note, hand in, take back                               | The homeroom teacher                           |
+| Approve                                                          | The principal (ADR 0012: not the Deputy)       |
+| Open the report pages from the sidebar (`report.open` on a unit) | Teachers, principals, Admins                   |
 
 ## Amendment: Graduation, SKL, Transcript Data, And The Exports, 31 October 2026
 
@@ -423,10 +422,10 @@ instead of a pilot school's file. These sources set the rules below:
 
 Who may act:
 
-| Action | Who |
-| --- | --- |
-| Record or change the graduation decision (`graduation.decide` on a period) | The principal |
-| Issue the SKL of a class group (`graduation.issue` on a cohort) | The principal |
+| Action                                                                                                                  | Who                                                                                   |
+| ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Record or change the graduation decision (`graduation.decide` on a period)                                              | The principal                                                                         |
+| Issue the SKL of a class group (`graduation.issue` on a cohort)                                                         | The principal                                                                         |
 | Open the graduation pages, the transcript data, the SKL files, and the readiness export (`graduation.view` on a cohort) | The principal, the Admin, and Staff (Staf TU), who keep the Dapodik and e-Ijazah data |
-| Offer the graduation pages in the sidebar (`graduation.open` on a unit) | The principal, the Admin, and Staff |
-| Export a class group's report data for Dapodik (`report.export` on a cohort) | The principal, the Admin, and Staff |
+| Offer the graduation pages in the sidebar (`graduation.open` on a unit)                                                 | The principal, the Admin, and Staff                                                   |
+| Export a class group's report data for Dapodik (`report.export` on a cohort)                                            | The principal, the Admin, and Staff                                                   |

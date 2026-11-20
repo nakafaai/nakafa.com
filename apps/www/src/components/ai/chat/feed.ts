@@ -1,5 +1,6 @@
 import { Ref } from "@confect/core";
-import { type UIMessagesQuery, useUIMessages } from "@convex-dev/agent/react";
+import type { UIMessagesQuery } from "@convex-dev/agent/react";
+import { useUIMessages } from "@convex-dev/agent/react";
 import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
@@ -17,7 +18,8 @@ import {
   useState,
 } from "react";
 import { readChatArgs } from "@/components/ai/chat/access";
-import { type ChatPaging, useChat } from "@/components/ai/chat/context";
+import type { ChatPaging } from "@/components/ai/chat/context";
+import { useChat } from "@/components/ai/chat/context";
 import { mergeMessages } from "@/components/ai/chat/messages";
 import { canLoadOlderMessages } from "@/components/ai/chat/turns";
 import { useAi } from "@/components/ai/context";

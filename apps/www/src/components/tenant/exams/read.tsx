@@ -1,7 +1,8 @@
 import { captureException } from "@repo/analytics/posthog/capture";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Effect, Fiber } from "effect";
-import { type ReactNode, useEffect } from "react";
+import type { ReactNode } from "react";
+import { useEffect } from "react";
 import { isLostAccess } from "@/components/tenant/refusal";
 
 /** How long a read that failed waits before it runs again. */

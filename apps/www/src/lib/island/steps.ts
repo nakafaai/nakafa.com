@@ -1,7 +1,9 @@
-import { type BlockKey, keyOf } from "@repo/backend/confect/island/blocks";
+import type { BlockKey } from "@repo/backend/confect/island/blocks";
+import { keyOf } from "@repo/backend/confect/island/blocks";
 import { Array as Arr, Option, Schema } from "effect";
 import { standOf } from "@/lib/island/path";
-import { blockAt, type Cells } from "@/lib/island/world";
+import type { Cells } from "@/lib/island/world";
+import { blockAt } from "@/lib/island/world";
 
 /**
  * What a footstep of the learner's fox sounds like, by what its paw lands on

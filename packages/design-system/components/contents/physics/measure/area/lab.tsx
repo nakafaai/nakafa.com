@@ -3,11 +3,11 @@ import {
   fade,
   vignette,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { Road } from "@repo/design-system/components/contents/physics/canvas/scene";
 import {
   paintCar,
   paintLandscape,
   paintRoad,
-  type Road,
 } from "@repo/design-system/components/contents/physics/canvas/scene";
 import { motionAreas } from "@repo/design-system/components/contents/physics/measure/data";
 import {

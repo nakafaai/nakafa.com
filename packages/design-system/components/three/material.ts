@@ -1,5 +1,6 @@
 import { Array as Arr } from "effect";
-import { Color, type Material, type Mesh } from "three";
+import type { Material, Mesh } from "three";
+import { Color } from "three";
 
 /** Tints a mesh material, or each material of a multi-material mesh, on clones. */
 export function tintMaterial(material: Mesh["material"], color: string) {

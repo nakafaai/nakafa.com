@@ -8,10 +8,8 @@ import { spendOperations } from "@repo/backend/confect/bucket/use";
 import { Class } from "@repo/backend/confect/classroom/access";
 import { schoolKeys } from "@repo/backend/confect/classroom/forum/views";
 import { classItem } from "@repo/backend/confect/classroom/library/edit";
-import {
-  type LibraryFileType,
-  libraryField,
-} from "@repo/backend/confect/classroom/library/item";
+import type { LibraryFileType } from "@repo/backend/confect/classroom/library/item";
+import { libraryField } from "@repo/backend/confect/classroom/library/item";
 import { starsOf } from "@repo/backend/confect/classroom/library/star";
 import {
   classFolders,

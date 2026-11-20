@@ -3,7 +3,8 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { slugOf, type tenancyFixture } from "@repo/backend/test/tenancy";
+import type { tenancyFixture } from "@repo/backend/test/tenancy";
+import { slugOf } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";
 
 /** The moment the card tests start from. Fake timers hold the clock here. */

@@ -16,7 +16,8 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { cn } from "cn";
-import { type ReactNode, useId, useState } from "react";
+import type { ReactNode } from "react";
+import { useId, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 
 /** The file of a new item: a drop area until a file is chosen, then the file's name with a way to clear it. */

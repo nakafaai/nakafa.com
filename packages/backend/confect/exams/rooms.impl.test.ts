@@ -2,6 +2,7 @@ import type { GenericId } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { denied, nf } from "@repo/backend/test/editor";
+import type { SittingFixture } from "@repo/backend/test/sittings";
 import {
   CLOSES_AT as CLOSES,
   keyedExam,
@@ -9,7 +10,6 @@ import {
   mentions,
   OPENS_AT as OPENS,
   openedSitting,
-  type SittingFixture,
   scheduleSitting,
   seedPlacement,
   sittingRow,

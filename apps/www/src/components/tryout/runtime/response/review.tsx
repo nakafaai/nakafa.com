@@ -5,9 +5,9 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import {
   chosenOptions,
-  type ExamResponse,
   markedCells,
 } from "@repo/backend/confect/assessment/response";
 import { partDirection, partLetter } from "@repo/backend/confect/exams/letters";
@@ -21,9 +21,9 @@ import { Array as Arr, Option } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { ChoiceReviewed } from "@/components/player/choice";
 import { ChoiceTable } from "@/components/player/table";
+import type { Entry } from "@/components/tryout/runtime/response/entry";
 import {
   decimalOf,
-  type Entry,
   isEntry,
   reviewEntry,
 } from "@/components/tryout/runtime/response/entry";

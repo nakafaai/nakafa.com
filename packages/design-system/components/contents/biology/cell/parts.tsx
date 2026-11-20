@@ -4,8 +4,10 @@ import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constant
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
-import { type ReactNode, useEffect, useMemo, useRef } from "react";
-import { DoubleSide, type Group, SphereGeometry, Vector3 } from "three";
+import type { ReactNode } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import type { Group } from "three";
+import { DoubleSide, SphereGeometry, Vector3 } from "three";
 
 /**
  * The back half of a unit sphere, its skin lifted and sunk a little by smooth

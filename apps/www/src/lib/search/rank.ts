@@ -1,6 +1,7 @@
 import { Array as Arr, Option, Order, Schema, String as Str } from "effect";
 import { prefixDistance } from "@/lib/search/distance";
-import { SearchEntry, type SearchKind } from "@/lib/search/entry";
+import type { SearchKind } from "@/lib/search/entry";
+import { SearchEntry } from "@/lib/search/entry";
 import {
   foldWord,
   foldWords,

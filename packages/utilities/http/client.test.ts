@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Effect, type Layer } from "effect";
+import type { Layer } from "effect";
+import { Effect } from "effect";
 import { FetchHttpClient, HttpClient } from "effect/http";
 
 /** Sends one request through a client and returns the fetch that received it. */

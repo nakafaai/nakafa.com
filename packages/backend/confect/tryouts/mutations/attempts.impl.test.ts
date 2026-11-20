@@ -13,10 +13,10 @@ import {
   insertProSubscription,
 } from "@repo/backend/test/billing";
 import { client } from "@repo/backend/test/client";
+import type { TryoutWorld } from "@repo/backend/test/tryout/world";
 import {
   startArgs,
   TRYOUT_NOW,
-  type TryoutWorld,
   tryoutWorld,
 } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Duration, Effect, Schema } from "effect";

@@ -2,11 +2,8 @@
 
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Result } from "effect";
-import {
-  HttpClient,
-  type HttpClientRequest,
-  HttpClientResponse,
-} from "effect/http";
+import type { HttpClientRequest } from "effect/http";
+import { HttpClient, HttpClientResponse } from "effect/http";
 import { getCurrentWeather } from "@/lib/weather/client";
 
 const latitude = "-6.2088";

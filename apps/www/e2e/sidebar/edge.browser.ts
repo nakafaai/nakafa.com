@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 /** A lesson with a page outline, whose sidebar opens from the right on a phone or a tablet. */
 const LESSON = "/en/subjects/chemistry/structure-matter/isotope";

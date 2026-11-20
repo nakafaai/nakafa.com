@@ -2,13 +2,13 @@ import { QueryResult } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Option, Schema } from "effect";
-import { createContext, type ReactNode, useState } from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
+import type { ReactNode } from "react";
+import { createContext, useState } from "react";
+import type { StoreApi } from "zustand";
+import { createStore, useStore } from "zustand";
 import { useViewerQuery } from "@/components/tenant/context";
-import {
-  SchoolUnitChoice,
-  type UnitId,
-} from "@/components/tenant/settings/unit";
+import type { UnitId } from "@/components/tenant/settings/unit";
+import { SchoolUnitChoice } from "@/components/tenant/settings/unit";
 
 /** The unit the Admin imports into: the one chosen, or none until the Admin chooses one. */
 const RosterUnitState = Schema.Struct({

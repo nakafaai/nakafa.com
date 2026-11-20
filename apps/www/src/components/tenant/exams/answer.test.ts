@@ -3,6 +3,7 @@ import type { Interaction } from "@nakafa/aksara-contracts/assessment/interactio
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { reasonAnswers } from "@repo/backend/confect/exams/reason";
 import { Array as Arr, Option } from "effect";
+import type { OptionLabel } from "@/components/tenant/exams/answer";
 import {
   acceptedKey,
   acceptedOf,
@@ -13,7 +14,6 @@ import {
   keyWithoutOption,
   markedKey,
   markedOptions,
-  type OptionLabel,
   optionEditOf,
   optionLabelOf,
   toggledKey,

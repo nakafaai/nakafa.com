@@ -1,15 +1,15 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { hasExactQuranVerseRange } from "@repo/backend/client/quran/integrity";
+import type { PublishedQuranSource } from "@repo/backend/client/quran/publication";
 import {
   decodePublishedQuranSource,
-  type PublishedQuranSource,
   quranPublicationError,
 } from "@repo/backend/client/quran/publication";
+import type { QuranSearchRow } from "@repo/backend/client/quran/rows";
 import {
   decodeQuranChunkVerses,
   decodeQuranSearchRow,
   decodeQuranSurahRow,
-  type QuranSearchRow,
 } from "@repo/backend/client/quran/rows";
 import { hasExpectedQuranSources } from "@repo/backend/client/quran/source";
 import { separateQuranRuntimeBismillah } from "@repo/backend/content/quran/bismillah";

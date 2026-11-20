@@ -1,6 +1,7 @@
 import type { ConvexReactClient } from "convex/react";
 import { Effect, Option, Result, Schema } from "effect";
-import { createStore, type StoreApi } from "zustand";
+import type { StoreApi } from "zustand";
+import { createStore } from "zustand";
 import { reportClientException } from "@/lib/analytics/client";
 import type { ConvexAuthConfirmation } from "@/lib/auth/convex";
 import type { SessionFeed } from "@/lib/auth/feed";

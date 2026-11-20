@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  MATH_FONT_FILES,
-  type MathFont,
-} from "@repo/design-system/lib/markdown/fonts";
+import type { MathFont } from "@repo/design-system/lib/markdown/fonts";
+import { MATH_FONT_FILES } from "@repo/design-system/lib/markdown/fonts";
 import { preload } from "react-dom";
 
 /**

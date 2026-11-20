@@ -1,5 +1,6 @@
 import { coverOf } from "@repo/design-system/components/pool/cover";
 import { poolStarts } from "@repo/design-system/components/pool/member";
+import type { World } from "@repo/design-system/components/pool/physics";
 import {
   hop,
   leave,
@@ -10,18 +11,18 @@ import {
   resize,
   restedFor,
   tick,
-  type World,
 } from "@repo/design-system/components/pool/physics";
 import { createWorld, fit } from "@repo/design-system/components/pool/place";
+import type { Settling } from "@repo/design-system/components/pool/settle";
 import {
   finishSettle,
   isSettled,
-  type Settling,
   settleFor,
   startSettle,
 } from "@repo/design-system/components/pool/settle";
 import { Array as Arr, Effect, Random } from "effect";
-import { cancelFrame, type FrameData, frame } from "motion";
+import type { FrameData } from "motion";
+import { cancelFrame, frame } from "motion";
 import { flushSync } from "react-dom";
 
 /**

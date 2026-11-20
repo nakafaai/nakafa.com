@@ -14,13 +14,13 @@ import type {
   BuiltinRole,
   GrantScope,
 } from "@repo/backend/confect/access/schema";
-import {
-  type Account,
-  type Email,
-  INVITE_TERM,
-  type InviteState,
-  type PersonStatus,
+import type {
+  Account,
+  Email,
+  InviteState,
+  PersonStatus,
 } from "@repo/backend/confect/tenancy/schema";
+import { INVITE_TERM } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import {
   createConvexTestWithAuth,

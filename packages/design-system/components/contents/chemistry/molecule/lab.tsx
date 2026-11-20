@@ -1,7 +1,7 @@
 import { Atom02Icon } from "@hugeicons/core-free-icons";
+import type { MoleculeId } from "@repo/design-system/components/contents/chemistry/molecule/catalog";
 import {
   getMolecule,
-  type MoleculeId,
   MoleculeIdSchema,
   moleculeFormula,
 } from "@repo/design-system/components/contents/chemistry/molecule/catalog";
@@ -38,7 +38,8 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Option, Schema } from "effect";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 import { useFormatter } from "use-intl";
 
 /** How far under its lowest atom the floor a molecule casts its shadow on lies. */

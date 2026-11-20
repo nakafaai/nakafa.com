@@ -1,8 +1,5 @@
-import {
-  type PaginatedQueryItem,
-  useMutation,
-  usePaginatedQuery,
-} from "@confect/react";
+import type { PaginatedQueryItem } from "@confect/react";
+import { useMutation, usePaginatedQuery } from "@confect/react";
 import {
   ClockAlertIcon,
   Delete02Icon,
@@ -46,10 +43,8 @@ import { LineDialog } from "@/components/tenant/line";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import { roleLooks } from "@/components/tenant/roles";
-import {
-  type CardView,
-  SchoolCardDialog,
-} from "@/components/tenant/settings/card";
+import type { CardView } from "@/components/tenant/settings/card";
+import { SchoolCardDialog } from "@/components/tenant/settings/card";
 import { readdressInviteChange } from "@/components/tenant/settings/edits";
 import { SchoolInviteAction } from "@/components/tenant/settings/invite";
 import { SchoolIssueCardDialog } from "@/components/tenant/settings/issue";

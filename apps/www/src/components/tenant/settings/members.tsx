@@ -1,9 +1,5 @@
-import {
-  type PaginatedQueryItem,
-  QueryResult,
-  useMutation,
-  usePaginatedQuery,
-} from "@confect/react";
+import type { PaginatedQueryItem } from "@confect/react";
+import { QueryResult, useMutation, usePaginatedQuery } from "@confect/react";
 import {
   IdCardIcon,
   MailSend01Icon,
@@ -31,7 +27,8 @@ import {
 } from "@repo/design-system/components/ui/responsive-dialog";
 import type { StatusTone } from "@repo/design-system/lib/status";
 import { Array as Arr, Option, Schema } from "effect";
-import { type ComponentProps, startTransition, useState } from "react";
+import type { ComponentProps } from "react";
+import { startTransition, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
@@ -58,10 +55,8 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import { roleLooks } from "@/components/tenant/roles";
 import { removeMemberChange } from "@/components/tenant/settings/accounts";
-import {
-  type CardView,
-  SchoolCardDialog,
-} from "@/components/tenant/settings/card";
+import type { CardView } from "@/components/tenant/settings/card";
+import { SchoolCardDialog } from "@/components/tenant/settings/card";
 import { UNIT_ICONS } from "@/components/tenant/settings/choices";
 import { SchoolGrantDialog } from "@/components/tenant/settings/grant";
 import { inviteChange } from "@/components/tenant/settings/grants";

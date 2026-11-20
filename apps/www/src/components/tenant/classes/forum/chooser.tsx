@@ -9,14 +9,8 @@ import {
 } from "@repo/design-system/components/ui/popover";
 import { readChunk } from "@repo/design-system/lib/lazy";
 import { Array as Arr, Effect, Option } from "effect";
-import {
-  type ComponentProps,
-  createContext,
-  type ReactNode,
-  use,
-  useRef,
-  useState,
-} from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { createContext, use, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import type { EmojiEntry } from "@/components/tenant/classes/forum/emoji";
 import { EmojiPanel } from "@/components/tenant/classes/forum/panel";

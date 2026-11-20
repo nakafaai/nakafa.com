@@ -1,6 +1,7 @@
 import { NINA, POP, TEXT, WHITE } from "@repo/mascot/color";
 import { tenth } from "@repo/mascot/round";
-import { ellipse, group, path, type Shape } from "@repo/mascot/shape";
+import type { Shape } from "@repo/mascot/shape";
+import { ellipse, group, path } from "@repo/mascot/shape";
 import { sparkle } from "@repo/mascot/sparkle";
 import { Array as Arr } from "effect";
 

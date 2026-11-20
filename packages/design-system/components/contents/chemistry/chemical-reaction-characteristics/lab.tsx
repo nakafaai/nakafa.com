@@ -3,13 +3,13 @@ import {
   createReactionCueStore,
   ReactionCharacteristicsSceneProvider,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/context";
+import type { ReactionCueId } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
 import {
   GAS_CUE_ID,
   getReactionSceneColors,
   isReactionCueId,
   REACTION_CUE_IDS,
   REACTION_SCENE_VIEW,
-  type ReactionCueId,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
 import { ReactionCharacteristicsScene } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";

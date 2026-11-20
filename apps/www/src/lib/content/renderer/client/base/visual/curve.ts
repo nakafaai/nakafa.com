@@ -5,10 +5,10 @@ import {
 import { getCurveDivisions } from "@repo/design-system/components/three/data/quality";
 import { Array as Arr, BigDecimal } from "effect";
 import type { PlaneObject } from "@/lib/content/renderer/client/base/visual/scene";
+import type { VisualProjection } from "@/lib/content/renderer/client/base/visual/transform";
 import {
   projectExactPlanePoint,
   sampleProjector,
-  type VisualProjection,
 } from "@/lib/content/renderer/client/base/visual/transform";
 
 const TWO = BigDecimal.fromBigInt(2n);

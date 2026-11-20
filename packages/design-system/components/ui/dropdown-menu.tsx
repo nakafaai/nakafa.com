@@ -1,9 +1,9 @@
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
 import { ArrowRight01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
+import type { OptionMark } from "@repo/design-system/components/ui/huge-icons";
 import {
   HugeIcons,
   OptionIcon,
-  type OptionMark,
 } from "@repo/design-system/components/ui/huge-icons";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PortalContainer } from "@repo/design-system/lib/portal";

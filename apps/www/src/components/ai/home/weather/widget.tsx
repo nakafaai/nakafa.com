@@ -13,14 +13,16 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Match, Option } from "effect";
-import { type ComponentProps, Suspense, use, useState } from "react";
+import type { ComponentProps } from "react";
+import { Suspense, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import {
   WeatherCard,
   WeatherCardHeader,
   WeatherGap,
 } from "@/components/ai/home/weather/card";
-import { readWeatherSummary, type WeatherRead } from "@/lib/weather/request";
+import type { WeatherRead } from "@/lib/weather/request";
+import { readWeatherSummary } from "@/lib/weather/request";
 
 const KELVIN_TO_CELSIUS = 273.15;
 

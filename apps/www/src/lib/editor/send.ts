@@ -1,8 +1,5 @@
-import {
-  BatchSchema,
-  type BatchTooLarge,
-  encodeBatch,
-} from "@repo/backend/confect/editor/batch";
+import type { BatchTooLarge } from "@repo/backend/confect/editor/batch";
+import { BatchSchema, encodeBatch } from "@repo/backend/confect/editor/batch";
 import { checkContent } from "@repo/backend/confect/editor/content";
 import type { BatchInvalid } from "@repo/backend/confect/editor/errors";
 import { MAX_BATCH_STEPS } from "@repo/backend/confect/editor/size";
@@ -11,12 +8,8 @@ import type { Step } from "@tiptap/pm/transform";
 import { Array as Arr, Effect, Match, Option, Ref, Schema } from "effect";
 import { sendableSteps } from "prosemirror-collab";
 import { dropUnsendable } from "@/lib/editor/replay";
-import {
-  type EditorClosed,
-  SyncFailed,
-  SyncFolding,
-  type SyncSession,
-} from "@/lib/editor/session";
+import type { EditorClosed, SyncSession } from "@/lib/editor/session";
+import { SyncFailed, SyncFolding } from "@/lib/editor/session";
 
 /** A batch as the loop encodes it: its text, and the number of steps the text holds. */
 const FittedBatch = Schema.Struct({

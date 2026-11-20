@@ -1,7 +1,5 @@
-import {
-  canonicalizeMaterialProjection,
-  type MaterialLessonProjection,
-} from "@nakafa/aksara-contracts/projection/material";
+import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,

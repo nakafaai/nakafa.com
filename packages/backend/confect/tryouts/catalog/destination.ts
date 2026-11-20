@@ -3,8 +3,8 @@ import {
   readCatalogNode,
   readCatalogSet,
 } from "@repo/backend/confect/tryouts/catalog/rows";
+import type { TryoutSetIdentity } from "@repo/backend/confect/tryouts/route";
 import {
-  type TryoutSetIdentity,
   tryoutRouteKeyValidator,
   tryoutSetIdentityOf,
   tryoutSetIdentityValidator,

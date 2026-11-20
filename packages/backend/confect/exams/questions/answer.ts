@@ -11,7 +11,8 @@ import {
 } from "@repo/backend/confect/exams/errors";
 import { answersFit } from "@repo/backend/confect/exams/fits";
 import { encodeAnswers, encodeKey } from "@repo/backend/confect/exams/question";
-import { type Array as Arr, Clock, Effect } from "effect";
+import type { Array as Arr } from "effect";
+import { Clock, Effect } from "effect";
 
 /**
  * Saves the answers and the key of one question at the revision the editor saw. A

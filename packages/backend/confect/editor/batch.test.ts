@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
+import type { Batch } from "@repo/backend/confect/editor/batch";
 import {
-  type Batch,
   BatchSchema,
   decodeBatch,
   encodeBatch,

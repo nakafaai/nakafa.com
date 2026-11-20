@@ -10,12 +10,12 @@ import { TestClock } from "effect/testing";
 import { KEPT_SCHOOL_KEY } from "@/lib/auth/keys";
 import { readBrowserPresence } from "@/lib/auth/presence";
 import { SchoolReadFailed, SchoolReads } from "@/lib/tenant/read";
+import type { SchoolVisit } from "@/lib/tenant/visit";
 import {
   confirmFrame,
   frameOfNavigation,
   readBrowserVisit,
   retryVisitRead,
-  type SchoolVisit,
   takeLiveRead,
 } from "@/lib/tenant/visit";
 

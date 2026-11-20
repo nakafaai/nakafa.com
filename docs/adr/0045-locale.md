@@ -8,11 +8,11 @@ Accepted on 9 November 2026.
 
 The architecture review of 8 November 2026 (candidate 4) measured locale handling on main 44e487e146, and Malay (`ms`) had just touched every place it names:
 
-| Concern | Homes before |
-| --- | --- |
-| Message selection | `packages/internationalization/src/messages.ts` (lazy loaders), `namespaces.ts` (every locale imported eagerly for the server's picker), `apps/www/src/lib/i18n/standalone.ts` (the standalone dictionaries read a third time) |
-| Dates | `apps/www/src/lib/i18n/date.ts` (a moment with a separator table, a publication day always in English), `packages/internationalization/src/school/time.ts`, `apps/www/src/components/user/age.ts`, `user/settings/memory/time.ts`, `lib/billing/plan.ts`, and about 25 `useFormatter` calls that each spelled their own options |
-| Numbers | 7 `Intl.NumberFormat` constructions in www, 3 more in the backend, two currency formatters and a third in the receipts, a currency symbol read twice, a storage size written three ways, a decimal mark table, and math options kept as constants in the design system |
+| Concern           | Homes before                                                                                                                                                                                                                                                                                                                    |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Message selection | `packages/internationalization/src/messages.ts` (lazy loaders), `namespaces.ts` (every locale imported eagerly for the server's picker), `apps/www/src/lib/i18n/standalone.ts` (the standalone dictionaries read a third time)                                                                                                  |
+| Dates             | `apps/www/src/lib/i18n/date.ts` (a moment with a separator table, a publication day always in English), `packages/internationalization/src/school/time.ts`, `apps/www/src/components/user/age.ts`, `user/settings/memory/time.ts`, `lib/billing/plan.ts`, and about 25 `useFormatter` calls that each spelled their own options |
+| Numbers           | 7 `Intl.NumberFormat` constructions in www, 3 more in the backend, two currency formatters and a third in the receipts, a currency symbol read twice, a storage size written three ways, a decimal mark table, and math options kept as constants in the design system                                                          |
 
 So a new locale had a separator, a decimal mark and three dictionary imports to add, the same day was written `6. Okt. 2026 15:30` in a try-out's history and `06.10.2026, 15:30` in School, and a list column could build a formatter per row.
 

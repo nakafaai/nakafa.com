@@ -18,21 +18,12 @@ import {
 import { ImageType } from "@repo/editor/upload";
 import type { Editor } from "@tiptap/core";
 import { FileHandler } from "@tiptap/extension-file-handler";
-import {
-  NodeViewWrapper,
-  type ReactNodeViewProps,
-  ReactNodeViewRenderer,
-} from "@tiptap/react";
+import type { ReactNodeViewProps } from "@tiptap/react";
+import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import { cn } from "cn";
 import { Option, Schema } from "effect";
-import {
-  createContext,
-  type ReactNode,
-  useEffect,
-  useId,
-  useMemo,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { createContext, useEffect, useId, useMemo, useState } from "react";
 
 /** The names of the pictures of an editor, in the reader's language. */
 const PictureLabels = Schema.Struct({

@@ -20,17 +20,17 @@ import { Switch } from "@repo/design-system/components/ui/switch";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Match, Option, Schema } from "effect";
-import { createContext, type ReactNode, useId, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { placeNodes } from "@/components/assessment/place";
+import type { Field, StepSchema } from "@/components/tenant/exams/figure/form";
 import {
-  type Field,
   getAt,
   initialCase,
   initialValue,
   labelOf,
   richOfText,
-  type StepSchema,
   textOfRich,
 } from "@/components/tenant/exams/figure/form";
 

@@ -17,7 +17,8 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { useRequired } from "@repo/design-system/hooks/required";
 import type { MermaidRenderConfig } from "@repo/design-system/lib/mermaid/render";
 import { Array as Arr, Option } from "effect";
-import { createContext, type ReactNode, useId, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { createContext, useId, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
 
 interface Props {

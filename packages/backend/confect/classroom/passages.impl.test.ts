@@ -17,7 +17,8 @@ import {
 import { conceptEmbedder, provider } from "@repo/backend/test/gateway";
 import { addFile, PDF } from "@repo/backend/test/library";
 import { providerStep } from "@repo/backend/test/nina/specialist";
-import { TENANCY_NOW, type tenancyFixture } from "@repo/backend/test/tenancy";
+import type { tenancyFixture } from "@repo/backend/test/tenancy";
+import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, Effect, Option, Struct } from "effect";
 

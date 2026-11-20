@@ -1,4 +1,5 @@
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { LOCALES } from "@repo/internationalization/src/locale";
 import { Effect } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";

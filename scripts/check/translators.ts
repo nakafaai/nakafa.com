@@ -7,9 +7,8 @@ import {
   String as Str,
   Tuple,
 } from "effect";
+import type { CallExpression, Expression, Node, SourceFile } from "tsrs/ast";
 import {
-  type CallExpression,
-  type Expression,
   isArrayLiteralExpression,
   isAsExpression,
   isCallExpression,
@@ -25,8 +24,6 @@ import {
   isStringLiteral,
   isTemplateExpression,
   isVariableStatement,
-  type Node,
-  type SourceFile,
   SyntaxKind,
 } from "tsrs/ast";
 import { loadsExport, loadsImport } from "#scripts/check/kinds";

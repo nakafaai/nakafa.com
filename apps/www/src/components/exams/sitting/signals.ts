@@ -8,9 +8,9 @@ import type {
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Clock, Effect, HashMap } from "effect";
 import { useEffect, useRef } from "react";
+import type { SignalGate } from "@/components/exams/sitting/signal";
 import {
   leftFullscreen,
-  type SignalGate,
   takeSignal,
   visibilitySignal,
 } from "@/components/exams/sitting/signal";

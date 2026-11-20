@@ -1,9 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
+import type {
+  NumericEntry,
+  NumericKey,
+} from "@repo/backend/confect/assessment/number";
 import {
   canonicalDecimal,
   matchesNumber,
-  type NumericEntry,
-  type NumericKey,
   numericKeyFits,
 } from "@repo/backend/confect/assessment/number";
 import { Option } from "effect";

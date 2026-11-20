@@ -1,13 +1,11 @@
+import type { MoleculeId } from "@repo/design-system/components/contents/chemistry/molecule/catalog";
 import {
   AngleSchema,
   countAtoms,
-  type MoleculeId,
   relativeMass,
 } from "@repo/design-system/components/contents/chemistry/molecule/catalog";
-import {
-  ELEMENTS,
-  type ElementSymbol,
-} from "@repo/design-system/components/contents/chemistry/molecule/elements";
+import type { ElementSymbol } from "@repo/design-system/components/contents/chemistry/molecule/elements";
+import { ELEMENTS } from "@repo/design-system/components/contents/chemistry/molecule/elements";
 import {
   AtomSchema,
   measureAngle,

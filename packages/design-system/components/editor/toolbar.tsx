@@ -29,14 +29,8 @@ import {
 import { EditorContext, useCurrentEditor } from "@tiptap/react";
 import { cn } from "cn";
 import { Array as Arr, Option, Schema } from "effect";
-import {
-  type ComponentProps,
-  type ReactNode,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 /** One group of controls of a bar: its name, which the bar keys it by, and the controls it holds. */
 interface EditorGroup {

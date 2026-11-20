@@ -1,7 +1,11 @@
 import { Array as Arr } from "effect";
+import type {
+  ExportDeclaration,
+  ImportDeclaration,
+  Node,
+  SourceFile,
+} from "tsrs/ast";
 import {
-  type ExportDeclaration,
-  type ImportDeclaration,
   isExportAssignment,
   isExportDeclaration,
   isExpressionStatement,
@@ -14,8 +18,6 @@ import {
   isStringLiteral,
   isTypeReferenceNode,
   isVariableStatement,
-  type Node,
-  type SourceFile,
   SyntaxKind,
 } from "tsrs/ast";
 

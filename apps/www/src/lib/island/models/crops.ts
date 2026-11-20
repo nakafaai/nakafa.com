@@ -1,6 +1,6 @@
 import { Array as Arr } from "effect";
+import type { Bloom } from "@/lib/island/models/blooms";
 import {
-  type Bloom,
   bushOf,
   dotsOver,
   leafOf,
@@ -8,7 +8,8 @@ import {
   stemOf,
 } from "@/lib/island/models/blooms";
 import type { Face } from "@/lib/island/models/parts";
-import { ball, type Ring, rod, tint, tube } from "@/lib/island/models/solids";
+import type { Ring } from "@/lib/island/models/solids";
+import { ball, rod, tint, tube } from "@/lib/island/models/solids";
 
 /** Where a crop's stalks stand: a small clump around the middle. */
 const CLUMP: readonly (readonly [number, number])[] = [

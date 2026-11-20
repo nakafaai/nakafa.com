@@ -1,7 +1,5 @@
-import {
-  type ActiveAppLocaleCode,
-  ActiveAppLocaleCodeSchema,
-} from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Effect, Option, Order, Schema } from "effect";
 import { temporaryRedirect } from "@/lib/routing/public/redirect";
 import { readSoleTrack } from "@/lib/routing/public/tryout/group";

@@ -8,11 +8,8 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Fiber, Option, Ref } from "effect";
 import { TestClock } from "effect/testing";
 import { getVersion, sendableSteps } from "prosemirror-collab";
-import {
-  SyncFailed,
-  type SyncSession,
-  type SyncTransport,
-} from "@/lib/editor/session";
+import type { SyncSession, SyncTransport } from "@/lib/editor/session";
+import { SyncFailed } from "@/lib/editor/session";
 import {
   FOLD_RETRY,
   startSync,

@@ -4,7 +4,8 @@ import { captureException } from "@repo/analytics/posthog/capture";
 import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
 import { NINA_DOCUMENT_MEBIBYTES } from "@repo/backend/client/nina/uploads";
 import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
-import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect, Fiber, Option, Record as Rec } from "effect";
 import { TestClock } from "effect/testing";
 import {

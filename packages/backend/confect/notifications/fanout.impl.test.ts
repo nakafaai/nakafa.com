@@ -11,12 +11,14 @@ import {
   keyedFixture,
   nf,
   period,
+  teach,
 } from "@repo/backend/test/classroom";
 import { schoolViews } from "@repo/backend/test/inbox";
-import { TENANCY_NOW } from "@repo/backend/test/tenancy";
+import { grantRole, TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const posts = refs.public.classroom.posts;
+const { send } = refs.public.classroom.forum.messages;
 const inbox = refs.public.notifications.inbox;
 const fanout = refs.internal.notifications.fanout;
 
@@ -123,6 +125,54 @@ describe("notifications/fanout", () => {
             source: { _tag: "post", postId: posted.id },
           })
         ).toBeNull();
+      })
+  );
+
+  it.effect(
+    "queues a mention of everyone in the email of each member it reaches, a co-teacher's as a teacher's",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* keyedFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const forum = yield* forumClass(fixture, term.id, "X-1");
+        const { principal } = fixture.people;
+        yield* fixture.run(
+          grantRole(fixture.tenants.nf, principal.personId, "teacher", {
+            kind: "unit",
+            unitId: fixture.units.smp,
+          })
+        );
+        yield* teach(fixture, forum.classId, principal.personId);
+        yield* fixture.as("teacher").mutation(send, {
+          attachments: [],
+          poll: null,
+          ...forum,
+          clientKey: "everyone-digest",
+          mentions: [{ _tag: "everyone" }],
+          slug: nf,
+          text: "@everyone besok libur.",
+        });
+        yield* fixture.finishScheduled();
+        const mailsOf = (personId: GenericId.GenericId<"tenantPeople">) =>
+          fixture.run(
+            Effect.flatMap(DatabaseReader, (reader) =>
+              reader
+                .table("noticeMails")
+                .index("by_recipientPersonId_and_dueAt", (query) =>
+                  query.eq("recipientPersonId", personId)
+                )
+                .take(5)
+                .pipe(Effect.orDie)
+            )
+          );
+        for (const personId of [
+          fixture.people.student.personId,
+          principal.personId,
+        ]) {
+          expect(
+            Arr.map(yield* mailsOf(personId), (mail) => mail.change)
+          ).toEqual(["forum.mentioned"]);
+        }
       })
   );
 });

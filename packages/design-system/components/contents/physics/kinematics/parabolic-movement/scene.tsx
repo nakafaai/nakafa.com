@@ -1,6 +1,10 @@
 import { useReducedMotion } from "@mantine/hooks";
 import { useFrame } from "@react-three/fiber";
 import { useParabolicMotion } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/context";
+import type {
+  ParabolicLaunchId,
+  ParabolicMotionState,
+} from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import {
   getParabolicLoopSample,
   getProjectilePoint,
@@ -8,8 +12,6 @@ import {
   getProjectileVelocityAt,
   getRestingProjectileSample,
   PARABOLIC_SCENE,
-  type ParabolicLaunchId,
-  type ParabolicMotionState,
   toSceneTuple,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import { ProjectileRange } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/ground";
@@ -18,7 +20,8 @@ import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { useMemo, useRef } from "react";
-import { CatmullRomCurve3, type Group, Vector3 } from "three";
+import type { Group } from "three";
+import { CatmullRomCurve3, Vector3 } from "three";
 
 const PROJECTILE_COLORS = {
   ballBand: getColor("SLATE", 50),

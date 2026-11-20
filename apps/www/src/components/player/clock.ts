@@ -1,5 +1,6 @@
 import { Clock, Duration, Effect, Fiber, Schema } from "effect";
-import { createStore, type StoreApi } from "zustand";
+import type { StoreApi } from "zustand";
+import { createStore } from "zustand";
 
 /** How often a watched clock reads the time again. */
 const TICK = Duration.seconds(1);

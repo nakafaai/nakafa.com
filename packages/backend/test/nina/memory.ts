@@ -16,12 +16,12 @@ import {
   readMemoryState,
 } from "@repo/backend/confect/nina/memory/store";
 import { recallLearner } from "@repo/backend/confect/nina/memory/turn";
-import {
-  MEMORY_KNOWN_LIMIT,
-  type NinaMemory,
-  type NinaMemoryCandidate,
-  type NinaMemorySeen,
+import type {
+  NinaMemory,
+  NinaMemoryCandidate,
+  NinaMemorySeen,
 } from "@repo/backend/confect/nina/memory.spec";
+import { MEMORY_KNOWN_LIMIT } from "@repo/backend/confect/nina/memory.spec";
 import { seedAuthenticatedUser } from "@repo/backend/confect/test.helpers";
 import {
   ensureLearnerKeys,

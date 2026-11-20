@@ -8,10 +8,10 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import users from "@repo/backend/confect/_generated/tables/users";
 import { storedBytes } from "@repo/backend/confect/nina/sealed/bytes";
+import type { SettledTurn } from "@repo/backend/confect/nina/sealed/rows";
 import {
   placeRows,
   readTurnRows,
-  type SettledTurn,
   TurnSealError,
   writeRuns,
 } from "@repo/backend/confect/nina/sealed/rows";

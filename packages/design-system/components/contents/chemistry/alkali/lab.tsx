@@ -1,9 +1,9 @@
 import { Line } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
+import type { MetalId } from "@repo/design-system/components/contents/chemistry/alkali/metals";
 import {
   floats,
   getMetal,
-  type MetalId,
   MetalIdSchema,
   melts,
   pieceAt,
@@ -38,15 +38,10 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
-import {
-  createRef,
-  type ReactNode,
-  Suspense,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { Color, type Mesh, MeshPhysicalMaterial, Vector2 } from "three";
+import type { ReactNode } from "react";
+import { createRef, Suspense, useMemo, useRef, useState } from "react";
+import type { Mesh } from "three";
+import { Color, MeshPhysicalMaterial, Vector2 } from "three";
 import { useFormatter } from "use-intl";
 
 /** A 600 mL Griffin beaker, in metres: 90 mm across, 125 mm tall, its glass 2 mm thick. */

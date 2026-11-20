@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { Descent } from "@repo/design-system/components/contents/physics/renewable-energy/lamp/drop";
 import {
   bagHeight,
-  type Descent,
   DROP_ENERGY,
   DROP_HEIGHT,
   descentSeconds,

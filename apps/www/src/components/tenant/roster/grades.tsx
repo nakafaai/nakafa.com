@@ -17,10 +17,8 @@ import { use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useTenant } from "@/components/tenant/context";
-import {
-  type GradeCohort,
-  GradeDownloadContext,
-} from "@/components/tenant/roster/download";
+import type { GradeCohort } from "@/components/tenant/roster/download";
+import { GradeDownloadContext } from "@/components/tenant/roster/download";
 import { useRosterUnit } from "@/components/tenant/roster/unit";
 
 /**

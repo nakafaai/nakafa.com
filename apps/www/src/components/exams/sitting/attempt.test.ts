@@ -3,8 +3,8 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option, Schema } from "effect";
+import type { AttemptValue } from "@/components/exams/sitting/attempt";
 import {
-  type AttemptValue,
   finishAttempt,
   finishInStore,
   isActive,

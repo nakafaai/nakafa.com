@@ -1,5 +1,6 @@
 import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
-import { strFromU8, type Unzipped, unzipSync } from "fflate";
+import type { Unzipped } from "fflate";
+import { strFromU8, unzipSync } from "fflate";
 import { ImportFileRefused } from "@/components/tenant/exams/import/file";
 import { MathTypeUnread } from "@/components/tenant/exams/import/mathtype/errors";
 

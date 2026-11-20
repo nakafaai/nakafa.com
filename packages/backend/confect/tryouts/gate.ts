@@ -7,10 +7,8 @@ import tryoutSectionAttempts from "@repo/backend/confect/_generated/tables/tryou
 import { setAssessmentFlag } from "@repo/backend/confect/assessment/flags";
 import { make } from "@repo/backend/confect/assessment/gate/admit";
 import type { EndReason } from "@repo/backend/confect/assessment/gate/end";
-import {
-  rules,
-  type Version,
-} from "@repo/backend/confect/assessment/gate/rules";
+import type { Version } from "@repo/backend/confect/assessment/gate/rules";
+import { rules } from "@repo/backend/confect/assessment/gate/rules";
 import { Answerable } from "@repo/backend/confect/assessment/gate/store";
 import type {
   SectionStart,
@@ -20,8 +18,8 @@ import {
   toTryoutFailure,
   toTryoutStale,
 } from "@repo/backend/confect/tryouts/refusal";
+import type { GradedAnswer } from "@repo/backend/confect/tryouts/response/answer";
 import {
-  type GradedAnswer,
   gradeAnswer,
   writeAnswer,
 } from "@repo/backend/confect/tryouts/response/answer";
@@ -29,11 +27,11 @@ import {
   indexTryoutResponses,
   requireTryoutResponseSection,
 } from "@repo/backend/confect/tryouts/response/integrity";
-import {
-  type SaveTryoutResponseArgs,
-  type TryoutFlagArgs,
-  toTryoutResponseError,
+import type {
+  SaveTryoutResponseArgs,
+  TryoutFlagArgs,
 } from "@repo/backend/confect/tryouts/response/spec";
+import { toTryoutResponseError } from "@repo/backend/confect/tryouts/response/spec";
 import { readVersion } from "@repo/backend/confect/tryouts/response/version";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import { finalizeSectionAttempt } from "@repo/backend/confect/tryouts/runtime/finish";

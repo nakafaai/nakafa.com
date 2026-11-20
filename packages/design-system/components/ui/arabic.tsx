@@ -8,7 +8,8 @@ import {
   ARABIC_ZERO,
 } from "@repo/design-system/lib/arabic/keys";
 import { Array as Arr } from "effect";
-import { Fragment, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { Fragment } from "react";
 import { useTranslations } from "use-intl";
 
 /**

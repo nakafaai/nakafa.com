@@ -5,12 +5,13 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
 import { Array as Arr, HashMap, Option } from "effect";
-import { type ReactNode, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { dashboardArgs } from "@/components/exams/sitting/change";
+import type { SittingData } from "@/components/exams/sitting/context";
 import {
-  type SittingData,
   SittingDataContext,
   SittingOfflineContext,
   SittingStoreContext,

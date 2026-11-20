@@ -1,8 +1,6 @@
 import { saveMessages } from "@convex-dev/agent";
-import {
-  type MessageDoc,
-  vMessageWithMetadata,
-} from "@convex-dev/agent/validators";
+import type { MessageDoc } from "@convex-dev/agent/validators";
+import { vMessageWithMetadata } from "@convex-dev/agent/validators";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import type { MutationCtx } from "@repo/backend/confect/_generated/services";

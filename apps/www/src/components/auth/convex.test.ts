@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { OutsideProvider } from "@repo/design-system/hooks/required";
 import { Option } from "effect";
-import { act, createElement, type ReactNode } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import type { ReactNode } from "react";
+import { act, createElement } from "react";
+import type { Root } from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import { renderToString } from "react-dom/server";
 import { createStore } from "zustand";
 import { AuthSessionContext } from "@/components/auth/context";
@@ -11,12 +13,10 @@ import {
   SignedOutSessionProvider,
   useAuthSession,
 } from "@/components/auth/session";
-import {
-  ConvexAuthContext,
-  type ConvexAuthStore,
-  createConvexAuthStore,
-} from "@/lib/auth/convex";
-import { type AuthSession, previewAuthSession } from "@/lib/auth/session";
+import type { ConvexAuthStore } from "@/lib/auth/convex";
+import { ConvexAuthContext, createConvexAuthStore } from "@/lib/auth/convex";
+import type { AuthSession } from "@/lib/auth/session";
+import { previewAuthSession } from "@/lib/auth/session";
 
 /** Shows the Convex auth state a component selects, as text the test reads. */
 function ConvexAuthProbe() {

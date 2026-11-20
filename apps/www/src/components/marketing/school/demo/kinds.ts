@@ -1,8 +1,6 @@
 import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
-import {
-  type InteractionKey,
-  InteractionKeySchema,
-} from "@nakafa/aksara-contracts/assessment/key";
+import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import { InteractionKeySchema } from "@nakafa/aksara-contracts/assessment/key";
 import {
   choiceAnswers,
   essayAnswers,

@@ -3,11 +3,8 @@ import {
   newChoiceAnswers,
   numericAnswers,
 } from "@repo/backend/confect/exams/blank";
-import {
-  type NumberSetting,
-  numberSettingOf,
-  withNumber,
-} from "@/components/tenant/exams/number";
+import type { NumberSetting } from "@/components/tenant/exams/number";
+import { numberSettingOf, withNumber } from "@/components/tenant/exams/number";
 
 /** A setting with no number yet, as a new numeric answer shows it. */
 const BLANK: NumberSetting = {

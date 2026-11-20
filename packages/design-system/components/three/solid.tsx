@@ -1,13 +1,11 @@
 import { Line } from "@react-three/drei";
 import { faceMesh, meshGeometry } from "@repo/design-system/lib/geometry/mesh";
-import { type Point3, pointsKey } from "@repo/design-system/lib/geometry/point";
+import type { Point3 } from "@repo/design-system/lib/geometry/point";
+import { pointsKey } from "@repo/design-system/lib/geometry/point";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
-import {
-  type ColorRepresentation,
-  DoubleSide,
-  MeshStandardMaterial,
-} from "three";
+import type { ColorRepresentation } from "three";
+import { DoubleSide, MeshStandardMaterial } from "three";
 
 /** Draws a solid with flat faces, such as a prism or a pyramid, and its edges. */
 export function Solid({

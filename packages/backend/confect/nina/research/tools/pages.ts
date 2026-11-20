@@ -1,8 +1,6 @@
 import { researchProviderConcurrency } from "@repo/backend/confect/nina/research/schema";
-import {
-  dedupeSources,
-  type SearchSource,
-} from "@repo/backend/confect/nina/research/search/source";
+import type { SearchSource } from "@repo/backend/confect/nina/research/search/source";
+import { dedupeSources } from "@repo/backend/confect/nina/research/search/source";
 import { selectRelevantContent } from "@repo/backend/confect/nina/research/selection";
 import { readPage } from "@repo/backend/confect/nina/research/tools/scrape";
 import { Array as Arr, Effect, HashMap, identity, Option } from "effect";

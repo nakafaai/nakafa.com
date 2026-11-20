@@ -1,28 +1,28 @@
 import { useFrame } from "@react-three/fiber";
 import { FollowCamera } from "@repo/design-system/components/contents/physics/kinematics/follow";
+import type { SkidRig } from "@repo/design-system/components/contents/physics/kinematics/road";
 import {
   DistancePosts,
   ROAD,
   Road,
   SkidMarks,
-  type SkidRig,
 } from "@repo/design-system/components/contents/physics/kinematics/road";
+import type { SedanRig } from "@repo/design-system/components/contents/physics/kinematics/sedan";
 import {
   SEDAN,
   Sedan,
-  type SedanRig,
 } from "@repo/design-system/components/contents/physics/kinematics/sedan";
+import type { Surface } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/friction";
 import {
   decelerationOf,
   frictionOf,
   isSurface,
   SURFACES,
-  type Surface,
 } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/friction";
+import type { Stop } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/motion";
 import {
   brakingDistance,
   brakingTime,
-  type Stop,
   stopPosition,
 } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/motion";
 import {
@@ -51,14 +51,8 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Array as Arr, Schema } from "effect";
-import {
-  type ReactNode,
-  Suspense,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import type { ReactNode } from "react";
+import { Suspense, useCallback, useMemo, useRef, useState } from "react";
 
 /** The speed every surface is tested from: 20 m/s, 72 km/h. */
 const SPEED = 20;

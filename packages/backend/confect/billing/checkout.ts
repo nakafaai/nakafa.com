@@ -18,16 +18,18 @@ import {
 import { PolarServer } from "@repo/backend/confect/billing/polar/catalog";
 import { readPolarServer } from "@repo/backend/confect/billing/polar/client";
 import { polarGateway } from "@repo/backend/confect/billing/polar/live";
+import type { PolarCheckoutError } from "@repo/backend/confect/billing/polar/spec";
 import {
-  type PolarCheckoutError,
   PolarCheckoutError as PolarCheckoutFailure,
   polarCheckoutErrorCode,
 } from "@repo/backend/confect/billing/polar/spec";
+import type {
+  BillingUrl,
+  CheckoutAdmission,
+  CheckoutRequestInput,
+  CheckoutSessionIoError,
+} from "@repo/backend/confect/billing/spec";
 import {
-  type BillingUrl,
-  type CheckoutAdmission,
-  type CheckoutRequestInput,
-  type CheckoutSessionIoError,
   CheckoutUnavailable,
   checkoutSessionIoError,
   InvalidCheckoutSuccessUrl,

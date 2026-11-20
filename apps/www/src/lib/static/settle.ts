@@ -1,8 +1,8 @@
 import { MathFontPreload } from "@repo/design-system/components/markdown/fonts";
+import type { MathFont } from "@repo/design-system/lib/markdown/fonts";
 import {
   isMathFont,
   loadMathFonts,
-  type MathFont,
 } from "@repo/design-system/lib/markdown/fonts";
 import {
   Array as Arr,

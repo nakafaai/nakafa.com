@@ -2,8 +2,8 @@ import {
   MAX_BATCH_BYTES,
   MAX_BATCH_STEPS,
 } from "@repo/backend/confect/editor/size";
+import type { Step } from "@repo/backend/confect/editor/step";
 import {
-  type Step,
   StepSchema,
   StepTextSchema,
   UncheckedStepSchema,

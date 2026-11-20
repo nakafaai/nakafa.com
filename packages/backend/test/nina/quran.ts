@@ -1,7 +1,9 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type {
+  QuranEmbeddedSourceId,
+  QuranExternalSourceId,
+} from "@nakafa/aksara-contracts/quran/identity";
 import {
-  type QuranEmbeddedSourceId,
-  type QuranExternalSourceId,
   quranTafsirSourceId,
   quranTranslationSourceId,
 } from "@nakafa/aksara-contracts/quran/identity";

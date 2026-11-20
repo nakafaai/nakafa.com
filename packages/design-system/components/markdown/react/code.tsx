@@ -7,10 +7,8 @@ import {
   MarkdownCodeBlock,
   MermaidMdx,
 } from "@repo/design-system/components/markdown/react/client";
-import {
-  type ReactMarkdownComponents,
-  readMarkdownNodeText,
-} from "@repo/design-system/components/markdown/react/node";
+import type { ReactMarkdownComponents } from "@repo/design-system/components/markdown/react/node";
+import { readMarkdownNodeText } from "@repo/design-system/components/markdown/react/node";
 import {
   normalizeMermaidChart,
   readMermaidMetadata,

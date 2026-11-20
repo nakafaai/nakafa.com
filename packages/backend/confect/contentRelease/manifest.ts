@@ -12,10 +12,8 @@ import {
 import { ensureDocumentSize } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { requireCurrentBase } from "@repo/backend/confect/contentRelease/generation";
-import {
-  ensureState,
-  type ReleaseRole,
-} from "@repo/backend/confect/contentRelease/model";
+import type { ReleaseRole } from "@repo/backend/confect/contentRelease/model";
+import { ensureState } from "@repo/backend/confect/contentRelease/model";
 import {
   decodeReleaseJson,
   decodeRendererJson,

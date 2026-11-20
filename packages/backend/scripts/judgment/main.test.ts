@@ -3,10 +3,8 @@ import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
-import {
-  ConvexCli,
-  type DevelopmentCliError,
-} from "@repo/backend/scripts/development/cli";
+import type { DevelopmentCliError } from "@repo/backend/scripts/development/cli";
+import { ConvexCli } from "@repo/backend/scripts/development/cli";
 import type { JudgmentCallError } from "@repo/backend/scripts/judgment/call";
 import { loggedCalls, prepare } from "@repo/backend/test/judgment/cli";
 import { messages } from "@repo/backend/test/judgment/message";

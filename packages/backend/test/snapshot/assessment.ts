@@ -6,11 +6,11 @@ import {
   makeAssessmentSnapshot,
 } from "@nakafa/aksara-contracts/assessment/snapshot";
 import { ACTIVE_APP_LOCALES } from "@nakafa/aksara-contracts/locale";
-import {
-  type ContentSnapshotManifest,
-  type ContentSnapshotRow,
-  canonicalizeContentSnapshotRow,
+import type {
+  ContentSnapshotManifest,
+  ContentSnapshotRow,
 } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { canonicalizeContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
 import {
   inheritContentSnapshots,
   replaceContentSnapshot,

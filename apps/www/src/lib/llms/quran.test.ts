@@ -4,7 +4,8 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { QuranTranslationDocument } from "@nakafa/aksara-contracts/quran/notes";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Effect, Option } from "effect";
-import { createTranslator, type Locale } from "use-intl/core";
+import type { Locale } from "use-intl/core";
+import { createTranslator } from "use-intl/core";
 import { BASE_URL } from "@/lib/llms/constants";
 import {
   classifyQuranLlmsRoute,

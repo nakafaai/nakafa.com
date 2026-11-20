@@ -1,5 +1,5 @@
+import type { Ball } from "@repo/design-system/components/pool/ball";
 import {
-  type Ball,
   BallSchema,
   fastest,
   fence,
@@ -7,10 +7,10 @@ import {
   tiltOf,
 } from "@repo/design-system/components/pool/ball";
 import { pushApart } from "@repo/design-system/components/pool/collide";
+import type { Point } from "@repo/design-system/components/pool/pointer";
 import {
   locate,
   measure,
-  type Point,
   PointerSchema,
   PointSchema,
   pointerPush,

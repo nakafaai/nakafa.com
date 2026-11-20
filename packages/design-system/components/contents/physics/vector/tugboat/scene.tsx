@@ -2,10 +2,8 @@ import { Line } from "@react-three/drei";
 import { FixedArrow } from "@repo/design-system/components/contents/physics/vector/solid/arrow";
 import { Rod } from "@repo/design-system/components/contents/physics/vector/solid/rod";
 import { Ship } from "@repo/design-system/components/contents/physics/vector/tugboat/ship";
-import {
-  type Tugs,
-  towResultant,
-} from "@repo/design-system/components/contents/physics/vector/tugboat/tow";
+import type { Tugs } from "@repo/design-system/components/contents/physics/vector/tugboat/tow";
+import { towResultant } from "@repo/design-system/components/contents/physics/vector/tugboat/tow";
 import {
   TUG_STAPLE,
   TUG_STAPLE_RISE,

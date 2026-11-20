@@ -1,5 +1,5 @@
+import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import {
-  type DecimalSeparator,
   formatKeptZeroNumber,
   formatSignedTrimmedNumber,
   formatTrimmedNumber,

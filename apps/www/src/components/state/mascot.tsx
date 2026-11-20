@@ -1,7 +1,8 @@
 import { wholeHeight } from "@repo/design-system/components/nina/height";
 import { EmptyMedia } from "@repo/design-system/components/ui/empty";
 import { lazy } from "@repo/design-system/lib/lazy";
-import { type ComponentProps, Suspense } from "react";
+import type { ComponentProps } from "react";
+import { Suspense } from "react";
 import { EMPTY_NINA_SIZE } from "@/components/state/size";
 
 /**

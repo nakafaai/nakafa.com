@@ -1,16 +1,16 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Option, Record as Rec } from "effect";
+import type { Plane } from "@/components/tenant/exams/figure/graph/plane";
 import {
   freeName,
   newSlider,
-  type Plane,
   sceneOf,
 } from "@/components/tenant/exams/figure/graph/plane";
-import {
-  newShape,
-  type ShapeDraft,
-  type ShapeKind,
+import type {
+  ShapeDraft,
+  ShapeKind,
 } from "@/components/tenant/exams/figure/graph/shapes";
+import { newShape } from "@/components/tenant/exams/figure/graph/shapes";
 
 /** A new shape of a kind with some of its fields typed over. */
 const shape = (

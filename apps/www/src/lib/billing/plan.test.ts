@@ -1,9 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import billing from "@repo/backend/confect/_generated/refs/billing";
 import { Option } from "effect";
+import type { BillingOverview, BillingSubscription } from "@/lib/billing/plan";
 import {
-  type BillingOverview,
-  type BillingSubscription,
   cancelPlanChange,
   creditFooterKey,
   creditPeriodKey,

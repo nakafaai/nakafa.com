@@ -3,8 +3,10 @@ import { useAction } from "@confect/react";
 import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Array as Arr, Effect, Option } from "effect";
-import { createContext, type ReactNode, useState, useTransition } from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
+import type { ReactNode } from "react";
+import { createContext, useState, useTransition } from "react";
+import type { StoreApi } from "zustand";
+import { createStore, useStore } from "zustand";
 import { useTenant } from "@/components/tenant/context";
 import { runSchoolWrite, schoolCall } from "@/components/tenant/write";
 

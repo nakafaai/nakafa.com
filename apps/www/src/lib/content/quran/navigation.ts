@@ -1,8 +1,6 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import {
-  type QuranSurahRow,
-  QuranSurahRowSchema,
-} from "@nakafa/aksara-contracts/quran/spec";
+import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
+import { QuranSurahRowSchema } from "@nakafa/aksara-contracts/quran/spec";
 import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
 import { Array as Arr, Schema, Struct } from "effect";
 import type { QuranIndexSurah } from "@/lib/content/quran/search";

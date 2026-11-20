@@ -1,6 +1,8 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import { ANSWER_MILLISECONDS, type Changes, live } from "@/e2e/support/changes";
+import type { Changes } from "@/e2e/support/changes";
+import { ANSWER_MILLISECONDS, live } from "@/e2e/support/changes";
 import {
   CHAT_PATH,
   LESSON_PATH,

@@ -1,5 +1,5 @@
+import type { PaginatedQueryItem } from "@confect/react";
 import {
-  type PaginatedQueryItem,
   PaginatedQueryResult,
   QueryResult,
   usePaginatedQuery,
@@ -12,24 +12,23 @@ import { rowLineVariants } from "@repo/design-system/lib/row";
 import { getRouteApi } from "@tanstack/react-router";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, use, useState } from "react";
+import type { ReactNode } from "react";
+import { use, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
-import {
-  type DashboardAttempt,
-  dashboardArgs,
-} from "@/components/exams/sitting/change";
+import type { DashboardAttempt } from "@/components/exams/sitting/change";
+import { dashboardArgs } from "@/components/exams/sitting/change";
 import {
   SittingOfflineContext,
   useSittingData,
   useSittingStore,
 } from "@/components/exams/sitting/context";
+import type { SeatFrame } from "@/components/exams/sitting/seat";
 import {
   awaySince,
   awayTime,
   isDisconnected,
   lastActivityOf,
   matchesFilter,
-  type SeatFrame,
   seatFrame,
   seatTimeKey,
   seenOffline,

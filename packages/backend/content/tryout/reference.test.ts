@@ -2,7 +2,8 @@ import { assert, describe, expect, it } from "@effect/vitest";
 import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
 import type { ContentReferenceInput } from "@repo/backend/confect/contentRelease/reference/spec";
 import { readTryoutReference } from "@repo/backend/content/tryout/reference";
-import { type TryoutWorld, tryoutWorld } from "@repo/backend/test/tryout/world";
+import type { TryoutWorld } from "@repo/backend/test/tryout/world";
+import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Effect, Struct } from "effect";
 
 /** Resolves one reference the way the reference reader does, then reads its try-out entry. */

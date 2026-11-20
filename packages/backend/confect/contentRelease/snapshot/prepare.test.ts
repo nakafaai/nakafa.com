@@ -1,9 +1,8 @@
 import { assert, describe, expect, it } from "@effect/vitest";
-import { ReleaseIdSchema, type Sha256Hash } from "@nakafa/aksara-contracts/ids";
-import {
-  type ContentSnapshotRow,
-  contentSnapshotId,
-} from "@nakafa/aksara-contracts/release/snapshot/data";
+import type { Sha256Hash } from "@nakafa/aksara-contracts/ids";
+import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import type { ContentSnapshotRow } from "@nakafa/aksara-contracts/release/snapshot/data";
+import { contentSnapshotId } from "@nakafa/aksara-contracts/release/snapshot/data";
 import {
   inheritContentSnapshots,
   replaceContentSnapshot,

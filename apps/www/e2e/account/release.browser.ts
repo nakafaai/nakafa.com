@@ -1,4 +1,5 @@
-import { expect, test, type WebSocket } from "@playwright/test";
+import type { WebSocket } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect, Predicate, pipe } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
 import {

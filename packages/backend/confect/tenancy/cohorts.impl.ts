@@ -18,11 +18,8 @@ import {
   periodAccess,
   unitAuthority,
 } from "@repo/backend/confect/tenancy/authority";
-import {
-  COHORT_LIMIT,
-  type CohortStatus,
-  cohortView,
-} from "@repo/backend/confect/tenancy/cohort";
+import type { CohortStatus } from "@repo/backend/confect/tenancy/cohort";
+import { COHORT_LIMIT, cohortView } from "@repo/backend/confect/tenancy/cohort";
 import { edit } from "@repo/backend/confect/tenancy/cohorts.edit";
 import { remove } from "@repo/backend/confect/tenancy/cohorts.remove";
 import spec from "@repo/backend/confect/tenancy/cohorts.spec";

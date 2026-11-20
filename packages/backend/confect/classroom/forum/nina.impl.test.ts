@@ -15,7 +15,8 @@ import {
 } from "@repo/backend/test/classroom";
 import { conceptEmbedder, provider } from "@repo/backend/test/gateway";
 import { providerStep } from "@repo/backend/test/nina/specialist";
-import { TENANCY_NOW, type tenancyFixture } from "@repo/backend/test/tenancy";
+import type { tenancyFixture } from "@repo/backend/test/tenancy";
+import { TENANCY_NOW } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { MockLanguageModelV4 } from "ai/test";
 import { Array as Arr, Effect, Option } from "effect";

@@ -7,8 +7,10 @@ import { useRequired } from "@repo/design-system/hooks/required";
 import type { ActSchema } from "@repo/mascot/nina/act";
 import type { MoodSchema } from "@repo/mascot/nina/face";
 import { Schema } from "effect";
-import { createContext, type ReactNode, useEffect, useState } from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
+import type { ReactNode } from "react";
+import { createContext, useEffect, useState } from "react";
+import type { StoreApi } from "zustand";
+import { createStore, useStore } from "zustand";
 import { TryoutResponseFields } from "@/components/tryout/runtime/response/fields";
 import { matchesKey } from "@/components/tryout/runtime/response/state";
 

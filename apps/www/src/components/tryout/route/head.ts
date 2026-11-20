@@ -1,11 +1,8 @@
 import type { LocalizedPath } from "@repo/internationalization/src/alternates";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { Schema } from "effect";
-import {
-  createSeoHead,
-  type HeadAlternate,
-  toRouterHead,
-} from "@/lib/seo/head";
+import type { HeadAlternate } from "@/lib/seo/head";
+import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 
 /**
  * The title of a try-out page. A plain title takes the site name, parts run from the

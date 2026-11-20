@@ -4,9 +4,9 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { reachedBadges, tallyAfter } from "@repo/backend/confect/island/badge";
 import { todayOf } from "@repo/backend/confect/island/day";
+import type { AwardSource } from "@repo/backend/confect/island/schema";
 import {
   AWARD_RULES,
-  type AwardSource,
   Capped,
   DAILY_STARS,
   DAY_GRANTS,

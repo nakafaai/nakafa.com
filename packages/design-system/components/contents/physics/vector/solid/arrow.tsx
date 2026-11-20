@@ -1,8 +1,6 @@
 import { useThree } from "@react-three/fiber";
-import {
-  VectorArrow,
-  type VectorArrowHandle,
-} from "@repo/design-system/components/contents/physics/solid/arrow";
+import type { VectorArrowHandle } from "@repo/design-system/components/contents/physics/solid/arrow";
+import { VectorArrow } from "@repo/design-system/components/contents/physics/solid/arrow";
 import { Guide } from "@repo/design-system/components/contents/physics/vector/solid/guide";
 import type { CoordinateTuple } from "@repo/design-system/components/three/frame";
 import { useLayoutEffect, useRef } from "react";

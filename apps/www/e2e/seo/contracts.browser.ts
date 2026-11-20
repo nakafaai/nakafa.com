@@ -1,8 +1,7 @@
-import {
-  type ActiveAppLocaleCode,
-  ActiveAppLocaleCodeSchema,
-} from "@nakafa/aksara-contracts/locale";
-import { expect, type Page, test } from "@playwright/test";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import type { Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import type { ArticleJsonLd } from "@repo/seo/jsonld/article";
 import { JsonTextSchema } from "@repo/utilities/json";
 import {
@@ -16,11 +15,8 @@ import {
 } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
-import {
-  expectSingleLink,
-  readServerDocument,
-  type ServerDocument,
-} from "@/e2e/support/crawler";
+import type { ServerDocument } from "@/e2e/support/crawler";
+import { expectSingleLink, readServerDocument } from "@/e2e/support/crawler";
 import { signInLearner } from "@/e2e/support/learner";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";

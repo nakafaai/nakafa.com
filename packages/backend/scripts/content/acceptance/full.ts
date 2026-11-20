@@ -12,17 +12,15 @@ import {
   readRows,
 } from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import {
-  type AcceptanceMode,
-  decodeModeArguments,
-} from "@repo/backend/scripts/content/acceptance/mode";
+import type { AcceptanceMode } from "@repo/backend/scripts/content/acceptance/mode";
+import { decodeModeArguments } from "@repo/backend/scripts/content/acceptance/mode";
+import type { SchoolCounts } from "@repo/backend/scripts/content/acceptance/roll";
 import {
   COHORT_COUNT,
   cohortOf,
   FULL_SCHOOL,
   peopleOf,
   personName,
-  type SchoolCounts,
   SUBJECTS,
 } from "@repo/backend/scripts/content/acceptance/roll";
 import {

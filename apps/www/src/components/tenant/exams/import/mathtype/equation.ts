@@ -1,7 +1,7 @@
 import { checkFormula } from "@repo/design-system/components/editor/render";
 import { Array as Arr, Effect, Match, Option } from "effect";
+import type { Cursor } from "@/components/tenant/exams/import/mathtype/cursor";
 import {
-  type Cursor,
   cursorOf,
   pairOf,
   signedOf,
@@ -17,12 +17,12 @@ import {
   wordOf,
 } from "@/components/tenant/exams/import/mathtype/flags";
 import { oleStream } from "@/components/tenant/exams/import/mathtype/ole";
+import type { Piece } from "@/components/tenant/exams/import/mathtype/pieces";
 import {
   lineLatex,
   mathPiece,
   matrixLatex,
   namePiece,
-  type Piece,
   pileLatex,
   scriptPiece,
   textPiece,

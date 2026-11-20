@@ -1,5 +1,6 @@
 import { useIntersection, useMergedRef } from "@mantine/hooks";
-import { type ComponentProps, useEffect, useEffectEvent, useRef } from "react";
+import type { ComponentProps } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 
 /** The observer's threshold when no share is given: any part of the element on the screen. */
 const ANY_PART_THRESHOLD = 0.1;

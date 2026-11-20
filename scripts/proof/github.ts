@@ -1,8 +1,5 @@
-import {
-  combineShards,
-  type ProofResult,
-  ShardResultJson,
-} from "@repo/testing/proof";
+import type { ProofResult } from "@repo/testing/proof";
+import { combineShards, ShardResultJson } from "@repo/testing/proof";
 import { sha256Hex } from "@repo/utilities/digest";
 import { randomUuid } from "@repo/utilities/uuid";
 import {

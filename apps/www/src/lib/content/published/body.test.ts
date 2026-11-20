@@ -4,7 +4,8 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { ContentTreeElement } from "@nakafa/aksara-contracts/tree";
 import { testSignedArtifact } from "@repo/backend/test/content/proof";
 import { Array as Arr, Effect, Function as Fn } from "effect";
-import { isValidElement, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { isValidElement } from "react";
 import { readRenderedBody } from "@/lib/content/published/body";
 
 const renderServerComponentMock = vi.hoisted(() =>

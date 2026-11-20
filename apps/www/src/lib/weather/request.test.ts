@@ -2,11 +2,11 @@ import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Fiber, Option, Result } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
+import type { WeatherRead } from "@/lib/weather/request";
 import {
   createWeatherReader,
   readWeatherSummary,
   requestWeatherSummary,
-  type WeatherRead,
 } from "@/lib/weather/request";
 
 const summary = {

@@ -3,9 +3,9 @@ import type {
   PromptInputFile,
   PromptInputRefusal,
 } from "@repo/design-system/lib/prompt/files";
+import type { PromptInputMessage } from "@repo/design-system/lib/prompt/submission";
 import {
   PromptInputCompletionError,
-  type PromptInputMessage,
   PromptInputSubmitError,
   submitPromptInput,
 } from "@repo/design-system/lib/prompt/submission";

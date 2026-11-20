@@ -1,8 +1,6 @@
 import { createCircleOutlinePoints } from "@repo/design-system/components/contents/mathematics/circle";
-import {
-  type RelationMapping,
-  resolveRelation,
-} from "@repo/design-system/components/contents/mathematics/function/relation";
+import type { RelationMapping } from "@repo/design-system/components/contents/mathematics/function/relation";
+import { resolveRelation } from "@repo/design-system/components/contents/mathematics/function/relation";
 import {
   CoordinateControls,
   CoordinateProvider,

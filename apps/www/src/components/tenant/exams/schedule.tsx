@@ -4,13 +4,12 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ClientOnly, lazyRouteComponent } from "@tanstack/react-router";
 import { Array as Arr, DateTime, Effect, Option } from "effect";
-import { type ComponentProps, Suspense, useState } from "react";
+import type { ComponentProps } from "react";
+import { Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useViewerQuery } from "@/components/tenant/context";
-import {
-  creatableUnits,
-  type ViewerUnit,
-} from "@/components/tenant/exams/create";
+import type { ViewerUnit } from "@/components/tenant/exams/create";
+import { creatableUnits } from "@/components/tenant/exams/create";
 import { nextQuarter } from "@/components/tenant/exams/time";
 
 /**

@@ -1,7 +1,8 @@
 import { OrbitControls } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { type ComponentRef, useLayoutEffect, useRef } from "react";
+import type { ComponentRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 
 /**
  * A camera that rides along beside a moving subject, as a tracking shot from

@@ -3,7 +3,8 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { SCHOOL_MCP_PATH } from "@repo/backend/confect/integrations/api";
 import type { Fixture } from "@repo/backend/test/api";
-import { type McpRequest, modernPost } from "@repo/backend/test/mcp/harness";
+import type { McpRequest } from "@repo/backend/test/mcp/harness";
+import { modernPost } from "@repo/backend/test/mcp/harness";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Record as Rec, Schema } from "effect";

@@ -1,11 +1,8 @@
 import { Array as Arr, Effect, Schema } from "effect";
 import type { Locale } from "use-intl";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
-import {
-  type LlmsSection,
-  llmsRouteUrl,
-  SECTION_LABELS,
-} from "@/lib/llms/constants";
+import type { LlmsSection } from "@/lib/llms/constants";
+import { llmsRouteUrl, SECTION_LABELS } from "@/lib/llms/constants";
 import { readMaterialLlmsInventory } from "@/lib/llms/content/material";
 import type { LlmsEntry } from "@/lib/llms/entries";
 import { formatRouteTitle, getLocaleLabel } from "@/lib/llms/format";

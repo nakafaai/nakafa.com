@@ -15,12 +15,12 @@ import { encodeAnswers } from "@repo/backend/confect/exams/question";
 import { WRITE_ALLOWANCE_MS } from "@repo/backend/confect/exams/sittings/gate";
 import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
+import type { SittingFixture } from "@repo/backend/test/sittings";
 import {
   CLOSES_AT as CLOSES,
   deviceOf,
   enterOk,
   openedSitting,
-  type SittingFixture,
 } from "@repo/backend/test/sittings";
 import {
   suspend,

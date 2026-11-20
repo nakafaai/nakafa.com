@@ -6,17 +6,19 @@ import {
   vignette,
   withShadow,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { Road } from "@repo/design-system/components/contents/physics/canvas/scene";
 import {
   paintLandscape,
   paintPerson,
-  type Road,
 } from "@repo/design-system/components/contents/physics/canvas/scene";
+import type {
+  Observer,
+  WalkWay,
+} from "@repo/design-system/components/contents/physics/kinematics/train/carriage";
 import {
-  type Observer,
   ObserverSchema,
   passengerVelocity,
   trainVelocity,
-  type WalkWay,
   WalkWaySchema,
 } from "@repo/design-system/components/contents/physics/kinematics/train/carriage";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
@@ -43,7 +45,8 @@ import { SKY_COLORS } from "@repo/design-system/lib/material/sky";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** A commuter train and a walking pace, in m/s (72 km/h and an easy walk). */
 const TRAIN = 20;

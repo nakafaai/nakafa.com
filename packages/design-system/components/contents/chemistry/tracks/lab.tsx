@@ -1,7 +1,7 @@
 import { Line } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
+import type { ParticleId } from "@repo/design-system/components/contents/chemistry/tracks/motion";
 import {
-  type ParticleId,
   ParticleIdSchema,
   trackPoints,
   trackRadius,
@@ -27,8 +27,10 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
-import { createRef, type ReactNode, Suspense, useMemo, useState } from "react";
-import { Color, type Mesh } from "three";
+import type { ReactNode } from "react";
+import { createRef, Suspense, useMemo, useState } from "react";
+import type { Mesh } from "three";
+import { Color } from "three";
 import { useFormatter } from "use-intl";
 
 /** How many scene units one metre of the chamber spans. */

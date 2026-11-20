@@ -1,6 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Array as Arr, MutableRef, Option, Schema } from "effect";
+import type {
+  Memory,
+  MemoryPage,
+} from "@/components/user/settings/memory/list";
 import {
   draftArgs,
   draftOf,
@@ -10,8 +14,6 @@ import {
   isPending,
   isSearching,
   learnerMemory,
-  type Memory,
-  type MemoryPage,
   memoryName,
   pageCleared,
   pageWith,

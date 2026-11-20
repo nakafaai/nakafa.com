@@ -9,11 +9,13 @@ import {
   decodeLocale,
 } from "@repo/internationalization/src/locale";
 import { readStandaloneMessages } from "@repo/internationalization/src/messages";
+import type {
+  ErrorComponentProps,
+  NotFoundRouteProps,
+} from "@tanstack/react-router";
 import {
   createRootRoute,
-  type ErrorComponentProps,
   HeadContent,
-  type NotFoundRouteProps,
   notFound,
   Scripts,
   useMatch,

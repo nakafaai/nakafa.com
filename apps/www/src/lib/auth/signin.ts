@@ -5,11 +5,8 @@ import type {
 import { ConvexHttpClient } from "convex/browser";
 import { makeFunctionReference } from "convex/server";
 import { Effect, Predicate, Schema } from "effect";
-import {
-  type AuthConvex,
-  readAuthClient,
-  SIGN_IN_ROUTE,
-} from "@/lib/auth/client";
+import type { AuthConvex } from "@/lib/auth/client";
+import { readAuthClient, SIGN_IN_ROUTE } from "@/lib/auth/client";
 import { expectSession } from "@/lib/auth/known";
 import { SessionTokens } from "@/lib/auth/token";
 import { rememberSessionUser } from "@/lib/auth/user";

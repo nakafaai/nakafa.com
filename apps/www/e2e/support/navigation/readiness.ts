@@ -1,4 +1,5 @@
-import { errors, expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { errors, expect } from "@playwright/test";
 import { Duration, Effect, Schedule } from "effect";
 import {
   NavigationBrowserReadinessError,

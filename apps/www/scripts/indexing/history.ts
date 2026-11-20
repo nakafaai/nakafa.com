@@ -8,12 +8,12 @@ import {
   Record as Rec,
   Schema,
 } from "effect";
-import {
-  type BingSubmitError,
-  type GoogleIndexSubmitError,
-  type IndexNowSubmitError,
-  SubmissionHistoryError,
+import type {
+  BingSubmitError,
+  GoogleIndexSubmitError,
+  IndexNowSubmitError,
 } from "@/scripts/indexing/errors";
+import { SubmissionHistoryError } from "@/scripts/indexing/errors";
 import { indexingFiles } from "@/scripts/indexing/paths";
 
 const SubmissionServiceSchema = Schema.Literals([

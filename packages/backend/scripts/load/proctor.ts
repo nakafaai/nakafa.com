@@ -1,16 +1,12 @@
 import type { Id } from "@repo/backend/confect/_generated/id";
 import examsPublic from "@repo/backend/confect/_generated/refs/exams";
-import { type Recorder, timed } from "@repo/backend/scripts/load/recorder";
+import type { Recorder } from "@repo/backend/scripts/load/recorder";
+import { timed } from "@repo/backend/scripts/load/recorder";
 import type { Seating } from "@repo/backend/scripts/load/student";
-import { type Wire, watch } from "@repo/backend/scripts/load/wire";
-import {
-  Array as Arr,
-  Deferred,
-  Effect,
-  MutableHashSet,
-  Queue,
-  type Scope,
-} from "effect";
+import type { Wire } from "@repo/backend/scripts/load/wire";
+import { watch } from "@repo/backend/scripts/load/wire";
+import type { Scope } from "effect";
+import { Array as Arr, Deferred, Effect, MutableHashSet, Queue } from "effect";
 
 const sittings = examsPublic.sittings;
 const { offline } = examsPublic.screens;

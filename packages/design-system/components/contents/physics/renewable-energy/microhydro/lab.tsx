@@ -39,7 +39,8 @@ import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** The stream's lit surface, where the dusk sky shows in the water. */
 const WATER_LIGHT = mix(TOWN_COLORS.water, TOWN_COLORS.waterGlint, 0.45);

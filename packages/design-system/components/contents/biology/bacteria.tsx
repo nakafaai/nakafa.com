@@ -1,11 +1,7 @@
-import {
-  type BacteriaLabItemProps,
-  BacteriaStructureScene,
-} from "@repo/design-system/components/contents/biology/bacteria/scene";
-import {
-  BiologyLabFrame,
-  type BiologyLabProps,
-} from "@repo/design-system/components/contents/biology/lab";
+import type { BacteriaLabItemProps } from "@repo/design-system/components/contents/biology/bacteria/scene";
+import { BacteriaStructureScene } from "@repo/design-system/components/contents/biology/bacteria/scene";
+import type { BiologyLabProps } from "@repo/design-system/components/contents/biology/lab";
+import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 
 const BACTERIA_VIEW = {

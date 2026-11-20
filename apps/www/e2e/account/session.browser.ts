@@ -1,4 +1,5 @@
-import { expect, type Page, test, type WebSocket } from "@playwright/test";
+import type { Page, WebSocket } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Deferred, Effect, Ref } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
 import {

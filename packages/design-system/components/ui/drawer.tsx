@@ -3,7 +3,8 @@ import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { StagedPopup } from "@repo/design-system/components/ui/staged";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { cn } from "cn";
-import { type ComponentProps, createContext, use } from "react";
+import type { ComponentProps } from "react";
+import { createContext, use } from "react";
 
 const DrawerContext = createContext<{
   hasSnapPoints: boolean;

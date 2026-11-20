@@ -16,7 +16,8 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { holyMenu } from "@/components/sidebar/data/holy";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
-import { Link, type LinkTarget, useSectionMatched } from "@/lib/routing/link";
+import type { LinkTarget } from "@/lib/routing/link";
+import { Link, useSectionMatched } from "@/lib/routing/link";
 import { articleCategoryTarget } from "@/lib/routing/target";
 import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 

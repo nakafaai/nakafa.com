@@ -4,14 +4,10 @@ import {
 } from "@repo/backend/confect/connectors/google/manifest";
 import { ConnectionView } from "@repo/backend/confect/connectors/schema";
 import { Array as Arr, Option, Schema } from "effect";
-import {
-  type Connection,
-  currentConnection,
-} from "@/components/connectors/optimistic";
-import {
-  type ConnectSearch,
-  connectFailure,
-} from "@/components/connectors/outcome";
+import type { Connection } from "@/components/connectors/optimistic";
+import { currentConnection } from "@/components/connectors/optimistic";
+import type { ConnectSearch } from "@/components/connectors/outcome";
+import { connectFailure } from "@/components/connectors/outcome";
 import { matchesSearch } from "@/components/shared/table/search";
 
 /** What a service is for, which the directory's filter reads. */

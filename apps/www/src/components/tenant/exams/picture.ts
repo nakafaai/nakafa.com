@@ -1,7 +1,5 @@
-import {
-  type ImageRefusal,
-  imageRefusal,
-} from "@repo/design-system/components/editor/image";
+import type { ImageRefusal } from "@repo/design-system/components/editor/image";
+import { imageRefusal } from "@repo/design-system/components/editor/image";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Option } from "effect";
 import type { PendingPicture } from "@/components/tenant/exams/editing";

@@ -1,9 +1,9 @@
-import {
-  type Message,
-  type SourcePart,
-  vMessage,
-  type vProviderReference,
+import type {
+  Message,
+  SourcePart,
+  vProviderReference,
 } from "@convex-dev/agent/validators";
+import { vMessage } from "@convex-dev/agent/validators";
 import type { Infer } from "convex/values";
 import { parse } from "convex-helpers/validators";
 import { Array as Arr, Match, Predicate } from "effect";

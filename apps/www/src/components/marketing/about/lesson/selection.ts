@@ -2,7 +2,8 @@ import type { AtomShellSampleId } from "@repo/design-system/components/contents/
 import type { ParabolicLaunchId } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { createContext } from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
+import type { StoreApi } from "zustand";
+import { createStore, useStore } from "zustand";
 
 /**
  * The reader's choice in each lab of the lesson window. A choice is null until

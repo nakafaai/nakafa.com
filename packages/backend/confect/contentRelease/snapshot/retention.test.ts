@@ -19,7 +19,8 @@ import {
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import { TRYOUT_NOW, tryoutWorld } from "@repo/backend/test/tryout/world";
 import { encodeJsonText } from "@repo/utilities/json";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Effect, Schema } from "effect";
 
 /** Loads one stored release row by its release identity. */

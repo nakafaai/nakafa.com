@@ -7,10 +7,12 @@ import {
   Record as Rec,
   Schema,
 } from "effect";
+import type {
+  PackageManifest,
+  WorkspaceManifest,
+} from "#scripts/dependencies/source";
 import {
-  type PackageManifest,
   readPackageManifest,
-  type WorkspaceManifest,
   workspaceManifestOf,
 } from "#scripts/dependencies/source";
 

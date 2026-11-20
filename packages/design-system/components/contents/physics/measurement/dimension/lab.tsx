@@ -1,11 +1,13 @@
 import { useThree } from "@react-three/fiber";
+import type {
+  DimensionLabLabels,
+  DimensionModeId,
+} from "@repo/design-system/components/contents/physics/measurement/dimension/data";
 import {
   AREA_MODE_ID,
   CAMERA_POSITION,
   CAMERA_TARGET,
   DIMENSION_MODES,
-  type DimensionLabLabels,
-  type DimensionModeId,
   getDimensionSceneColors,
   isDimensionModeId,
   LENGTH_MODE_ID,

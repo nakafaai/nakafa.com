@@ -12,7 +12,8 @@ import {
   makeProgramSnapshotData,
 } from "@repo/backend/test/program/snapshot";
 import { insertExpiredQuran } from "@repo/backend/test/quran/snapshot";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Effect } from "effect";
 
 /** Executes one cleanup transaction through Confect's native mutation services. */

@@ -1,10 +1,9 @@
-import {
-  defineConfig,
-  devices,
-  type PlaywrightTestOptions,
-  type PlaywrightWorkerOptions,
-  type Project,
+import type {
+  PlaywrightTestOptions,
+  PlaywrightWorkerOptions,
+  Project,
 } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test";
 import { acceptanceOrigin } from "@repo/backend/scripts/content/acceptance/origin";
 import {
   Array as Arr,

@@ -12,13 +12,13 @@ import {
   vignette,
   withShadow,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { Fuel } from "@repo/design-system/components/contents/physics/renewable-energy/carbon/combustion";
 import {
   carbonMass,
   dioxideMass,
   dioxidePerMegajoule,
   dioxideVolume,
   FUEL_MASS,
-  type Fuel,
   FuelSchema,
   oxygenTaken,
 } from "@repo/design-system/components/contents/physics/renewable-energy/carbon/combustion";
@@ -48,7 +48,8 @@ import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** How long the burn lasts, in seconds of the run. */
 const BURN_SECONDS = 6;

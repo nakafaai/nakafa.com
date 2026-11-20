@@ -1,5 +1,6 @@
 import { Option } from "effect";
-import { eyeOf, FIELD_OF_VIEW, type Orbit } from "@/lib/island/camera";
+import type { Orbit } from "@/lib/island/camera";
+import { eyeOf, FIELD_OF_VIEW } from "@/lib/island/camera";
 
 /** A 4 by 4 matrix in column-major order, as WebGL reads it. */
 type Matrix = Float32Array;

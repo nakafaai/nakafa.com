@@ -1,12 +1,13 @@
 import { NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Effect, FileSystem, type Path, Schema } from "effect";
+import type { Path } from "effect";
+import { Array as Arr, Effect, FileSystem, Schema } from "effect";
 import type { ChildProcessSpawner } from "effect/process";
 import { makeEffectSourceProgram } from "#scripts/effect/source";
+import type { Fixture } from "#scripts/effect/test.fixture";
 import {
   abbreviatedUpstreamCommit,
   commitFiles,
-  type Fixture,
   IDENTITY,
   INSTALLED,
   installNextRelease,

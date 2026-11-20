@@ -1,9 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Logger, MutableList } from "effect";
-import {
-  logRouteFailures,
-  type RouteMatchFacts,
-} from "@/lib/routing/failures.server";
+import type { RouteMatchFacts } from "@/lib/routing/failures.server";
+import { logRouteFailures } from "@/lib/routing/failures.server";
 
 /** Runs the log with a logger that keeps each message, and returns the kept messages. */
 function collectLogs(matches: readonly RouteMatchFacts[]) {

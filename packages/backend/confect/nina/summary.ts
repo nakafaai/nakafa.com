@@ -1,4 +1,5 @@
-import { Agent, type MessageDoc } from "@convex-dev/agent";
+import type { MessageDoc } from "@convex-dev/agent";
+import { Agent } from "@convex-dev/agent";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import ninaInternal from "@repo/backend/confect/_generated/refs/nina.server";
@@ -18,10 +19,8 @@ import {
 } from "@repo/backend/confect/nina/budget";
 import { NinaFailureOperation } from "@repo/backend/confect/nina/failure";
 import { foldWithin, nextSummaryTarget } from "@repo/backend/confect/nina/fold";
-import {
-  readThreadFromAction,
-  type ThreadPage,
-} from "@repo/backend/confect/nina/sealed/action";
+import type { ThreadPage } from "@repo/backend/confect/nina/sealed/action";
+import { readThreadFromAction } from "@repo/backend/confect/nina/sealed/action";
 import {
   foldedTurns,
   transcriptOf,

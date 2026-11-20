@@ -1,22 +1,16 @@
 import { findFormulas } from "@repo/editor/formula";
-import {
-  type AnyExtension,
-  Extension,
-  type JSONContent,
-  type MarkdownToken,
-  type MarkdownTokenizer,
-  mergeAttributes,
-  Node,
-  type NodeViewRenderer,
-  PasteRule,
-  type Storage,
+import type {
+  AnyExtension,
+  JSONContent,
+  MarkdownToken,
+  MarkdownTokenizer,
+  NodeViewRenderer,
+  Storage,
 } from "@tiptap/core";
+import { Extension, mergeAttributes, Node, PasteRule } from "@tiptap/core";
 import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
-import {
-  NodeSelection,
-  TextSelection,
-  type Transaction,
-} from "@tiptap/pm/state";
+import type { Transaction } from "@tiptap/pm/state";
+import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { Array as Arr, Function as Fn, Option, String as Str } from "effect";
 
 /** The two formula nodes: a formula inside a line of text, and a formula on a line of its own. */

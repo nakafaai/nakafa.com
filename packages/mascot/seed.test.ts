@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Animal, DESIGNS } from "@repo/mascot/animal";
-import { encode, type Mascot } from "@repo/mascot/code";
+import type { Mascot } from "@repo/mascot/code";
+import { encode } from "@repo/mascot/code";
 import { contrast } from "@repo/mascot/ground";
 import { cast, forSeed } from "@repo/mascot/seed";
 import { Array as Arr } from "effect";

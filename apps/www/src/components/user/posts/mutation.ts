@@ -2,8 +2,8 @@ import type { OptimisticUpdate } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { Option } from "effect";
+import type { ListPost } from "@/components/user/posts/state";
 import {
-  type ListPost,
   likePost,
   prependPost,
   removePost,

@@ -7,9 +7,9 @@ import {
   vignette,
   withShadow,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
+import type { Bulb } from "@repo/design-system/components/contents/physics/renewable-energy/flashlight/bulb";
 import {
   BATTERY_ENERGY,
-  type Bulb,
   BulbSchema,
   heatPower,
   INPUT_POWER,
@@ -45,7 +45,8 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 /** How many wall seconds the 7.5 h of battery life plays in. */
 const PLAY_SECONDS = 8;

@@ -7,12 +7,12 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { WRITE_ALLOWANCE_MS } from "@repo/backend/confect/exams/sittings/gate";
 import { nf } from "@repo/backend/test/editor";
+import type { SittingFixture } from "@repo/backend/test/sittings";
 import {
   deviceOf,
   enterOk,
   OPENS_AT,
   openedSitting,
-  type SittingFixture,
 } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Effect } from "effect";

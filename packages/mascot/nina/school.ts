@@ -1,11 +1,12 @@
 import { POP } from "@repo/mascot/color";
-import { type Curve, flip } from "@repo/mascot/nina/limb";
+import type { Curve } from "@repo/mascot/nina/limb";
+import { flip } from "@repo/mascot/nina/limb";
 import type { Place } from "@repo/mascot/nina/point";
+import type { Pose } from "@repo/mascot/nina/pose";
 import {
   armLeft,
   armRight,
   breathe,
-  type Pose,
   REST,
   sway,
   swayLegs,

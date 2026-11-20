@@ -1,6 +1,8 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { Effect, MutableList, Schema } from "effect";
-import { type Changes, live, saved } from "@/e2e/support/changes";
+import type { Changes } from "@/e2e/support/changes";
+import { live, saved } from "@/e2e/support/changes";
 import {
   EMPTY,
   editorOf,

@@ -3,8 +3,8 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import schema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
+import type { Opened } from "@repo/backend/confect/nina/memory/seal";
 import {
-  type Opened,
   openMemories,
   openMemory,
 } from "@repo/backend/confect/nina/memory/seal";

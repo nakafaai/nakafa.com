@@ -1,6 +1,6 @@
+import type { LogoAnswer } from "@repo/backend/confect/tenancy/schema";
 import {
   LOGO_BYTE_LIMIT,
-  type LogoAnswer,
   LogoType,
 } from "@repo/backend/confect/tenancy/schema";
 import { Match, Schema } from "effect";

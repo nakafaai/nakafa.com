@@ -1,7 +1,9 @@
 import { HugeiconsIcon } from "@hugeicons/react";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
-import { type ComponentProps, isValidElement, type ReactElement } from "react";
+import type { ComponentProps, ReactElement } from "react";
+import { isValidElement } from "react";
 
 /**
  * The sizes an icon is drawn at. `default` is `size-4`, the largest an icon is ever drawn; the smaller steps sit in

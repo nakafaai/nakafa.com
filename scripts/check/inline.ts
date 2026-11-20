@@ -1,4 +1,11 @@
 import { Array as Arr, HashSet } from "effect";
+import type {
+  Node,
+  ParameterDeclaration,
+  SourceFile,
+  TypeLiteralNode,
+  TypeNode,
+} from "tsrs/ast";
 import {
   isArrowFunction,
   isCallExpression,
@@ -16,11 +23,6 @@ import {
   isTypePredicateNode,
   isTypeReferenceNode,
   isVariableDeclaration,
-  type Node,
-  type ParameterDeclaration,
-  type SourceFile,
-  type TypeLiteralNode,
-  type TypeNode,
 } from "tsrs/ast";
 import { candidate } from "#scripts/check/rules";
 import { declaredNames, mentions, objectLiterals } from "#scripts/check/shapes";

@@ -1,4 +1,5 @@
-import { expect, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { readRowAxis } from "@/e2e/support/axis";
 import { readOverlaps } from "@/e2e/support/overlap";
 
@@ -42,7 +43,6 @@ function readAsymmetry({
     text: Element;
   }
   const rows = new Map<Element, Row>();
-
   const round = (value: number) => Math.round(value * 10) / 10;
   const spread = (values: number[]) =>
     values.length === 0 ? 0 : Math.max(...values) - Math.min(...values);

@@ -18,8 +18,8 @@ import {
 } from "@repo/backend/confect/notifications/feed";
 import { heldSchools, holds } from "@repo/backend/confect/notifications/held";
 import spec from "@repo/backend/confect/notifications/inbox.spec";
+import type { AccountRow } from "@repo/backend/confect/notifications/schema";
 import {
-  type AccountRow,
   isAccountRow,
   notificationView,
 } from "@repo/backend/confect/notifications/schema";

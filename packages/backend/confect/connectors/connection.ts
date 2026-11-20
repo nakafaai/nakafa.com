@@ -15,7 +15,8 @@ import {
 import { connection } from "@repo/backend/confect/connectors/kinds";
 import type { ConnectionInput } from "@repo/backend/confect/connectors/schema";
 import { sealRefreshToken } from "@repo/backend/confect/connectors/secret";
-import { type Actor, JournalEntry } from "@repo/backend/confect/journal/schema";
+import type { Actor } from "@repo/backend/confect/journal/schema";
+import { JournalEntry } from "@repo/backend/confect/journal/schema";
 import { Space } from "@repo/backend/confect/space";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { Duration, Effect, Option, Schema } from "effect";

@@ -6,11 +6,8 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { localizeInternalHref } from "@repo/internationalization/src/href";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  ConvexProvider,
-  type ConvexReactClient,
-  useConvex,
-} from "convex/react";
+import type { ConvexReactClient } from "convex/react";
+import { ConvexProvider, useConvex } from "convex/react";
 import { Effect, Option } from "effect";
 import { useEffect, useEffectEvent, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";

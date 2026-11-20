@@ -22,7 +22,8 @@ import {
   deleteRow,
   deleteTable,
 } from "@tiptap/pm/tables";
-import { findWrapping, type Step } from "@tiptap/pm/transform";
+import type { Step } from "@tiptap/pm/transform";
+import { findWrapping } from "@tiptap/pm/transform";
 import {
   Array as Arr,
   Effect,

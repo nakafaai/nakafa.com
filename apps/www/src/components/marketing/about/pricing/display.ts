@@ -1,7 +1,5 @@
-import {
-  getProMonthlyPricingFor,
-  type PricingCurrency,
-} from "@/lib/pricing/monthly";
+import type { PricingCurrency } from "@/lib/pricing/monthly";
+import { getProMonthlyPricingFor } from "@/lib/pricing/monthly";
 
 /** The key of the drink that a monthly price buys in its own currency. */
 export function drinkKey(

@@ -16,7 +16,8 @@ import {
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
-import { type KeyboardEvent, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
+import { useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
 import { isLocked } from "@/components/tenant/exams/freeze";

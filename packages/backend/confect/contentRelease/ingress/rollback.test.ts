@@ -29,7 +29,8 @@ import {
   UnexpectedRollbackTestState,
 } from "@repo/backend/test/rollback/ingress";
 import { encodeJsonText } from "@repo/utilities/json";
-import { convexTest, type TestConvex } from "convex-test";
+import type { TestConvex } from "convex-test";
+import { convexTest } from "convex-test";
 import { Cause, Effect, Exit, Schema } from "effect";
 
 type StoredRollbackEnvelope = typeof stageEnvelopeValidator.Type;

@@ -1,6 +1,7 @@
 import { useRequired } from "@repo/design-system/hooks/required";
 import { createContext } from "react";
-import { type StoreApi, useStore } from "zustand";
+import type { StoreApi } from "zustand";
+import { useStore } from "zustand";
 
 /** The emphasis of the Pro action: the page's one primary on the pricing page, secondary elsewhere. */
 export type PricingButtonVariant = "default" | "secondary";

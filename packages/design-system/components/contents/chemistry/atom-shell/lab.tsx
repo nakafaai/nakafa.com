@@ -1,7 +1,7 @@
+import type { AtomShellSampleId } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
 import {
   ATOM_SHELL_SAMPLE_IDS,
   ATOM_SHELL_SAMPLES,
-  type AtomShellSampleId,
   CALCIUM_ID,
   isAtomShellSampleId,
 } from "@repo/design-system/components/contents/chemistry/atom-shell/data";

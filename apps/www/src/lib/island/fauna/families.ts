@@ -1,12 +1,6 @@
 import { Schema } from "effect";
-import {
-  box,
-  ellipse,
-  line,
-  PART,
-  type Shape,
-  setCell,
-} from "@/lib/island/tiles/shape";
+import type { Shape } from "@/lib/island/tiles/shape";
+import { box, ellipse, line, PART, setCell } from "@/lib/island/tiles/shape";
 
 /** What sets one species apart within its family: its ears, tail, horns, and a mane or crest. */
 export const Traits = Schema.Struct({

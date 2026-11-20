@@ -24,22 +24,24 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { OnboardingOption } from "@/components/programs/onboarding/choice";
 import { getOnboardingDestination } from "@/components/programs/onboarding/destination";
 import { useSaveOnboardingAnswerMutation } from "@/components/programs/onboarding/mutation";
+import type {
+  OnboardingAnswer,
+  OnboardingItemName,
+} from "@/components/programs/onboarding/options";
 import {
   focusOptions,
   isOnboardingItemName,
-  type OnboardingAnswer,
-  type OnboardingItemName,
   onboardingItems,
   regionOptions,
   roleOptions,
 } from "@/components/programs/onboarding/options";
+import type { OnboardingProfile } from "@/components/programs/onboarding/state";
 import {
   applyOnboardingAnswer,
   getCompleteOnboardingAnswers,
   getInitialOnboardingItem,
   getOnboardingAnswer,
   getOnboardingAnswers,
-  type OnboardingProfile,
 } from "@/components/programs/onboarding/state";
 import {
   finishOnboarding,
@@ -47,10 +49,10 @@ import {
 } from "@/components/programs/onboarding/submit";
 import { QuestionnaireSteps } from "@/components/shared/questionnaire";
 import { reportClientException } from "@/lib/analytics/client";
+import type { PostAuthIntentResolution } from "@/lib/auth/admission";
 import {
   getPostAuthDestination,
   getPostAuthSignInHref,
-  type PostAuthIntentResolution,
 } from "@/lib/auth/admission";
 import { requireConvexOnline } from "@/lib/convex/online";
 import { useCurrentLocale } from "@/lib/routing/link";

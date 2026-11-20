@@ -28,15 +28,14 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useNavigate } from "@tanstack/react-router";
 import { Effect, Option, Schema } from "effect";
-import { type ReactNode, startTransition } from "react";
+import type { ReactNode } from "react";
+import { startTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useDialogs } from "@/components/shared/dialogs";
 import { isPending } from "@/components/tenant/classes/forum/marks";
 import { useOpening } from "@/components/tenant/classes/forum/open";
-import {
-  type ForumMessage,
-  hideUpdate,
-} from "@/components/tenant/classes/forum/optimistic";
+import type { ForumMessage } from "@/components/tenant/classes/forum/optimistic";
+import { hideUpdate } from "@/components/tenant/classes/forum/optimistic";
 import { renameDiscussionUpdate } from "@/components/tenant/classes/forum/rename";
 import { messageToolbarVariants } from "@/components/tenant/classes/forum/reveal";
 import { useChannelScope } from "@/components/tenant/classes/forum/scope";

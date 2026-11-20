@@ -1,4 +1,5 @@
-import { type ConsoleMessage, expect, type Page, test } from "@playwright/test";
+import type { ConsoleMessage, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { THREE_RENDER_MARGIN } from "@repo/design-system/components/three/data/constants";
 import { Effect } from "effect";
 import {

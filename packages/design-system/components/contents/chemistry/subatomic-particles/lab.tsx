@@ -1,12 +1,12 @@
 import { useMediaQuery } from "@mantine/hooks";
 import { useThree } from "@react-three/fiber";
+import type { SubatomicParticlesModeId } from "@repo/design-system/components/contents/chemistry/subatomic-particles/data";
 import {
   CATHODE_RAY_MODE_ID,
   getSubatomicSceneColors,
   isSubatomicParticlesModeId,
   SUBATOMIC_PARTICLE_MODE_IDS,
   SUBATOMIC_VIEW_CONFIG,
-  type SubatomicParticlesModeId,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles/data";
 import {
   SubatomicParticlesScene,
@@ -35,7 +35,8 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.4;

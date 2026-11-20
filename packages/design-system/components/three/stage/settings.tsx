@@ -6,7 +6,8 @@ import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Suspense, useMemo } from "react";
-import { type ColorRepresentation, DataTexture } from "three";
+import type { ColorRepresentation } from "three";
+import { DataTexture } from "three";
 
 /**
  * Each setting turns its photo so the photo's brightest light falls where the

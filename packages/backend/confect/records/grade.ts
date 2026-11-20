@@ -1,9 +1,9 @@
 import type { ClassGradesDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
+import type { GradingScheme } from "@repo/backend/confect/records/scheme";
 import {
   bandOf,
   GradeValue,
-  type GradingScheme,
   reachesKktp,
 } from "@repo/backend/confect/records/scheme";
 import { ListedPerson } from "@repo/backend/confect/tenancy/schema";

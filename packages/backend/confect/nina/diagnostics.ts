@@ -1,8 +1,6 @@
 import { PostHog } from "@posthog/convex";
-import {
-  createOperationalException,
-  type OperationalExceptionProperties,
-} from "@repo/analytics/posthog/exception";
+import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
+import { createOperationalException } from "@repo/analytics/posthog/exception";
 import { components } from "@repo/backend/confect/_generated/components";
 import type { NinaTurnsDoc } from "@repo/backend/confect/_generated/docs";
 import {

@@ -6,8 +6,10 @@ import type { SavedView } from "@repo/backend/confect/exams/sittings/contract";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { Step, StudentScript } from "@repo/backend/scripts/load/plan";
 import { Recorder, timed } from "@repo/backend/scripts/load/recorder";
-import { send, type Wire, watch } from "@repo/backend/scripts/load/wire";
+import type { Wire } from "@repo/backend/scripts/load/wire";
+import { send, watch } from "@repo/backend/scripts/load/wire";
 import { randomUuid } from "@repo/utilities/uuid";
+import type { Scope } from "effect";
 import {
   Array as Arr,
   Clock,
@@ -20,7 +22,6 @@ import {
   Random,
   Schedule,
   Schema,
-  type Scope,
 } from "effect";
 
 const sittings = examsPublic.sittings;
