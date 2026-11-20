@@ -183,9 +183,11 @@ const checkFarFrame = Effect.fn("NakafaE2E.checkFarFrame")(function* (
   const card = mathSceneCards(page).filter({ hasText: NUCLIDE_TITLE });
   const picture = card.locator(MATH_SCENE);
   yield* Effect.promise(() => card.scrollIntoViewIfNeeded());
-  const grid = picture.locator('[data-slot="scene-grid"]');
+  // The grid fills the still, which sits inside the body's top border line.
+  const stillFrame = picture.locator('[data-slot="scene-still"]');
+  const grid = stillFrame.locator('[data-slot="scene-grid"]');
   const [frame, lines] = yield* Effect.promise(() =>
-    Promise.all([picture.boundingBox(), grid.boundingBox()])
+    Promise.all([stillFrame.boundingBox(), grid.boundingBox()])
   );
   yield* Effect.sync(() => {
     expect(lines, "the still's grid").not.toBeNull();
