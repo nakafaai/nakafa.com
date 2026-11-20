@@ -17,12 +17,12 @@ export const calendarButton = (field: Locator) =>
 
 /**
  * Chooses one day, written as its day key such as `2027-07-01`, in a design-system date field: it
- * opens the field's calendar from its button, pages forward to the day's month, and presses the
- * day, which closes the calendar. `field` is the field's text, which its label names.
+ * opens the field's calendar from the button of the date field that holds the text, pages forward to the day's month,
+ * and presses the day, which closes the calendar. `field` is the field's text, which its label names.
  */
 export async function chooseDay(page: Page, field: Locator, day: string) {
   await calendarButton(
-    page.locator('[data-slot="date-picker"]', { has: field })
+    field.locator('xpath=ancestor::*[@data-slot="date-picker"][1]')
   ).click();
   const calendar = page.locator('[data-slot="date-picker-content"]');
   const target = calendar
