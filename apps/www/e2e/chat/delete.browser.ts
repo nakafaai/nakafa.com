@@ -4,7 +4,6 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect } from "effect";
-import { noticeWith } from "@/e2e/support/attachment";
 import { live, reloadUntil, saved } from "@/e2e/support/changes";
 import {
   CHAT_PAGE,
@@ -14,7 +13,7 @@ import {
   openChatPage,
   runOnPage,
 } from "@/e2e/support/chat";
-import { PROFILE_PAGE } from "@/e2e/support/selector";
+import { noticeWith, PROFILE_PAGE } from "@/e2e/support/selector";
 import { ACCESS_TITLE } from "@/e2e/support/share";
 import { inTheSheet, promptWith } from "@/e2e/support/sheet";
 import { shownTexts, watchTexts } from "@/e2e/support/shown";

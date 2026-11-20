@@ -4,7 +4,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect } from "effect";
-import { composerOf, noticeWith } from "@/e2e/support/attachment";
+import { composerOf } from "@/e2e/support/attachment";
 import type { Changes } from "@/e2e/support/changes";
 import {
   OPENED_CHAT,
@@ -15,6 +15,7 @@ import {
   viewerKnown,
 } from "@/e2e/support/chat";
 import { sidebarRows } from "@/e2e/support/rows";
+import { noticeWith } from "@/e2e/support/selector";
 import {
   inTheSheet,
   openSheet,

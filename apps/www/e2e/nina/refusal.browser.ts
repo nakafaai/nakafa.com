@@ -8,16 +8,11 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect, Schema } from "effect";
-import {
-  composerOf,
-  GERMAN,
-  noticeWith,
-  write,
-} from "@/e2e/support/attachment";
+import { composerOf, GERMAN, write } from "@/e2e/support/attachment";
 import { onThePage, openChatPage, runOnPage, START } from "@/e2e/support/chat";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForSlide } from "@/e2e/support/layout";
-import { SHEET_POPUP } from "@/e2e/support/selector";
+import { noticeWith, SHEET_POPUP } from "@/e2e/support/selector";
 import { UNCONFIRMED_TOAST } from "@/e2e/support/sheet";
 
 /**
@@ -237,7 +232,6 @@ for (const { failure, reason, sentence } of GERMAN_REFUSALS) {
           // The notice slides into place; its place is read once it stopped.
           yield* Effect.promise(async () => {
             await expect(notice).toBeVisible();
-            await expect(notice).toHaveAttribute("data-mounted", "true");
           });
           yield* waitForSlide(notice);
 

@@ -9,7 +9,6 @@ import {
   chipsOfComposer,
   composerOf,
   fileOf,
-  noticeWith,
   pickFiles,
   pictureOf,
   TRANSPARENT,
@@ -17,6 +16,7 @@ import {
 } from "@/e2e/support/attachment";
 import { saved } from "@/e2e/support/changes";
 import { onThePage, openChatPage, runOnPage, START } from "@/e2e/support/chat";
+import { noticeWith } from "@/e2e/support/selector";
 import {
   inTheSheet,
   openFromHistory,

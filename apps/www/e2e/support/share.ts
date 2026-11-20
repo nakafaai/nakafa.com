@@ -4,13 +4,13 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
-import { noticeWith } from "@/e2e/support/attachment";
 import type { Changes } from "@/e2e/support/changes";
 import { ANSWER_MILLISECONDS, live, saved } from "@/e2e/support/changes";
 import { CHAT_PAGE, onThePage, openChatPage } from "@/e2e/support/chat";
 import { lastCopy, recordCopies } from "@/e2e/support/clipboard";
 import { pressInPopup } from "@/e2e/support/popup";
 import { SERVER_FUNCTION_PATH } from "@/e2e/support/requests";
+import { noticeWith } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { SHARE_ENTRY } from "@/lib/share/fragment";
 

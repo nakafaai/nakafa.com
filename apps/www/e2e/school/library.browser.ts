@@ -7,6 +7,7 @@ import {
   hostAddress,
   signInClassTeacher,
 } from "@/e2e/support/school";
+import { noticeWith } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -138,7 +139,7 @@ for (const viewport of [
       name: "Catatan.pdf",
     });
     await dialog.getByRole("button", { name: "Add", exact: true }).click();
-    await expect(page.getByText("The file was not added.")).toBeVisible({
+    await expect(noticeWith(page, "The file was not added.")).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
     await expect(page.getByText("Catatan", { exact: true })).toBeHidden();

@@ -45,6 +45,14 @@ export const MARKDOWN_MARKUP = "em, strong, code, pre, a, ul, ol, h1, h2, h3";
  */
 export const TOASTER = "[data-slot=toast-region]";
 /**
+ * The toasts on the page that contain `text`. A toast's words are also in the
+ * live region that announces it to a screen reader, so a toast is read from the
+ * toast itself, never from the page's text.
+ */
+export function noticeWith(page: Page, text: string) {
+  return page.locator("[data-slot=toast]").filter({ hasText: text });
+}
+/**
  * The tooltip that shows. Every tooltip stays in the page, hidden, from the first HTML, since it names or describes
  * its trigger (`@ui-sdk/react/docs/components/tooltip.md`), so only the open one is selected.
  */
