@@ -11,7 +11,7 @@ import {
 
 describe("try-out artwork", () => {
   it.effect.each(["en", "id", "de", "ms"] as const)(
-    "keeps the Darmstadt design off the general entrance exam in %s",
+    "draws the Aufnahmeprüfung's own name, never a Kolleg's mark, in its one design in %s",
     (appLocale) =>
       Effect.gen(function* () {
         expect(
@@ -21,7 +21,12 @@ describe("try-out artwork", () => {
             examKey: "entrance-examination",
             publicPath: "try-out/germany/entrance-examination",
           })
-        ).toEqual({ socialImageSrc: `/${appLocale}/og/image.png` });
+        ).toEqual({
+          cardImageSrc:
+            "/open-graph/tryout/germany/en-entrance-examination.png",
+          socialImageSrc:
+            "/open-graph/tryout/germany/en-entrance-examination.png",
+        });
       })
   );
 
@@ -189,9 +194,14 @@ describe("try-out artwork", () => {
     }
   );
 
-  it.each(["en", "id", "de"] as const)(
-    "draws Germany's Darmstadt Mathematics with its own design, one file for every locale, in %s",
-    (locale) => {
+  it.each([
+    ["de", "de"],
+    ["en", "en"],
+    ["id", "en"],
+    ["ms", "en"],
+  ] as const)(
+    "draws Germany's Darmstadt Mathematics in German for %s readers and in English otherwise (%s)",
+    (locale, file) => {
       expect(
         getTryoutTrackCatalogArtwork(locale, {
           countryKey: "germany",
@@ -199,7 +209,7 @@ describe("try-out artwork", () => {
           trackKey: "tu-darmstadt-mathematics",
         })
       ).toBe(
-        "/open-graph/tryout/germany/entrance-examination/en-tu-darmstadt-mathematics.png"
+        `/open-graph/tryout/germany/entrance-examination/${file}-tu-darmstadt-mathematics.png`
       );
     }
   );

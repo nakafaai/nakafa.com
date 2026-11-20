@@ -9,6 +9,13 @@ import { getOgUrl } from "@/lib/seo/social";
 const ALL_ARTWORK_LOCALES = ACTIVE_APP_LOCALE_CODES;
 const ENGLISH_ARTWORK = [ENGLISH_APP_LOCALE_CODE] as const;
 /**
+ * A design lettered with an exam's own name, such as SNBT, TKA,
+ * Aufnahmeprüfung or Feststellungsprüfung. No language translates an exam's
+ * name, so the design is drawn once, in the exam's own language, and every
+ * locale shows that one file. Never ask for, or install, a translated version.
+ */
+const EXAM_NAME_ARTWORK = ENGLISH_ARTWORK;
+/**
  * A design whose Indonesian lettering is not Malaysian Malay, such as
  * `Matematika` for `Matematik`, until the Malay lettering is drawn. A design
  * whose lettering reads the same in both, such as `tanya Nina`, has its Malay
@@ -18,15 +25,16 @@ const WITHOUT_MALAY_ARTWORK = ["en", "id", "de"] as const;
 
 /**
  * Reviewed public artwork grouped by stable, language-neutral identity, each with
- * the locales it has a file for. A design whose words read the same in every
- * language, such as the School's or the Quran's, has one English file, which
- * every locale falls back to. A design whose words belong to one language, such
- * as the landing's "belajar sampai paham.", has a file for that language alone,
- * and every other locale keeps its generated image.
+ * the locales it has a file for. English is the default: every design has an
+ * English file, and a locale without its own file shows the English one, so a
+ * design drawn in Indonesian or German alone, such as the German "mathematik",
+ * shows English everywhere else. A design whose words read the same in every
+ * language, such as the School's or the Quran's, and a design of an exam's own
+ * name (`EXAM_NAME_ARTWORK`) have that one file alone.
  */
 export const artworkSources = {
   "app/ask-nina": ALL_ARTWORK_LOCALES,
-  "app/landing": ["id"],
+  "app/landing": ["en", "id", "de"],
   "app/pricing": ALL_ARTWORK_LOCALES,
   "app/school": ENGLISH_ARTWORK,
   "curriculum/cambridge-international": ENGLISH_ARTWORK,
@@ -51,16 +59,16 @@ export const artworkSources = {
   "subject/physics": WITHOUT_MALAY_ARTWORK,
   "subject/science": ALL_ARTWORK_LOCALES,
   "subject/secondary-additional-mathematics": ["en", "de"],
-  "tryout/germany/entrance-examination/tu-darmstadt-mathematics":
-    ENGLISH_ARTWORK,
+  "tryout/germany/entrance-examination": EXAM_NAME_ARTWORK,
+  "tryout/germany/entrance-examination/tu-darmstadt-mathematics": ["en", "de"],
   "tryout/germany/index": ENGLISH_ARTWORK,
   "tryout/indonesia/2027": ENGLISH_ARTWORK,
   "tryout/indonesia/index": ENGLISH_ARTWORK,
-  "tryout/indonesia/snbt": ENGLISH_ARTWORK,
+  "tryout/indonesia/snbt": EXAM_NAME_ARTWORK,
   "tryout/indonesia/snbt/general-reasoning": WITHOUT_MALAY_ARTWORK,
   "tryout/indonesia/snbt/mathematical-reasoning": WITHOUT_MALAY_ARTWORK,
   "tryout/indonesia/snbt/quantitative-knowledge": ALL_ARTWORK_LOCALES,
-  "tryout/indonesia/tka": ENGLISH_ARTWORK,
+  "tryout/indonesia/tka": EXAM_NAME_ARTWORK,
   "tryout/indonesia/tka/advanced-mathematics": WITHOUT_MALAY_ARTWORK,
   "tryout/indonesia/tka/compulsory-mathematics": WITHOUT_MALAY_ARTWORK,
   "tryout/indonesia/tka/english-language": WITHOUT_MALAY_ARTWORK,
@@ -74,10 +82,7 @@ const artworkInventory: Readonly<
   Record<string, readonly [Locale, ...Locale[]]>
 > = artworkSources;
 
-/**
- * The file of one identity in the locale, or in English when the locale has none, and none for a design of another
- * language alone.
- */
+/** The file of one identity in the locale, or its English default when the locale has none. */
 function pickArtworkPath(
   identity: string,
   locales: readonly Locale[],
@@ -96,7 +101,7 @@ function pickArtworkPath(
   );
 }
 
-/** Resolves exact locale artwork, then the reviewed English default, and none for a design of another language. */
+/** Resolves exact locale artwork, then the reviewed English default every design has. */
 export function resolveStaticArtwork(
   identity: ArtworkIdentity | undefined,
   locale: Locale
