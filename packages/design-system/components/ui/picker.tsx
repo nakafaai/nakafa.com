@@ -332,10 +332,12 @@ function PickerContent<Item>({
 
 /**
  * One option of a picker: the icon of its kind, the same icon the sidebar or the page uses for it, the caller's words,
- * and a tick on the chosen one. Choosing it runs the caller's `onClick`, then closes the picker.
+ * and a tick on the chosen one, or the option's own value at its end in the tick's place. Choosing it runs the
+ * caller's `onClick`, then closes the picker.
  */
 function PickerItem({
   children,
+  end,
   icon,
   onClick,
   selected = false,
@@ -343,6 +345,11 @@ function PickerItem({
 }: Pick<AutocompletePrimitive.Item.Props, "disabled" | "onClick" | "value"> & {
   /** The words of the option, such as a name and a fact under it. */
   children: ReactNode;
+  /**
+   * What the option ends with, such as an attempt's score. It stands where the tick would, so the end stays one
+   * column; the trigger already names the chosen option.
+   */
+  end?: ReactNode;
   /** The icon of the option's kind: a Hugeicons icon, or an element such as a flag. */
   icon: ComponentProps<typeof OptionIcon>["icon"];
   /** Whether the option is the chosen one, which shows its tick. */
@@ -362,10 +369,12 @@ function PickerItem({
     >
       <OptionIcon icon={icon} />
       <span className="flex min-w-0 flex-1 items-center gap-2">{children}</span>
-      <HugeIcons
-        className="opacity-0 transition-opacity ease-out group-data-chosen/picker-item:opacity-100"
-        icon={Tick01Icon}
-      />
+      {end ?? (
+        <HugeIcons
+          className="opacity-0 transition-opacity ease-out group-data-chosen/picker-item:opacity-100"
+          icon={Tick01Icon}
+        />
+      )}
     </AutocompleteItem>
   );
 }

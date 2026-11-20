@@ -174,6 +174,7 @@ import tryoutAttempts from "./tables/tryoutAttempts";
 import tryoutResponses from "./tables/tryoutResponses";
 import tryoutScores from "./tables/tryoutScores";
 import tryoutSectionAttempts from "./tables/tryoutSectionAttempts";
+import tryoutSetBests from "./tables/tryoutSetBests";
 import tryoutSetProgress from "./tables/tryoutSetProgress";
 import userLearningRecents from "./tables/userLearningRecents";
 import users from "./tables/users";
@@ -357,6 +358,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly tryoutResponses: typeof tryoutResponses;
   readonly tryoutScores: typeof tryoutScores;
   readonly tryoutSectionAttempts: typeof tryoutSectionAttempts;
+  readonly tryoutSetBests: typeof tryoutSetBests;
   readonly tryoutSetProgress: typeof tryoutSetProgress;
   readonly userLearningRecents: typeof userLearningRecents;
   readonly users: typeof users;
@@ -539,6 +541,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   tryoutResponses,
   tryoutScores,
   tryoutSectionAttempts,
+  tryoutSetBests,
   tryoutSetProgress,
   userLearningRecents,
   users,

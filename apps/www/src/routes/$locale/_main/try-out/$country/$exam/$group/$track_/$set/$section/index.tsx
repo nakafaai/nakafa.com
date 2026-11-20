@@ -34,7 +34,7 @@ import { readStaticData } from "@/lib/static/data";
 const VISITOR = { kind: "visitor" } as const;
 
 export const Route = createFileRoute(
-  "/$locale/_main/try-out/$country/$exam/$group/$track/$set/$section/"
+  "/$locale/_main/try-out/$country/$exam/$group/$track_/$set/$section/"
 )({
   validateSearch: Schema.toStandardSchemaV1(TryoutAttemptSearch),
   loader: async ({ params }) => {

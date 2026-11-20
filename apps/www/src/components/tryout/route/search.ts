@@ -3,6 +3,7 @@ import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { Effect, Schema } from "effect";
 import { CatalogQuery } from "@/components/tryout/catalog/table/query";
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
+import { PRACTICE_SEARCH } from "@/components/tryout/route/path";
 import { QueryText } from "@/lib/routing/search";
 
 /** The keys of one track that its set list is read for. */
@@ -64,3 +65,18 @@ export const TryoutAttemptSearch = Schema.Struct({
 });
 
 export type TryoutAttemptSearch = typeof TryoutAttemptSearch.Type;
+
+/**
+ * Whether a set's address opens one of its papers, which take the whole page: its practice, or, for a set entered by
+ * its one section, the attempt the address names, its player while it runs and its review once it ends, as a
+ * section's own page does. Any other address of a set opens its pane beside its track's table.
+ */
+export function opensSetPaper(
+  search: Pick<TryoutAttemptSearch, "attemptId" | "mode">,
+  entered: boolean
+) {
+  return (
+    search.mode === PRACTICE_SEARCH.mode ||
+    (entered && search.attemptId !== undefined)
+  );
+}

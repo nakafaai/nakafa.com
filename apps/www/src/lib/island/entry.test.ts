@@ -30,6 +30,16 @@ describe("island/entry", () => {
     });
   });
 
+  it("opens how far a learner grew with no edits, as a try-out pane reads it", () => {
+    const tally = { ...EMPTY_TALLY, sets: 2 };
+    expect(entryOf({ lifetime: 120, tally }, undefined)).toMatchObject({
+      edits: [],
+      level: 2,
+      tally,
+      version: 0,
+    });
+  });
+
   it("starts a learner with no island at level 1 with nothing counted", () => {
     expect(entryOf(null, undefined)).toEqual({
       edits: [],

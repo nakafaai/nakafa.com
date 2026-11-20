@@ -356,8 +356,7 @@ test("guest reaches authentication only when starting a public tryout", async ({
           expect(set).toHaveAttribute("href", setHref)
         );
         // The row opens its set beside the table through its own handler, which the
-        // track page only has once React takes the row over. A set the visitor has not
-        // started keeps the address on the track.
+        // track page only has once React takes the row over, at the set's own address.
         yield* Effect.promise(() => waitUntilTakenOver(setRow));
         yield* Effect.promise(() => setRow.click());
         yield* Effect.promise(() =>
@@ -366,7 +365,7 @@ test("guest reaches authentication only when starting a public tryout", async ({
           ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
         );
         yield* Effect.promise(() =>
-          expect(page).toHaveURL(new URL(trackHref, page.url()).toString())
+          expect(page).toHaveURL(new URL(setHref, page.url()).toString())
         );
 
         const start = page.getByRole("button", {

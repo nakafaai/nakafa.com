@@ -9,6 +9,7 @@ import {
 } from "@repo/design-system/components/ui/resizable";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
+import { useHydrated } from "@tanstack/react-router";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Option, Schema } from "effect";
@@ -345,6 +346,7 @@ export function PagePane({
   open?: boolean;
 }) {
   const wide = useWide();
+  const hydrated = useHydrated();
   const group = use(PanesGroupContext);
   const besidePage = use(PaneBesideContext);
   const from = use(PanesWidthContext);
@@ -354,9 +356,13 @@ export function PagePane({
   const isOpen = open ?? rowOpen;
   const sheet = open ?? sheetOpen;
   const close = onClose ?? closePanes;
-  const beside = besidePage
-    ? wide && (alwaysOn || isOpen)
-    : alwaysOn || (wide && isOpen);
+  const beside = standsBeside({
+    alwaysOn,
+    besidePage,
+    hydrated,
+    open: isOpen,
+    wide,
+  });
   const closes = beside && !alwaysOn;
 
   // Escape closes a row that stands open, unless a popup over it or a field in it took the key.
@@ -411,7 +417,7 @@ export function PagePane({
             close();
           }
         }}
-        open={!wide && sheet}
+        open={hydrated && !wide && sheet}
       >
         <DrawerContent className={paneSheetVariants({ fill })}>
           <PaneModeContext value={{ close, place: "sheet" }}>
@@ -421,6 +427,27 @@ export function PagePane({
       </Drawer>
     </>
   );
+}
+
+/**
+ * Whether a detail stands beside its list. A pane at the screen's right stands there while it is on or open, and,
+ * since the server knows no width, also until the page hydrates, as the server drew it: its own CSS steps it aside
+ * below its width, so a pane the address opens is in the first paint of a wide screen, and the phone's sheet opens
+ * once the page knows the screen is narrow. A detail in a row under the shell stands beside its list on a wide screen.
+ */
+function standsBeside(detail: {
+  alwaysOn: boolean;
+  besidePage: boolean;
+  hydrated: boolean;
+  open: boolean;
+  wide: boolean;
+}) {
+  if (detail.besidePage) {
+    return (
+      (detail.wide || !detail.hydrated) && (detail.alwaysOn || detail.open)
+    );
+  }
+  return detail.alwaysOn || (detail.wide && detail.open);
 }
 
 /**

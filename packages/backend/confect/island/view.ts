@@ -18,10 +18,30 @@ export const OwnIsland = Schema.Struct({
 });
 
 /**
+ * How far the signed-in learner has grown, without the world they built: their lifetime Stars, from
+ * which `growthOf` reads the level, and their tally, from which every medal is read. A try-out pane
+ * reads it to show the level and the medals a set moves.
+ */
+export const Growth = Schema.Struct({
+  lifetime: Schema.Finite,
+  tally: Tally,
+});
+
+/**
  * A learner's medals as their profile shows them to whoever may open it (ADR
  * 0047, D30): their level, and the tally every medal is read from.
  */
 export const Medals = Schema.Struct({ level: Schema.Int, tally: Tally });
+
+/**
+ * What a learner already holds of one try-out set's Stars: the set's own grant, the keys of the
+ * sections whose grant they hold, and the Stars those grants gave.
+ */
+export const SetClaims = Schema.Struct({
+  sections: Schema.Array(Schema.String),
+  set: Schema.Boolean,
+  stars: Schema.Finite,
+});
 
 /** Projects the stored island for its owner. */
 export function toOwnIsland(island: Docs["islands"]) {

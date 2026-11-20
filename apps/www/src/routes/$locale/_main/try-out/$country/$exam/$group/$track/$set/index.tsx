@@ -22,7 +22,10 @@ import {
   useKeptLearnerRead,
   useLearnerSet,
 } from "@/components/tryout/route/live";
-import { TryoutAttemptSearch } from "@/components/tryout/route/search";
+import {
+  opensSetPaper,
+  TryoutAttemptSearch,
+} from "@/components/tryout/route/search";
 import { TryoutPressProvider } from "@/components/tryout/runtime/start";
 import { TryoutSetPageClient } from "@/components/tryout/set/client";
 import { readSetSections } from "@/components/tryout/set/sections";
@@ -141,6 +144,7 @@ function TryoutSetView({
   readonly learner: ReturnType<typeof useLearnerSet>;
 }) {
   const route = Route.useLoaderData();
+  const search = Route.useSearch();
   const practicing = useTryoutPracticing();
   // A read that answered decides the shell's lock, so the first frame's lock can go.
   usePrepaintRelease(
@@ -198,6 +202,10 @@ function TryoutSetView({
         binding={view.binding}
         content={view.content}
         page={view.page}
+        paper={opensSetPaper(
+          search,
+          route.page.entrySection?.visibility === "internal-entry"
+        )}
         pending={learner.kind === "pending"}
         restartTarget={view.restartTarget}
         route={route.route}

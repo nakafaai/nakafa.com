@@ -11077,6 +11077,34 @@ export declare const api: {
       open: FunctionReference<"mutation", "public", { timeZone: string }, null>;
     };
     queries: {
+      claims: FunctionReference<
+        "query",
+        "public",
+        {
+          countryKey: string;
+          examKey: string;
+          locale: "en" | "id" | "de" | "ms";
+          setKey: string;
+          trackKey: string;
+        },
+        { sections: Array<string>; set: boolean; stars: number } | null
+      >;
+      growth: FunctionReference<
+        "query",
+        "public",
+        {},
+        {
+          lifetime: number;
+          tally: {
+            days: number;
+            lessons: number;
+            sections: number;
+            sets: number;
+            streak: number;
+            subjects: Record<string, number>;
+          };
+        } | null
+      >;
       leaders: FunctionReference<
         "query",
         "public",
@@ -16355,6 +16383,40 @@ export declare const api: {
           }>
         >;
       };
+      ranks: {
+        bySet: FunctionReference<
+          "query",
+          "public",
+          {
+            countryKey: string;
+            examKey: string;
+            locale: "en" | "id" | "de" | "ms";
+            score?: number;
+            setKey: string;
+            trackKey: string;
+          },
+          {
+            count: number;
+            leaders: Array<{
+              id: Id<"tryoutSetBests">;
+              mascot: string;
+              name: string;
+              own: boolean;
+              place: number;
+              score: number;
+            }>;
+            own: {
+              id: Id<"tryoutSetBests">;
+              mascot: string;
+              name: string;
+              own: boolean;
+              place: number;
+              score: number;
+            } | null;
+            standing: number | null;
+          }
+        >;
+      };
       runtime: {
         getSectionAttemptState: FunctionReference<
           "query",
@@ -16762,6 +16824,7 @@ export declare const internal: {
             profile: {
               email?: string;
               emailVerified: boolean;
+              hostedDomain?: string;
               id: string;
               name?: string;
               picture?: string;
@@ -16785,6 +16848,7 @@ export declare const internal: {
             profile: {
               email?: string;
               emailVerified: boolean;
+              hostedDomain?: string;
               id: string;
               name?: string;
               picture?: string;
@@ -16856,7 +16920,7 @@ export declare const internal: {
               kind: "complete";
               runResult:
                 | { kind: "success"; returnValue: null }
-                | { error: string; kind: "failed" }
+                | { error: string; errorData?: any; kind: "failed" }
                 | { kind: "canceled" };
             }
         >;
@@ -16877,7 +16941,7 @@ export declare const internal: {
               kind: "complete";
               runResult:
                 | { kind: "success"; returnValue: null }
-                | { error: string; kind: "failed" }
+                | { error: string; errorData?: any; kind: "failed" }
                 | { kind: "canceled" };
             }
         >;
@@ -16898,7 +16962,7 @@ export declare const internal: {
               kind: "complete";
               runResult:
                 | { kind: "success"; returnValue: null }
-                | { error: string; kind: "failed" }
+                | { error: string; errorData?: any; kind: "failed" }
                 | { kind: "canceled" };
             }
         >;
@@ -18832,7 +18896,7 @@ export declare const internal: {
               kind: "complete";
               runResult:
                 | { kind: "success"; returnValue: null }
-                | { error: string; kind: "failed" }
+                | { error: string; errorData?: any; kind: "failed" }
                 | { kind: "canceled" };
             }
         >;
@@ -20149,7 +20213,7 @@ export declare const internal: {
               kind: "complete";
               runResult:
                 | { kind: "success"; returnValue: null }
-                | { error: string; kind: "failed" }
+                | { error: string; errorData?: any; kind: "failed" }
                 | { kind: "canceled" };
             }
         >;
@@ -20303,7 +20367,7 @@ export declare const internal: {
               kind: "complete";
               runResult:
                 | { kind: "success"; returnValue: null }
-                | { error: string; kind: "failed" }
+                | { error: string; errorData?: any; kind: "failed" }
                 | { kind: "canceled" };
             }
         >;
@@ -22309,6 +22373,6 @@ export declare const components: {
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
   resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
   posthog: import("@posthog/convex/_generated/component.js").ComponentApi<"posthog">;
-  globalLeaderboard: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"globalLeaderboard">;
   learningPopularityRankings: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"learningPopularityRankings">;
+  tryoutSetRanks: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"tryoutSetRanks">;
 };

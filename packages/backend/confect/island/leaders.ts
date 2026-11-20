@@ -3,6 +3,11 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { growthOf } from "@repo/backend/confect/island/level";
 import { Array as Arr, Effect, Option, String as Str } from "effect";
 
+/** The word a leaderboard names a learner by: the first of their name, so no board shows a full name. */
+export function leaderNameOf(name: string) {
+  return Arr.headNonEmpty(Str.split(Str.trim(name), " "));
+}
+
 /** How many learners the global leaderboard shows. */
 export const LEADER_COUNT = 10;
 
@@ -32,7 +37,7 @@ export const leadersOf = Effect.fn("island.leaders")(function* (
             level: growthOf(island.lifetime).level,
             lifetime: island.lifetime,
             mascot: user.mascot,
-            name: Arr.headNonEmpty(Str.split(Str.trim(user.name), " ")),
+            name: leaderNameOf(user.name),
             own: Option.exists(viewer, (id) => id === island.userId),
           }))
         )

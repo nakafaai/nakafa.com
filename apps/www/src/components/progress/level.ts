@@ -27,7 +27,7 @@ const KINDS: readonly (typeof MedalSchema.Type)[] = [
 /**
  * Every medal of a tally, as a profile shows them all (ADR 0047, D30), the
  * earned ones before those still to earn: its count, the tier it reached, the
- * count of the next tier, and the share of the way there.
+ * counts its tier starts at and the next one does, and the share of the way there.
  */
 export function medalsOf(tally: typeof Tally.Type) {
   const counts = countsOf(tally);
@@ -36,7 +36,14 @@ export function medalsOf(tally: typeof Tally.Type) {
     const tier = tierOf(count);
     const from = tier === 0 ? 0 : markOf(tier);
     const next = markOf(tier + 1);
-    return { count, name, next, share: (count - from) / (next - from), tier };
+    return {
+      count,
+      from,
+      name,
+      next,
+      share: (count - from) / (next - from),
+      tier,
+    };
   });
   return [
     ...Arr.filter(medals, (medal) => medal.tier > 0),

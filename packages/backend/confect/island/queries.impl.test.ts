@@ -32,6 +32,25 @@ const islandWorld = Effect.fn("test.island.world")(function* () {
 
 describe("island queries and mutations", () => {
   it.effect(
+    "answers the learner's lifetime Stars and tally without their world, and nothing before an island",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* islandWorld();
+        expect(
+          yield* client(world.t).query(island.queries.growth, {})
+        ).toBeNull();
+        expect(yield* world.owner.query(island.queries.growth, {})).toBeNull();
+        yield* world.owner.mutation(island.mutations.open, {
+          timeZone: JAKARTA,
+        });
+        expect(yield* world.owner.query(island.queries.growth, {})).toEqual({
+          lifetime: 0,
+          tally: EMPTY_TALLY,
+        });
+      })
+  );
+
+  it.effect(
     "opens the learner's island with no cell changed and keeps its zone at theirs",
     () =>
       Effect.gen(function* () {

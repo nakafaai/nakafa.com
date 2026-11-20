@@ -6,41 +6,26 @@ import {
 import { setFilterValidator } from "@repo/backend/confect/tryouts/sets/query";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
-import { navigationOf } from "@/components/notifications/press";
-import { usePanes } from "@/components/shared/page/panes";
 import { tableColumns } from "@/components/shared/table/columns";
 import { RowItems, RowOpen } from "@/components/shared/table/menu";
-import { isUnstartedSet } from "@/components/tryout/catalog/table/started";
+import { catalogSearchOf } from "@/components/tryout/catalog/table/query";
 import type {
   TryoutSetRow,
   TryoutSetStatusFilter,
 } from "@/components/tryout/catalog/table/types";
-import { TryoutLevelBadge, useLevelChoices } from "@/components/tryout/level";
+import { TryoutLevel, useLevelChoices } from "@/components/tryout/level";
 import { statusLook } from "@/components/tryout/progress";
-import { TryoutPageLink } from "@/components/tryout/route/link";
-import type { TryoutPageAddress } from "@/components/tryout/route/path";
+import { getTryoutPublicPathTarget } from "@/components/tryout/route/path";
 import { TryoutStatus } from "@/components/tryout/status";
+import { Link } from "@/lib/routing/link";
 
 /** The seconds of one minute, the unit the duration column prints and filters by. */
 const SECONDS_IN_MINUTE = 60;
 
 /** The columns of a track's sets. */
 const setColumns = tableColumns<TryoutSetRow>();
-
-/**
- * Opens a set, or the page its running attempt continues on directly: through the public set the learner would pass a
- * second page on the way.
- */
-function setAddress(row: TryoutSetRow): TryoutPageAddress {
-  return row.runningAttempt
-    ? {
-        attemptId: row.runningAttempt.attemptId,
-        publicPath: row.runningAttempt.publicPath,
-      }
-    : { publicPath: row.publicPath };
-}
 
 /**
  * The values of the status column, which chooses the sets the server reads: every set, or the sets in one state, each
@@ -83,7 +68,7 @@ export function useTryoutSetColumns() {
       id: "title",
     }),
     setColumns.choice((row) => row.level, {
-      cell: (info) => <TryoutLevelBadge level={info.row.original.level} />,
+      cell: (info) => <TryoutLevel level={info.row.original.level} />,
       header: t("set-column-level"),
       id: "level",
       options: levelChoices,
@@ -129,43 +114,39 @@ function TryoutSetMenu() {
 }
 
 /**
- * A set's name, the link the row presses, after the mark that its latest attempt is complete. A set the learner has
- * not started opens its pane beside the table on a plain press, as its row does; the link stays for a new tab and for
- * crawlers.
+ * A set's name, the link the row presses, after the mark that its latest attempt is complete. It opens the set at its
+ * own address, which the track shows in the pane beside the table, and keeps the table's selection and scroll, so the
+ * table stays as it was; the link stays a link for a new tab and for crawlers.
  */
 function TryoutSetName({ row }: { row: TryoutSetRow }) {
-  const show = usePanes((state) => state.show);
-  const opens = isUnstartedSet(row);
-
-  return (
-    <TryoutPageLink
-      className="flex min-w-0 items-center gap-2 underline-offset-4 hover:underline"
-      onClick={(event) => {
-        if (opens && navigationOf(event) === "same-tab") {
-          event.preventDefault();
-          show(row.publicPath);
-        }
-      }}
-      preload="intent"
-      {...setAddress(row)}
-    >
-      <span
-        aria-hidden="true"
-        className={cn(
-          "flex size-5 shrink-0 items-center justify-center rounded-full border",
-          row.attemptStatus === "completed"
-            ? "bg-secondary text-secondary-foreground border-transparent"
-            : "border-muted-foreground/40"
-        )}
-        data-progress
+  return Option.match(getTryoutPublicPathTarget(row.publicPath), {
+    onNone: () => null,
+    onSome: (target) => (
+      <Link
+        {...target}
+        className="flex min-w-0 items-center gap-2 underline-offset-4 hover:underline"
+        preload="intent"
+        resetScroll={false}
+        search={catalogSearchOf}
       >
-        {row.attemptStatus === "completed" && (
-          <HugeIcons icon={CheckmarkCircle02Icon} />
-        )}
-      </span>
-      <span className="truncate" title={row.title}>
-        {row.title}
-      </span>
-    </TryoutPageLink>
-  );
+        <span
+          aria-hidden="true"
+          className={cn(
+            "flex size-5 shrink-0 items-center justify-center rounded-full border",
+            row.attemptStatus === "completed"
+              ? "bg-secondary text-secondary-foreground border-transparent"
+              : "border-muted-foreground/40"
+          )}
+          data-progress
+        >
+          {row.attemptStatus === "completed" && (
+            <HugeIcons icon={CheckmarkCircle02Icon} />
+          )}
+        </span>
+        <span className="truncate" title={row.title}>
+          {row.title}
+        </span>
+      </Link>
+    ),
+  });
 }

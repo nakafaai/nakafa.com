@@ -19,7 +19,9 @@ const readingRoutes = [
   "/en/subjects/chemistry/structure-matter/isotope",
   "/en/articles/politics/merah-putih-cabinet-analysis",
 ];
-const tryoutSetRoute = "/en/try-out/indonesia/snbt/2027/utbk/set-1";
+/** A try-out part's page, which fills the screen below the app header; a set opens in a pane beside its track. */
+const tryoutSectionRoute =
+  "/en/try-out/indonesia/snbt/2027/utbk/set-1/general-reasoning";
 
 const visit = Effect.fn("NakafaE2E.visitLayoutRoute")(function* (
   page: Page,
@@ -74,7 +76,7 @@ const verifyContentColumn = Effect.fn("NakafaE2E.verifyContentColumn")(
 const verifyTryoutHeight = Effect.fn("NakafaE2E.verifyTryoutHeight")(function* (
   page: Page
 ) {
-  yield* visit(page, tryoutSetRoute);
+  yield* visit(page, tryoutSectionRoute);
   yield* Effect.promise(() =>
     expect(page.locator('main [data-slot="tryout-page"]')).toBeVisible()
   );

@@ -9,6 +9,9 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const TRACK_PATH = "/en/try-out/indonesia/snbt/2027/utbk";
 
+/** The address of the track's one set, which opens its pane. */
+const SET_PATH = `${TRACK_PATH}/set-1`;
+
 /** The four levels a set can measure at, as the table and the pane name them. */
 const LEVELS = [
   en.Tryouts["level-easy"],
@@ -45,9 +48,10 @@ async function rowName(row: Locator) {
 }
 
 /**
- * The owner's sketch of the pane: a press on the row of a set nobody has started opens the set beside the table, with
- * its name, its parts, and its level beside Start, and marks the row while it stays open. The name's link opens it too, Escape closes
- * it, and a visitor's Start goes to sign in and comes back to the set.
+ * The owner's notes of 20 Nov: a press on a set's row opens the set beside the table at the set's own address, with
+ * its name, its parts as a path, what it gives, and its level beside Start, and marks the row while it stays open.
+ * The name's link opens it too, Escape closes it back to the track, the set's address opens the same pane, and a
+ * visitor's Start goes to sign in and comes back to the set.
  */
 test.describe("The set pane beside a track's table", () => {
   test.use({ viewport: viewportSize(desktopViewport) });
@@ -71,6 +75,8 @@ test.describe("The set pane beside a track's table", () => {
       pane.getByRole("heading", { exact: true, name: await rowName(first) })
     ).toBeVisible();
     await expect(first).toHaveAttribute("data-state", "selected");
+    // The pane stands at the set's own address, so a learner can send it.
+    expect(new URL(page.url()).pathname).toBe(SET_PATH);
     // The set's measured level stands at the start of the pane's footer, never in its title.
     const cell = await first.getByRole("cell").nth(1).textContent();
     const level = cell?.trim() ?? "";
@@ -78,8 +84,20 @@ test.describe("The set pane beside a track's table", () => {
     await expect(
       pane.locator("footer").getByText(level, { exact: true })
     ).toBeVisible();
-    // The set's parts stand in the set page's own list, each row a link to its part, with no heading above them.
+    // The set's parts stand as one path, each step a link to its part, and what the set gives under them.
+    await expect(
+      pane.getByRole("heading", {
+        exact: true,
+        name: en.Tryouts["parts-title"],
+      })
+    ).toBeVisible();
     await expect(pane.getByRole("link").first()).toBeVisible();
+    await expect(
+      pane.getByRole("heading", {
+        exact: true,
+        name: en.Tryouts["rewards-title"],
+      })
+    ).toBeVisible();
     await expect(
       pane.getByRole("button", {
         exact: true,
@@ -87,17 +105,33 @@ test.describe("The set pane beside a track's table", () => {
       })
     ).toBeVisible();
 
-    // Escape closes it and the row lets go of its mark; the set's name opens it again, and the page stays on the
-    // track. Every track of the acceptance release holds one set, so the name opens the same one.
+    // Escape closes it, back at the track's address, and the row lets go of its mark; the set's name opens it
+    // again. Every track of the acceptance release holds one set, so the name opens the same one.
     await page.keyboard.press("Escape");
     await expect(pane).toBeHidden();
+    await expect.poll(() => new URL(page.url()).pathname).toBe(TRACK_PATH);
     await expect(first).not.toHaveAttribute("data-state", "selected");
     await first.getByRole("link").first().click();
     await expect(
       pane.getByRole("heading", { exact: true, name: await rowName(first) })
     ).toBeVisible();
     await expect(first).toHaveAttribute("data-state", "selected");
-    expect(new URL(page.url()).pathname).toBe(TRACK_PATH);
+    expect(new URL(page.url()).pathname).toBe(SET_PATH);
+  });
+
+  test("opens a set's own address in its pane beside the table", async ({
+    page,
+  }) => {
+    await page.goto(SET_PATH, { waitUntil: "load" });
+    const pane = page.getByRole("complementary", {
+      name: en.Tryouts["set-pane"],
+    });
+    await expect(pane).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+    const first = page.getByRole("table").getByRole("row").nth(1);
+    await expect(first).toHaveAttribute("data-state", "selected");
+    await expect(
+      pane.getByRole("heading", { exact: true, name: await rowName(first) })
+    ).toBeVisible();
   });
 
   test("sends a visitor's Start to sign in, coming back to the set", async ({
@@ -118,8 +152,6 @@ test.describe("The set pane beside a track's table", () => {
       })
       .click();
     await expect.poll(() => new URL(page.url()).pathname).toBe("/en/auth");
-    expect(new URL(page.url()).searchParams.get("redirect")).toBe(
-      `${TRACK_PATH}/set-1`
-    );
+    expect(new URL(page.url()).searchParams.get("redirect")).toBe(SET_PATH);
   });
 });

@@ -5,13 +5,9 @@ import {
 } from "@repo/backend/confect/tryouts/sets/query";
 import { Option, Schema } from "effect";
 import { useTranslations } from "use-intl";
-import { PageList } from "@/components/shared/page/body";
-import { PagePane, Panes, PanesList } from "@/components/shared/page/panes";
 import { DataTable } from "@/components/shared/table/data";
 import { useTryoutSetColumns } from "@/components/tryout/catalog/table/columns";
-import { TryoutSetPane } from "@/components/tryout/catalog/table/pane";
 import { useTryoutSetTable } from "@/components/tryout/catalog/table/selection";
-import { isUnstartedSet } from "@/components/tryout/catalog/table/started";
 import type { TryoutSetData } from "@/components/tryout/catalog/table/types";
 
 /**
@@ -19,10 +15,11 @@ import type { TryoutSetData } from "@/components/tryout/catalog/table/types";
  * visitor's and a learner's table render this same frame, so the two variants keep one layout. The address holds the
  * status, the level and the sort, the heads of the name and the figures keep the sets the table has read, and the next window
  * loads as the end of the rows comes into view, so a filter reaches the whole track. The status line says when the
- * rows are updating, offline, or could not update.
+ * rows are updating, offline, or could not update. Every row opens its set at the set's own address, which the track
+ * shows in the pane beside the table, and the row of the set it shows stays marked.
  */
 export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
-  const { filter, level, onFilter, onLevel, onSort, sort } =
+  const { filter, level, onFilter, onLevel, onSort, shown, sort } =
     useTryoutSetTable();
   const t = useTranslations("Tryouts");
   const columns = useTryoutSetColumns();
@@ -38,62 +35,55 @@ export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
     data.hasMore && !data.busy && !data.error && !data.offline;
 
   return (
-    <Panes fill="parent" id="tryout-sets">
-      <PanesList>
-        <PageList>
-          {/* The rows every visitor reads hide a learner's progress marks under a signed-in hint. */}
-          <div
-            className="contents"
-            data-catalog-snapshot={data.snapshotId}
-            data-rows={data.shared ? "shared" : undefined}
-          >
-            <DataTable
-              columns={columns}
-              data={data.rows}
-              loading={data.busy}
-              opens={isUnstartedSet}
-              rowId={(row) => row.publicPath}
-              server={{
-                choose: (column, value) => {
-                  if (column === "level") {
-                    if (Schema.is(setLevelFilterValidator)(value)) {
-                      onLevel(value);
-                    }
-                    return;
-                  }
-                  if (Schema.is(setFilterValidator)(value)) {
-                    onFilter(value);
-                  }
-                },
-                chosen: { level, status: filter },
-                more: canLoadMore ? Option.some(data.loadMore) : Option.none(),
-                onSort: (column, descending) => {
-                  if (Schema.is(setSortValidator.fields.field)(column)) {
-                    onSort({
-                      direction: descending ? "desc" : "asc",
-                      field: column,
-                    });
-                  }
-                },
-                snapshot: `${filter}:${level}:${sort.field}:${sort.direction}:${data.snapshotId ?? ""}`,
-                sort:
-                  sort.field === "order"
-                    ? Option.none()
-                    : Option.some({
-                        column: sort.field,
-                        descending: sort.direction === "desc",
-                      }),
-              }}
-            />
-          </div>
-          <span aria-live="polite" className="sr-only" role="status">
-            {status}
-          </span>
-        </PageList>
-      </PanesList>
-      <PagePane label={t("set-pane")}>
-        <TryoutSetPane rows={data.rows} />
-      </PagePane>
-    </Panes>
+    <>
+      {/* The rows every visitor reads hide a learner's progress marks under a signed-in hint. */}
+      <div
+        className="contents"
+        data-catalog-snapshot={data.snapshotId}
+        data-rows={data.shared ? "shared" : undefined}
+      >
+        <DataTable
+          columns={columns}
+          data={data.rows}
+          loading={data.busy}
+          rowId={(row) => row.publicPath}
+          server={{
+            choose: (column, value) => {
+              if (column === "level") {
+                if (Schema.is(setLevelFilterValidator)(value)) {
+                  onLevel(value);
+                }
+                return;
+              }
+              if (Schema.is(setFilterValidator)(value)) {
+                onFilter(value);
+              }
+            },
+            chosen: { level, status: filter },
+            more: canLoadMore ? Option.some(data.loadMore) : Option.none(),
+            onSort: (column, descending) => {
+              if (Schema.is(setSortValidator.fields.field)(column)) {
+                onSort({
+                  direction: descending ? "desc" : "asc",
+                  field: column,
+                });
+              }
+            },
+            snapshot: `${filter}:${level}:${sort.field}:${sort.direction}:${data.snapshotId ?? ""}`,
+            sort:
+              sort.field === "order"
+                ? Option.none()
+                : Option.some({
+                    column: sort.field,
+                    descending: sort.direction === "desc",
+                  }),
+          }}
+          shownRow={shown}
+        />
+      </div>
+      <span aria-live="polite" className="sr-only" role="status">
+        {status}
+      </span>
+    </>
   );
 }

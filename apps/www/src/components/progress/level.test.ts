@@ -44,13 +44,13 @@ describe("progress/level", () => {
     });
     // The earned medals stand first, then the kinds still to earn.
     expect(wall).toEqual([
-      { count: 3, name: "days", next: 5, share: 1 / 3, tier: 2 },
-      { count: 7, name: "lessons", next: 10, share: 0.4, tier: 3 },
-      { count: 5, name: "mathematics", next: 10, share: 0, tier: 3 },
-      { count: 2, name: "physics", next: 5, share: 0, tier: 2 },
-      { count: 0, name: "streak", next: 1, share: 0, tier: 0 },
-      { count: 0, name: "sections", next: 1, share: 0, tier: 0 },
-      { count: 0, name: "sets", next: 1, share: 0, tier: 0 },
+      { count: 3, from: 2, name: "days", next: 5, share: 1 / 3, tier: 2 },
+      { count: 7, from: 5, name: "lessons", next: 10, share: 0.4, tier: 3 },
+      { count: 5, from: 5, name: "mathematics", next: 10, share: 0, tier: 3 },
+      { count: 2, from: 2, name: "physics", next: 5, share: 0, tier: 2 },
+      { count: 0, from: 0, name: "streak", next: 1, share: 0, tier: 0 },
+      { count: 0, from: 0, name: "sections", next: 1, share: 0, tier: 0 },
+      { count: 0, from: 0, name: "sets", next: 1, share: 0, tier: 0 },
     ]);
   });
 

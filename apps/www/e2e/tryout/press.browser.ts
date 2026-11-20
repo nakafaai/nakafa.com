@@ -45,11 +45,11 @@ test("a press on a row while the page's client arrives opens the set beside the 
           await socket;
           await waitUntilTakenOver(link);
           await page.mouse.up();
-          // A set the learner has not started opens in the pane, and the address stays on the track.
+          // The set opens in the pane beside the table, at the set's own address.
           await expect(
             page.getByRole("heading", { exact: true, name: "Set 1" })
           ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-          expect(new URL(page.url()).pathname).toBe(TRACK_HREF);
+          expect(new URL(page.url()).pathname).toBe(SET_HREF);
         });
       })
     )

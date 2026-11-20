@@ -4,6 +4,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { toUserCleanupError } from "@repo/backend/confect/auth/cleanup/spec";
+import { deleteSetBests } from "@repo/backend/confect/tryouts/rank/write";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, flow, Option } from "effect";
 
@@ -83,6 +84,9 @@ export const cleanupUserTryouts = Effect.fn("auth.cleanup.cleanupUserTryouts")(
       yield* writer.table("tryoutSetProgress").delete(row._id);
     }
     if (progress.length > 0) {
+      return true;
+    }
+    if (yield* deleteSetBests(userId, PROGRESS_BATCH_SIZE).pipe(Effect.orDie)) {
       return true;
     }
     const attempt = yield* database

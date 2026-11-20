@@ -1,6 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Schema } from "effect";
-import { TryoutAttemptSearch } from "@/components/tryout/route/search";
+import {
+  opensSetPaper,
+  TryoutAttemptSearch,
+} from "@/components/tryout/route/search";
 
 describe("TryoutAttemptSearch", () => {
   it("keeps a single or repeated attempt value as text for the attempt readers", () => {
@@ -59,5 +62,18 @@ describe("TryoutAttemptSearch", () => {
     expect(
       Schema.encodeSync(TryoutAttemptSearch)({ attemptId: "abc", view: "list" })
     ).toEqual({ attemptId: "abc", view: "list" });
+  });
+});
+
+describe("opensSetPaper", () => {
+  it("opens the practice of any set on the whole page", () => {
+    expect(opensSetPaper({ mode: "practice" }, false)).toBe(true);
+    expect(opensSetPaper({ mode: "practice" }, true)).toBe(true);
+  });
+
+  it("opens the attempt a set entered by its one section names, and its pane otherwise", () => {
+    expect(opensSetPaper({ attemptId: "a" }, true)).toBe(true);
+    expect(opensSetPaper({}, true)).toBe(false);
+    expect(opensSetPaper({ attemptId: "a" }, false)).toBe(false);
   });
 });

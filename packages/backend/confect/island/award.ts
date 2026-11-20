@@ -19,7 +19,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Effect, Match, Option } from "effect";
 
 /** The one key a source holds for good, so the same learning never grants twice. */
-const keyOf = Match.type<AwardSource>().pipe(
+export const keyOf = Match.type<AwardSource>().pipe(
   Match.tagsExhaustive({
     lesson: (source) => `lesson:${source.content}`,
     section: (source) => `section:${source.set}:${source.section}`,

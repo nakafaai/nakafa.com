@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import type { PlayerMode } from "@/components/player/mode";
 import { PlayerTimer, PlayerTimerCard } from "@/components/player/timer";
+import type { TryoutSetPaneProps } from "@/components/tryout/pane/set";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
 import {
   TryoutPlayerOpening,
@@ -29,14 +30,13 @@ import type {
   LoadedRuntime,
   SetEntrySection,
 } from "@/components/tryout/set/model";
-import type { TryoutSetOverviewProps } from "@/components/tryout/set/overview";
 import { TryoutPage, TryoutPageBody } from "@/components/tryout/shell/header";
 
 /** Props of the direct-entry set: its render model and its only section's runtime. */
 interface TryoutSetEntryProps {
   children: ReactNode;
   /** Render model for sets whose only section is the set entry itself. */
-  value: TryoutSetOverviewProps["value"] & {
+  value: TryoutSetPaneProps["view"] & {
     entrySection: SetEntrySection;
     /** The finish of a live attempt; a page without one has none. */
     finish: TryoutFinish | null;

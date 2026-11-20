@@ -18,21 +18,13 @@ const SECTION_HREF_PATTERN =
 export const LOCKED_SHELL = "[data-slot=sidebar-wrapper][data-locked]";
 
 /**
- * The first section link of the open set's pane, which a set nobody has started opens beside the track's table
- * (the owner's sketch IMG_1029). A phone shows the pane as a sheet outside the page's main region, so the link is
- * found anywhere on the page.
+ * The first section link of the open set's pane, which every set opens beside the track's table (the owner's notes
+ * of 20 Nov). A phone shows the pane as a sheet outside the page's main region, so the link is found anywhere on the
+ * page.
  */
 export function paneSectionLink(page: Page) {
   return page
     .locator(`a[href^="${setHref}/"]`)
-    .filter({ visible: true })
-    .first();
-}
-
-/** The first section link that the current set page shows. */
-function sectionLink(page: Page) {
-  return page
-    .locator(`main a[href^="${setHref}/"]`)
     .filter({ visible: true })
     .first();
 }
@@ -147,8 +139,8 @@ export const openTrack = Effect.fn("NakafaE2E.openTryoutTrack")(function* (
 });
 
 /**
- * The set page's first section link once the learner's attempt has resolved.
- * The resolved set replaces the catalog view's rows, and a row that is replaced
+ * The first section link of the set's pane once the learner's attempt has resolved.
+ * The resolved set replaces the catalog view's steps, and a step that is replaced
  * in the middle of a press loses the press.
  */
 export const settledSection = Effect.fn("NakafaE2E.settledTryoutSection")(
@@ -158,13 +150,13 @@ export const settledSection = Effect.fn("NakafaE2E.settledTryoutSection")(
       onPath(setHref),
       page.getByRole("button", { exact: true, name: "Start" })
     );
-    return sectionLink(page);
+    return paneSectionLink(page);
   }
 );
 
 /**
- * Opens the first set from the track's table. A set the learner has not started opens beside the table and the
- * address stays on the track, so this waits for the pane's Start and returns it.
+ * Opens the first set from the track's table. Every set opens beside the table at its own address, so this waits
+ * for the pane's Start and returns it.
  */
 export const openSetPane = Effect.fn("NakafaE2E.openTryoutSetPane")(function* (
   page: Page,
@@ -172,7 +164,7 @@ export const openSetPane = Effect.fn("NakafaE2E.openTryoutSetPane")(function* (
 ) {
   const start = page.getByRole("button", { exact: true, name: "Start" });
   yield* activate(visibleLink(page, setHref, "main"), hasTouch);
-  yield* arrive(page, onPath(trackHref), start);
+  yield* arrive(page, onPath(setHref), start);
   return start;
 });
 

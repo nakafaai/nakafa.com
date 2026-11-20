@@ -12,6 +12,8 @@ import { useNow } from "@/components/player/now";
 import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutBody } from "@/components/tryout/content/body";
 import { TryoutContentContext } from "@/components/tryout/content/context";
+import type { TryoutSetPaneProps } from "@/components/tryout/pane/set";
+import { TryoutSetPane } from "@/components/tryout/pane/set";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
 import { useTryoutFinish } from "@/components/tryout/player/finish";
 import { useTryoutLeave } from "@/components/tryout/route/leave";
@@ -43,8 +45,6 @@ import type {
   TryoutSetRoute,
 } from "@/components/tryout/set/model";
 import { useKeepActionName } from "@/components/tryout/set/name";
-import type { TryoutSetOverviewProps } from "@/components/tryout/set/overview";
-import { TryoutSetOverview } from "@/components/tryout/set/overview";
 import { useLastValue } from "@/lib/data/kept";
 
 type SetState = TryoutSetInitialState | null;
@@ -61,16 +61,21 @@ interface TryoutSetPageClientProps {
   /** The decoded question bodies of the attempt: the running section's, or a finished one's for its review. */
   content: readonly TryoutBody[] | null;
   page: SetPage;
+  /** Whether the address opens the set's paper, which takes the whole page, in place of its pane (`opensSetPaper`). */
+  paper: boolean;
   /** The learner's attempt is still being read, so the action waits for it and takes no press. */
   pending: boolean;
   restartTarget: TryoutSetRestartTarget | null;
   route: TryoutSetRoute;
 }
 
-/** The page the set client draws: its set page, whether the learner read is pending, the attempt to restart, and its route. */
+/**
+ * The page the set client draws: its set page, whether it opens the paper, whether the learner read is
+ * pending, the attempt to restart, and its route.
+ */
 const TryoutSetPageContext = createContext<Pick<
   TryoutSetPageClientProps,
-  "page" | "pending" | "restartTarget" | "route"
+  "page" | "paper" | "pending" | "restartTarget" | "route"
 > | null>(null);
 
 /** Reads the page of the surrounding set client. */
@@ -84,13 +89,16 @@ export function TryoutSetPageClient({
   children,
   content,
   page,
+  paper,
   pending,
   restartTarget,
   route,
 }: TryoutSetPageClientProps) {
   return (
     <TryoutContentContext value={{ bodies: content }}>
-      <TryoutSetPageContext value={{ page, pending, restartTarget, route }}>
+      <TryoutSetPageContext
+        value={{ page, paper, pending, restartTarget, route }}
+      >
         <TryoutStartProvider>
           {binding === null ? (
             <ResolvedTryoutSetPage binding={null} finish={null} state={null}>
@@ -183,9 +191,10 @@ function LiveTryoutSetPage({
 }
 
 /**
- * Renders one stable set view from its exact mutable state. A page rendered
- * for a running attempt locks the app shell until the learner leaves it, even
- * once the attempt ends here, so the shell never changes under a page.
+ * Renders one stable set view from its exact mutable state: the set's pane beside its track's table, or,
+ * for an address that opens the paper of a set entered by its one section, that paper. A paper rendered
+ * for a running attempt locks the app shell until the learner leaves it, even once the attempt ends here,
+ * so the shell never changes under a page.
  */
 function ResolvedTryoutSetPage({
   binding,
@@ -197,7 +206,7 @@ function ResolvedTryoutSetPage({
   finish: TryoutFinish | null;
   state: SetState;
 }) {
-  const { page, pending, restartTarget, route } = useTryoutSetPage();
+  const { page, paper, pending, restartTarget, route } = useTryoutSetPage();
   const currentAttempt = state?.attempt ?? null;
   const runtime = state?.runtime ?? null;
   const entrySection = page.entrySection;
@@ -228,7 +237,7 @@ function ResolvedTryoutSetPage({
     startEntrySection,
     setPath: activeAttempt ? getTryoutPublicPath(route) : links.currentPath,
   });
-  const view: TryoutSetOverviewProps["value"] = {
+  const view: TryoutSetPaneProps["view"] = {
     // An action without an attempt is one whose learner read is still pending.
     ...(actionAttempt === undefined ? {} : { actionAttempt }),
     activeAttempt,
@@ -245,26 +254,25 @@ function ResolvedTryoutSetPage({
     },
   };
 
+  if (!(paper && isInternalEntry && entrySection)) {
+    return <TryoutSetPane view={view} />;
+  }
   return (
     <>
       <SetLock binding={binding} />
-      {isInternalEntry && entrySection ? (
-        <TryoutInternalSet
-          value={{
-            entrySection,
-            now,
-            // A page without an attempt runs and reviews nothing, so its view is never read.
-            finish: binding ? finish : null,
-            mode: binding?.mode ?? "list",
-            runtime,
-            view,
-          }}
-        >
-          {children}
-        </TryoutInternalSet>
-      ) : (
-        <TryoutSetOverview value={view} />
-      )}
+      <TryoutInternalSet
+        value={{
+          entrySection,
+          now,
+          // A page without an attempt runs and reviews nothing, so its view is never read.
+          finish: binding ? finish : null,
+          mode: binding?.mode ?? "list",
+          runtime,
+          view,
+        }}
+      >
+        {children}
+      </TryoutInternalSet>
     </>
   );
 }
@@ -302,7 +310,7 @@ function TryoutInternalSet({
     /** The view the browser resolved for a page bound to an attempt, for its player and its review. */
     mode: PlayerMode;
     runtime: LoadedRuntime | null;
-    view: TryoutSetOverviewProps["value"];
+    view: TryoutSetPaneProps["view"];
   };
 }) {
   const runtimeState = getTryoutRuntimeState({
@@ -344,7 +352,7 @@ function getStartDestination({
   startEntrySection,
   setPath,
 }: {
-  activeAttempt: TryoutSetOverviewProps["value"]["activeAttempt"];
+  activeAttempt: TryoutSetPaneProps["view"]["activeAttempt"];
   page: SetPage;
   startEntrySection: SetEntrySection | null;
   setPath: string;

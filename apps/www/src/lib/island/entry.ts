@@ -1,7 +1,6 @@
-import type { Ref } from "@confect/core";
-import type island from "@repo/backend/confect/_generated/refs/island";
 import { growthOf } from "@repo/backend/confect/island/level";
 import { EMPTY_TALLY } from "@repo/backend/confect/island/schema";
+import type { Growth, OwnIsland } from "@repo/backend/confect/island/view";
 import { seedOf } from "@/lib/island/noise";
 
 /**
@@ -10,10 +9,11 @@ import { seedOf } from "@/lib/island/noise";
  * of their footprint, the seed their terrain grows from, their edits with the
  * version those stand at, and the tally their medals read. A learner with no
  * island yet starts at level 1 with nothing changed and nothing counted; a learner with no account read yet grows the shared
- * seed until it is known.
+ * seed until it is known. A page that reads only how far the learner grew (`island.queries.growth`) opens it with no
+ * edits.
  */
 export function entryOf(
-  own: Ref.Returns<typeof island.queries.own> | undefined,
+  own: (typeof Growth.Type & Partial<typeof OwnIsland.Type>) | null | undefined,
   owner: string | undefined
 ) {
   const growth = growthOf(own?.lifetime ?? 0);
