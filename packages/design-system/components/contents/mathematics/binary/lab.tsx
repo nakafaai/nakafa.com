@@ -78,15 +78,7 @@ export function BinaryLampLab({
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
-        <div className="flex min-w-48 flex-1 flex-col gap-2">
-          <div className="flex items-center justify-between gap-4 text-sm">
-            <span>{labels.value}</span>
-            {showReadout ? (
-              <span className="shrink-0 tabular-nums">
-                <InlineMath math={String(count)} />
-              </span>
-            ) : null}
-          </div>
+        <div className="flex min-w-48 flex-1 items-center">
           <Slider
             aria-label={labels.value}
             max={largestCount(bits)}
