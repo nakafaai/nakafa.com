@@ -24,14 +24,6 @@ export default Table.make(() =>
     /** The owner's zone, kept current by their own visits; it sets the island's day. */
     timeZone: Schema.TimeZoneNamedFromString,
     userId: IdSchema("users"),
-    /**
-     * Retired with the world of blocks (ADR 0050): unread, and held only until
-     * the Convex CLI clears it from every row after this release, because
-     * Convex refuses a schema that drops a field every row holds.
-     */
-    version: Schema.optionalKey(Schema.Finite),
-    /** Retired with the world of blocks (ADR 0050), as `version` is. */
-    world: Schema.optionalKey(Schema.instanceOf(ArrayBuffer)),
   })
 )
   .index("by_userId", ["userId"])
