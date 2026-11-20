@@ -45,9 +45,7 @@ test("at 1440px the sidebar folds into a rail of named icons from its own toggle
           .toBe(RAIL);
         const quran = sidebar.getByRole("link", { name: "Quran" });
         await quran.hover();
-        await expect(page.locator(TOOLTIP)).toHaveText(
-          "Quran"
-        );
+        await expect(page.locator(TOOLTIP)).toHaveText("Quran");
         // The page starts at the rail's edge.
         const main = await page
           .locator("main")

@@ -69,11 +69,11 @@ function NumberFieldInput({
   return (
     <NumberInputControl
       aria-roledescription={t("number-field")}
-      id={id ?? fieldId}
       className={cn(
         "selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground w-full min-w-0 flex-1 bg-transparent px-2 text-center text-base tabular-nums outline-none disabled:cursor-not-allowed md:text-sm",
         className
       )}
+      id={id ?? fieldId}
       {...props}
     />
   );

@@ -3,7 +3,8 @@ import { openPageToAgents } from "@repo/design-system/lib/agent";
 import { Button } from "@ui-sdk/react/button";
 import { Array as Arr, Option } from "effect";
 import { act, createElement, Fragment } from "react";
-import { createRoot, type Root } from "react-dom/client";
+import type { Root } from "react-dom/client";
+import { createRoot } from "react-dom/client";
 
 /** A tool as the page hands it to the browser's agent. */
 interface RegisteredTool {

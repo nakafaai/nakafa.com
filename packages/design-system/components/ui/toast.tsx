@@ -8,6 +8,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import type { ToastType } from "@ui-sdk/react/toast";
 import {
   createToaster,
   Toast,
@@ -16,7 +17,6 @@ import {
   ToastDescription,
   ToastRegion,
   ToastTitle,
-  type ToastType,
 } from "@ui-sdk/react/toast";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";

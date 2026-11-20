@@ -2,7 +2,8 @@ import { Separator } from "@repo/design-system/components/ui/separator";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import type { RenderableProps } from "@repo/design-system/lib/render";
 import { renderElement } from "@ui-sdk/react/primitive";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 
 /**

@@ -11,7 +11,8 @@ import { useCodeBlock } from "@repo/design-system/lib/code/context";
 import type { Button as ButtonPrimitive } from "@ui-sdk/react/button";
 import { cn } from "cn";
 import { Array as Arr, Duration, Effect, Fiber, Option } from "effect";
-import { type ComponentProps, useEffect, useRef, useState } from "react";
+import type { ComponentProps } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /** Copy callbacks and duration for the transient success state. */
 type CodeBlockCopyButtonProps = ComponentProps<typeof ButtonPrimitive> & {

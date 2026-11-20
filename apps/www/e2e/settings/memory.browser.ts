@@ -1,11 +1,8 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import {
-  ANSWER_MILLISECONDS,
-  type Changes,
-  reloadUntil,
-  saved,
-} from "@/e2e/support/changes";
+import type { Changes } from "@/e2e/support/changes";
+import { ANSWER_MILLISECONDS, reloadUntil, saved } from "@/e2e/support/changes";
 import { swipeAway } from "@/e2e/support/input";
 import {
   confirmDelete,
@@ -174,7 +171,7 @@ const pauseMemory = Effect.fn("NakafaE2E.pauseMemory")(function* (
  * Leaves the delete question without deleting: its corner close where it is a dialog, and a swipe down where it rises
  * as a sheet, which a touch screen shows and which has no close of its own.
  */
-async function leaveQuestion(page: Page, question: Locator) {
+async function leaveQuestion(question: Locator) {
   if ((await question.getAttribute("data-presentation")) === "dialog") {
     await question.getByRole("button", { exact: true, name: "Close" }).click();
     return;
@@ -197,7 +194,7 @@ const removeMemory = Effect.fn("NakafaE2E.removeMemory")(function* (
     await page.getByRole("button", { exact: true, name: "Delete" }).click();
     const question = deleteQuestion(page);
     await expect(question).toBeVisible();
-    await leaveQuestion(page, question);
+    await leaveQuestion(question);
     await expect(question).toHaveCount(0);
     // The editor still shows the memory's words. At 390px the editor is a dialog
     // over the list, which hides the list from the accessibility tree, so the

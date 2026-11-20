@@ -18,9 +18,7 @@ import ms from "@repo/internationalization/dictionaries/ms.json" with {
  * `role="alert"` until it speaks (`data-ui-sdk-announcer`), which is no alert of the page, so it is left out.
  */
 export const shownAlerts = (scope: Page | Locator) =>
-  scope
-    .getByRole("alert")
-    .and(scope.locator(":not([data-ui-sdk-announcer])"));
+  scope.getByRole("alert").and(scope.locator(":not([data-ui-sdk-announcer])"));
 
 /** The site's messages in each of its languages. */
 const MESSAGES = { de, en, id, ms } satisfies Record<
@@ -55,7 +53,8 @@ export const TOOLTIP = '[data-slot="tooltip-content"][data-open]';
  * The header's open section. The navigation menu's viewport stays in the page while every section is closed
  * (`data-closed`), so only the open one is selected.
  */
-export const HEADER_SECTION = '[data-slot="navigation-menu-viewport"][data-open]';
+export const HEADER_SECTION =
+  '[data-slot="navigation-menu-viewport"][data-open]';
 /** The popup of a drawer, which a phone opens for the consent and contributor surfaces. */
 export const DRAWER_POPUP = '[data-slot="drawer-content"]';
 /** The handle at the top of a drawer, which a swipe drags. */

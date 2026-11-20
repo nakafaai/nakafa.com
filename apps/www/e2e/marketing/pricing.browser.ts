@@ -6,12 +6,12 @@ import {
   openedHeaderSection,
 } from "@/e2e/support/marketing";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { HEADER_SECTION } from "@/e2e/support/selector";
 import {
   expectStablePricingAppShell,
   expectStablePricingTransition,
   observeStablePricingReload,
 } from "@/e2e/support/pricing";
+import { HEADER_SECTION } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport } from "@/e2e/support/viewport";
 

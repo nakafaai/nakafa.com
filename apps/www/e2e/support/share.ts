@@ -1,20 +1,12 @@
-import {
-  expect,
-  type Locator,
-  type Page,
-  type Request,
-} from "@playwright/test";
+import type { Locator, Page, Request } from "@playwright/test";
+import { expect } from "@playwright/test";
 import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
-import {
-  ANSWER_MILLISECONDS,
-  type Changes,
-  live,
-  saved,
-} from "@/e2e/support/changes";
 import { noticeWith } from "@/e2e/support/attachment";
+import type { Changes } from "@/e2e/support/changes";
+import { ANSWER_MILLISECONDS, live, saved } from "@/e2e/support/changes";
 import { CHAT_PAGE, onThePage, openChatPage } from "@/e2e/support/chat";
 import { lastCopy, recordCopies } from "@/e2e/support/clipboard";
 import { SERVER_FUNCTION_PATH } from "@/e2e/support/requests";

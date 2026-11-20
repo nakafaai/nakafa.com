@@ -1,8 +1,8 @@
 import { ArrowDown01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
+import type { OptionMark } from "@repo/design-system/components/ui/huge-icons";
 import {
   HugeIcons,
   OptionIcon,
-  type OptionMark,
 } from "@repo/design-system/components/ui/huge-icons";
 import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";

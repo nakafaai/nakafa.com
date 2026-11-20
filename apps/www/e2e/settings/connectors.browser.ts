@@ -67,9 +67,7 @@ for (const viewport of [
     await page.waitForURL(FAILED, {
       timeout: readinessTimeoutMilliseconds,
     });
-    await expect(shownAlerts(page)).toContainText(
-      "Connect failed, try again."
-    );
+    await expect(shownAlerts(page)).toContainText("Connect failed, try again.");
     await expect(shownAlerts(page)).toHaveCount(1);
 
     await page.goto(`${site}/en/user/settings/connectors`);

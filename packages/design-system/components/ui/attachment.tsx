@@ -2,7 +2,8 @@ import { Button } from "@repo/design-system/components/ui/button";
 import type { RenderableProps } from "@repo/design-system/lib/render";
 import type { Button as ButtonPrimitive } from "@ui-sdk/react/button";
 import { renderElement } from "@ui-sdk/react/primitive";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 

@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { boundedMonth } from "@repo/design-system/lib/calendar/month";
+import type { CalendarSelectState } from "@ui-sdk/react/calendar";
 import {
   CalendarDay,
   CalendarGrid,
@@ -23,7 +24,6 @@ import {
   CalendarNext,
   CalendarPrevious,
   Calendar as CalendarPrimitive,
-  type CalendarSelectState,
   CalendarWeekday,
   CalendarWeekdays,
   CalendarWeeks,
@@ -33,7 +33,8 @@ import {
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { type ComponentProps, useState } from "react";
+import type { ComponentProps } from "react";
+import { useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 
 /** What turns the month a calendar shows: its own controller, or the date field's that holds it. */

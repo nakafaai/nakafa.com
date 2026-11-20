@@ -5,9 +5,9 @@ import { CalendarBody } from "@repo/design-system/components/ui/calendar";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
 import { TimeSelect } from "@repo/design-system/components/ui/time";
+import type { LocalTimeParts } from "@repo/design-system/lib/calendar/time";
 import {
   joinLocalTime,
-  type LocalTimeParts,
   splitLocalTime,
 } from "@repo/design-system/lib/calendar/time";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
@@ -22,7 +22,8 @@ import {
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Option } from "effect";
-import { type ComponentProps, useState } from "react";
+import type { ComponentProps } from "react";
+import { useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 
 /**

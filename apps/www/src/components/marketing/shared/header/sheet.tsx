@@ -8,12 +8,11 @@ import {
 } from "@repo/design-system/components/ui/drawer";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
-import { createContext, type ReactNode, use } from "react";
+import type { ReactNode } from "react";
+import { createContext, use } from "react";
 import { useTranslations } from "use-intl";
-import {
-  HEADER_SECTIONS,
-  type HeaderLink,
-} from "@/components/marketing/shared/header/sections";
+import type { HeaderLink } from "@/components/marketing/shared/header/sections";
+import { HEADER_SECTIONS } from "@/components/marketing/shared/header/sections";
 import { TargetLink } from "@/lib/routing/link";
 
 /** Closes the header's drawer, which its links call; none outside a drawer. */

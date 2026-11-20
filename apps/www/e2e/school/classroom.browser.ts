@@ -286,9 +286,7 @@ test("the selects of New task open with a one-word label and an icon on every op
       if (width === 390) {
         // A phone's header shows New task as its plus alone, and its name in a tooltip.
         await create.hover();
-        await expect(page.locator(TOOLTIP)).toHaveText(
-          "New task"
-        );
+        await expect(page.locator(TOOLTIP)).toHaveText("New task");
         await page.screenshot({
           path: info.outputPath(`tooltip-new-task-${width}-${scheme}.png`),
         });

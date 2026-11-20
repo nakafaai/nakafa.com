@@ -18,9 +18,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@ui-sdk/react/dialog";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
-import { Activity, type ComponentProps, createContext, use } from "react";
+import type { ComponentProps } from "react";
+import { Activity, createContext, use } from "react";
 import { useTranslations } from "use-intl";
 
 const SheetContext =

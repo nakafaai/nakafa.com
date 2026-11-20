@@ -1,5 +1,6 @@
 import type { ResizablePanel } from "@repo/design-system/components/ui/resizable";
-import { type ComponentProps, createContext } from "react";
+import type { ComponentProps } from "react";
+import { createContext } from "react";
 
 /** A pane's size: a share of the group's width, such as `"35%"`, or a length, such as `"20rem"`. */
 export type PaneSize = NonNullable<

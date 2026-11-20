@@ -8,8 +8,11 @@ import { StagedPopup } from "@repo/design-system/components/ui/staged";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { optionRowVariants } from "@repo/design-system/lib/option";
 import { sheetSurface } from "@repo/design-system/lib/popup";
+import type {
+  CommandController,
+  ListAnnouncement,
+} from "@ui-sdk/react/command";
 import {
-  type CommandController,
   CommandEmpty as CommandEmptyPrimitive,
   CommandGroupLabel as CommandGroupLabelPrimitive,
   CommandGroup as CommandGroupPrimitive,
@@ -19,7 +22,6 @@ import {
   Command as CommandPrimitive,
   CommandSeparator as CommandSeparatorPrimitive,
   createCommandController,
-  type ListAnnouncement,
 } from "@ui-sdk/react/command";
 import {
   DialogBackdrop,

@@ -1,14 +1,16 @@
 import { Array as Arr, HashMap, Option } from "effect";
+import type {
+  JsxAttributes,
+  JsxTagNameExpression,
+  Node,
+  SourceFile,
+} from "tsrs/ast";
 import {
   isIdentifier,
   isJsxAttribute,
   isJsxElement,
   isJsxSelfClosingElement,
   isStringLiteral,
-  type JsxAttributes,
-  type JsxTagNameExpression,
-  type Node,
-  type SourceFile,
 } from "tsrs/ast";
 import { children } from "#scripts/check/source";
 

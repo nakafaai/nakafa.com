@@ -4,7 +4,8 @@ import {
   ToggleGroup as ToggleGroupPrimitive,
   Toggle as TogglePrimitive,
 } from "@ui-sdk/react/toggle";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Schema } from "effect";
 import type * as React from "react";
