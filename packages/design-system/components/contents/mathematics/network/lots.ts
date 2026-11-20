@@ -1,13 +1,11 @@
 import { seededUniforms } from "@repo/design-system/components/contents/mathematics/chance";
-import {
-  linksOf,
-  type Road,
-  type Town,
+import type {
+  Road,
+  Town,
 } from "@repo/design-system/components/contents/mathematics/network/graph";
-import {
-  placeOf,
-  type Spot,
-} from "@repo/design-system/components/contents/mathematics/network/layout";
+import { linksOf } from "@repo/design-system/components/contents/mathematics/network/graph";
+import type { Spot } from "@repo/design-system/components/contents/mathematics/network/layout";
+import { placeOf } from "@repo/design-system/components/contents/mathematics/network/layout";
 import { Array as Arr, Schema } from "effect";
 
 /**

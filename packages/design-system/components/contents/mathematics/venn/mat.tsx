@@ -1,8 +1,8 @@
+import type { Place } from "@repo/design-system/components/contents/mathematics/venn/layout";
 import {
   HOOP,
   letterPlaces,
   MAT,
-  type Place,
   TRAY,
   TRAY_Z,
   UNIVERSE_PLACE,

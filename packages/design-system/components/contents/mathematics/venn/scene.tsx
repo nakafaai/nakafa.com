@@ -18,11 +18,11 @@ import {
   OBJECT_REACH,
   VennObjectModel,
 } from "@repo/design-system/components/contents/mathematics/venn/objects";
-import {
-  selects,
-  type VennObject,
-  type VennOperation,
+import type {
+  VennObject,
+  VennOperation,
 } from "@repo/design-system/components/contents/mathematics/venn/sets";
+import { selects } from "@repo/design-system/components/contents/mathematics/venn/sets";
 import {
   carried,
   carryAt,
@@ -35,13 +35,8 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { VENN_COLORS } from "@repo/design-system/lib/material/venn";
 import { Array as Arr } from "effect";
 import { useMemo, useRef } from "react";
-import {
-  type Color,
-  type Group,
-  Mesh,
-  MeshBasicMaterial,
-  MeshStandardMaterial,
-} from "three";
+import type { Color, Group } from "three";
+import { Mesh, MeshBasicMaterial, MeshStandardMaterial } from "three";
 
 /** How high a chosen object rises off the mat once it is set down, in metres. */
 const RISE = 0.014;

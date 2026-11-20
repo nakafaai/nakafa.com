@@ -1,12 +1,12 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import type { Place } from "@repo/design-system/components/contents/mathematics/venn/layout";
 import {
   HOOP,
   hoopCentres,
   letterPlaces,
   MAT,
-  type Place,
   regionAt,
   regionSpots,
   restingPlaces,

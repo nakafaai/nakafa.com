@@ -1,16 +1,14 @@
 import { PlayCases } from "@repo/design-system/components/contents/mathematics/logic/play";
-import {
-  LogicScene,
-  type SwitchName,
-} from "@repo/design-system/components/contents/mathematics/logic/scene";
+import type { SwitchName } from "@repo/design-system/components/contents/mathematics/logic/scene";
+import { LogicScene } from "@repo/design-system/components/contents/mathematics/logic/scene";
 import {
   setCase,
   setMode,
   startBoard,
   tableRows,
 } from "@repo/design-system/components/contents/mathematics/logic/table";
+import type { LogicMode } from "@repo/design-system/components/contents/mathematics/logic/truth";
 import {
-  type LogicMode,
   truthOf,
   usesQ,
 } from "@repo/design-system/components/contents/mathematics/logic/truth";
@@ -42,7 +40,8 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, Suspense, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useState } from "react";
 
 /**
  * Two statements as two switches on a circuit board: p is "switch P is

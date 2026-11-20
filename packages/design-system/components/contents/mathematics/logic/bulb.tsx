@@ -12,15 +12,17 @@ import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { LOGIC_COLORS } from "@repo/design-system/lib/material/logic";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo, useRef } from "react";
+import type {
+  MeshPhysicalMaterial,
+  MeshStandardMaterial,
+  PointLight,
+} from "three";
 import {
   AdditiveBlending,
   CatmullRomCurve3,
   Color,
   DoubleSide,
   LatheGeometry,
-  type MeshPhysicalMaterial,
-  type MeshStandardMaterial,
-  type PointLight,
   ShaderMaterial,
   TubeGeometry,
   Vector2,

@@ -1,9 +1,9 @@
 import { seededUniforms } from "@repo/design-system/components/contents/mathematics/chance";
-import {
-  type Road,
-  roadBetween,
-  type Town,
+import type {
+  Road,
+  Town,
 } from "@repo/design-system/components/contents/mathematics/network/graph";
+import { roadBetween } from "@repo/design-system/components/contents/mathematics/network/graph";
 import { Array as Arr, HashMap, Option, Order, Schema } from "effect";
 
 /** A place on the model board: across and back from its middle, in metres. */

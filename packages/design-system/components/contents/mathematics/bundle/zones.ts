@@ -2,10 +2,10 @@ import {
   numeralLength,
   placeDigits,
 } from "@repo/design-system/components/contents/mathematics/bundle/digits";
+import type { Point } from "@repo/design-system/components/contents/mathematics/bundle/layout";
 import {
   boxSize,
   bundleSize,
-  type Point,
   SINGLE_SIZE,
   SizeSchema,
   traySize,

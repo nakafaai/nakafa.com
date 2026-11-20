@@ -3,15 +3,18 @@ import {
   LETTERS,
 } from "@repo/design-system/components/contents/mathematics/venn/mat";
 import { VennScene } from "@repo/design-system/components/contents/mathematics/venn/scene";
+import type {
+  VennAttribute,
+  VennObject,
+  VennOperation,
+} from "@repo/design-system/components/contents/mathematics/venn/sets";
 import {
   OPERATION_MATH,
   OPERATION_TEXT,
   regionOf,
   selects,
-  type VennAttribute,
-  type VennObject,
-  type VennOperation,
 } from "@repo/design-system/components/contents/mathematics/venn/sets";
+import { toolbarLayout } from "@repo/design-system/components/contents/mathematics/venn/toolbar";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
@@ -27,21 +30,17 @@ import {
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
-import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
+import {
+  VisualFactIndicator,
+  VisualFactTabular,
+} from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, Suspense, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 /** How far the mat, its hoops and the tray reach from their middle, in metres. */
 const REACH = 1.2;
-
-/** How many columns the toolbar lays the operations in, so each one's notation keeps its width. */
-function toolbarColumns(count: number) {
-  if (count <= 2) {
-    return "2";
-  }
-  return count === 3 ? "3" : "4";
-}
 
 /**
  * Operations on sets, seen on real objects. Everyday objects wait on a tray
@@ -50,8 +49,8 @@ function toolbarColumns(count: number) {
  * as red or made of metal. Playing carries each object into its region, so
  * an object of two sets lands where their hoops overlap. The learner picks
  * an operation: its region is tinted on the mat, and the objects it selects
- * rise in a ring of light while the rest darken. Under the operations, each
- * set is written as its letter and what it gathers, in its hoop's colour.
+ * rise in a ring of light while the rest darken. The footer writes each set
+ * as its letter and what it gathers, in its hoop's colour.
  * With `showCount`, the footer reads how many objects the operation selects
  * and which they are.
  */
@@ -96,6 +95,7 @@ export function VennSortLab({
     selects(operation, Arr.getUnsafe(regions, index))
   );
   const math = OPERATION_MATH[operation];
+  const toolbar = toolbarLayout(operations.length);
 
   return (
     <VisualCard>
@@ -104,7 +104,7 @@ export function VennSortLab({
       <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.operation}
-          gridColumns={toolbarColumns(operations.length)}
+          gridColumns={toolbar.columns}
           onValueChange={(value: string) => {
             Option.map(
               Arr.findFirst(operations, (each) => each === value),
@@ -115,9 +115,14 @@ export function VennSortLab({
           value={operation}
           variant="outline"
         >
-          {Arr.map(operations, (each) => (
+          {Arr.map(operations, (each, index) => (
             <ToggleGroupItem
               aria-label={OPERATION_TEXT[each]}
+              className={
+                toolbar.lastSpan === 2 && index === operations.length - 1
+                  ? "col-span-2"
+                  : undefined
+              }
               key={each}
               value={each}
             >
@@ -125,20 +130,6 @@ export function VennSortLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-        <ul className="flex w-full flex-wrap gap-x-5 gap-y-1 text-sm">
-          {Arr.map(sets, (set, index) => (
-            <li className="flex items-center gap-2" key={LETTERS[index]}>
-              <span
-                aria-hidden="true"
-                className="size-2.5 shrink-0 rounded-full"
-                style={{ backgroundColor: HOOP_COLORS[index] }}
-              />
-              <span>
-                <InlineMath math={`${LETTERS[index]} =`} /> {`{${set.name}}`}
-              </span>
-            </li>
-          ))}
-        </ul>
       </VisualCardToolbar>
 
       <VisualCardBody
@@ -160,30 +151,40 @@ export function VennSortLab({
 
       <VisualCardSceneActions />
 
-      {showCount ? (
-        <VisualCardFooter>
-          <VisualCardFacts>
-            <VisualFactTabular
-              label={labels.count}
-              value={<InlineMath math={`n(${math}) = ${chosen.length}`} />}
+      <VisualCardFooter>
+        <VisualCardFacts>
+          {Arr.map(sets, (set, index) => (
+            <VisualFactIndicator
+              indicatorColor={HOOP_COLORS[index]}
+              key={LETTERS[index]}
+              label={<InlineMath math={LETTERS[index]} />}
+              value={`{${set.name}}`}
             />
-            <VisualFactTabular
-              label={labels.members}
-              value={
-                <span>
-                  <InlineMath math={`${math} =`} />{" "}
-                  {chosen.length === 0
-                    ? "{ }"
-                    : `{ ${Arr.join(
-                        Arr.map(chosen, (each) => each.name),
-                        ", "
-                      )} }`}
-                </span>
-              }
-            />
-          </VisualCardFacts>
-        </VisualCardFooter>
-      ) : null}
+          ))}
+          {showCount ? (
+            <>
+              <VisualFactTabular
+                label={labels.count}
+                value={<InlineMath math={`n(${math}) = ${chosen.length}`} />}
+              />
+              <VisualFactTabular
+                label={labels.members}
+                value={
+                  <span>
+                    <InlineMath math={`${math} =`} />{" "}
+                    {chosen.length === 0
+                      ? "{ }"
+                      : `{ ${Arr.join(
+                          Arr.map(chosen, (each) => each.name),
+                          ", "
+                        )} }`}
+                  </span>
+                }
+              />
+            </>
+          ) : null}
+        </VisualCardFacts>
+      </VisualCardFooter>
     </VisualCard>
   );
 }
