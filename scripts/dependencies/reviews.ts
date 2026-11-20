@@ -53,8 +53,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@effect/tsgo@latest",
-    "0.69.0",
-    "Compiler patching moves with tsrs and Effect, and every rule is decided in packages/typescript-config/base.json, which Aksara's rule block matches (docs/adr/0021-rules.md). 0.69.0 is the latest release and the adopted one: it patches tsrs 0.25.0-ts7.1.0-beta (the version table of its README), which replaces the TypeScript package, and base.json decides missingConcurrencyOption, the one rule 0.69 adds (docs/adr/0021-rules.md). Checked 14 November 2026.",
+    "0.73.2",
+    "Compiler patching moves with tsrs and Effect, and every rule is decided in packages/typescript-config/base.json, which Aksara's rule block matches (docs/adr/0021-rules.md). 0.73.2 is the latest release and the adopted one: it patches tsrs 7.1.0-beta.tsrs2 and 7.1.0-beta.tsrs3 (the version table of its README) and no longer patches 0.25.0-ts7.1.0-beta, so tsrs moves with it, and prepare runs the same effect-tsgo patch --tsrs --no-typescript. 0.70 to 0.73 add five rules, which base.json decides (docs/adr/0021-rules.md): flatMapMapToZipWith and flatMapProvideServiceToProvideServiceEffect, which upstream ships as suggestions that fail the typecheck until decided, and forLoopPushToForEach, promiseAllInEffect and promiseRaceInEffect, which upstream ships off. 0.72, 0.73.1 and 0.73.2 change only the Vite+ integration and release builds. Checked 20 November 2026.",
   ],
   [
     "vitest@latest",
@@ -78,8 +78,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "tsrs@latest",
-    "0.25.0-ts7.1.0-beta",
-    "tsrs is the Rust port of the TypeScript 7.1 checker, pinned exactly to 0.25.0-ts7.1.0-beta, the latest release and the one @effect/tsgo 0.69.0 patches. Every typecheck, the language server, and the source check's compiler API run on it. 0.25.0 adds concurrent headless lint and a Windows ARM64 package with the same checker. Checked 14 November 2026.",
+    "7.1.0-beta.tsrs3",
+    "tsrs is the Rust port of the TypeScript 7.1 checker, pinned exactly to 7.1.0-beta.tsrs3, the latest release and one of the two that @effect/tsgo 0.73.2 patches. From tsrs2 a version names the TypeScript release it targets and a tsrs revision, so 0.25.0-ts7.1.0-beta was the last of the old scheme. tsrs3 checks against TypeScript 7.1.0-beta at the same source commit, fixes compiler and lint edge cases, and leaves the tsrs/sync, tsrs/ast and tsrs/fs modules and the tsdk folder that the source check and the editors load unchanged byte for byte. Every typecheck, the language server, and the source check's compiler API run on it. Checked 20 November 2026.",
   ],
   [
     "ai@latest",

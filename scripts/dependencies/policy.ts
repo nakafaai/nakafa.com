@@ -19,7 +19,7 @@ type DependencyHold = typeof ApprovedSpecsSchema.Type &
   typeof DependencyNameSchema.Type;
 
 /** The exact package manager the root manifest pins for every checkout and workflow job. */
-export const PACKAGE_MANAGER = "bun@1.4.4";
+export const PACKAGE_MANAGER = "bun@1.4.5";
 /**
  * The exact Node release the root manifest downloads. A workflow job that does
  * not check out the repository cannot read the manifest, so it names the same
@@ -41,7 +41,7 @@ export const EFFECT_COHORT_OVERRIDES = [
   "@effect/platform-node-shared",
 ] as const;
 /** The tsrs release that the pinned @effect/tsgo patches, which every manifest takes from the catalog. */
-export const TSRS_VERSION = "0.25.0-ts7.1.0-beta";
+export const TSRS_VERSION = "7.1.0-beta.tsrs3";
 /** The Vitest runner, coverage, and UI packages move as one catalog cohort. */
 export const VITEST_COHORT_VERSION = "5.1.1";
 /**
@@ -247,7 +247,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   {
-    approved: "0.69.0",
+    approved: "0.73.2",
     dependency: "@effect/tsgo",
     minimumDeclarations: 1,
   },

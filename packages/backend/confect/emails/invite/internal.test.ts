@@ -16,7 +16,7 @@ import {
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Duration, Effect, Schema } from "effect";
+import { Duration, Effect, Schema } from "effect";
 
 const address = Schema.decodeSync(Email)("kepala@harapan.example.test");
 const placeholder = Schema.decodeSync(Email)(loginAddress("kepala"));
@@ -96,8 +96,13 @@ describe("emails/invite/internal", () => {
           requestedAt,
           ...message,
         });
-        const [first, second] = yield* Effect.promise(() =>
-          Promise.all(Arr.map(send.mock.results, (result) => result.value))
+        const [first, second] = yield* Effect.forEach(
+          send.mock.results,
+          (result) =>
+            Effect.promise(
+              (): ReturnType<typeof resend.sendEmail> => result.value
+            ),
+          { concurrency: "unbounded" }
         );
         const stored = yield* fixture.run(
           Effect.flatMap(MutationCtx, (ctx) =>
@@ -151,8 +156,13 @@ describe("emails/invite/internal", () => {
           requestedAt: resentAt,
           ...message,
         });
-        const [first, resent] = yield* Effect.promise(() =>
-          Promise.all(Arr.map(send.mock.results, (result) => result.value))
+        const [first, resent] = yield* Effect.forEach(
+          send.mock.results,
+          (result) =>
+            Effect.promise(
+              (): ReturnType<typeof resend.sendEmail> => result.value
+            ),
+          { concurrency: "unbounded" }
         );
         expect(send).toHaveBeenCalledTimes(2);
         expect(resent).not.toBe(first);

@@ -52,15 +52,16 @@ describe("contentRelease/article", () => {
             appLocale: "en",
           })
         );
-        const sitemap = yield* Effect.promise(() =>
-          Promise.all(
-            Arr.map(buckets.buckets, (bucket) =>
+        const sitemap = yield* Effect.forEach(
+          buckets.buckets,
+          (bucket) =>
+            Effect.promise(() =>
               t.query(api.contentRelease.article.sitemapPage, {
                 appLocale: "en",
                 bucket,
               })
-            )
-          )
+            ),
+          { concurrency: "unbounded" }
         );
         expect(
           Arr.flatMap(sitemap, (result) => result?.routes ?? [])

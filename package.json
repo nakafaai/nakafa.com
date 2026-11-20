@@ -46,7 +46,7 @@
       "remark-mdx": "3.1.1",
       "remark-parse": "11.0.0",
       "sonner": "^2.0.8",
-      "tsrs": "0.25.0-ts7.1.0-beta",
+      "tsrs": "7.1.0-beta.tsrs3",
       "unified": "11.0.5",
       "use-intl": "4.15.1",
       "virtua": "^0.55.0",
@@ -113,7 +113,7 @@
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "^3.0.3",
     "@effect/platform-node": "catalog:",
-    "@effect/tsgo": "0.69.0",
+    "@effect/tsgo": "0.73.2",
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@repo/utilities": "workspace:*",
@@ -128,7 +128,7 @@
     "ultracite": "8.2.0",
     "vitest": "catalog:"
   },
-  "packageManager": "bun@1.4.4",
+  "packageManager": "bun@1.4.5",
   "engines": {
     "node": ">=26.0.0 <27.0.0"
   },

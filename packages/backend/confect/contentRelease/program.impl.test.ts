@@ -73,15 +73,16 @@ describe("contentRelease/program registered queries", () => {
           managed: true,
           routeCount: 2,
         });
-        const sitemap = yield* Effect.promise(() =>
-          Promise.all(
-            Arr.map(buckets.buckets, (bucket) =>
+        const sitemap = yield* Effect.forEach(
+          buckets.buckets,
+          (bucket) =>
+            Effect.promise(() =>
               t.query(program.sitemapPage, {
                 appLocale,
                 bucket,
               })
-            )
-          )
+            ),
+          { concurrency: "unbounded" }
         );
         expect(
           Arr.flatMap(sitemap, (page) => page?.routes ?? [])

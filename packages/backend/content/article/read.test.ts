@@ -139,14 +139,15 @@ describe("article publication pages", () => {
               Arr.every(results, (result) => result.result.page.length === 1)
             ).toBe(true);
           } else {
-            yield* Effect.promise(() =>
-              Promise.all(
-                Arr.map([categories, publications], (query) =>
+            yield* Effect.forEach(
+              [categories, publications],
+              (query) =>
+                Effect.promise(() =>
                   expect(query).rejects.toMatchObject({
                     data: { code: "CONTENT_RELEASE_LIMIT" },
                   })
-                )
-              )
+                ),
+              { concurrency: "unbounded", discard: true }
             );
           }
         }

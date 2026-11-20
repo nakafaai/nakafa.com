@@ -129,14 +129,12 @@ const members = FunctionImpl.make(
           .first()
           .pipe(
             Effect.orDie,
-            Effect.flatMap((login) =>
-              Effect.map(emailOf(person), (email) => ({
-                email,
-                id: person._id,
-                login: Option.isSome(login) ? login.value.name : null,
-                name: person.name,
-              }))
-            )
+            Effect.zipWith(emailOf(person), (login, email) => ({
+              email,
+              id: person._id,
+              login: Option.isSome(login) ? login.value.name : null,
+              name: person.name,
+            }))
           ),
       { concurrency: "unbounded" }
     );
