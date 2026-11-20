@@ -68,11 +68,11 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
   {
     action: "oven-sh/setup-bun",
     approvedSha: "0c5077e51419868618aeaa5fe8019c62421857d6",
-    expectedInputs: { "bun-version": "1.4.4", "no-cache": "true" },
+    expectedInputs: { "bun-version": "1.4.5", "no-cache": "true" },
     expectedTag: "v2.2.0",
     expectedUsages: 1,
     reason:
-      "The install action pins Bun 1.4.4 and installs the workspace from its frozen bun.lock. The cache stays off because a cold install beats restoring it on hosted runners.",
+      "The install action pins Bun 1.4.5 and installs the workspace from its frozen bun.lock. The cache stays off because a cold install beats restoring it on hosted runners.",
   },
   {
     action: "astral-sh/setup-uv",

@@ -29,7 +29,7 @@ Do not submit a contribution if you cannot grant these rights.
 The supported toolchain is declared in `package.json`:
 
 - Node.js 24
-- Bun 1.4.4
+- Bun 1.4.5
 - Git
 
 ```sh

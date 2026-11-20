@@ -110,6 +110,21 @@ explicitly typed calls, which keeps their decisions above.
 | `onExitFailureToOnError` | error | Fixed at its source: an `Effect.onExit` callback that acts only on a failure, with `Effect.void` on the other side, becomes `Effect.onError` (3 sites) |
 | `missingConcurrencyOption` | off | Stays off, as upstream ships it. It asks every `Effect.all` and `Effect.forEach` to name its concurrency. About 1,000 of the 1,240 calls here run in order on purpose, most of them writes inside one Convex mutation and steps of a test, where `{ concurrency: 1 }` on each would add a line and say nothing the call does not already mean; the 211 that run side by side already name theirs |
 
+### Compiler rules that `@effect/tsgo` 0.70 to 0.73 add
+
+`@effect/tsgo` 0.73.2, the adopted release, patches tsrs 7.1.0-beta.tsrs3 and
+adds five rules since 0.69. `packages/typescript-config/base.json` decides them
+in the same way in both repositories. Upstream ships two of them as suggestions,
+which fail the typecheck until decided, and three off.
+
+| Rule | Decision | Owner, or the reason it stays off |
+| --- | --- | --- |
+| `flatMapMapToZipWith` | error | Fixed at its source: an `Effect.flatMap` whose callback only maps an effect that does not read its argument becomes `Effect.zipWith` (2 sites) |
+| `flatMapProvideServiceToProvideServiceEffect` | error | No site |
+| `forLoopPushToForEach` | off | Owner: the source check `array-mutation`, which forbids the native `push` (`scripts/check/calls.ts`, judged in `scripts/check/arrays.ts`) |
+| `promiseAllInEffect` | error | Fixed at its source: a `Promise.all` inside an Effect becomes `Effect.forEach` or `Effect.all` with its concurrency named, so an interrupted fiber stops what it started (8 sites) |
+| `promiseRaceInEffect` | error | No site |
+
 ### Schema error brands
 
 A missing brand lets a structurally equal value pass for a Schema class instance,

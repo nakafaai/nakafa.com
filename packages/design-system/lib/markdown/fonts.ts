@@ -105,13 +105,15 @@ export const loadMathFonts = Effect.fn("designSystem.markdown.loadMathFonts")(
     fonts: Pick<FontFaceSet, "load">,
     faces: readonly MathFont[] = CORE_MATH_FONTS
   ) {
-    yield* Effect.tryPromise({
-      try: () =>
-        Promise.all(
-          Arr.map(faces, (face) => fonts.load(MATH_FONT_SHORTHANDS[face]))
-        ),
-      catch: (cause) => new MathFontLoadError({ cause }),
-    });
+    yield* Effect.forEach(
+      faces,
+      (face) =>
+        Effect.tryPromise({
+          try: () => fonts.load(MATH_FONT_SHORTHANDS[face]),
+          catch: (cause) => new MathFontLoadError({ cause }),
+        }),
+      { concurrency: "unbounded", discard: true }
+    );
   }
 );
 

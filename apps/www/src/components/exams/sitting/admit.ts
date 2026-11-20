@@ -96,7 +96,7 @@ export function useEnterSitting() {
     // A failed call goes again with the same device, which the server admits to the same attempt. Each send
     // reads its own time, because the clock's correction comes from the round trip that was answered.
     return Clock.currentTimeMillis.pipe(
-      Effect.flatMap((sentAt) =>
+      Effect.zipWith(
         Effect.tryPromise(() =>
           enter({
             deviceId,
@@ -104,7 +104,8 @@ export function useEnterSitting() {
             slug: input.slug,
             token: input.token,
           })
-        ).pipe(Effect.map((result) => ({ result, sentAt })))
+        ),
+        (sentAt, result) => ({ result, sentAt })
       ),
       Effect.retry(NETWORK_RETRY_SCHEDULE),
       Effect.flatMap(({ result, sentAt }) =>

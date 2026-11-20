@@ -67,19 +67,21 @@ describe("contentRelease/material", () => {
             appLocale: "en",
           })
         );
-        const results = yield* Effect.promise(() =>
-          Promise.all(
-            Arr.map(buckets.buckets, async (bucket) => ({
-              bucket: await t.query(material.bucket, {
-                appLocale: "en",
-                bucket,
-              }),
-              sitemap: await t.query(material.sitemapPage, {
-                appLocale: "en",
-                bucket: [bucket],
-              }),
-            }))
-          )
+        const results = yield* Effect.forEach(
+          buckets.buckets,
+          (bucket) =>
+            Effect.all({
+              bucket: Effect.promise(() =>
+                t.query(material.bucket, { appLocale: "en", bucket })
+              ),
+              sitemap: Effect.promise(() =>
+                t.query(material.sitemapPage, {
+                  appLocale: "en",
+                  bucket: [bucket],
+                })
+              ),
+            }),
+          { concurrency: "unbounded" }
         );
         expect(
           Arr.flatMap(results, ({ bucket }) => bucket.materials ?? [])

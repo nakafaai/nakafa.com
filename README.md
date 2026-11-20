@@ -21,7 +21,7 @@ authored content source or publication path.
 - Node.js 26.13.1, and the Node major that `packages/backend/convex.json` names
   for Convex "use node" actions, installed with `brew install node@<major>`. The
   local acceptance backend finds it through Homebrew, so no shell puts it first.
-- Bun 1.4.4
+- Bun 1.4.5
 - Turborepo
 - TanStack Start and React 19
 - tsrs, the Rust port of the TypeScript 7.1 compiler

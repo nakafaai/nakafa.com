@@ -222,7 +222,11 @@ function watchScripts(page: Page) {
 /** Whether any recorded script holds the code of the pool. */
 function holdsPool(texts: MutableList.MutableList<Promise<string>>) {
   return Effect.map(
-    Effect.promise(() => Promise.all(MutableList.toArray(texts))),
+    Effect.forEach(
+      MutableList.toArray(texts),
+      (text) => Effect.promise(() => text),
+      { concurrency: "unbounded" }
+    ),
     (bodies) => Arr.some(bodies, (body) => POOL_SCRIPT.test(body))
   );
 }
