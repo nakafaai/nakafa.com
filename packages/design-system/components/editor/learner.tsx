@@ -278,7 +278,7 @@ export function LearnerEditor({
           learnerTextVariants(),
           "wrap-anywhere outline-none"
         ),
-        "data-slot": "input-group-control",
+        "data-input-group": "control",
         role: "textbox",
       },
       handleDrop: (_view, event) => {

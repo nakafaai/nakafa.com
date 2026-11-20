@@ -89,7 +89,7 @@ function SchoolSettingsNavGroup({ group }: { group: SchoolSettingsGroup }) {
         <CollapsibleTrigger
           render={
             <SidebarMenuButton
-              className="[&[data-panel-open]>svg:last-child]:rotate-90"
+              className="data-open:[&>svg:last-child]:rotate-90"
               tooltip={label}
             />
           }

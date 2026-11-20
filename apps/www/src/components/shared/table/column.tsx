@@ -89,7 +89,6 @@ export function ColumnFilter({
           {Arr.map(options, (option) => (
             <DropdownMenuCheckboxItem
               checked={Arr.contains(chosen, option.value)}
-              closeOnClick={false}
               icon={option.icon}
               key={option.value}
               onCheckedChange={(next) =>
@@ -100,6 +99,7 @@ export function ColumnFilter({
                     : Arr.filter(chosen, (value) => value !== option.value)
                 )
               }
+              value={option.value}
             >
               {option.label}
             </DropdownMenuCheckboxItem>
@@ -111,7 +111,7 @@ export function ColumnFilter({
             <DropdownMenuGroup>
               <DropdownMenuItem
                 icon={Cancel01Icon}
-                onClick={() => choose(column, [])}
+                onSelect={() => choose(column, [])}
               >
                 {t("reset")}
               </DropdownMenuItem>

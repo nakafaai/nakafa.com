@@ -1,7 +1,5 @@
 import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
 import { ToasterHost } from "@repo/design-system/components/ui/toaster";
-import { DesignSystemProvider } from "@repo/design-system/providers/system";
-import { textDirection } from "@repo/internationalization/src/direction";
 import { FORMATS } from "@repo/internationalization/src/formats";
 import {
   DEFAULT_LOCALE,
@@ -17,7 +15,6 @@ import {
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { createFileRoute, Outlet, useParams } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
-import { useTranslations } from "use-intl";
 import { createTranslator } from "use-intl/core";
 import { AppNotFound } from "@/components/state/app";
 import { LocalizedError, useRouteFailure } from "@/components/state/localized";
@@ -95,12 +92,10 @@ function LocaleRoot() {
       now={now}
       timeZone={localeTimeZone(locale)}
     >
-      <DesignSystemProvider direction={textDirection(locale)}>
-        <div className="isolate">
-          <Outlet />
-        </div>
-        <ShellToaster />
-      </DesignSystemProvider>
+      <div className="isolate">
+        <Outlet />
+      </div>
+      <ToasterHost />
       {/* After the page and out of every snippet: first in the body, search engines quoted it as the page's description. */}
       <div className="sr-only" data-nosnippet>
         For AI agents: use <a href="/llms.txt">/llms.txt</a> for the Nakafa
@@ -108,17 +103,6 @@ function LocaleRoot() {
       </div>
       <TailwindIndicator />
     </MessagesProvider>
-  );
-}
-
-/** The toaster names its close and region labels in the shell's messages. */
-function ShellToaster() {
-  const t = useTranslations("Common");
-  return (
-    <ToasterHost
-      closeButtonAriaLabel={t("close-notification")}
-      containerAriaLabel={t("notifications")}
-    />
   );
 }
 

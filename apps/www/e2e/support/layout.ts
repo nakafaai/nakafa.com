@@ -44,7 +44,7 @@ export function recordLayoutShifts({
     return `${owner.tagName.toLowerCase()}${slot ? `[data-slot=${slot}]` : ""} class="${classes.slice(0, 80)}"${element ? "" : " (text)"}`;
   };
   // Whether the node sits inside a floating element that matches `overlay`: one out of the page's flow, fixed to
-  // the screen or placed absolutely over the page, as Base UI places a popup, so its own motion moves no content.
+  // the screen or placed absolutely over the page, as UI SDK's top layer places a popup, so its own motion moves no content.
   const insideOverlay = (node: unknown) => {
     const owner = node instanceof Node ? node : null;
     const element = owner instanceof Element ? owner : owner?.parentElement;

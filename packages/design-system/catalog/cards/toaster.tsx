@@ -1,4 +1,4 @@
-import { Toaster } from "@repo/design-system/components/ui/sonner";
+import { Toaster } from "@repo/design-system/components/ui/toast";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useEffect } from "react";
 
@@ -8,7 +8,7 @@ export const card = {
   name: "Toaster",
   group: "Feedback",
   height: 300,
-  source: "components/ui/sonner",
+  source: "components/ui/toast",
 };
 
 /** Toasts of each kind, kept open: a success, a failure that says what to do, and a notice. */
@@ -27,13 +27,5 @@ export function Preview() {
     );
     toast.success({ title: "school-address-copied.title" }, persistent);
   }, []);
-  return (
-    <Toaster
-      closeButtonAriaLabel="Close"
-      containerAriaLabel="Notifications"
-      expand
-      position="top-center"
-      visibleToasts={3}
-    />
-  );
+  return <Toaster />;
 }

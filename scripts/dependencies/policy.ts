@@ -138,6 +138,16 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
  * catalog holds `@confect/core`, and each manifest pins the rest exactly.
  */
 const CONFECT_COHORT_VERSION = "10.6.0";
+/**
+ * UI SDK is the design system's one primitive layer (ADR 0049). It is in beta, so its core and its React parts move
+ * together on one exact release: a beta may change a part between releases, and the two share one copy of the core,
+ * which two versions would split.
+ */
+const UI_SDK_COHORT_VERSION = "0.1.0-beta.13";
+/** The UI SDK packages the design system pins, the only workspace that imports them. */
+const UI_SDK_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
+  ["packages/design-system/package.json", ["@ui-sdk/core", "@ui-sdk/react"]],
+];
 /** The Confect packages each manifest pins: the web app's client and the backend's server, CLI and tests. */
 const CONFECT_DECLARATIONS: readonly (readonly [string, readonly string[]])[] =
   [
@@ -328,6 +338,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   ...exactCohortHolds(TIPTAP_COHORT_VERSION, TIPTAP_DECLARATIONS),
   ...exactCohortHolds(CONFECT_COHORT_VERSION, CONFECT_DECLARATIONS),
+  ...exactCohortHolds(UI_SDK_COHORT_VERSION, UI_SDK_DECLARATIONS),
 ];
 
 export const SCRIPT_DEPENDENCY_HOLDS = [

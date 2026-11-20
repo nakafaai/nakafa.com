@@ -32,10 +32,7 @@ export function LanguageItems({
             />
           }
           key={language.value}
-          onClick={(event) => {
-            event.stopPropagation();
-            onPick(language.value);
-          }}
+          onSelect={() => onPick(language.value)}
         >
           <span className="truncate">{language.label}</span>
           <ActiveBadge isActive={current === language.value} />

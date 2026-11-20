@@ -220,7 +220,7 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
       <RowItems>
         <DropdownMenuItem
           icon={TaskDaily01Icon}
-          onClick={() => dialogs.show("read")}
+          onSelect={() => dialogs.show("read")}
         >
           {t("webhook-deliveries")}
         </DropdownMenuItem>
@@ -228,14 +228,14 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
           <>
             <DropdownMenuItem
               icon={PencilEdit02Icon}
-              onClick={() => dialogs.show("edit")}
+              onSelect={() => dialogs.show("edit")}
             >
               {tCommon("edit")}
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={isPending}
               icon={Key01Icon}
-              onClick={() =>
+              onSelect={() =>
                 startTransition(() =>
                   runSchoolWrite(
                     schoolCall(() => rotate(names)),
@@ -249,7 +249,7 @@ function SchoolWebhookMenu({ webhook }: { webhook: WebhookItem }) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               icon={Delete02Icon}
-              onClick={() => dialogs.show("revoke")}
+              onSelect={() => dialogs.show("revoke")}
               variant="destructive"
             >
               {t("grant-revoke")}

@@ -180,5 +180,5 @@ export const write = Effect.fn("NakafaE2E.write")(function* (
 
 /** The notices on the page that contain `text`. */
 export function noticeWith(page: Page, text: string) {
-  return page.locator("[data-sonner-toast]").filter({ hasText: text });
+  return page.locator("[data-slot=toast]").filter({ hasText: text });
 }

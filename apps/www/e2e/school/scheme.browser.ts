@@ -20,7 +20,7 @@ test("an admin stores a grading scheme version with a band, then a newer one, an
 
   await page.goto(address("/settings/profile"));
   await (
-    await settingsLink(page.locator('[data-slot="sidebar-content"]'), "grading")
+    await settingsLink(page.locator('[data-sidebar="content"]'), "grading")
   ).click();
   await expect(page).toHaveURL(address("/settings/grading"));
   await expect(page.getByText("No version stored yet.")).toBeVisible({

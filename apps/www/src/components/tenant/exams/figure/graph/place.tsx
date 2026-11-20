@@ -175,9 +175,7 @@ export function PlanePlace({ shape }: { readonly shape: ShapeDraft }) {
           className="min-h-16 font-mono"
           dir="ltr"
           id={id}
-          onChange={(event) =>
-            changeShape(shape.id, { formula: event.target.value })
-          }
+          onValueChange={(formula) => changeShape(shape.id, { formula })}
           placeholder={kind === "polygon" ? "(0, 0) (4, 0) (0, 3)" : "y >= x^2"}
           value={shape.formula}
         />

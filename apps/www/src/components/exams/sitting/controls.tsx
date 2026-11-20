@@ -85,13 +85,13 @@ export function StudentPanelActions({
         >
           <DropdownMenuItem
             icon={TimeQuarterPassIcon}
-            onClick={() => onOpen("add-minutes")}
+            onSelect={() => onOpen("add-minutes")}
           >
             {t("add-minutes")}
           </DropdownMenuItem>
           <DropdownMenuItem
             icon={SmartPhone01Icon}
-            onClick={() => onOpen("allow-device")}
+            onSelect={() => onOpen("allow-device")}
           >
             {t("allow-device")}
           </DropdownMenuItem>

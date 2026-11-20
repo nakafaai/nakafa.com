@@ -76,7 +76,7 @@ function InvoiceAction({ payment }: { payment: Receipt }) {
       <DropdownMenuItem
         disabled={!isActiveLocale(locale) || isPending}
         icon={Download04Icon}
-        onClick={() => {
+        onSelect={() => {
           if (isActiveLocale(locale)) {
             download(() => draw({ locale, paymentId: payment.id }));
           }
@@ -98,7 +98,7 @@ function PortalAction() {
       <DropdownMenuItem
         disabled={billing.isPending}
         icon={LinkSquare02Icon}
-        onClick={() => billing.openPortal({ source: "settings-invoice" })}
+        onSelect={() => billing.openPortal({ source: "settings-invoice" })}
       >
         {t("payment-portal")}
       </DropdownMenuItem>

@@ -42,7 +42,7 @@ export function SelectField({
     <Field>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
       <Select
-        items={items}
+        items={[...items]}
         onValueChange={(next) => {
           if (typeof next === "string") {
             onChoose(next);

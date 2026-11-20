@@ -145,7 +145,7 @@ function StudentRowMenu({
 
   return (
     <RowItems>
-      <DropdownMenuItem icon={ViewIcon} onClick={() => show(attemptId)}>
+      <DropdownMenuItem icon={ViewIcon} onSelect={() => show(attemptId)}>
         {tCommon("answers")}
       </DropdownMenuItem>
     </RowItems>

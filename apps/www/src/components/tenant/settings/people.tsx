@@ -342,7 +342,7 @@ function PersonOption({
   return (
     <PickerItem
       icon={UserIcon}
-      onClick={onChoose}
+      onSelect={onChoose}
       selected={selected}
       value={person}
     >

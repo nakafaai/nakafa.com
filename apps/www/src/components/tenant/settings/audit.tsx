@@ -11,10 +11,10 @@ import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-men
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
-  SheetContent,
   SheetDescription,
   SheetFooter,
   SheetHeader,
+  SheetPopup,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -192,13 +192,13 @@ function AuditEntryMenu({ entry }: { entry: EntryItem }) {
       <RowItems>
         <DropdownMenuItem
           icon={InformationCircleIcon}
-          onClick={() => setOpen(true)}
+          onSelect={() => setOpen(true)}
         >
           {t("audit-details")}
         </DropdownMenuItem>
       </RowItems>
       <Sheet onOpenChange={setOpen} open={open}>
-        <SheetContent>
+        <SheetPopup>
           <SheetHeader>
             <SheetTitle>{words.change(entry)}</SheetTitle>
             <SheetDescription>
@@ -231,7 +231,7 @@ function AuditEntryMenu({ entry }: { entry: EntryItem }) {
               {t("audit-detail-footer")}
             </p>
           </SheetFooter>
-        </SheetContent>
+        </SheetPopup>
       </Sheet>
     </>
   );

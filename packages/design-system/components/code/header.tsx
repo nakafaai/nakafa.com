@@ -94,11 +94,8 @@ export function CodeBlockFilename({
   );
 }
 
-/** Select behavior bound to the active code source. */
-type CodeBlockSelectProps = ComponentProps<typeof Select>;
-
-/** Binds a language selector to the code block's active source. */
-export function CodeBlockSelect(props: CodeBlockSelectProps) {
+/** Binds a language selector to the code block's active source: its trigger and its list, as `children`. */
+export function CodeBlockSelect({ children }: { children: ReactNode }) {
   const data = useCodeBlock((state) => state.data);
   const value = useCodeBlock((state) => state.value);
   const onValueChange = useCodeBlock((state) => state.onValueChange);
@@ -116,8 +113,9 @@ export function CodeBlockSelect(props: CodeBlockSelectProps) {
         }
       }}
       value={value}
-      {...props}
-    />
+    >
+      {children}
+    </Select>
   );
 }
 

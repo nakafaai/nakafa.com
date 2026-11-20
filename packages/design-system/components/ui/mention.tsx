@@ -1,14 +1,16 @@
-import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
+import {
+  Popover,
+  PopoverContent,
+} from "@repo/design-system/components/ui/popover";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
-import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { cn } from "cn";
 import type { ComponentProps, ReactNode } from "react";
 
 /**
- * A list of mention choices anchored at the caret of a text field (ADR 0025): Base UI's Positioner
- * with a virtual anchor, and a listbox. It is not modal and takes no focus, so the field keeps the
- * caret while the list is open, and the field moves the active choice with the arrow keys. It opens
- * above the caret line, so it never covers the word being typed, and it stays inside the viewport.
+ * A list of mention choices anchored at the caret of a text field (ADR 0025): a popover with a virtual anchor, and a
+ * listbox. It is not modal and takes no focus, so the field keeps the caret while the list is open, and the field
+ * moves the active choice with the arrow keys. It opens above the caret line, so it never covers the word being typed,
+ * and it stays inside the viewport. It stays a popover on a phone, since a sheet would cover the field it follows.
  */
 export function MentionPopup({
   anchor,
@@ -18,7 +20,7 @@ export function MentionPopup({
   onClose,
   open,
 }: {
-  anchor: PopoverPrimitive.Positioner.Props["anchor"];
+  anchor: ComponentProps<typeof PopoverContent>["anchor"];
   children: ReactNode;
   /** The ID of the listbox, which the field names in `aria-controls`. */
   id: string;
@@ -27,7 +29,7 @@ export function MentionPopup({
   open: boolean;
 }) {
   return (
-    <PopoverPrimitive.Root
+    <Popover
       modal={false}
       onOpenChange={(next) => {
         if (!next) {
@@ -36,37 +38,28 @@ export function MentionPopup({
       }}
       open={open}
     >
-      <ButtonGroupVariant value={undefined}>
-        <PopoverPrimitive.Portal>
-          <PopoverPrimitive.Positioner
-            align="start"
-            anchor={anchor}
-            className="isolate z-50"
-            collisionPadding={8}
-            side="top"
-            sideOffset={6}
+      <PopoverContent
+        align="start"
+        anchor={anchor ?? null}
+        className="max-h-64 w-64 max-w-[calc(100vw-1rem)] gap-0 overflow-hidden p-0"
+        collisionPadding={8}
+        finalFocus="none"
+        initialFocus="none"
+        side="top"
+        sideOffset={6}
+      >
+        <ScrollArea>
+          <div
+            aria-label={label}
+            className="flex flex-col p-1"
+            id={id}
+            role="listbox"
           >
-            <PopoverPrimitive.Popup
-              className="bg-popover text-popover-foreground flex max-h-64 w-64 max-w-[calc(100vw-1rem)] origin-(--transform-origin) flex-col overflow-hidden rounded-md border shadow-md outline-hidden"
-              data-slot="mention-popup"
-              finalFocus={false}
-              initialFocus={false}
-            >
-              <ScrollArea>
-                <div
-                  aria-label={label}
-                  className="flex flex-col p-1"
-                  id={id}
-                  role="listbox"
-                >
-                  {children}
-                </div>
-              </ScrollArea>
-            </PopoverPrimitive.Popup>
-          </PopoverPrimitive.Positioner>
-        </PopoverPrimitive.Portal>
-      </ButtonGroupVariant>
-    </PopoverPrimitive.Root>
+            {children}
+          </div>
+        </ScrollArea>
+      </PopoverContent>
+    </Popover>
   );
 }
 

@@ -49,13 +49,16 @@ export function memoryNeighbour(
 }
 
 /**
- * Whether the focus is inside the open editor. A refused delete reopens the
- * editor while its question is still closing, and the editor takes the focus then.
+ * The element in the open editor that holds the focus, if one does. A refused
+ * delete reopens the editor while its question is still closing, and the editor
+ * takes the focus then.
  */
-function focusIsInEditor() {
-  return (
-    elementById(MEMORY_EDITOR_ID)?.contains(document.activeElement) === true
-  );
+function focusInEditor() {
+  const focused = document.activeElement;
+  return focused instanceof HTMLElement &&
+    elementById(MEMORY_EDITOR_ID)?.contains(focused) === true
+    ? Option.some(focused)
+    : Option.none();
 }
 
 /**
@@ -73,16 +76,14 @@ function neighbourRow(neighbour: Option.Option<Memory["id"]>) {
 
 /**
  * The element that takes the focus after a confirmed delete: the row of the
- * neighbour when it can take the focus, else the Add memory button. It is false,
- * which leaves the focus where it is, while the focus is already in the editor.
+ * neighbour when it can take the focus, else the Add memory button. While the
+ * focus is already in the editor it is the element that holds it, so the focus
+ * stays where it is.
  */
 export function focusAfterDelete(neighbour: Option.Option<Memory["id"]>) {
-  if (focusIsInEditor()) {
-    return false;
-  }
-
-  return Option.getOrElse(neighbourRow(neighbour), () =>
-    elementById(MEMORY_ADD_ID)
+  return Option.getOrElse(
+    Option.orElse(focusInEditor(), () => neighbourRow(neighbour)),
+    () => elementById(MEMORY_ADD_ID)
   );
 }
 

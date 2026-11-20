@@ -1,7 +1,7 @@
 import { ArrowDown01Icon, BrainIcon } from "@hugeicons/core-free-icons";
 import {
   Collapsible,
-  CollapsibleContent,
+  CollapsiblePanel,
   CollapsibleTrigger,
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -9,6 +9,7 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useControllableState } from "@repo/design-system/hooks/controllable";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { lineMark } from "@repo/design-system/lib/mark";
+import type { NodeChildren } from "@repo/design-system/lib/render";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { DateTime, Effect, Fiber, Schema } from "effect";
@@ -153,7 +154,9 @@ export const Reasoning = memo(
   }
 );
 
-type ReasoningTriggerProps = ComponentProps<typeof CollapsibleTrigger>;
+type ReasoningTriggerProps = NodeChildren<
+  ComponentProps<typeof CollapsibleTrigger>
+>;
 
 const ThinkingMessage = memo(() => {
   const t = useTranslations("Ai");
@@ -236,7 +239,7 @@ export const ReasoningTrigger = memo(
   }
 );
 
-type ReasoningContentProps = ComponentProps<typeof CollapsibleContent>;
+type ReasoningContentProps = ComponentProps<typeof CollapsiblePanel>;
 
 /**
  * Frames rendered reasoning; streamed and static callers choose the renderer.
@@ -245,7 +248,7 @@ type ReasoningContentProps = ComponentProps<typeof CollapsibleContent>;
  */
 export const ReasoningContent = memo(
   ({ className, ...props }: ReasoningContentProps) => (
-    <CollapsibleContent
+    <CollapsiblePanel
       className={cn(
         "text-muted-foreground ms-2 border-s ps-4 text-sm outline-none",
         className

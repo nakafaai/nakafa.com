@@ -36,17 +36,17 @@ export const scrollThumbVariants = cva(
 
 /**
  * The fade at an edge of a scroller where more content is, which says the scroller moves: it grows from nothing with
- * the distance left to scroll, up to `--fade-size`, so a scroller at its end shows a whole edge. It reads the overflow
- * that Base UI's scroll viewport measures, so it stands on that viewport. `start` also fades the near edges, for a
- * scroller whose first row is not kept in place.
+ * the distance left to scroll, up to `--fade-size`, so a scroller at its end shows a whole edge. It stands on the
+ * viewport and inherits the overflow its scroll area measures, which no element inherits by default. `start` also
+ * fades the near edges, for a scroller whose first row is not kept in place.
  */
 export const scrollFadeVariants = cva(
-  "mask-r-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-x-end)))] mask-b-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-y-end)))] [--fade-size:1.5rem]",
+  "mask-r-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-x-end)))] mask-b-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-y-end)))] [--fade-size:1.5rem] [--scroll-area-overflow-x-end:inherit] [--scroll-area-overflow-y-end:inherit]",
   {
     variants: {
       start: {
         false: "",
-        true: "mask-t-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-y-start)))] mask-l-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-x-start)))]",
+        true: "mask-t-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-y-start)))] mask-l-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-x-start)))] [--scroll-area-overflow-x-start:inherit] [--scroll-area-overflow-y-start:inherit]",
       },
     },
   }

@@ -1,12 +1,11 @@
 import { Schema } from "effect";
 
 /**
- * The direction in which the text of a locale runs. The `dir` attribute and
- * Base UI's `DirectionProvider` take these two words.
+ * The direction in which the text of a locale runs, as the `dir` attribute takes it.
  */
-export const TextDirection = Schema.Literals(["ltr", "rtl"]);
+const TextDirection = Schema.Literals(["ltr", "rtl"]);
 
-export type TextDirection = typeof TextDirection.Type;
+type TextDirection = typeof TextDirection.Type;
 
 /**
  * Reads the direction of the text of one locale tag, such as `en` or `ar`,

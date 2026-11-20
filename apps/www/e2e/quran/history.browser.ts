@@ -76,7 +76,7 @@ const verifyOutlineHistory = Effect.fn("NakafaE2E.verifyOutlineHistory")(
       readinessTimeoutMilliseconds
     );
     const outline = page.locator(
-      '[data-side="right"] [data-slot="sidebar-content"]'
+      '[data-side="right"] [data-sidebar="content"]'
     );
     yield* Effect.promise(() =>
       outline

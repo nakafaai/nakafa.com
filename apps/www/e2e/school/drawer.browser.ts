@@ -5,32 +5,27 @@ import { waitForStill } from "@/e2e/support/quiet";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
-/** A phone, where a dialog opens as a drawer from the bottom. */
+/** A phone, a small touch screen, where a dialog opens as a sheet from the bottom. */
 const PHONE = { height: 844, width: 390 };
 
 /** A wide screen, where the same dialog opens in the middle. */
 const DESKTOP = { height: 900, width: 1440 };
 
-/** How far a swipe drags the drawer down before letting go. */
+/** How far a swipe drags the sheet down before letting go. */
 const SWIPE = 400;
 
-/** The scale of the page behind the drawer, as its computed style reads it. */
+/** The scale of the page behind the sheet, as its computed style reads it. */
 function stageScale(stage: Locator) {
   return stage.evaluate((element) => getComputedStyle(element).scale);
 }
 
 /**
- * Whether the page holds Base UI's scroll lock. Where the page's scrollbar takes room, the lock marks
- * `<html>` with its attribute; where the bar overlays the page and takes none, it hides the overflow of the
- * element that scrolls the viewport, `<html>` when it sets an overflow of its own and `<body>` otherwise, and
- * sets no attribute.
+ * Whether the page holds UI SDK's scroll lock, which hides the overflow of the element that scrolls the viewport:
+ * `<html>` when it sets an overflow of its own, and `<body>` otherwise.
  */
 function scrollLocked(page: Page) {
   return page.evaluate(() => {
     const html = document.documentElement;
-    if (html.hasAttribute("data-base-ui-scroll-locked")) {
-      return true;
-    }
     const own = getComputedStyle(html);
     const scroller =
       own.overflowX === "visible" && own.overflowY === "visible"
@@ -42,20 +37,24 @@ function scrollLocked(page: Page) {
 }
 
 /**
- * Waits until the drawer stands still. It slides up as it opens, so a box read earlier names a place the handle
- * has already left, and a press there lands on the drawer's text.
+ * Waits until the sheet stands still. It slides up as it opens, so a box read earlier names a place the grip
+ * has already left, and a press there lands on the sheet's text.
  */
-async function settled(drawer: Locator) {
-  await waitForStill(drawer);
+async function settled(sheet: Locator) {
+  await waitForStill(sheet);
 }
 
-test("a dialog opens as a drawer on a phone, scales the page back, keeps the focus, and closes on Escape and on a swipe down", async ({
+test("a dialog opens as a sheet on a phone, scales the page back, keeps the focus, and closes on Escape and on a swipe down", async ({
   baseURL,
   browser,
 }) => {
   const school = await Effect.runPromise(createSchool());
   const host = `${school.slug}.localhost`;
-  const context = await browser.newContext({ viewport: PHONE });
+  const context = await browser.newContext({
+    hasTouch: true,
+    isMobile: true,
+    viewport: PHONE,
+  });
   await Effect.runPromise(
     signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
   );
@@ -64,16 +63,21 @@ test("a dialog opens as a drawer on a phone, scales the page back, keeps the foc
   const create = page.getByRole("button", { name: "Create exam" });
   await waitUntilTakenOver(create);
   const stage = page.locator('[data-slot="drawer-stage"]');
-  const drawer = page.locator('[data-slot="drawer-popup"]');
+  const sheet = page.locator(
+    '[data-slot="dialog-content"][data-presentation="sheet"]'
+  );
+  const centered = page.locator(
+    '[data-slot="dialog-content"][data-presentation="dialog"]'
+  );
 
-  // The dialog opens from the bottom as a drawer, the page behind it scales back, and the page is locked.
+  // The dialog opens from the bottom as a sheet, the page behind it scales back, and the page is locked.
   await create.click();
-  await expect(drawer).toBeVisible();
-  await expect(page.locator('[data-slot="dialog-content"]')).toHaveCount(0);
+  await expect(sheet).toBeVisible();
+  await expect(centered).toHaveCount(0);
   await expect.poll(() => scrollLocked(page)).toBe(true);
   await expect.poll(() => stageScale(stage)).toBe("0.94");
 
-  // The focus stays in the drawer however far the writer tabs, forward and back. Past the last control, or
+  // The focus stays in the sheet however far the writer tabs, forward and back. Past the last control, or
   // before the first, a press lands on the trap's guard, which hands the focus to the control at the other end
   // on the next frame, so each press waits for it.
   for (const key of ["Tab", "Shift+Tab"]) {
@@ -81,7 +85,7 @@ test("a dialog opens as a drawer on a phone, scales the page back, keeps the foc
       await page.keyboard.press(key);
       await expect
         .poll(() =>
-          drawer.evaluate((element) => element.contains(document.activeElement))
+          sheet.evaluate((element) => element.contains(document.activeElement))
         )
         .toBe(true);
     }
@@ -89,17 +93,15 @@ test("a dialog opens as a drawer on a phone, scales the page back, keeps the foc
 
   // Escape closes it, and the page takes its size back and scrolls again.
   await page.keyboard.press("Escape");
-  await expect(drawer).toHaveCount(0);
+  await expect(sheet).toHaveCount(0);
   await expect.poll(() => scrollLocked(page)).toBe(false);
   await expect.poll(() => stageScale(stage)).toBe("none");
 
-  // A swipe down on the drawer's handle closes it.
+  // A swipe down on the sheet's grip closes it.
   await create.click();
-  await expect(drawer).toBeVisible();
-  await settled(drawer);
-  const handle = await drawer
-    .locator('[data-slot="drawer-swipe-handle"]')
-    .boundingBox();
+  await expect(sheet).toBeVisible();
+  await settled(sheet);
+  const handle = await sheet.locator('[data-slot="sheet-grip"]').boundingBox();
   expect(handle).not.toBeNull();
   if (handle !== null) {
     const x = handle.x + handle.width / 2;
@@ -109,14 +111,14 @@ test("a dialog opens as a drawer on a phone, scales the page back, keeps the foc
     await page.mouse.move(x, y + SWIPE, { steps: 20 });
     await page.mouse.up();
   }
-  await expect(drawer).toHaveCount(0);
+  await expect(sheet).toHaveCount(0);
   await expect.poll(() => stageScale(stage)).toBe("none");
 
   // On a wide screen the same dialog opens in the middle, and the page keeps its size.
   await page.setViewportSize(DESKTOP);
   await create.click();
-  await expect(page.locator('[data-slot="dialog-content"]')).toBeVisible();
-  await expect(drawer).toHaveCount(0);
+  await expect(centered).toBeVisible();
+  await expect(sheet).toHaveCount(0);
   expect(await stageScale(stage)).toBe("none");
   await context.close();
 });

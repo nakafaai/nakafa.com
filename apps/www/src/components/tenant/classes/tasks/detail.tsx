@@ -322,7 +322,7 @@ function HandIn() {
                 className="min-h-40"
                 dir="auto"
                 id={`${id}-work`}
-                onChange={(event) => setText(event.target.value)}
+                onValueChange={setText}
                 placeholder={t("handin-placeholder")}
                 readOnly={isClosed}
                 value={text}

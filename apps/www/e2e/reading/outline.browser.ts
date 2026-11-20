@@ -12,7 +12,7 @@ test.use({ viewport: { height: 900, width: 1440 } });
 
 /** The links of the lesson's outline, in the panel beside it. */
 const OUTLINE_LINKS =
-  '[data-side="right"] [data-slot="sidebar-content"] a[href^="#"]';
+  '[data-side="right"] [data-sidebar="content"] a[href^="#"]';
 
 /** The page's header, which stays on screen while the lesson scrolls under it. */
 const PAGE_HEADER = '[data-slot="page-header"]';

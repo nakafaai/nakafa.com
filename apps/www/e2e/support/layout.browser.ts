@@ -41,7 +41,7 @@ const openToaster = async (page: Page, toasterPosition: "fixed" | "static") => {
        li { background: #ccc; height: 100px; }
      </style>
      <div class="page">page</div>
-     <ol class="toaster" data-sonner-toaster><li class="toast">toast</li></ol>`
+     <section class="toaster" data-slot="toast-region"><ol><li class="toast">toast</li></ol></section>`
   );
   await page.evaluate(recordLayoutShifts, { key: KEY, overlay: TOASTER });
   await nextFrame(page);

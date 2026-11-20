@@ -2,7 +2,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import { ResizeEdge } from "@repo/design-system/components/ui/resizable";
 import {
   Sheet,
-  SheetContent,
+  SheetPopup,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/resizable";
@@ -248,22 +248,27 @@ function MemoryEditorSheet({
       }}
       open={open}
     >
-      <SheetContent
+      <SheetPopup
         className="w-full max-w-none gap-0 border-l-0"
-        finalFocus={() => {
-          // The sheet also goes when the window widens past the panel's width.
-          // The editor is still open then, and it moves into the panel with its
-          // caret, so the focus stays in it.
-          if (open) {
-            return false;
-          }
-          if (opener === null) {
-            return elementById(MEMORY_ADD_ID);
-          }
-          // A deleted memory has no row, and its delete question has placed the
-          // focus already, so the sheet leaves it where the question put it.
-          return elementById(memoryRowId(opener)) ?? false;
-        }}
+        // The sheet also goes when the window widens past the panel's width.
+        // The editor is still open then, and it moves into the panel with its
+        // caret, so the focus stays in it.
+        finalFocus={
+          open
+            ? "none"
+            : () => {
+                if (opener === null) {
+                  return elementById(MEMORY_ADD_ID);
+                }
+                // A deleted memory has no row, and its delete question has placed the
+                // focus already, so the sheet leaves it where the question put it.
+                const focused = document.activeElement;
+                return (
+                  elementById(memoryRowId(opener)) ??
+                  (focused instanceof HTMLElement ? focused : undefined)
+                );
+              }
+        }
         id={SHEET_ID}
         initialFocus={() => elementById(SHEET_ID)}
         ref={place}
@@ -272,7 +277,7 @@ function MemoryEditorSheet({
         <SheetTitle className="sr-only">
           {memory ? t("edit") : t("new")}
         </SheetTitle>
-      </SheetContent>
+      </SheetPopup>
     </Sheet>
   );
 }

@@ -1,8 +1,10 @@
-import { Toggle as TogglePrimitive } from "@base-ui/react/toggle";
-import { ToggleGroup as ToggleGroupPrimitive } from "@base-ui/react/toggle-group";
+import type { NodeChildren } from "@repo/design-system/lib/render";
 import { toggleVariants } from "@repo/design-system/lib/toggle/variants";
-import type { VariantProps } from "class-variance-authority";
-import { cva } from "class-variance-authority";
+import {
+  ToggleGroup as ToggleGroupPrimitive,
+  Toggle as TogglePrimitive,
+} from "@ui-sdk/react/toggle";
+import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Schema } from "effect";
 import type * as React from "react";
@@ -101,93 +103,61 @@ type ToggleGroupGridColumns = NonNullable<
   VariantProps<typeof toggleGroupRootVariants>["gridColumns"]
 >;
 
-type ToggleGroupBaseProps = Omit<
-  React.ComponentProps<typeof ToggleGroupPrimitive>,
-  "defaultValue" | "multiple" | "onValueChange" | "value"
-> &
+type ToggleGroupRestProps = Omit<
+  NodeChildren<React.ComponentProps<typeof ToggleGroupPrimitive>>,
+  "defaultValue" | "multiple" | "onValueChange" | "orientation" | "value"
+>;
+
+type ToggleGroupValueProps =
+  | {
+      defaultValue?: string;
+      onValueChange?: (value: string) => void;
+      type?: "single";
+      value?: string;
+    }
+  | {
+      defaultValue?: readonly string[];
+      onValueChange?: (value: string[]) => void;
+      type: "multiple";
+      value?: readonly string[];
+    };
+
+type ToggleGroupProps = ToggleGroupRestProps &
+  ToggleGroupValueProps &
   VariantProps<typeof toggleVariants> & {
     gridColumns?: ToggleGroupGridColumns;
     layout?: ToggleGroupLayout;
+    orientation?: "horizontal" | "vertical";
   };
 
-type ToggleGroupSingleProps = ToggleGroupBaseProps & {
-  defaultValue?: string;
-  onValueChange?: (value: string) => void;
-  type?: "single";
-  value?: string;
-};
-
-type ToggleGroupMultipleProps = ToggleGroupBaseProps & {
-  defaultValue?: readonly string[];
-  onValueChange?: (value: string[]) => void;
-  type: "multiple";
-  value?: readonly string[];
-};
-
-type ToggleGroupProps = ToggleGroupSingleProps | ToggleGroupMultipleProps;
-
 /**
- * Renders a single-select or multi-select toggle group: joined outline segments of equal inner spacing, never ghost.
+ * A row of joined outline toggles of equal inner spacing, never ghost. `type="single"`, the default, keeps one value
+ * as a string, empty when nothing is pressed; `type="multiple"` keeps an array.
  */
-function ToggleGroup(props: ToggleGroupProps) {
-  if (isMultipleToggleGroupProps(props)) {
-    return <MultipleToggleGroup {...props} />;
-  }
-
-  return <SingleToggleGroup {...props} />;
-}
-
-/**
- * Adapts Base UI's array value model to the single string value used by our API.
- */
-function SingleToggleGroup({
+function ToggleGroup({
   className,
   variant = "outline",
   size,
   children,
-  defaultValue,
   gridColumns,
-  onValueChange,
   orientation = "horizontal",
   layout = "default",
-  type = "single",
-  value,
   ...props
-}: ToggleGroupSingleProps) {
-  const groupDefaultValue =
-    defaultValue === undefined ? undefined : toSingleValueArray(defaultValue);
-  const groupValue =
-    value === undefined ? undefined : toSingleValueArray(value);
-  const resolvedLayout = getResolvedLayout(layout, gridColumns);
-
-  /**
-   * Publishes only the selected item instead of Base UI's single-item array.
-   */
-  function handleValueChange(nextValue: string[]) {
-    onValueChange?.(nextValue[0] ?? "");
-  }
+}: ToggleGroupProps) {
+  const resolvedLayout = gridColumns ? "grid" : layout;
 
   return (
     <ToggleGroupPrimitive
       className={cn(
-        toggleGroupRootVariants({
-          gridColumns,
-          layout: resolvedLayout,
-        }),
+        toggleGroupRootVariants({ gridColumns, layout: resolvedLayout }),
         className
       )}
       data-grid-columns={gridColumns}
       data-layout={resolvedLayout}
-      data-orientation={orientation}
       data-size={size}
-      data-slot="toggle-group"
-      data-type={type}
       data-variant={variant}
-      defaultValue={groupDefaultValue}
-      onValueChange={handleValueChange}
       orientation={orientation}
-      value={groupValue}
-      {...props}
+      {...valueProps(props)}
     >
       <ToggleGroupStyle layout={resolvedLayout} size={size} variant={variant}>
         {children}
@@ -197,80 +167,35 @@ function SingleToggleGroup({
 }
 
 /**
- * Renders Base UI's multiple selection mode while preserving shared visual variants.
+ * The group's own props, with a single group's string value read as the array of the one pressed toggle. A value the
+ * caller leaves out stays out, so the group keeps its own state.
  */
-function MultipleToggleGroup({
-  className,
-  variant = "outline",
-  size,
-  children,
-  gridColumns,
-  orientation = "horizontal",
-  layout = "default",
-  type,
-  ...props
-}: ToggleGroupMultipleProps) {
-  const resolvedLayout = getResolvedLayout(layout, gridColumns);
-
-  return (
-    <ToggleGroupPrimitive
-      className={cn(
-        toggleGroupRootVariants({
-          gridColumns,
-          layout: resolvedLayout,
-        }),
-        className
-      )}
-      data-grid-columns={gridColumns}
-      data-layout={resolvedLayout}
-      data-orientation={orientation}
-      data-size={size}
-      data-slot="toggle-group"
-      data-type={type}
-      data-variant={variant}
-      multiple
-      orientation={orientation}
-      {...props}
-    >
-      <ToggleGroupStyle layout={resolvedLayout} size={size} variant={variant}>
-        {children}
-      </ToggleGroupStyle>
-    </ToggleGroupPrimitive>
-  );
-}
-
-/**
- * Grid column presets opt into the grid layout while leaving the default group unchanged.
- */
-function getResolvedLayout(
-  layout: ToggleGroupLayout,
-  gridColumns?: ToggleGroupGridColumns
-): ToggleGroupLayout {
-  if (gridColumns) {
-    return "grid";
+function valueProps(props: ToggleGroupValueProps & ToggleGroupRestProps) {
+  if (props.type === "multiple") {
+    const { type: _type, defaultValue, value, ...rest } = props;
+    return {
+      ...rest,
+      ...(defaultValue === undefined
+        ? {}
+        : { defaultValue: [...defaultValue] }),
+      ...(value === undefined ? {} : { value: [...value] }),
+      multiple: true,
+    };
   }
-
-  return layout;
+  const { type: _type, defaultValue, onValueChange, value, ...rest } = props;
+  return {
+    ...rest,
+    ...(defaultValue === undefined
+      ? {}
+      : { defaultValue: toPressed(defaultValue) }),
+    ...(value === undefined ? {} : { value: toPressed(value) }),
+    onValueChange: (next: string[]) => onValueChange?.(next[0] ?? ""),
+  };
 }
 
-/**
- * Narrows the union so each Base UI mode receives the correct value shape.
- */
-function isMultipleToggleGroupProps(
-  props: ToggleGroupProps
-): props is ToggleGroupMultipleProps {
-  return props.type === "multiple";
-}
-
-/**
- * Converts the public single-value API into Base UI's array API.
- */
-function toSingleValueArray(value: string) {
-  if (!value) {
-    return [];
-  }
-
-  return [value];
+/** A single group's string as the pressed toggles' values: none for an empty string. */
+function toPressed(value: string) {
+  return value ? [value] : [];
 }
 
 /**
@@ -307,7 +232,6 @@ function ToggleGroupItem({
         className
       )}
       data-size={itemSize}
-      data-slot="toggle-group-item"
       data-variant={itemVariant}
       {...props}
     >

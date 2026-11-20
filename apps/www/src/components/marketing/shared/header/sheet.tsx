@@ -8,29 +8,27 @@ import {
 } from "@repo/design-system/components/ui/drawer";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
-import type { ComponentProps, ReactNode } from "react";
-import { createContext, use, useRef } from "react";
+import { createContext, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
-import type { HeaderLink } from "@/components/marketing/shared/header/sections";
-import { HEADER_SECTIONS } from "@/components/marketing/shared/header/sections";
+import {
+  HEADER_SECTIONS,
+  type HeaderLink,
+} from "@/components/marketing/shared/header/sections";
 import { TargetLink } from "@/lib/routing/link";
 
-/** The actions of the header's drawer, so a link inside it closes it. */
-type DrawerActions = NonNullable<ComponentProps<typeof Drawer>["actionsRef"]>;
-
-/** The open drawer's actions, which its links read; none outside a drawer. */
-const HeaderDrawerActions = createContext<DrawerActions | null>(null);
+/** Closes the header's drawer, which its links call; none outside a drawer. */
+const HeaderDrawerClose = createContext<(() => void) | null>(null);
 
 /** One link of the drawer, on the row a menu item draws. A press opens its page or part and closes the drawer, the current address included. */
 function HeaderDrawerLink({ link }: { link: HeaderLink }) {
   const t = useTranslations();
-  const actions = use(HeaderDrawerActions);
+  const close = use(HeaderDrawerClose);
 
   return (
     <TargetLink
       className="hover:bg-accent hover:text-accent-foreground hover:**:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground flex min-h-10 items-center gap-2 rounded-sm px-2 text-sm outline-hidden transition-colors"
       hash={"hash" in link ? link.hash : undefined}
-      onClick={() => actions?.current?.close()}
+      onClick={() => close?.()}
       target={link.target}
     >
       <HugeIcons className="text-muted-foreground" icon={link.icon} />
@@ -45,7 +43,7 @@ function HeaderDrawerLink({ link }: { link: HeaderLink }) {
  * button: each section under its name with its groups of links, and the page's
  * call to action, which the caller gives as children, in the footer, since a
  * phone's header has no room for it. The Menu button outside it opens it
- * (`open`), and its links close it through the drawer's own actions. Its code
+ * (`open`), and its links close it as they open their page. Its code
  * loads on the reader's intent, never with the page (ADR 0039).
  */
 export function HeaderSheet({
@@ -58,11 +56,10 @@ export function HeaderSheet({
   open: boolean;
 }) {
   const t = useTranslations();
-  const actions: DrawerActions = useRef(null);
 
   return (
-    <HeaderDrawerActions value={actions}>
-      <Drawer actionsRef={actions} onOpenChange={onOpenChange} open={open}>
+    <HeaderDrawerClose value={() => onOpenChange(false)}>
+      <Drawer onOpenChange={onOpenChange} open={open}>
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>{t("Marketing.menu")}</DrawerTitle>
@@ -93,6 +90,6 @@ export function HeaderSheet({
           <DrawerFooter className="items-end">{children}</DrawerFooter>
         </DrawerContent>
       </Drawer>
-    </HeaderDrawerActions>
+    </HeaderDrawerClose>
   );
 }

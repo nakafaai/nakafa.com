@@ -120,19 +120,25 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+/** Where the menu sends the focus as it closes, with a function's target read as the menu reads it. */
+function menuFocusTarget() {
+  const target = hook().menuFinalFocus;
+  return typeof target === "function" ? target() : target;
+}
+
 describe("useChatRename", () => {
   it("opens the box with the title, and hands the focus to the box when the menu closes after a rename", () => {
     act(() => hook().handleEdit());
 
     expect(hook().isEditing).toBe(true);
     expect(hook().chatTitle).toBe(chat.title);
-    expect(hook().menuFinalFocus).toBe(hook().inputRef);
+    expect(menuFocusTarget()).toBe(hook().inputRef.current);
 
     act(() => hook().onMenuOpenChange(false));
-    expect(hook().menuFinalFocus).toBe(hook().inputRef);
+    expect(menuFocusTarget()).toBe(hook().inputRef.current);
 
     act(() => hook().onMenuOpenChange(true));
-    expect(hook().menuFinalFocus).toBeUndefined();
+    expect(hook().menuFinalFocus).toBe("trigger");
   });
 
   it("opens the box empty for a chat that has no title yet", () => {

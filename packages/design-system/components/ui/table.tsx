@@ -19,7 +19,7 @@ function Table({
   return (
     <ScrollArea
       className={cn("w-full", containerClassName)}
-      data-slot="table-container"
+      data-table="container"
       viewportRef={viewportRef}
     >
       <table

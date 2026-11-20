@@ -44,7 +44,6 @@ export function GuestLanguageMenu() {
     <SidebarMenuItem>
       <DropdownMenu>
         <DropdownMenuTrigger
-          openOnHover
           render={
             <SidebarMenuButton title={label}>
               <HugeIcons icon={TranslateIcon} />
@@ -74,7 +73,6 @@ export function GuestLanguageMenu() {
 /** The language submenu of an account menu, shared by the Nakafa and the school menus. */
 export function SidebarLanguageSubmenu() {
   const t = useTranslations("Common");
-  const side = useSidebar(selectMenuSide);
 
   return (
     <DropdownMenuSub>
@@ -84,7 +82,6 @@ export function SidebarLanguageSubmenu() {
       <DropdownMenuSubContent
         className="w-max max-w-[calc(100vw-2rem)]"
         label={t("menu-language")}
-        side={side}
       >
         <RouteLanguageItems />
       </DropdownMenuSubContent>
@@ -95,7 +92,6 @@ export function SidebarLanguageSubmenu() {
 /** The theme submenu of an account menu, shared by the Nakafa and the school menus. */
 export function SidebarThemeSubmenu() {
   const t = useTranslations("Common");
-  const side = useSidebar(selectMenuSide);
 
   return (
     <DropdownMenuSub>
@@ -104,7 +100,7 @@ export function SidebarThemeSubmenu() {
       </DropdownMenuSubTrigger>
       <Suspense fallback={null}>
         <ClientOnly fallback={null}>
-          <ThemeSubmenuContent side={side} />
+          <ThemeSubmenuContent />
         </ClientOnly>
       </Suspense>
     </DropdownMenuSub>

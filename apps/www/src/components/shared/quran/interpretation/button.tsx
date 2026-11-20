@@ -6,6 +6,7 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { cn } from "cn";
 import {
   useQuranInterpretationSelection,
   useQuranInterpretationState,
@@ -26,8 +27,8 @@ export function QuranInterpretationButton({
 
   return (
     <Button
-      aria-busy={isLoading || undefined}
-      className={state === "inactive" ? "disabled:opacity-100" : undefined}
+      aria-busy={isLoading}
+      className={cn(state === "inactive" && "disabled:opacity-100")}
       data-quran-interpretation-verse={verseNumber}
       disabled={state !== "idle"}
       onClick={selectInterpretation}

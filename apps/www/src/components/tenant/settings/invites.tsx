@@ -268,7 +268,7 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
         <DropdownMenuItem
           disabled={sendLocale === undefined || isResending}
           icon={MailSend01Icon}
-          onClick={() => {
+          onSelect={() => {
             if (sendLocale !== undefined) {
               (isExpired ? sendExpired : sendPending)(sendLocale);
             }
@@ -281,14 +281,14 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
             <DropdownMenuItem
               disabled={sendLocale === undefined}
               icon={MailEdit01Icon}
-              onClick={() => dialogs.show("readdress")}
+              onSelect={() => dialogs.show("readdress")}
             >
               {t("invite-readdress")}
             </DropdownMenuItem>
             {cardOffered(invite.roles) ? (
               <DropdownMenuItem
                 icon={IdIcon}
-                onClick={() => dialogs.show("issue")}
+                onSelect={() => dialogs.show("issue")}
               >
                 {t("invite-card")}
               </DropdownMenuItem>
@@ -296,7 +296,7 @@ function SchoolInviteMenu({ invite }: { invite: InviteItem }) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               icon={Delete02Icon}
-              onClick={() => dialogs.show("revoke")}
+              onSelect={() => dialogs.show("revoke")}
               variant="destructive"
             >
               {t("grant-revoke")}

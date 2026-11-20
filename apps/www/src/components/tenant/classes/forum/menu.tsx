@@ -78,7 +78,7 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
           render={
             // With a mouse the menu shows on the row's hover or focus; a touch screen always shows it.
             <Button
-              className="pointer-fine:opacity-0 pointer-fine:group-focus-within/chat:opacity-100 pointer-fine:group-hover/chat:opacity-100 pointer-fine:data-popup-open:opacity-100"
+              className="pointer-fine:opacity-0 pointer-fine:group-focus-within/chat:opacity-100 pointer-fine:group-hover/chat:opacity-100 pointer-fine:data-open:opacity-100"
               size="icon"
               tooltip={common("more-actions")}
               variant="ghost"
@@ -106,7 +106,7 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
             <DropdownMenuItem
               disabled={!channel.unread}
               icon={CheckmarkCircle02Icon}
-              onClick={() =>
+              onSelect={() =>
                 runSchoolWrite(
                   Effect.flatMap(Clock.currentTimeMillis, (at) =>
                     schoolCall(() =>
@@ -127,7 +127,7 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
             {managed ? (
               <DropdownMenuItem
                 icon={PencilEdit02Icon}
-                onClick={() => dialogs.show("rename")}
+                onSelect={() => dialogs.show("rename")}
               >
                 {t("channel-rename")}
               </DropdownMenuItem>
@@ -139,7 +139,7 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
               <DropdownMenuGroup>
                 <DropdownMenuItem
                   icon={channel.archived ? ArchiveRestoreIcon : Archive02Icon}
-                  onClick={() =>
+                  onSelect={() =>
                     runSchoolWrite(
                       schoolCall(() =>
                         archive({
@@ -158,7 +158,7 @@ export function ChannelMenu({ channel }: { channel: typeof ChannelView.Type }) {
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   icon={Delete02Icon}
-                  onClick={() => dialogs.show("remove")}
+                  onSelect={() => dialogs.show("remove")}
                   variant="destructive"
                 >
                   {t("channel-remove")}

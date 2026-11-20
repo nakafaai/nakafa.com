@@ -33,7 +33,6 @@ export function InboxTabs({
         {Arr.map(topics, (item) => (
           <TabsTab
             key={item}
-            nativeButton={false}
             render={
               <Link
                 replace={true}

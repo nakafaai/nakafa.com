@@ -1,88 +1,48 @@
 "use client";
 
-import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
-import { PortalContainer } from "@repo/design-system/lib/portal";
+import { popupMotion } from "@repo/design-system/lib/popup";
+import {
+  TooltipContent as TooltipContentPrimitive,
+  Tooltip as TooltipPrimitive,
+  TooltipTrigger as TooltipTriggerPrimitive,
+} from "@ui-sdk/react/tooltip";
 import { cn } from "cn";
 import type * as React from "react";
-import { use } from "react";
-
-function TooltipProvider({
-  delay = 0,
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
-  return (
-    <TooltipPrimitive.Provider
-      data-slot="tooltip-provider"
-      delay={delay}
-      {...props}
-    />
-  );
-}
 
 /**
  * The words of a control that shows only an icon, on hover and focus. It names the action; it never holds anything a
- * reader must read.
+ * reader must read. It opens the moment the pointer rests, and the next one along a row opens at once.
  */
 function Tooltip({
+  delay = 0,
   ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Root>) {
-  return (
-    <TooltipProvider>
-      <TooltipPrimitive.Root data-slot="tooltip" {...props} />
-    </TooltipProvider>
-  );
+}: React.ComponentProps<typeof TooltipPrimitive>) {
+  return <TooltipPrimitive delay={delay} {...props} />;
 }
 
-function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
+function TooltipTrigger(
+  props: React.ComponentProps<typeof TooltipTriggerPrimitive>
+) {
+  return <TooltipTriggerPrimitive {...props} />;
 }
 
 function TooltipContent({
   className,
-  side = "top",
-  sideOffset = 4,
-  align = "center",
-  alignOffset = 0,
-  children,
   ...props
-}: TooltipPrimitive.Popup.Props &
-  Pick<
-    TooltipPrimitive.Positioner.Props,
-    "align" | "alignOffset" | "side" | "sideOffset"
-  >) {
+}: React.ComponentProps<typeof TooltipContentPrimitive>) {
   return (
     <ButtonGroupVariant value={undefined}>
-      <TooltipPrimitive.Portal container={use(PortalContainer)}>
-        <TooltipPrimitive.Positioner
-          align={align}
-          alignOffset={alignOffset}
-          className="isolate z-50"
-          side={side}
-          sideOffset={sideOffset}
-        >
-          <TooltipPrimitive.Popup
-            className={cn(
-              "data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=inline-end]:slide-in-from-left-2 bg-foreground text-background duration-ui motion-safe:data-closed:animate-out motion-safe:data-open:animate-in z-50 w-fit max-w-xs origin-(--transform-origin) rounded-md px-3 py-1.5 text-xs ease-out",
-              className
-            )}
-            data-slot="tooltip-content"
-            {...props}
-          >
-            {children}
-          </TooltipPrimitive.Popup>
-        </TooltipPrimitive.Positioner>
-      </TooltipPrimitive.Portal>
+      <TooltipContentPrimitive
+        className={cn(
+          popupMotion(),
+          "bg-foreground text-background z-50 w-fit max-w-xs rounded-md px-3 py-1.5 text-xs",
+          className
+        )}
+        {...props}
+      />
     </ButtonGroupVariant>
   );
 }
 
-const TooltipPopup = TooltipContent;
-
-export {
-  Tooltip,
-  TooltipContent,
-  TooltipPopup,
-  TooltipProvider,
-  TooltipTrigger,
-};
+export { Tooltip, TooltipContent, TooltipTrigger };

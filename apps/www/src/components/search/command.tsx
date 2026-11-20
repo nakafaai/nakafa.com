@@ -1,6 +1,5 @@
 import {
   Command,
-  CommandCollection,
   CommandDialog,
   CommandDialogPopup,
   CommandGroup,
@@ -13,9 +12,9 @@ import {
 import { useRequired } from "@repo/design-system/hooks/required";
 import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option, Result } from "effect";
-import type { ReactNode } from "react";
 import {
   createContext,
+  type ReactNode,
   Suspense,
   use,
   useDeferredValue,
@@ -26,15 +25,20 @@ import {
 import { useLocale, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { CommandKeys } from "@/components/search/keys";
-import type { PaletteGroup, PaletteRow } from "@/components/search/rows";
-import { SearchRow, usePaletteGroups } from "@/components/search/rows";
+import {
+  type PaletteRow,
+  SearchRow,
+  usePaletteGroups,
+} from "@/components/search/rows";
 import { EmptyState } from "@/components/state/empty";
 import { EmptyNina } from "@/components/state/nina";
 import { SEARCH_TARGET } from "@/lib/routing/target";
 import { useSearch } from "@/lib/search/context";
 import type { SearchEntry } from "@/lib/search/entry";
-import type { SearchIndexUnavailable } from "@/lib/search/load";
-import { readSearchIndex } from "@/lib/search/load";
+import {
+  readSearchIndex,
+  type SearchIndexUnavailable,
+} from "@/lib/search/load";
 import { createRecentStore } from "@/lib/search/recent";
 
 /**
@@ -106,8 +110,7 @@ function SearchDialog() {
     <CommandDialog onOpenChange={setOpen} open={open}>
       <CommandDialogPopup
         description={t("search-description")}
-        initialFocus
-        portalProps={{ keepMounted: true }}
+        keepMounted
         title={tCommon("search")}
       >
         <SearchPalette />
@@ -146,15 +149,7 @@ function SearchPalette() {
   }
 
   return (
-    <Command
-      filter={null}
-      items={groups}
-      itemToStringValue={(row: PaletteRow) => row.key}
-      loopFocus
-      mode="none"
-      onValueChange={setQuery}
-      value={query}
-    >
+    <Command filter={false} onQueryChange={setQuery} query={query}>
       <CommandInput
         clearLabel={tCommon("clear-search")}
         placeholder={t("search-placeholder")}
@@ -166,23 +161,21 @@ function SearchPalette() {
           <SearchMissed />
         ) : null}
         <CommandList>
-          {(group: PaletteGroup) => (
-            <CommandGroup items={group.items} key={group.key}>
+          {Arr.map(groups, (group) => (
+            <CommandGroup key={group.key}>
               <CommandGroupLabel>{group.label}</CommandGroupLabel>
-              <CommandCollection>
-                {(row: PaletteRow) => (
-                  <CommandItem
-                    disabled={isPending}
-                    key={row.key}
-                    onClick={() => choose(row)}
-                    value={row}
-                  >
-                    <SearchRow row={row} />
-                  </CommandItem>
-                )}
-              </CommandCollection>
+              {Arr.map(group.items, (row) => (
+                <CommandItem
+                  disabled={isPending}
+                  key={row.key}
+                  onSelect={() => choose(row)}
+                  value={`${group.key}:${row.key}`}
+                >
+                  <SearchRow row={row} />
+                </CommandItem>
+              ))}
             </CommandGroup>
-          )}
+          ))}
         </CommandList>
       </CommandPanel>
       <CommandKeys />

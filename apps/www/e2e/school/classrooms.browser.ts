@@ -30,7 +30,7 @@ test("an admin adds, renames, archives and restores a classroom of a cohort, ass
 
   await page.goto(address("/settings/profile"));
   await (
-    await settingsLink(page.locator('[data-slot="sidebar-content"]'), "classes")
+    await settingsLink(page.locator('[data-sidebar="content"]'), "classes")
   ).click();
   await expect(page).toHaveURL(address("/settings/classes"));
   const header = page.locator("header");

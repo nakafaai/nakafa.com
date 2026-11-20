@@ -353,10 +353,10 @@ export function ReportNoteDialog({
       <Field>
         <FieldLabel htmlFor={`${id}-note`}>{t("note-label")}</FieldLabel>
         <Textarea
+          className="min-h-24"
           id={`${id}-note`}
           maxLength={NOTE_LIMIT}
-          minRows={4}
-          onChange={(event) => setNote(event.target.value)}
+          onValueChange={setNote}
           placeholder={t("note-placeholder")}
           value={note}
         />

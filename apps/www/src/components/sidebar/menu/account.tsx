@@ -78,7 +78,7 @@ export function AccountMenu({
         <DropdownMenuTrigger
           render={
             <SidebarMenuButton
-              className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground"
+              className="data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
               onFocus={warm}
               onPointerDown={warm}
               onPointerEnter={warm}
@@ -128,10 +128,10 @@ export function AccountMenu({
           ) : null}
           <DropdownMenuGroup>
             <DropdownMenuItem
-              closeOnClick={false}
+              closeOnSelect={false}
               disabled={isSigningOut}
               icon={<Spinner icon={Logout01Icon} isLoading={isSigningOut} />}
-              onClick={() => startSigningOut(onSignOut)}
+              onSelect={() => startSigningOut(onSignOut)}
             >
               {t("logout")}
             </DropdownMenuItem>

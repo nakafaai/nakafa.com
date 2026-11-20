@@ -73,7 +73,7 @@ export function PlayerParts<
             disabled={locked && part.key !== current}
             icon={iconOf(part)}
             key={part.key}
-            onClick={() => onChoose(part)}
+            onSelect={() => onChoose(part)}
             selected={part.key === current}
             value={part}
           >

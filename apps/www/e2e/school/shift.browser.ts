@@ -49,7 +49,7 @@ const coldPage = async (context: BrowserContext) => {
   const page = await context.newPage();
   await page.addInitScript(recordLayoutShifts, {
     key: SHIFTS_KEY,
-    overlay: "[data-sonner-toaster]",
+    overlay: "[data-slot=toast-region]",
   });
   const cdp = await context.newCDPSession(page);
   await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });

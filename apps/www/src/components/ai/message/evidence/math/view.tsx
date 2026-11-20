@@ -3,7 +3,7 @@ import { useDisclosure } from "@mantine/hooks";
 import type { DataPart } from "@repo/backend/confect/nina/contract/data";
 import {
   Collapsible,
-  CollapsibleContent,
+  CollapsiblePanel,
   CollapsibleTrigger,
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -58,9 +58,9 @@ export function MathPart({ children, icon, message }: Props) {
         />
       </CollapsibleTrigger>
       {/* Math takes the size of the words around it, as every text of a step does: KaTeX alone draws it a fifth larger. Its stylesheet is in no cascade layer, so it beats every Tailwind utility, and only an important one sets the size. */}
-      <CollapsibleContent className="text-muted-foreground max-w-full overflow-hidden text-sm outline-none [&_.katex]:text-[1em]!">
+      <CollapsiblePanel className="text-muted-foreground max-w-full overflow-hidden text-sm outline-none [&_.katex]:text-[1em]!">
         <StepDetails>{children}</StepDetails>
-      </CollapsibleContent>
+      </CollapsiblePanel>
     </Collapsible>
   );
 }

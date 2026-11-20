@@ -5,7 +5,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { LineMark, MarkedLine } from "@repo/design-system/components/ui/line";
-import { Radio } from "@repo/design-system/components/ui/radio-group";
+import { RadioMark } from "@repo/design-system/components/ui/radio-group";
 import { cva } from "class-variance-authority";
 import { Function as Fn, Option } from "effect";
 import type { ReactNode } from "react";
@@ -76,7 +76,12 @@ export function PartAdd({
 }) {
   return (
     <div className={shown && onAdd !== undefined ? undefined : "invisible"}>
-      <Button onClick={onAdd} size="sm" type="button" variant="outline">
+      <Button
+        onClick={() => onAdd?.()}
+        size="sm"
+        type="button"
+        variant="outline"
+      >
         <HugeIcons aria-hidden="true" icon={icon} />
         {label}
       </Button>
@@ -123,7 +128,7 @@ export function PaperOption({
         {multiple ? (
           <Checkbox letter={letter} />
         ) : (
-          <Radio letter={letter} value="unmarked" />
+          <RadioMark letter={letter} />
         )}
       </LineMark>
       {children}

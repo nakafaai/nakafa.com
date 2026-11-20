@@ -29,7 +29,7 @@ import { titleOf, widthOf, wordsShown, writeWorst } from "@/e2e/support/worst";
 
 const TITLE = "Study habits";
 const WORDS = "Studies after dinner";
-const TOAST = "[data-sonner-toast]";
+const TOAST = "[data-slot=toast]";
 const DAY = 86_400_000;
 
 /** Waits until the page shows an empty list and is signed in with its list live. */

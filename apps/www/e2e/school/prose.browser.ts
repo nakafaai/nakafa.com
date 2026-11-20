@@ -79,7 +79,7 @@ const KINDS: Readonly<
   // The editor's wrapper in a live document, and the frame `frameTables` draws in a document without an editor.
   tableFrame: {
     document: '.tableWrapper, [data-slot="table-frame"]',
-    lesson: '[data-slot="table-container"]',
+    lesson: '[data-table="container"]',
   },
   tableHead: {
     document: "th",

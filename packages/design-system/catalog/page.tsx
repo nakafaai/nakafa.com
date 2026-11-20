@@ -1,5 +1,6 @@
 import { ThemeProvider, useTheme } from "@repo/design-system/providers/theme";
 import messages from "@repo/internationalization/dictionaries/en.json";
+import { FORMATS } from "@repo/internationalization/src/formats";
 import { Array as Arr, Option } from "effect";
 import type { ComponentType, ReactNode } from "react";
 import { useEffect } from "react";
@@ -27,14 +28,19 @@ function PageTheme() {
 }
 
 /**
- * The context every Nakafa component may read: the English copy of the product, its locale and the theme the page
- * shows. A design that renders Nakafa components outside a card preview wraps them in `Root` once, at its top.
+ * The context every Nakafa component may read: the English copy of the product, its locale, its named formats and
+ * the theme the page shows. A design that renders Nakafa components outside a card preview wraps them in `Root` once, at its top.
  */
 export function Root({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
       <PageTheme />
-      <IntlProvider locale="en" messages={messages} timeZone="Asia/Jakarta">
+      <IntlProvider
+        formats={FORMATS}
+        locale="en"
+        messages={messages}
+        timeZone="Asia/Jakarta"
+      >
         {children}
       </IntlProvider>
     </ThemeProvider>

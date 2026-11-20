@@ -76,7 +76,7 @@ export function ReadingField({
         onValueChange={(value) => {
           const source: Option.Option<typeof ReadingSource.Type> =
             value === NO_READING || value === NEW_READING
-              ? Option.some(value)
+              ? Option.some(value === NO_READING ? NO_READING : NEW_READING)
               : Option.map(
                   Arr.findFirst(shared, (peer) => peer.source === value),
                   (peer) => peer.source

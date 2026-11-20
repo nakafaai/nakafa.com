@@ -219,7 +219,7 @@ function RangeField({
       <NumberFieldInput
         aria-label={label}
         className="h-full bg-transparent"
-        data-slot="input-group-control"
+        data-input-group="control"
         placeholder={placeholder}
       />
     </NumberField>

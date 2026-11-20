@@ -1,7 +1,5 @@
 "use client";
 
-import { mergeProps } from "@base-ui/react/merge-props";
-import { useRender } from "@base-ui/react/use-render";
 import {
   ArrowExpand01Icon,
   ArrowShrink02Icon,
@@ -31,7 +29,8 @@ import type {
 } from "@repo/design-system/components/visual/store";
 import { createVisualStore } from "@repo/design-system/components/visual/store";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { PortalContainer } from "@repo/design-system/lib/portal";
+import type { RenderableProps } from "@repo/design-system/lib/render";
+import { renderElement } from "@ui-sdk/react/primitive";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type { ComponentProps, ReactNode } from "react";
@@ -39,7 +38,6 @@ import {
   createContext,
   use,
   useLayoutEffect,
-  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -175,8 +173,8 @@ const visualBodyVariants = cva(
  *
  * The card element itself fills the screen, so the scene inside never
  * remounts and a WebGL canvas keeps its camera. Its slot in the page keeps
- * the card's place meanwhile, so nothing behind it moves, and the popups of
- * its parts render inside it.
+ * the card's place meanwhile, so nothing behind it moves. The popups of its
+ * parts open in the top layer, above the card wherever it stands.
  */
 function VisualCard({
   children,
@@ -194,40 +192,30 @@ function VisualCard({
       presentation: state.presentation,
     }))
   );
-  const element = useRef<HTMLDivElement | null>(null);
-  const portal = useRef<HTMLElement | null>(null);
-  const cardRef = useMergedRef(ref, bind, element);
+  const cardRef = useMergedRef(ref, bind);
 
   // Activity hides a route and unmounting removes the card; both return it
   // to the page, so the page behind never stays inert.
   useLayoutEffect(() => () => store.getState().exit(), [store]);
 
-  // Across the screen the card holds its own menus and selects: the browser's
-  // full screen draws nothing outside it, and focus that leaves it returns it.
-  useLayoutEffect(() => {
-    portal.current = presentation === "inline" ? null : element.current;
-  }, [presentation]);
-
   return (
     <VisualContext value={store}>
-      <PortalContainer value={portal}>
-        <div data-slot="visual-card" style={place}>
-          <Card
-            className={cn(
-              "gap-0 py-0",
-              className,
-              visualCardVariants({ presentation })
-            )}
-            data-fullscreen={presentation === "inline" ? undefined : ""}
-            ref={cardRef}
-            {...props}
-          >
-            {/* A card inside this one does not repeat its note. */}
-            <VisualNoteContext value={null}>{children}</VisualNoteContext>
-            {note === null ? null : <VisualCardNote>{note}</VisualCardNote>}
-          </Card>
-        </div>
-      </PortalContainer>
+      <div data-slot="visual-card" style={place}>
+        <Card
+          className={cn(
+            "gap-0 py-0",
+            className,
+            visualCardVariants({ presentation })
+          )}
+          data-fullscreen={presentation === "inline" ? undefined : ""}
+          ref={cardRef}
+          {...props}
+        >
+          {/* A card inside this one does not repeat its note. */}
+          <VisualNoteContext value={null}>{children}</VisualNoteContext>
+          {note === null ? null : <VisualCardNote>{note}</VisualCardNote>}
+        </Card>
+      </div>
     </VisualContext>
   );
 }
@@ -285,16 +273,16 @@ function VisualCardBody({
   className,
   render,
   ...props
-}: useRender.ComponentProps<"div">) {
-  return useRender({
-    defaultTagName: "div",
-    props: mergeProps<"div">(
-      { className: cn(visualBodyVariants(), className) },
-      props
-    ),
-    render,
-    state: { slot: "visual-card-body" },
-  });
+}: RenderableProps<"div">) {
+  return renderElement(
+    "div",
+    {
+      "data-slot": "visual-card-body",
+      ...props,
+      className: cn(visualBodyVariants(), className),
+    },
+    render
+  );
 }
 
 /**

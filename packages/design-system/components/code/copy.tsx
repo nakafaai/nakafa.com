@@ -1,4 +1,3 @@
-import type { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { Copy01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog/capture";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -9,12 +8,13 @@ import type {
 } from "@repo/design-system/lib/code/clipboard";
 import { writeCodeToClipboard } from "@repo/design-system/lib/code/clipboard";
 import { useCodeBlock } from "@repo/design-system/lib/code/context";
+import type { Button as ButtonPrimitive } from "@ui-sdk/react/button";
 import { cn } from "cn";
 import { Array as Arr, Duration, Effect, Fiber, Option } from "effect";
-import { useEffect, useRef, useState } from "react";
+import { type ComponentProps, useEffect, useRef, useState } from "react";
 
 /** Copy callbacks and duration for the transient success state. */
-type CodeBlockCopyButtonProps = ButtonPrimitive.Props & {
+type CodeBlockCopyButtonProps = ComponentProps<typeof ButtonPrimitive> & {
   onCopy?: () => void;
   onError?: (error: Error) => void;
   timeout?: number;

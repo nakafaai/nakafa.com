@@ -1,4 +1,5 @@
-import { useRender } from "@base-ui/react/use-render";
+import type { RenderableProps } from "@repo/design-system/lib/render";
+import { renderElement } from "@ui-sdk/react/primitive";
 import { cn } from "cn";
 import type { ComponentProps, ReactElement } from "react";
 
@@ -40,14 +41,13 @@ export function SidebarMenuSubButton({
   className,
   render,
   ...props
-}: useRender.ComponentProps<"a"> & {
+}: RenderableProps<"a"> & {
   size?: "sm" | "md";
   isActive?: boolean;
 }): ReactElement {
-  return useRender({
-    defaultTagName: "a",
-    render,
-    props: {
+  return renderElement(
+    "a",
+    {
       className: cn(
         "pressable text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden transition-[scale] focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
         "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground",
@@ -62,5 +62,6 @@ export function SidebarMenuSubButton({
       "data-slot": "sidebar-menu-sub-button",
       ...props,
     },
-  });
+    render
+  );
 }

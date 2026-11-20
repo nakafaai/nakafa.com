@@ -234,14 +234,14 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
       <RowItems>
         <DropdownMenuItem
           icon={PencilEdit02Icon}
-          onClick={() => dialogs.show("edit")}
+          onSelect={() => dialogs.show("edit")}
         >
           {t("client-edit")}
         </DropdownMenuItem>
         <DropdownMenuItem
           disabled={isPending}
           icon={Key01Icon}
-          onClick={() =>
+          onSelect={() =>
             startTransition(() =>
               runSchoolWrite(
                 schoolCall(() => rotate({ clientId: client.id, slug })),
@@ -254,20 +254,20 @@ function SchoolClientMenu({ client }: { client: ClientItem }) {
         </DropdownMenuItem>
         <DropdownMenuItem
           icon={Copy01Icon}
-          onClick={() => clipboard.copy(client.id)}
+          onSelect={() => clipboard.copy(client.id)}
         >
           {t("client-id-copy")}
         </DropdownMenuItem>
         <DropdownMenuItem
           icon={CommandLineIcon}
-          onClick={() => dialogs.show("connect")}
+          onSelect={() => dialogs.show("connect")}
         >
           {t("device-title")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           icon={Delete02Icon}
-          onClick={() => dialogs.show("revoke")}
+          onSelect={() => dialogs.show("revoke")}
           variant="destructive"
         >
           {t("grant-revoke")}

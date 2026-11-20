@@ -209,9 +209,9 @@ function CopyItem({
 
   return (
     <DropdownMenuItem
-      closeOnClick={false}
+      closeOnSelect={false}
       icon={clipboard.copied ? Tick01Icon : icon}
-      onClick={() => clipboard.copy(value)}
+      onSelect={() => clipboard.copy(value)}
     >
       {label}
     </DropdownMenuItem>

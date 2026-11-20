@@ -76,7 +76,7 @@ export function ExamRowMenu({ exam }: { exam: ListedExam }) {
           <DropdownMenuItem
             disabled={isPending}
             icon={Copy01Icon}
-            onClick={press}
+            onSelect={press}
           >
             {t("duplicate-action")}
           </DropdownMenuItem>
@@ -85,7 +85,7 @@ export function ExamRowMenu({ exam }: { exam: ListedExam }) {
         <DropdownMenuGroup>
           <DropdownMenuItem
             icon={Delete02Icon}
-            onClick={() => setIsDeleting(true)}
+            onSelect={() => setIsDeleting(true)}
             variant="destructive"
           >
             {common("delete")}

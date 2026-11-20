@@ -13,7 +13,7 @@ import {
 } from "@repo/design-system/components/ui/card";
 import {
   Collapsible,
-  CollapsibleContent,
+  CollapsiblePanel,
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toAnchorSlug } from "@repo/utilities/slug";
@@ -81,7 +81,7 @@ export function CardMaterial({ material }: Props) {
         </div>
       </CardHeader>
       <Collapsible onOpenChange={set} open={isOpen}>
-        <CollapsibleContent>
+        <CollapsiblePanel>
           <CardContent className="border-t px-0">
             <CardLinks>
               {Arr.map(material.items, (item) => (
@@ -96,7 +96,7 @@ export function CardMaterial({ material }: Props) {
               ))}
             </CardLinks>
           </CardContent>
-        </CollapsibleContent>
+        </CollapsiblePanel>
       </Collapsible>
     </Card>
   );

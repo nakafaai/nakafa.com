@@ -81,7 +81,7 @@ function VisualPicker({
           <PickerItem
             icon={Image01Icon}
             key={name}
-            onClick={() => onChoose(name)}
+            onSelect={() => onChoose(name)}
             selected={name === component}
             value={name}
           >

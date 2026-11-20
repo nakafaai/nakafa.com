@@ -93,7 +93,7 @@ export function StarItem({
   const t = useTranslations("Classroom");
 
   return (
-    <DropdownMenuItem icon={StarIcon} onClick={onStar}>
+    <DropdownMenuItem icon={StarIcon} onSelect={onStar}>
       {t(starred ? "library-unstar" : "library-star")}
     </DropdownMenuItem>
   );
@@ -112,13 +112,13 @@ export function MoveAndTrash({
 
   return (
     <>
-      <DropdownMenuItem icon={FolderTransferIcon} onClick={onMove}>
+      <DropdownMenuItem icon={FolderTransferIcon} onSelect={onMove}>
         {tCommon("move")}
       </DropdownMenuItem>
       <DropdownMenuSeparator />
       <DropdownMenuItem
         icon={Delete02Icon}
-        onClick={onTrash}
+        onSelect={onTrash}
         variant="destructive"
       >
         {t("library-trash")}
@@ -137,14 +137,14 @@ function OpenItems({ item }: { item: LibraryItem }) {
     <>
       <DropdownMenuItem
         icon={ArrowRight01Icon}
-        onClick={() => openItem(item, false)}
+        onSelect={() => openItem(item, false)}
       >
         {tCommon("open")}
       </DropdownMenuItem>
       {item.kind === "link" ? null : (
         <DropdownMenuItem
           icon={Download04Icon}
-          onClick={() => openItem(item, true)}
+          onSelect={() => openItem(item, true)}
         >
           {t("media-download")}
         </DropdownMenuItem>
@@ -198,7 +198,7 @@ export function ManagerItemMenu({ item }: { item: LibraryItem }) {
         />
         <DropdownMenuItem
           icon={PencilEdit02Icon}
-          onClick={() => dialogs.show("edit")}
+          onSelect={() => dialogs.show("edit")}
         >
           {tCommon("edit")}
         </DropdownMenuItem>

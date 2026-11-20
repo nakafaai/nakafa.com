@@ -1,19 +1,13 @@
 import { usePaginatedQuery } from "@confect/react";
-import {
-  Globe02Icon,
-  SquareLock01Icon,
-  Tick01Icon,
-} from "@hugeicons/core-free-icons";
+import { Globe02Icon, SquareLock01Icon } from "@hugeicons/core-free-icons";
 import { CHAT_LIST_PAGE_SIZE } from "@repo/backend/client/chats/list";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import {
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuShortcut,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { useChatList } from "@/components/ai/chat/list";
@@ -57,29 +51,22 @@ function SheetHistoryContent() {
       className="max-h-64 w-72"
       label={common("menu-chats")}
     >
-      {Arr.map(results, (chat) => {
-        const isPrivate = chat.visibility === "private";
-        return (
-          <DropdownMenuItem
-            icon={isPrivate ? SquareLock01Icon : Globe02Icon}
+      <DropdownMenuRadioGroup
+        onValueChange={setActiveChatId}
+        value={activeChatId}
+      >
+        {Arr.map(results, (chat) => (
+          <DropdownMenuRadioItem
+            icon={
+              chat.visibility === "private" ? SquareLock01Icon : Globe02Icon
+            }
             key={chat._id}
-            onClick={() => {
-              setActiveChatId(chat._id);
-            }}
+            value={chat._id}
           >
             <span className="max-w-62.5 truncate">{chat.title}</span>
-            <DropdownMenuShortcut>
-              <HugeIcons
-                className={cn(
-                  "transition-opacity ease-out",
-                  activeChatId === chat._id ? "opacity-100" : "opacity-0"
-                )}
-                icon={Tick01Icon}
-              />
-            </DropdownMenuShortcut>
-          </DropdownMenuItem>
-        );
-      })}
+          </DropdownMenuRadioItem>
+        ))}
+      </DropdownMenuRadioGroup>
       {loadMore ? <Intersection onIntersect={loadMore} /> : null}
     </DropdownMenuContent>
   );

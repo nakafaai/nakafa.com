@@ -113,7 +113,7 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
   // A confirmed delete hands the focus to the neighbour's row. A cancelled
   // question returns it to where it was, as the dialog does on its own.
   const focusAfterQuestion = () =>
-    confirmed.current ? focusAfterDelete(neighbour.current) : true;
+    confirmed.current ? focusAfterDelete(neighbour.current) : undefined;
 
   /** Shows what the learner wrote and hands it to the saving. */
   function write(next: MemoryDraft) {

@@ -76,7 +76,7 @@ export function TaskRowMenu({ task }: { task: ClassTask }) {
           task.archived ? (
             <DropdownMenuItem
               icon={ArrowTurnBackwardIcon}
-              onClick={() => {
+              onSelect={() => {
                 leave();
                 runSchoolWrite(
                   schoolCall(() =>
@@ -90,7 +90,7 @@ export function TaskRowMenu({ task }: { task: ClassTask }) {
           ) : (
             <DropdownMenuItem
               icon={Archive02Icon}
-              onClick={() => {
+              onSelect={() => {
                 leave();
                 runSchoolWrite(
                   schoolCall(() =>
@@ -115,7 +115,7 @@ export function TaskRowMenu({ task }: { task: ClassTask }) {
         <RowOpen icon={ArrowRight01Icon} label={t("task-open")} />
         <DropdownMenuItem
           icon={PencilEdit02Icon}
-          onClick={() => setOpenings((count) => count + 1)}
+          onSelect={() => setOpenings((count) => count + 1)}
         >
           {t("task-edit")}
         </DropdownMenuItem>

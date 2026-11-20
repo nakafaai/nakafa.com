@@ -150,7 +150,7 @@ export function useChatRename(chat: ChatView) {
     handleSave,
     inputRef,
     isEditing,
-    menuFinalFocus: menuReturnsToBox ? inputRef : undefined,
+    menuFinalFocus: menuReturnsToBox ? () => inputRef.current : "trigger",
     moreActions,
     onMenuOpenChange,
     setChatTitle,

@@ -195,7 +195,7 @@ for (const viewport of SCREENS) {
     });
     await page.addInitScript(recordLayoutShifts, {
       key: SHIFTS_KEY,
-      overlay: "[data-sonner-toaster]",
+      overlay: "[data-slot=toast-region]",
     });
     await page.addInitScript(recordBlankThreads, BLANK_KEY);
     const shot = (state: string) =>

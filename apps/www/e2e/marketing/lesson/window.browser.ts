@@ -182,7 +182,7 @@ test("home lesson window keeps the launch the reader picked when the reader retu
                 .locator('[data-slot="button-group"]')
                 .getByRole("button");
               const launch = lessonPanel(page)
-                .locator('[data-slot="toggle-group-item"]')
+                .locator('[data-slot="toggle"]')
                 .nth(HIGH_ANGLE_TOGGLE_INDEX);
               yield* showLessonWindow(page);
               yield* Effect.promise(() =>

@@ -10,10 +10,6 @@ const Skip = Schema.Struct({ path: Schema.String, reason: Schema.String });
  */
 export const SKIPPED: readonly (typeof Skip.Type)[] = [
   {
-    path: "components/ui/autocomplete",
-    reason: "the searchable list the Picker card composes",
-  },
-  {
     path: "components/ui/avatar",
     reason: "the round frame the PersonAvatar card draws a person in",
   },
@@ -32,6 +28,11 @@ export const SKIPPED: readonly (typeof Skip.Type)[] = [
   {
     path: "components/ui/mention",
     reason: "the mention list of the editor, which shows inside it",
+  },
+  {
+    path: "components/ui/sheet-grip",
+    reason:
+      "the grip every popup draws while it presents as a sheet, which their cards show on a phone",
   },
   {
     path: "components/ui/sidebar-content",

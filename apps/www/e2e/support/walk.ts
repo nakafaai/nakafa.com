@@ -169,7 +169,7 @@ function readPopup(popups: string) {
         button.textContent.trim()
       )
     ).length,
-    closes: popup.querySelectorAll('[data-slot="sheet-close"]').length,
+    closes: popup.querySelectorAll('[data-slot="dialog-close"]').length,
     inside:
       box.left >= -1 &&
       box.top >= -1 &&
@@ -177,7 +177,7 @@ function readPopup(popups: string) {
       box.bottom <= window.innerHeight + 1,
     items: popup.querySelectorAll('[role^="menuitem"], [role="option"]').length,
     labels: Array.from(
-      popup.querySelectorAll<HTMLElement>('[data-slot="dropdown-menu-label"]')
+      popup.querySelectorAll<HTMLElement>('[data-slot="menu-group-label"]')
     ).flatMap((label) =>
       // The account menu's face, its name and role beside its picture, stands under the menu's own label.
       label.querySelector('[data-slot="avatar"]') === null
@@ -192,7 +192,10 @@ function readPopup(popups: string) {
         label.getBoundingClientRect().height >
         Number.parseFloat(getComputedStyle(label).lineHeight) * 1.5
     ).length,
-    slot: popup.getAttribute("data-slot") ?? "",
+    slot:
+      popup.getAttribute("data-surface") ??
+      popup.getAttribute("data-slot") ??
+      "",
     // The popup, or a body that scrolls inside it, that is wider than its frame and lets the reader scroll sideways.
     // A body that clips sideways (overflow-x hidden) scrolls down only. A table's own scroll inside its card is the
     // table's, which may scroll sideways (docs/adr/0021-rules.md, "Overlays scroll downwards only").
@@ -203,7 +206,7 @@ function readPopup(popups: string) {
           '[data-slot="scroll-area-viewport"]'
         )
       ).filter(
-        (viewport) => viewport.closest('[data-slot="table-container"]') === null
+        (viewport) => viewport.closest('[data-table="container"]') === null
       ),
     ].some(
       (box) =>
@@ -221,19 +224,19 @@ const expectWhole = (
   expect.soft(popup.inside, `${label}: stands inside the screen`).toBe(true);
   expect.soft(popup.wide, `${label}: never scrolls sideways`).toBe(false);
   expect.soft(popup.broken, `${label}: breaks no field label`).toBe(0);
-  if (popup.slot === "sheet-popup") {
+  if (popup.slot === "sheet") {
     expect.soft(popup.footer, `${label}: has a footer`).toBe(true);
   }
   expect
     .soft(popup.repeats, `${label}: repeats no close in its footer`)
     .toBe(0);
-  if (popup.slot === "sheet-popup") {
+  if (popup.slot === "sheet") {
     expect.soft(popup.closes, `${label}: closes from its corner only`).toBe(1);
   }
   if (popup.slot === "select-content") {
     expect.soft(popup.items, `${label}: holds an item`).toBeGreaterThan(0);
   }
-  if (popup.slot !== "dropdown-menu-content") {
+  if (popup.slot !== "menu-content") {
     return;
   }
   expect.soft(popup.items, `${label}: holds an item`).toBeGreaterThan(0);
@@ -254,9 +257,8 @@ const nameOf = (trigger: Locator) =>
     .evaluate(
       (control) => {
         const side =
-          control.closest(
-            '[data-slot="sidebar-content"], [data-slot="sidebar"]'
-          ) === null
+          control.closest('[data-sidebar="content"], [data-slot="sidebar"]') ===
+          null
             ? ""
             : "sidebar ";
         const words =

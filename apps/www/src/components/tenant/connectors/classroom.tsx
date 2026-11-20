@@ -306,7 +306,7 @@ function CourseRosterImport({ courseId }: { courseId: string }) {
     <DropdownMenuItem
       disabled={isImporting}
       icon={<Spinner icon={UserAdd01Icon} isLoading={isImporting} />}
-      onClick={() =>
+      onSelect={() =>
         startImporting(() =>
           runSchoolWrite(
             schoolCall(() => importRoster({ courseId, slug })),

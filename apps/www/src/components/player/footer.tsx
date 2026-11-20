@@ -77,9 +77,8 @@ export function PlayerNote({
   const t = useTranslations("Player");
 
   return (
-    <Popover defaultOpen={defaultOpen}>
+    <Popover defaultOpen={defaultOpen} openOnHover>
       <PopoverTrigger
-        openOnHover
         render={
           <Button
             className="max-lg:absolute max-lg:start-full max-lg:top-1/2 max-lg:ms-2 max-lg:-translate-y-1/2"

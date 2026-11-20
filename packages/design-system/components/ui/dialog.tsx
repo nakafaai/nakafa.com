@@ -1,119 +1,78 @@
-import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { CancelIcon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
+import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
+import { StagedPopup } from "@repo/design-system/components/ui/staged";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
+import { sheetSurface } from "@repo/design-system/lib/popup";
+import type { NodeChildren } from "@repo/design-system/lib/render";
+import {
+  DialogBackdrop,
+  DialogClose,
+  DialogContent as DialogContentPrimitive,
+  DialogDescription as DialogDescriptionPrimitive,
+  Dialog as DialogPrimitive,
+  DialogTitle as DialogTitlePrimitive,
+} from "@ui-sdk/react/dialog";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
 
-const DialogCreateHandle = DialogPrimitive.createHandle;
-
-function Dialog(props: DialogPrimitive.Root.Props) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />;
-}
-
-function DialogTrigger(props: DialogPrimitive.Trigger.Props) {
-  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />;
-}
-
-function DialogPortal(props: DialogPrimitive.Portal.Props) {
-  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />;
-}
-
-function DialogClose(props: DialogPrimitive.Close.Props) {
-  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
-}
-
-function DialogOverlay({
-  className,
+/**
+ * A dialog over the page. On a wide or a mouse screen it stands in the middle with its close in the top right corner;
+ * on a phone it rises from the bottom as a sheet, which closes as an iPhone sheet does, by its handle, a swipe or a
+ * press outside, so it draws no close button. One tree holds both, so a dialog keeps its fields as the screen turns.
+ */
+function Dialog({
+  presentation = "auto",
   ...props
-}: DialogPrimitive.Backdrop.Props) {
-  return (
-    <DialogPrimitive.Backdrop
-      className={cn(
-        "data-closed:fade-out-0 data-open:fade-in-0 duration-surface motion-safe:data-closed:animate-out motion-safe:data-open:animate-in bg-ink/20 fixed inset-0 isolate z-50 ease-out supports-backdrop-filter:backdrop-blur-sm",
-        className
-      )}
-      data-slot="dialog-overlay"
-      {...props}
-    />
-  );
-}
-
-function DialogViewport({
-  className,
-  ...props
-}: DialogPrimitive.Viewport.Props) {
-  return (
-    <DialogPrimitive.Viewport
-      className={cn(
-        "fixed inset-0 z-50 grid grid-rows-[1fr_auto_3fr] justify-items-center p-4 max-sm:grid-rows-[1fr_auto] max-sm:p-0 max-sm:pt-12",
-        className
-      )}
-      data-slot="dialog-viewport"
-      {...props}
-    />
-  );
+}: ComponentProps<typeof DialogPrimitive>) {
+  return <DialogPrimitive presentation={presentation} {...props} />;
 }
 
 function DialogContent({
-  bottomStickOnMobile = true,
   className,
   children,
-  closeProps,
-  portalProps,
   size = "default",
-  showCloseButton = true,
   ...props
-}: DialogPrimitive.Popup.Props & {
-  bottomStickOnMobile?: boolean;
-  closeProps?: DialogPrimitive.Close.Props;
-  portalProps?: DialogPrimitive.Portal.Props;
+}: NodeChildren<ComponentProps<typeof DialogContentPrimitive>> & {
   size?: "default" | "wide";
-  showCloseButton?: boolean;
 }) {
   const t = useTranslations("Common");
-  const { className: closeClassName, ...closeButtonProps } = closeProps ?? {};
 
   return (
     <ButtonGroupVariant value={undefined}>
-      <DialogPortal {...portalProps}>
-        <DialogOverlay />
-        <DialogViewport
-          className={cn(
-            !bottomStickOnMobile && "max-sm:grid-rows-[1fr_auto_3fr] max-sm:p-4"
-          )}
+      <DialogBackdrop className="bg-ink/20 duration-surface fixed inset-0 z-50 transition-opacity ease-out data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none pointer-fine:backdrop-blur-sm" />
+      <DialogContentPrimitive
+        className={cn(
+          "group/dialog bg-popover text-popover-foreground z-50 flex min-h-0 w-full flex-col overflow-hidden border text-sm shadow-lg/5 outline-none has-[[data-popup-hold]]:pointer-events-none has-[[data-popup-hold]]:opacity-0",
+          "data-[presentation=dialog]:duration-surface data-[presentation=dialog]:fixed data-[presentation=dialog]:inset-0 data-[presentation=dialog]:m-auto data-[presentation=dialog]:h-fit data-[presentation=dialog]:max-h-[min(90dvh,900px)] data-[presentation=dialog]:max-w-[calc(100%-2rem)] data-[presentation=dialog]:rounded-xl data-[presentation=dialog]:transition-[opacity,scale] data-[presentation=dialog]:ease-out data-[presentation=dialog]:data-ending-style:opacity-0 data-[presentation=dialog]:data-starting-style:opacity-0 data-[presentation=dialog]:motion-safe:data-ending-style:scale-98 data-[presentation=dialog]:motion-safe:data-starting-style:scale-98",
+          sheetSurface(),
+          size === "default" && "sm:max-w-md",
+          size === "wide" &&
+            "data-[presentation=dialog]:h-[min(90dvh,900px)] sm:max-w-7xl",
+          className
+        )}
+        render={(contentProps, state) => (
+          <StagedPopup
+            {...contentProps}
+            open={state.open && state.presentation === "sheet"}
+          />
+        )}
+        {...props}
+      >
+        <SheetGrip />
+        {children}
+        <DialogClose
+          className="absolute top-2 right-2 group-data-[presentation=sheet]/dialog:hidden"
+          render={
+            <Button size="icon-sm" tooltip={t("close")} variant="ghost" />
+          }
         >
-          <DialogPrimitive.Popup
-            className={cn(
-              "data-closed:fade-out-0 data-closed:zoom-out-98 data-open:fade-in-0 data-open:zoom-in-98 bg-popover text-popover-foreground duration-surface motion-safe:data-closed:animate-out motion-safe:data-open:animate-in relative row-start-2 flex max-h-[min(90dvh,900px)] min-h-0 w-full max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-xl border text-sm shadow-lg/5 ease-out outline-none has-[[data-popup-hold]]:pointer-events-none has-[[data-popup-hold]]:opacity-0",
-              size === "default" && "sm:max-w-md",
-              size === "wide" && "h-[min(90dvh,900px)] sm:max-w-7xl",
-              bottomStickOnMobile &&
-                "max-sm:data-closed:slide-out-to-bottom-4 max-sm:data-open:slide-in-from-bottom-4 max-sm:max-w-none max-sm:origin-bottom max-sm:rounded-t-xl max-sm:rounded-b-none max-sm:border-x-0 max-sm:border-b-0",
-              className
-            )}
-            data-slot="dialog-content"
-            {...props}
-          >
-            {children}
-            {showCloseButton && (
-              <DialogPrimitive.Close
-                className={cn("absolute top-2 right-2", closeClassName)}
-                data-slot="dialog-close"
-                render={
-                  <Button size="icon-sm" tooltip={t("close")} variant="ghost" />
-                }
-                {...closeButtonProps}
-              >
-                <HugeIcons data-icon="icon" icon={CancelIcon} />
-              </DialogPrimitive.Close>
-            )}
-          </DialogPrimitive.Popup>
-        </DialogViewport>
-      </DialogPortal>
+          <HugeIcons icon={Cancel01Icon} />
+        </DialogClose>
+      </DialogContentPrimitive>
     </ButtonGroupVariant>
   );
 }
@@ -122,7 +81,7 @@ function DialogHeader({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 border-b p-6 pb-4 last:border-b-0 has-[+[data-slot=dialog-footer]]:border-b-0",
+        "flex flex-col gap-2 border-b p-6 pb-4 group-data-[presentation=sheet]/dialog:gap-0.5 group-data-[presentation=sheet]/dialog:p-4 group-data-[presentation=sheet]/dialog:pt-0 group-data-[presentation=sheet]/dialog:text-center last:border-b-0 has-[+[data-slot=dialog-footer]]:border-b-0",
         className
       )}
       data-slot="dialog-header"
@@ -131,19 +90,15 @@ function DialogHeader({ className, ...props }: ComponentProps<"div">) {
   );
 }
 
-function DialogFooter({
-  className,
-  variant = "default",
-  ...props
-}: ComponentProps<"div"> & {
-  variant?: "bare" | "default";
-}) {
+/**
+ * The actions, on a tinted, ruled band. On a sheet they stack, the main action on top and as wide as the sheet; in a
+ * dialog they stand in a row, the main action last.
+ */
+function DialogFooter({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "flex flex-col-reverse gap-2 px-6 sm:flex-row sm:justify-end max-sm:[&>[data-slot=button]]:w-full",
-        variant === "default" && "bg-muted/70 border-t py-4",
-        variant === "bare" && "pt-3 pb-6",
+        "bg-muted/70 flex shrink-0 flex-col-reverse gap-2 border-t px-6 py-4 group-data-[presentation=sheet]/dialog:p-4 group-data-[presentation=dialog]/dialog:sm:flex-row group-data-[presentation=dialog]/dialog:sm:justify-end group-data-[presentation=sheet]/dialog:[&>[data-slot=button]]:w-full",
         className
       )}
       data-slot="dialog-footer"
@@ -160,17 +115,15 @@ function DialogFooter({
 function DialogPanel({
   className,
   fill = false,
-  scrollFade = true,
   ...props
 }: ComponentProps<"div"> & {
   fill?: boolean;
-  scrollFade?: boolean;
 }) {
   if (fill) {
     return (
       <div
         className={cn(
-          "flex min-h-0 min-w-0 flex-1 flex-col gap-4 p-6",
+          "flex min-h-0 min-w-0 flex-1 flex-col gap-4 p-6 group-data-[presentation=sheet]/dialog:p-4",
           className
         )}
         data-slot="dialog-panel"
@@ -179,13 +132,12 @@ function DialogPanel({
     );
   }
   return (
-    <ScrollArea
-      axis="vertical"
-      className="min-h-0 flex-1 touch-auto"
-      scrollFade={scrollFade}
-    >
+    <ScrollArea axis="vertical" className="min-h-0 flex-1" scrollFade>
       <div
-        className={cn("flex min-w-0 flex-col gap-4 p-6", className)}
+        className={cn(
+          "flex min-w-0 flex-col gap-4 p-6 group-data-[presentation=sheet]/dialog:p-4",
+          className
+        )}
         data-slot="dialog-panel"
         {...props}
       />
@@ -193,11 +145,16 @@ function DialogPanel({
   );
 }
 
-function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
+function DialogTitle({
+  className,
+  ...props
+}: ComponentProps<typeof DialogTitlePrimitive>) {
   return (
-    <DialogPrimitive.Title
-      className={cn("text-xl leading-none font-semibold", className)}
-      data-slot="dialog-title"
+    <DialogTitlePrimitive
+      className={cn(
+        "text-xl leading-none font-semibold group-data-[presentation=sheet]/dialog:text-base group-data-[presentation=sheet]/dialog:leading-normal group-data-[presentation=sheet]/dialog:font-medium",
+        className
+      )}
       {...props}
     />
   );
@@ -206,14 +163,13 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
 function DialogDescription({
   className,
   ...props
-}: DialogPrimitive.Description.Props) {
+}: ComponentProps<typeof DialogDescriptionPrimitive>) {
   return (
-    <DialogPrimitive.Description
+    <DialogDescriptionPrimitive
       className={cn(
-        "text-muted-foreground *:[a]:hover:text-foreground text-sm *:[a]:underline *:[a]:underline-offset-3",
+        "text-muted-foreground *:[a]:hover:text-foreground text-sm text-balance *:[a]:underline *:[a]:underline-offset-3",
         className
       )}
-      data-slot="dialog-description"
       {...props}
     />
   );
@@ -221,18 +177,10 @@ function DialogDescription({
 
 export {
   Dialog,
-  DialogClose,
   DialogContent,
-  DialogContent as DialogPopup,
-  DialogCreateHandle,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogOverlay as DialogBackdrop,
-  DialogOverlay,
   DialogPanel,
-  DialogPortal,
   DialogTitle,
-  DialogTrigger,
-  DialogViewport,
 };

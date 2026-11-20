@@ -13,7 +13,7 @@ import {
 import { openEverySettingsGroup } from "@/e2e/support/settings";
 
 /** The sidebar of the school, whose links every click below starts from. */
-const SIDEBAR = '[data-slot="sidebar-content"]';
+const SIDEBAR = '[data-sidebar="content"]';
 
 /** The sidebar items of a manager's school, each by the address its link opens. */
 const SIDEBAR_ITEMS = ["/notifications", "/exams", "/settings/profile"];

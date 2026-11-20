@@ -130,15 +130,15 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
               label={tCommon("menu-actions")}
             >
               <DropdownMenuGroup>
-                <DropdownMenuItem icon={Edit01Icon} onClick={handleEdit}>
+                <DropdownMenuItem icon={Edit01Icon} onSelect={handleEdit}>
                   {t("rename-chat")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   icon={LinkForwardIcon}
-                  onClick={() => setConfirmShare(true)}
                   onFocus={warmShare}
                   onPointerDown={warmShare}
                   onPointerEnter={warmShare}
+                  onSelect={() => setConfirmShare(true)}
                 >
                   {t("share-chat")}
                 </DropdownMenuItem>
@@ -147,7 +147,7 @@ function OwnerChatHeader({ chat }: { chat: ChatView }) {
               <DropdownMenuGroup>
                 <DropdownMenuItem
                   icon={Delete02Icon}
-                  onClick={() => setConfirmDelete(true)}
+                  onSelect={() => setConfirmDelete(true)}
                   variant="destructive"
                 >
                   {t("delete-chat")}

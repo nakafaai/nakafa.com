@@ -104,14 +104,14 @@ function GradeMenu({
         {Option.isSome(narrative) ? (
           <DropdownMenuItem
             icon={Comment01Icon}
-            onClick={() => setOpenings((count) => count + 1)}
+            onSelect={() => setOpenings((count) => count + 1)}
           >
             {t("grade-comment")}
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuItem
           icon={Copy01Icon}
-          onClick={() => clipboard.copy(grade.className)}
+          onSelect={() => clipboard.copy(grade.className)}
         >
           {common("copy")}
         </DropdownMenuItem>

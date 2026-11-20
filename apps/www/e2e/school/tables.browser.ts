@@ -218,7 +218,7 @@ test("a table closes on its last row with few rows, and a list that fills its ca
   // A list that fills the card: the same line reaches the frame, and the table's last pixel covers it.
   await page.setViewportSize({ height: 170, width: 1440 });
   const edge = await card.evaluate((element) => {
-    const container = element.querySelector('[data-slot="table-container"]');
+    const container = element.querySelector('[data-table="container"]');
     const scroller = container?.querySelector(
       '[data-slot="scroll-area-viewport"]'
     );

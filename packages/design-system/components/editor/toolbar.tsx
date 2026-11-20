@@ -247,11 +247,9 @@ export function EditorBar({
             <PopoverContent
               align="end"
               className="flex w-auto flex-col gap-1 p-1.5"
-              // After a press the caret stays in the text. A close from the
-              // keyboard returns to the control that opened the groups.
-              finalFocus={(closed) =>
-                closed === "keyboard" ? true : (editor?.view.dom ?? true)
-              }
+              // After a press or a close the caret goes back to the text, where
+              // the next key lands.
+              finalFocus={() => editor?.view.dom}
               // A press reaches here from a control of the groups, a field or menu it opens included.
               onClickCapture={() => {
                 acted.current = true;

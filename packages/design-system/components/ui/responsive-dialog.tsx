@@ -1,4 +1,3 @@
-import { useMediaQuery } from "@mantine/hooks";
 import {
   Dialog,
   DialogContent,
@@ -8,15 +7,6 @@ import {
   DialogPanel,
   DialogTitle,
 } from "@repo/design-system/components/ui/dialog";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerPanel,
-  DrawerTitle,
-} from "@repo/design-system/components/ui/drawer";
 import { OptionIcon } from "@repo/design-system/components/ui/huge-icons";
 import {
   Item,
@@ -26,11 +16,21 @@ import {
   ItemMedia,
   ItemTitle,
 } from "@repo/design-system/components/ui/item";
-import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
+import {
+  AgentConfirmSentence,
+  agentSentence,
+} from "@repo/design-system/lib/confirm";
 import { pressMainAction } from "@repo/design-system/lib/dialog";
 import { cva } from "class-variance-authority";
-import type { ComponentProps, KeyboardEvent, ReactNode } from "react";
-import { createContext, use, useRef } from "react";
+import {
+  type ComponentProps,
+  createContext,
+  type KeyboardEvent,
+  type ReactNode,
+  use,
+  useRef,
+} from "react";
+import { useTranslations } from "use-intl";
 
 interface Props {
   /**
@@ -43,8 +43,8 @@ interface Props {
   /** The one sentence under the title that says what the dialog does; every dialog has one. */
   description: ReactNode;
   /**
-   * Where focus goes on close: `true` for the default, `false` to leave it to
-   * the caller, or the element that a function returns.
+   * Where focus goes on close: back to what opened the dialog, `"none"` to leave it to the caller, or the element that
+   * a function returns, falling back to what opened the dialog when it returns none.
    */
   finalFocus?: ComponentProps<typeof DialogContent>["finalFocus"];
   /** Runs after the open or close animation has finished. */
@@ -60,12 +60,12 @@ interface Props {
 }
 
 /**
- * A dialog on a wide screen and a drawer on a phone, with one anatomy on both, as shadcn's dialog and alert dialog
+ * A dialog on a wide screen and a sheet on a phone, one tree with one anatomy, as shadcn's dialog and alert dialog
  * have it: a header with the title and its sentence; a body, which every dialog has; and a footer with the caller's
  * actions alone, which a dialog that only shows something leaves out. The dialog shows its close in the top right
- * corner; the drawer closes as an iPhone sheet does, by its handle, a swipe or a press outside, so it draws no close
- * button. That close is the one way out, so no footer repeats it with Cancel or Close. The dialog draws its header
- * and its close itself, so no dialog can leave one out.
+ * corner; the sheet closes as an iPhone sheet does, by its handle, a swipe or a press outside. That close is the one
+ * way out, so no footer repeats it with Cancel or Close. The dialog draws its header and its close itself, so no
+ * dialog can leave one out.
  */
 export function ResponsiveDialog({
   action,
@@ -74,16 +74,11 @@ export function ResponsiveDialog({
   title,
   description,
   children,
-  finalFocus,
+  finalFocus = "trigger",
   onOpenChangeComplete,
   size = "default",
 }: Props) {
-  // The screen's width is read while the dialog renders: read in an effect it is false at first, so a dialog that
-  // opens as it mounts would paint the drawer, then the dialog, and remount its body. Its popup renders through a
-  // portal only in the browser, so the server's markup holds none of it and the read cannot differ from it.
-  const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp, undefined, {
-    getInitialValueInEffect: false,
-  });
+  const t = useTranslations("Common");
   const opened = useRef(false);
   const footerPart = useRef<HTMLDivElement>(null);
   const pressMain = (event: KeyboardEvent<HTMLDivElement>) =>
@@ -106,40 +101,25 @@ export function ResponsiveDialog({
     onOpenChangeComplete?.(next);
   };
 
-  if (isDesktop) {
-    return (
-      <Dialog onOpenChange={change} onOpenChangeComplete={complete} open={open}>
-        <DialogContent finalFocus={finalFocus} size={size}>
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{description}</DialogDescription>
-          </DialogHeader>
-          <DialogPanel fill={size === "wide"} onKeyDown={pressMain}>
-            {children}
-          </DialogPanel>
-          {action === undefined || action === null ? null : (
-            <DialogFooter ref={footerPart}>{action}</DialogFooter>
-          )}
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
   return (
-    <Drawer onOpenChange={change} onOpenChangeComplete={complete} open={open}>
-      <DrawerContent finalFocus={finalFocus}>
-        <DrawerHeader>
-          <DrawerTitle>{title}</DrawerTitle>
-          <DrawerDescription>{description}</DrawerDescription>
-        </DrawerHeader>
-        <DrawerPanel fill={size === "wide"} onKeyDown={pressMain}>
+    <Dialog onOpenChange={change} onOpenChangeComplete={complete} open={open}>
+      <DialogContent finalFocus={finalFocus} size={size}>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        <DialogPanel fill={size === "wide"} onKeyDown={pressMain}>
           {children}
-        </DrawerPanel>
+        </DialogPanel>
         {action === undefined || action === null ? null : (
-          <DrawerFooter ref={footerPart}>{action}</DrawerFooter>
+          <AgentConfirmSentence
+            value={agentSentence(description, title, t("agent-confirm"))}
+          >
+            <DialogFooter ref={footerPart}>{action}</DialogFooter>
+          </AgentConfirmSentence>
         )}
-      </DrawerContent>
-    </Drawer>
+      </DialogContent>
+    </Dialog>
   );
 }
 

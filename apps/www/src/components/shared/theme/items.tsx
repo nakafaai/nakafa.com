@@ -23,7 +23,7 @@ function ThemeGroup({ options }: { options: typeof themeOptions }) {
         <DropdownMenuItem
           icon={theme.icon}
           key={theme.value}
-          onClick={() => setTheme(theme.value)}
+          onSelect={() => setTheme(theme.value)}
         >
           {t(theme.value)}
           <ActiveBadge isActive={currentTheme === theme.value} />

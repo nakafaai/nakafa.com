@@ -126,7 +126,9 @@ describe("focus after a delete", () => {
     document.body.innerHTML = `<div id="${MEMORY_EDITOR_ID}"><button id="editing" type="button"></button></div><button id="${memoryRowId(memoryId("second"))}" type="button"></button>`;
     elementById("editing")?.focus();
 
-    expect(focusAfterDelete(Option.some(memoryId("second")))).toBe(false);
+    expect(focusAfterDelete(Option.some(memoryId("second")))).toBe(
+      elementById("editing")
+    );
   });
 
   it("hands the focus of a leaving list to the search field and names the row that held it", () => {

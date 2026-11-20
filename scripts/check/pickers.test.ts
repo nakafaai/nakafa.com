@@ -4,8 +4,6 @@ import { inspectPickerSource } from "#scripts/check/pickers";
 import { parseSources } from "#scripts/check/source";
 
 const VIEW = "apps/www/src/components/example.tsx";
-const RAW =
-  "imports the raw autocomplete of @repo/design-system/components/ui/autocomplete. A searchable choice is a Picker, which draws its search, its label, its options and its empty sentence on every screen.";
 const OWN_EMPTY = `${VIEW}: a PickerContent writes its own empty sentence. Read it from a key of the empty family, which holds one sentence, such as empty={t("locale-empty")}.`;
 
 /** Inspects one module with the picker policy alone. */
@@ -21,28 +19,17 @@ function inspect(sourceText: string, file = VIEW) {
 
 /** What the policy says of a command list put in `surface` by hand. */
 function commandIn(surface: string) {
-  return `${VIEW}: puts the command list of @repo/design-system/components/ui/command in @repo/design-system/components/ui/${surface}. A searchable choice is a Picker, which opens as a popover on a wide screen and as a drawer on a phone.`;
+  return `${VIEW}: puts the command list of @repo/design-system/components/ui/command in @repo/design-system/components/ui/${surface}. A searchable choice is a Picker, which opens as a popover on a wide screen and as a sheet on a phone.`;
 }
 
 describe("Picker source policy", () => {
-  it.effect("rejects a module that imports the raw autocomplete", () =>
-    Effect.gen(function* () {
-      assert.deepStrictEqual(
-        yield* inspect(`
-import { Autocomplete } from "@repo/design-system/components/ui/autocomplete";
-import "./side-effect";
-export const value = 1;`),
-        [`${VIEW}: ${RAW}`]
-      );
-    })
-  );
-
   it.effect(
     "rejects a command list in a popover, a drawer, a sheet or a dialog",
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
           yield* inspect(`
+import "./side-effect";
 import { Command } from "@repo/design-system/components/ui/command";
 import { Popover } from "@repo/design-system/components/ui/popover";
 import { Drawer } from "@repo/design-system/components/ui/drawer";
@@ -78,7 +65,7 @@ export const value = 1;`),
         assert.deepStrictEqual(
           yield* inspect(
             `
-import { Autocomplete } from "@repo/design-system/components/ui/autocomplete";
+import { Command } from "@repo/design-system/components/ui/command";
 import { Popover } from "@repo/design-system/components/ui/popover";
 export function Picker() {
   return <PickerContent empty="Nothing" />;

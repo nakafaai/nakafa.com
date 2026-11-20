@@ -10,6 +10,6 @@ import { cva } from "class-variance-authority";
  * nothing.
  */
 export const messageToolbarVariants = cva(
-  "absolute -top-4 z-10 rounded-md opacity-0 shadow-xs transition-opacity group-focus-within/row:opacity-100 group-hover/row:opacity-100 empty:hidden has-data-popup-open:opacity-100 motion-reduce:transition-none pointer-coarse:pointer-events-none pointer-coarse:group-focus-within/row:pointer-events-auto pointer-coarse:has-data-popup-open:pointer-events-auto",
+  "absolute -top-4 z-10 rounded-md opacity-0 shadow-xs transition-opacity group-focus-within/row:opacity-100 group-hover/row:opacity-100 empty:hidden has-data-open:opacity-100 motion-reduce:transition-none pointer-coarse:pointer-events-none pointer-coarse:group-focus-within/row:pointer-events-auto pointer-coarse:has-data-open:pointer-events-auto",
   { variants: { mine: { false: "end-2", true: "start-2" } } }
 );

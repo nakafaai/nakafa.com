@@ -88,7 +88,7 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
   // A confirmed delete hands the focus to the neighbour's row. A cancelled question
   // returns it to the row that asked, as the dialog does on its own.
   const focusAfterQuestion = useCallbackRef(() =>
-    confirmed.current ? focusAfterDelete(neighbour.current) : true
+    confirmed.current ? focusAfterDelete(neighbour.current) : undefined
   );
 
   /** Removes the memory the learner confirmed, and closes the question. */

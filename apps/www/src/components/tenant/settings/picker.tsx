@@ -139,7 +139,7 @@ function RegionOption({
   return (
     <PickerItem
       icon={icon}
-      onClick={onChoose}
+      onSelect={onChoose}
       selected={selected}
       value={choice}
     >

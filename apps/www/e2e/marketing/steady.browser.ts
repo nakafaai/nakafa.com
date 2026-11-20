@@ -29,7 +29,7 @@ const WATCH = "nakafaSteadyWatch";
  * the header's section popup, the phone's menu drawer, and the toasts.
  */
 const OVERLAYS =
-  '[data-slot="navigation-menu-positioner"],[data-slot="drawer-popup"],[data-sonner-toaster]';
+  '[data-slot="navigation-menu-viewport"],[data-slot="drawer-content"],[data-slot=toast-region]';
 
 /** What one document saw: frames with no header or headline, and headers or headlines replaced after the first paint. */
 const Watch = Schema.Struct({
@@ -159,7 +159,7 @@ const pressMenu = Effect.fn("NakafaE2E.pressMenu")(function* (
   yield* Effect.promise(() =>
     header.getByRole("button", { name: "Learn" }).click()
   );
-  const popup = page.locator('[data-slot="navigation-menu-popup"]');
+  const popup = page.locator('[data-slot="navigation-menu-viewport"]');
   yield* Effect.promise(() => expect(popup).toBeVisible());
   yield* movePointerTo(page, header.getByRole("button", { name: "School" }));
   yield* Effect.promise(() => page.keyboard.press("Escape"));

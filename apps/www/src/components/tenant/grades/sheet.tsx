@@ -457,7 +457,7 @@ function GradeLineMenu({ line }: { line: SheetLine }) {
     <RowItems>
       <DropdownMenuItem
         icon={SentIcon}
-        onClick={() =>
+        onSelect={() =>
           startTransition(() =>
             runSchoolWrite(
               schoolCall(() => release({ gradeId: grade.id, slug }))

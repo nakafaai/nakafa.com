@@ -147,9 +147,9 @@ const verifyContributorPayloads = Effect.fn(
   yield* Effect.promise(() => page.keyboard.press("Tab"));
   yield* Effect.promise(() => page.keyboard.press("Shift+Tab"));
   yield* Effect.promise(() => expect(firstTrigger).toBeFocused());
-  // Base UI 1.7 describes Tooltip as a visual hint and its Popup renders a
-  // div without a tooltip role. The trigger's aria-label owns its identity.
-  // @see https://base-ui.com/react/components/tooltip
+  // UI SDK's tooltip content has the tooltip role and only describes a
+  // trigger that names itself, so the trigger's aria-label owns its identity
+  // (`@ui-sdk/react/docs/components/tooltip.md`).
   const tooltip = page.locator(
     '[data-slot="tooltip-content"][data-open]:not([data-starting-style]):not([data-ending-style])'
   );

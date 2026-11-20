@@ -1,7 +1,7 @@
-import { mergeProps } from "@base-ui/react/merge-props";
-import { useRender } from "@base-ui/react/use-render";
 import { ArrowRight01Icon, FolderTreeIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import type { RenderableProps } from "@repo/design-system/lib/render";
+import { renderElement } from "@ui-sdk/react/primitive";
 import { cn } from "cn";
 import type * as React from "react";
 
@@ -42,24 +42,16 @@ function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
   );
 }
 
-function BreadcrumbLink({
-  className,
-  render,
-  ...props
-}: useRender.ComponentProps<"a">) {
-  return useRender({
-    defaultTagName: "a",
-    props: mergeProps<"a">(
-      {
-        className: cn("hover:text-foreground transition-colors", className),
-      },
-      props
-    ),
-    render,
-    state: {
-      slot: "breadcrumb-link",
+function BreadcrumbLink({ className, render, ...props }: RenderableProps<"a">) {
+  return renderElement(
+    "a",
+    {
+      "data-slot": "breadcrumb-link",
+      ...props,
+      className: cn("hover:text-foreground transition-colors", className),
     },
-  });
+    render
+  );
 }
 
 function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {

@@ -1,7 +1,7 @@
 "use client";
 
 import nina from "@repo/backend/confect/_generated/refs/nina";
-import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
+import { Sheet, SheetPopup } from "@repo/design-system/components/ui/sheet";
 import { lazy } from "@repo/design-system/lib/lazy";
 import { ClientOnly } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
@@ -56,24 +56,29 @@ export function AiSheet() {
    * body holds two composers once a chat is open, and one of them is hidden.
    */
   function focusComposer() {
-    return Option.getOrElse(
+    return Option.getOrUndefined(
       Arr.findFirst(
         content.current?.querySelectorAll("textarea") ?? [],
         (composer) => composer.getClientRects().length > 0
-      ),
-      () => true
+      )
     );
   }
 
   return (
     <Sheet
-      disablePointerDismissal
       modal={false}
-      onOpenChange={setOpen}
+      // Nina stays beside the page while the learner reads and presses it.
+      onOpenChange={(next, details) => {
+        if (details.reason === "outside-press") {
+          details.cancel();
+          return;
+        }
+        setOpen(next);
+      }}
       onOpenChangeComplete={setSettledOpen}
       open={open}
     >
-      <SheetContent
+      <SheetPopup
         className="w-full max-w-none border-l-0 sm:border-l"
         initialFocus={focusComposer}
         keepMounted
@@ -86,7 +91,7 @@ export function AiSheet() {
             {warmed ? <SheetBody /> : null}
           </div>
         </Activity>
-      </SheetContent>
+      </SheetPopup>
     </Sheet>
   );
 }

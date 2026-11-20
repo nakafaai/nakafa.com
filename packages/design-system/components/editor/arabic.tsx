@@ -25,7 +25,7 @@ export function EditorArabicKeyboard({ label }: { label: string }) {
       onOpenChange={(next, details) => {
         const inText =
           details.reason === "outside-press" &&
-          details.event.target instanceof Node &&
+          details.event?.target instanceof Node &&
           editor?.view.dom.contains(details.event.target) === true;
         if (!inText) {
           setOpen(next);
@@ -51,8 +51,8 @@ export function EditorArabicKeyboard({ label }: { label: string }) {
       <PopoverContent
         align="end"
         className="w-auto max-w-(--available-width) p-2"
-        finalFocus={false}
-        initialFocus={false}
+        finalFocus="none"
+        initialFocus="none"
       >
         <ArabicKeypad
           onKey={(text) => editor?.chain().focus().insertContent(text).run()}

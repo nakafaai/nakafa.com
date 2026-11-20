@@ -47,14 +47,20 @@ function useCodeSource<T>(selector: (source: CodeSource) => T) {
 }
 
 /** Copy-button callbacks and duration for its transient success state. */
-type CodeBlockCopyButtonProps = ComponentProps<"button"> & {
+type CodeBlockCopyButtonProps = Pick<
+  ComponentProps<"button">,
+  "children" | "className"
+> & {
   onCopy?: () => void;
   onError?: (error: Error) => void;
   timeout?: number;
 };
 
 /** Download-button callbacks for the generated code file. */
-type CodeBlockDownloadButtonProps = ComponentProps<"button"> & {
+type CodeBlockDownloadButtonProps = Pick<
+  ComponentProps<"button">,
+  "children" | "className"
+> & {
   onDownload?: () => void;
   onError?: (error: Error) => void;
 };
@@ -65,7 +71,6 @@ export function CodeBlockDownloadButton({
   onError,
   children,
   className,
-  ...props
 }: CodeBlockDownloadButtonProps) {
   const t = useTranslations("Ai");
   const code = useCodeSource((source) => source.code);
@@ -96,10 +101,8 @@ export function CodeBlockDownloadButton({
       className={cn("shrink-0", className)}
       onClick={downloadCode}
       size="icon"
-      title={t("download-file")}
       tooltip={t("download-file")}
       variant="ghost"
-      {...props}
     >
       {children ?? <HugeIcons icon={Download01Icon} />}
     </Button>
@@ -113,7 +116,6 @@ export function CodeBlockCopyButton({
   timeout = 2000,
   children,
   className,
-  ...props
 }: CodeBlockCopyButtonProps) {
   const tCommon = useTranslations("Common");
   const [isCopied, setIsCopied] = useState(false);
@@ -167,10 +169,8 @@ export function CodeBlockCopyButton({
       className={cn("shrink-0", className)}
       onClick={copyToClipboard}
       size="icon"
-      title={tCommon("copy-code")}
       tooltip={tCommon("copy-code")}
       variant="ghost"
-      {...props}
     >
       {children ?? <HugeIcons icon={icon} />}
     </Button>

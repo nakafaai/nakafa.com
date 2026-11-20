@@ -1,23 +1,32 @@
-import { NumberField as NumberFieldPrimitive } from "@base-ui/react/number-field";
 import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  NumberInputControl,
+  NumberInputDecrement,
+  NumberInputGroup,
+  NumberInputIncrement,
+  NumberInput as NumberInputPrimitive,
+} from "@ui-sdk/react/number-input";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
+import type * as React from "react";
 import { useLocale, useTranslations } from "use-intl";
 
 /**
- * A field that holds one number, as Base UI builds it: a text input that reads and writes the
+ * A field that holds one number: a text input that reads and writes the
  * number in the page's locale, with a decrease and an increase button, and the arrow keys
  * stepping it within `min` and `max`. The browser draws no spin buttons, because the input is a
  * text field that asks for the numeric keyboard.
  */
-function NumberField({ className, ...props }: NumberFieldPrimitive.Root.Props) {
+function NumberField({
+  className,
+  ...props
+}: React.ComponentProps<typeof NumberInputPrimitive>) {
   const locale = useLocale();
 
   return (
-    <NumberFieldPrimitive.Root
+    <NumberInputPrimitive
       className={cn("w-full", className)}
-      data-slot="number-field"
       locale={locale}
       {...props}
     />
@@ -28,14 +37,13 @@ function NumberField({ className, ...props }: NumberFieldPrimitive.Root.Props) {
 function NumberFieldGroup({
   className,
   ...props
-}: NumberFieldPrimitive.Group.Props) {
+}: React.ComponentProps<typeof NumberInputGroup>) {
   return (
-    <NumberFieldPrimitive.Group
+    <NumberInputGroup
       className={cn(
         "border-input has-aria-invalid:border-destructive has-focus-visible:border-ring has-aria-invalid:ring-destructive/20 has-focus-visible:ring-ring/50 flex h-9 w-full min-w-0 items-stretch overflow-hidden rounded-md border shadow-xs transition-[color,box-shadow] outline-none has-focus-visible:ring-3 data-disabled:opacity-50",
         className
       )}
-      data-slot="number-field-group"
       {...props}
     />
   );
@@ -45,17 +53,16 @@ function NumberFieldGroup({
 function NumberFieldInput({
   className,
   ...props
-}: NumberFieldPrimitive.Input.Props) {
+}: React.ComponentProps<typeof NumberInputControl>) {
   const t = useTranslations("Common");
 
   return (
-    <NumberFieldPrimitive.Input
+    <NumberInputControl
       aria-roledescription={t("number-field")}
       className={cn(
         "selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground w-full min-w-0 flex-1 bg-transparent px-2 text-center text-base tabular-nums outline-none disabled:cursor-not-allowed md:text-sm",
         className
       )}
-      data-slot="number-field-input"
       {...props}
     />
   );
@@ -63,7 +70,7 @@ function NumberFieldInput({
 
 /** A stepper button of a number field, divided from the input on the side that faces it. */
 const numberFieldStepVariants = cva(
-  "border-input text-muted-foreground hover:bg-accent hover:text-accent-foreground flex w-9 shrink-0 items-center justify-center transition-colors disabled:pointer-events-none disabled:opacity-50",
+  "border-input text-muted-foreground hover:bg-accent hover:text-accent-foreground flex w-9 shrink-0 items-center justify-center transition-colors data-disabled:pointer-events-none data-disabled:opacity-50",
   {
     variants: {
       side: {
@@ -78,18 +85,17 @@ const numberFieldStepVariants = cva(
 function NumberFieldDecrement({
   className,
   ...props
-}: NumberFieldPrimitive.Decrement.Props) {
+}: React.ComponentProps<typeof NumberInputDecrement>) {
   const t = useTranslations("Common");
 
   return (
-    <NumberFieldPrimitive.Decrement
+    <NumberInputDecrement
       aria-label={t("decrease")}
       className={cn(numberFieldStepVariants({ side: "start" }), className)}
-      data-slot="number-field-decrement"
       {...props}
     >
       <HugeIcons icon={MinusSignIcon} />
-    </NumberFieldPrimitive.Decrement>
+    </NumberInputDecrement>
   );
 }
 
@@ -97,18 +103,17 @@ function NumberFieldDecrement({
 function NumberFieldIncrement({
   className,
   ...props
-}: NumberFieldPrimitive.Increment.Props) {
+}: React.ComponentProps<typeof NumberInputIncrement>) {
   const t = useTranslations("Common");
 
   return (
-    <NumberFieldPrimitive.Increment
+    <NumberInputIncrement
       aria-label={t("increase")}
       className={cn(numberFieldStepVariants({ side: "end" }), className)}
-      data-slot="number-field-increment"
       {...props}
     >
       <HugeIcons icon={PlusSignIcon} />
-    </NumberFieldPrimitive.Increment>
+    </NumberInputIncrement>
   );
 }
 

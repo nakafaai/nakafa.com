@@ -311,7 +311,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
           <HugeIcons icon={isEffectivelyPlaying ? PauseIcon : PlayIcon} />
         </Button>
         <VisualCardMenu>
-          <DropdownMenuItem icon={Clock04Icon} onClick={resetAnimation}>
+          <DropdownMenuItem icon={Clock04Icon} onSelect={resetAnimation}>
             {labels.reset}
           </DropdownMenuItem>
         </VisualCardMenu>

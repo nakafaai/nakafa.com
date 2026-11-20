@@ -111,7 +111,7 @@ test("two teachers write two options of one question while one marks the key, an
     await expect(option(page, "B")).toHaveText("jawaban dua", {
       timeout: readinessTimeoutMilliseconds,
     });
-    await expect(page.locator("[data-sonner-toast]")).toHaveCount(0);
+    await expect(page.locator("[data-slot=toast]")).toHaveCount(0);
   }
   await expect(key).toHaveAttribute("aria-pressed", "true");
   await teacherContext.close();
@@ -170,7 +170,7 @@ test("two teachers type fast into one prompt at once, one at each end, and both 
     await expect(
       page.getByRole("textbox", { name: "Question 1 text" })
     ).toHaveText(whole, { timeout: readinessTimeoutMilliseconds });
-    await expect(page.locator("[data-sonner-toast]")).toHaveCount(0);
+    await expect(page.locator("[data-slot=toast]")).toHaveCount(0);
   }
   expect(MutableRef.get(ownerRefusals)).toBe(0);
   expect(MutableRef.get(teacherRefusals)).toBe(0);

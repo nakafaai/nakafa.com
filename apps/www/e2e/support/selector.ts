@@ -36,11 +36,11 @@ export const MARKDOWN_MARKUP = "em, strong, code, pre, a, ul, ol, h1, h2, h3";
  * The list that holds the toasts. They stack over the page and move on their
  * own, so a toast moving is not the page moving.
  */
-export const TOASTER = "[data-sonner-toaster]";
+export const TOASTER = "[data-slot=toast-region]";
 /** The popup of a drawer, which a phone opens for the consent and contributor surfaces. */
-export const DRAWER_POPUP = '[data-slot="drawer-popup"]';
+export const DRAWER_POPUP = '[data-slot="drawer-content"]';
 /** The handle at the top of a drawer, which a swipe drags. */
-export const DRAWER_HANDLE = '[data-slot="drawer-swipe-handle"]';
+export const DRAWER_HANDLE = '[data-slot="drawer-handle"]';
 /** The title of a drawer, which names the surface a learner opened. */
 export const DRAWER_TITLE = '[data-slot="drawer-title"]';
 /** The content panel of a drawer, below its title. */
@@ -49,7 +49,7 @@ export const DRAWER_PANEL = '[data-slot="drawer-panel"]';
  * The popup of an open sheet, which a learner opens from the side of a page.
  * Nina's sheet stays mounted while closed, so only the open one is selected.
  */
-export const SHEET_POPUP = '[data-slot="sheet-popup"][data-open]';
+export const SHEET_POPUP = '[data-surface="sheet"][data-open]';
 /** A deferred MathVisual scene inside a lesson card, plane or space. */
 export const MATH_SCENE = '[data-scene="math"]';
 /** The actions band of a 3D scene: its own actions, then play, reset and full screen. */
@@ -58,7 +58,7 @@ export const SCENE_ACTIONS = "[data-scene-actions]";
 export const SURAH_SIDEBAR_TRIGGER =
   'header [data-slot="page-actions"] button[data-sidebar="trigger"]';
 /** The sidebar trigger that a narrow viewport shows, which opens the sidebar. */
-export const VISIBLE_SIDEBAR_TRIGGER = '[data-slot="sidebar-trigger"]:visible';
+export const VISIBLE_SIDEBAR_TRIGGER = '[data-sidebar="trigger"]:visible';
 /** The main element of a marketing page, which marks the page as one. */
 export const MARKETING_PAGE = 'main[data-marketing-page="true"]';
 /** The Nina part of the homepage, which holds its own composer. */

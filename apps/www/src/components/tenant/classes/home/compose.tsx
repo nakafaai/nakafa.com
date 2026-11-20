@@ -113,7 +113,7 @@ export function NewAnnouncement() {
               className="min-h-32"
               dir="auto"
               id={`${id}-text`}
-              onChange={(event) => setText(event.target.value)}
+              onValueChange={setText}
               placeholder={t("announcement-placeholder")}
               value={text}
             />

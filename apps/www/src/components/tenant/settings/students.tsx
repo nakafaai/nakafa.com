@@ -213,17 +213,17 @@ function SchoolLoginMenu({ login }: { login: LoginItem }) {
       <RowItems>
         <DropdownMenuItem
           icon={PencilEdit02Icon}
-          onClick={() => dialogs.show("rename")}
+          onSelect={() => dialogs.show("rename")}
         >
           {tCommon("rename")}
         </DropdownMenuItem>
-        <DropdownMenuItem icon={AtIcon} onClick={() => dialogs.show("login")}>
+        <DropdownMenuItem icon={AtIcon} onSelect={() => dialogs.show("login")}>
           {t("login-rename")}
         </DropdownMenuItem>
         <DropdownMenuItem
           disabled={isPending}
           icon={Refresh01Icon}
-          onClick={() =>
+          onSelect={() =>
             startTransition(() =>
               runSchoolWrite(
                 schoolCall(() => reissue({ personId: login.person.id, slug })),

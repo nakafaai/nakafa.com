@@ -29,6 +29,15 @@ const currentOf = (siblings: CrumbSiblings) =>
 function CrumbOptions({ siblings }: { siblings: CrumbSiblings }) {
   return (
     <DropdownMenuRadioGroup
+      onValueChange={(label) => {
+        const chosen = Arr.findFirst(
+          siblings.options,
+          (option) => option.label === label
+        );
+        if (Option.isSome(chosen)) {
+          siblings.onChoose?.(chosen.value);
+        }
+      }}
       value={Option.getOrElse(
         Option.map(currentOf(siblings), (option) => option.label),
         () => ""
@@ -39,7 +48,6 @@ function CrumbOptions({ siblings }: { siblings: CrumbSiblings }) {
           aria-current={option.current ? "page" : undefined}
           icon={option.icon}
           key={option.label}
-          onClick={() => siblings.onChoose?.(option)}
           render={<BreadcrumbAnchor target={option.target} />}
           value={option.label}
         >
@@ -77,7 +85,7 @@ export function BreadcrumbSiblingsSegment({
           render={
             <button
               aria-current={current ? "page" : undefined}
-              className="hover:text-foreground data-popup-open:text-foreground focus-visible:ring-ring flex min-w-0 items-center gap-1 rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
+              className="hover:text-foreground data-open:text-foreground focus-visible:ring-ring flex min-w-0 items-center gap-1 rounded-md transition-colors focus-visible:ring-2 focus-visible:outline-none"
               type="button"
             >
               <span className="min-w-0 truncate">{label}</span>

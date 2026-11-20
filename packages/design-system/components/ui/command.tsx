@@ -1,38 +1,42 @@
-import type { AutocompleteRootProps } from "@base-ui/react/autocomplete";
-import { Dialog as CommandDialogPrimitive } from "@base-ui/react/dialog";
-import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer";
-import { useMediaQuery } from "@base-ui/react/unstable-use-media-query";
-import { Search02Icon } from "@hugeicons/core-free-icons";
-import {
-  Autocomplete,
-  AutocompleteCollection,
-  AutocompleteEmpty,
-  AutocompleteGroup,
-  AutocompleteGroupLabel,
-  AutocompleteInput,
-  AutocompleteItem,
-  AutocompleteList,
-  AutocompleteSeparator,
-} from "@repo/design-system/components/ui/autocomplete";
-import {
-  Drawer,
-  DrawerContent,
-} from "@repo/design-system/components/ui/drawer";
+import { Cancel01Icon, Search02Icon } from "@hugeicons/core-free-icons";
+import { Button } from "@repo/design-system/components/ui/button";
+import { Dialog } from "@repo/design-system/components/ui/dialog";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
+import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
+import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
+import { StagedPopup } from "@repo/design-system/components/ui/staged";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
+import { optionRowVariants } from "@repo/design-system/lib/option";
+import { sheetSurface } from "@repo/design-system/lib/popup";
+import {
+  type CommandController,
+  CommandEmpty as CommandEmptyPrimitive,
+  CommandGroupLabel as CommandGroupLabelPrimitive,
+  CommandGroup as CommandGroupPrimitive,
+  CommandInput as CommandInputPrimitive,
+  CommandItem as CommandItemPrimitive,
+  CommandList as CommandListPrimitive,
+  Command as CommandPrimitive,
+  CommandSeparator as CommandSeparatorPrimitive,
+  createCommandController,
+  type ListAnnouncement,
+} from "@ui-sdk/react/command";
+import {
+  DialogBackdrop,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@ui-sdk/react/dialog";
+import type { VariantProps } from "class-variance-authority";
 import { cn } from "cn";
-import { Array as Arr, Predicate } from "effect";
 import type * as React from "react";
-import { createContext, use, useRef } from "react";
-
-/** Whether the palette opens as a dialog, from the medium breakpoint, or as a drawer on a phone. */
-const CommandSurfaceContext = createContext<"dialog" | "drawer">("dialog");
+import { createContext, use, useState } from "react";
+import { useTranslations } from "use-intl";
 
 /**
- * Opens a command palette: a dialog over the page from the medium breakpoint, and
- * on a phone a drawer with the search at its top, its handle and no close button,
- * as every searchable choice opens there (`Picker`).
+ * Opens a command palette over the page: in the upper part of a wide or a mouse screen, and on a phone as a sheet
+ * from the bottom with the search at its top, which closes as every sheet does, by its handle, a swipe or a press
+ * outside. One tree holds both, so the palette keeps its search as the screen turns.
  */
 function CommandDialog({
   children,
@@ -43,240 +47,170 @@ function CommandDialog({
   onOpenChange: (open: boolean) => void;
   open: boolean;
 }) {
-  const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp, {});
-  if (isDesktop) {
-    return (
-      <CommandSurfaceContext value="dialog">
-        <CommandDialogPrimitive.Root
-          onOpenChange={(next) => onOpenChange(next)}
-          open={open}
-        >
-          {children}
-        </CommandDialogPrimitive.Root>
-      </CommandSurfaceContext>
-    );
-  }
   return (
-    <CommandSurfaceContext value="drawer">
-      <Drawer onOpenChange={(next) => onOpenChange(next)} open={open}>
-        {children}
-      </Drawer>
-    </CommandSurfaceContext>
+    <Dialog onOpenChange={(next) => onOpenChange(next)} open={open}>
+      {children}
+    </Dialog>
   );
 }
 
-const CommandDialogPortal = CommandDialogPrimitive.Portal;
-const CommandDialogCreateHandle = CommandDialogPrimitive.createHandle;
-
-type CommandProps<ItemValue> = Omit<
-  AutocompleteRootProps<ItemValue>,
-  "items"
-> & {
-  items?: readonly ItemValue[] | readonly { items: readonly ItemValue[] }[];
-};
-
-function hasGroupedItems(value: unknown) {
-  return (
-    Predicate.isObject(value) &&
-    Predicate.hasProperty(value, "items") &&
-    Arr.isArray(value.items)
-  );
-}
-
-function isGroupedCommandItems<ItemValue>(
-  items: CommandProps<ItemValue>["items"]
-): items is readonly { items: readonly ItemValue[] }[] {
-  return Arr.isArray(items) && Arr.some(items, hasGroupedItems);
-}
-
-function CommandDialogTrigger(props: CommandDialogPrimitive.Trigger.Props) {
-  return (
-    <CommandDialogPrimitive.Trigger
-      data-slot="command-dialog-trigger"
-      {...props}
-    />
-  );
-}
-
-function CommandDialogBackdrop({
-  className,
-  ...props
-}: CommandDialogPrimitive.Backdrop.Props) {
-  return (
-    <CommandDialogPrimitive.Backdrop
-      className={cn(
-        // The palette opens from the keyboard, so it appears and leaves at
-        // once: an action from the keyboard is never animated.
-        "bg-ink/32 fixed inset-0 z-50 backdrop-blur-sm",
-        className
-      )}
-      data-slot="command-dialog-backdrop"
-      {...props}
-    />
-  );
-}
-
-function CommandDialogViewport({
-  className,
-  ...props
-}: CommandDialogPrimitive.Viewport.Props) {
-  return (
-    <CommandDialogPrimitive.Viewport
-      className={cn(
-        "fixed inset-0 z-50 flex flex-col items-center px-4 py-[max(--spacing(4),4vh)] sm:py-[10vh]",
-        className
-      )}
-      data-slot="command-dialog-viewport"
-      {...props}
-    />
-  );
-}
-
+/**
+ * The palette's window. It opens from the keyboard, so on a wide screen it appears and leaves at once: an action from
+ * the keyboard is never animated. A press focuses its search field, and a touch focuses the window itself, so no
+ * keyboard covers the rows before the reader asks for it. A palette that sets `keepMounted` stays in the document
+ * while closed, hidden, so its rows are ready before it opens.
+ */
 function CommandDialogPopup({
   children,
   className,
   description,
-  portalProps,
+  keepMounted = false,
   title,
-  ...props
-}: CommandDialogPrimitive.Popup.Props & {
+}: {
+  children: React.ReactNode;
+  className?: string | undefined;
   /** What a screen reader reads under the title, in the reader's language. */
-  description: React.ReactNode;
-  portalProps?: CommandDialogPrimitive.Portal.Props;
+  description: string;
+  keepMounted?: boolean | undefined;
   /** The name of the dialog, in the reader's language. */
-  title: React.ReactNode;
+  title: string;
 }) {
-  const body = useRef<HTMLDivElement>(null);
-  if (use(CommandSurfaceContext) === "drawer") {
-    // As a `Picker` drawer does: a press focuses the search field, and a touch
-    // focuses the drawer itself, so no keyboard covers the rows before the
-    // learner asks for it.
-    return (
-      <DrawerPrimitive.VirtualKeyboardProvider>
-        <DrawerContent
-          className="[--drawer-content-height:calc(100dvh-6rem)]"
-          initialFocus={(type) =>
-            type === "touch"
-              ? body.current
-              : (body.current?.querySelector("input") ?? true)
-          }
-        >
-          <DrawerPrimitive.Title className="sr-only">
-            {title}
-          </DrawerPrimitive.Title>
-          <DrawerPrimitive.Description className="sr-only">
-            {description}
-          </DrawerPrimitive.Description>
-          <div
-            className="flex min-h-0 flex-1 flex-col outline-none"
-            ref={body}
-            tabIndex={-1}
-          >
-            {children}
-          </div>
-        </DrawerContent>
-      </DrawerPrimitive.VirtualKeyboardProvider>
-    );
-  }
   return (
     <ButtonGroupVariant value={undefined}>
-      <CommandDialogPortal {...portalProps}>
-        <CommandDialogBackdrop />
-        <CommandDialogViewport>
-          <CommandDialogPrimitive.Popup
-            className={cn(
-              "bg-popover text-popover-foreground duration-surface before:bg-muted/72 relative isolate row-start-2 flex h-[min(40rem,calc(100dvh-2rem))] min-h-0 w-full max-w-xl min-w-0 translate-y-[calc(-1.25rem*var(--nested-dialogs))] scale-[calc(1-0.1*var(--nested-dialogs))] flex-col overflow-hidden rounded-2xl border opacity-[calc(1-0.1*var(--nested-dialogs))] shadow-lg/5 transition-[scale,opacity,translate] outline-none *:relative *:z-10 not-dark:bg-clip-padding before:pointer-events-none before:absolute before:inset-0 before:z-0 before:rounded-[calc(var(--radius-2xl)-1px)] before:shadow-[0_1px_--theme(--color-black/4%)] data-nested:data-ending-style:translate-y-8 data-nested-dialog-open:origin-top data-nested:data-starting-style:translate-y-8 **:data-[slot=scroll-area-viewport]:data-has-overflow-y:pe-1 sm:h-[min(40rem,80dvh)] dark:before:shadow-[0_-1px_--theme(--color-white/6%)]",
-              className
-            )}
-            data-slot="command-dialog-popup"
-            {...props}
-          >
-            <CommandDialogPrimitive.Title className="sr-only">
-              {title}
-            </CommandDialogPrimitive.Title>
-            <CommandDialogPrimitive.Description className="sr-only">
-              {description}
-            </CommandDialogPrimitive.Description>
-            {children}
-          </CommandDialogPrimitive.Popup>
-        </CommandDialogViewport>
-      </CommandDialogPortal>
+      <DialogBackdrop className="bg-ink/32 fixed inset-0 z-50 pointer-fine:backdrop-blur-sm" />
+      <DialogContent
+        className={cn(
+          sheetSurface(),
+          // The window is tinted, so the card of rows (`CommandPanel`) stands out of it in the popup's own colour.
+          "text-popover-foreground z-50 flex min-h-0 w-full flex-col overflow-hidden border bg-[color-mix(in_oklab,var(--muted)_72%,var(--popover))] outline-none not-dark:bg-clip-padding",
+          "data-[presentation=dialog]:fixed data-[presentation=dialog]:inset-x-0 data-[presentation=dialog]:top-[max(--spacing(4),4vh)] data-[presentation=dialog]:mx-auto data-[presentation=dialog]:h-[min(40rem,calc(100dvh-2rem))] data-[presentation=dialog]:max-w-[min(36rem,calc(100%-2rem))] data-[presentation=dialog]:rounded-2xl data-[presentation=dialog]:shadow-lg/5 sm:data-[presentation=dialog]:top-[10vh] sm:data-[presentation=dialog]:h-[min(40rem,80dvh)]",
+          "data-[presentation=sheet]:h-[calc(100dvh-6rem)]",
+          className
+        )}
+        data-surface="palette"
+        keepMounted={keepMounted}
+        render={(contentProps, state) => (
+          <StagedPopup
+            {...contentProps}
+            open={state.open && state.presentation === "sheet"}
+          />
+        )}
+      >
+        <SheetGrip />
+        <DialogTitle className="sr-only">{title}</DialogTitle>
+        <DialogDescription className="sr-only">{description}</DialogDescription>
+        {children}
+      </DialogContent>
     </ButtonGroupVariant>
   );
 }
 
+/** The controller of the palette around a part, which the search field's clear button empties the search through. */
+const CommandControllerContext = createContext<CommandController | null>(null);
+
 /**
- * The search palette's list: one field over grouped places, each row with the icon of its kind, opened in a dialog
- * on a wide screen and a drawer on a phone. Search across the product goes here; a choice among options is a Picker.
+ * A search field over an always-open list of rows, for the command palette and every picker. It filters its rows as
+ * the reader types, unless its caller filters them, as a server search does (`filter={false}`), and it tells a screen
+ * reader how many rows are left, in the reader's language. A row runs its `onSelect`, by pointer, keys or an agent
+ * alike.
  */
-function Command<ItemValue>({
-  autoHighlight = "always",
-  keepHighlight = true,
-  items,
-  mode = "list",
-  open = true,
+function Command({
+  announcement,
+  className,
+  controller,
   ...props
-}: CommandProps<ItemValue>) {
-  if (isGroupedCommandItems(items)) {
-    return (
-      <Autocomplete
-        autoHighlight={autoHighlight}
-        inline
-        items={items}
-        keepHighlight={keepHighlight}
-        mode={mode}
-        open={open}
-        {...props}
-      />
-    );
-  }
+}: Omit<React.ComponentProps<typeof CommandPrimitive>, "className"> & {
+  className?: string | undefined;
+}) {
+  const t = useTranslations("Common");
+  const [own] = useState(createCommandController);
+  const control = controller ?? own;
+  const announce = (change: ListAnnouncement) => {
+    if (change.type !== "results") {
+      return null;
+    }
+    if (change.loading) {
+      return t("loading");
+    }
+    return t("results-count", { count: change.count });
+  };
 
   return (
-    <Autocomplete
-      autoHighlight={autoHighlight}
-      inline
-      items={items}
-      keepHighlight={keepHighlight}
-      mode={mode}
-      open={open}
-      {...props}
-    />
+    <CommandControllerContext value={control}>
+      <CommandPrimitive
+        announcement={announcement ?? announce}
+        className={cn("flex min-h-0 flex-1 flex-col", className)}
+        controller={control}
+        pendingAnnouncement={t("loading")}
+        {...props}
+      />
+    </CommandControllerContext>
   );
 }
 
 /**
- * The search field of a command dialog. It does not autofocus: a kept-mounted dialog
- * mounts hidden, so the dialog takes focus when it opens, through its `initialFocus`.
+ * The search field of a command list, with its search icon and a button that empties it. It does not autofocus: the
+ * dialog or the popup around it focuses it when it opens, by its `initialFocus`.
  */
 function CommandInput({
+  "aria-label": ariaLabel,
   className,
-  showClear = true,
+  clearLabel,
+  placeholder,
   ...props
-}: React.ComponentProps<typeof AutocompleteInput> & {
-  /** What the box shows while empty, which says what to search for. */
+}: Omit<React.ComponentProps<typeof CommandInputPrimitive>, "className"> & {
+  className?: string | undefined;
+  /** The name of the button that empties the search, in the reader's language. */
+  clearLabel: string;
+  /** What the box shows while empty, which says what to search for. It names the box, unless `aria-label` does. */
   placeholder: string;
 }) {
+  const controller = use(CommandControllerContext);
+
   return (
-    <div className="px-2.5 py-1.5" data-slot="command-input-wrapper">
-      <AutocompleteInput
+    <div
+      className="relative flex shrink-0 items-center px-2.5 py-1.5 has-[input:placeholder-shown]:[--command-clear:hidden]"
+      data-slot="command-input-wrapper"
+    >
+      <HugeIcons
+        aria-hidden="true"
+        className="text-muted-foreground pointer-events-none absolute start-5.5 opacity-80"
+        icon={Search02Icon}
+      />
+      <CommandInputPrimitive
+        aria-label={ariaLabel ?? placeholder}
         className={cn(
-          "border-transparent! bg-transparent! shadow-none before:hidden focus-visible:border-transparent focus-visible:ring-0 has-focus-visible:ring-0",
+          "placeholder:text-muted-foreground h-10 w-full min-w-0 rounded-md bg-transparent ps-9 pe-10 text-base outline-none md:text-sm [&::-webkit-search-cancel-button]:hidden",
           className
         )}
-        showClear={showClear}
-        size="lg"
-        startAddon={<HugeIcons icon={Search02Icon} />}
+        enterKeyHint="search"
+        placeholder={placeholder}
+        type="search"
         {...props}
       />
+      <Button
+        className="[visibility:var(--command-clear,visible)] absolute end-3"
+        onClick={() => {
+          controller?.setQuery("");
+          controller?.focus();
+        }}
+        size="icon-sm"
+        tooltip={clearLabel}
+        type="button"
+        variant="ghost"
+      >
+        <HugeIcons icon={Cancel01Icon} />
+      </Button>
     </div>
   );
 }
 
+/** The card the rows stand on, ruled off from the search field above it and the keys at its foot. */
 function CommandPanel({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "bg-popover relative -mx-px flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-xl border border-b-0 bg-clip-padding shadow-xs/5 not-has-[+[data-slot=command-footer]]:-mb-px not-has-[+[data-slot=command-footer]]:rounded-b-2xl before:pointer-events-none before:absolute before:inset-0 before:rounded-t-[calc(var(--radius-xl)-1px)] **:data-[slot=scroll-area-scrollbar]:mt-2",
+        "bg-popover relative -mx-px flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-xl border border-b-0 bg-clip-padding shadow-xs/5 not-has-[+[data-slot=command-footer]]:-mb-px not-has-[+[data-slot=command-footer]]:rounded-b-2xl",
         className
       )}
       data-slot="command-panel"
@@ -285,27 +219,39 @@ function CommandPanel({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** The rows, which scroll within the panel and fade at the edge that hides more. */
 function CommandList({
   className,
   ...props
-}: React.ComponentProps<typeof AutocompleteList>) {
+}: Omit<React.ComponentProps<typeof CommandListPrimitive>, "className"> & {
+  className?: string | undefined;
+}) {
   return (
-    <AutocompleteList
-      className={cn("not-empty:scroll-py-2 not-empty:p-2", className)}
-      data-slot="command-list"
-      {...props}
-    />
+    <ScrollArea axis="vertical" className="min-h-0 flex-1" scrollFade>
+      <CommandListPrimitive
+        className={cn("scroll-py-2 p-2 empty:p-0", className)}
+        {...props}
+      />
+    </ScrollArea>
   );
 }
 
+/**
+ * What the list says when no row matches the search, centred as every empty state is. It stays in the document as the
+ * live region that announces it, so it takes room only while it speaks (`data-empty`).
+ */
 function CommandEmpty({
   className,
   ...props
-}: React.ComponentProps<typeof AutocompleteEmpty>) {
+}: Omit<React.ComponentProps<typeof CommandEmptyPrimitive>, "className"> & {
+  className?: string | undefined;
+}) {
   return (
-    <AutocompleteEmpty
-      className={cn("not-empty:py-6", className)}
-      data-slot="command-empty"
+    <CommandEmptyPrimitive
+      className={cn(
+        "text-muted-foreground flex justify-center text-center text-sm data-empty:px-4 data-empty:py-6",
+        className
+      )}
       {...props}
     />
   );
@@ -314,11 +260,12 @@ function CommandEmpty({
 function CommandGroup({
   className,
   ...props
-}: React.ComponentProps<typeof AutocompleteGroup>) {
+}: Omit<React.ComponentProps<typeof CommandGroupPrimitive>, "className"> & {
+  className?: string | undefined;
+}) {
   return (
-    <AutocompleteGroup
-      className={className}
-      data-slot="command-group"
+    <CommandGroupPrimitive
+      className={cn("[[role=group]+&]:mt-1.5", className)}
       {...props}
     />
   );
@@ -327,33 +274,43 @@ function CommandGroup({
 function CommandGroupLabel({
   className,
   ...props
-}: React.ComponentProps<typeof AutocompleteGroupLabel>) {
+}: Omit<
+  React.ComponentProps<typeof CommandGroupLabelPrimitive>,
+  "className"
+> & {
+  className?: string | undefined;
+}) {
   return (
-    <AutocompleteGroupLabel
-      className={cn("font-medium", className)}
-      data-slot="command-group-label"
+    <CommandGroupLabelPrimitive
+      className={cn(
+        "text-muted-foreground px-2 py-1.5 text-xs font-medium",
+        className
+      )}
       {...props}
     />
   );
 }
 
-function CommandCollection({
-  ...props
-}: React.ComponentProps<typeof AutocompleteCollection>) {
-  return <AutocompleteCollection data-slot="command-collection" {...props} />;
-}
-
+/**
+ * One row of a command list. It runs its `onSelect`; a `label` gives the words the search matches when the row's text
+ * holds more, or less, than them. A row of the palette stands as tall as a thumb on every screen (`roomy`, the
+ * default), and a row of a picker as a select's row does.
+ */
 function CommandItem({
   className,
+  size = "roomy",
   ...props
-}: React.ComponentProps<typeof AutocompleteItem>) {
+}: Omit<React.ComponentProps<typeof CommandItemPrimitive>, "className"> &
+  Pick<VariantProps<typeof optionRowVariants>, "size"> & {
+    className?: string | undefined;
+  }) {
   return (
-    <AutocompleteItem
+    <CommandItemPrimitive
       className={cn(
-        "icon-first-line min-h-11! w-full overflow-hidden rounded-md px-3 py-3! text-sm! sm:min-h-11! sm:py-3! [&_svg:not([class*='size-'])]:size-4!",
+        optionRowVariants({ size }),
+        "icon-first-line overflow-hidden rounded-md",
         className
       )}
-      data-slot="command-item"
       {...props}
     />
   );
@@ -362,24 +319,12 @@ function CommandItem({
 function CommandSeparator({
   className,
   ...props
-}: React.ComponentProps<typeof AutocompleteSeparator>) {
+}: Omit<React.ComponentProps<typeof CommandSeparatorPrimitive>, "className"> & {
+  className?: string | undefined;
+}) {
   return (
-    <AutocompleteSeparator
-      className={cn("-mx-2 my-2", className)}
-      data-slot="command-separator"
-      {...props}
-    />
-  );
-}
-
-function CommandShortcut({ className, ...props }: React.ComponentProps<"kbd">) {
-  return (
-    <kbd
-      className={cn(
-        "text-muted-foreground ms-auto font-sans text-xs tracking-widest",
-        className
-      )}
-      data-slot="command-shortcut"
+    <CommandSeparatorPrimitive
+      className={cn("bg-border -mx-2 my-2 h-px", className)}
       {...props}
     />
   );
@@ -389,7 +334,7 @@ function CommandFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "bg-popover text-muted-foreground flex items-center justify-between gap-2 rounded-b-[calc(var(--radius-2xl)-1px)] border-t px-5 py-3 text-sm",
+        "bg-popover text-muted-foreground flex shrink-0 items-center justify-between gap-2 rounded-b-[calc(var(--radius-2xl)-1px)] border-t px-5 py-3 text-sm",
         className
       )}
       data-slot="command-footer"
@@ -400,14 +345,8 @@ function CommandFooter({ className, ...props }: React.ComponentProps<"div">) {
 
 export {
   Command,
-  CommandCollection,
   CommandDialog,
-  CommandDialogBackdrop,
-  CommandDialogCreateHandle,
   CommandDialogPopup,
-  CommandDialogPortal,
-  CommandDialogTrigger,
-  CommandDialogViewport,
   CommandEmpty,
   CommandFooter,
   CommandGroup,
@@ -417,5 +356,4 @@ export {
   CommandList,
   CommandPanel,
   CommandSeparator,
-  CommandShortcut,
 };

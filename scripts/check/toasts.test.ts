@@ -5,11 +5,11 @@ import { inspectToastSource } from "#scripts/check/toasts";
 
 const COMPONENT = "apps/www/src/components/example/toast.tsx";
 const HELPER = "packages/design-system/lib/toast/notify.ts";
-const TOASTER = "packages/design-system/components/ui/sonner.tsx";
+const TOASTER = "packages/design-system/components/ui/toast.tsx";
 const TEST_MODULE = "apps/www/src/components/example/toast.test.ts";
 const TEST_HELPER = "packages/design-system/components/pool/test.fixture.ts";
-const SONNER_RULE =
-  "import { toast } from @repo/design-system/lib/toast/notify instead of sonner, which only the Toaster and that helper import";
+const TOAST_RULE =
+  "import { toast } from @repo/design-system/lib/toast/notify instead of @ui-sdk/react/toast, which only the Toaster imports";
 
 /** Inspects one module with the toast policy alone. */
 function inspect(sourceText: string, file = COMPONENT) {
@@ -28,8 +28,8 @@ describe("Toast source policy", () => {
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
-          yield* inspect(`import { toast } from "sonner";`),
-          [`${COMPONENT}: ${SONNER_RULE}.`]
+          yield* inspect(`import { toast } from "@ui-sdk/react/toast";`),
+          [`${COMPONENT}: ${TOAST_RULE}.`]
         );
       })
   );
@@ -40,24 +40,32 @@ describe("Toast source policy", () => {
       Effect.gen(function* () {
         assert.deepStrictEqual(
           yield* inspect(`
-export { toast } from "sonner";
-const sonner = import("sonner");`),
-          [`${COMPONENT}: ${SONNER_RULE}.`, `${COMPONENT}: ${SONNER_RULE}.`]
+export { toast } from "@ui-sdk/react/toast";
+const parts = import("@ui-sdk/react/toast");`),
+          [`${COMPONENT}: ${TOAST_RULE}.`, `${COMPONENT}: ${TOAST_RULE}.`]
         );
       })
   );
 
-  it.effect("accepts the toast library in the Toaster and in the helper", () =>
-    Effect.gen(function* () {
-      assert.deepStrictEqual(
-        yield* inspect(`import { toast } from "sonner";`, TOASTER),
-        []
-      );
-      assert.deepStrictEqual(
-        yield* inspect(`import { toast } from "sonner";`, HELPER),
-        []
-      );
-    })
+  it.effect(
+    "accepts the toast parts in the Toaster, and rejects them in the helper, which shows toasts through the Toaster",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspect(
+            `import { toast } from "@ui-sdk/react/toast";`,
+            TOASTER
+          ),
+          []
+        );
+        assert.deepStrictEqual(
+          yield* inspect(
+            `import { toast } from "@ui-sdk/react/toast";`,
+            HELPER
+          ),
+          [`${HELPER}: ${TOAST_RULE}.`]
+        );
+      })
   );
 
   it.effect("accepts a component that shows toasts through the helper", () =>
@@ -74,7 +82,10 @@ toast.error({ title: "action-error.title", description: "action-error.descriptio
   it.effect("does not judge a test module, which may test the library", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
-        yield* inspect(`import { toast } from "sonner";`, TEST_MODULE),
+        yield* inspect(
+          `import { toast } from "@ui-sdk/react/toast";`,
+          TEST_MODULE
+        ),
         []
       );
     })
@@ -85,7 +96,10 @@ toast.error({ title: "action-error.title", description: "action-error.descriptio
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
-          yield* inspect(`import { toast } from "sonner";`, TEST_HELPER),
+          yield* inspect(
+            `import { toast } from "@ui-sdk/react/toast";`,
+            TEST_HELPER
+          ),
           []
         );
       })

@@ -170,9 +170,7 @@ test.describe("A prompt in a conversation at 390px", () => {
  * notice overlaps the text box and the send button, in square pixels.
  */
 const readCover = (notice: HTMLElement, names: readonly string[]) => {
-  const form = document.querySelector(
-    '[data-slot="sheet-popup"][data-open] form'
-  );
+  const form = document.querySelector('[data-surface="sheet"][data-open] form');
   if (!form) {
     return null;
   }

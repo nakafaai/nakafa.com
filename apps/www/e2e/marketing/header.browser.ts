@@ -203,7 +203,7 @@ test.describe("the header's sections at desktop", () => {
         Effect.gen(function* () {
           yield* loadMarketingPage(page, "/en");
           const header = page.locator("header");
-          const popup = page.locator('[data-slot="navigation-menu-popup"]');
+          const popup = page.locator('[data-slot="navigation-menu-viewport"]');
           yield* Effect.promise(() =>
             header.getByRole("button", { name: "School" }).hover()
           );

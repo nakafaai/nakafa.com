@@ -39,12 +39,7 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
   const common = useTranslations("Common");
   const roleItems = Arr.map(roles, (role) => ({
-    label: (
-      <>
-        <HugeIcons icon={role.icon} />
-        {t(`roles.${role.value}`)}
-      </>
-    ),
+    label: t(`roles.${role.value}`),
     value: role.value,
   }));
   const updateUserRole = useUpdateUserRoleMutation();
@@ -130,6 +125,16 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
                     className="w-full max-w-xs"
                     id="user-settings-role"
                   >
+                    {Option.match(
+                      Arr.findFirst(
+                        roles,
+                        (role) => role.value === field.state.value
+                      ),
+                      {
+                        onNone: () => null,
+                        onSome: (role) => <HugeIcons icon={role.icon} />,
+                      }
+                    )}
                     <SelectValue placeholder={t("role-placeholder")} />
                   </SelectTrigger>
                   <SelectContent label={common("menu-role")}>

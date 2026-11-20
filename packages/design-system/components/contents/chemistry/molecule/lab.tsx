@@ -167,9 +167,10 @@ export function MoleculeShapeLab({
       <VisualCardSceneActions>
         <DropdownMenuCheckboxItem
           checked={style === "fill"}
-          closeOnClick
+          closeOnSelect
           icon={Atom02Icon}
           onCheckedChange={(checked) => setStyle(checked ? "fill" : "ball")}
+          value="fill"
         >
           {labels.fill}
         </DropdownMenuCheckboxItem>

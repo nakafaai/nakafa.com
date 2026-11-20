@@ -326,7 +326,7 @@ export function FormulaEdit({
       <PopoverContent
         align="center"
         className="w-80 gap-3 p-3"
-        finalFocus={false}
+        finalFocus="none"
         onKeyDown={discardOnEscape}
       >
         <ButtonGroup className="w-full">
@@ -366,7 +366,7 @@ export function FormulaEdit({
           <Textarea
             aria-label={labels.latex}
             className="font-mono"
-            onChange={(event) => setDraft(event.target.value)}
+            onValueChange={setDraft}
             // An example of LaTeX, the same in every language.
             placeholder={String.raw`\frac{a}{b}`}
             value={draft}

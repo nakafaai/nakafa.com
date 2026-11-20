@@ -36,7 +36,7 @@ class MarketingSurfaceMissing extends Schema.TaggedError<
  */
 export const openedHeaderSection = Effect.fn("NakafaE2E.openedHeaderSection")(
   function* (page: Page) {
-    const popup = page.locator('[data-slot="navigation-menu-popup"]');
+    const popup = page.locator('[data-slot="navigation-menu-viewport"]');
     yield* Effect.promise(() => expect(popup).toBeVisible());
     yield* Effect.promise(() => waitForAnimations(popup));
     return popup;

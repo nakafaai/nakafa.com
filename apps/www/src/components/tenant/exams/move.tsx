@@ -118,7 +118,7 @@ export function RoomMenu({
         {room.canChange ? (
           <DropdownMenuItem
             icon={Calendar03Icon}
-            onClick={() => setMoves((count) => count + 1)}
+            onSelect={() => setMoves((count) => count + 1)}
           >
             {t("room-move")}
           </DropdownMenuItem>

@@ -97,14 +97,14 @@ function LearnerMenu() {
             {own ? (
               <DropdownMenuItem
                 icon={Edit02Icon}
-                onClick={() => edit(comment._id)}
+                onSelect={() => edit(comment._id)}
               >
                 {t("edit")}
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem
                 icon={Flag02Icon}
-                onClick={() => setDialog("report")}
+                onSelect={() => setDialog("report")}
               >
                 {t("report")}
               </DropdownMenuItem>
@@ -116,7 +116,7 @@ function LearnerMenu() {
               <DropdownMenuGroup>
                 <DropdownMenuItem
                   icon={Delete02Icon}
-                  onClick={() => setDialog("delete")}
+                  onSelect={() => setDialog("delete")}
                   variant="destructive"
                 >
                   {t("delete")}

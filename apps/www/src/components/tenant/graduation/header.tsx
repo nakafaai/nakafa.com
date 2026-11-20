@@ -190,7 +190,7 @@ function GraduationActions({
             {canDecide ? (
               <DropdownMenuItem
                 icon={CheckmarkBadge01Icon}
-                onClick={() => setIsDeciding(true)}
+                onSelect={() => setIsDeciding(true)}
               >
                 {t("decide")}
               </DropdownMenuItem>
@@ -198,7 +198,7 @@ function GraduationActions({
             <DropdownMenuItem
               disabled={isExporting}
               icon={FileExportIcon}
-              onClick={exportReadiness}
+              onSelect={exportReadiness}
             >
               {t("export-readiness")}
             </DropdownMenuItem>

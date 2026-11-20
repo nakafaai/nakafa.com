@@ -145,8 +145,8 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
         page.getByRole("button", { name: "Copy Content", exact: true })
       ).toHaveCount(0)
     );
-    // Base UI 1.8 keeps tooltips visual and labels their triggers with aria-label.
-    // https://base-ui.com/react/components/tooltip#usage-guidelines
+    // A UI SDK tooltip describes a trigger that names itself with aria-label
+    // (`@ui-sdk/react/docs/components/tooltip.md`).
     const tooltip = page.locator('[data-slot="tooltip-content"]');
     const showsTooltip = Effect.fn("NakafaE2E.showsReadingTooltip")(function* (
       trigger: Locator,
@@ -195,7 +195,7 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       });
       // The outline's own links, which the rail hides while its area keeps the panel's height.
       const outline = sidebar
-        .locator('[data-slot="sidebar-content"]')
+        .locator('[data-sidebar="content"]')
         .getByRole("link")
         .first();
       yield* Effect.promise(() =>

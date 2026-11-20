@@ -238,19 +238,19 @@ export function MessageMenu({
           label={common("menu-actions")}
         >
           {words === "" ? null : (
-            <DropdownMenuItem icon={Copy01Icon} onClick={copy}>
+            <DropdownMenuItem icon={Copy01Icon} onSelect={copy}>
               {t("message-copy")}
             </DropdownMenuItem>
           )}
           {editable ? (
-            <DropdownMenuItem icon={PencilEdit02Icon} onClick={onEdit}>
+            <DropdownMenuItem icon={PencilEdit02Icon} onSelect={onEdit}>
               {t("message-edit")}
             </DropdownMenuItem>
           ) : null}
           {discussion === null ? null : (
             <DropdownMenuItem
               icon={TextFontIcon}
-              onClick={() => dialogs.show("rename")}
+              onSelect={() => dialogs.show("rename")}
             >
               {t("discussion-rename")}
             </DropdownMenuItem>
@@ -262,7 +262,7 @@ export function MessageMenu({
               <DropdownMenuGroup>
                 <DropdownMenuItem
                   icon={ViewOffSlashIcon}
-                  onClick={() => dialogs.show("hide")}
+                  onSelect={() => dialogs.show("hide")}
                   variant="destructive"
                 >
                   {t("message-hide")}

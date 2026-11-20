@@ -19,11 +19,9 @@ import { nodesBelow, tagText } from "#scripts/check/drilling";
 /** The design system's primitives, which compose the picker from these parts and are the only modules that may. */
 const PRIMITIVE_DIRECTORY = "packages/design-system/components/ui/";
 const JSX_MODULE_PATTERN = /\.tsx$/u;
-/** The raw searchable list, which only the picker and the command palette compose. */
-const AUTOCOMPLETE_MODULE = "@repo/design-system/components/ui/autocomplete";
 /** The command list, whose search and rows the command palette draws in its own dialog. */
 const COMMAND_MODULE = "@repo/design-system/components/ui/command";
-/** The surfaces a command list could be dropped into by hand, which the picker chooses by the screen's width. */
+/** The surfaces a command list could be dropped into by hand, which the picker chooses by the screen. */
 const SURFACE_MODULES = HashSet.make(
   "@repo/design-system/components/ui/popover",
   "@repo/design-system/components/ui/drawer",
@@ -95,10 +93,10 @@ function writesOwnEmpty(empty: Node): boolean {
 
 /**
  * Reports a searchable choice built by hand. The picker draws one on every screen: a popover with the search over its
- * options on a wide screen, a drawer with the search at its top on a phone, the one-word label over the options, an
- * icon on each, and one sentence when nothing matches. So no module outside the design system's primitives imports the
- * raw autocomplete, or puts the command list in a popover, a drawer, a sheet or a dialog. A picker reads its empty
- * sentence from a key of the empty family, which the dictionary check holds to one sentence.
+ * options on a wide screen, a sheet with the search at its top on a phone, the one-word label over the options, an
+ * icon on each, and one sentence when nothing matches. So no module outside the design system's primitives puts the
+ * command list in a popover, a drawer, a sheet or a dialog. A picker reads its empty sentence from a key of the empty
+ * family, which the dictionary check holds to one sentence.
  */
 export function inspectPickerSource(file: string, sourceFile: SourceFile) {
   if (file.startsWith(PRIMITIVE_DIRECTORY)) {
@@ -119,15 +117,10 @@ export function inspectPickerSource(file: string, sourceFile: SourceFile) {
       )
     : [];
   return Arr.flatten([
-    Arr.contains(modules, AUTOCOMPLETE_MODULE)
-      ? [
-          `${file}: imports the raw autocomplete of ${AUTOCOMPLETE_MODULE}. A searchable choice is a Picker, which draws its search, its label, its options and its empty sentence on every screen.`,
-        ]
-      : [],
     Arr.map(
       commandSurfaces,
       (surface) =>
-        `${file}: puts the command list of ${COMMAND_MODULE} in ${surface}. A searchable choice is a Picker, which opens as a popover on a wide screen and as a drawer on a phone.`
+        `${file}: puts the command list of ${COMMAND_MODULE} in ${surface}. A searchable choice is a Picker, which opens as a popover on a wide screen and as a sheet on a phone.`
     ),
     Arr.map(
       ownEmpties,

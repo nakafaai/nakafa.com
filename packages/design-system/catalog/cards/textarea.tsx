@@ -13,7 +13,7 @@ export function Preview() {
     <div className="max-w-md p-6">
       <Textarea
         aria-label="Question"
-        minRows={3}
+        className="min-h-20"
         placeholder="Ask Nina anything..."
       />
     </div>

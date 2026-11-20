@@ -13,9 +13,9 @@ import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import {
   Sheet,
-  SheetContent,
   SheetDescription,
   SheetHeader,
+  SheetPopup,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import {
@@ -54,7 +54,7 @@ export function ReferenceButton({ references }: Props) {
       </SidebarMenuItem>
 
       <Sheet modal={false} onOpenChange={set} open={open}>
-        <SheetContent className="w-full" size="md">
+        <SheetPopup className="w-full" size="md">
           <div className="flex h-full flex-col">
             <SheetHeader>
               <SheetTitle className="text-xl">
@@ -154,7 +154,7 @@ export function ReferenceButton({ references }: Props) {
               </ScrollArea>
             </div>
           </div>
-        </SheetContent>
+        </SheetPopup>
       </Sheet>
     </>
   );

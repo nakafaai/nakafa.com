@@ -61,7 +61,9 @@ test("a School feature's link in the header's sections brings its section right 
                 .click()
             );
             // A press made while the popup still scales in can land on another of its links.
-            const popup = page.locator('[data-slot="navigation-menu-popup"]');
+            const popup = page.locator(
+              '[data-slot="navigation-menu-viewport"]'
+            );
             yield* Effect.promise(() => expect(popup).toBeVisible());
             yield* Effect.promise(() => waitForAnimations(popup));
             yield* Effect.promise(() =>

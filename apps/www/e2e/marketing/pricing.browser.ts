@@ -90,7 +90,7 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
   const renewalItem = page
     .locator('#faq [data-slot="accordion-item"]')
     .filter({ hasText: "When do credits renew?" });
-  const renewalPanel = renewalItem.locator('[data-slot="accordion-content"]');
+  const renewalPanel = renewalItem.locator('[data-slot="accordion-panel"]');
   yield* Effect.promise(() => renewalQuestion.click());
   yield* Effect.promise(() =>
     expect(renewalQuestion).toHaveAttribute("aria-expanded", "true")
@@ -99,10 +99,10 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
     expect(renewalPanel).toHaveAttribute("data-open", "")
   );
   yield* Effect.promise(() =>
-    expect(renewalPanel).toHaveCSS("animation-name", "accordion-down")
+    expect(renewalPanel).toHaveCSS("transition-property", "height")
   );
   yield* Effect.promise(() =>
-    expect(renewalPanel).toHaveCSS("animation-duration", "0.18s")
+    expect(renewalPanel).toHaveCSS("transition-duration", "0.18s")
   );
   yield* Effect.promise(() =>
     expect(renewalQuestion.locator("svg")).toHaveCSS("rotate", "180deg")
@@ -133,7 +133,7 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
     page.locator("header").getByRole("button", { name: "Learn" }).click()
   );
   const pricingLink = page
-    .locator('[data-slot="navigation-menu-popup"]')
+    .locator('[data-slot="navigation-menu-viewport"]')
     .locator('[href="/en/pricing"]');
   yield* Effect.promise(() => expect(pricingLink).toHaveText("Pricing"));
   yield* Effect.promise(() =>

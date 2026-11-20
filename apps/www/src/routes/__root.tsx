@@ -26,6 +26,7 @@ import { Option, Schema } from "effect";
 import type { ReactNode } from "react";
 import { DeferredPreviewRefresh } from "@/components/dev/deferred";
 import { Announcer } from "@/components/navigation/announcer";
+import { AgentBridge } from "@/components/shared/agent";
 import { ContentPageAnchorProvider } from "@/components/shared/content/anchor";
 import {
   LocalizedError,
@@ -204,6 +205,7 @@ function RootDocument({ children }: { children: ReactNode }) {
         )}
         <ThemeProvider>
           <Announcer />
+          <AgentBridge />
           <DrawerStage>
             <ContentPageAnchorProvider>{children}</ContentPageAnchorProvider>
           </DrawerStage>

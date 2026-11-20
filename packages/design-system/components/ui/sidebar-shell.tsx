@@ -1,7 +1,5 @@
 "use client";
 
-import type { Button as ButtonPrimitive } from "@base-ui/react/button";
-
 import { PanelLeftIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -12,6 +10,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useMissedPress } from "@repo/design-system/hooks/press";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
+import type { Button as ButtonPrimitive } from "@ui-sdk/react/button";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 
@@ -59,16 +58,9 @@ export function Sidebar({
     <>
       {/* A phone's sidebar is a drawer from its side, as every drawer is: its handle at the edge facing the page, a
           swipe or a press outside closes it, and it draws no close button. */}
-      <Drawer
-        onOpenChange={setOpenMobile}
-        open={openMobile}
-        swipeDirection={side}
-      >
+      <Drawer onOpenChange={setOpenMobile} open={openMobile} side={side}>
         <DrawerContent
-          className="bg-sidebar text-sidebar-foreground [--drawer-bleed-background:var(--color-sidebar)]"
-          data-mobile="true"
-          data-sidebar="sidebar"
-          data-slot="sidebar"
+          className="bg-sidebar text-sidebar-foreground"
           onClick={(event) => {
             // A link pressed in the phone sidebar opens its page in this tab, so the drawer steps
             // aside for it; a press that opens another tab leaves the drawer where it is.
@@ -82,7 +74,15 @@ export function Sidebar({
           }}
         >
           <DrawerTitle className="sr-only">{label}</DrawerTitle>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          {/* The drawer's content owns its own slot, so the phone's sidebar names itself inside it. */}
+          <div
+            className="flex h-full w-full flex-col"
+            data-mobile="true"
+            data-sidebar="sidebar"
+            data-slot="sidebar"
+          >
+            {children}
+          </div>
         </DrawerContent>
       </Drawer>
 
@@ -142,14 +142,13 @@ export function Sidebar({
  * sidebar once React mounts the button, and a slow phone never shows a dead button.
  */
 export function SidebarTrigger({
-  className,
   onClick,
   icon,
   label,
   size = "icon-sm",
   variant = "ghost",
   ...props
-}: ButtonPrimitive.Props &
+}: Omit<ComponentProps<typeof ButtonPrimitive>, "children"> &
   Pick<ComponentProps<typeof Button>, "variant"> & {
     /** The square size of the toggle, the height of the row it stands in. */
     size?: "icon" | "icon-sm";
@@ -172,12 +171,10 @@ export function SidebarTrigger({
     <Button
       {...press}
       aria-expanded={isMobile ? openMobile : open}
-      className={className}
       data-sidebar="trigger"
-      data-slot="sidebar-trigger"
-      onClick={(event) => {
+      onClick={(event, details) => {
         press.onClick();
-        onClick?.(event);
+        onClick?.(event, details);
         toggleSidebar();
       }}
       size={size}

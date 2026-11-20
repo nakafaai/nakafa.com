@@ -1,60 +1,68 @@
-/**
- * WARNING: If you want to use select in dialog, sheet, or any modal component, use DropdownMenu instead.
- */
-
-import { Select as SelectPrimitive } from "@base-ui/react/select";
-import {
-  ArrowDown01Icon,
-  ArrowUp01Icon,
-  Tick01Icon,
-} from "@hugeicons/core-free-icons";
-import type { OptionMark } from "@repo/design-system/components/ui/huge-icons";
+import { ArrowDown01Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import {
   HugeIcons,
   OptionIcon,
+  type OptionMark,
 } from "@repo/design-system/components/ui/huge-icons";
+import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
-import { PortalContainer } from "@repo/design-system/lib/portal";
+import {
+  optionRowVariants,
+  optionTickVariants,
+} from "@repo/design-system/lib/option";
+import { popupMotion, sheetSurface } from "@repo/design-system/lib/popup";
+import {
+  SelectContent as SelectContentPrimitive,
+  SelectGroup,
+  SelectGroupLabel,
+  SelectItemIcon,
+  SelectItemIndicator,
+  SelectItem as SelectItemPrimitive,
+  Select as SelectPrimitive,
+  SelectTrigger as SelectTriggerPrimitive,
+  SelectValue as SelectValuePrimitive,
+} from "@ui-sdk/react/select";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type * as React from "react";
-import { use } from "react";
 import { useTranslations } from "use-intl";
 
 /**
- * A select. One with nothing to choose from stays shut, since it would open on an empty line: its caller says what
- * must happen first.
+ * A select. On a phone its list rises from the bottom as a sheet, and on a wide or a mouse screen it opens over its
+ * trigger with the chosen item on it. One with nothing to choose from stays shut, since it would open on an empty
+ * line: its caller says what must happen first.
  */
-function Select<Value, Multiple extends boolean | undefined = false>({
-  disabled,
-  items,
-  ...props
-}: SelectPrimitive.Root.Props<Value, Multiple>) {
+function Select<Value = string, Multiple extends boolean | undefined = false>(
+  props: React.ComponentProps<typeof SelectPrimitive<Value, Multiple>>
+) {
   return (
-    <SelectPrimitive.Root
-      disabled={disabled || (Arr.Array.isArray(items) && items.length === 0)}
-      items={items}
+    <SelectPrimitive<Value, Multiple>
+      presentation="auto"
       {...props}
+      disabled={props.disabled === true || props.items?.length === 0}
     />
   );
 }
 
 /**
  * The chosen item in the trigger, on one line: a label longer than the trigger ends in an ellipsis, so it never
- * pushes the text or the chevron past the trigger's border. The value is a block, where the ellipsis draws, and
- * an item drawn with an icon, such as a flag, keeps the icon inline before its label: Base UI copies the item's
- * nodes into the value, the label often as bare text, which a row of flex items could not end in an ellipsis.
+ * pushes the text or the chevron past the trigger's border.
  */
-const selectValueVariants = cva(
-  "min-w-0 flex-1 truncate text-left [&>svg]:me-2 [&>svg]:inline-block [&>svg]:align-[-0.1875em]"
-);
+const selectValueVariants = cva("min-w-0 flex-1 truncate text-start");
 
 function SelectValue({
   className,
   labels,
-  ...props
-}: SelectPrimitive.Value.Props & {
+  placeholder,
+  ...rest
+}: Omit<
+  React.ComponentProps<typeof SelectValuePrimitive>,
+  "className" | "placeholder"
+> & {
+  className?: string | undefined;
+  /** What shows while nothing is chosen, in place of the select's own `placeholder`. */
+  placeholder?: string | undefined;
   /**
    * Every label the select can show, given where its value changes on its own, as a playing lab's time does: the
    * value keeps the widest label's width, so the trigger never grows and nothing beside it moves. Each label is
@@ -62,11 +70,12 @@ function SelectValue({
    */
   labels?: readonly string[];
 }) {
+  const props = placeholder === undefined ? rest : { ...rest, placeholder };
+
   if (labels === undefined) {
     return (
-      <SelectPrimitive.Value
+      <SelectValuePrimitive
         className={selectValueVariants({ className })}
-        data-slot="select-value"
         {...props}
       />
     );
@@ -85,11 +94,10 @@ function SelectValue({
           key={label}
         />
       ))}
-      <SelectPrimitive.Value
+      <SelectValuePrimitive
         className={selectValueVariants({
           className: cn("col-start-1 row-start-1", className),
         })}
-        data-slot="select-value"
         {...props}
       />
     </span>
@@ -110,106 +118,76 @@ function SelectTrigger({
   size = "default",
   children,
   ...props
-}: SelectPrimitive.Trigger.Props & {
+}: Omit<
+  React.ComponentProps<typeof SelectTriggerPrimitive>,
+  "children" | "className"
+> & {
+  children?: React.ReactNode;
+  className?: string | undefined;
   size?: "sm" | "default";
 }) {
   return (
-    <SelectPrimitive.Trigger
+    <SelectTriggerPrimitive
       className={cn(selectTriggerVariants(), className)}
       data-size={size}
-      data-slot="select-trigger"
       {...props}
     >
       {children}
-      <SelectPrimitive.Icon>
-        <HugeIcons className="text-inherit opacity-80" icon={ArrowDown01Icon} />
-      </SelectPrimitive.Icon>
-    </SelectPrimitive.Trigger>
+      <HugeIcons
+        aria-hidden="true"
+        className="text-inherit opacity-80"
+        icon={ArrowDown01Icon}
+      />
+    </SelectTriggerPrimitive>
   );
 }
 
 /**
  * The list of a select. It opens with its one-word label, which names what is chosen, so a list never reads as bare
- * codes: the label is required, and the list draws it above its items.
+ * codes: the label is required, and the list draws it above its items. On a mouse screen the chosen item opens over
+ * the trigger, as a native select does; a list that stands under its trigger passes `alignItemWithTrigger={false}`.
  */
 function SelectContent({
+  alignItemWithTrigger = true,
   className,
   children,
   label,
-  side = "bottom",
-  sideOffset = 4,
-  align = "center",
-  alignOffset = 0,
-  alignItemWithTrigger = true,
   ...props
-}: SelectPrimitive.Popup.Props &
-  Pick<
-    SelectPrimitive.Positioner.Props,
-    "align" | "alignOffset" | "alignItemWithTrigger" | "side" | "sideOffset"
-  > & {
-    /** The one word that names what is chosen, such as "Kelas". */
-    label: string;
-  }) {
+}: Omit<
+  React.ComponentProps<typeof SelectContentPrimitive>,
+  "children" | "className"
+> & {
+  children?: React.ReactNode;
+  className?: string | undefined;
+  /** The one word that names what is chosen, such as "Kelas". */
+  label: string;
+}) {
   return (
     <ButtonGroupVariant value={undefined}>
-      <SelectPrimitive.Portal container={use(PortalContainer)}>
-        <SelectPrimitive.Positioner
-          align={align}
-          alignItemWithTrigger={alignItemWithTrigger}
-          alignOffset={alignOffset}
-          className="isolate z-50"
-          side={side}
-          sideOffset={sideOffset}
-        >
-          <SelectPrimitive.Popup
-            className={cn(
-              "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 bg-popover text-popover-foreground duration-ui motion-safe:data-closed:animate-out motion-safe:data-open:animate-in relative isolate z-50 max-h-(--available-height) w-max max-w-(--available-width) min-w-(--anchor-width) origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-md border shadow-md inset-shadow-[0_-1px_--theme(--color-black/4%)] ease-out not-dark:bg-clip-padding data-[align-trigger=true]:animate-none dark:inset-shadow-[0_1px_--theme(--color-white/6%)] [&:not(:has([data-slot=select-item],[data-slot=select-empty]))]:[--select-nothing:block]",
-              className
-            )}
-            data-align-trigger={alignItemWithTrigger}
-            data-slot="select-content"
-            {...props}
-          >
-            <SelectScrollUpButton />
-            <SelectPrimitive.List>
-              <SelectPrimitive.Group
-                className="scroll-my-1 p-1"
-                data-slot="select-group"
-              >
-                <SelectLabel>{label}</SelectLabel>
-                {children}
-                <SelectNothing />
-              </SelectPrimitive.Group>
-            </SelectPrimitive.List>
-            <SelectScrollDownButton />
-          </SelectPrimitive.Popup>
-        </SelectPrimitive.Positioner>
-      </SelectPrimitive.Portal>
+      <SelectContentPrimitive
+        alignItemWithTrigger={alignItemWithTrigger}
+        className={cn(
+          popupMotion(),
+          sheetSurface(),
+          "bg-popover text-popover-foreground z-50 max-h-(--available-height) w-max max-w-(--available-width) min-w-(--anchor-width) scroll-py-1 overflow-x-hidden overflow-y-auto overscroll-contain rounded-md border p-1 shadow-md inset-shadow-[0_-1px_--theme(--color-black/4%)] outline-none not-dark:bg-clip-padding data-[presentation=sheet]:px-2 dark:inset-shadow-[0_1px_--theme(--color-white/6%)] [&:not(:has([data-slot=select-item]))]:[--select-nothing:block]",
+          className
+        )}
+        {...props}
+      >
+        <SheetGrip />
+        <SelectGroup>
+          <SelectGroupLabel className="text-muted-foreground px-2 py-1.5 text-xs">
+            {label}
+          </SelectGroupLabel>
+          {children}
+        </SelectGroup>
+        <SelectNothing />
+      </SelectContentPrimitive>
     </ButtonGroupVariant>
   );
 }
 
-/**
- * What a list says with nothing to choose, in one short sentence of the caller who knows what to do first, centred as
- * every empty state is. A list that holds none of these says so by itself (`SelectNothing`).
- */
-function SelectEmpty({ className, ...props }: React.ComponentProps<"p">) {
-  return (
-    <p
-      className={cn(
-        "text-muted-foreground px-2 py-6 text-center text-sm",
-        className
-      )}
-      data-slot="select-empty"
-      {...props}
-    />
-  );
-}
-
-/**
- * The sentence of a list with no item and no `SelectEmpty`, so a select never opens on a thin
- * empty line, however its caller fills it.
- */
+/** The sentence of a list with no item, so a select never opens on a thin empty line, however its caller fills it. */
 function SelectNothing() {
   const t = useTranslations("Common");
 
@@ -220,108 +198,45 @@ function SelectNothing() {
   );
 }
 
-function SelectLabel({
-  className,
-  ...props
-}: SelectPrimitive.GroupLabel.Props) {
-  return (
-    <SelectPrimitive.GroupLabel
-      className={cn("text-muted-foreground px-2 py-1.5 text-xs", className)}
-      data-slot="select-label"
-      {...props}
-    />
-  );
-}
-
 /** One choice of a select. It shows the icon of its kind before its words, so it never reads as a bare code. */
-function SelectItem({
+function SelectItem<Value = string>({
   className,
   children,
   icon,
   plain,
   ...props
-}: SelectPrimitive.Item.Props & OptionMark) {
+}: Omit<
+  React.ComponentProps<typeof SelectItemPrimitive<Value>>,
+  "className" | "children"
+> &
+  OptionMark & {
+    children?: React.ReactNode;
+    className?: string | undefined;
+  }) {
   return (
-    <SelectPrimitive.Item
-      className={cn(
-        "focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground focus:[&_svg:not([class*='text-'])]:text-accent-foreground relative flex w-full items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
-        className
-      )}
-      data-slot="select-item"
+    <SelectItemPrimitive<Value>
+      className={cn(optionRowVariants({ mark: "tick" }), className)}
       {...props}
     >
-      <SelectPrimitive.ItemText className="flex min-w-0 flex-1 items-center gap-2 text-pretty">
-        {plain ? null : <OptionIcon icon={icon} />}
+      {plain ? null : (
+        <SelectItemIcon>
+          <OptionIcon icon={icon} />
+        </SelectItemIcon>
+      )}
+      <span className="flex min-w-0 flex-1 items-center gap-2 text-pretty">
         {children}
-      </SelectPrimitive.ItemText>
-      <SelectPrimitive.ItemIndicator
-        render={
-          <span className="pointer-events-none absolute right-2 flex size-3.5 items-center justify-center" />
-        }
-      >
+      </span>
+      <SelectItemIndicator className={optionTickVariants()}>
         <HugeIcons icon={Tick01Icon} />
-      </SelectPrimitive.ItemIndicator>
-    </SelectPrimitive.Item>
-  );
-}
-
-function SelectSeparator({
-  className,
-  ...props
-}: SelectPrimitive.Separator.Props) {
-  return (
-    <SelectPrimitive.Separator
-      className={cn("bg-border pointer-events-none -mx-1 my-1 h-px", className)}
-      data-slot="select-separator"
-      {...props}
-    />
-  );
-}
-
-function SelectScrollUpButton({
-  className,
-  ...props
-}: React.ComponentProps<typeof SelectPrimitive.ScrollUpArrow>) {
-  return (
-    <SelectPrimitive.ScrollUpArrow
-      className={cn(
-        "bg-popover top-0 z-10 flex w-full cursor-default items-center justify-center py-1",
-        className
-      )}
-      data-slot="select-scroll-up-button"
-      {...props}
-    >
-      <HugeIcons icon={ArrowUp01Icon} />
-    </SelectPrimitive.ScrollUpArrow>
-  );
-}
-
-function SelectScrollDownButton({
-  className,
-  ...props
-}: React.ComponentProps<typeof SelectPrimitive.ScrollDownArrow>) {
-  return (
-    <SelectPrimitive.ScrollDownArrow
-      className={cn(
-        "bg-popover bottom-0 z-10 flex w-full cursor-default items-center justify-center py-1",
-        className
-      )}
-      data-slot="select-scroll-down-button"
-      {...props}
-    >
-      <HugeIcons icon={ArrowDown01Icon} />
-    </SelectPrimitive.ScrollDownArrow>
+      </SelectItemIndicator>
+    </SelectItemPrimitive>
   );
 }
 
 export {
   Select,
   SelectContent,
-  SelectEmpty,
   SelectItem,
-  SelectScrollDownButton,
-  SelectScrollUpButton,
-  SelectSeparator,
   SelectTrigger,
   SelectValue,
   selectTriggerVariants,

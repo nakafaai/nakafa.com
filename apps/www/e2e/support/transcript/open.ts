@@ -42,11 +42,11 @@ const PROMPT_MILLISECONDS = 6000;
 
 /**
  * A control that opens or closes a part of the evidence, and is closed now. A
- * trigger with nothing to open carries `data-disabled`, as Base UI marks it,
+ * trigger with nothing to open carries `data-disabled`, as UI SDK marks it,
  * whether the button is natively disabled or only marked so.
  */
 const CLOSED =
-  '[data-slot="collapsible-trigger"]:not([data-panel-open]):not([data-disabled])';
+  '[data-slot="collapsible-trigger"]:not([data-open]):not([data-disabled])';
 
 /** The cookies of a browser context. */
 type Cookies = Awaited<ReturnType<BrowserContext["cookies"]>>;

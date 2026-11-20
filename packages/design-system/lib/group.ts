@@ -8,8 +8,8 @@ import { createContext } from "react";
  * state. The quiet variants alone may join a group, ghost for a row of icon buttons that touch: the page's primary fill
  * stands by itself, never inside one.
  *
- * Context reaches through a portal, so every popup of the design system starts outside any group: a dialog that opens
- * from a grouped button keeps its own primary.
+ * Context reaches into every popup of the design system, so each starts outside any group: a dialog that opens from a
+ * grouped button keeps its own primary.
  */
 export const ButtonGroupVariant = createContext<
   | Extract<

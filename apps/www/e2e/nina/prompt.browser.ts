@@ -96,7 +96,7 @@ for (const width of [320, 1440]) {
  * element at its middle is the button itself.
  */
 const readSendRow = () => {
-  const popup = document.querySelector('[data-slot="sheet-popup"][data-open]');
+  const popup = document.querySelector('[data-surface="sheet"][data-open]');
   const form = popup?.querySelector("form");
   const send = form?.querySelector('button[aria-label="Send message"]');
   const attach = form?.querySelector('button[aria-label="Attach files"]');

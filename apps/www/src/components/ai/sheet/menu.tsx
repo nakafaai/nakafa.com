@@ -20,9 +20,9 @@ export function AiMenuItem({ contextTitle }: { contextTitle: string }) {
   return (
     <DropdownMenuItem
       icon={StarsIcon}
-      onClick={handleOpen}
       onFocus={warm}
       onMouseEnter={warm}
+      onSelect={handleOpen}
     >
       {t("ask-nina")}
     </DropdownMenuItem>

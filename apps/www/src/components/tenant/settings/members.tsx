@@ -301,13 +301,13 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
       <RowItems>
         <DropdownMenuItem
           icon={PencilEdit02Icon}
-          onClick={() => dialogs.show("rename")}
+          onSelect={() => dialogs.show("rename")}
         >
           {tCommon("rename")}
         </DropdownMenuItem>
         <DropdownMenuItem
           icon={UserStar01Icon}
-          onClick={() => dialogs.show("give")}
+          onSelect={() => dialogs.show("give")}
         >
           {t("roles-assign-dialog")}
         </DropdownMenuItem>
@@ -315,7 +315,7 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
           <DropdownMenuItem
             disabled={sendLocale === undefined}
             icon={MailSend01Icon}
-            onClick={() => dialogs.show("invite")}
+            onSelect={() => dialogs.show("invite")}
           >
             {t("invite-action")}
           </DropdownMenuItem>
@@ -323,7 +323,7 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
         {member.status === "notInvited" && cardOffered(member.roles) ? (
           <DropdownMenuItem
             icon={IdCardIcon}
-            onClick={() => dialogs.show("card")}
+            onSelect={() => dialogs.show("card")}
           >
             {t("invite-card")}
           </DropdownMenuItem>
@@ -333,7 +333,7 @@ function SchoolMemberMenu({ member }: { member: MemberItem }) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               icon={UserRemove01Icon}
-              onClick={() => dialogs.show("remove")}
+              onSelect={() => dialogs.show("remove")}
               variant="destructive"
             >
               {t("member-remove")}

@@ -69,7 +69,7 @@ test("an admin opens the profile and the periods of a school", async ({
   ).toBeVisible();
 
   await (
-    await settingsLink(page.locator('[data-slot="sidebar-content"]'), "periods")
+    await settingsLink(page.locator('[data-sidebar="content"]'), "periods")
   ).click();
   await expect(page).toHaveURL(address("/settings/periods"));
   await expect(

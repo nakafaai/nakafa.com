@@ -82,18 +82,18 @@ export function AttachMenu({
         >
           <DropdownMenuItem
             icon={Image01Icon}
-            onClick={() => photos.current?.click()}
+            onSelect={() => photos.current?.click()}
           >
             {t("attach-photo")}
           </DropdownMenuItem>
           <DropdownMenuItem
             icon={File02Icon}
-            onClick={() => documents.current?.click()}
+            onSelect={() => documents.current?.click()}
           >
             {common("document")}
           </DropdownMenuItem>
           {onPoll === undefined ? null : (
-            <DropdownMenuItem icon={ChartBarLineIcon} onClick={onPoll}>
+            <DropdownMenuItem icon={ChartBarLineIcon} onSelect={onPoll}>
               {t("attach-poll")}
             </DropdownMenuItem>
           )}

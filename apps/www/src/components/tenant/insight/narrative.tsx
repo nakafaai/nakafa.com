@@ -89,7 +89,7 @@ export function NarrativeMenu({ id }: { id: InsightStudent["id"] }) {
 
   return (
     <RowItems>
-      <DropdownMenuItem icon={NoteEditIcon} onClick={() => choose(id)}>
+      <DropdownMenuItem icon={NoteEditIcon} onSelect={() => choose(id)}>
         {tCommon("narrative")}
       </DropdownMenuItem>
     </RowItems>
@@ -203,7 +203,7 @@ function StudentNarrative({ student }: { student: InsightStudent }) {
         <Textarea
           aria-label={t("narrative-title", { student: student.name })}
           maxLength={NARRATIVE_LIMIT}
-          onChange={(event) => setText(event.target.value)}
+          onValueChange={setText}
           placeholder={t("narrative-placeholder")}
           rows={6}
           value={text}

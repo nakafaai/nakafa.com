@@ -46,7 +46,7 @@ function VisualCardReset() {
   const resetView = useVisual((state) => state.resetView);
 
   return (
-    <DropdownMenuItem icon={CenterFocusIcon} onClick={resetView}>
+    <DropdownMenuItem icon={CenterFocusIcon} onSelect={resetView}>
       {t("reset-view")}
     </DropdownMenuItem>
   );

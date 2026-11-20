@@ -17,17 +17,13 @@ export const sidebarSearch = (page: Page) =>
 /** The scrolling part of the sidebar that holds the chats: the viewport of its scroll area. */
 export const sidebarScroller = (page: Page) =>
   page
-    .locator(
-      '[data-slot="sidebar-content"] > [data-slot="scroll-area-viewport"]'
-    )
+    .locator('[data-sidebar="content"] > [data-slot="scroll-area-viewport"]')
     .filter({ has: page.locator('a[href^="/en/chat/"]') })
     .filter({ visible: true });
 
 /** The chats of the history menu of Nina's sheet: the open menu, not the account menu kept mounted closed. */
 export const historyRows = (page: Page) =>
-  page.locator(
-    '[data-slot="dropdown-menu-content"][data-open] [role="menuitem"]'
-  );
+  page.locator('[data-slot="menu-content"][data-open] [role="menuitem"]');
 
 /** The chats of the chats page of a learner. */
 export const pageRows = (page: Page) =>

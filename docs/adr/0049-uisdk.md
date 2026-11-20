@@ -1,0 +1,36 @@
+# ADR 0049: UI SDK Is The One Primitive Layer, And The Page Opens Itself To Agents
+
+## Status
+
+Accepted on 20 November 2026, with the owner's approval of the same day ("UI SDK ya... 0 technical debt, 0 redundant, 100% cohesive"; "its fine if it is still beta"). It replaces Base UI under `packages/design-system` and the libraries beside it that drew one control each. Where an earlier ADR names a Base UI part, a `data-state` value or a `drawer-popup` slot (ADR 0021's overlay rule, ADR 0025's mention popup, ADR 0039's drawer rule), the rule stands and this ADR names the part that now carries it.
+
+## Context
+
+The design system stood on Base UI 1.9 and seven single-purpose libraries: `sonner` (toasts), `react-day-picker` (calendar), `react-resizable-panels` (panes), `react-textarea-autosize`, `frimousse` (an emoji picker no page used), `tw-animate-css` (keyframes) and a separate drawer for phones. Each brought its own state attributes, its own focus rules and its own idea of a popup, so one menu on a phone and the same menu on a laptop were two components, and every dialog carried a drawer twin.
+
+None of them could tell an agent what the page holds. A browser that hosts an agent (WebMCP, `document.modelContext`) gets a page of pixels and a DOM, and guesses.
+
+UI SDK (`@ui-sdk/react` and `@ui-sdk/core`, Vercel Labs) is one headless library for every part Nakafa draws: dialog, menu, select, command, popover, tooltip, toast, calendar and date picker, resizable, slider, tabs, accordion, navigation menu. Its parts share one state vocabulary (`data-open`, `data-highlighted`, `data-presentation`, `data-starting-style`, `data-ending-style`), one popup model (the top layer through `popover="manual"`, rendered in place) and one presentation switch: `presentation="auto"` turns a dialog, menu or select into a sheet from the bottom on a phone with a coarse pointer, inside the same tree. Its agent module reads every part by name, with its state and its actions, and acts through the part's own API, so a change an agent makes runs the same callbacks as a reader's.
+
+## Decision
+
+1. **One primitive layer.** Every interactive part of `packages/design-system` is a UI SDK part styled with Tailwind. Application code imports the design system and never `@ui-sdk/*`. Both packages are pinned to one exact version, `0.1.0-beta.13`, held together by `UI_SDK_COHORT_VERSION` in `scripts/dependencies/policy.ts`. Nakafa runs on TanStack Start, whose RSC plugin reads `"use client"` only in the graph that `renderServerComponent` renders, the published content bodies (`apps/www/src/lib/content/published/body.ts`). UI SDK's modules carry the directive themselves, so a design-system wrapper takes none unless that graph imports it directly and it holds state, a hook or a function prop, as `AGENTS.md` says; this change adds none, and the modules that carry it are those `main` marked.
+2. **The page keeps one tree on every screen.** A dialog, a menu, a select and a picker take `presentation="auto"`: a centred dialog or an anchored popup on a wide or a mouse screen, a sheet with its grip (`SheetGrip`) on a phone. `sheetSurface` in `lib/popup.ts` is the one sheet look; `popupMotion` animates only the anchored presentation, since UI SDK drives the sheet's own travel. The drawer twin of every dialog is gone; `Drawer`, UI SDK's drawer, stays only for what is a drawer on every screen: the page's pane on a phone, the sidebar and the marketing header's menu.
+3. **Actions run from `onSelect`.** A menu item, a command row and a picker row run their action from `onSelect`, which a pointer, the keys and an agent reach alike. A menu radio item closes its menu, a checkbox item keeps it open, and a row that returns a Promise keeps the menu open and announces the wait in the reader's language (`pendingAnnouncement`).
+4. **The page opens itself to agents.** `AgentBridge` (`apps/www/src/components/shared/agent.tsx`) loads `lib/agent.ts` only in a browser that has `document.modelContext`, so no other reader downloads it. It registers UI SDK's `snapshot`, `act` and `query` tools. A destructive action in a `ResponsiveDialog` carries `data-agent-confirm` with the dialog's own sentence, or its title, or the dictionary's `agent-confirm` sentence when both are drawn with more than words (`agentSentence`, `AgentConfirmSentence`), so every such action is marked, and the bridge refuses to press it: the agent is told to ask the reader. `lib/agent.test.ts` proves the refusal: a plain button is pressed, a marked one is refused and its handler never runs; `lib/confirm.test.ts` proves the sentence.
+5. **Motion and styling come from the parts' attributes.** `tw-animate-css` and the `data-state` branches of the custom variants are gone; enter and leave motion reads `data-starting-style` and `data-ending-style`, and an accordion panel animates its height with a transition. `@layer ui-sdk;` is declared first in `globals.css`, so UI SDK's popup reset sits under every utility.
+6. **A part's `data-slot` is UI SDK's.** A part sets its own `data-slot` over any a caller passes, so the design system never passes one to a part. Where it names an element that a part draws, it uses an attribute of its own component, as the sidebar already did (`data-sidebar="content"`, `data-table="container"`, `data-input-group="control"`), or `data-surface` for the kind of a popup.
+7. **Two parts stay on `@shadcn/react`.** The message scroller and the questionnaire have no UI SDK equivalent and no dependency of their own, so they stay as they are.
+
+## Consequences
+
+- Seven dependencies leave the design system, and one popup model replaces three (Base UI popups, the drawer twin of each dialog and the toast library's own layer).
+- An e2e spec reads the new slots: `menu-content`, `menu-group-label`, `dialog-content` with `data-presentation`, `toast-region`, `tabs-indicator`, `accordion-panel`, and `data-surface` where a design-system popup names its kind (`palette`, `sheet`).
+- UI SDK is in beta. A breaking release changes one cohort pin, and the design system is the only place that imports it.
+- Known gaps of `0.1.0-beta.13`, each held in the design system rather than worked around in a page: list data takes mutable arrays; a command list has no clear part, so `CommandInput` draws its own; every label a part draws is passed from the dictionary, but a date field's validity message is fixed in English ("Enter a valid date."), which a reader never sees because no Nakafa date field sits in a form the browser validates; a toast region has no per-toast position; a resizable group saves its layout by id only.
+
+## Rejected
+
+- **Keep Base UI and add an agent layer beside it.** Two descriptions of one control drift, and an agent layer that guesses at a part's state is the problem this ADR removes.
+- **Radix UI.** It has no presentation switch and no agent module, and moving to it is the same migration for less.
+- **A sheet component beside each dialog.** That is the drawer twin this ADR deletes.

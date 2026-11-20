@@ -18,13 +18,12 @@ const WIDTHS = [
 ] as const;
 
 /**
- * Chooses a day from the calendar that `picker` opens through its month and year selects: December of the year
- * after the one it shows, then the 15th. The selects lie under the calendar's arrows bar, so a press reaching
- * them proves the bar lets it through. The picker then shows the day.
+ * Chooses a day from the calendar that a date field opens through its month and year selects: December of the year
+ * after the one it shows, then the 15th. The field's text then holds the day, in the page's locale.
  */
-async function chooseThroughSelects(page: Page, picker: Locator) {
-  await picker.click();
-  const calendar = page.locator('[data-slot="calendar"]');
+async function chooseThroughSelects(page: Page, field: Locator) {
+  await field.locator('[data-slot="date-picker-trigger"]').click();
+  const calendar = page.locator('[data-slot="date-picker-content"]');
   await expect(calendar).toBeVisible();
   const year = calendar.getByRole("combobox", { name: "Year" });
   const next = String(Number(await year.innerText()) + 1);
@@ -36,9 +35,11 @@ async function chooseThroughSelects(page: Page, picker: Locator) {
     "December"
   );
   await expect(year).toHaveText(next);
-  await calendar.getByRole("button", { name: CHOSEN_DAY }).click();
+  await calendar.getByRole("gridcell", { name: CHOSEN_DAY }).click();
   await expect(calendar).toHaveCount(0);
-  await expect(picker).toHaveText(`Dec 15, ${next}`);
+  await expect(field.locator('[data-slot="date-picker-input"]')).toHaveValue(
+    `12/15/${next}`
+  );
 }
 
 for (const viewport of WIDTHS) {
@@ -78,7 +79,12 @@ for (const viewport of WIDTHS) {
     const add = page.getByRole("button", { name: "Add period" }).first();
     await waitUntilTakenOver(add);
     await add.click();
-    await chooseThroughSelects(page, page.getByLabel("First day"));
+    await chooseThroughSelects(
+      page,
+      page.locator('[data-slot="date-picker"]', {
+        has: page.getByLabel("First day"),
+      })
+    );
     await context.close();
   });
 }

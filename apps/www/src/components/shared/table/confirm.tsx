@@ -62,7 +62,7 @@ export function ConfirmRowMenu({
           <DropdownMenuItem
             disabled={disabled}
             icon={icon}
-            onClick={() => setIsConfirming(true)}
+            onSelect={() => setIsConfirming(true)}
             variant="destructive"
           >
             {action}

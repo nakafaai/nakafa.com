@@ -3,7 +3,7 @@ import { selectMenuSide } from "@/components/sidebar/menu/side";
 
 describe("the side of a sidebar menu", () => {
   it("opens beside the sidebar at its inline end on desktop", () => {
-    expect(selectMenuSide({ isMobile: false })).toBe("inline-end");
+    expect(selectMenuSide({ isMobile: false })).toBe("end");
   });
 
   it("opens above its trigger on a phone", () => {

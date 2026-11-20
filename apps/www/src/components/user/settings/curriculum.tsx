@@ -121,12 +121,7 @@ function UserSettingsCurriculumForm({
   const setPreferredCurriculum = useSetPreferredCurriculumMutation(programs);
   const latestSave = useRef(0);
   const selectItems = Arr.map(programs, (program) => ({
-    label: (
-      <>
-        <CountryFlagIcon countryCode={program.countryCode} />
-        {program.title}
-      </>
-    ),
+    label: program.title,
     value: program.key,
   }));
   const form = useForm({
@@ -213,6 +208,18 @@ function UserSettingsCurriculumForm({
                     className="w-full max-w-xs"
                     id="user-settings-curriculum"
                   >
+                    {Option.match(
+                      Arr.findFirst(
+                        programs,
+                        (program) => program.key === field.state.value
+                      ),
+                      {
+                        onNone: () => null,
+                        onSome: (program) => (
+                          <CountryFlagIcon countryCode={program.countryCode} />
+                        ),
+                      }
+                    )}
                     <SelectValue placeholder={t("curriculum-placeholder")} />
                   </SelectTrigger>
                   <SelectContent

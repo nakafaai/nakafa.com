@@ -158,13 +158,13 @@ function WorkMenu({ work }: { work: TaskWork }) {
       <RowItems>
         <DropdownMenuItem
           icon={ViewIcon}
-          onClick={() => setOpenings((count) => count + 1)}
+          onSelect={() => setOpenings((count) => count + 1)}
         >
           {t("task-read")}
         </DropdownMenuItem>
         <DropdownMenuItem
           icon={Copy01Icon}
-          onClick={() => clipboard.copy(work.text)}
+          onSelect={() => clipboard.copy(work.text)}
         >
           {common("copy")}
         </DropdownMenuItem>
@@ -244,11 +244,11 @@ function WorkPoints({ points, work }: { points: number; work: TaskWork }) {
 
   return (
     <NumberField
-      defaultValue={work.score ?? undefined}
+      defaultValue={work.score}
       key={work.score}
       max={points}
       min={0}
-      onValueCommitted={give}
+      onValueCommit={give}
     >
       <NumberFieldGroup>
         <NumberFieldDecrement />

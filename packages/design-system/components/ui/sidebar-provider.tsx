@@ -1,7 +1,6 @@
 "use client";
 
 import { useHotkeys } from "@mantine/hooks";
-import { TooltipProvider } from "@repo/design-system/components/ui/tooltip";
 import {
   createMaxWidthInclusiveMediaQuery,
   createMaxWidthMediaQuery,
@@ -169,20 +168,18 @@ export function SidebarProvider({
   return (
     <SidebarStoreContext value={store}>
       <SidebarContext value={controls}>
-        <TooltipProvider>
-          <div
-            className={cn(
-              "group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full",
-              className
-            )}
-            data-slot="sidebar-wrapper"
-            style={style}
-            tabIndex={-1}
-            {...props}
-          >
-            {children}
-          </div>
-        </TooltipProvider>
+        <div
+          className={cn(
+            "group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full",
+            className
+          )}
+          data-slot="sidebar-wrapper"
+          style={style}
+          tabIndex={-1}
+          {...props}
+        >
+          {children}
+        </div>
       </SidebarContext>
     </SidebarStoreContext>
   );

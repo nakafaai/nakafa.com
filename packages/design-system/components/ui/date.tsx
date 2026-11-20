@@ -1,39 +1,59 @@
 import { Calendar03Icon } from "@hugeicons/core-free-icons";
+import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import { Calendar } from "@repo/design-system/components/ui/calendar";
+import { CalendarBody } from "@repo/design-system/components/ui/calendar";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@repo/design-system/components/ui/popover";
+import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
 import { TimeSelect } from "@repo/design-system/components/ui/time";
 import {
-  getCalendarDayKey,
-  parseCalendarDayKey,
-} from "@repo/design-system/lib/calendar/day";
-import type { LocalTimeParts } from "@repo/design-system/lib/calendar/time";
-import {
   joinLocalTime,
+  type LocalTimeParts,
   splitLocalTime,
 } from "@repo/design-system/lib/calendar/time";
-import { fieldBoxVariants } from "@repo/design-system/lib/input";
+import { ButtonGroupVariant } from "@repo/design-system/lib/group";
+import { popupMotion, sheetSurface } from "@repo/design-system/lib/popup";
+import {
+  createDatePickerController,
+  DatePickerContent,
+  DatePickerInput,
+  DatePicker as DatePickerPrimitive,
+  DatePickerTrigger,
+} from "@ui-sdk/react/date-picker";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
-import { Array as Arr, DateTime, Option } from "effect";
-import type { ComponentProps } from "react";
-import { useId, useState } from "react";
-import { useFormatter, useTranslations } from "use-intl";
+import { Option } from "effect";
+import { type ComponentProps, useState } from "react";
+import { useLocale, useTranslations } from "use-intl";
 
-/** The props of a date field, besides those its trigger button takes. */
+/**
+ * The box of a date field, which draws the field around its text and its calendar button as one, so the field reads
+ * as the text field beside it: its ring shows while either takes the keys, and its border turns red while the text is
+ * not a day the field offers.
+ */
+const datePickerBoxVariants = cva(
+  "border-input has-focus-visible:border-ring has-focus-visible:ring-ring/50 data-invalid:border-destructive data-invalid:ring-destructive/20 has-aria-invalid:border-destructive has-aria-invalid:ring-destructive/20 flex h-9 w-full min-w-0 items-center rounded-md border bg-transparent shadow-xs transition-[color,box-shadow] has-focus-visible:ring-3 data-disabled:pointer-events-none data-disabled:opacity-50"
+);
+
+/** The props of a date field, besides those its text field takes. */
 type DatePickerProps = Omit<
-  ComponentProps<"button">,
-  "children" | "onChange" | "type" | "value"
+  ComponentProps<typeof DatePickerInput>,
+  | "children"
+  | "className"
+  | "defaultValue"
+  | "end"
+  | "max"
+  | "min"
+  | "onChange"
+  | "placeholder"
+  | "type"
+  | "value"
 > & {
-  /** The last day the calendar offers, as a day key such as `2026-12-31`. */
+  readonly className?: string | undefined;
+  /** The last day the field offers, as a day key such as `2026-12-31`. */
   readonly max?: string | undefined;
-  /** The first day the calendar offers, as a day key such as `2026-07-13`. */
+  /** The first day the field offers, as a day key such as `2026-07-13`. */
   readonly min?: string | undefined;
-  /** Receives the chosen day as its day key. */
+  /** Receives the chosen day as its day key, or an empty text once the field is cleared. */
   readonly onValueChange: (day: string) => void;
   /** What the field shows while no day is chosen: an example day or a short hint. */
   readonly placeholder: string;
@@ -42,10 +62,11 @@ type DatePickerProps = Omit<
 };
 
 /**
- * A field that holds one civil day, written as its day key such as `2026-10-27`. Its trigger is
- * drawn like a text field and names the day in the page's locale, or shows the placeholder; it
- * opens the calendar in a popover, and choosing a day closes it. `min` and `max` bound the days
- * that the calendar offers. The browser draws no picker of its own.
+ * A field that holds one civil day, written as its day key such as `2026-10-27`. A reader types the day in the order
+ * of the page's locale, `27/10/2026` or `27.10.2026`, or opens the calendar from the button at its end and presses a
+ * day, which closes it. On a phone the calendar rises from the bottom as a sheet. `min` and `max` bound the days it
+ * takes, typed or pressed; a typed day outside them, or text that is no day, marks the field invalid and keeps its
+ * value. The field's `id` is its text's, so its label names it, and an agent sets it through its value as a reader does.
  */
 function DatePicker({
   className,
@@ -56,83 +77,68 @@ function DatePicker({
   value,
   ...props
 }: DatePickerProps) {
-  const format = useFormatter();
-  const shownId = useId();
-  const [open, setOpen] = useState(false);
-  const chosen = parseCalendarDayKey(value);
-  const first = parseCalendarDayKey(min ?? "");
-  const last = parseCalendarDayKey(max ?? "");
+  const t = useTranslations("Common");
+  const [controller] = useState(createDatePickerController);
 
   return (
-    <Popover onOpenChange={setOpen} open={open}>
-      <PopoverTrigger
-        className={cn(
-          fieldBoxVariants(),
-          "data-placeholder:text-muted-foreground items-center gap-2 text-left",
-          className
-        )}
-        data-placeholder={Option.isNone(chosen) || undefined}
-        data-slot="date-picker"
+    <DatePickerPrimitive
+      className={cn(datePickerBoxVariants(), className)}
+      controller={controller}
+      locale={useLocale()}
+      {...Option.match(Option.fromUndefinedOr(max), {
+        onNone: () => ({}),
+        onSome: (last) => ({ max: last }),
+      })}
+      {...Option.match(Option.fromUndefinedOr(min), {
+        onNone: () => ({}),
+        onSome: (first) => ({ min: first }),
+      })}
+      onValueChange={(next) => {
+        onValueChange(typeof next === "string" ? next : "");
+      }}
+      presentation="auto"
+      value={value === "" ? null : value}
+    >
+      <DatePickerInput
+        className="placeholder:text-muted-foreground h-full min-w-0 flex-1 bg-transparent ps-3 text-base outline-none md:text-sm"
+        placeholder={placeholder}
         {...props}
-        aria-describedby={Arr.join(
-          Arr.getSomes([
-            Option.some(shownId),
-            Option.fromUndefinedOr(props["aria-describedby"]),
-          ]),
-          " "
-        )}
-      >
-        <HugeIcons className="text-muted-foreground" icon={Calendar03Icon} />
-        <span className="flex-1 whitespace-nowrap" id={shownId}>
-          {Option.isSome(chosen)
-            ? format.dateTime(
-                DateTime.toDateUtc(
-                  DateTime.makeUnsafe(`${value}T00:00:00.000Z`)
-                ),
-                "calendar"
-              )
-            : placeholder}
-        </span>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-auto p-0">
-        <Calendar
-          autoFocus
-          {...Option.match(
-            Option.orElse(chosen, () => first),
-            {
-              onNone: () => ({}),
-              onSome: (defaultMonth) => ({ defaultMonth }),
-            }
+      />
+      <ButtonGroupVariant value={undefined}>
+        <DatePickerTrigger
+          aria-label={t("choose-date")}
+          className="me-1 shrink-0"
+          render={
+            <Button
+              className="size-7"
+              size="icon-sm"
+              tooltip={t("choose-date")}
+              variant="ghost"
+            />
+          }
+        >
+          <HugeIcons className="text-muted-foreground" icon={Calendar03Icon} />
+        </DatePickerTrigger>
+        <DatePickerContent
+          align="start"
+          className={cn(
+            popupMotion(),
+            sheetSurface(),
+            "bg-popover text-popover-foreground z-50 rounded-md border p-3 shadow-md outline-none [--cell-size:--spacing(8)] data-[presentation=sheet]:[--cell-size:--spacing(11)]"
           )}
-          disabled={Arr.getSomes([
-            Option.map(first, (before) => ({ before })),
-            Option.map(last, (after) => ({ after })),
-          ])}
-          {...Option.match(first, {
-            onNone: () => ({}),
-            onSome: (startMonth) => ({ startMonth }),
-          })}
-          {...Option.match(last, {
-            onNone: () => ({}),
-            onSome: (endMonth) => ({ endMonth }),
-          })}
-          mode="single"
-          onSelect={(day) => {
-            onValueChange(getCalendarDayKey(day));
-            setOpen(false);
-          }}
-          required
-          selected={Option.getOrUndefined(chosen)}
-        />
-      </PopoverContent>
-    </Popover>
+        >
+          <SheetGrip />
+          <CalendarBody bounds={{ max, min }} turner={controller} />
+        </DatePickerContent>
+      </ButtonGroupVariant>
+    </DatePickerPrimitive>
   );
 }
 
 /**
  * A field that holds one local time, written as a `datetime-local` value such as
  * `2026-10-27T08:15`: a date field and a time select side by side in one group. The label of the
- * field names its date trigger, by `id`. While the value holds no time, the field keeps the half
+ * field names its date, by `id`. While the value holds no time, the field keeps the half
  * the person chose, and it reports a value once both halves are chosen. A field narrower than both
  * halves, in a drawer on the narrowest phone, gives up the time's clock, so the group stays in its column.
  */
@@ -150,7 +156,7 @@ function DateTimePicker({
   readonly className?: string | undefined;
   /** What the date shows while no day is chosen. */
   readonly dayPlaceholder: string;
-  /** The id of the date trigger, which the field's label names. */
+  /** The id of the date's text, which the field's label names. */
   readonly id?: string | undefined;
   /** The last day the calendar offers, as a day key. */
   readonly max?: string | undefined;

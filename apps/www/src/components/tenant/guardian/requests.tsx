@@ -86,7 +86,7 @@ function RequestMenu({ request }: { request: ParentRequest }) {
   return (
     <>
       <RowItems>
-        <DropdownMenuItem icon={ViewIcon} onClick={() => setOpen(true)}>
+        <DropdownMenuItem icon={ViewIcon} onSelect={() => setOpen(true)}>
           {t("request-read")}
         </DropdownMenuItem>
       </RowItems>
@@ -248,7 +248,7 @@ export function AskDialog({
           <Textarea
             aria-label={t("request-text")}
             maxLength={REQUEST_LIMIT}
-            onChange={(event) => setText(event.target.value)}
+            onValueChange={setText}
             placeholder={t("request-placeholder")}
             rows={4}
             value={text}
@@ -333,14 +333,14 @@ export function WaitingRequests({
             <RowItems>
               <DropdownMenuItem
                 icon={CheckmarkCircle02Icon}
-                onClick={() => decide(info.row.original, "approved")}
+                onSelect={() => decide(info.row.original, "approved")}
               >
                 {t("request-approve")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 icon={CancelCircleIcon}
-                onClick={() => decide(info.row.original, "declined")}
+                onSelect={() => decide(info.row.original, "declined")}
                 variant="destructive"
               >
                 {tCommon("decline")}

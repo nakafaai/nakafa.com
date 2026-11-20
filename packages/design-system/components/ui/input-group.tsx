@@ -1,15 +1,14 @@
-import type { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
-import type { VariantProps } from "class-variance-authority";
-import { cva } from "class-variance-authority";
+import type { Button as ButtonPrimitive } from "@ui-sdk/react/button";
+import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 
 /** Returns the single focusable control owned by one input group. */
 function getInputGroupControl(parentElement: HTMLElement | null) {
   return parentElement?.querySelector<HTMLElement>(
-    '[data-slot="input-group-control"]'
+    '[data-input-group="control"]'
   );
 }
 
@@ -27,14 +26,14 @@ function InputGroup({ className, ...props }: React.ComponentProps<"fieldset">) {
 
         // Variants based on alignment. A control finds its addon among its siblings, on either side: a rule whose
         // subject sits under a :has() restyles the whole page on every element inserted (ADR 0039).
-        "[&>[data-align=inline-start]~[data-slot=input-group-control]]:pl-2 [&>[data-slot=input-group-control]:has(~[data-align=inline-start])]:pl-2",
-        "[&>[data-align=inline-end]~[data-slot=input-group-control]]:pr-2 [&>[data-slot=input-group-control]:has(~[data-align=inline-end])]:pr-2",
-        "has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col [&>[data-align=block-start]~[data-slot=input-group-control]]:pb-3 [&>[data-slot=input-group-control]:has(~[data-align=block-start])]:pb-3",
-        "has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col [&>[data-align=block-end]~[data-slot=input-group-control]]:pt-3 [&>[data-slot=input-group-control]:has(~[data-align=block-end])]:pt-3",
-        "has-[>[data-slot=input-group-control]]:[--input-group-addon-space:--spacing(2.5)]",
+        "[&>[data-align=inline-start]~[data-input-group=control]]:pl-2 [&>[data-input-group=control]:has(~[data-align=inline-start])]:pl-2",
+        "[&>[data-align=inline-end]~[data-input-group=control]]:pr-2 [&>[data-input-group=control]:has(~[data-align=inline-end])]:pr-2",
+        "has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col [&>[data-align=block-start]~[data-input-group=control]]:pb-3 [&>[data-input-group=control]:has(~[data-align=block-start])]:pb-3",
+        "has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col [&>[data-align=block-end]~[data-input-group=control]]:pt-3 [&>[data-input-group=control]:has(~[data-align=block-end])]:pt-3",
+        "has-[>[data-input-group=control]]:[--input-group-addon-space:--spacing(2.5)]",
 
         // Focus state.
-        "has-[[data-slot=input-group-control]:focus-visible]:border-ring has-[[data-slot=input-group-control]:focus-visible]:ring-ring/50 has-[[data-slot=input-group-control]:focus-visible]:ring-3",
+        "has-[[data-input-group=control]:focus-visible]:border-ring has-[[data-input-group=control]:focus-visible]:ring-ring/50 has-[[data-input-group=control]:focus-visible]:ring-3",
 
         // Error state.
         "has-[[data-slot][aria-invalid=true]]:border-destructive has-[[data-slot][aria-invalid=true]]:ring-destructive/20 dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40",
@@ -118,7 +117,7 @@ function InputGroupButton({
   type = "button",
   variant = "ghost",
   ...props
-}: ButtonPrimitive.Props &
+}: React.ComponentProps<typeof ButtonPrimitive> &
   Pick<React.ComponentProps<typeof Button>, "variant"> &
   (
     | {
@@ -177,7 +176,7 @@ function InputGroupInput({
         "flex-1 rounded-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent",
         className
       )}
-      data-slot="input-group-control"
+      data-input-group="control"
       {...props}
     />
   );
@@ -193,7 +192,7 @@ function InputGroupTextarea({
         "flex-1 rounded-none border-0 bg-transparent py-3 shadow-none focus-visible:ring-0 dark:bg-transparent",
         className
       )}
-      data-slot="input-group-control"
+      data-input-group="control"
       {...props}
     />
   );

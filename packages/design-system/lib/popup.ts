@@ -1,0 +1,19 @@
+import { cva } from "class-variance-authority";
+
+/**
+ * How every anchored popup of the design system enters and leaves: it fades and grows from the point of its trigger,
+ * and shrinks back as it closes, kept in the page until its exit ends. Where motion is reduced it only fades, and a
+ * tooltip that opens at once because another just closed skips the motion. A popup that rises as a sheet on a phone
+ * moves as the sheet does, by the finger and its spring, so none of this applies to it.
+ */
+export const popupMotion = cva(
+  "not-data-[presentation=sheet]:duration-ui not-data-[presentation=sheet]:origin-(--transform-origin) not-data-[presentation=sheet]:transition-[opacity,scale] not-data-[presentation=sheet]:ease-out not-data-[presentation=sheet]:data-ending-style:opacity-0 not-data-[presentation=sheet]:data-instant:transition-none not-data-[presentation=sheet]:data-starting-style:opacity-0 not-data-[presentation=sheet]:motion-safe:data-ending-style:scale-95 not-data-[presentation=sheet]:motion-safe:data-starting-style:scale-95"
+);
+
+/**
+ * The surface every popup that a phone raises as a sheet wears there: the full width of the screen, rounded on its top
+ * corners, clear of the home indicator, and never taller than the screen less a band of the page above it.
+ */
+export const sheetSurface = cva(
+  "data-[presentation=sheet]:max-h-[calc(100dvh-3rem)] data-[presentation=sheet]:w-full data-[presentation=sheet]:max-w-none data-[presentation=sheet]:rounded-t-3xl data-[presentation=sheet]:rounded-b-none data-[presentation=sheet]:border-x-0 data-[presentation=sheet]:border-b-0 data-[presentation=sheet]:pb-[max(--spacing(2),env(safe-area-inset-bottom))]"
+);

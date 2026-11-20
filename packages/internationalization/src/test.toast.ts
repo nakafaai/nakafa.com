@@ -3,9 +3,10 @@ import { Array as Arr, Schema, String as Str } from "effect";
 /**
  * How many characters one line of a toast title holds at 320px.
  *
- * Sonner 2.0.8 (`dist/index.mjs`, `dist/styles.css`) sets the toast to the
- * viewport less `--mobile-offset`, which is 16px on each side below 600px. The
- * toast keeps 16px of padding and a 1px border on each side, so 288px less 34px
+ * The Toaster (`components/ui/toast.tsx` of the design system) sets each stack
+ * to the viewport less 1rem on each side, at most 22rem, so 288px at 320px. Its
+ * close stands on the toast's corner, off the line of the words. The toast
+ * keeps 16px of padding and a 1px border on each side, so 288px less 34px
  * leaves 254px. The icon takes 16px with a -3px start and a 4px end margin,
  * and a 6px gap follows it: 254px less 17px less 6px leaves 231px of text.
  *

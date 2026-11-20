@@ -19,9 +19,8 @@ export function PlayerAccess() {
   const t = useTranslations("Player");
 
   return (
-    <Popover>
+    <Popover openOnHover>
       <PopoverTrigger
-        openOnHover
         render={
           <Button
             className="me-auto"

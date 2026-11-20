@@ -71,7 +71,7 @@ test("a teacher writes an answer and its reason, marks both keys one at a time, 
     .getByRole("button", { name: "Mark reason A of question 1 as correct" })
     .click();
   await saved(changes, sentBefore);
-  await expect(page.locator("[data-sonner-toast]")).toHaveCount(0);
+  await expect(page.locator("[data-slot=toast]")).toHaveCount(0);
 
   // The student picks one answer and one reason, and picking again moves only its own.
   await page.getByRole("link", { name: "Try as student" }).click();

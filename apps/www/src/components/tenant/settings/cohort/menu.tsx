@@ -59,7 +59,7 @@ export function SchoolCohortRestore({
     <ConfirmRowMenu {...remove}>
       <DropdownMenuItem
         icon={ArchiveRestoreIcon}
-        onClick={() =>
+        onSelect={() =>
           startTransition(() =>
             runSchoolWrite(
               schoolCall(() => restore({ cohortId: cohort.id, slug }))
@@ -165,7 +165,7 @@ export function SchoolCohortMenu({
         footer={
           <DropdownMenuItem
             icon={Archive02Icon}
-            onClick={() =>
+            onSelect={() =>
               startTransition(() =>
                 runSchoolWrite(
                   schoolCall(() => archive({ cohortId: cohort.id, slug })),
@@ -198,13 +198,13 @@ export function SchoolCohortMenu({
       >
         <DropdownMenuItem
           icon={TeacherIcon}
-          onClick={() => setHomeroomOpenings((count) => count + 1)}
+          onSelect={() => setHomeroomOpenings((count) => count + 1)}
         >
           {t("homeroom-title")}
         </DropdownMenuItem>
         <DropdownMenuItem
           icon={PencilEdit02Icon}
-          onClick={() => {
+          onSelect={() => {
             setName(cohort.name);
             setGradeValue(String(cohort.grade));
             setIsEditing(true);

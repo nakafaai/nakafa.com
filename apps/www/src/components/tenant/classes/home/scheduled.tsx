@@ -119,14 +119,14 @@ function WaitingMenu({ post }: { post: WaitingPost }) {
         >
           <DropdownMenuItem
             icon={PencilEdit02Icon}
-            onClick={() => dialogs.show("edit")}
+            onSelect={() => dialogs.show("edit")}
           >
             {t("message-edit")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             icon={Cancel01Icon}
-            onClick={() =>
+            onSelect={() =>
               runSchoolWrite(
                 schoolCall(() =>
                   cancel.withOptimisticUpdate(cancelWaitingUpdate)({
@@ -224,7 +224,7 @@ function WaitingDialog({
             className="min-h-32"
             dir="auto"
             id={`${id}-text`}
-            onChange={(event) => setText(event.target.value)}
+            onValueChange={setText}
             placeholder={t("announcement-placeholder")}
             value={text}
           />

@@ -1,6 +1,5 @@
 "use client";
 
-import { useRender } from "@base-ui/react/use-render";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { Skeleton } from "@repo/design-system/components/ui/skeleton";
 import {
@@ -8,9 +7,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import type { RenderableProps } from "@repo/design-system/lib/render";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
-import type { VariantProps } from "class-variance-authority";
-import { cva } from "class-variance-authority";
+import { renderElement } from "@ui-sdk/react/primitive";
+import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import type { ComponentProps, ReactElement } from "react";
 
@@ -76,7 +76,7 @@ export function SidebarMenuDescription(
 }
 
 const sidebarMenuButtonVariants = cva(
-  "pressable peer/menu-button ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-popup-open:hover:bg-sidebar-accent data-popup-open:hover:text-sidebar-accent-foreground flex w-full items-center gap-2 overflow-hidden rounded-md p-2 pr-[var(--menu-button-end,--spacing(2))] text-left text-sm outline-hidden transition-[width,height,padding,scale,color,background-color,box-shadow] group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+  "pressable peer/menu-button ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground flex w-full items-center gap-2 overflow-hidden rounded-md p-2 pr-[var(--menu-button-end,--spacing(2))] text-left text-sm outline-hidden transition-[width,height,padding,scale,color,background-color,box-shadow] group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -122,16 +122,15 @@ export function SidebarMenuButton({
   className,
   render,
   ...props
-}: useRender.ComponentProps<"button"> & {
+}: RenderableProps<"button"> & {
   isActive?: boolean;
   tooltip?: string | ComponentProps<typeof TooltipContent>;
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const isMobile = useSidebar((sidebar) => sidebar.isMobile);
   const state = useSidebar((sidebar) => sidebar.state);
-  const button = useRender({
-    defaultTagName: "button",
-    render,
-    props: {
+  const button = renderElement(
+    "button",
+    {
       className: cn(sidebarMenuButtonVariants({ variant, size }), className),
       "data-active": isActive,
       "data-sidebar": "menu-button",
@@ -139,11 +138,8 @@ export function SidebarMenuButton({
       "data-slot": "sidebar-menu-button",
       ...props,
     },
-  });
-
-  if (!button) {
-    return null;
-  }
+    render
+  );
 
   // The tooltip names a folded item, so it exists only while the sidebar is folded on a wide
   // screen. An open sidebar mounts none: a tooltip, even disabled, is a tree of components and
@@ -170,13 +166,12 @@ export function SidebarMenuAction({
   showOnHover = false,
   render,
   ...props
-}: useRender.ComponentProps<"button"> & {
+}: RenderableProps<"button"> & {
   showOnHover?: boolean;
 }): ReactElement {
-  return useRender({
-    defaultTagName: "button",
-    render,
-    props: {
+  return renderElement(
+    "button",
+    {
       className: cn(
         "pressable text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground peer-hover/menu-button:text-sidebar-accent-foreground absolute top-1.5 right-1 flex aspect-square w-5 items-center justify-center rounded-md p-0 outline-hidden transition-transform focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
         "after:absolute after:-inset-2 md:after:hidden",
@@ -185,14 +180,15 @@ export function SidebarMenuAction({
         "peer-data-[size=lg]/menu-button:top-2.5",
         "group-data-[collapsible=icon]:hidden",
         !!showOnHover &&
-          "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-popup-open:opacity-100 md:opacity-0",
+          "peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-open:opacity-100 md:opacity-0",
         className
       ),
       "data-sidebar": "menu-action",
       "data-slot": "sidebar-menu-action",
       ...props,
     },
-  });
+    render
+  );
 }
 
 /** Renders a compact count or status badge beside a sidebar menu button. */

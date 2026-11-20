@@ -1,56 +1,53 @@
-import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
+import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
-import { PortalContainer } from "@repo/design-system/lib/portal";
+import { popupMotion, sheetSurface } from "@repo/design-system/lib/popup";
+import type { NodeChildren } from "@repo/design-system/lib/render";
+import {
+  PopoverContent as PopoverContentPrimitive,
+  PopoverDescription as PopoverDescriptionPrimitive,
+  Popover as PopoverPrimitive,
+  PopoverTitle as PopoverTitlePrimitive,
+  PopoverTrigger as PopoverTriggerPrimitive,
+} from "@ui-sdk/react/popover";
 import { cn } from "cn";
-import { use } from "react";
+import type * as React from "react";
 
 /**
  * A small floating panel under its trigger, for a short form or details. Its header, body and footer keep one
- * padding, and a padded child never adds its own.
+ * padding, and a padded child never adds its own. A popover that passes `presentation="auto"` rises from the bottom
+ * as a sheet on a phone, with the sheet's grip, and floats under its trigger elsewhere.
  */
-function Popover({ ...props }: PopoverPrimitive.Root.Props) {
-  return <PopoverPrimitive.Root data-slot="popover" {...props} />;
+function Popover(props: React.ComponentProps<typeof PopoverPrimitive>) {
+  return <PopoverPrimitive {...props} />;
 }
 
-function PopoverTrigger({ ...props }: PopoverPrimitive.Trigger.Props) {
-  return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
+function PopoverTrigger(
+  props: React.ComponentProps<typeof PopoverTriggerPrimitive>
+) {
+  return <PopoverTriggerPrimitive {...props} />;
 }
 
 function PopoverContent({
+  children,
   className,
-  align = "center",
-  alignOffset = 0,
   side = "bottom",
-  sideOffset = 4,
   ...props
-}: PopoverPrimitive.Popup.Props &
-  Pick<
-    PopoverPrimitive.Positioner.Props,
-    "align" | "alignOffset" | "side" | "sideOffset"
-  >) {
+}: NodeChildren<React.ComponentProps<typeof PopoverContentPrimitive>>) {
   return (
     <ButtonGroupVariant value={undefined}>
-      <PopoverPrimitive.Portal container={use(PortalContainer)}>
-        {/* Fixed to the screen, so a page that scrolls under an open popover never pulls it off its trigger, which
-            mostly stands in a sticky header. */}
-        <PopoverPrimitive.Positioner
-          align={align}
-          alignOffset={alignOffset}
-          className="isolate z-50"
-          positionMethod="fixed"
-          side={side}
-          sideOffset={sideOffset}
-        >
-          <PopoverPrimitive.Popup
-            className={cn(
-              "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 bg-popover text-popover-foreground duration-ui motion-safe:data-closed:animate-out motion-safe:data-open:animate-in z-50 flex w-72 origin-(--transform-origin) flex-col gap-2 rounded-md border p-4 shadow-md outline-hidden ease-out",
-              className
-            )}
-            data-slot="popover-content"
-            {...props}
-          />
-        </PopoverPrimitive.Positioner>
-      </PopoverPrimitive.Portal>
+      <PopoverContentPrimitive
+        className={cn(
+          popupMotion(),
+          sheetSurface(),
+          "bg-popover text-popover-foreground z-50 flex w-72 flex-col gap-2 rounded-md border p-4 shadow-md outline-hidden",
+          className
+        )}
+        side={side}
+        {...props}
+      >
+        <SheetGrip />
+        {children}
+      </PopoverContentPrimitive>
     </ButtonGroupVariant>
   );
 }
@@ -65,11 +62,13 @@ function PopoverHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function PopoverTitle({ className, ...props }: PopoverPrimitive.Title.Props) {
+function PopoverTitle({
+  className,
+  ...props
+}: React.ComponentProps<typeof PopoverTitlePrimitive>) {
   return (
-    <PopoverPrimitive.Title
+    <PopoverTitlePrimitive
       className={cn("font-medium", className)}
-      data-slot="popover-title"
       {...props}
     />
   );
@@ -78,11 +77,10 @@ function PopoverTitle({ className, ...props }: PopoverPrimitive.Title.Props) {
 function PopoverDescription({
   className,
   ...props
-}: PopoverPrimitive.Description.Props) {
+}: React.ComponentProps<typeof PopoverDescriptionPrimitive>) {
   return (
-    <PopoverPrimitive.Description
+    <PopoverDescriptionPrimitive
       className={cn("text-muted-foreground", className)}
-      data-slot="popover-description"
       {...props}
     />
   );

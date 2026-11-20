@@ -294,7 +294,7 @@ test.describe("Uploads of a composer at 390px", () => {
 });
 
 /** The popup of Nina's sheet, which stays in the page while the sheet is closed. */
-const sheetPopup = (page: Page) => page.locator('[data-slot="sheet-popup"]');
+const sheetPopup = (page: Page) => page.locator('[data-surface="sheet"]');
 
 /** A chat the sheet opens from its history, and the words the learner sends to it with a picture. */
 const CONVERSATION = {
@@ -346,7 +346,7 @@ test.describe("Uploads of a composer in the sheet at 1440px", () => {
           await expect(page.getByText(UNCONFIRMED).first()).toBeVisible({
             timeout: readinessTimeoutMilliseconds,
           });
-          await expect(page.locator("[data-sonner-toast]")).toHaveCount(0, {
+          await expect(page.locator("[data-slot=toast]")).toHaveCount(0, {
             timeout: readinessTimeoutMilliseconds,
           });
           await page
@@ -437,7 +437,7 @@ test.describe("Uploads of a composer in the sheet at 1440px", () => {
           await inTheSheet(page).getByRole("button", { name: "Close" }).click();
           await expect(composerOf(sheetPopup(page))).toBeHidden();
           // The notice covers the entry to the sheet for a moment, so the press waits for it to go.
-          await expect(page.locator("[data-sonner-toast]")).toHaveCount(0, {
+          await expect(page.locator("[data-slot=toast]")).toHaveCount(0, {
             timeout: readinessTimeoutMilliseconds,
           });
           await page

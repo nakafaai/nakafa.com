@@ -8,9 +8,9 @@ import { useTranslations } from "use-intl";
 
 /**
  * One line of toast copy: a message of the `Toast` namespace in the reader's
- * language. The helper hands Sonner this node with the key and its values, and
- * Sonner renders it inside the Toaster, so a toast fired outside React still
- * reads in the reader's language.
+ * language. The helper hands the Toaster this node with the key and its values,
+ * and the Toaster renders it, so a toast fired outside React still reads in the
+ * reader's language.
  */
 export function ToastMessage({
   message,
@@ -24,8 +24,8 @@ export function ToastMessage({
 }
 
 /**
- * The label of a toast's action: one word of the `Common` namespace in the reader's language, which Sonner renders
- * as the toast's button inside the Toaster.
+ * The label of a toast's action: one word of the `Common` namespace in the reader's language, which the Toaster
+ * renders as the toast's button.
  */
 export function ToastAction({ label }: { label: ToastActionKey }) {
   const t = useTranslations("Common");
