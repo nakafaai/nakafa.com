@@ -27,8 +27,10 @@ import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
 import { reloadPage } from "@/components/shared/reload";
-import { useFormatTimeZone } from "@/components/shared/table/calendar";
-import { tableColumns } from "@/components/shared/table/columns";
+import {
+  datedColumns,
+  useFormatTimeZone,
+} from "@/components/shared/table/calendar";
 import { DataTable } from "@/components/shared/table/data";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TableEnd } from "@/components/shared/table/pages";
@@ -68,7 +70,7 @@ const VERSION_LOOKS = {
 } as const satisfies Record<typeof VersionStatus.Type, StatusLook>;
 
 /** The columns of the versions table. */
-const versionColumns = tableColumns<SchemeVersion>();
+const versionColumns = datedColumns<SchemeVersion>();
 
 /**
  * The versions of the school's grading scheme, the newest first, which is the version in force: when each took

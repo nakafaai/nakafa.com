@@ -1,6 +1,9 @@
 import { Calendar } from "@repo/design-system/components/ui/calendar";
+import type { AccessorFn, RowData } from "@tanstack/react-table";
 import { Array as Arr, DateTime, Option } from "effect";
 import { useTimeZone } from "use-intl";
+import type { DaysSpec } from "@/components/shared/table/columns";
+import { daysColumn, tableColumns } from "@/components/shared/table/columns";
 import { chosenDays, dayRangeOf } from "@/components/shared/table/days";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 
@@ -15,10 +18,10 @@ export function useFormatTimeZone() {
 
 /**
  * The calendar of a column of moments, whose range of days the page's filters hold under the column's ID. The column's
- * filter reads each moment's day as the row's clock shows it (`withinDays`). It stands in a module of its own, so a
- * table without a column of moments, as the try-out tables are, keeps the calendar out of its page's first JavaScript.
+ * filter reads each moment's day as the row's clock shows it (`withinDays`). A column of moments carries it
+ * (`datedColumns`), so a table without one, as the try-out tables are, keeps the calendar out of its page's JavaScript.
  */
-export function HeadDays({ column }: { column: string }) {
+function HeadDays({ column }: { column: string }) {
   const all = useTableFilters((state) => state.chosen);
   const choose = useTableFilters((state) => state.choose);
   const days = chosenDays(all, column);
@@ -55,3 +58,16 @@ export function HeadDays({ column }: { column: string }) {
     />
   );
 }
+
+/**
+ * Declares the columns of a table of `TData` that holds moments: every kind `tableColumns` declares, and a column of
+ * moments, whose head filters a range of days on the calendar and sorts the rows by them.
+ */
+export const datedColumns = <TData extends RowData>() => ({
+  ...tableColumns<TData>(),
+  /** A column of moments, a row without one reading as nothing. */
+  days: <TValue extends number | null>(
+    read: AccessorFn<TData, TValue>,
+    column: DaysSpec<TData, TValue>
+  ) => daysColumn(read, column, HeadDays),
+});

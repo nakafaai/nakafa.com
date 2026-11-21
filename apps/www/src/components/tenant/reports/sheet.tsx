@@ -27,8 +27,10 @@ import {
   PanesList,
   PanesProvider,
 } from "@/components/shared/page/panes";
-import { useFormatTimeZone } from "@/components/shared/table/calendar";
-import { tableColumns } from "@/components/shared/table/columns";
+import {
+  datedColumns,
+  useFormatTimeZone,
+} from "@/components/shared/table/calendar";
 import { DataTable } from "@/components/shared/table/data";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
@@ -73,7 +75,7 @@ function useCohortArgs() {
 }
 
 /** The columns of the report list. */
-const lineColumns = tableColumns<ReportLine>();
+const lineColumns = datedColumns<ReportLine>();
 
 /** The state of a line's report: not started, or the state the report is in. */
 const stateOf = (line: ReportLine) => line.report?.state ?? "none";

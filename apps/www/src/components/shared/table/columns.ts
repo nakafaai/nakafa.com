@@ -8,7 +8,7 @@ import type {
   RowData,
 } from "@tanstack/react-table";
 import { Schema } from "effect";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ComponentType } from "react";
 import { withinDays } from "@/components/shared/table/days";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 
@@ -27,7 +27,7 @@ export interface ColumnOption {
  * number of them or, for a list the server filters by one value, a single one (`ColumnChoice`).
  */
 export type HeadFilter =
-  | { readonly kind: "days" }
+  | { readonly kind: "days"; readonly panel: DaysPanel }
   | { readonly kind: "number" }
   | { readonly kind: "text" }
   | {
@@ -36,6 +36,16 @@ export type HeadFilter =
       readonly sort?: ColumnSortWords;
     }
   | { readonly kind: "values"; readonly options: readonly ColumnOption[] };
+
+/**
+ * What filters a column of moments by a range of days: `HeadDays`, the calendar, which `datedColumns` in `calendar.tsx`
+ * gives its columns. A column carries it, so a table without a column of moments keeps the calendar out of its page's
+ * JavaScript.
+ */
+export type DaysPanel = ComponentType<typeof DaysPanelProps.Type>;
+
+/** What a column of moments hands its days panel: the column's ID, under which the page's filters hold its days. */
+const DaysPanelProps = Schema.Struct({ column: Schema.String });
 
 /**
  * How a column of known values names the two ways its server sorts the rows, by the order of its values: the first
@@ -73,7 +83,7 @@ interface ValuesSpec<TData extends RowData, TValue extends CellData>
 }
 
 /** A column of moments: `timeZone` names the clock its cell prints a row's moment by. */
-interface DaysSpec<TData extends RowData, TValue extends number | null>
+export interface DaysSpec<TData extends RowData, TValue extends number | null>
   extends ColumnSpec<TData, TValue> {
   readonly timeZone: (row: TData) => string;
 }
@@ -115,8 +125,9 @@ function dataColumn<TData extends RowData, TValue extends CellData>(
 
 /**
  * Declares the columns of a table of `TData`, one kind of column for each kind of data, so a column's head filters what
- * the column holds: text by a field, numbers by a lowest and a highest value, moments by a range of days, and a column of
- * known values by those values. The rows sort by a column of text, numbers or moments.
+ * the column holds: text by a field, numbers by a lowest and a highest value, and a column of known values by those
+ * values. The rows sort by a column of text or numbers. A table with a column of moments declares its columns with
+ * `datedColumns` (`calendar.tsx`), which adds them.
  */
 export const tableColumns = <TData extends RowData>() => ({
   /**
@@ -138,15 +149,6 @@ export const tableColumns = <TData extends RowData>() => ({
     }),
     enableSorting: sort !== undefined,
     filterFn: "oneOf",
-  }),
-  /** A column of moments, a row without one reading as nothing. */
-  days: <TValue extends number | null>(
-    read: AccessorFn<TData, TValue>,
-    { timeZone, ...column }: DaysSpec<TData, TValue>
-  ): TableColumn<TData> => ({
-    ...dataColumn(read, column, { kind: "days" }),
-    filterFn: withinDays(timeZone),
-    sortFn: "basic",
   }),
   /** A column whose cell holds a list of values, such as a member's roles. */
   list: <TValue extends readonly string[]>(
@@ -200,3 +202,16 @@ export const tableColumns = <TData extends RowData>() => ({
     filterFn: "oneOf",
   }),
 });
+
+/** A column of moments, a row without one reading as nothing, whose head filters a range of days with `panel`. */
+export function daysColumn<TData extends RowData, TValue extends number | null>(
+  read: AccessorFn<TData, TValue>,
+  { timeZone, ...column }: DaysSpec<TData, TValue>,
+  panel: DaysPanel
+): TableColumn<TData> {
+  return {
+    ...dataColumn(read, column, { kind: "days", panel }),
+    filterFn: withinDays(timeZone),
+    sortFn: "basic",
+  };
+}

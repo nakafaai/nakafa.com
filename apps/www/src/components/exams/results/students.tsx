@@ -21,7 +21,7 @@ import {
 } from "@/components/exams/results/context";
 import { usePanes } from "@/components/shared/page/panes";
 import { reloadPage } from "@/components/shared/reload";
-import { tableColumns } from "@/components/shared/table/columns";
+import { datedColumns } from "@/components/shared/table/calendar";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
 import { RowItems } from "@/components/shared/table/menu";
@@ -153,7 +153,7 @@ function StudentRowMenu({
 }
 
 /** The columns of the students' table. */
-const studentColumns = tableColumns<typeof StudentRowSchema.Type>();
+const studentColumns = datedColumns<typeof StudentRowSchema.Type>();
 
 /**
  * The values of the students' status column, which chooses the attempts the server reads: every attempt, or only the

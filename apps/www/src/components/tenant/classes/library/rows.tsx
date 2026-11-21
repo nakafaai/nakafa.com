@@ -13,8 +13,10 @@ import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-men
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Match, Option, Schema } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
-import { useFormatTimeZone } from "@/components/shared/table/calendar";
-import { tableColumns } from "@/components/shared/table/columns";
+import {
+  datedColumns,
+  useFormatTimeZone,
+} from "@/components/shared/table/calendar";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { RowCopy, RowItems } from "@/components/shared/table/menu";
@@ -97,7 +99,7 @@ const rowIdOf = (row: LibraryRow) =>
   });
 
 /** The columns of the library's table. */
-const libraryColumns = tableColumns<LibraryRow>();
+const libraryColumns = datedColumns<LibraryRow>();
 
 /** The kind of drag that carries a library row onto a folder. */
 const ROW_DRAG = "application/x-nakafa-library";

@@ -38,8 +38,10 @@ import { createContext, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
-import { useFormatTimeZone } from "@/components/shared/table/calendar";
-import { tableColumns } from "@/components/shared/table/columns";
+import {
+  datedColumns,
+  useFormatTimeZone,
+} from "@/components/shared/table/calendar";
 import { DataTable } from "@/components/shared/table/data";
 import { RowItems } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
@@ -81,7 +83,7 @@ const PAGE_SIZE = 25;
 type LoginItem = PaginatedQueryItem<typeof identity.logins.list>;
 
 /** The columns of the logins table. */
-const loginColumns = tableColumns<LoginItem>();
+const loginColumns = datedColumns<LoginItem>();
 
 /** Opens a card the server issued in the page's card dialog. */
 const CardIssueContext = createContext<((card: CardView) => void) | null>(null);

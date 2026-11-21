@@ -16,7 +16,7 @@ import { Array as Arr, Record as Rec } from "effect";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useInvoiceDownload } from "@/components/billing/invoice";
-import { tableColumns } from "@/components/shared/table/columns";
+import { datedColumns } from "@/components/shared/table/calendar";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { RowItems } from "@/components/shared/table/menu";
@@ -30,7 +30,7 @@ import { isActiveLocale } from "@/lib/i18n/active";
 type Receipt = Ref.Returns<typeof billingRefs.queries.payments>[number];
 
 /** The columns of the receipts table. */
-const receiptColumns = tableColumns<Receipt>();
+const receiptColumns = datedColumns<Receipt>();
 
 /** What each kind of payment bought, with the icon its filter draws. */
 const PAYMENT_KINDS = {

@@ -24,8 +24,10 @@ import { startTransition, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useDialogs } from "@/components/shared/dialogs";
-import { useFormatTimeZone } from "@/components/shared/table/calendar";
-import { tableColumns } from "@/components/shared/table/columns";
+import {
+  datedColumns,
+  useFormatTimeZone,
+} from "@/components/shared/table/calendar";
 import { DataTable } from "@/components/shared/table/data";
 import { TableList } from "@/components/shared/table/list";
 import { RowItems } from "@/components/shared/table/menu";
@@ -65,7 +67,7 @@ const PAGE_SIZE = 25;
 type InviteItem = PaginatedQueryItem<typeof tenancy.invites.list>;
 
 /** The columns of the invites table. */
-const inviteColumns = tableColumns<InviteItem>();
+const inviteColumns = datedColumns<InviteItem>();
 
 /**
  * The invites of the school: Invite in the header, then every pending and expired invite in a

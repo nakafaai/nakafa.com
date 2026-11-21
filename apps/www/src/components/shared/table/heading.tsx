@@ -15,7 +15,6 @@ import {
   menuPlaceOf,
   placeOf,
 } from "@/components/shared/table/align";
-import { HeadDays } from "@/components/shared/table/calendar";
 import { ColumnChoice, ColumnFilter } from "@/components/shared/table/column";
 import type {
   ColumnWidth,
@@ -122,9 +121,9 @@ function HeadControl<TData extends RowData>({
           title={title}
         />
       ),
-      days: () => (
+      days: ({ panel: Panel }) => (
         <SortingHead header={header} kind="days" name={children}>
-          <HeadDays column={id} />
+          <Panel column={id} />
         </SortingHead>
       ),
       number: () => (
