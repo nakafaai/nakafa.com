@@ -78,8 +78,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "tsrs@latest",
-    "7.1.0-beta.tsrs3",
-    "tsrs is the Rust port of the TypeScript 7.1 checker, pinned exactly to 7.1.0-beta.tsrs3, the latest release and one of the two that @effect/tsgo 0.73.2 patches. From tsrs2 a version names the TypeScript release it targets and a tsrs revision, so 0.25.0-ts7.1.0-beta was the last of the old scheme. tsrs3 checks against TypeScript 7.1.0-beta at the same source commit, fixes compiler and lint edge cases, and leaves the tsrs/sync, tsrs/ast and tsrs/fs modules and the tsdk folder that the source check and the editors load unchanged byte for byte. Every typecheck, the language server, and the source check's compiler API run on it. Checked 20 November 2026.",
+    "7.1.0-beta.tsrs4",
+    "tsrs is the Rust port of the TypeScript 7.1 checker, pinned exactly to 7.1.0-beta.tsrs3, one of the two that @effect/tsgo 0.73.2, the latest, patches. 7.1.0-beta.tsrs4 is the latest release, and it waits for an @effect/tsgo release that patches it, because every typecheck runs the patched compiler. From tsrs2 a version names the TypeScript release it targets and a tsrs revision, so 0.25.0-ts7.1.0-beta was the last of the old scheme. tsrs3 checks against TypeScript 7.1.0-beta at the same source commit, fixes compiler and lint edge cases, and leaves the tsrs/sync, tsrs/ast and tsrs/fs modules and the tsdk folder that the source check and the editors load unchanged byte for byte. Every typecheck, the language server, and the source check's compiler API run on it. Checked 21 November 2026.",
   ],
   [
     "ai@latest",
@@ -108,8 +108,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@polar-sh/sdk@latest",
-    "1.3.1",
-    "The backend stays on 1.0.2. 1.3.1 moves the Outpost and its OpenTelemetry, ioredis and @vercel/oidc imports to the @polar-sh/sdk/outpost subpath, which nothing here imports, so the cause of the 1.1.0 hold is gone. But @polar-sh/sdk/2026-10, whose createPolarCore, errors and webhooks the billing client and the Polar webhook route import (confect/billing/polar, confect/routes/polar.ts), statically imports the metering chunk dist/client-Os3zkUrE.mjs, which imports node:timers/promises (sdk/typescript/src/metering/buffered.ts). Convex bundles the default runtime for the browser platform, so the HTTP router cannot resolve it and the deploy fails; 1.1.0 carried the same import in dist/client-Bz9G1UDp.mjs. Move when a release keeps node: built-ins out of the 2026-10 entry. Checked 20 November 2026.",
+    "1.3.2",
+    "The backend stays on 1.0.2. 1.3.1 moved the Outpost and its OpenTelemetry, ioredis and @vercel/oidc imports to the @polar-sh/sdk/outpost subpath, which nothing here imports, so the cause of the 1.1.0 hold is gone. But @polar-sh/sdk/2026-10, whose createPolarCore, errors and webhooks the billing client and the Polar webhook route import (confect/billing/polar, confect/routes/polar.ts), statically imports the metering client chunk, which imports node:timers/promises; in 1.3.2 that chunk is dist/client-BG5NBqal.mjs (sdk/typescript/src/metering/buffered.ts). Convex bundles the default runtime for the browser platform, so the HTTP router cannot resolve it and the deploy fails; 1.1.0 carried the same import in dist/client-Bz9G1UDp.mjs. Move when a release keeps node: built-ins out of the 2026-10 entry. Checked 21 November 2026.",
   ],
   [
     "@convex-dev/workpool@latest",

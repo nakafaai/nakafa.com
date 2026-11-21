@@ -76,12 +76,12 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
   },
   {
     action: "astral-sh/setup-uv",
-    approvedSha: "68559e99cc807c1eb7e9238fd43a15bba460eec2",
+    approvedSha: "1db35dd8eee11c5894872e0b383ae6c406cf738d",
     expectedInputs: {
       "cache-dependency-glob": "apps/cas/uv.lock",
-      version: "0.13.8",
+      version: "0.13.9",
     },
-    expectedTag: "v10.3.3",
+    expectedTag: "v10.4.0",
     expectedUsages: 2,
     reason:
       "The CAS engine's Python dependencies are vendored with uv for the Pyodide runtime, so the deploy job installs the pinned uv release before the stack deploys, and the proof workflow's gate installs it for the engine's typecheck, lint and tests. Its cache key reads only the CAS lockfile, because the default glob walks every folder, node_modules included, for 3.5 minutes.",
