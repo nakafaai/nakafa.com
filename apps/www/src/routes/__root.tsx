@@ -2,6 +2,7 @@ import "@fontsource-variable/inter";
 import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 import { PageScrollbar } from "@repo/design-system/components/ui/scrollbar";
 import { DrawerStage } from "@repo/design-system/components/ui/stage";
+import { UI_SDK_HEAD_SCRIPT, UI_SDK_STYLES } from "@repo/design-system/lib/sdk";
 import { ThemeProvider } from "@repo/design-system/providers/theme";
 import { textDirection } from "@repo/internationalization/src/direction";
 import {
@@ -48,7 +49,6 @@ import {
   readNotFoundPageLocale,
 } from "@/lib/routing/missing";
 import { paintFirst } from "@/lib/routing/paint";
-import { SCROLL_AREA_PROPERTIES_SCRIPT } from "@/lib/scroll/prepaint";
 import { SOCIAL_SITE_NAME } from "@/lib/seo/social";
 import { THEME_PREPAINT_SCRIPT } from "@/lib/theme/prepaint";
 import appCss from "@/styles/globals.css?url";
@@ -189,8 +189,13 @@ function RootDocument({ children }: { children: ReactNode }) {
         />
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
-          dangerouslySetInnerHTML={{ __html: SCROLL_AREA_PROPERTIES_SCRIPT }}
+          dangerouslySetInnerHTML={{ __html: UI_SDK_HEAD_SCRIPT }}
         />
+        {UI_SDK_STYLES.map(({ css, id }) => (
+          <style id={id} key={id}>
+            {css}
+          </style>
+        ))}
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
           dangerouslySetInnerHTML={{ __html: STALE_CHUNK_SCRIPT }}
