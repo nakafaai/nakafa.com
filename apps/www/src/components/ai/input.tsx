@@ -148,10 +148,12 @@ export function NinaInput({
             <NinaAttachments submittedFiles={submittedFiles} />
           </Suspense>
         ) : null}
+        {/* On a touch screen the box keeps the field's 16px, below which iOS zooms the page into it; with a mouse it
+            reads at the chat's size. */}
         <PromptInputTextarea
           aria-label={t("text-placeholder")}
           autoFocus={autoFocus}
-          className="max-h-[min(12rem,35dvh)] px-3 py-3 text-(length:--text-chat) md:text-(length:--text-chat)"
+          className="max-h-[min(12rem,35dvh)] px-3 py-3 pointer-fine:text-(length:--text-chat) md:pointer-fine:text-(length:--text-chat)"
           dir="auto"
           onFocus={() => {
             onEngage?.();

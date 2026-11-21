@@ -3,7 +3,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
-import { StagedPopup } from "@repo/design-system/components/ui/staged";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PopupContainer, sheetSurface } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
@@ -60,12 +59,6 @@ function DialogContent({
           size === "wide" &&
             "data-[presentation=dialog]:h-[min(90dvh,900px)] sm:max-w-7xl",
           className
-        )}
-        render={(contentProps, state) => (
-          <StagedPopup
-            {...contentProps}
-            open={state.open && state.presentation === "sheet"}
-          />
         )}
         {...props}
       >

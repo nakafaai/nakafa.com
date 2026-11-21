@@ -23,10 +23,17 @@ export const popupMotion = cva(
 
 /**
  * The surface every popup that a phone raises as a sheet wears there: the full width of the screen, rounded on its top
- * corners, clear of the home indicator, and never taller than the screen less a band of the page above it.
+ * corners, clear of the home indicator, and never taller than the screen less a band of the page above it. The screen
+ * is the part the keyboard leaves (`--visual-viewport-height`, which UI SDK sets on the sheet's host), so a sheet
+ * with a field keeps the field in view while the reader types.
+ *
+ * A sheet that another sheet rises over, such as a menu's sheet under its submenu's, steps back as stacked toasts do: it
+ * shrinks by 4% from its top and rises for each sheet over it until its top edge stands 12px above the sheet in front,
+ * however much shorter it is (`--sheet-front-height`, which the sheet in front reports through its grip). UI SDK counts the sheets over it, easing the count as they rise and leave, in `--drawer-stack`, which is 0
+ * while none is. A drawer steps back the same way (`DrawerContent`).
  */
 export const sheetSurface = cva(
-  "data-[presentation=sheet]:max-h-[calc(100dvh-3rem)] data-[presentation=sheet]:w-full data-[presentation=sheet]:max-w-none data-[presentation=sheet]:rounded-t-3xl data-[presentation=sheet]:rounded-b-none data-[presentation=sheet]:border-x-0 data-[presentation=sheet]:border-b-0 data-[presentation=sheet]:pb-[max(--spacing(2),env(safe-area-inset-bottom))]"
+  "data-[presentation=sheet]:max-h-[calc(var(--visual-viewport-height,100dvh)-3rem)] data-[presentation=sheet]:w-full data-[presentation=sheet]:max-w-none data-[presentation=sheet]:origin-top data-[presentation=sheet]:[transform:translateY(calc(var(--drawer-stack,0)*(-0.75rem-max(0px,var(--sheet-front-height,0px)-100%))))_scale(calc(1-var(--drawer-stack,0)*0.04))] data-[presentation=sheet]:rounded-t-3xl data-[presentation=sheet]:rounded-b-none data-[presentation=sheet]:border-x-0 data-[presentation=sheet]:border-b-0 data-[presentation=sheet]:pb-[max(--spacing(2),env(safe-area-inset-bottom))]"
 );
 
 /** How far, in CSS pixels, a press may travel and still count as a click: UI SDK's menu and select use the same. */

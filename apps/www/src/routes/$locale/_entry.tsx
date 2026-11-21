@@ -67,7 +67,6 @@ function EntryLayout() {
     >
       <EntryShell>
         <EntryShellPanel>
-          {" "}
           <ConvexProvider convexUrl={clientEnv.VITE_CONVEX_URL}>
             <Outlet />
           </ConvexProvider>

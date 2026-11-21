@@ -157,7 +157,7 @@ function PickerContent<Item>({
   return (
     <PopoverContent
       align="start"
-      className="max-h-[min(var(--available-height),26rem)] w-(--anchor-width) max-w-(--available-width) min-w-72 gap-0 overflow-hidden p-0 data-[presentation=sheet]:h-[calc(100dvh-6rem)] data-[presentation=sheet]:max-h-none"
+      className="max-h-[min(var(--available-height),26rem)] w-(--anchor-width) max-w-(--available-width) min-w-72 gap-0 overflow-hidden p-0 data-[presentation=sheet]:h-[calc(var(--visual-viewport-height,100dvh)-3rem)] data-[presentation=sheet]:max-h-none"
     >
       <PickerLabelsContext value={labels}>
         <Command

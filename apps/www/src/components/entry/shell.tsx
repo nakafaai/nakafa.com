@@ -12,12 +12,15 @@ export function EntryShell({ children }: { children: ReactNode }) {
 
 /**
  * Owns the interactive side of an entry page. It scrolls when it must, but its spacing is set so a
- * question with its choices fits a laptop's screen, and nobody has to scroll to answer.
+ * question with its choices fits a laptop's screen, and nobody has to scroll to answer. The panel is as tall as the
+ * screen at every width, so its column is at least that tall: the header stands at the top, the body in the middle
+ * and the footer at the bottom. A height that the scroll area's content box must resolve, such as `min-h-full`, it
+ * never resolves, and the three would stack at the top.
  */
 export function EntryShellPanel({ children }: { children: ReactNode }) {
   return (
     <ScrollArea className="col-span-3 lg:min-h-0">
-      <div className="flex min-h-svh flex-col gap-4 p-6 sm:px-12 sm:py-8 lg:min-h-full">
+      <div className="flex min-h-svh flex-col gap-4 p-6 sm:px-12 sm:py-8">
         {children}
       </div>
     </ScrollArea>

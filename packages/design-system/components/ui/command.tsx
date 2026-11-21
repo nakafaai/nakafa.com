@@ -4,7 +4,6 @@ import { Dialog } from "@repo/design-system/components/ui/dialog";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
-import { StagedPopup } from "@repo/design-system/components/ui/staged";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { optionRowVariants } from "@repo/design-system/lib/option";
 import { sheetSurface } from "@repo/design-system/lib/popup";
@@ -86,17 +85,11 @@ function CommandDialogPopup({
           // The window is tinted, so the card of rows (`CommandPanel`) stands out of it in the popup's own colour.
           "text-popover-foreground z-50 flex min-h-0 w-full flex-col overflow-hidden border bg-[color-mix(in_oklab,var(--muted)_72%,var(--popover))] outline-none not-dark:bg-clip-padding",
           "data-[presentation=dialog]:fixed data-[presentation=dialog]:inset-x-0 data-[presentation=dialog]:top-[max(--spacing(4),4vh)] data-[presentation=dialog]:mx-auto data-[presentation=dialog]:h-[min(40rem,calc(100dvh-2rem))] data-[presentation=dialog]:max-w-[min(36rem,calc(100%-2rem))] data-[presentation=dialog]:rounded-2xl data-[presentation=dialog]:shadow-lg/5 sm:data-[presentation=dialog]:top-[10vh] sm:data-[presentation=dialog]:h-[min(40rem,80dvh)]",
-          "data-[presentation=sheet]:h-[calc(100dvh-6rem)]",
+          "data-[presentation=sheet]:h-[calc(var(--visual-viewport-height,100dvh)-3rem)]",
           className
         )}
         data-surface="palette"
         keepMounted={keepMounted}
-        render={(contentProps, state) => (
-          <StagedPopup
-            {...contentProps}
-            open={state.open && state.presentation === "sheet"}
-          />
-        )}
       >
         <SheetGrip />
         <DialogTitle className="sr-only">{title}</DialogTitle>
@@ -182,7 +175,7 @@ function CommandInput({
       <CommandInputPrimitive
         aria-label={ariaLabel ?? placeholder}
         className={cn(
-          "placeholder:text-muted-foreground h-10 w-full min-w-0 rounded-md bg-transparent ps-9 pe-10 text-base outline-none md:text-sm [&::-webkit-search-cancel-button]:hidden",
+          "placeholder:text-muted-foreground h-10 w-full min-w-0 rounded-md bg-transparent ps-9 pe-10 text-base outline-none md:pointer-fine:text-sm [&::-webkit-search-cancel-button]:hidden",
           className
         )}
         enterKeyHint="search"

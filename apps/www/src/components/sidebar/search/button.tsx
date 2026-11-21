@@ -15,7 +15,11 @@ import { SearchShortcut } from "@/components/search/shortcut";
  * other row's label, so it never wraps while the row narrows. The rail keeps the
  * row's icon alone, so the keys never crowd it in the round button. On a phone
  * the sheet steps aside for the palette, as it does for a link, so a result opens
- * on the page and closing the palette returns to the page.
+ * on the page and closing the palette returns to the page. The sheet leaves first,
+ * handing the focus back to its trigger as it closes, and the palette opens on the
+ * next frame and takes the focus from there: opened together, the closing sheet's
+ * hand-back landed after the palette had focused its search, and the typing went
+ * nowhere.
  */
 export function SidebarSearchButton({
   label,
@@ -38,7 +42,7 @@ export function SidebarSearchButton({
           isActive={open}
           onClick={() => {
             setOpenMobile(false);
-            onOpen();
+            requestAnimationFrame(onOpen);
           }}
           onFocus={onIntent}
           onMouseEnter={onIntent}

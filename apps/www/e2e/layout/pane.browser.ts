@@ -10,25 +10,23 @@ import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 /**
  * The owner's rule (8 Nov): a pane opens at the right edge of the screen, from the window's top to its bottom, and the
  * whole page narrows beside it, so the body is never wider than the header and nothing stands inside the body. On a
- * phone the same pane is a sheet from the bottom of the screen, and the page keeps its whole width. Reads it from what
+ * phone the same pane is a sheet from the bottom of the screen, as wide as the screen and resting on its bottom edge,
+ * and the page keeps its whole width. Reads it from what
  * is drawn, on a reading page's outline and on a detail opened by a press.
  */
 
-/** A bottom sheet that runs the window's width and rests at its bottom, one even inset off its edges. */
+/** A bottom sheet that runs the window's whole width and rests on its bottom edge, as every drawer does. */
 function readSheetProblems(page: Page) {
   return page.evaluate(() => {
     const sheet = document.querySelector('[data-slot="drawer-content"]');
     if (sheet === null) {
       return ["no sheet opened"];
     }
-    // The sheet floats one even inset off the window's sides and bottom.
     const box = sheet.getBoundingClientRect();
-    const inset = box.left;
     return [
-      (inset < 0 || inset > 16) && "the sheet does not run the window's width",
-      Math.abs(innerWidth - box.right - inset) > 1 &&
-        "the sheet stands off centre",
-      Math.abs(innerHeight - box.bottom - inset) > 1 &&
+      (Math.abs(box.left) > 1 || Math.abs(innerWidth - box.right) > 1) &&
+        "the sheet does not run the window's width",
+      Math.abs(innerHeight - box.bottom) > 1 &&
         "the sheet does not rest at the window's bottom",
       Array.from(document.querySelectorAll("[data-pane-side]")).some(
         (pane) => pane.getBoundingClientRect().width > 1

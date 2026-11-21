@@ -65,11 +65,7 @@ export const SKIPPED: readonly (typeof Skip.Type)[] = [
   },
   {
     path: "components/ui/stage",
-    reason: "plumbing behind every drawer, scaling the page back",
-  },
-  {
-    path: "components/ui/staged",
-    reason: "plumbing that counts the open drawers",
+    reason: "plumbing that boxes the whole app and draws its first loader",
   },
   {
     path: "components/ui/scrollbar",

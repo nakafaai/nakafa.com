@@ -60,7 +60,7 @@ export function Sidebar({
           swipe or a press outside closes it, and it draws no close button. */}
       <Drawer onOpenChange={setOpenMobile} open={openMobile} side={side}>
         <DrawerContent
-          className="bg-sidebar text-sidebar-foreground"
+          className="text-sidebar-foreground [--drawer-surface:var(--color-sidebar)]"
           onClick={(event) => {
             // A link pressed in the phone sidebar opens its page in this tab, so the drawer steps
             // aside for it; a press that opens another tab leaves the drawer where it is.

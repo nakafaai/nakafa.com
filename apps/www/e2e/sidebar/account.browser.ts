@@ -316,7 +316,7 @@ test("a signed-in screen shows a loader until its scripts arrive", async ({
         await page.goto("/en/notifications", {
           waitUntil: "domcontentloaded",
         });
-        const stage = page.locator('[data-slot="drawer-stage"]');
+        const stage = page.locator('[data-slot="app-stage"]');
         const loaderContent = () =>
           stage.evaluate(
             (element) => getComputedStyle(element, "::after").content
