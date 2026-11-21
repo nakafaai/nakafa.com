@@ -44,6 +44,8 @@ export const MARKDOWN_MARKUP = "em, strong, code, pre, a, ul, ol, h1, h2, h3";
  * own, so a toast moving is not the page moving.
  */
 export const TOASTER = "[data-slot=toast-region]";
+/** A drawer's surface, which rises from the screen's edge over the page. */
+export const DRAWER_CONTENT = '[data-slot="drawer-content"]';
 /**
  * The dialog on top. A popup renders where it is written, so a dialog that a
  * control inside another dialog opens, such as a phone's sheet, renders inside

@@ -5,7 +5,7 @@ import {
   readRecordedLayoutShifts,
   recordLayoutShifts,
 } from "@/e2e/support/layout";
-import { DRAWER_POPUP, TOASTER } from "@/e2e/support/selector";
+import { DRAWER_CONTENT, TOASTER } from "@/e2e/support/selector";
 
 const SAMPLES_KEY = "nakafaShellSamples";
 const LAYOUT_SHIFTS_KEY = "nakafaLayoutShifts";
@@ -160,7 +160,7 @@ export const observeShell = Effect.fn("NakafaE2E.observeShell")(function* (
     page.addInitScript(recordLayoutShifts, {
       key: LAYOUT_SHIFTS_KEY,
       // A toast and a drawer stand fixed over the page and move on their own, so their motion moves no content.
-      overlay: `${TOASTER}, ${DRAWER_POPUP}`,
+      overlay: `${TOASTER}, ${DRAWER_CONTENT}`,
     })
   );
 });
