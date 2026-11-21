@@ -171,9 +171,11 @@ function SheetPopup({
             resizer={resizerProps}
           />
         ) : null}
+        {/* The close is drawn by a Button, whose slot it wears, so the sheet names it as its own close. */}
         {!!showCloseButton && (
           <DialogClose
             className="absolute inset-e-2 top-2"
+            data-sheet="close"
             render={
               <Button size="icon-sm" tooltip={t("close")} variant="ghost" />
             }
