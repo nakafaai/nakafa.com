@@ -19,6 +19,7 @@ const PageNavigationItemSchema = Schema.Struct({
 type PageNavigationItem = typeof PageNavigationItemSchema.Type;
 
 const PageNavigationSchema = Schema.Struct({
+  aboutItem: PageNavigationItemSchema,
   dataProcessingPath: Schema.String,
   developerItem: PageNavigationItemSchema,
   legalItems: Schema.Array(PageNavigationItemSchema),
@@ -26,7 +27,7 @@ const PageNavigationSchema = Schema.Struct({
   termsOfServicePath: Schema.String,
 });
 /**
- * Verified developer and legal destinations for one locale. The router matches
+ * Verified about, developer and legal destinations for one locale. The router matches
  * each of them from its own route tree. Their links never preload: the route's
  * loader reads the signed Page through a server function, and a preload on hover
  * would run that read before the reader chooses the link.
@@ -42,6 +43,7 @@ export class PageNavigationMissingError extends Schema.TaggedError<
   pageKey: PageKeySchema,
 }) {}
 
+const aboutKey = PageKeySchema.make("about");
 const dataProcessingKey = PageKeySchema.make("data-processing-agreement");
 const developerKey = PageKeySchema.make("developers");
 const imprintKey = PageKeySchema.make("imprint");
@@ -78,6 +80,7 @@ export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
       })
     );
     const [
+      aboutItem,
       dataProcessingItem,
       developerItem,
       imprintItem,
@@ -85,6 +88,7 @@ export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
       securityPolicyItem,
       termsOfServiceItem,
     ] = yield* Effect.all([
+      readRequiredPageItem(localeItems, aboutKey, locale),
       readRequiredPageItem(localeItems, dataProcessingKey, locale),
       readRequiredPageItem(localeItems, developerKey, locale),
       readRequiredPageItem(localeItems, imprintKey, locale),
@@ -93,6 +97,7 @@ export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
       readRequiredPageItem(localeItems, termsOfServiceKey, locale),
     ]);
     return {
+      aboutItem,
       dataProcessingPath: dataProcessingItem.publicPath,
       developerItem,
       legalItems: [

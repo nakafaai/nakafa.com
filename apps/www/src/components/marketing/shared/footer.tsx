@@ -76,6 +76,15 @@ export function Footer({
           ))}
 
           <FooterGroup label={t("About.company")}>
+            {pageNavigation ? (
+              <li>
+                <FooterPageLink
+                  label={pageNavigation.aboutItem.title}
+                  preload={false}
+                  publicPath={pageNavigation.aboutItem.publicPath}
+                />
+              </li>
+            ) : null}
             <li>
               <FooterLink
                 label={t("Common.contributor")}

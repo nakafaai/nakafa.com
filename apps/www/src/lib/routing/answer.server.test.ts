@@ -186,10 +186,10 @@ describe("decisions before the router", () => {
 
   it.effect("moves a moved address before the router", () =>
     Effect.gen(function* () {
-      const response = yield* answer("/en/about");
+      const response = yield* answer("/en/settings");
 
       expect(response.status).toBe(308);
-      expect(response.headers.get("location")).toBe("/en");
+      expect(response.headers.get("location")).toBe("/en/user/settings");
     })
   );
 
@@ -437,7 +437,7 @@ describe("locale redirects", () => {
         for (const [address, language, location] of [
           ["/quran/2?ref=app", "id-ID,id;q=0.9", "/id/quran/2?ref=app"],
           ["/quran/2", "fr-FR,fr;q=0.9", "/id/quran/2"],
-          ["/about", "id", "/"],
+          ["/about", "id", "/en/about"],
           ["/school/pricing?plan=pro", "de", "/de/school/pricing?plan=pro"],
         ] as const) {
           const response = yield* answer(address, {
