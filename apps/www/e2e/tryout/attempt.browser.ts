@@ -170,7 +170,11 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
 
   // Closing the set's pane leaves for the track, which unlocks the shell together with the new page: a press on
   // the open set's row beside the table, or Escape, which closes the drawer a phone shows the pane in.
-  const runningRow = page.locator(`main a[href^="${setHref}?"]`).first();
+  // The running set's row in the table: every row links the set's own address, which moves to the attempt's.
+  const runningRow = page
+    .getByRole("table")
+    .locator(`a[href="${setHref}"], a[href^="${setHref}?"]`)
+    .first();
   yield* observeStep(
     page,
     [true, false],
@@ -187,8 +191,8 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     })
   );
 
-  // The running set's row opens the attempt directly: the track stays on
-  // screen until the locked set is ready.
+  // The running set's row opens the attempt: the track stays on screen until
+  // the locked set is ready, at the attempt's address.
   const reopened = yield* observeStep(
     page,
     [false, true],
@@ -198,9 +202,8 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     })
   );
   yield* Effect.sync(() => {
-    for (const url of reopened) {
-      expect(new URL(url).searchParams.has("attemptId")).toBe(true);
-    }
+    expect(reopened.length).toBeGreaterThan(0);
+    expect(new URL(page.url()).searchParams.has("attemptId")).toBe(true);
   });
 
   // Visiting a completed section's URL directly while its set still runs redirects straight back to the set pane.
