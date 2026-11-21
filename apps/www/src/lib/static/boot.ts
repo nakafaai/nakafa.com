@@ -30,7 +30,9 @@ const BootChunk = Schema.Struct({
  * Why the boot chunk breaks the first-load contract: too many bytes, or a module
  * that only an island runs. None when it keeps both.
  */
-export function readBootProblems(chunk: typeof BootChunk.Type): readonly string[] {
+export function readBootProblems(
+  chunk: typeof BootChunk.Type
+): readonly string[] {
   const islandModules = Arr.filter(chunk.moduleIds, (id) =>
     Arr.some(ISLAND_MODULES, (pattern) => pattern.test(id))
   );
