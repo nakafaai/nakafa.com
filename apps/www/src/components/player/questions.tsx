@@ -9,10 +9,10 @@ import { usePlayerSpy } from "@/components/player/watch";
  * descendant keeps 80 px clear of the header, and 80 px clear of the footer, when the browser scrolls it into view, so a focused
  * option is never hidden under either. The reading line of the list follows
  * the top margin, so it always falls inside a question that was just revealed.
- * The player places the page itself when it reveals a question, so the list
- * opts out of the browser's scroll anchoring: Chrome and Firefox would move the
- * page again to hold an anchor of their own choosing, and leave the question it
- * revealed under the header, where Safari, which anchors nothing, leaves it right.
+ * The list never skips drawing a card (`content-auto-card`): a skipped card
+ * stands at a fallback height until the reader reaches it, so the cards a jump
+ * brings near the window would take their own height after the jump placed the
+ * question and move it under the header.
  */
 export function PlayerQuestions({ children }: { children: ReactNode }) {
   const list = useRef<HTMLElement>(null);
@@ -23,7 +23,7 @@ export function PlayerQuestions({ children }: { children: ReactNode }) {
 
   return (
     <section
-      className="flex flex-col gap-12 [overflow-anchor:none] **:scroll-mt-20 **:scroll-mb-20"
+      className="flex flex-col gap-12 **:scroll-mt-20 **:scroll-mb-20 [&_.content-auto-card]:[content-visibility:visible]!"
       ref={list}
     >
       {children}

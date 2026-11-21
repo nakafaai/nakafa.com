@@ -5,7 +5,7 @@ import {
   readRecordedLayoutShifts,
   recordLayoutShifts,
 } from "@/e2e/support/layout";
-import { TOASTER } from "@/e2e/support/selector";
+import { DRAWER_POPUP, TOASTER } from "@/e2e/support/selector";
 
 const SAMPLES_KEY = "nakafaShellSamples";
 const LAYOUT_SHIFTS_KEY = "nakafaLayoutShifts";
@@ -159,7 +159,8 @@ export const observeShell = Effect.fn("NakafaE2E.observeShell")(function* (
   yield* Effect.promise(() =>
     page.addInitScript(recordLayoutShifts, {
       key: LAYOUT_SHIFTS_KEY,
-      overlay: TOASTER,
+      // A toast and a drawer stand fixed over the page and move on their own, so their motion moves no content.
+      overlay: `${TOASTER}, ${DRAWER_POPUP}`,
     })
   );
 });
@@ -199,7 +200,7 @@ function outgoingPages(frames: readonly (typeof ShellFrame.Type)[]) {
 
 /**
  * Expects the frames since one observation to show the app shell throughout: a
- * mounted, visible shell with a heading in every frame, no layout shift, and
+ * mounted, visible shell with a heading in every frame, no layout shift that no input caused, and
  * exactly the expected lock states. A client render locks through the shell
  * alone, so no page, hidden or not, may carry the server's lock marker. A move
  * within one shell keeps its `<main>`; a move to the other shell, from the app to
@@ -253,7 +254,8 @@ export const readShellObservation = Effect.fn("NakafaE2E.readShellObservation")(
       hiddenFrames: Arr.countBy(frames, (frame) => !showsShell(frame)),
       layoutShifts: pipe(
         shifts,
-        Arr.filter((shift) => shift.time >= since),
+        // A shift within half a second of a press or a key answers that input, as the press that locks the shell.
+        Arr.filter((shift) => shift.time >= since && !shift.hadRecentInput),
         Arr.map(
           (shift) =>
             `${shift.value} at ${Math.round(shift.time)} ms: ${Arr.join(shift.sources, "; ")}`
