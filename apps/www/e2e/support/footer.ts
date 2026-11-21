@@ -4,7 +4,9 @@ import { Effect } from "effect";
 /**
  * Measures each action of a card's footer: its label, whether the label is cut
  * off, whether the action lies inside the card that holds it, and its top edge,
- * so a test can tell whether the actions share a row.
+ * so a test can tell whether the actions share a row. The label is the name a
+ * reader hears: an action that shows only an icon is named by its tooltip,
+ * which `aria-labelledby` points at, and one that shows words by those words.
  */
 export function readFooterActions(actions: Locator) {
   return actions.evaluateAll((elements) =>
@@ -21,7 +23,18 @@ export function readFooterActions(actions: Locator) {
           box.right <= card.right &&
           box.top >= card.top &&
           box.bottom <= card.bottom,
-        label: element.textContent?.trim() ?? "",
+        label:
+          (element.getAttribute("aria-label") ??
+            (element.getAttribute("aria-labelledby") ?? "")
+              .split(" ")
+              .map(
+                (id) =>
+                  document.querySelector(`#${CSS.escape(id)}`)?.textContent ??
+                  ""
+              )
+              .join(" ")
+              .trim()) ||
+          (element.textContent?.trim() ?? ""),
         top: box.top,
       };
     })

@@ -78,12 +78,15 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       })
     );
     yield* Effect.sync(() => expect(alloLoaded).toBe(true));
-    // A reading page's title stands alone over its byline: no summary paragraph follows it.
-    const summary = page
+    // A lesson's description is the one lead line under its title, before its byline (#2699). An article's title
+    // stands alone over its byline.
+    const lead = page
       .locator("header")
       .filter({ has: title })
       .locator("h1 + p");
-    yield* Effect.promise(() => expect(summary).toHaveCount(0));
+    yield* Effect.promise(() =>
+      expect(lead).toHaveCount(href === pinnedRoutes.material.en ? 1 : 0)
+    );
 
     const sectionHeading = page
       .locator("article")
@@ -181,7 +184,10 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
         expect(headerOutline).toHaveAttribute("aria-expanded", "false")
       );
       yield* Effect.promise(() => headerOutline.click());
-      const sidebar = page.locator('[role="dialog"][data-sidebar="sidebar"]');
+      // The outline's sheet is a drawer whose content holds the phone's sidebar.
+      const sidebar = page.getByRole("dialog").filter({
+        has: page.locator('[data-mobile="true"][data-slot="sidebar"]'),
+      });
       yield* Effect.promise(() => expect(sidebar).toBeVisible());
       yield* Effect.promise(() => page.keyboard.press("Escape"));
       yield* Effect.promise(() => expect(sidebar).toHaveCount(0));
@@ -289,7 +295,10 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       page.getByRole("menuitem", { name: "Copy Content", exact: true }).click()
     );
     yield* Effect.promise(() =>
-      expect(page.getByText("Copied!", { exact: true })).toBeVisible({
+      // The live region that announces a toast repeats its words, so the toast is read from the toast itself.
+      expect(
+        page.locator("[data-slot=toast]").getByText("Copied!", { exact: true })
+      ).toBeVisible({
         timeout: readinessTimeoutMilliseconds,
       })
     );

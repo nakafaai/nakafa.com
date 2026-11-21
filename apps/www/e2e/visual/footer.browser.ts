@@ -47,6 +47,14 @@ const TEXT_BLOCKS =
   "blockquote, caption, dl, figcaption, h1, h2, h3, h4, h5, h6, li, ol, p, small, table, ul";
 
 /**
+ * What stands in a band without being drawn there: a control's popup, which
+ * renders in place beside it (ADR 0049) and shows only over the page, and a
+ * status that only assistive technology hears.
+ */
+const UNDRAWN =
+  '[popover], [role="tooltip"], [data-slot$="-content"], .sr-only[role="status"]';
+
+/**
  * Reads what the toolbar and actions bands of every visual card on the page
  * hold besides controls: an item that holds no control, a text block, or words
  * written straight into the band. Each finding names its band and its text.
@@ -63,6 +71,7 @@ function readBandText(page: Page) {
           const loose = Array.from(band.children).filter(
             (child) =>
               !(
+                child.matches(selectors.undrawn) ||
                 child.matches(selectors.interactive) ||
                 child.querySelector(selectors.interactive)
               )
@@ -78,7 +87,7 @@ function readBandText(page: Page) {
               `${slot} ${node.nodeName}: ${(node.textContent ?? "").trim().slice(0, 60)}`
           );
         }),
-      { blocks: TEXT_BLOCKS, interactive: INTERACTIVE }
+      { blocks: TEXT_BLOCKS, interactive: INTERACTIVE, undrawn: UNDRAWN }
     );
 }
 
