@@ -1,3 +1,4 @@
+import { LaterMath } from "@repo/design-system/components/markdown/fonts";
 import { untilNearScreen } from "@repo/design-system/lib/screen";
 import { untilPageRead } from "@repo/design-system/lib/settle";
 import { Deferred, Effect, Exit, Fiber, Option } from "effect";
@@ -45,7 +46,8 @@ function LaterBody<Props extends object>({
  * reaches a little past its section, with the same margin taken back, and a ring
  * or a shadow on the section's last line stays whole. The boundary sits under a box
  * that holds no state, so nothing that changes here reaches the section's HTML
- * while it waits.
+ * while it waits. Its formulas load their faces when the browser first lays them
+ * out (`LaterMath`).
  */
 export function LaterSection<Props extends object>({
   children,
@@ -84,9 +86,11 @@ export function LaterSection<Props extends object>({
 
   return (
     <div className="later-section -my-2 py-2" ref={box}>
-      <Suspense fallback={null}>
-        <LaterBody code={code}>{children}</LaterBody>
-      </Suspense>
+      <LaterMath>
+        <Suspense fallback={null}>
+          <LaterBody code={code}>{children}</LaterBody>
+        </Suspense>
+      </LaterMath>
     </div>
   );
 }

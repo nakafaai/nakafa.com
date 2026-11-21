@@ -112,6 +112,25 @@ const verifyNavigationFonts = Effect.fn("NakafaE2E.verifyNavigationFonts")(
   }
 );
 
+/**
+ * The home page draws a formula in its lesson section, after the first screen,
+ * so its faces wait for the formula's first layout instead of sharing the
+ * connection with the first screen's stylesheet and fonts.
+ */
+const verifyLaterMathFonts = Effect.fn("NakafaE2E.verifyLaterMathFonts")(
+  function* (page: Page) {
+    yield* Effect.promise(() => page.goto("/en"));
+    yield* Effect.promise(() =>
+      expect(page.locator("#lesson .katex").first()).toBeAttached()
+    );
+    const fonts = yield* readMathFonts(page);
+
+    yield* Effect.sync(() => {
+      expect(fonts.preloaded).toEqual([]);
+    });
+  }
+);
+
 test.describe("Math fonts", () => {
   test.use({ viewport: { height: 900, width: 1440 } });
 
@@ -128,6 +147,14 @@ test.describe("Math fonts", () => {
   }) => {
     await Effect.runPromise(
       withObservedPageErrors(page, verifyNavigationFonts(page))
+    );
+  });
+
+  test("a formula after the home page's first screen preloads no face", async ({
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(page, verifyLaterMathFonts(page))
     );
   });
 });
