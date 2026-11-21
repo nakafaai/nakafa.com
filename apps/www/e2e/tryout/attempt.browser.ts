@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
 import { loadMathFonts } from "@/e2e/support/fonts";
@@ -127,49 +127,44 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
 
   // A completed part of an in-progress attempt opens its info dialog right in the pane (never a card-only page),
   // and an unstarted part asks for confirmation instead of auto-starting its clock.
-  // A phone shows the set's pane in a drawer, a dialog too, so each part's dialog is found by what it says.
-  const doneDialog = page
-    .getByRole("dialog")
-    .filter({ hasText: "Correct answers" });
-  const startDialog = page
-    .getByRole("dialog")
-    .filter({ hasText: "The timer starts right away and cannot be paused." });
+  // A phone shows the set's pane in a drawer, a dialog too, which says the attempt's facts as well, so each part's
+  // dialog is the one dialog more than the page held before the press, and the last one open.
+  const dialogs = page.getByRole("dialog");
+  const pressPart = Effect.fn("NakafaE2E.pressPart")(function* (
+    step: "done" | "next",
+    says: (dialog: Locator) => Promise<void>
+  ) {
+    const before = yield* Effect.promise(() => dialogs.count());
+    yield* activate(
+      page.locator(`ol button[data-part-step="${step}"]`).first(),
+      hasTouch
+    );
+    yield* Effect.promise(async () => {
+      await expect(dialogs).toHaveCount(before + 1, {
+        timeout: readinessTimeoutMilliseconds,
+      });
+      await says(dialogs.last());
+      expect(new URL(page.url()).pathname).toBe(setHref);
+      await page.keyboard.press("Escape");
+      await expect(dialogs).toHaveCount(before, {
+        timeout: readinessTimeoutMilliseconds,
+      });
+    });
+  });
   yield* observeStep(
     page,
     [true],
     Effect.gen(function* () {
-      yield* activate(
-        page.locator('ol button[data-part-step="done"]').first(),
-        hasTouch
+      yield* pressPart("done", (dialog) =>
+        expect(
+          dialog.getByText("Correct answers", { exact: true })
+        ).toBeVisible()
       );
-      yield* Effect.promise(async () => {
-        await expect(doneDialog).toBeVisible({
-          timeout: readinessTimeoutMilliseconds,
-        });
-        await expect(
-          doneDialog.getByText("Correct answers", { exact: true })
-        ).toBeVisible();
-        expect(new URL(page.url()).pathname).toBe(setHref);
-        await page.keyboard.press("Escape");
-        await expect(doneDialog).toBeHidden({
-          timeout: readinessTimeoutMilliseconds,
-        });
-      });
-
-      yield* activate(
-        page.locator('ol button[data-part-step="next"]').first(),
-        hasTouch
+      yield* pressPart("next", (dialog) =>
+        expect(
+          dialog.getByRole("button", { exact: true, name: "Start" })
+        ).toBeVisible()
       );
-      yield* Effect.promise(async () => {
-        await expect(
-          startDialog.getByRole("button", { exact: true, name: "Start" })
-        ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-        expect(new URL(page.url()).pathname).toBe(setHref);
-        await page.keyboard.press("Escape");
-        await expect(startDialog).toBeHidden({
-          timeout: readinessTimeoutMilliseconds,
-        });
-      });
     })
   );
 
@@ -184,7 +179,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
         yield* Effect.promise(() => page.keyboard.press("Escape"));
       } else {
         yield* activate(
-          page.locator('main a[aria-current="page"]').first(),
+          page.getByRole("table").locator('a[aria-current="page"]'),
           hasTouch
         );
       }
