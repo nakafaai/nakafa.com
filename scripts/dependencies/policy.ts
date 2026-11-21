@@ -237,11 +237,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     minimumDeclarations: 1,
   },
   {
-    approved: "0.0.70",
-    dependency: "convex-test",
-    minimumDeclarations: 1,
-  },
-  {
     approved: "0.4.16",
     dependency: "@convex-dev/workpool",
     minimumDeclarations: 1,

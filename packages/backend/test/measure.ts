@@ -2,6 +2,7 @@ import type { createConvexTestWithAuth } from "@repo/backend/confect/test.helper
 import type {
   ActionCtx,
   MutationCtx,
+  QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import { getFunctionAddress } from "convex/server";
 import { Array as Arr } from "effect";
@@ -60,8 +61,8 @@ export function measured(
 ): ActionCtx {
   return {
     ...ctx,
-    runMutation: (mutation, ...args) =>
-      t.mutation(async (mutationCtx) => {
+    runMutation: (mutation, ...args) => {
+      const run = async (mutationCtx: MutationCtx) => {
         const value = await mutationCtx.runMutation(mutation, ...args);
         observe(
           sampleOf(
@@ -70,14 +71,18 @@ export function measured(
           )
         );
         return value;
-      }),
-    runQuery: (query, ...args) =>
-      t.query(async (queryCtx) => {
+      };
+      return t.mutation(run);
+    },
+    runQuery: (query, ...args) => {
+      const run = async (queryCtx: QueryCtx) => {
         const value = await queryCtx.runQuery(query, ...args);
         observe(
           sampleOf(nameOf(query), await queryCtx.meta.getTransactionMetrics())
         );
         return value;
-      }),
+      };
+      return t.query(run);
+    },
   };
 }

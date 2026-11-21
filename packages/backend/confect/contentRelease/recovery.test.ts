@@ -103,21 +103,25 @@ describe("contentRelease/recovery", () => {
     () =>
       Effect.gen(function* () {
         const { t } = yield* seedPair();
-        /** The releases that section builds were queued for, in order. */
-        const queued = () =>
+        /** The pending section builds queued by activation, in order. */
+        const pending = () =>
           t.run(async (ctx) =>
             Arr.map(
               Arr.filter(
                 await ctx.db.system.query("_scheduled_functions").collect(),
-                ({ name }) => name === "contents/sections/build:run"
+                ({ name, state }) =>
+                  name === "contents/sections/build:run" &&
+                  state.kind === "pending"
               ),
               ({ args }) => args
             )
           );
         yield* Effect.promise(() => activateCandidate(t));
-        yield* Effect.promise(() => recoverCandidate(t));
-        assert.deepStrictEqual(yield* Effect.promise(queued), [
+        assert.deepStrictEqual(yield* Effect.promise(pending), [
           [{ releaseId: CANDIDATE.releaseId }],
+        ]);
+        yield* Effect.promise(() => recoverCandidate(t));
+        assert.deepStrictEqual(yield* Effect.promise(pending), [
           [{ releaseId: RECOVERY.releaseId }],
         ]);
         // Activating the same recovery again finds it completed and queues nothing.
@@ -128,8 +132,7 @@ describe("contentRelease/recovery", () => {
             rendererJson: testRendererJson(),
           })
         );
-        assert.deepStrictEqual(yield* Effect.promise(queued), [
-          [{ releaseId: CANDIDATE.releaseId }],
+        assert.deepStrictEqual(yield* Effect.promise(pending), [
           [{ releaseId: RECOVERY.releaseId }],
         ]);
       })

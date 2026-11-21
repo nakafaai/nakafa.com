@@ -1,5 +1,5 @@
 import { Ref } from "@confect/core";
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { MEMORY_BATCH } from "@repo/backend/confect/nina/memory/store";
 import type { NinaMemoryNote } from "@repo/backend/confect/nina/memory.spec";
@@ -10,6 +10,11 @@ import {
 } from "@repo/backend/test/nina/memory";
 import { createPortraitTest } from "@repo/backend/test/nina/portrait";
 import { Array as Arr, Order } from "effect";
+
+// Writing a memory schedules a portrait build, which must reach no model.
+vi.mock("@repo/backend/confect/gateway/live", async () => ({
+  GatewayLive: (await import("@repo/backend/test/gateway")).GatewayUnconfigured,
+}));
 
 const memory = refs.public.nina.memory;
 const state = Ref.getFunctionReference(memory.state);
@@ -25,11 +30,7 @@ const expire = Ref.getFunctionReference(refs.internal.nina.memory.expire);
 
 const NOW = Date.UTC(2026, 9, 10, 12);
 
-beforeEach(() => {
-  vi.useFakeTimers();
-  vi.setSystemTime(NOW);
-});
-afterEach(() => vi.useRealTimers());
+beforeEach(() => vi.useFakeTimers({ now: NOW }));
 
 /** The learners that own the stored key rows, once each. */
 async function keyOwners(f: Awaited<ReturnType<typeof createMemoryTest>>) {

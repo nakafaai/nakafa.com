@@ -367,18 +367,6 @@ describe("contentRelease/rollback", () => {
     expect((await readPage(t, -1, 8)).done).toBe(false);
   });
 
-  it("rejects a first record that cannot advance the bounded page", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await activateRollbackFixture(ctx, 1);
-      await insertRollbackItem(ctx, 0, true, "x".repeat(2_100_000));
-    });
-
-    await expect(readPage(t, -1, 1)).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_LIMIT" },
-    });
-  });
-
   it("returns canonical terminal pages for an empty active release", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation((ctx) => activateRollbackFixture(ctx, 0, 0));

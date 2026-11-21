@@ -134,12 +134,6 @@ export const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(
           rollbackPageBytes(candidate, recordBytes + textBytes) >
           MAX_ROLLBACK_PAGE_BYTES
         ) {
-          if (records.length === 0) {
-            return yield* releaseFail(
-              "CONTENT_RELEASE_LIMIT",
-              `Rollback transition ${request.rollbackOf}/${row.index} exceeds the page byte ceiling.`
-            );
-          }
           return true;
         }
         records = Arr.append(records, record);

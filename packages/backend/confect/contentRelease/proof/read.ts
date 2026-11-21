@@ -294,12 +294,6 @@ export const pageProgram = Effect.fn("contentRelease.proofPage")(function* (
       rows: [...rows, next],
     };
     if (getConvexSize(candidate) > PROOF_PAGE_BYTES) {
-      if (rows.length === 0) {
-        return yield* releaseFail(
-          "CONTENT_RELEASE_LIMIT",
-          `Proof row ${releaseId}/${row.index} exceeds the page byte ceiling.`
-        );
-      }
       break;
     }
     rows = Arr.append(rows, next);

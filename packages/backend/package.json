@@ -93,7 +93,7 @@
     "@scalar/openapi-parser": "0.29.26",
     "@types/react": "catalog:",
     "@vitest/coverage-istanbul": "catalog:",
-    "convex-test": "0.0.70",
+    "convex-test": "0.0.73",
     "tsrs": "catalog:",
     "vite": "catalog:",
     "vite-plugin-wasm-module": "0.0.0",
