@@ -71,8 +71,10 @@ export const UI_SDK_STYLES = [HIDDEN_STYLE, POPOVER_RESET_STYLE] as const;
  * reset as prepared in the registry UI SDK keeps for it, from the head of the page.
  * Here the document has no elements yet, so none of it restyles anything.
  *
- * - A positioned popup's room, which UI SDK registers to take any value without
- *   inheriting, and registers the same way here.
+ * - A positioned popup's room and a scroll area's progress along each axis, which
+ *   UI SDK registers to take any value without inheriting, and which register the
+ *   same way here. A scroll area registers its progress when its code first runs,
+ *   which restyled every element of a lesson page, 95 ms on a slow phone.
  * - A sheet's drag, which UI SDK registers as numbers from 0, as here.
  * - A scroll area's overflow, which UI SDK registers to take any value. Here they
  *   register as lengths from 0px, so a fade that reads one in `min()` before the
@@ -92,7 +94,7 @@ export const UI_SDK_HEAD_SCRIPT = `(function () {
       CSS.registerProperty(definition);
     } catch (error) {}
   }
-  ["--available-height", "--available-width"].forEach(function (name) {
+  ["--available-height", "--available-width", "--scroll-area-progress-x", "--scroll-area-progress-y"].forEach(function (name) {
     register({ name: name, syntax: "*", inherits: false });
   });
   ["--drawer-progress", "--drawer-dim", "--drawer-expand", "--drawer-stack"].forEach(function (name) {
