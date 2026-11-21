@@ -251,7 +251,34 @@ export const chooseView = Effect.fn("NakafaE2E.chooseView")(function* (
   }
   const menu = viewOf(page, hasTouch).getByRole("button");
   yield* Effect.promise(() => waitUntilTakenOver(menu));
+  yield* Effect.promise(() =>
+    page.evaluate(() => {
+      const describe = (node: EventTarget | null) => {
+        const element = node instanceof Element ? node : null;
+        return element ? `${element.tagName}${element.getAttribute("data-slot") ? `[${element.getAttribute("data-slot")}]` : ""}:${(element.textContent ?? "").trim().slice(0, 16)}` : String(node);
+      };
+      for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "click", "lostpointercapture", "gotpointercapture"]) {
+        window.addEventListener(type, (event) => {
+          const target = describe(event.target);
+          setTimeout(() => console.log(`PROBE ev ${type} target=${target} prevented=${event.defaultPrevented} buttons=${(event as MouseEvent).buttons}`));
+        }, { capture: true });
+      }
+    })
+  );
+  yield* Effect.promise(async () => {
+    const box = await menu.boundingBox();
+    const hit = await page.evaluate(([x, y]) => {
+      const element = document.elementFromPoint(x, y);
+      return `${element?.tagName}:${element?.getAttribute("data-slot")}:${(element?.textContent ?? "").trim().slice(0, 20)}`;
+    }, [Math.round((box?.x ?? 0) + (box?.width ?? 0) / 2), Math.round((box?.y ?? 0) + (box?.height ?? 0) / 2)] as const);
+    console.log(`PROBE hit ${JSON.stringify(box)} ${hit}`);
+  });
   yield* activate(menu, hasTouch);
+  yield* Effect.promise(async () => {
+    await page.waitForTimeout(800);
+    const expanded = await menu.getAttribute("aria-expanded");
+    console.log(`PROBE after expanded=${expanded} items=${await page.getByRole("menuitemradio").count()}`);
+  });
   yield* Effect.promise(() =>
     pressInPopup(
       page.getByRole("menuitemradio", { exact: true, name: view }),
