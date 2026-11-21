@@ -99,7 +99,7 @@ test("the home practice question keeps an early answer and scores the example Ni
     expect(spaces[0]).toBeGreaterThan(0);
     expect(Math.max(...spaces) - Math.min(...spaces)).toBeLessThanOrEqual(1);
     await mistake.getByRole("radio").click();
-    await expect(mistake).toHaveAttribute("data-pressed", "");
+    await expect(mistake).toHaveAttribute("data-early-press", "");
   } finally {
     await release();
   }

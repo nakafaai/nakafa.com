@@ -51,7 +51,7 @@ test("a learner who types and presses attach before React takes the landing page
         await attach.click();
         // React has not run, so the page keeps the press on the button.
         expect(await isTakenOver(attach)).toBe(false);
-        await expect(attach).toHaveAttribute("data-pressed", "");
+        await expect(attach).toHaveAttribute("data-early-press", "");
       });
 
       // The browser fetches the held scripts side by side, as it would have.

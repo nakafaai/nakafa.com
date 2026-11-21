@@ -27,11 +27,14 @@ const BootChunk = Schema.Struct({
 });
 
 /**
- * Why the boot chunk breaks the first-load contract: too many bytes, or a module
- * that only an island runs. None when it keeps both.
+ * Why the boot chunk breaks the first-load contract: too many bytes, a module
+ * that only an island runs, or a phase of the browser entry (`src/client.tsx`)
+ * that the chunk does not hold, which the browser would fetch before it hydrates.
+ * None when it keeps all three.
  */
 export function readBootProblems(
-  chunk: typeof BootChunk.Type
+  chunk: typeof BootChunk.Type,
+  phases: readonly string[]
 ): readonly string[] {
   const islandModules = Arr.filter(chunk.moduleIds, (id) =>
     Arr.some(ISLAND_MODULES, (pattern) => pattern.test(id))
@@ -47,6 +50,11 @@ export function readBootProblems(
       islandModules,
       (id) =>
         `The boot chunk holds ${id}, which only a signed-in island runs. A route option imports a module of an island.`
+    ),
+    ...Arr.map(
+      Arr.filter(phases, (id) => !Arr.contains(chunk.moduleIds, id)),
+      (id) =>
+        `The browser entry starts ${id} as a phase, but the boot chunk does not hold it, so the page fetches it before it hydrates. Start a module that the boot already imports.`
     ),
   ];
 }

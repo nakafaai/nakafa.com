@@ -3,8 +3,12 @@ import { useEffect, useEffectEvent, useRef } from "react";
 /** Marks a control drawn on the server whose press must not be lost before React takes the page over. */
 export const PRESS_ATTRIBUTE = "data-press";
 
-/** Set by the app's pre-paint script on such a control when it is pressed, until React replays the press. */
-export const PRESSED_ATTRIBUTE = "data-pressed";
+/**
+ * Set by the app's pre-paint script on such a control when it is pressed, until React replays the press. UI SDK marks
+ * a pressed toggle with `data-pressed`, which the server draws for a toggle that starts pressed, so the mark has a
+ * name of its own: a section that held a pressed toggle read as a press made before hydration and loaded at once.
+ */
+export const PRESSED_ATTRIBUTE = "data-early-press";
 
 /**
  * The props of a control drawn on the server that answers its own presses, whose
