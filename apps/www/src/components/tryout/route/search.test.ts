@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Schema } from "effect";
+import { MutableHashSet, Schema } from "effect";
 import {
   opensSetPaper,
   SET_PAPER_ATTRIBUTE,
@@ -82,13 +82,15 @@ describe("opensSetPaper", () => {
 
 /** Whether the prepaint script marks itself for an address, run as the browser runs it while it reads the markup. */
 function marksPaper(entered: boolean, search: string) {
-  const marks = new Set<string>();
-  const script = { setAttribute: (name: string) => marks.add(name) };
+  const marks = MutableHashSet.empty<string>();
+  const script = {
+    setAttribute: (name: string) => MutableHashSet.add(marks, name),
+  };
   new Function("location", "document", setPaperScript(entered))(
     { search },
     { currentScript: script }
   );
-  return marks.has(SET_PAPER_ATTRIBUTE);
+  return MutableHashSet.has(marks, SET_PAPER_ATTRIBUTE);
 }
 
 describe("setPaperScript", () => {

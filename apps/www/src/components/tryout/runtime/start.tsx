@@ -23,10 +23,12 @@ const TryoutStartPhaseSchema = Schema.Literals(["idle", "starting", "opening"]);
 type TryoutStartPhase = typeof TryoutStartPhaseSchema.Type;
 
 /** A start and the pages it belongs to: the page it was pressed on, then the page it leads to. */
-interface TryoutStart {
-  readonly pages: readonly string[];
-  readonly phase: TryoutStartPhase;
-}
+const TryoutStartSchema = Schema.Struct({
+  pages: Schema.Array(Schema.String),
+  phase: TryoutStartPhaseSchema,
+});
+
+type TryoutStart = typeof TryoutStartSchema.Type;
 
 const IDLE: TryoutStart = { pages: [], phase: "idle" };
 

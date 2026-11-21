@@ -70,7 +70,7 @@ export function TryoutRunningPlayer(
  * attempt, and the loader stands where the first question arrives with the running player, which takes this
  * frame's place once the page reads the attempt, so the wait shows as the player opening.
  */
-export function TryoutPlayerOpening({
+function TryoutPlayerOpening({
   card,
   children,
   questionCount,
