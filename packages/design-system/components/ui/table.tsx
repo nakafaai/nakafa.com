@@ -18,6 +18,7 @@ function Table({
 }) {
   return (
     <ScrollArea
+      axis="both"
       className={cn("w-full", containerClassName)}
       data-table="container"
       viewportRef={viewportRef}

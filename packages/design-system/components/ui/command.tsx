@@ -229,7 +229,7 @@ function CommandList({
   className?: string | undefined;
 }) {
   return (
-    <ScrollArea axis="vertical" className="min-h-0 flex-1" scrollFade>
+    <ScrollArea className="min-h-0 flex-1" scrollFade>
       <CommandListPrimitive
         className={cn("scroll-py-2 p-2 empty:p-0", className)}
         {...props}

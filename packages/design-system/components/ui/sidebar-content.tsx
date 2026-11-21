@@ -73,7 +73,6 @@ export function SidebarSeparator({
 export function SidebarContent({ className, ...props }: ComponentProps<"div">) {
   return (
     <ScrollArea
-      axis="vertical"
       className="flex-1"
       data-sidebar="content"
       viewportClassName="group-data-[collapsible=icon]:overflow-hidden!"

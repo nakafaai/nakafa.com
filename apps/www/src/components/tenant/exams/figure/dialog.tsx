@@ -159,7 +159,7 @@ function FigureForm({
       title={t("figure")}
     >
       {/* A wide dialog's panel fills the screen and scrolls nothing itself: the form scrolls under its header. */}
-      <ScrollArea axis="vertical" className="min-h-0 flex-1" scrollFade>
+      <ScrollArea className="min-h-0 flex-1" scrollFade>
         {/* The end padding keeps a field's border and focus ring clear of the scrollbar. */}
         <FieldGroup className="pe-3">
           <Field>

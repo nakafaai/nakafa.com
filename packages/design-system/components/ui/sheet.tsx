@@ -225,11 +225,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
  */
 function SheetPanel({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <ScrollArea
-      axis="vertical"
-      className="min-h-0 flex-1 touch-auto"
-      scrollFade
-    >
+    <ScrollArea className="min-h-0 flex-1 touch-auto" scrollFade>
       <div
         className={cn("flex min-w-0 flex-col gap-4 p-4", className)}
         data-slot="sheet-panel"

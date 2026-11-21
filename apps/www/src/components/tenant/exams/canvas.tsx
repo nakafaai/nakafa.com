@@ -224,6 +224,7 @@ export function ExamCanvas({
     // presentation, so the section names its role again to be the named region of the pages.
     <ScrollArea
       aria-label={t("pages-label")}
+      axis="both"
       className="bg-muted/40 min-w-0 flex-1"
       onViewportScroll={syncPage}
       render={<section />}
