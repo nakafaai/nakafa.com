@@ -95,9 +95,10 @@ export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
  * the parent before it, beside one menu that holds Home and every item before the last and that a
  * 320 px row folds too, so the page's name stands whole,
  * and a path of one item keeps Home beside it while the row has the room, so the page's
- * name stays whole next to the page's actions. A path that `unfolds` shows every item in a frame row of 42rem or wider, whose
- * `@container` the header sets, and only its last item truncates. CSS alone folds it, so
- * the first paint already has its final shape.
+ * name stays whole next to the page's actions. From the small breakpoint up only the last item truncates, so a row
+ * narrowed by a pane beside it cuts the page's own name and never a parent's. A path that `unfolds` shows every item in
+ * a frame row of 42rem or wider, whose `@container` the header sets. CSS alone folds it, so the first paint already has
+ * its final shape.
  */
 export function BreadcrumbHeaderPath({
   home,
@@ -163,7 +164,7 @@ export function BreadcrumbHeaderPath({
               foldsOnPhone &&
                 index < visibleItems.length - 1 &&
                 cn(phonePartVariants({ kept: "parent" }), "max-sm:max-w-28"),
-              unfolds && index < visibleItems.length - 1 && "@2xl:shrink-0"
+              index < visibleItems.length - 1 && "sm:shrink-0"
             )}
             item={item}
             key={`${item.label}:${item.target === undefined ? "current" : "link"}`}
