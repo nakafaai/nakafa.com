@@ -31,17 +31,21 @@ const EDGE_SLACK = 1;
  */
 async function expectEvenPanel(page: Page, card: Locator, head: string) {
   await card.getByRole("button", { exact: true, name: head }).click();
-  const panel = page.locator('[data-slot="popover-content"][data-open]');
+  // A panel opens with a small scale, from the style it starts with, so it is measured once that style is gone and
+  // its transition has ended: the transition starts only as the starting style leaves.
+  const panel = page.locator(
+    '[data-slot="popover-content"][data-open]:not([data-starting-style])'
+  );
   await expect(panel).toBeVisible();
-  // A panel opens with a small scale, so it is measured once it stands at its own size.
   await panel.evaluate((element) =>
     Promise.all(element.getAnimations().map((animation) => animation.finished))
   );
   const layout = await panel.evaluate((element) => {
     const box = element.getBoundingClientRect();
-    const parts = Array.from(element.children, (part) =>
-      part.getBoundingClientRect()
-    );
+    // A control's tooltip renders in place beside it (ADR 0049), hidden until it shows, and is no part of the panel.
+    const parts = Array.from(element.children)
+      .filter((part) => part.checkVisibility())
+      .map((part) => part.getBoundingClientRect());
     return {
       bottom: box.bottom - (parts.at(-1)?.bottom ?? 0),
       gaps: parts.slice(1).map((part, i) => part.top - parts[i].bottom),
