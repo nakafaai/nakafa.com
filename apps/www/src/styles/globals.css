@@ -152,18 +152,17 @@
  * 0039). The browser skips its style, layout and paint until the reader nears it,
  * and holds one screen for it until then, bounded as every part is
  * (`--marketing-screen`); it is the only box that skips, so the part inside keeps
- * its own style. A jump to a part, by a loaded `#part` address (`:target`) or by a
- * navigation to a hash (`[data-jump]`, which `followHashJumps` marks), first lays
- * out every box from the top down to the part's own, so the one scroll lands on
- * real heights with the part's scroll margin. The boxes below it stay skipped, and
+ * its own style. A jump to a part, by a loaded `#part` address or by a navigation
+ * to a hash, first lays out every box from the top down to the part's own
+ * (`data-laid-out`, which `layOutDownTo` sets), so the one scroll lands on real
+ * heights with the part's scroll margin. The boxes below it stay skipped, and
  * nothing is laid out before a jump.
  */
 @utility later-section {
   contain-intrinsic-size: auto none auto var(--marketing-screen);
   content-visibility: auto;
 
-  &:has(:target, [data-jump]),
-  &:has(~ * :is(:target, [data-jump])) {
+  &[data-laid-out] {
     content-visibility: visible;
   }
 }

@@ -22,6 +22,7 @@ import {
   withRequestTracker,
 } from "@/e2e/support/requests";
 import { servedTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const JAVASCRIPT_RESOURCE_PATTERN = /^\/assets\/.+\.js$/u;
 const RESOURCE_IDLE_MILLISECONDS = 1000;
@@ -339,6 +340,21 @@ export const measureRouteJavascript = Effect.fn(
                   });
                 }
 
+                // A page warms its links at the reader's first gesture (`warmLinks`), so the graph moves the
+                // pointer as a reader would once the page took over and its effects ran, and counts the warmed
+                // pages too.
+                yield* Effect.promise(() =>
+                  waitUntilTakenOver(page.locator("body"))
+                );
+                yield* Effect.promise(() =>
+                  page.evaluate(
+                    () =>
+                      new Promise<void>((resolve) => {
+                        requestIdleCallback(() => resolve(), { timeout: 2000 });
+                      })
+                  )
+                );
+                yield* Effect.promise(() => page.mouse.move(8, 8));
                 const loaded = yield* readSettledJavascriptRun(
                   page,
                   href,

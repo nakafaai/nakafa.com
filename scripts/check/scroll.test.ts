@@ -6,7 +6,7 @@ import { parseSources } from "#scripts/check/source";
 const VIEW = "apps/www/src/components/example.tsx";
 const SHEET = "packages/design-system/components/ui/sheet.tsx";
 const FIX =
-  'lets an overlay scroll sideways. A dialog, a sheet or a drawer scrolls only downwards: give its ScrollArea axis="vertical", and wrap, truncate or stack what it holds.';
+  "lets an overlay scroll sideways. A dialog, a sheet or a drawer scrolls only downwards: keep its ScrollArea on its default vertical axis, and wrap, truncate or stack what it holds.";
 
 /** Inspects one module with the overlay scroll policy alone. */
 function inspect(sourceText: string, file = VIEW) {
@@ -27,7 +27,7 @@ describe("Overlay scroll source policy", () => {
 export function Poll() {
   return (
     <ResponsiveDialog title={t("poll")}>
-      <ScrollArea>
+      <ScrollArea axis="both">
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
       <div className="flex md:overflow-x-auto" />
@@ -36,7 +36,7 @@ export function Poll() {
   );
 }`),
         [
-          `${VIEW}:5: a ScrollArea without axis="vertical" ${FIX}`,
+          `${VIEW}:5: a ScrollArea with axis="both" ${FIX}`,
           `${VIEW}:6: a horizontal ScrollBar ${FIX}`,
           `${VIEW}:8: overflow-x-auto ${FIX}`,
           `${VIEW}:9: overflow-scroll ${FIX}`,
@@ -80,7 +80,7 @@ export function Poll() {
   );
 
   it.effect(
-    "requires a vertical axis of every ScrollArea in the design system's overlays",
+    "keeps every ScrollArea in the design system's overlays on its vertical axis",
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
@@ -88,17 +88,17 @@ export function Poll() {
             `
 function SheetPanel(props) {
   return (
-    <ScrollArea className="min-h-0 flex-1" scrollFade>
+    <ScrollArea axis="both" className="min-h-0 flex-1" scrollFade>
       <div {...props} />
     </ScrollArea>
   );
 }
 function SheetList(props) {
-  return <ScrollArea axis="vertical" {...props} />;
+  return <ScrollArea {...props} />;
 }`,
             SHEET
           ),
-          [`${SHEET}:4: a ScrollArea without axis="vertical" ${FIX}`]
+          [`${SHEET}:4: a ScrollArea with axis="both" ${FIX}`]
         );
       })
   );

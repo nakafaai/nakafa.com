@@ -111,7 +111,7 @@ function PaginationLabel({
 /**
  * Links the previous and next page. The links themselves load their page on
  * intent: a lesson's answer is small on the wire but about half a megabyte for a
- * phone to read. Once the page has settled, `warmLinks` may warm them with the
+ * phone to read. Once the page has its reader, `warmLinks` may warm them with the
  * other links on screen, within its budget, and never for a reader who saves data
  * or reads on a thin connection.
  *
