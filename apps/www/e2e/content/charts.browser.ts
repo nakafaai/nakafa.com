@@ -6,6 +6,7 @@ import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { VISUAL_CARD, VISUAL_CARD_TABLE } from "@/e2e/support/selector";
 import { servedTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const revealChart = Effect.fn("NakafaE2E.revealChart")(function* (
   chart: Locator
@@ -228,4 +229,22 @@ test("function charts retain their tables and hydrate after a cached reload", as
         })
     )
   );
+});
+
+test("a chart under a served page's first screen draws once the reader nears it", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(pinnedRoutes.cabinet.en, { waitUntil: "load" });
+  await waitUntilTakenOver(page.locator("article").first());
+  const chart = page.locator('article [data-slot="chart"]').first();
+  // The chart stands past the half screen below the first one, where a visual waits.
+  const top = await chart.evaluate(
+    (element) => element.getBoundingClientRect().top
+  );
+  expect(top).toBeGreaterThan(844 * 1.5);
+  await page.waitForTimeout(1000);
+  await expect(chart.locator("svg.recharts-surface")).toHaveCount(0);
+
+  await Effect.runPromise(revealChart(chart));
 });
