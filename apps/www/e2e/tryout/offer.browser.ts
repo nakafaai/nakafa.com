@@ -1,13 +1,16 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import app from "@repo/internationalization/dictionaries/id.json" with {
   type: "json",
 };
-import { Array as Arr, Effect, Option } from "effect";
+import { Effect, Option } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
 import { setLargeText } from "@/e2e/support/footer";
 import { CONVEX_SOCKET, decodeSent } from "@/e2e/support/frames";
-import { activate, visibleLink } from "@/e2e/support/input";
+import { activate } from "@/e2e/support/input";
 import {
   confirmFinish,
   finishSection,
@@ -15,7 +18,7 @@ import {
   waitForRunningSection,
 } from "@/e2e/support/player";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { arrive, arriveLocked, setHref } from "@/e2e/support/tryout";
+import { arrive, setHref } from "@/e2e/support/tryout";
 import { compactViewport } from "@/e2e/support/viewport";
 
 /** The link to the page's Indonesian address, which the catalog resolves, since a slug can differ by locale. */
@@ -74,37 +77,35 @@ const readCheckout = (checkout: Locator) =>
   });
 
 /**
- * The section rows of the learner's attempt on its set page. Each one carries
+ * The section rows of the learner's attempt on its set page, a link for each part it finished. Each one carries
  * the attempt's id, which the rows show only once the attempt has resolved.
  */
 const attemptRows = (page: Page) =>
   page.locator(`main a[href^="${setHref}/"][href*="attemptId="]`);
 
-/** The address of every attempt row that the set page shows, in its order. */
-const readRowHrefs = (page: Page) =>
-  attemptRows(page).evaluateAll((links) =>
-    links.map((link) => link.getAttribute("href") ?? "")
-  );
+/** The set's pane, whose path holds the attempt's parts and whose footer holds its next action. */
+const paneOf = (page: Page) =>
+  page.getByRole("complementary", { name: en.Tryouts["set-pane"] });
 
-/** The pathname of a section row's address, resolved against the page that shows it. */
-const pathOf = (page: Page, href: string) => new URL(href, page.url()).pathname;
+/** The pane's Continue, which starts the attempt's next part and opens it running. */
+const continueOf = (page: Page) =>
+  paneOf(page).getByRole("button", {
+    exact: true,
+    name: en.Tryouts.action["continue-cta"],
+  });
 
 /**
- * Starts one section row of the running attempt and finishes it. Any section
- * but the last returns to the set page, still locked. The last one completes
- * the attempt, which unlocks the shell, so this waits for the set page instead.
+ * Starts the attempt's next part from the pane's Continue and finishes it. Any part but the last returns to the
+ * set page, still locked. The last one completes the attempt, which unlocks the shell, so this waits for the set
+ * page instead.
  */
-const finishSectionRow = Effect.fn("NakafaE2E.finishTryoutSectionRow")(
-  function* (page: Page, href: string, last: boolean) {
-    const path = pathOf(page, href);
-    const start = page.getByRole("button", { exact: true, name: "Start" });
-
-    yield* activate(visibleLink(page, href, "main"), false);
-    yield* arriveLocked(page, (pathname) => pathname === path);
+const finishNextSection = Effect.fn("NakafaE2E.finishNextTryoutSection")(
+  function* (page: Page, last: boolean) {
+    const next = continueOf(page);
     yield* Effect.promise(() =>
-      expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
+      expect(next).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
     );
-    yield* activate(start, false);
+    yield* activate(next, false);
     yield* waitForRunningSection(page);
     if (!last) {
       yield* finishSection(page, false);
@@ -122,29 +123,23 @@ const finishSectionRow = Effect.fn("NakafaE2E.finishTryoutSectionRow")(
 );
 
 /**
- * Finishes every section row of the running attempt except the one already
- * finished. A free learner's review opens only once the whole attempt is over,
- * so each section is started and finished from its row on the set page.
+ * Finishes every part of the running attempt that has not started. A free learner's review opens only once the
+ * whole attempt is over, so each part is started from the pane and finished in turn. Each part not started yet is
+ * a press on the pane's path.
  */
 const finishOtherSections = Effect.fn("NakafaE2E.finishOtherTryoutSections")(
-  function* (page: Page, finishedPath: string) {
+  function* (page: Page) {
     yield* Effect.promise(() =>
-      expect(attemptRows(page).filter({ visible: true }).first()).toBeVisible({
+      expect(continueOf(page)).toBeVisible({
         timeout: readinessTimeoutMilliseconds,
       })
     );
-    const hrefs = yield* Effect.promise(() => readRowHrefs(page));
-    const others = Arr.dedupeWith(
-      Arr.filter(hrefs, (href) => pathOf(page, href) !== finishedPath),
-      (left: string, right: string) =>
-        pathOf(page, left) === pathOf(page, right)
+    const left = yield* Effect.promise(() =>
+      paneOf(page).locator("ol button").count()
     );
-    const last = others.length - 1;
-    yield* Effect.forEach(
-      others,
-      (href, index) => finishSectionRow(page, href, index === last),
-      { discard: true }
-    );
+    for (let part = 1; part <= left; part += 1) {
+      yield* finishNextSection(page, part === left);
+    }
   }
 );
 
@@ -169,7 +164,7 @@ const verifyOfferActions = Effect.fn("NakafaE2E.verifyTryoutOfferActions")(
     // A phone opens one question at a time until the learner saves a view, so the address names the list.
     indonesian.searchParams.set("view", "list");
     yield* finishSection(page, false);
-    yield* finishOtherSections(page, section.pathname);
+    yield* finishOtherSections(page);
 
     yield* Effect.promise(() =>
       page.setViewportSize({

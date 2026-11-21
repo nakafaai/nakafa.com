@@ -1,6 +1,5 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
 import type {
   currentSetResultValidator,
@@ -26,7 +25,7 @@ import {
 import {
   readAttemptSetIdentity,
   readLatestProgressAttempt,
-  readOwnedAttemptById,
+  readOwnedAttempt,
 } from "@repo/backend/confect/tryouts/runtime/lookup";
 import { loadSectionAttemptState } from "@repo/backend/confect/tryouts/runtime/section/state";
 import { loadSetAttemptState } from "@repo/backend/confect/tryouts/runtime/set/state";
@@ -49,7 +48,7 @@ export const readSetAttemptPage = Effect.fn(
   const attempt =
     request.kind === "current"
       ? yield* readLatestProgressAttempt(request, auth.appUser._id)
-      : yield* readRetainedAttempt(request.attemptId, auth.appUser._id);
+      : yield* readOwnedAttempt(request.attemptId, auth.appUser._id);
   if (!attempt) {
     return null;
   }
@@ -113,10 +112,7 @@ export const readSectionAttemptPage = Effect.fn(
     };
     return result;
   }
-  const attempt = yield* readRetainedAttempt(
-    request.attemptId,
-    auth.appUser._id
-  );
+  const attempt = yield* readOwnedAttempt(request.attemptId, auth.appUser._id);
   if (!attempt) {
     return null;
   }
@@ -192,16 +188,4 @@ const loadSetPage = Effect.fn("tryouts.attemptPage.loadSetPage")(function* (
     page,
     restartTarget,
   };
-});
-
-/** Normalizes one untrusted ID before applying exact ownership checks. */
-const readRetainedAttempt = Effect.fn(
-  "tryouts.attemptPage.readRetainedAttempt"
-)(function* (attemptId: string, userId: Docs["users"]["_id"]) {
-  const ctx = yield* QueryCtxService;
-  const normalized = ctx.db.normalizeId("tryoutAttempts", attemptId);
-  if (!normalized) {
-    return null;
-  }
-  return yield* readOwnedAttemptById(normalized, userId);
 });

@@ -8,12 +8,12 @@ import { questionArticle } from "@/e2e/support/player";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 
-/** How a checked question's badge reads. */
-const GRADED = /^(?:Correct|Wrong)$/u;
+/** How a checked question's number reads to a screen reader. */
+const GRADED = /Question \d+, (?:correct|wrong)$/u;
 
-/** A checked question's verdict badge, apart from the words its marked options say to a screen reader. */
+/** A checked question's number, which shows its verdict, apart from the words its marked options say to a screen reader. */
 const verdictIn = (article: Locator) =>
-  article.locator("[data-slot=badge]").filter({ hasText: GRADED });
+  article.getByRole("link", { name: GRADED });
 
 /** The name of an option the key marks correct. */
 const CORRECT = /Correct\s*$/u;
@@ -50,7 +50,7 @@ test.describe("Practice beside the try-out", () => {
         yield* activate(start, false);
         const dialog = page.getByRole("dialog");
         yield* activate(
-          dialog.getByRole("button", { exact: true, name: "Practice" }),
+          dialog.getByRole("radio", { exact: true, name: "Practice" }),
           false
         );
         yield* activate(

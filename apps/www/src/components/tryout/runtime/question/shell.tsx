@@ -14,10 +14,7 @@ import { HashSet } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { readQuestionIds } from "@/components/player/ids";
-import {
-  PlayerQuestion,
-  PlayerQuestionHeader,
-} from "@/components/player/question";
+import { PlayerQuestion } from "@/components/player/question";
 import { useTryoutExplained } from "@/components/tryout/review/result";
 
 interface TryoutQuestionShellProps {
@@ -26,24 +23,19 @@ interface TryoutQuestionShellProps {
 }
 
 /**
- * Composes one finished question of the review's player: its number, how it went, and its actions, shown in
- * the list or alone as the view decides, with its explanation open as the review's store holds it, so its
- * own button and the result's footer open and close the same one.
+ * Composes one finished question of the review's player, shown in the list or alone as the view decides, with
+ * its explanation open as the review's store holds it, so its own button and the result's footer open and close
+ * the same one. The caller composes its parts: the question's head (`PlayerQuestionHeader`, whose number shows
+ * how it went, with `TryoutReviewQuestionActions`), its prompt, its answer and its explanation.
  */
 export function TryoutReviewQuestionShell({
-  action,
   children,
-  mark,
   questionKey,
   questionOrder,
 }: TryoutQuestionShellProps & {
-  readonly action?: ReactNode;
-  /** How the question went, beside its number. */
-  readonly mark: ReactNode;
   /** The key that the player and the store name this question by. */
   readonly questionKey: string;
 }) {
-  const tCommon = useTranslations("Common");
   const ids = readQuestionIds(questionOrder);
   const open = useTryoutExplained((state) =>
     HashSet.has(state.open, questionKey)
@@ -57,19 +49,30 @@ export function TryoutReviewQuestionShell({
       questionKey={questionKey}
     >
       <Collapsible onOpenChange={() => toggle(questionKey)} open={open}>
-        <PlayerQuestionHeader number={questionOrder}>
-          {mark}
-          <ButtonGroup
-            aria-label={tCommon("question", { number: questionOrder })}
-            className="shrink-0"
-          >
-            {action}
-            <TryoutExplanationTrigger />
-          </ButtonGroup>
-        </PlayerQuestionHeader>
         {children}
       </Collapsible>
     </PlayerQuestion>
+  );
+}
+
+/** A reviewed question's actions at the end of its head: what the caller adds, then the explanation's toggle. */
+export function TryoutReviewQuestionActions({
+  children,
+  questionOrder,
+}: {
+  /** The actions before the explanation's toggle, such as asking Nina. */
+  readonly children?: ReactNode;
+  readonly questionOrder: number;
+}) {
+  const tCommon = useTranslations("Common");
+  return (
+    <ButtonGroup
+      aria-label={tCommon("question", { number: questionOrder })}
+      className="shrink-0"
+    >
+      {children}
+      <TryoutExplanationTrigger />
+    </ButtonGroup>
   );
 }
 

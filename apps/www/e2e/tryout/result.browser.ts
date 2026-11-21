@@ -189,9 +189,6 @@ test.describe("The result of a finished try-out", () => {
               })
             ).toBeVisible();
             await expect(
-              pane.getByText("Green is correct, red is wrong.")
-            ).toBeVisible();
-            await expect(
               pane.getByRole("button", { exact: true, name: "Explanation" })
             ).toBeEnabled();
           });

@@ -16,7 +16,7 @@ import type { TryoutSetData } from "@/components/tryout/catalog/table/types";
  * status, the level and the sort, the heads of the name and the figures keep the sets the table has read, and the next window
  * loads as the end of the rows comes into view, so a filter reaches the whole track. The status line says when the
  * rows are updating, offline, or could not update. Every row opens its set at the set's own address, which the track
- * shows in the pane beside the table, and the row of the set it shows stays marked.
+ * shows in the pane beside the table, and pressing the marked row again closes its pane back to the track.
  */
 export function TryoutSetFrame({ data }: { data: TryoutSetData }) {
   const { filter, level, onFilter, onLevel, onSort, shown, sort } =

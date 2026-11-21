@@ -179,6 +179,10 @@ describe("tryouts/attemptPage", () => {
             attempt: {
               attemptId,
               completedSectionKeys: ["section-a", "section-b"],
+              sectionScores: [
+                { publishedScore: 50, sectionKey: "section-a" },
+                { publishedScore: 0, sectionKey: "section-b" },
+              ],
               status: "completed",
             },
           },

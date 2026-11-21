@@ -3,6 +3,7 @@ import { Array as Arr } from "effect";
 import { NinaAskProvider } from "@/components/ai/ask";
 import {
   PlayerQuestionAnswer,
+  PlayerQuestionHeader,
   PlayerQuestionPrompt,
 } from "@/components/player/question";
 import { PlayerQuestions } from "@/components/player/questions";
@@ -10,12 +11,12 @@ import { TryoutAskButton } from "@/components/tryout/review/ask";
 import { verdictOfQuestion } from "@/components/tryout/review/model";
 import { TryoutExplanationOffer } from "@/components/tryout/review/offer";
 import { useTryoutReview } from "@/components/tryout/review/result";
-import { TryoutVerdictBadge } from "@/components/tryout/review/verdict";
 import {
   TryoutExplanationBody,
   TryoutQuestionBody,
 } from "@/components/tryout/runtime/question/body";
 import {
+  TryoutReviewQuestionActions,
   TryoutReviewQuestionExplanation,
   TryoutReviewQuestionShell,
 } from "@/components/tryout/runtime/question/shell";
@@ -46,18 +47,24 @@ export function TryoutAttemptReview({
       <PlayerQuestions>
         {Arr.map(joined, ({ body, question }) => (
           <TryoutReviewQuestionShell
-            action={
-              <TryoutAskButton
-                attemptId={binding.attemptId}
-                placementId={question.placementId}
-                questionOrder={question.questionOrder}
-              />
-            }
             key={question.placementId}
-            mark={<TryoutVerdictBadge verdict={verdictOfQuestion(question)} />}
             questionKey={question.placementId}
             questionOrder={question.questionOrder}
           >
+            <PlayerQuestionHeader
+              number={question.questionOrder}
+              verdict={verdictOfQuestion(question)}
+            >
+              <TryoutReviewQuestionActions
+                questionOrder={question.questionOrder}
+              >
+                <TryoutAskButton
+                  attemptId={binding.attemptId}
+                  placementId={question.placementId}
+                  questionOrder={question.questionOrder}
+                />
+              </TryoutReviewQuestionActions>
+            </PlayerQuestionHeader>
             <PlayerQuestionPrompt>
               <TryoutQuestionBody body={body} />
             </PlayerQuestionPrompt>

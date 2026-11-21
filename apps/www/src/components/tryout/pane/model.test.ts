@@ -1,9 +1,16 @@
 import { describe, expect, it } from "@effect/vitest";
-import { NO_CLAIMS, partStep, starsLeft } from "@/components/tryout/pane/model";
+import { Option } from "effect";
+import {
+  NO_CLAIMS,
+  partScore,
+  partStep,
+  starsLeft,
+} from "@/components/tryout/pane/model";
 
 const running = {
   completedSectionKeys: ["verbal"],
   resumeSectionKey: "numeric",
+  sectionScores: [{ publishedScore: 725, sectionKey: "verbal" }],
   status: "in-progress" as const,
 };
 
@@ -48,5 +55,16 @@ describe("partStep", () => {
     expect(partStep({ ...running, status: "completed" }, "verbal")).toBe(
       "done"
     );
+  });
+});
+
+describe("partScore", () => {
+  it("returns none before an attempt starts or for an unscored part", () => {
+    expect(partScore(null, "verbal")).toEqual(Option.none());
+    expect(partScore(running, "numeric")).toEqual(Option.none());
+  });
+
+  it("returns the published score of a scored part", () => {
+    expect(partScore(running, "verbal")).toEqual(Option.some(725));
   });
 });

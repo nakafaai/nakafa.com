@@ -20,8 +20,8 @@ const setLeaderValidator = Schema.Struct({
 });
 
 /**
- * One set's leaderboard: how many learners it ranks, the first of them, the viewer's own row, which stands
- * under the first ones when it is not among them, and the place the score the page shows would take.
+ * One set's leaderboard: the first learners it ranks, the viewer's own row, which stands under the first ones
+ * when it is not among them, and the place the attempt the page shows takes among `count` learners.
  */
 const setBoardValidator = Schema.Struct({
   count: Schema.Int,
@@ -36,8 +36,8 @@ export default GroupSpec.make().addFunction(
     name: "bySet",
     args: () => ({
       ...tryoutSetIdentityValidator.fields,
-      /** A score the page shows, such as an older attempt's, whose place the board answers. */
-      score: Schema.optionalKey(Schema.Finite),
+      /** The attempt the page's address names (`?attemptId`), whose place the board answers; without one, the viewer's latest. */
+      attemptId: Schema.optionalKey(Schema.String),
     }),
     returns: () => setBoardValidator,
     error: () => Schema.Union([TryoutRouteErrorWire, TryoutRuntimeErrorWire]),

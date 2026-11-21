@@ -1,11 +1,26 @@
 import { ConvexProvider } from "convex/react";
 import { Option } from "effect";
 import type { ReactNode } from "react";
+import { useSyncExternalStore } from "react";
 import { SignedInIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
 import { clientEnv } from "@/env.public";
 import { hasSignedInHint } from "@/lib/auth/hint";
 import { readVisitorClient } from "@/lib/convex/visitor";
+
+/** The hint cookie is read on mount; session updates settle `useLiveSession` directly. */
+function subscribeToNothing() {
+  return () => undefined;
+}
+
+/** Whether this browser carries the signed-in hint cookie; false during SSR. */
+function useHasSignedInHint() {
+  return useSyncExternalStore(
+    subscribeToNothing,
+    () => hasSignedInHint(document.cookie),
+    () => false
+  );
+}
 
 /**
  * The Convex client a visited world reads through (ADR 0050, W6). A learner
@@ -16,11 +31,12 @@ import { readVisitorClient } from "@/lib/convex/visitor";
  * once as a visitor's and again as a learner's.
  */
 export function WorldClient({ children }: { children: ReactNode }) {
+  const hinted = useHasSignedInHint();
   const isSettled = useLiveSession(
     (state) =>
       state.hasError || (Option.isSome(state.client) && !state.isPending)
   );
-  if (hasSignedInHint(document.cookie) && !isSettled) {
+  if (hinted && !isSettled) {
     return null;
   }
   return (

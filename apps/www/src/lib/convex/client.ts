@@ -1,6 +1,7 @@
 import { CONVEX_TOKEN_OPTIONS } from "@repo/backend/confect/auth/browser";
 import { GOING_RELOAD, readPageGoing } from "@repo/design-system/lib/lazy";
 import { ConvexReactClient } from "convex/react";
+import { Option } from "effect";
 
 /** The one browser client of this page, created on first use. */
 let shared: ConvexReactClient | undefined;
@@ -53,4 +54,12 @@ export function readConvexClient(convexUrl: string): ConvexReactClient {
   }
   shared = client;
   return client;
+}
+
+/**
+ * The browser's Convex client once a page made it (`readConvexClient`), or none. Only a page under a signed-in
+ * hint makes one, so a reader that must open no socket for a visitor asks this instead.
+ */
+export function readMadeClient(): Option.Option<ConvexReactClient> {
+  return Option.fromUndefinedOr(shared);
 }

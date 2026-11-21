@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { GOING_ATTRIBUTE } from "@repo/design-system/lib/lazy";
+import { Option } from "effect";
 import { askBeforeLosingRequests, readConvexClient } from "@/lib/convex/client";
 
 const URL = "https://example.convex.cloud";
@@ -29,6 +30,14 @@ describe("browser Convex client", () => {
 
   it("creates one client per page", () => {
     expect(readConvexClient(URL)).toBe(readConvexClient(URL));
+  });
+
+  it("names the client only once a page made it", async () => {
+    vi.resetModules();
+    const fresh = await import("@/lib/convex/client");
+    expect(Option.isNone(fresh.readMadeClient())).toBe(true);
+    const made = fresh.readConvexClient(URL);
+    expect(fresh.readMadeClient()).toEqual(Option.some(made));
   });
 
   it("asks before the page goes while a request has no answer", () => {

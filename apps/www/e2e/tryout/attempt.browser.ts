@@ -58,7 +58,7 @@ const observeStep = Effect.fn("NakafaE2E.observeAttemptStep")(function* (
 
 /**
  * Signs a synthetic learner in and walks one attempt through the shell: start
- * it from the catalog, run its first section, reload it, finish it, revisit
+ * it from the catalog into its first section, reload it, finish it, revisit
  * the finished section, leave for the catalog, come back through the running
  * set's row, and open the public set URL of the running attempt.
  */
@@ -76,9 +76,9 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
   yield* openTrack(page, hasTouch);
 
   // Starting from the public set locks the shell only with the attempt's first
-  // section. A set nobody has started opens beside the track's table, where the
-  // player suites press its Start, so this walk opens the set's own page by its
-  // address. The section's own Start has the same name.
+  // section, which the start opens running. A set nobody has started opens
+  // beside the track's table, where the player suites press its Start, so this
+  // walk opens the set's own page by its address.
   const start = page.getByRole("button", { exact: true, name: "Start" });
   yield* Effect.promise(() => page.goto(setHref, { waitUntil: "commit" }));
   yield* arrive(page, onPath(setHref), start);
@@ -96,6 +96,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
         hasTouch
       );
       yield* arriveLocked(page, isSection);
+      yield* waitForRunningSection(page);
     })
   );
 
@@ -103,17 +104,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
   // Questions render math, whose fonts load on first use. A font swapping in
   // late moves text, which is not what this suite measures.
   yield* loadMathFonts(page);
-
-  // Running the section keeps the same locked page.
   const finish = page.getByRole("button", { exact: true, name: "Finish" });
-  yield* observeStep(
-    page,
-    [true],
-    Effect.gen(function* () {
-      yield* activate(start, hasTouch);
-      yield* waitForRunningSection(page);
-    })
-  );
 
   // A reload paints the running section locked from its first frame.
   yield* Effect.promise(() => page.reload({ waitUntil: "commit" }));

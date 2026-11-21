@@ -1,4 +1,5 @@
 import {
+  Cancel01Icon,
   CheckmarkCircle02Icon,
   Menu01Icon,
   ViewIcon,
@@ -11,6 +12,7 @@ import { useTranslations } from "use-intl";
 import { tableColumns } from "@/components/shared/table/columns";
 import { RowItems, RowOpen } from "@/components/shared/table/menu";
 import { catalogSearchOf } from "@/components/tryout/catalog/table/query";
+import { useTryoutSetTable } from "@/components/tryout/catalog/table/selection";
 import type {
   TryoutSetRow,
   TryoutSetStatusFilter,
@@ -98,34 +100,55 @@ export function useTryoutSetColumns() {
       header: t("set-column-score"),
       id: "publishedScore",
     }),
-    setColumns.menu(() => <TryoutSetMenu />),
+    setColumns.menu((info) => (
+      <TryoutSetMenu publicPath={info.row.original.publicPath} />
+    )),
   ];
 }
 
-/** What a set's row offers: Open, which presses the row's link. */
-function TryoutSetMenu() {
+/** What a set's row offers: Open, or Close when the set is already open beside the table. */
+function TryoutSetMenu({ publicPath }: { publicPath: string }) {
   const common = useTranslations("Common");
+  const { shown } = useTryoutSetTable();
+  const isShown = Option.contains(shown, publicPath);
 
   return (
     <RowItems>
-      <RowOpen icon={ViewIcon} label={common("open")} />
+      <RowOpen
+        icon={isShown ? Cancel01Icon : ViewIcon}
+        label={common(isShown ? "close" : "open")}
+      />
     </RowItems>
   );
 }
 
 /**
  * A set's name, the link the row presses, after the mark that its latest attempt is complete. It opens the set at its
- * own address, which the track shows in the pane beside the table, and keeps the table's selection and scroll, so the
- * table stays as it was; the link stays a link for a new tab and for crawlers.
+ * own address, which the track shows in the pane beside the table, and pressing the open set again closes the pane back
+ * to the track while keeping the table's selection and scroll. The link stays a real link for a new tab and crawlers.
  */
 function TryoutSetName({ row }: { row: TryoutSetRow }) {
+  const { onClose, shown } = useTryoutSetTable();
+  const isShown = Option.contains(shown, row.publicPath);
+
   return Option.match(getTryoutPublicPathTarget(row.publicPath), {
     onNone: () => null,
     onSome: (target) => (
       <Link
         {...target}
+        aria-current={isShown ? "page" : undefined}
         className="flex min-w-0 items-center gap-2 underline-offset-4 hover:underline"
-        preload="intent"
+        onClick={(event) => {
+          if (
+            isShown &&
+            event.button === 0 &&
+            !(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+          ) {
+            event.preventDefault();
+            onClose();
+          }
+        }}
+        preload={isShown ? false : "intent"}
         resetScroll={false}
         search={catalogSearchOf}
       >

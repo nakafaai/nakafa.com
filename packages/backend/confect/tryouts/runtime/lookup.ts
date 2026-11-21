@@ -1,5 +1,8 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  QueryCtx,
+} from "@repo/backend/confect/_generated/services";
 import type { TryoutSetIdentity } from "@repo/backend/confect/tryouts/route";
 import {
   TryoutRuntimeError,
@@ -120,6 +123,18 @@ export const readOwnedAttemptById = Effect.fn(
   }
   return attempt;
 });
+
+/** Reads the viewer's attempt an untrusted ID names, such as an address's `?attemptId`: none when the ID is malformed or another learner's. */
+export const readOwnedAttempt = Effect.fn("tryouts.runtime.readOwnedAttempt")(
+  function* (attemptId: string, userId: UserId) {
+    const ctx = yield* QueryCtx;
+    const normalized = ctx.db.normalizeId("tryoutAttempts", attemptId);
+    if (!normalized) {
+      return null;
+    }
+    return yield* readOwnedAttemptById(normalized, userId);
+  }
+);
 
 /** Reads the complete identity persisted on every signed attempt. */
 export function readAttemptSetIdentity(attempt: TryoutAttempt) {

@@ -1,21 +1,27 @@
 import { Flag02Icon, StarIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { tierOf } from "@repo/backend/confect/island/badge";
 import { AWARD_RULES } from "@repo/backend/confect/island/schema";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Medal } from "@repo/design-system/components/ui/medal";
 import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
 import { getTileLooks } from "@repo/design-system/lib/look";
 import { rowLineVariants } from "@repo/design-system/lib/row";
 import { cva } from "class-variance-authority";
-import { Array as Arr, Tuple } from "effect";
+import { Array as Arr, Option, Tuple } from "effect";
 import type { ReactNode } from "react";
-import { useTranslations } from "use-intl";
+import { useFormatter, useTranslations } from "use-intl";
 import { PaneSection } from "@/components/progress/section";
 import { getTryoutSubjectIcons } from "@/components/tryout/catalog/icons";
 import { useSetPane } from "@/components/tryout/pane/context";
 import type { PartStep } from "@/components/tryout/pane/model";
-import { partStep } from "@/components/tryout/pane/model";
+import { partScore, partStep } from "@/components/tryout/pane/model";
 import { TryoutPageLink } from "@/components/tryout/route/link";
+import {
+  useSetTryoutPressed,
+  useTryoutStartPhase,
+} from "@/components/tryout/runtime/start";
+import { useStartPart } from "@/components/tryout/set/part";
 
 /** A step's marker on the path: a part's number or tick in a circle, the finish's flag in a rounded square. */
 const nodeVariants = cva(
@@ -40,9 +46,9 @@ const lineVariants = cva(
   { variants: { done: { false: "bg-border", true: "bg-success/60" } } }
 );
 
-/** A step's card: the part the attempt resumes at stands out, and a part with a page lights up under the pointer. */
+/** A step's card: the part the attempt resumes at stands out, and a part a press opens lights up under the pointer. */
 const cardVariants = cva(
-  "flex min-w-0 flex-1 items-center gap-3 rounded-lg p-2",
+  "flex min-w-0 flex-1 items-center gap-3 rounded-lg p-2 text-start",
   {
     variants: {
       link: {
@@ -90,32 +96,118 @@ function PathStep({
   );
 }
 
-/** A step's card: a link to the part's page where it has one, so its result or its questions are one press away. */
+/**
+ * A step's card, which a press takes into its part in one move: a finished or missed part opens its result, the
+ * part that runs opens where it runs, and a part not started yet starts and opens running. A set the learner has
+ * not started takes the press as its footer's action does. A part with no page of its own, and a part while
+ * another one runs, take no press.
+ */
 function StepCard({
   children,
   publicPath,
+  sectionKey,
   step,
 }: {
   children: ReactNode;
   publicPath: string | undefined;
+  sectionKey: string;
   step: PartStep;
 }) {
   const { view } = useSetPane();
+  const attempt = view.actionAttempt ?? null;
   const next = step === "next";
   if (publicPath === undefined) {
     return (
       <div className={cardVariants({ link: false, next })}>{children}</div>
     );
   }
+  const opensPage =
+    step === "done" ||
+    step === "missed" ||
+    attempt?.activeSectionKey === sectionKey;
+  if (opensPage) {
+    return (
+      <TryoutPageLink
+        attemptId={attempt?.attemptId}
+        className={cardVariants({ link: true, next })}
+        preload="intent"
+        publicPath={publicPath}
+      >
+        {children}
+      </TryoutPageLink>
+    );
+  }
+  if (attempt?.status !== "in-progress") {
+    return <StartPress next={next}>{children}</StartPress>;
+  }
+  if (attempt.activeSectionKey !== null) {
+    return (
+      <div className={cardVariants({ link: false, next })}>{children}</div>
+    );
+  }
   return (
-    <TryoutPageLink
-      attemptId={view.actionAttempt?.attemptId}
-      className={cardVariants({ link: true, next })}
-      preload="intent"
+    <OpenPart
+      attemptId={attempt.attemptId}
+      next={next}
       publicPath={publicPath}
+      sectionKey={sectionKey}
     >
       {children}
-    </TryoutPageLink>
+    </OpenPart>
+  );
+}
+
+/** A part of a running attempt not started yet: a press starts it and opens it running (`useStartPart`). */
+function OpenPart({
+  attemptId,
+  children,
+  next,
+  publicPath,
+  sectionKey,
+}: {
+  attemptId: Id<"tryoutAttempts">;
+  children: ReactNode;
+  next: boolean;
+  publicPath: string;
+  sectionKey: string;
+}) {
+  const startPart = useStartPart();
+  const busy = useTryoutStartPhase() !== "idle";
+  return (
+    <button
+      className={cardVariants({ link: true, next })}
+      inert={busy}
+      onClick={() =>
+        startPart({
+          address: Option.some({ attemptId, publicPath }),
+          attemptId,
+          sectionKey,
+        })
+      }
+      type="button"
+    >
+      {children}
+    </button>
+  );
+}
+
+/** A part of a set the learner has not started: a press waits for the footer's action, which answers it. */
+function StartPress({
+  children,
+  next,
+}: {
+  children: ReactNode;
+  next: boolean;
+}) {
+  const press = useSetTryoutPressed();
+  return (
+    <button
+      className={cardVariants({ link: true, next })}
+      onClick={() => press(true)}
+      type="button"
+    >
+      {children}
+    </button>
   );
 }
 
@@ -128,6 +220,7 @@ export function SetPath() {
   const t = useTranslations("Tryouts");
   const tIsland = useTranslations("Island");
   const tCommon = useTranslations("Common");
+  const format = useFormatter();
   const { claims, sections, tally, view } = useSetPane();
   const attempt = view.actionAttempt ?? null;
   const looks = getTileLooks(
@@ -144,6 +237,7 @@ export function SetPath() {
       <ol className="flex flex-col gap-2">
         {Arr.map(Arr.zip(sections, looks), ([section, look], index) => {
           const step = partStep(attempt, section.sectionKey);
+          const score = partScore(attempt, section.sectionKey);
           const gives =
             (step === "next" || step === "todo") &&
             !Arr.contains(claims.sections, section.sectionKey);
@@ -161,7 +255,11 @@ export function SetPath() {
                 </span>
               }
             >
-              <StepCard publicPath={section.publicPath} step={step}>
+              <StepCard
+                publicPath={section.publicPath}
+                sectionKey={section.sectionKey}
+                step={step}
+              >
                 <Tile className="size-10" seed={look.seed} shift={look.shift}>
                   <TileIcon icon={look.icon} />
                 </Tile>
@@ -176,6 +274,14 @@ export function SetPath() {
                     })}
                   </span>
                 </span>
+                {Option.match(score, {
+                  onNone: () => null,
+                  onSome: (value) => (
+                    <span className="shrink-0 text-sm font-medium tabular-nums">
+                      {format.number(value)}
+                    </span>
+                  ),
+                })}
                 {step === "missed" ? (
                   <span className="text-muted-foreground shrink-0 text-xs">
                     {t("part-missed")}

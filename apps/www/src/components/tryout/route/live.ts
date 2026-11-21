@@ -22,7 +22,6 @@ import {
   projectSectionAttempt,
   projectSetAttempt,
   sectionAttemptRequest,
-  setAttemptRequest,
 } from "@/components/tryout/route/learner";
 import {
   getTryoutAttemptAuthHref,
@@ -34,6 +33,7 @@ import type { TryoutAttemptSearch } from "@/components/tryout/route/search";
 import { holdsTryoutQuestions } from "@/components/tryout/runtime/state";
 import type { TryoutSectionPage } from "@/components/tryout/section/model";
 import type { SetPage } from "@/components/tryout/set/model";
+import { setReadArgs } from "@/components/tryout/set/reads";
 import { hasSignedInHint } from "@/lib/auth/hint";
 
 /**
@@ -62,7 +62,7 @@ export function useKeptLearnerRead<Value>(read: LearnerRead<Value>) {
 }
 
 /** The attempt a URL names, if it names one. */
-function attemptOf(search: TryoutAttemptSearch) {
+export function attemptOf(search: TryoutAttemptSearch) {
   return Option.getOrUndefined(
     Option.flatMapNullishOr(
       readAddressIntent(Struct.pick(search, ["attemptId", "view"])),
@@ -262,14 +262,11 @@ export function useLearnerSet(input: {
   const read = useQuery(
     tryouts.queries.attemptPage.getSet,
     gate.readable && !closed
-      ? {
-          request: setAttemptRequest({
-            attemptId: gate.attemptId,
-            keys: input.page.set,
-            locale: gate.locale,
-            publicPath: input.page.set.publicPath,
-          }),
-        }
+      ? setReadArgs({
+          attemptId: gate.attemptId,
+          locale: gate.locale,
+          set: input.page.set,
+        }).attempt
       : "skip"
   );
   const answer = answerOf(read, closed ? held.answer : undefined);

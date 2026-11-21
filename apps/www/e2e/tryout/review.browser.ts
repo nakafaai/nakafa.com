@@ -23,14 +23,14 @@ const ARTICLES = 'main article[id^="exercise-question-"]';
 /** The name of an option the key marks correct; an incorrect one ends with "Incorrect". */
 const CORRECT = /Correct\s*$/u;
 
-/** How a graded question's badge reads. */
-const GRADED = /^(?:Correct|Wrong)$/u;
+/** How a graded question's number reads to a screen reader. */
+const GRADED = /Question \d+, (?:correct|wrong)$/u;
+/** The name of question 3's number, which it reads while the learner left it unanswered. */
+const THIRD_UNANSWERED = /Question 3, unanswered$/u;
 
-/** A question's verdict badge, apart from the words its marked options say to a screen reader. */
+/** A question's number, which shows its verdict, apart from the words its marked options say to a screen reader. */
 const verdictOf = (page: Page, question: number) =>
-  questionArticle(page, question)
-    .locator("[data-slot=badge]")
-    .filter({ hasText: GRADED });
+  questionArticle(page, question).getByRole("link", { name: GRADED });
 
 /** The global that holds the fewest question articles the page showed while it watched. */
 const FEWEST = "__nakafaFewestReviewArticles";
@@ -298,7 +298,9 @@ test.describe("The review of a finished try-out", () => {
           // Every question says how it went: the answered one is graded, the rest are unanswered.
           await expect(verdictOf(page, 1)).toBeVisible();
           await expect(
-            questionArticle(page, 3).getByText("Unanswered", { exact: true })
+            questionArticle(page, 3).getByRole("link", {
+              name: THIRD_UNANSWERED,
+            })
           ).toBeVisible();
           // A free sample marks its options against the key; a question past the samples marks none.
           await expect(

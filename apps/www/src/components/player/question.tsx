@@ -1,9 +1,16 @@
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { cn } from "cn";
 import type { ReactNode } from "react";
 import { Activity } from "react";
 import { useTranslations } from "use-intl";
 import { readQuestionIds } from "@/components/player/ids";
+import {
+  VERDICT_VARIANT,
+  verdictNumberVariants,
+} from "@/components/player/look";
+import type { PlayerVerdict } from "@/components/player/model";
 import { usePlayer } from "@/components/player/provider";
+import { PlayerVerdictMark } from "@/components/player/verdict";
 
 /**
  * One question of the player. The list shows every question, and one at a time
@@ -48,33 +55,48 @@ export function PlayerQuestion({
 /**
  * The head of one question, the same wherever a question is answered or reviewed: its number in a circle
  * at the start, which links to the question itself, and the question's actions at the end. The link is the
- * circle alone, so its press area never runs under the question's flag or actions. The number names the
- * question for a screen reader through its heading.
+ * circle alone, so its press area never runs under the question's flag or actions. A reviewed question's
+ * circle shows its verdict as its number in the navigator does, its color and its corner mark, so no badge
+ * says it in words. The number names the question, and its verdict, for a screen reader through its heading.
  */
 export function PlayerQuestionHeader({
   children,
   number,
+  verdict,
 }: {
   /** The question's actions, at the end of the row. */
   children?: ReactNode;
   number: number;
+  /** How a reviewed question went; a question still answered has none. */
+  verdict?: PlayerVerdict;
 }) {
   const tCommon = useTranslations("Common");
+  const tPlayer = useTranslations("Player");
   const ids = readQuestionIds(number);
 
   return (
     <div className="@container flex items-center justify-between gap-4">
       <a
-        className="flex shrink-0 scroll-mt-44 ring-0 outline-none"
+        className={cn(
+          "flex size-9 shrink-0 scroll-mt-44 items-center justify-center rounded-full font-mono text-xs tracking-tighter outline-none",
+          verdict === undefined
+            ? "border-primary bg-secondary text-secondary-foreground border"
+            : cn(
+                buttonVariants({ variant: VERDICT_VARIANT[verdict] }),
+                verdictNumberVariants({ verdict }),
+                "size-9 rounded-full px-0"
+              )
+        )}
         href={`#${ids.anchor}`}
         id={ids.anchor}
       >
-        <div className="border-primary bg-secondary text-secondary-foreground flex size-9 items-center justify-center rounded-full border">
-          <span className="font-mono text-xs tracking-tighter">{number}</span>
-          <h2 className="sr-only" id={ids.title}>
-            {tCommon("question", { number })}
-          </h2>
-        </div>
+        {number}
+        <h2 className="sr-only" id={ids.title}>
+          {verdict === undefined
+            ? tCommon("question", { number })
+            : tPlayer("cell-verdict", { number, state: verdict })}
+        </h2>
+        {verdict === undefined ? null : <PlayerVerdictMark verdict={verdict} />}
       </a>
       {children}
     </div>

@@ -42,7 +42,6 @@ import { PlayerKeys } from "@/components/player/keys";
 import type { PlayerMode } from "@/components/player/mode";
 import { projectQuestions } from "@/components/player/model";
 import { PlayerGrid } from "@/components/player/navigator/grid";
-import { PlayerLegend } from "@/components/player/navigator/legend";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
 import {
   PlayerNavigatorHeader,
@@ -308,7 +307,6 @@ function RunningPaper({
           >
             {card}
             <PlayerGrid questions={questions} />
-            <PlayerLegend />
           </PlayerSidebar>
         }
       >
@@ -336,7 +334,6 @@ function RunningPaper({
       </PlayerFooter>
       <PlayerSheet>
         <PlayerGrid questions={questions} />
-        <PlayerLegend />
       </PlayerSheet>
     </PlayerProvider>
   );

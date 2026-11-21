@@ -3,7 +3,7 @@ import type {
   Growth,
   SetClaims as SetClaimsSchema,
 } from "@repo/backend/confect/island/view";
-import { Array as Arr, HashSet } from "effect";
+import { Array as Arr, HashSet, Option } from "effect";
 import type { CurrentAttempt } from "@/components/tryout/set/model";
 
 type SetClaims = typeof SetClaimsSchema.Type;
@@ -54,4 +54,21 @@ export function partStep(
     return "missed";
   }
   return attempt.resumeSectionKey === sectionKey ? "next" : "todo";
+}
+
+/** The published score of one completed part in the attempt the pane shows, if that part has been scored. */
+export function partScore(
+  attempt: Pick<CurrentAttempt, "sectionScores"> | null,
+  sectionKey: string
+): Option.Option<number> {
+  if (attempt === null) {
+    return Option.none();
+  }
+  return Option.map(
+    Arr.findFirst(
+      attempt.sectionScores,
+      (entry) => entry.sectionKey === sectionKey
+    ),
+    (entry) => entry.publishedScore
+  );
 }

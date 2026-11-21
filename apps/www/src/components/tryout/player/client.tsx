@@ -9,7 +9,6 @@ import { PlayerHeaderEnd } from "@/components/player/header";
 import { PlayerKeys } from "@/components/player/keys";
 import type { PlayerMode } from "@/components/player/mode";
 import { PlayerGrid } from "@/components/player/navigator/grid";
-import { PlayerLegend } from "@/components/player/navigator/legend";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
 import {
   PlayerNavigatorHeader,
@@ -111,7 +110,6 @@ export function TryoutPlayer({
             <TryoutPlayerParts />
             <TryoutPlayerTimerCard expiresAt={runtime.expiresAt} />
             <PlayerGrid questions={questions} />
-            <PlayerLegend />
           </PlayerSidebar>
         }
       >
@@ -126,7 +124,6 @@ export function TryoutPlayer({
       <PlayerSheet>
         <TryoutPlayerParts />
         <PlayerGrid questions={questions} />
-        <PlayerLegend />
       </PlayerSheet>
     </PlayerProvider>
   );
