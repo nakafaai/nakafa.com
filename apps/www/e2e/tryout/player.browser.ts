@@ -100,6 +100,36 @@ const verifyView = Effect.fn("NakafaE2E.verifyPlayerView")(function* (
   const other = otherView(opening);
   yield* expectView(page, opening);
 
+  // The try-out page fills the screen below the app header, and on desktop both footers align at 64 px.
+  const pageMetrics = yield* Effect.promise(() =>
+    page.evaluate(() => {
+      const tryout = document.querySelector('main [data-slot="tryout-page"]');
+      const top = (tryout?.getBoundingClientRect().top ?? 0) + window.scrollY;
+      const least = tryout
+        ? Number.parseFloat(getComputedStyle(tryout).minHeight)
+        : 0;
+      return { reach: Math.round(top + least), screen: window.innerHeight };
+    })
+  );
+  yield* Effect.sync(() => {
+    expect(pageMetrics.reach).toBe(pageMetrics.screen);
+  });
+  if (!hasTouch) {
+    yield* Effect.promise(async () => {
+      const [playerFooter, paneFooter] = await Promise.all([
+        page.locator("[data-player-footer]").boundingBox(),
+        sidebarOf(page).locator("footer").boundingBox(),
+      ]);
+      expect(playerFooter).not.toBeNull();
+      expect(paneFooter).not.toBeNull();
+      expect(Math.round(playerFooter?.y ?? 0)).toBe(
+        Math.round(paneFooter?.y ?? -1)
+      );
+      expect(Math.round(playerFooter?.height ?? 0)).toBe(64);
+      expect(Math.round(paneFooter?.height ?? 0)).toBe(64);
+    });
+  }
+
   // With nothing saved, the device's view; the address alone names the other view.
   yield* shownAtOpen(page, withView(address));
   yield* expectView(page, opening);

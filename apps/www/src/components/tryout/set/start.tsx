@@ -43,6 +43,7 @@ import {
   tryoutActionNameOf,
 } from "@/components/tryout/set/kept";
 import type { CurrentAttempt } from "@/components/tryout/set/model";
+import { TryoutPartSchema } from "@/components/tryout/set/model";
 import { TryoutActionName } from "@/components/tryout/set/name";
 import {
   ContinueTryoutButton,
@@ -60,8 +61,8 @@ const StartTryoutRequestSchema = Schema.Struct({
   authRedirect: TryoutPageAddressSchema,
   countryKey: Schema.String,
   destination: TryoutPageAddressSchema,
-  /** The section whose page the start lands on; none lands on the set. */
-  destinationSectionKey: Schema.optionalKey(Schema.String),
+  /** The part whose page the start lands on; none lands on the set. */
+  destinationPart: Schema.optionalKey(TryoutPartSchema),
   /** The section the start opens, whose player shows on the page the start lands on; none opens no section. */
   entrySectionKey: Schema.optionalKey(Schema.String),
   examKey: Schema.String,
@@ -82,18 +83,17 @@ interface StartTryoutButtonProps {
 /**
  * Composes the action that continues a running attempt, or the transactional start action. A running
  * attempt whose start lands on a section's page continues there: through a link to the section that runs,
- * or by starting the next one and opening it, so the press lands in the running section and never on a
- * page that asks again. One whose page is the set starts its entry section from here. A visitor has no
- * client, so the start action mounts once the page holds one, and until then the visitor's button sends
- * the visitor to sign in.
+ * or through a confirmation dialog before starting the next part's clock. One whose page is the set starts
+ * its entry section from here. A visitor has no client, so the start action mounts once the page holds one,
+ * and until then the visitor's button sends the visitor to sign in.
  */
 export function StartTryoutButton(props: StartTryoutButtonProps) {
   const { attempt, request } = props;
   if (
     attempt?.status === "in-progress" &&
-    request.destinationSectionKey !== undefined
+    request.destinationPart !== undefined
   ) {
-    if (attempt.activeSectionKey === request.destinationSectionKey) {
+    if (attempt.activeSectionKey === request.destinationPart.sectionKey) {
       return <ResumeTryoutLink request={request} />;
     }
     return (
@@ -101,7 +101,7 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
         <ContinueTryoutButton
           address={request.destination}
           attemptId={attempt.attemptId}
-          sectionKey={request.destinationSectionKey}
+          part={request.destinationPart}
         />
       </ConvexIsland>
     );
@@ -203,9 +203,9 @@ function TryoutStartSignInButton({
 function startArgsOf(request: StartTryoutRequest) {
   return {
     countryKey: request.countryKey,
-    ...(request.destinationSectionKey === undefined
+    ...(request.destinationPart === undefined
       ? {}
-      : { destinationSectionKey: request.destinationSectionKey }),
+      : { destinationSectionKey: request.destinationPart.sectionKey }),
     ...(request.entrySectionKey === undefined
       ? {}
       : { entrySectionKey: request.entrySectionKey }),

@@ -357,18 +357,6 @@ function getStartDestination({
   startEntrySection: SetEntrySection | null;
   setPath: string;
 }) {
-  if (
-    activeAttempt?.resumeSectionKey &&
-    activeAttempt.resumeSectionPublicPath
-  ) {
-    return {
-      address: {
-        attemptId: activeAttempt.attemptId,
-        publicPath: activeAttempt.resumeSectionPublicPath,
-      },
-      sectionKey: activeAttempt.resumeSectionKey,
-    };
-  }
   const resumeSection = Option.getOrElse(
     Arr.findFirst(
       page.sections,
@@ -376,12 +364,35 @@ function getStartDestination({
     ),
     () => page.entrySection
   );
+  if (
+    activeAttempt?.resumeSectionKey &&
+    activeAttempt.resumeSectionPublicPath &&
+    resumeSection
+  ) {
+    return {
+      address: {
+        attemptId: activeAttempt.attemptId,
+        publicPath: activeAttempt.resumeSectionPublicPath,
+      },
+      part: {
+        questionCount: resumeSection.questionCount,
+        sectionKey: activeAttempt.resumeSectionKey,
+        timeLimitSeconds: resumeSection.timeLimitSeconds,
+        title: resumeSection.title,
+      },
+    };
+  }
   const section = activeAttempt ? resumeSection : startEntrySection;
   if (!section) {
     return null;
   }
   return {
     address: getEntrySectionAddress({ entrySection: section, setPath }),
-    sectionKey: section.sectionKey,
+    part: {
+      questionCount: section.questionCount,
+      sectionKey: section.sectionKey,
+      timeLimitSeconds: section.timeLimitSeconds,
+      title: section.title,
+    },
   };
 }

@@ -76,11 +76,27 @@ test.describe("Practice beside the try-out", () => {
           ).toHaveCount(0);
         });
 
+        // The player's footer and the practice pane's footer share one flush 64 px single row with no prose.
+        const pane = page.getByRole("complementary", { name: PANE });
+        yield* Effect.promise(async () => {
+          await expect(pane.locator("footer p")).toHaveCount(0);
+          const [playerFooter, paneFooter] = await Promise.all([
+            page.locator("[data-player-footer]").boundingBox(),
+            pane.locator("footer").boundingBox(),
+          ]);
+          expect(playerFooter).not.toBeNull();
+          expect(paneFooter).not.toBeNull();
+          expect(Math.round(playerFooter?.y ?? 0)).toBe(
+            Math.round(paneFooter?.y ?? -1)
+          );
+          expect(Math.round(playerFooter?.height ?? 0)).toBe(64);
+          expect(Math.round(paneFooter?.height ?? 0)).toBe(64);
+        });
+
         // An answer enables Check, and the check says how it went at once.
         const option = first.getByRole("radio").first();
         yield* activate(option, false);
         yield* activate(check, false);
-        const pane = page.getByRole("complementary", { name: PANE });
         yield* Effect.promise(async () => {
           await expect(verdictIn(first)).toBeVisible({
             timeout: readinessTimeoutMilliseconds,

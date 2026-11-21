@@ -34,8 +34,13 @@ export const loadAttemptState = Effect.fn("tryouts.attempt.loadState")(
       candidate.score === undefined
         ? Result.failVoid
         : Result.succeed({
+            completedAt: candidate.completedAt,
             publishedScore: candidate.score.publishedScore,
+            scoreStatus: candidate.score.scoreStatus,
             sectionKey: candidate.sectionKey,
+            startedAt: candidate.startedAt,
+            totalCorrect: candidate.correctAnswers,
+            totalQuestions: candidate.totalQuestions,
           })
     );
     return {

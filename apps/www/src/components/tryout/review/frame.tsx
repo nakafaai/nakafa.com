@@ -29,9 +29,8 @@ import {
   TryoutReviewOpener,
 } from "@/components/tryout/review/result";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
-import { useFactsWaiting } from "@/components/tryout/section/summary";
 import { KEPT_PANE_SCRIPT } from "@/components/tryout/set/kept";
-import { useKeptFinished } from "@/components/tryout/set/name";
+import { useFactsWaiting, useKeptFinished } from "@/components/tryout/set/name";
 
 /**
  * A finished attempt's page, in the player that ran it: its header, the questions it reviews in the list or

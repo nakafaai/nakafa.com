@@ -203,6 +203,10 @@ function TryoutSetView({
           page: route.page,
           restartTarget: route.restartTarget,
         };
+  const paper = opensSetPaper(
+    search,
+    route.page.entrySection?.visibility === "internal-entry"
+  );
   return (
     // The clock starts again with the attempt, so its first render reads the browser's time.
     <ClockProvider
@@ -213,11 +217,10 @@ function TryoutSetView({
         binding={view.binding}
         content={view.content}
         page={view.page}
-        paper={opensSetPaper(
-          search,
-          route.page.entrySection?.visibility === "internal-entry"
-        )}
-        pending={learner.kind === "pending"}
+        paper={paper}
+        pending={
+          learner.kind === "pending" || (paper && learner.kind === "visitor")
+        }
         restartTarget={view.restartTarget}
         route={route.route}
       >

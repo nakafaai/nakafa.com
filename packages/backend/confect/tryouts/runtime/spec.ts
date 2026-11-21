@@ -32,8 +32,13 @@ const tryoutCurrentSectionValidator = Schema.Struct({
   totalQuestions: Schema.Finite,
 });
 const tryoutSectionScoreSummaryValidator = Schema.Struct({
+  completedAt: Schema.Union([Schema.Finite, Schema.Null]),
   publishedScore: Schema.Finite,
+  scoreStatus: tryoutScoreResultValidator.fields.scoreStatus,
   sectionKey: tryoutRouteKeyValidator,
+  startedAt: Schema.Finite,
+  totalCorrect: Schema.Finite,
+  totalQuestions: Schema.Finite,
 });
 export const tryoutAttemptStateValidator = Schema.Struct({
   activeSectionKey: Schema.Union([tryoutRouteKeyValidator, Schema.Null]),

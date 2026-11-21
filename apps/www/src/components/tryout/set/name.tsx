@@ -131,6 +131,16 @@ export function useKeptPageAttempt() {
 }
 
 /**
+ * Whether a learner surface still waits for its read. A static page's first paint is every reader's, so it waits
+ * until the page holds its client too. A session that could not be read answers nothing, so waiting ends then.
+ */
+export function useFactsWaiting(pending: boolean) {
+  const hasClient = useLiveSession((state) => Option.isSome(state.client));
+  const failed = useLiveSession((state) => state.hasError);
+  return !failed && (pending || !hasClient);
+}
+
+/**
  * Whether this browser last read the page it is on as finished, for a signed-in reader only: such a page
  * holds its result pane once its read answers.
  */

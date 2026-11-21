@@ -151,7 +151,7 @@ function TryoutSectionView({
       <TryoutPage>
         <TryoutPractice target={target} title={section.title}>
           <TryoutPracticeSession
-            returnAddress={{ publicPath: route.sectionPath }}
+            returnAddress={{ publicPath: route.setPath }}
             target={target}
             title={section.title}
           />
@@ -182,6 +182,7 @@ function TryoutSectionView({
         pending={learner.kind === "pending"}
         route={route.route}
         setPath={view.setPath}
+        visitor={learner.kind === "visitor"}
       >
         <TryoutAttemptReview binding={view.binding} />
       </TryoutSectionPageClient>

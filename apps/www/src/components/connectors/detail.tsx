@@ -128,7 +128,7 @@ export function ServiceStatus({ children }: { children?: ReactNode }) {
   const { state } = useService();
 
   return (
-    <div className="me-auto flex min-w-0 flex-wrap gap-2">
+    <div className="me-auto flex min-w-0 items-center gap-2">
       {Option.isSome(state) ? (
         <TableStatus
           band

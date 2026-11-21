@@ -1,4 +1,5 @@
 import { Flag02Icon, StarIcon, Tick02Icon } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
 import { tierOf } from "@repo/backend/confect/island/badge";
 import { AWARD_RULES } from "@repo/backend/confect/island/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -16,12 +17,17 @@ import { getTryoutSubjectIcons } from "@/components/tryout/catalog/icons";
 import { useSetPane } from "@/components/tryout/pane/context";
 import type { PartStep } from "@/components/tryout/pane/model";
 import { partScore, partStep } from "@/components/tryout/pane/model";
+import { TryoutPartInfoDialog } from "@/components/tryout/pane/part";
 import { TryoutPageLink } from "@/components/tryout/route/link";
 import {
   useSetTryoutPressed,
   useTryoutStartPhase,
 } from "@/components/tryout/runtime/start";
-import { useStartPart } from "@/components/tryout/set/part";
+import type { TryoutPart } from "@/components/tryout/set/model";
+import {
+  TryoutPartStartDialog,
+  useStartPart,
+} from "@/components/tryout/set/part";
 
 /** A step's marker on the path: a part's number or tick in a circle, the finish's flag in a rounded square. */
 const nodeVariants = cva(
@@ -97,20 +103,21 @@ function PathStep({
 }
 
 /**
- * A step's card, which a press takes into its part in one move: a finished or missed part opens its result, the
- * part that runs opens where it runs, and a part not started yet starts and opens running. A set the learner has
- * not started takes the press as its footer's action does. A part with no page of its own, and a part while
- * another one runs, take no press.
+ * A step's card: a completed part of a finished attempt opens its review, a running part opens where it runs,
+ * a completed part of an in-progress attempt or a missed part opens its info dialog (never an empty card page),
+ * and an unstarted part of a running attempt asks for confirmation before starting its clock. A set the learner
+ * has not started takes the press as its footer's action does. A part with no page of its own, and an unstarted
+ * part while another one runs, take no press.
  */
 function StepCard({
   children,
+  part,
   publicPath,
-  sectionKey,
   step,
 }: {
   children: ReactNode;
+  part: TryoutPart;
   publicPath: string | undefined;
-  sectionKey: string;
   step: PartStep;
 }) {
   const { view } = useSetPane();
@@ -118,18 +125,23 @@ function StepCard({
   const next = step === "next";
   if (publicPath === undefined) {
     return (
-      <div className={cardVariants({ link: false, next })}>{children}</div>
+      <div
+        className={cardVariants({ link: false, next })}
+        data-part-step={step}
+      >
+        {children}
+      </div>
     );
   }
-  const opensPage =
-    step === "done" ||
-    step === "missed" ||
-    attempt?.activeSectionKey === sectionKey;
-  if (opensPage) {
+  const opensReview =
+    step === "done" && attempt !== null && attempt.status !== "in-progress";
+  const opensRunning = attempt?.activeSectionKey === part.sectionKey;
+  if (opensReview || opensRunning) {
     return (
       <TryoutPageLink
         attemptId={attempt?.attemptId}
         className={cardVariants({ link: true, next })}
+        data-part-step={step}
         preload="intent"
         publicPath={publicPath}
       >
@@ -137,57 +149,124 @@ function StepCard({
       </TryoutPageLink>
     );
   }
+  if (step === "done" || step === "missed") {
+    return (
+      <PartInfoButton next={next} part={part} step={step}>
+        {children}
+      </PartInfoButton>
+    );
+  }
   if (attempt?.status !== "in-progress") {
-    return <StartPress next={next}>{children}</StartPress>;
+    return (
+      <StartPress next={next} step={step}>
+        {children}
+      </StartPress>
+    );
   }
   if (attempt.activeSectionKey !== null) {
     return (
-      <div className={cardVariants({ link: false, next })}>{children}</div>
+      <div
+        className={cardVariants({ link: false, next })}
+        data-part-step={step}
+      >
+        {children}
+      </div>
     );
   }
   return (
     <OpenPart
       attemptId={attempt.attemptId}
       next={next}
+      part={part}
       publicPath={publicPath}
-      sectionKey={sectionKey}
+      step={step}
     >
       {children}
     </OpenPart>
   );
 }
 
-/** A part of a running attempt not started yet: a press starts it and opens it running (`useStartPart`). */
+/** A finished part while its set still runs, or a missed part: a press opens its info dialog right in the pane. */
+function PartInfoButton({
+  children,
+  next,
+  part,
+  step,
+}: {
+  children: ReactNode;
+  next: boolean;
+  part: TryoutPart;
+  step: PartStep;
+}) {
+  const { view } = useSetPane();
+  const [dialogOpen, dialog] = useDisclosure(false);
+  const score = partScore(view.actionAttempt ?? null, part.sectionKey);
+
+  return (
+    <>
+      <button
+        className={cardVariants({ link: true, next })}
+        data-part-step={step}
+        onClick={dialog.open}
+        type="button"
+      >
+        {children}
+      </button>
+      <TryoutPartInfoDialog
+        open={dialogOpen}
+        part={part}
+        score={score}
+        setOpen={(open) => (open ? dialog.open() : dialog.close())}
+      />
+    </>
+  );
+}
+
+/** A part of a running attempt not started yet: a press asks for confirmation, then starts it and opens it running. */
 function OpenPart({
   attemptId,
   children,
   next,
+  part,
   publicPath,
-  sectionKey,
+  step,
 }: {
   attemptId: Id<"tryoutAttempts">;
   children: ReactNode;
   next: boolean;
+  part: TryoutPart;
   publicPath: string;
-  sectionKey: string;
+  step: PartStep;
 }) {
   const startPart = useStartPart();
   const busy = useTryoutStartPhase() !== "idle";
+  const [dialogOpen, dialog] = useDisclosure(false);
+
   return (
-    <button
-      className={cardVariants({ link: true, next })}
-      inert={busy}
-      onClick={() =>
-        startPart({
-          address: Option.some({ attemptId, publicPath }),
-          attemptId,
-          sectionKey,
-        })
-      }
-      type="button"
-    >
-      {children}
-    </button>
+    <>
+      <button
+        className={cardVariants({ link: true, next })}
+        data-part-step={step}
+        inert={busy}
+        onClick={dialog.open}
+        type="button"
+      >
+        {children}
+      </button>
+      <TryoutPartStartDialog
+        busy={busy}
+        onStart={() =>
+          startPart({
+            address: Option.some({ attemptId, publicPath }),
+            attemptId,
+            sectionKey: part.sectionKey,
+          })
+        }
+        open={dialogOpen}
+        part={part}
+        setOpen={(open) => (open ? dialog.open() : dialog.close())}
+      />
+    </>
   );
 }
 
@@ -195,14 +274,17 @@ function OpenPart({
 function StartPress({
   children,
   next,
+  step,
 }: {
   children: ReactNode;
   next: boolean;
+  step: PartStep;
 }) {
   const press = useSetTryoutPressed();
   return (
     <button
       className={cardVariants({ link: true, next })}
+      data-part-step={step}
       onClick={() => press(true)}
       type="button"
     >
@@ -213,8 +295,8 @@ function StartPress({
 
 /**
  * The set as one path (the owner's notes of 20 Nov): a step for each part the learner sits, marked by where the
- * attempt the pane shows stands, each with the Stars it still gives, ending at the set's finish, which shows the
- * medal finishing it counts toward.
+ * attempt the pane shows stands, each with its score once finished or the Stars it still gives, ending at the set's
+ * finish, which shows the medal finishing it counts toward.
  */
 export function SetPath() {
   const t = useTranslations("Tryouts");
@@ -241,6 +323,12 @@ export function SetPath() {
           const gives =
             (step === "next" || step === "todo") &&
             !Arr.contains(claims.sections, section.sectionKey);
+          const part: TryoutPart = {
+            questionCount: section.questionCount,
+            sectionKey: section.sectionKey,
+            timeLimitSeconds: section.timeLimitSeconds,
+            title: section.title,
+          };
           return (
             <PathStep
               key={section.sectionKey}
@@ -255,11 +343,7 @@ export function SetPath() {
                 </span>
               }
             >
-              <StepCard
-                publicPath={section.publicPath}
-                sectionKey={section.sectionKey}
-                step={step}
-              >
+              <StepCard part={part} publicPath={section.publicPath} step={step}>
                 <Tile className="size-10" seed={look.seed} shift={look.shift}>
                   <TileIcon icon={look.icon} />
                 </Tile>
@@ -278,7 +362,7 @@ export function SetPath() {
                   onNone: () => null,
                   onSome: (value) => (
                     <span className="shrink-0 text-sm font-medium tabular-nums">
-                      {format.number(value)}
+                      {format.number(value.publishedScore)}
                     </span>
                   ),
                 })}

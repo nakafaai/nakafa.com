@@ -56,19 +56,19 @@ export function partStep(
   return attempt.resumeSectionKey === sectionKey ? "next" : "todo";
 }
 
-/** The published score of one completed part in the attempt the pane shows, if that part has been scored. */
+/** The scored summary of one completed part in the attempt the pane shows. */
+export type PartScoreSummary = CurrentAttempt["sectionScores"][number];
+
+/** The score summary of one completed part in the attempt the pane shows, if that part has been scored. */
 export function partScore(
   attempt: Pick<CurrentAttempt, "sectionScores"> | null,
   sectionKey: string
-): Option.Option<number> {
+): Option.Option<PartScoreSummary> {
   if (attempt === null) {
     return Option.none();
   }
-  return Option.map(
-    Arr.findFirst(
-      attempt.sectionScores,
-      (entry) => entry.sectionKey === sectionKey
-    ),
-    (entry) => entry.publishedScore
+  return Arr.findFirst(
+    attempt.sectionScores,
+    (entry) => entry.sectionKey === sectionKey
   );
 }

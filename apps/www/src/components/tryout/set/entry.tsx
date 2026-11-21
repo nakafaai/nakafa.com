@@ -1,6 +1,8 @@
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
+import { useNavigate } from "@tanstack/react-router";
 import { Option } from "effect";
 import type { ReactNode } from "react";
+import { useEffect } from "react";
 import { useTranslations } from "use-intl";
 import type { PlayerMode } from "@/components/player/mode";
 import { PlayerTimer, PlayerTimerCard } from "@/components/player/timer";
@@ -15,13 +17,12 @@ import {
   TryoutFinishedPlace,
   TryoutReviewFrame,
 } from "@/components/tryout/review/frame";
+import { getTryoutPageTarget } from "@/components/tryout/route/path";
 import { useTryoutStartPhase } from "@/components/tryout/runtime/start";
 import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
 import { isTryoutRuntimeRunning } from "@/components/tryout/runtime/state";
 import { TryoutAttemptPicker } from "@/components/tryout/score/history";
-import { TryoutSummaryAction } from "@/components/tryout/section/action";
-import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
-import { TryoutSectionSummary } from "@/components/tryout/section/summary";
+import { TryoutSetAction } from "@/components/tryout/set/action";
 import {
   TryoutSetPageHeader,
   useTryoutSetPath,
@@ -30,7 +31,7 @@ import type {
   LoadedRuntime,
   SetEntrySection,
 } from "@/components/tryout/set/model";
-import { TryoutPage, TryoutPageBody } from "@/components/tryout/shell/header";
+import { TryoutPage } from "@/components/tryout/shell/header";
 
 /** Props of the direct-entry set: its render model and its only section's runtime. */
 interface TryoutSetEntryProps {
@@ -47,10 +48,9 @@ interface TryoutSetEntryProps {
 }
 
 /**
- * Renders a no-nested-section set as the directly startable section surface.
- * A running section is the player, a section the learner's press is opening is
- * the player's frame until it runs, a finished one is its review in the same
- * player, and every other state is the set page.
+ * Renders a no-nested-section set's paper: the player while it runs, its opening frame while starting, or its
+ * full review once it ends. Any settled paper address with neither returns straight to the set's pane, never
+ * drawing a standalone card-only page.
  */
 export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
   const opening = useTryoutStartPhase() === "opening";
@@ -74,7 +74,7 @@ export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
   );
 }
 
-/** The set's entry under its paper: the player, its opening frame, the review, or the set page. */
+/** The set's entry under its paper: the player, its opening frame, the review, or return to its pane. */
 function TryoutSetEntryBody({ children, value }: TryoutSetEntryProps) {
   const opening = useTryoutStartPhase() === "opening";
   const state = value.runtimeState;
@@ -121,21 +121,29 @@ function TryoutSetEntryBody({ children, value }: TryoutSetEntryProps) {
     );
   }
 
-  return (
-    <TryoutPage>
-      <TryoutEntryHeader value={value} />
-      <TryoutPageBody>
-        <TryoutSectionSummary
-          value={{
-            pending: value.actionAttempt === undefined,
-            score,
-            section: value.entrySection,
-          }}
-        />
-        <TryoutFinishedPlace pending={value.actionAttempt === undefined} />
-      </TryoutPageBody>
-    </TryoutPage>
-  );
+  if (value.actionAttempt === undefined) {
+    return (
+      <TryoutPage>
+        <TryoutEntryHeader value={value} />
+        <TryoutFinishedPlace pending />
+      </TryoutPage>
+    );
+  }
+
+  return <TryoutEntryRedirect publicPath={value.page.set.publicPath} />;
+}
+
+/** Redirects a direct-entry paper URL with neither a running player nor a review back to the set pane. */
+function TryoutEntryRedirect({ publicPath }: { publicPath: string }) {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    Option.map(getTryoutPageTarget({ publicPath }), (target) =>
+      navigate({ ...target, replace: true })
+    );
+  }, [navigate, publicPath]);
+
+  return null;
 }
 
 /**
@@ -169,39 +177,18 @@ function TryoutEntryAction({ value }: { value: TryoutSetEntryProps["value"] }) {
     return null;
   }
 
-  const sectionAttempt =
-    value.runtimeState.kind === "none"
-      ? null
-      : value.runtimeState.runtime.section;
-  const sectionFinished =
-    getTryoutFinishedSectionStatus(sectionAttempt) !== null;
-  const startEntrySection = value.start.entrySection;
-  const startDestination = value.start.destination;
-  if (!(startEntrySection && startDestination)) {
-    return null;
-  }
-
   return (
-    <TryoutSummaryAction
+    <TryoutSetAction
       value={{
-        completedAction: "restart",
         activeAttempt: value.activeAttempt,
+        currentPath: value.currentPath,
         ...(value.actionAttempt === undefined
           ? {}
-          : { attempt: value.actionAttempt }),
+          : { currentAttempt: value.actionAttempt }),
+        destination: value.start.destination,
+        entrySection: value.start.entrySection,
         locale: value.route.locale,
-        returnAddress: { publicPath: value.returnPath },
-        section: startEntrySection,
-        sectionFinished,
         set: value.start.set,
-        startDestination:
-          startEntrySection.visibility === "internal-entry"
-            ? { address: startDestination.address, successNavigation: "stay" }
-            : {
-                address: startDestination.address,
-                sectionKey: startEntrySection.sectionKey,
-                successNavigation: "destination",
-              },
       }}
     />
   );

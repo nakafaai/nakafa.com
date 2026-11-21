@@ -28,6 +28,7 @@ export function TryoutSectionPageProvider({
   pending,
   route,
   setPath,
+  visitor,
 }: {
   binding: {
     attemptId: Id<"tryoutAttempts">;
@@ -44,9 +45,13 @@ export function TryoutSectionPageProvider({
   pending: boolean;
   route: TryoutSectionRoute;
   setPath: string;
+  /** True while rendered without a Convex client (SSR, pre-hydration fallback, or signed-out visitor). */
+  visitor: boolean;
 }) {
   return (
-    <PageContext value={{ binding, page, parts, pending, route, setPath }}>
+    <PageContext
+      value={{ binding, page, parts, pending, route, setPath, visitor }}
+    >
       {children}
     </PageContext>
   );

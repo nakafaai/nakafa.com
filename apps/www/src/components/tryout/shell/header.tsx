@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
@@ -14,10 +13,6 @@ import {
   PageHeader,
   PageTitle,
 } from "@/components/shared/page/header";
-import {
-  pageRhythmVariants,
-  pageRowVariants,
-} from "@/components/shared/page/width";
 import { HOME_TARGET, TRYOUT_TARGET } from "@/lib/routing/target";
 
 /**
@@ -89,25 +84,6 @@ export function TryoutPage({ children }: { children: ReactNode }) {
     <div
       className="flex min-h-[calc(100svh-var(--app-header-top))] flex-col lg:min-h-svh"
       data-slot="tryout-page"
-    >
-      {children}
-    </div>
-  );
-}
-
-/**
- * Owns the body width and spacing shared by sets and timed sections. It fills
- * the height TryoutPage leaves below the page header, so a locked review can
- * end at the screen edge.
- */
-export function TryoutPageBody({ children }: { children: ReactNode }) {
-  return (
-    <div
-      className={cn(
-        pageRowVariants(),
-        pageRhythmVariants(),
-        "flex flex-1 flex-col space-y-6"
-      )}
     >
       {children}
     </div>

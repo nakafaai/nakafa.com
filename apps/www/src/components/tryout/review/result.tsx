@@ -3,13 +3,13 @@ import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { Array as Arr, HashSet, Number as Num, Option } from "effect";
+import { HashSet, Number as Num, Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { PlayerReviewGrid } from "@/components/player/navigator/review";
 import { usePlayer } from "@/components/player/provider";
-import { splitTime } from "@/components/player/time";
+import { formatClock } from "@/components/player/time";
 import { PaneFact, PaneFacts } from "@/components/shared/page/pane";
 import type { createExplainedStore } from "@/components/tryout/review/context";
 import {
@@ -17,15 +17,6 @@ import {
   TryoutReviewContext,
 } from "@/components/tryout/review/context";
 import { reviewCellsOf } from "@/components/tryout/review/model";
-
-/** A duration as a clock reads it, such as 01:15:00. */
-function readClock(seconds: number) {
-  const { hours, minutes, seconds: rest } = splitTime(seconds);
-  return Arr.join(
-    Arr.map([hours, minutes, rest], (part) => String(part).padStart(2, "0")),
-    ":"
-  );
-}
 
 /** Reads the review around the caller (`TryoutReviewFrame`). */
 export function useTryoutReview() {
@@ -106,7 +97,7 @@ export function TryoutResult() {
           onNone: () => null,
           onSome: (seconds) => (
             <PaneFact label={t("time-used-label")}>
-              {readClock(seconds)}
+              {formatClock(seconds)}
             </PaneFact>
           ),
         })}
@@ -114,7 +105,7 @@ export function TryoutResult() {
           onNone: () => null,
           onSome: (seconds) => (
             <PaneFact label={t("time-limit-label")}>
-              {readClock(seconds)}
+              {formatClock(seconds)}
             </PaneFact>
           ),
         })}
