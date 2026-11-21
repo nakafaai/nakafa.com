@@ -29,16 +29,16 @@ const readSnapshotDate = Effect.fn("contentRelease.readSnapshotDate")(
 
 /**
  * The day each snapshot family of the active release last changed, which is the
- * only date its pages have: the Quran, the curricula and the try-outs author none.
+ * only date its sitemap pages have: the curricula and the try-outs author none.
  * A snapshot's id is the digest of its bytes and its first verification is never
  * overwritten, so a release that keeps a family keeps the date, and the date moves
- * when the family's bytes do. It covers the family, so one changed surah dates them all.
+ * when the family's bytes do. It covers the family, so one changed set dates them all.
  */
 export const readSnapshotDates = Effect.fn("contentRelease.readSnapshotDates")(
   function* () {
     const releaseId = (yield* loadState())?.activeReleaseId;
     if (releaseId === undefined) {
-      return { assessment: null, program: null, quran: null };
+      return { assessment: null, program: null };
     }
     const { snapshotTransitions } = yield* loadRelease(releaseId);
     return yield* Effect.all({
@@ -49,10 +49,6 @@ export const readSnapshotDates = Effect.fn("contentRelease.readSnapshotDates")(
       program: readSnapshotDate(
         "program",
         snapshotTransitions.program.resultSnapshotId
-      ),
-      quran: readSnapshotDate(
-        "quran",
-        snapshotTransitions.quran.resultSnapshotId
       ),
     });
   }

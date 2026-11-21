@@ -22,7 +22,6 @@ import {
 import { pinSitemapRelease } from "@/lib/sitemap/pin";
 
 const curriculaRoute = "/curricula";
-const quranRootRoute = "/quran";
 
 /** Static top-level routes in canonical lexical order. */
 export const baseRoutes: readonly string[] = [
@@ -31,7 +30,7 @@ export const baseRoutes: readonly string[] = [
   "/contributor",
   curriculaRoute,
   "/pricing",
-  quranRootRoute,
+  "/quran",
   "/school",
   "/school/pricing",
   "/search",
@@ -52,10 +51,7 @@ function dateRoutes<Route>(
  * are built with the code and hold no published content, so no date is true of them.
  */
 function readBaseRouteDate(path: string, dates: SitemapDates) {
-  if (path === curriculaRoute) {
-    return dates.program;
-  }
-  return path === quranRootRoute ? dates.quran : null;
+  return path === curriculaRoute ? dates.program : null;
 }
 
 /** Reads the bounded routes and shared metadata for one sitemap page. */
@@ -146,15 +142,13 @@ export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
     if (isQuranSitemapPage(page)) {
       const { verify } = yield* pinSitemapRelease(pageId, page.locale);
       const { surahs } = yield* readPublishedQuranCatalog();
-      const { quran } = yield* readSitemapDates();
       yield* verify;
+      // The sitemap leaves the Quran out (`isUnlistedPath`); these routes only
+      // tell the build which surah pages to write, so they carry no date.
       return {
-        routes: dateRoutes(
-          Arr.map(surahs, (surah) => ({
-            path: `/quran/${surah.number}`,
-          })),
-          quran
-        ),
+        routes: Arr.map(surahs, (surah) => ({
+          path: `/quran/${surah.number}`,
+        })),
       };
     }
 

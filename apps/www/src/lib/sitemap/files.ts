@@ -11,33 +11,40 @@ type SitemapFile = typeof SitemapFile.Type;
 
 /**
  * Renders the sitemap index and every bounded sitemap page of the active release,
- * at the addresses that the sitemap index names. A try-out section is not listed,
- * because it is not indexed.
+ * at the addresses that the sitemap index names. A page that its head keeps out
+ * of search indexes is not listed (`isUnlistedPath`), and a sitemap page left
+ * with no listed address, such as a locale's Quran page, is neither written nor
+ * named by the index.
  */
 export const readSitemapFiles = Effect.fn("www.sitemap.files")(function* () {
   const descriptors = yield* readSitemapPageDescriptors();
-  const pages = yield* Effect.forEach(
+  const listed = yield* Effect.forEach(
     descriptors,
     (descriptor) =>
-      Effect.map(
-        getSitemapEntries({ pageId: descriptor.id }),
-        (entries): SitemapFile => ({
-          path: `sitemap/${descriptor.id}.xml`,
-          text: buildSitemapUrlSetXml(
-            Arr.filter(entries, ({ url }) => {
-              const { pathname } = new URL(url);
-              return !isUnlistedPath(pathname);
-            })
-          ),
-        })
-      ),
+      Effect.map(getSitemapEntries({ pageId: descriptor.id }), (entries) => ({
+        entries: Arr.filter(
+          entries,
+          ({ url }) => !isUnlistedPath(new URL(url).pathname)
+        ),
+        id: descriptor.id,
+      })),
     { concurrency: 8 }
   );
+  const pages = Arr.filter(listed, ({ entries }) => entries.length > 0);
   const index: SitemapFile = {
     path: "sitemap.xml",
     text: buildSitemapIndexXml(
-      Arr.map(descriptors, ({ id }) => `${SITE_ORIGIN}/sitemap/${id}.xml`)
+      Arr.map(pages, ({ id }) => `${SITE_ORIGIN}/sitemap/${id}.xml`)
     ),
   };
-  return [index, ...pages];
+  return [
+    index,
+    ...Arr.map(
+      pages,
+      ({ entries, id }): SitemapFile => ({
+        path: `sitemap/${id}.xml`,
+        text: buildSitemapUrlSetXml(entries),
+      })
+    ),
+  ];
 });

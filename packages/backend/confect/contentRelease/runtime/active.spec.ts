@@ -11,7 +11,6 @@ const snapshotDateValidator = Schema.Union([Schema.String, Schema.Null]);
 const snapshotDatesValidator = Schema.Struct({
   assessment: snapshotDateValidator,
   program: snapshotDateValidator,
-  quran: snapshotDateValidator,
 });
 
 export default GroupSpec.make()

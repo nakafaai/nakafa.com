@@ -13,16 +13,25 @@ const TRYOUT_SEGMENT = "try-out";
 /** The segments of a try-out section's path: `/<locale>/try-out/<country>/<exam>/<group>/<track>/<set>/<section>`. */
 const TRYOUT_SECTION_SEGMENTS = 9;
 
+/** The Quran family segment, which every locale spells the same way. */
+const QURAN_SEGMENT = "quran";
+
+/** The search page segment, which every locale spells the same way. */
+const SEARCH_SEGMENT = "search";
+
 /**
- * Whether the sitemap leaves a page out that the build still writes: a try-out
- * section, which the head marks as not indexed, so its set stands for it in search.
+ * Whether the sitemap leaves out a page that the build still writes, because
+ * its head keeps it out of search indexes: a try-out section, which its set
+ * stands for in search; the Quran index and every surah, whose text comes from
+ * third parties; and the search page, a search box with no content of its own.
  */
 export function isUnlistedPath(path: string): boolean {
   const segments = path.split("/");
-  return (
-    segments[2] === TRYOUT_SEGMENT &&
-    segments.length === TRYOUT_SECTION_SEGMENTS
-  );
+  const family = segments[2];
+  if (family === TRYOUT_SEGMENT) {
+    return segments.length === TRYOUT_SECTION_SEGMENTS;
+  }
+  return family === QURAN_SEGMENT || family === SEARCH_SEGMENT;
 }
 
 /**

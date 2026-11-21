@@ -2,8 +2,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { api } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
-import { makeQuranSearch } from "@repo/backend/test/quran/rows";
-import { activateQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { activateAssessmentTestSnapshot } from "@repo/backend/test/snapshot/assessment";
 import { convexTest } from "convex-test";
 
@@ -18,45 +16,43 @@ describe("contentRelease/snapshot/dates", () => {
     await expect(t.query(readDates, {})).resolves.toEqual({
       assessment: null,
       program: null,
-      quran: null,
     });
   });
 
   it("dates a family by its snapshot's first verification, on the UTC day", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
-      await activateQuranSnapshot(ctx, [makeQuranSearch("en", 1, "Technical")]);
+      await activateAssessmentTestSnapshot(ctx);
       const snapshot = await ctx.db.query("contentSnapshots").unique();
       if (!snapshot) {
-        throw new Error("Expected the active Quran snapshot.");
+        throw new Error("Expected the active assessment snapshot.");
       }
       await ctx.db.patch("contentSnapshots", snapshot._id, {
         verifiedAt: LATE_ON_THE_LAST_DAY,
       });
     });
     await expect(t.query(readDates, {})).resolves.toEqual({
-      assessment: null,
+      assessment: "2026-10-31",
       program: null,
-      quran: "2026-10-31",
     });
   });
 
   it("reads each family from its own snapshot", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(activateAssessmentTestSnapshot);
-    await expect(t.query(readDates, {})).resolves.toMatchObject({
+    await expect(t.query(readDates, {})).resolves.toEqual({
       assessment: "1970-01-01",
-      quran: null,
+      program: null,
     });
   });
 
   it("refuses an active snapshot that was lost", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
-      await activateQuranSnapshot(ctx, [makeQuranSearch("en", 1, "Technical")]);
+      await activateAssessmentTestSnapshot(ctx);
       const snapshot = await ctx.db.query("contentSnapshots").unique();
       if (!snapshot) {
-        throw new Error("Expected the active Quran snapshot.");
+        throw new Error("Expected the active assessment snapshot.");
       }
       await ctx.db.delete("contentSnapshots", snapshot._id);
     });
@@ -68,10 +64,10 @@ describe("contentRelease/snapshot/dates", () => {
   it("refuses an active snapshot that was never verified", async () => {
     const t = convexTest(schema, convexModules);
     await t.mutation(async (ctx) => {
-      await activateQuranSnapshot(ctx, [makeQuranSearch("en", 1, "Technical")]);
+      await activateAssessmentTestSnapshot(ctx);
       const snapshot = await ctx.db.query("contentSnapshots").unique();
       if (!snapshot) {
-        throw new Error("Expected the active Quran snapshot.");
+        throw new Error("Expected the active assessment snapshot.");
       }
       await ctx.db.patch("contentSnapshots", snapshot._id, {
         verifiedAt: undefined,

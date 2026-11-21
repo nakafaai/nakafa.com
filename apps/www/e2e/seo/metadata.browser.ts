@@ -123,28 +123,19 @@ for (const [locale, href] of Rec.toEntries(pinnedRoutes.material)) {
   });
 }
 
-test("chat and a search with a query answer noindex, so no engine indexes a learner's screen or a result list", async ({
+test("pages that hold no content of their own answer noindex: chat, search, sign-in and the Quran's third-party text", async ({
   request,
 }) => {
-  for (const path of ["/en/search?q=fraction", "/en/chat"]) {
+  for (const path of [
+    "/en/chat",
+    "/en/search",
+    "/en/search?q=fraction",
+    "/en/auth",
+    "/en/quran",
+    "/en/quran/1",
+  ]) {
     const response = await request.get(path);
     expect(response.status(), path).toBe(200);
     expect(readRobots(await response.text()), path).toMatch(NOINDEX);
   }
-});
-
-test("the bare search page stays open to search engines, since it names no query and no learner", async ({
-  request,
-}) => {
-  const response = await request.get("/en/search");
-  expect(response.status()).toBe(200);
-  expect(readRobots(await response.text())).not.toMatch(NOINDEX);
-});
-
-test("sign-in stays open to search, so a learner who looks for it finds it", async ({
-  request,
-}) => {
-  const response = await request.get("/en/auth");
-  expect(response.status()).toBe(200);
-  expect(readRobots(await response.text())).not.toMatch(NOINDEX);
 });
