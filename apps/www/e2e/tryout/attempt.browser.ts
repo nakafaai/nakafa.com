@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
 import { loadMathFonts } from "@/e2e/support/fonts";
-import { activate, activateAncestor } from "@/e2e/support/input";
+import { activate } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { finishSection, waitForRunningSection } from "@/e2e/support/player";
@@ -127,7 +127,13 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
 
   // A completed part of an in-progress attempt opens its info dialog right in the pane (never a card-only page),
   // and an unstarted part asks for confirmation instead of auto-starting its clock.
-  const dialog = page.getByRole("dialog");
+  // A phone shows the set's pane in a drawer, a dialog too, so each part's dialog is found by what it says.
+  const doneDialog = page
+    .getByRole("dialog")
+    .filter({ hasText: "Correct answers" });
+  const startDialog = page
+    .getByRole("dialog")
+    .filter({ hasText: "The timer starts right away and cannot be paused." });
   yield* observeStep(
     page,
     [true],
@@ -137,15 +143,15 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
         hasTouch
       );
       yield* Effect.promise(async () => {
-        await expect(dialog).toBeVisible({
+        await expect(doneDialog).toBeVisible({
           timeout: readinessTimeoutMilliseconds,
         });
         await expect(
-          dialog.getByText("Correct answers", { exact: true })
+          doneDialog.getByText("Correct answers", { exact: true })
         ).toBeVisible();
         expect(new URL(page.url()).pathname).toBe(setHref);
         await page.keyboard.press("Escape");
-        await expect(dialog).toBeHidden({
+        await expect(doneDialog).toBeHidden({
           timeout: readinessTimeoutMilliseconds,
         });
       });
@@ -156,24 +162,32 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
       );
       yield* Effect.promise(async () => {
         await expect(
-          dialog.getByRole("button", { exact: true, name: "Start" })
+          startDialog.getByRole("button", { exact: true, name: "Start" })
         ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
         expect(new URL(page.url()).pathname).toBe(setHref);
         await page.keyboard.press("Escape");
-        await expect(dialog).toBeHidden({
+        await expect(startDialog).toBeHidden({
           timeout: readinessTimeoutMilliseconds,
         });
       });
     })
   );
 
-  // Leaving for the catalog unlocks the shell together with the new page.
+  // Closing the set's pane leaves for the track, which unlocks the shell together with the new page: a press on
+  // the open set's row beside the table, or Escape, which closes the drawer a phone shows the pane in.
   const runningRow = page.locator(`main a[href^="${setHref}?"]`).first();
   yield* observeStep(
     page,
     [true, false],
     Effect.gen(function* () {
-      yield* activateAncestor(page, trackHref, hasTouch);
+      if (hasTouch) {
+        yield* Effect.promise(() => page.keyboard.press("Escape"));
+      } else {
+        yield* activate(
+          page.locator('main a[aria-current="page"]').first(),
+          hasTouch
+        );
+      }
       yield* arrive(page, onPath(trackHref), runningRow);
     })
   );
