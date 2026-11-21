@@ -7,6 +7,7 @@ import { useSetPane } from "@/components/tryout/pane/context";
 import { TryoutResultFacts } from "@/components/tryout/review/result";
 import { TryoutClock } from "@/components/tryout/runtime/countdown";
 import { TryoutAttemptPicker } from "@/components/tryout/score/history";
+import { useFactsWaiting } from "@/components/tryout/set/name";
 
 /** The day an attempt was taken, short enough for a fact. */
 const TAKEN = { day: "numeric", month: "short", year: "numeric" } as const;
@@ -105,10 +106,12 @@ export function SetAttempt() {
   const format = useFormatter();
   const { board, view } = useSetPane();
   const attempt = view.actionAttempt;
-  if (attempt === undefined) {
+  // The static first paint is every reader's, so it waits for the learner's read as a pending one does.
+  const waiting = useFactsWaiting(attempt === undefined);
+  if (waiting) {
     return <WaitingAttempt />;
   }
-  if (attempt === null) {
+  if (attempt === undefined || attempt === null) {
     return null;
   }
   if (attempt.status === "in-progress") {

@@ -227,11 +227,17 @@ function ResolvedTryoutSectionPage({
     actionAttempt ? tryoutActionNameOf(actionAttempt) : null
   );
   const runtimeState = getTryoutRuntimeState({ activeAttempt, now, runtime });
+  // The section runs, and its runtime is on its way: the player's frame stands until it arrives.
   if (
     attempt?.section?.status === "in-progress" &&
     runtimeState.kind === "none"
   ) {
-    return <TryoutSectionLock />;
+    return (
+      <TryoutPage>
+        <TryoutSectionLock />
+        <TryoutSectionOpening />
+      </TryoutPage>
+    );
   }
   if (finish && binding && isTryoutRuntimeRunning(runtimeState)) {
     return (
@@ -314,10 +320,18 @@ function TryoutSectionSettled({
     );
   }
 
+  // The learner's read is on its way: the section's heading stands over the place its attempt takes.
   if (actionAttempt === undefined) {
     return (
       <TryoutPage>
         <TryoutSectionLock />
+        <TryoutSectionPageHeader
+          page={page}
+          parents="linked"
+          setPath={returnAddress.publicPath}
+        >
+          {null}
+        </TryoutSectionPageHeader>
         <TryoutFinishedPlace pending />
       </TryoutPage>
     );
