@@ -12,6 +12,7 @@ import {
   wavelength,
 } from "@repo/design-system/components/contents/chemistry/emission/spectrum";
 import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
+import { useSimulationClock } from "@repo/design-system/components/contents/simulation/clock";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
@@ -22,7 +23,6 @@ import {
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
-  useVisualScene,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -35,7 +35,7 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Option, Schema } from "effect";
 import type { ReactNode } from "react";
-import { Suspense, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Group, Mesh } from "three";
 import { Color } from "three";
 import { useFormatter } from "use-intl";
@@ -116,7 +116,7 @@ export function BohrEmissionLab({
     .split("E");
 
   return (
-    <VisualCard>
+    <VisualCard onReset={() => setChosen(undefined)}>
       <VisualCardHeader description={description} title={title} />
 
       {offered.length > 1 ? (
@@ -152,16 +152,14 @@ export function BohrEmissionLab({
         render={<section />}
       >
         <ScienceStage reach={7} setting="space">
-          <Suspense>
-            <EmissionCamera />
-            <BohrAtom fall={shown} key={key(shown)} />
-            <group position={[0, -6.4, 0]}>
-              <SpectroscopeView from={shown.from} to={shown.to} />
-            </group>
-            <group position={[-6.6, -2.2, 0]} rotation={[0, 0, 0.12]}>
-              <DischargeTube />
-            </group>
-          </Suspense>
+          <EmissionCamera />
+          <BohrAtom fall={shown} />
+          <group position={[0, -6.4, 0]}>
+            <SpectroscopeView from={shown.from} to={shown.to} />
+          </group>
+          <group position={[-6.6, -2.2, 0]} rotation={[0, 0, 0.12]}>
+            <DischargeTube />
+          </group>
         </ScienceStage>
       </VisualCardBody>
 
@@ -223,7 +221,9 @@ function photonColor(nanometres: number) {
  * with the photon on its way.
  */
 function BohrAtom({ fall }: { readonly fall: Fall }) {
-  const playing = useVisualScene((card) => card.playing, false);
+  const stillSeconds = CYCLE * 0.75;
+  const { advance, time } = useSimulationClock(stillSeconds);
+  const invalidate = useThree((state) => state.invalidate);
   const electron = useRef<Mesh>(null);
   const photon = useRef<Group>(null);
   const nanometres = wavelength(fall.from, fall.to);
@@ -234,22 +234,35 @@ function BohrAtom({ fall }: { readonly fall: Fall }) {
     return [x, 0.18 * Math.sin((2 * Math.PI * x) / shown), 0] as const;
   });
 
-  useFrame((state) => {
-    const time = playing ? (state.clock.elapsedTime % CYCLE) / CYCLE : 0.75;
-    const falling = Math.min(1, Math.max(0, (time - 0.4) / 0.12));
+  const fallKey = `${fall.from}-${fall.to}`;
+  const shownFall = useRef(fallKey);
+
+  useEffect(() => {
+    if (shownFall.current === fallKey) {
+      return;
+    }
+    shownFall.current = fallKey;
+    time.current = stillSeconds;
+    invalidate();
+  }, [fallKey, invalidate, stillSeconds, time]);
+
+  useFrame((_, delta) => {
+    const seconds = advance(delta);
+    const phase = (seconds % CYCLE) / CYCLE;
+    const falling = Math.min(1, Math.max(0, (phase - 0.4) / 0.12));
     const radius =
       BOHR *
       (orbitRadius(fall.from) +
         (orbitRadius(fall.to) - orbitRadius(fall.from)) * falling);
-    const angle = state.clock.elapsedTime * (playing ? 1.4 : 0) + 0.6;
+    const angle = (seconds - stillSeconds) * 1.4 + 0.6;
     electron.current?.position.set(
       radius * Math.cos(angle),
       radius * Math.sin(angle),
       0
     );
     if (photon.current !== null) {
-      const flight = Math.max(0, (time - 0.5) / 0.5);
-      photon.current.visible = time >= 0.5;
+      const flight = Math.max(0, (phase - 0.5) / 0.5);
+      photon.current.visible = phase >= 0.5;
       photon.current.position.set(
         radius * Math.cos(angle) + flight * 6,
         radius * Math.sin(angle),

@@ -1,4 +1,4 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { getAtomSceneColors } from "@repo/design-system/components/contents/chemistry/color";
 import type { layoutReaction } from "@repo/design-system/components/contents/chemistry/equation/layout";
 import {
@@ -16,15 +16,20 @@ import {
   BondSticks,
   placeBond,
 } from "@repo/design-system/components/contents/chemistry/molecule/model";
+import type { CycleState } from "@repo/design-system/components/contents/simulation/cycle";
+import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
+import {
+  useVisualReset,
+  useVisualScene,
+} from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { useTheme } from "@repo/design-system/providers/theme";
 import type { Result } from "effect";
 import { Array as Arr, Option } from "effect";
 import type { ReactNode, RefObject } from "react";
-import { createRef, useMemo, useRef } from "react";
+import { createRef, useEffect, useMemo, useRef } from "react";
 import type { Group, Mesh } from "three";
 
 /** A reaction laid out for the lab. */
@@ -88,10 +93,15 @@ export function ReactionScene({
   readonly reactants: ReactNode;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
+  const invalidate = useThree((state) => state.invalidate);
   const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const colors = getAtomSceneColors(resolvedTheme);
   const store = useReactionProgress();
-  const shown = useRef(store.getState().progress);
+  const cycle = useRef<CycleState>({
+    hold: 0,
+    value: store.getState().progress,
+  });
+  const shownPlaying = useRef(false);
   const atomRefs = useMemo(
     () => Arr.map(layout.particles, () => createRef<Mesh>()),
     [layout]
@@ -105,17 +115,56 @@ export function ReactionScene({
     [layout]
   );
 
+  // Wake the demand loop whenever the slider scrubs or a reaction switch resets progress.
+  useEffect(
+    () =>
+      store.subscribe((state) => {
+        if (Math.abs(state.progress - cycle.current.value) >= SLIDER_STEP / 2) {
+          cycle.current = {
+            hold: 0,
+            value: Math.min(1, Math.max(0, state.progress)),
+          };
+          invalidate();
+        }
+      }),
+    [invalidate, store]
+  );
+
+  const shownLayout = useRef(layout);
+
+  useEffect(() => {
+    if (shownLayout.current === layout) {
+      return;
+    }
+    shownLayout.current = layout;
+    cycle.current = { hold: 0, value: store.getState().progress };
+    invalidate();
+  }, [invalidate, layout, store]);
+
+  useVisualReset(() => {
+    cycle.current = { hold: 0, value: 0 };
+    invalidate();
+  });
+
   useFrame((_, seconds) => {
     const state = store.getState();
     if (playing) {
-      shown.current = advanceProgress(shown.current, seconds);
-      if (Math.abs(shown.current - state.progress) >= SLIDER_STEP) {
-        state.setProgress(shown.current);
+      if (!shownPlaying.current && cycle.current.value >= 1) {
+        cycle.current = { hold: 0, value: 0 };
+      }
+      shownPlaying.current = true;
+      cycle.current = advanceProgress(cycle.current, simulationStep(seconds));
+      if (Math.abs(cycle.current.value - state.progress) >= SLIDER_STEP) {
+        state.setProgress(cycle.current.value);
       }
     } else {
-      shown.current = state.progress;
+      shownPlaying.current = false;
+      cycle.current = {
+        hold: 0,
+        value: Math.min(1, Math.max(0, state.progress)),
+      };
     }
-    const progress = Math.min(1, shown.current);
+    const progress = cycle.current.value;
     const positions = Arr.map(layout.particles, (particle) =>
       particlePosition(particle, progress)
     );

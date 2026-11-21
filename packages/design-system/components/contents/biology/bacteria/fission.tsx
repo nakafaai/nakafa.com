@@ -7,13 +7,11 @@ import {
   DOUBLING_MINUTES,
   generationsAfter,
 } from "@repo/design-system/components/contents/biology/bacteria/microbe";
+import { useCycleClock } from "@repo/design-system/components/contents/simulation/clock";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
-import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
-import { Slider } from "@repo/design-system/components/ui/slider";
 import {
-  useVisualScene,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -23,10 +21,11 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { VisualSlider } from "@repo/design-system/components/visual/slider";
 import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { InstancedMesh } from "three";
 
 /** Two hours: six doublings, sixty-four cells. */
@@ -96,24 +95,21 @@ export function BinaryFissionLab({
   const [minutes, setMinutes] = useState(MINUTES);
 
   return (
-    <VisualCard>
+    <VisualCard onReset={() => setMinutes(MINUTES)}>
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
-        <div className="flex min-w-48 flex-1 flex-col gap-2">
-          <div className="flex items-center justify-between gap-4 text-sm">
-            <span>{labels.minutes}</span>
-            <span className="tabular-nums">{Math.floor(minutes)}</span>
-          </div>
-          <Slider
-            aria-label={labels.minutes}
-            max={MINUTES}
-            min={0}
-            onValueChange={setMinutes}
-            step={1}
-            value={minutes}
-          />
-        </div>
+        <VisualSlider
+          heading={labels.minutes}
+          label={labels.minutes}
+          max={MINUTES}
+          min={0}
+          onValueChange={setMinutes}
+          pauseOnChange
+          readout={Math.floor(minutes)}
+          step={1}
+          value={minutes}
+        />
       </VisualCardToolbar>
 
       <VisualCardBody
@@ -122,9 +118,7 @@ export function BinaryFissionLab({
         render={<section />}
       >
         <ScienceStage reach={60} setting="studio">
-          <Suspense fallback={null}>
-            <FissionScene minutes={minutes} onMinutes={setMinutes} />
-          </Suspense>
+          <FissionScene minutes={minutes} onMinutes={setMinutes} />
         </ScienceStage>
       </VisualCardBody>
 
@@ -154,35 +148,20 @@ function FissionScene({
   readonly minutes: number;
   readonly onMinutes: (minutes: number) => void;
 }) {
-  const playing = useVisualScene((card) => card.playing, false);
   const bodies = useRef<InstancedMesh>(null);
   const caps = useRef<InstancedMesh>(null);
   const haloBodies = useRef<InstancedMesh>(null);
   const haloCaps = useRef<InstancedMesh>(null);
-  const clock = useRef(minutes);
-  const sent = useRef(minutes);
+  const clock = useCycleClock({
+    initial: MINUTES,
+    onValue: onMinutes,
+    rate: MINUTES_PER_SECOND,
+    steps: MINUTES,
+    total: MINUTES,
+    value: minutes,
+  });
 
-  // A time the learner set on the slider moves the clock; a time the scene
-  // sent while playing is already on it.
-  useEffect(() => {
-    if (minutes !== sent.current) {
-      clock.current = minutes;
-      sent.current = minutes;
-    }
-  }, [minutes]);
-
-  useFrame((_, delta) => {
-    if (playing) {
-      clock.current =
-        clock.current >= MINUTES
-          ? 0
-          : Math.min(MINUTES, clock.current + delta * MINUTES_PER_SECOND);
-      const whole = Math.floor(clock.current);
-      if (whole !== sent.current) {
-        sent.current = whole;
-        onMinutes(whole);
-      }
-    }
+  useFrame(() => {
     const time = clock.current;
     const generation = generationsAfter(time);
     const progress = time >= MINUTES ? 0 : cycleProgress(time);
@@ -244,47 +223,44 @@ function FissionScene({
   });
 
   return (
-    <>
-      <SimulationTicker running={playing} />
-      <MicroscopeField>
-        <directionalLight intensity={1.2} position={[20, 60, 30]} />
-        <Instances limit={MOST * 2} ref={haloBodies}>
-          <cylinderGeometry args={[RADIUS, RADIUS, NEWBORN, 14, 1, true]} />
-          <meshBasicMaterial color={CELL_COLORS.phaseHalo} toneMapped={false} />
-          {Arr.map(Arr.range(1, MOST * 2), (slot) => (
-            <Instance key={slot} />
-          ))}
-        </Instances>
-        <Instances limit={MOST * 4} ref={haloCaps}>
-          <sphereGeometry args={[RADIUS, 14, 10]} />
-          <meshBasicMaterial color={CELL_COLORS.phaseHalo} toneMapped={false} />
-          {Arr.map(Arr.range(1, MOST * 4), (slot) => (
-            <Instance key={slot} />
-          ))}
-        </Instances>
-        <Instances limit={MOST * 2} ref={bodies}>
-          <cylinderGeometry args={[RADIUS, RADIUS, NEWBORN, 14, 1, true]} />
-          <meshPhysicalMaterial
-            clearcoat={0.5}
-            color={CELL_COLORS.phaseCell}
-            roughness={0.5}
-          />
-          {Arr.map(Arr.range(1, MOST * 2), (slot) => (
-            <Instance key={slot} />
-          ))}
-        </Instances>
-        <Instances limit={MOST * 4} ref={caps}>
-          <sphereGeometry args={[RADIUS, 14, 10]} />
-          <meshPhysicalMaterial
-            clearcoat={0.5}
-            color={CELL_COLORS.phaseCell}
-            roughness={0.5}
-          />
-          {Arr.map(Arr.range(1, MOST * 4), (slot) => (
-            <Instance key={slot} />
-          ))}
-        </Instances>
-      </MicroscopeField>
-    </>
+    <MicroscopeField>
+      <directionalLight intensity={1.2} position={[20, 60, 30]} />
+      <Instances limit={MOST * 2} ref={haloBodies}>
+        <cylinderGeometry args={[RADIUS, RADIUS, NEWBORN, 14, 1, true]} />
+        <meshBasicMaterial color={CELL_COLORS.phaseHalo} toneMapped={false} />
+        {Arr.map(Arr.range(1, MOST * 2), (slot) => (
+          <Instance key={slot} />
+        ))}
+      </Instances>
+      <Instances limit={MOST * 4} ref={haloCaps}>
+        <sphereGeometry args={[RADIUS, 14, 10]} />
+        <meshBasicMaterial color={CELL_COLORS.phaseHalo} toneMapped={false} />
+        {Arr.map(Arr.range(1, MOST * 4), (slot) => (
+          <Instance key={slot} />
+        ))}
+      </Instances>
+      <Instances limit={MOST * 2} ref={bodies}>
+        <cylinderGeometry args={[RADIUS, RADIUS, NEWBORN, 14, 1, true]} />
+        <meshPhysicalMaterial
+          clearcoat={0.5}
+          color={CELL_COLORS.phaseCell}
+          roughness={0.5}
+        />
+        {Arr.map(Arr.range(1, MOST * 2), (slot) => (
+          <Instance key={slot} />
+        ))}
+      </Instances>
+      <Instances limit={MOST * 4} ref={caps}>
+        <sphereGeometry args={[RADIUS, 14, 10]} />
+        <meshPhysicalMaterial
+          clearcoat={0.5}
+          color={CELL_COLORS.phaseCell}
+          roughness={0.5}
+        />
+        {Arr.map(Arr.range(1, MOST * 4), (slot) => (
+          <Instance key={slot} />
+        ))}
+      </Instances>
+    </MicroscopeField>
   );
 }

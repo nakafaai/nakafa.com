@@ -1,15 +1,7 @@
-import {
-  Clock04Icon,
-  DashboardSpeed01Icon,
-  PauseIcon,
-  PlayIcon,
-  Table01Icon,
-} from "@hugeicons/core-free-icons";
+import { DashboardSpeed01Icon, Table01Icon } from "@hugeicons/core-free-icons";
 import { useIntersection, useMediaQuery } from "@mantine/hooks";
 import { getTableChairArrangement } from "@repo/design-system/components/contents/mathematics/sequence/arrangement";
-import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Select,
@@ -19,16 +11,19 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import {
+  usePauseVisualScene,
+  useStartVisualScene,
+  useVisualReset,
+  useVisualScene,
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
   VisualCardHeader,
-  VisualCardMenu,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Effect, Fiber, Schedule } from "effect";
 import {
@@ -41,10 +36,11 @@ import {
 import { div as MotionDiv } from "motion/react-m";
 import type { ReactNode } from "react";
 import {
-  useCallback,
   useDeferredValue,
   useEffect,
+  useEffectEvent,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useTranslations } from "use-intl";
@@ -77,31 +73,70 @@ interface TableChairsProps {
 /**
  * Renders the table-chair sequence animation used by the sequence concept page.
  *
- * `LazyMotion` with `domMax` keeps layout animation support explicit, while
- * `MotionConfig reducedMotion="user"` follows the user's OS preference.
- *
- * @see https://motion.dev/docs/react-reduce-bundle-size
- * @see https://motion.dev/docs/react-accessibility
- * @see https://motion.dev/docs/react-layout-animations
+ * Uses the shared `VisualCard` store and `VisualCardSceneActions` so Play,
+ * Pause, Fullscreen, and Reset behave identically to every other visual card.
  */
 export default function TableChairsAnimation({ labels }: TableChairsProps) {
-  const common = useTranslations("Common");
-  const [tableCount, setTableCount] = useState(1);
-  const [speed, setSpeed] = useState(1);
-  const [isPlaying, setIsPlaying] = useState(true);
-
   const { ref, entry } = useIntersection({
     threshold: 0.1,
   });
+  const isInView = entry?.isIntersecting ?? false;
+
+  return (
+    <VisualCard ref={ref}>
+      <VisualCardHeader
+        description={`${labels.table} & ${labels.chair}`}
+        title={labels.title}
+      />
+      <TableChairsContent isInView={isInView} labels={labels} />
+    </VisualCard>
+  );
+}
+
+/** Controls, stage, actions, and footer inside the shared `VisualCard` store. */
+function TableChairsContent({
+  isInView,
+  labels,
+}: {
+  readonly isInView: boolean;
+  readonly labels: TableChairsProps["labels"];
+}) {
+  const common = useTranslations("Common");
+  const [tableCount, setTableCount] = useState(1);
+  const [speed, setSpeed] = useState(1);
+  const playing = useVisualScene((state) => state.playing, false);
+  const start = useStartVisualScene();
+  const pause = usePauseVisualScene();
+  const startedOnce = useRef(false);
+  const shownPlaying = useRef(playing);
+  const startOnEnter = useEffectEvent(() => start());
 
   const isMobile = useMediaQuery("(max-width: 640px)");
-
   const maxTables = isMobile ? MAX_TABLES_MOBILE : MAX_TABLES_DESKTOP;
 
-  const isInView = entry?.isIntersecting ?? false;
-  const isEffectivelyPlaying = isPlaying && tableCount < maxTables;
-  // Viewport visibility gates work without overriding the user's Play/Pause intent.
-  const isAnimating = isEffectivelyPlaying && isInView;
+  // Start playing once the card first enters the viewport, matching BacterialGrowth.
+  useEffect(() => {
+    if (isInView && !startedOnce.current) {
+      startedOnce.current = true;
+      startOnEnter();
+    }
+  }, [isInView]);
+
+  // Pressing Play while parked at the maximum table count replays from 1.
+  useEffect(() => {
+    const justStarted = playing && !shownPlaying.current;
+    shownPlaying.current = playing;
+    if (justStarted && tableCount >= maxTables) {
+      setTableCount(1);
+    }
+  }, [maxTables, playing, tableCount]);
+
+  useVisualReset(() => {
+    setTableCount(1);
+    setSpeed(1);
+  });
+
+  const isAnimating = playing && tableCount < maxTables && isInView;
   const deferredAnimating = useDeferredValue(isAnimating);
   const deferredTableCount = useDeferredValue(tableCount);
 
@@ -132,21 +167,13 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
     };
   }, [deferredAnimating, maxTables, speed]);
 
-  const resetAnimation = useCallback(() => {
-    setTableCount(1);
-    setIsPlaying(true);
-  }, []);
-
-  const togglePlayPause = useCallback(() => {
-    if (tableCount >= maxTables) {
-      // If at max table count and trying to play, restart from beginning
-      setTableCount(1);
-      setIsPlaying(true);
-      return;
+  // Stop the play toggle cleanly once the sequence reaches its final step.
+  const pauseAtEnd = useEffectEvent(() => pause());
+  useEffect(() => {
+    if (playing && tableCount >= maxTables) {
+      pauseAtEnd();
     }
-
-    setIsPlaying(!isPlaying);
-  }, [isPlaying, tableCount, maxTables]);
+  }, [maxTables, playing, tableCount]);
 
   const arrangement = useMemo(
     () => getTableChairArrangement(deferredTableCount),
@@ -162,15 +189,8 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
   }));
 
   return (
-    <VisualCard ref={ref}>
-      <VisualCardHeader
-        // What the card counts; the counts themselves stand in its footer.
-        description={`${labels.table} & ${labels.chair}`}
-        title={labels.title}
-      />
-
+    <>
       <VisualCardToolbar>
-        {/* The speed and the count read as one control at the default size. */}
         <ButtonGroup>
           <Select
             items={speedItems}
@@ -202,7 +222,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
             onValueChange={(next: number | null) => {
               if (next !== null) {
                 setTableCount(next);
-                setIsPlaying(false);
+                pause();
               }
             }}
             value={tableCount}
@@ -225,7 +245,6 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
       <VisualCardBody className="p-(--card-spacing)">
         <div className="relative aspect-square h-full w-full overflow-hidden sm:aspect-video">
           <div className="flex h-full flex-col items-center justify-center gap-8">
-            {/* Table and chairs visualization */}
             <div className="relative flex w-full items-center justify-center">
               <div
                 className="relative"
@@ -237,7 +256,6 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
                 <MotionConfig reducedMotion="user">
                   <LazyMotion features={domMax} strict>
                     <LayoutGroup>
-                      {/* Tables */}
                       <AnimatePresence mode="popLayout">
                         {Arr.map(arrangement.tables, (table) => (
                           <MotionDiv
@@ -259,13 +277,12 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
                               type: "spring",
                               stiffness: 500,
                               damping: 30,
-                              delay: (table.id - 1) * STAGGER_DELAY, // Stagger effect
+                              delay: (table.id - 1) * STAGGER_DELAY,
                             }}
                           />
                         ))}
                       </AnimatePresence>
 
-                      {/* Chairs */}
                       <AnimatePresence mode="popLayout">
                         {Arr.map(arrangement.chairs, (chair) => (
                           <MotionDiv
@@ -287,7 +304,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
                               type: "spring",
                               stiffness: 500,
                               damping: 30,
-                              delay: chair.id * STAGGER_DELAY, // Stagger effect
+                              delay: chair.id * STAGGER_DELAY,
                             }}
                           />
                         ))}
@@ -301,21 +318,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
         </div>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <Button
-          onClick={togglePlayPause}
-          size="icon"
-          tooltip={isEffectivelyPlaying ? labels.pause : labels.play}
-          variant={isEffectivelyPlaying ? "outline" : "default"}
-        >
-          <HugeIcons icon={isEffectivelyPlaying ? PauseIcon : PlayIcon} />
-        </Button>
-        <VisualCardMenu>
-          <DropdownMenuItem icon={Clock04Icon} onSelect={resetAnimation}>
-            {labels.reset}
-          </DropdownMenuItem>
-        </VisualCardMenu>
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
         <VisualCardFacts>
@@ -323,6 +326,6 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
           <VisualFactTabular label={labels.chair} value={chairCount} />
         </VisualCardFacts>
       </VisualCardFooter>
-    </VisualCard>
+    </>
   );
 }

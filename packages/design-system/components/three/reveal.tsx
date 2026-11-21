@@ -1,5 +1,9 @@
 import { addAfterEffect, useFrame, useThree } from "@react-three/fiber";
 import { useCameraFraming } from "@repo/design-system/components/three/camera/framing";
+import {
+  isSceneOverlayReady,
+  useSceneOverlayStoreOptional,
+} from "@repo/design-system/components/three/overlay";
 import { useEffect, useEffectEvent, useRef } from "react";
 
 /**
@@ -40,6 +44,7 @@ const SETTLE_FRAMES = 15;
  */
 export function SceneDrawn({ onDrawn }: { onDrawn: () => void }) {
   const framing = useCameraFraming();
+  const overlay = useSceneOverlayStoreOptional();
   const invalidate = useThree((state) => state.invalidate);
   const fittedFrames = useRef(0);
   const whole = useRef(false);
@@ -50,16 +55,15 @@ export function SceneDrawn({ onDrawn }: { onDrawn: () => void }) {
     if (told.current) {
       return;
     }
-    if (!framing) {
-      whole.current = true;
-      return;
-    }
-    if (framing.hasFitted()) {
+    const framingReady = framing ? framing.isSettled() : true;
+    const overlayReady = overlay ? isSceneOverlayReady(overlay) : true;
+    if (!framing || framing.hasFitted()) {
       fittedFrames.current += 1;
     }
-    whole.current = framing.isSettled() || fittedFrames.current > SETTLE_FRAMES;
+    whole.current =
+      (framingReady && overlayReady) || fittedFrames.current > SETTLE_FRAMES;
     if (!whole.current) {
-      // The camera still fits: draw again once it has.
+      // The camera or its overlay labels still settle: draw again once ready.
       invalidate();
     }
   });

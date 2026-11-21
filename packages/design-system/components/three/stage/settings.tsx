@@ -1,11 +1,10 @@
 import { Environment, Sky, useEnvironment } from "@react-three/drei";
 import { useStage } from "@repo/design-system/components/three/stage/context";
 import { horizonColor } from "@repo/design-system/components/three/stage/horizon";
-import { Panels } from "@repo/design-system/components/three/stage/panels";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
-import { Suspense, useMemo } from "react";
+import { useMemo } from "react";
 import type { ColorRepresentation } from "three";
 import { DataTexture } from "three";
 
@@ -158,15 +157,13 @@ function Haze({ color }: { readonly color: ColorRepresentation }) {
 export function LabSetting() {
   return (
     <>
-      <Suspense fallback={<Panels />}>
-        <Photo
-          backdrop={3}
-          blur={0.18}
-          exposure={1.5}
-          file="lab"
-          turn={LAB_TURN}
-        />
-      </Suspense>
+      <Photo
+        backdrop={3}
+        blur={0.18}
+        exposure={1.5}
+        file="lab"
+        turn={LAB_TURN}
+      />
       <Sun direction={LAB_SUN} intensity={1.5} />
     </>
   );
@@ -176,15 +173,13 @@ export function LabSetting() {
 export function FieldSetting() {
   return (
     <>
-      <Suspense fallback={<Panels />}>
-        <Photo
-          backdrop={4}
-          blur={0.12}
-          exposure={3.5}
-          file="field"
-          turn={FIELD_TURN}
-        />
-      </Suspense>
+      <Photo
+        backdrop={4}
+        blur={0.12}
+        exposure={3.5}
+        file="field"
+        turn={FIELD_TURN}
+      />
       <Sun direction={FIELD_SUN} intensity={2.6} />
     </>
   );
@@ -237,13 +232,11 @@ export function StudioSetting() {
   return (
     <>
       <color args={[backdrop]} attach="background" />
-      <Suspense fallback={<Panels />}>
-        <Environment
-          environmentIntensity={1}
-          environmentRotation={[0, STUDIO_TURN, 0]}
-          files={`/environments/${tier === "full" ? "desktop" : "phone"}/studio.exr`}
-        />
-      </Suspense>
+      <Environment
+        environmentIntensity={1}
+        environmentRotation={[0, STUDIO_TURN, 0]}
+        files={`/environments/${tier === "full" ? "desktop" : "phone"}/studio.exr`}
+      />
       <Sun direction={STUDIO_SUN} intensity={1.4} />
       <Haze color={backdrop} />
     </>
@@ -260,12 +253,10 @@ export function SpaceSetting() {
   return (
     <>
       <color args={[getColor("ZINC", 950)]} attach="background" />
-      <Suspense fallback={null}>
-        <Environment
-          environmentIntensity={0.15}
-          files={`/environments/${tier === "full" ? "desktop" : "phone"}/studio.exr`}
-        />
-      </Suspense>
+      <Environment
+        environmentIntensity={0.15}
+        files={`/environments/${tier === "full" ? "desktop" : "phone"}/studio.exr`}
+      />
       <Sun direction={STUDIO_SUN} intensity={3.2} />
     </>
   );

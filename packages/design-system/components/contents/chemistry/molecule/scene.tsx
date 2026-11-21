@@ -14,10 +14,13 @@ import {
   BondSticks,
   placeBond,
 } from "@repo/design-system/components/contents/chemistry/molecule/model";
+import {
+  useInvalidateOnChange,
+  useSimulationClock,
+} from "@repo/design-system/components/contents/simulation/clock";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr, Option, Result } from "effect";
 import { createRef, useMemo } from "react";
@@ -73,7 +76,9 @@ export function MoleculeScene({
   readonly molecule: Molecule;
   readonly style: ModelStyle;
 }) {
-  const playing = useVisualScene((card) => card.playing, false);
+  const { advance } = useSimulationClock(0);
+  useInvalidateOnChange(molecule);
+  useInvalidateOnChange(style);
   const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const colors = getAtomSceneColors(resolvedTheme);
   const atomRefs = useMemo(
@@ -85,8 +90,8 @@ export function MoleculeScene({
     [molecule]
   );
 
-  useFrame((state) => {
-    const seconds = playing ? state.clock.elapsedTime : 0;
+  useFrame((_, delta) => {
+    const seconds = advance(delta);
     const positions = Arr.map(molecule.atoms, (atom, index) =>
       vibrate(atom.position, ELEMENTS[atom.element].mass, seconds, index * 0.9)
     );

@@ -6,15 +6,17 @@ import {
   trackPoints,
   trackRadius,
 } from "@repo/design-system/components/contents/chemistry/tracks/motion";
+import {
+  useInvalidateOnChange,
+  useSimulationClock,
+} from "@repo/design-system/components/contents/simulation/clock";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { GlassMaterial } from "@repo/design-system/components/three/physical";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
-import { Slider } from "@repo/design-system/components/ui/slider";
 import {
-  useVisualScene,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -24,11 +26,12 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { VisualSlider } from "@repo/design-system/components/visual/slider";
 import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { createRef, Suspense, useMemo, useState } from "react";
+import { createRef, useMemo, useState } from "react";
 import type { Mesh } from "three";
 import { Color } from "three";
 import { useFormatter } from "use-intl";
@@ -93,28 +96,24 @@ export function ParticleTrackLab({
       .replaceAll(",", "{,}");
 
   return (
-    <VisualCard>
+    <VisualCard onReset={() => setField(0.0005)}>
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
-        <div className="flex w-full flex-col gap-3">
-          <div className="flex items-center justify-between gap-4 text-sm">
-            <span>{labels.field}</span>
-            <span className="shrink-0 tabular-nums">
-              <InlineMath
-                math={`B = ${decimal(field * 1000, 1)}\\ \\mathrm{mT}`}
-              />
-            </span>
-          </div>
-          <Slider
-            aria-label={labels.field}
-            max={FIELD.max}
-            min={FIELD.min}
-            onValueChange={(value: number) => setField(value)}
-            step={0.0001}
-            value={field}
-          />
-        </div>
+        <VisualSlider
+          heading={labels.field}
+          label={labels.field}
+          max={FIELD.max}
+          min={FIELD.min}
+          onValueChange={setField}
+          readout={
+            <InlineMath
+              math={`B = ${decimal(field * 1000, 1)}\\ \\mathrm{mT}`}
+            />
+          }
+          step={0.0001}
+          value={field}
+        />
       </VisualCardToolbar>
 
       <VisualCardBody
@@ -123,10 +122,8 @@ export function ParticleTrackLab({
         render={<section />}
       >
         <ScienceStage reach={HALF_WIDTH * METRE + 1} setting="space">
-          <Suspense>
-            <TrackCamera />
-            <Chamber field={field} />
-          </Suspense>
+          <TrackCamera />
+          <Chamber field={field} />
         </ScienceStage>
       </VisualCardBody>
 
@@ -177,7 +174,8 @@ export function ParticleTrackLab({
  * bead on each track that travels it while the card plays.
  */
 function Chamber({ field }: { readonly field: number }) {
-  const playing = useVisualScene((card) => card.playing, false);
+  const { advance } = useSimulationClock(3);
+  useInvalidateOnChange(field);
   const tracks = useMemo(
     () =>
       Arr.map(ParticleIdSchema.literals, (id: ParticleId) => {
@@ -197,8 +195,9 @@ function Chamber({ field }: { readonly field: number }) {
     [field]
   );
 
-  useFrame((state) => {
-    const share = playing ? (state.clock.elapsedTime / 3) % 1 : 1;
+  useFrame((_, delta) => {
+    const raw = advance(delta);
+    const share = raw === 3 ? 1 : (raw / 3) % 1;
     for (const track of tracks) {
       const point = Arr.get(
         track.points,

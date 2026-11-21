@@ -7,7 +7,9 @@ import {
   Particle,
   ParticleElementContext,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/parts";
+import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { Array as Arr, Schema } from "effect";
 import { useRef } from "react";
 import type { Group, Mesh } from "three";
@@ -117,13 +119,14 @@ export function RustPatches({ color }: { color: string }) {
 export function FloatingIons() {
   const { colors } = useChemicalReactionTypeScene();
   const groupRef = useRef<Group>(null);
+  const playing = useVisualScene((card) => card.playing, true);
 
   useFrame((_, delta) => {
-    if (!groupRef.current) {
+    if (!(playing && groupRef.current)) {
       return;
     }
 
-    groupRef.current.rotation.y += delta * 0.38;
+    groupRef.current.rotation.y += simulationStep(delta) * 0.38;
   });
 
   return (

@@ -16,17 +16,11 @@ type ExactRange = ReturnType<typeof range>;
 export type VisualProjection = ReturnType<typeof resolveVisualProjection>;
 function range(
   bounds: { readonly min: number; readonly max: number },
-  padding: number
+  padding: BigDecimal.BigDecimal
 ) {
   return {
-    min: BigDecimal.subtract(
-      BigDecimal.fromNumberUnsafe(bounds.min),
-      BigDecimal.fromNumberUnsafe(padding)
-    ),
-    max: BigDecimal.sum(
-      BigDecimal.fromNumberUnsafe(bounds.max),
-      BigDecimal.fromNumberUnsafe(padding)
-    ),
+    min: BigDecimal.subtract(BigDecimal.fromNumberUnsafe(bounds.min), padding),
+    max: BigDecimal.sum(BigDecimal.fromNumberUnsafe(bounds.max), padding),
   };
 }
 function include(bounds: ExactRange, value: number): ExactRange {
@@ -42,15 +36,40 @@ function span(bounds: ExactRange) {
   return BigDecimal.subtract(bounds.max, bounds.min);
 }
 function frameRanges(scene: PlaneVisual | SpaceVisual, padded: boolean) {
-  const padding =
-    padded && scene.view.kind === "fit" ? (scene.view.padding ?? 0) : 0;
-  return {
-    x: range(scene.frame.x, padding),
-    y: range(scene.frame.y, padding),
+  const raw = {
+    x: range(scene.frame.x, ZERO),
+    y: range(scene.frame.y, ZERO),
     z:
       scene.space === "plane"
         ? { min: ZERO, max: ZERO }
-        : range(scene.frame.z, padding),
+        : range(scene.frame.z, ZERO),
+  };
+  const padding =
+    padded && scene.view.kind === "fit" ? (scene.view.padding ?? 0) : 0;
+  if (padding === 0) {
+    return raw;
+  }
+  const amount = BigDecimal.fromNumberUnsafe(padding);
+  const spans = { x: span(raw.x), y: span(raw.y), z: span(raw.z) };
+  const extents = axisExtents(scene, spans);
+  const longest = BigDecimal.max(
+    extents.x,
+    BigDecimal.max(extents.y, extents.z)
+  );
+  // On a graph with independent X and Y scales, scale padding proportionally
+  // to each axis's extent so a narrow axis (e.g. seconds [0, 0.8] paired with
+  // pressure [0, 16]) is never bloated by raw padding written for the wider axis.
+  const padAxis = (extent: BigDecimal.BigDecimal) =>
+    BigDecimal.equals(extent, longest)
+      ? amount
+      : BigDecimal.divideUnsafe(BigDecimal.multiply(amount, extent), longest);
+  return {
+    x: range(scene.frame.x, padAxis(extents.x)),
+    y: range(scene.frame.y, padAxis(extents.y)),
+    z:
+      scene.space === "plane"
+        ? { min: ZERO, max: ZERO }
+        : range(scene.frame.z, padAxis(extents.z)),
   };
 }
 /**

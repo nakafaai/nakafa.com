@@ -116,6 +116,23 @@ describe("MathVisual normalization", () => {
       ).toEqual({ x: 5, y: 5, z: 0 });
     }
   );
+  it("scales padding proportionally per axis on independent-scale plane graphs", () => {
+    const scene = {
+      ...plane({ min: 0, max: 0.8 }, { min: 0, max: 16 }),
+      view: { kind: "fit", padding: 1 },
+    } satisfies PlaneVisual;
+    const projection = resolveVisualProjection(scene);
+    const padded = projectVisualFrame(scene, projection, true);
+    const unpadded = projectVisualFrame(scene, projection, false);
+    expect(padded.x).toEqual({ min: -5, max: 5 });
+    expect(padded.y).toEqual({ min: -5, max: 5 });
+    expect(unpadded.x.max - unpadded.x.min).toBeCloseTo(
+      unpadded.y.max - unpadded.y.min,
+      12
+    );
+    expect(unpadded.x.max - unpadded.x.min).toBeCloseTo((16 / 18) * 10, 12);
+  });
+
   it("includes padding without introducing mathematical depth to a plane", () => {
     const scene = {
       ...plane({ min: -2, max: 2 }),

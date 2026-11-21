@@ -8,12 +8,12 @@ import {
 } from "@repo/design-system/components/contents/chemistry/decay/law";
 import { HandSlider } from "@repo/design-system/components/contents/chemistry/slider";
 import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
+import { useCycleClock } from "@repo/design-system/components/contents/simulation/clock";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
-  useVisualScene,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -27,7 +27,7 @@ import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { Suspense, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { InstancedMesh } from "three";
 import { Color, Object3D } from "three";
 import { useFormatter } from "use-intl";
@@ -80,7 +80,7 @@ export function RadioactiveDecayLab({
   const count = SIDE * SIDE;
 
   return (
-    <VisualCard>
+    <VisualCard onReset={() => setYears(CARBON_HALF_LIFE)}>
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
@@ -109,10 +109,8 @@ export function RadioactiveDecayLab({
         render={<section />}
       >
         <ScienceStage floor={0} reach={7} setting="studio">
-          <Suspense>
-            <DecayCamera />
-            <DecaySample onTime={setYears} times={times} years={years} />
-          </Suspense>
+          <DecayCamera />
+          <DecaySample onTime={setYears} times={times} years={years} />
         </ScienceStage>
       </VisualCardBody>
 
@@ -167,10 +165,16 @@ function DecaySample({
   readonly times: readonly number[];
   readonly years: number;
 }) {
-  const playing = useVisualScene((card) => card.playing, false);
   const mesh = useRef<InstancedMesh>(null);
-  const clock = useRef(years);
-  const reported = useRef(years);
+  const totalYears = HALF_LIVES * CARBON_HALF_LIFE;
+  const clock = useCycleClock({
+    initial: CARBON_HALF_LIFE,
+    onValue: onTime,
+    rate: PACE * CARBON_HALF_LIFE,
+    steps: totalYears / 10,
+    total: totalYears,
+    value: years,
+  });
   const carbon = useMemo(() => new Color(getColor("NEUTRAL", 800)), []);
   const nitrogen = useMemo(() => new Color(PLOT_COLORS.violet), []);
 
@@ -197,21 +201,10 @@ function DecaySample({
     instances.instanceMatrix.needsUpdate = true;
   }, [times]);
 
-  useFrame((_, seconds) => {
+  useFrame(() => {
     const instances = mesh.current;
     if (instances === null) {
       return;
-    }
-    if (playing) {
-      clock.current =
-        (clock.current + seconds * PACE * CARBON_HALF_LIFE) %
-        (HALF_LIVES * CARBON_HALF_LIFE);
-      if (Math.abs(clock.current - reported.current) > CARBON_HALF_LIFE / 8) {
-        reported.current = clock.current;
-        onTime(Math.round(clock.current / 10) * 10);
-      }
-    } else {
-      clock.current = years;
     }
     for (const [index, decay] of Arr.map(
       times,

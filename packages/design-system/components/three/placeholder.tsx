@@ -10,18 +10,32 @@ import { createContext, use } from "react";
  */
 const SceneStillContext = createContext<ReactNode>(null);
 
+/** Callback invoked when the first scene inside `SceneStill` draws its first whole frame. */
+const SceneDrawnContext = createContext<(() => void) | null>(null);
+
+/** Reads the surrounding `SceneStill`'s drawn callback, when one was supplied. */
+export function useNotifySceneDrawn() {
+  return use(SceneDrawnContext);
+}
+
 /**
  * Gives the scenes inside it the still they show while they load, so the card
  * keeps the same picture from the server's HTML to the scene's first frame.
  */
 export function SceneStill({
   children,
+  onDrawn,
   still,
 }: {
   children: ReactNode;
+  onDrawn?: () => void;
   still: ReactNode;
 }) {
-  return <SceneStillContext value={still}>{children}</SceneStillContext>;
+  return (
+    <SceneDrawnContext value={onDrawn ?? null}>
+      <SceneStillContext value={still}>{children}</SceneStillContext>
+    </SceneDrawnContext>
+  );
 }
 
 /**

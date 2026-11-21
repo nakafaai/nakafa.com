@@ -34,6 +34,17 @@ export function getPowerPreference(): "default" | "high-performance" {
 }
 
 /**
+ * Chooses a stable device-pixel-ratio cap for WebGL canvases. Keeping the cap
+ * fixed avoids mid-session framebuffer resizes and blank clears while cutting
+ * fragment fill cost on high-DPI phones.
+ *
+ * @returns `[1, 1.5]` on mobile devices and `[1, 2]` on desktop
+ */
+export function getCanvasDpr(): [number, number] {
+  return isMobileDevice() ? [1, 1.5] : [1, 2];
+}
+
+/**
  * Checks whether a WebGL renderer name belongs to a software rasterizer, which
  * draws on the CPU, so every full-screen pass costs a frame many times over.
  *

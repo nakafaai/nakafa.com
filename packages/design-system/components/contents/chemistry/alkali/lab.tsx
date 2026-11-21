@@ -10,6 +10,7 @@ import {
   stillMoment,
 } from "@repo/design-system/components/contents/chemistry/alkali/metals";
 import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
+import { useSimulationClock } from "@repo/design-system/components/contents/simulation/clock";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
@@ -25,7 +26,6 @@ import {
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
-  useVisualScene,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -39,7 +39,7 @@ import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
 import type { ReactNode } from "react";
-import { createRef, Suspense, useMemo, useRef, useState } from "react";
+import { createRef, useEffect, useMemo, useRef, useState } from "react";
 import type { Mesh } from "three";
 import { Color, MeshPhysicalMaterial, Vector2 } from "three";
 import { useFormatter } from "use-intl";
@@ -141,7 +141,7 @@ export function AlkaliWaterLab({
     mathNumber(format.number(value, "math", { maximumFractionDigits: digits }));
 
   return (
-    <VisualCard>
+    <VisualCard onReset={() => setChosen(undefined)}>
       <VisualCardHeader description={description} title={title} />
 
       {offered.length > 1 ? (
@@ -177,10 +177,8 @@ export function AlkaliWaterLab({
         render={<section />}
       >
         <ScienceStage floor={0} reach={0.2} setting="lab">
-          <Suspense>
-            <BeakerCamera />
-            <Beaker key={shown} metalId={shown} />
-          </Suspense>
+          <BeakerCamera />
+          <Beaker metalId={shown} />
         </ScienceStage>
       </VisualCardBody>
 
@@ -237,7 +235,7 @@ export function AlkaliWaterLab({
  */
 function Beaker({ metalId }: { readonly metalId: MetalId }) {
   const metal = getMetal(metalId);
-  const playing = useVisualScene((card) => card.playing, false);
+  const invalidate = useThree((state) => state.invalidate);
   const pieceRef = useRef<Mesh>(null);
   const flame = useRef<Mesh>(null);
   const water = useRef<Mesh>(null);
@@ -255,10 +253,16 @@ function Beaker({ metalId }: { readonly metalId: MetalId }) {
   );
   const floating = floats(metalId);
   const still = stillMoment(metalId, RUN);
+  const { advance, time } = useSimulationClock(still);
   const room = BEAKER.inner * 0.6;
 
-  useFrame((state) => {
-    const seconds = playing ? state.clock.elapsedTime % RUN : still;
+  useEffect(() => {
+    time.current = still;
+    invalidate();
+  }, [invalidate, still, time]);
+
+  useFrame((_, delta) => {
+    const seconds = advance(delta) % RUN;
     const piece = pieceAt(metalId, seconds, RUN, LEVEL, room);
     placePiece(pieceRef.current, piece, melts(metalId));
     placeFlame(flame.current, piece, metal.flame, seconds);

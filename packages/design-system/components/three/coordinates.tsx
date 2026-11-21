@@ -112,6 +112,7 @@ function CoordinateCamera() {
       framing={framing}
       maxDistance={maxDistance}
       minDistance={minDistance}
+      orbitOnPlay
       projection={projection}
     />
   );

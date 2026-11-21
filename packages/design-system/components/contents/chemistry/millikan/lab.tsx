@@ -7,14 +7,15 @@ import {
   ELEMENTARY_CHARGE,
   nearestDrop,
 } from "@repo/design-system/components/contents/chemistry/millikan/drop";
+import { useInvalidateOnChange } from "@repo/design-system/components/contents/simulation/clock";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
-import { Slider } from "@repo/design-system/components/ui/slider";
 import {
+  useVisualReset,
   useVisualScene,
   VisualCard,
   VisualCardBody,
@@ -25,11 +26,12 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { VisualSlider } from "@repo/design-system/components/visual/slider";
 import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { createRef, Suspense, useMemo, useState } from "react";
+import { createRef, useMemo, useState } from "react";
 import type { Mesh } from "three";
 import { Color } from "three";
 import { useFormatter } from "use-intl";
@@ -85,26 +87,20 @@ export function MillikanOilDropLab({
       .replaceAll(",", "{,}");
 
   return (
-    <VisualCard>
+    <VisualCard onReset={() => setVoltage(500)}>
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
-        <div className="flex w-full flex-col gap-3">
-          <div className="flex items-center justify-between gap-4 text-sm">
-            <span>{labels.voltage}</span>
-            <span className="shrink-0 tabular-nums">
-              <InlineMath math={`${decimal(voltage, 0)}\\ \\mathrm{V}`} />
-            </span>
-          </div>
-          <Slider
-            aria-label={labels.voltage}
-            max={MOST_VOLTAGE}
-            min={50}
-            onValueChange={(value: number) => setVoltage(value)}
-            step={1}
-            value={voltage}
-          />
-        </div>
+        <VisualSlider
+          heading={labels.voltage}
+          label={labels.voltage}
+          max={MOST_VOLTAGE}
+          min={50}
+          onValueChange={setVoltage}
+          readout={<InlineMath math={`${decimal(voltage, 0)}\\ \\mathrm{V}`} />}
+          step={1}
+          value={voltage}
+        />
       </VisualCardToolbar>
 
       <VisualCardBody
@@ -113,10 +109,8 @@ export function MillikanOilDropLab({
         render={<section />}
       >
         <ScienceStage reach={6} setting="lab">
-          <Suspense>
-            <MillikanCamera />
-            <Plates voltage={voltage} />
-          </Suspense>
+          <MillikanCamera />
+          <Plates voltage={voltage} />
         </ScienceStage>
       </VisualCardBody>
 
@@ -168,6 +162,7 @@ export function MillikanOilDropLab({
  */
 function Plates({ voltage }: { readonly voltage: number }) {
   const playing = useVisualScene((card) => card.playing, false);
+  const invalidate = useThree((state) => state.invalidate);
   const gap = APPARATUS.gap * 1000 * MILLIMETRE;
   const drops = useMemo(
     () =>
@@ -181,6 +176,15 @@ function Plates({ voltage }: { readonly voltage: number }) {
   );
   const balanced = nearestDrop(voltage);
   const glint = new Color(PLOT_COLORS.amber).multiplyScalar(1.6);
+
+  useInvalidateOnChange(voltage);
+
+  useVisualReset(() => {
+    for (const drop of drops) {
+      drop.height.value = 0;
+    }
+    invalidate();
+  });
 
   useFrame((_, seconds) => {
     for (const drop of drops) {

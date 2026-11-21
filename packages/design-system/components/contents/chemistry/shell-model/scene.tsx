@@ -2,9 +2,11 @@ import { useReducedMotion } from "@mantine/hooks";
 import { useFrame } from "@react-three/fiber";
 import { useShellModel } from "@repo/design-system/components/contents/chemistry/shell-model/context";
 import type { ShellModelShells } from "@repo/design-system/components/contents/chemistry/shell-model/data";
+import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { Array as Arr } from "effect";
 import { useRef } from "react";
 import type { Group } from "three";
@@ -168,6 +170,7 @@ function OrbitingShellElectrons({
   speed: number;
 }) {
   const groupRef = useRef<Group>(null);
+  const playing = useVisualScene((card) => card.playing, true);
   const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
   const electronRadius = isOuterShell ? OUTER_ELECTRON_RADIUS : ELECTRON_RADIUS;
   const orbitExtent = radius + electronRadius;
@@ -177,11 +180,11 @@ function OrbitingShellElectrons({
   );
 
   useFrame((_, delta) => {
-    if (calm || !groupRef.current) {
+    if (calm || !playing || !groupRef.current) {
       return;
     }
 
-    groupRef.current.rotation.y += delta * speed;
+    groupRef.current.rotation.y += simulationStep(delta) * speed;
   });
 
   return (

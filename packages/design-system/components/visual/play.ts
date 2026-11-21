@@ -21,6 +21,8 @@ export const STILL: VisualPlay = { playing: false, view: 0 };
  */
 export function playActions(set: StoreApi<VisualPlay>["setState"]) {
   return {
+    /** Stops the scene moving by itself, such as when a learner scrubs a slider. */
+    pause: () => set({ playing: false }),
     /** Takes the scene back to its first view, and keeps it playing if it played. */
     resetView: () => set((current) => ({ view: current.view + 1 })),
     /** Starts the scene moving by itself, as an animation does once it first shows. */

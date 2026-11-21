@@ -1,7 +1,10 @@
 import { useThree } from "@react-three/fiber";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { useLayoutEffect, useRef } from "react";
+import {
+  useVisualReset,
+  useVisualScene,
+} from "@repo/design-system/components/visual/card";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 /** How long a finished run rests on its last frame before it starts again. */
 const HOLD = 1.6;
@@ -25,6 +28,17 @@ export function useTimeline(start: number, end: number) {
     time.current = shownPlaying.current ? start : end;
     invalidate();
   }, [end, invalidate, start]);
+
+  useEffect(() => {
+    if (playing) {
+      invalidate();
+    }
+  }, [invalidate, playing]);
+
+  useVisualReset(() => {
+    time.current = playing ? start : end;
+    invalidate();
+  });
 
   const advance = (delta: number) => {
     if (!playing) {

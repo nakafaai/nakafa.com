@@ -18,6 +18,8 @@ function createFraming() {
   const subjects = MutableHashMap.empty<number, CameraSubjectBounds>();
   let scheduled: number | undefined;
   let flushed = false;
+  let controllers = 0;
+  let fitted = false;
   let renderedChildren: ReactNode;
   const invalidate = () => {
     if (scheduled !== undefined) {
@@ -48,17 +50,28 @@ function createFraming() {
         scheduled = undefined;
       }
     },
-    /** Whether the registry has fitted the camera at least once. */
+    /** Whether the camera controller (or registry without one) has fitted at least once. */
     hasFitted() {
-      return flushed;
+      return controllers > 0 ? fitted : flushed;
     },
     invalidate,
     /**
      * Whether the camera stands where the scene's subjects put it: the
-     * registry has fitted at least once and no fit waits for the next frame.
+     * camera has applied its first pose/fit and no fit waits for the next frame.
      */
     isSettled() {
-      return flushed && scheduled === undefined;
+      return (controllers > 0 ? fitted : flushed) && scheduled === undefined;
+    },
+    /** Records that the scene's active makeDefault camera has applied its pose or fit. */
+    markFitted() {
+      fitted = true;
+    },
+    /** Registers a camera controller that must apply its pose before reveal. */
+    registerController() {
+      controllers += 1;
+      return () => {
+        controllers = Math.max(0, controllers - 1);
+      };
     },
     subscribe(listener: () => void) {
       MutableHashSet.add(listeners, listener);

@@ -10,13 +10,14 @@ import {
   pointAlong,
 } from "@repo/design-system/components/contents/chemistry/scattering/coulomb";
 import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
+import { useInvalidateOnChange } from "@repo/design-system/components/contents/simulation/clock";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
-import { Slider } from "@repo/design-system/components/ui/slider";
 import {
+  useVisualReset,
   useVisualScene,
   VisualCard,
   VisualCardBody,
@@ -27,12 +28,13 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { VisualSlider } from "@repo/design-system/components/visual/slider";
 import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
 import { constant } from "effect/Function";
 import type { ReactNode } from "react";
-import { createRef, Suspense, useMemo, useState } from "react";
+import { createRef, useMemo, useState } from "react";
 import type { Mesh } from "three";
 import { Color } from "three";
 import { useFormatter } from "use-intl";
@@ -102,34 +104,27 @@ export function RutherfordScatteringLab({
   readonly title: NonNullable<ReactNode>;
 }) {
   const format = useFormatter();
-  const [energy, setEnergy] = useState<number>(
-    Math.min(ENERGY.max, Math.max(ENERGY.min, start))
-  );
+  const initialEnergy = Math.min(ENERGY.max, Math.max(ENERGY.min, start));
+  const [energy, setEnergy] = useState<number>(initialEnergy);
   const approach = closestApproach(energy, GOLD_CHARGE);
   const number = (value: number, digits: number) =>
     mathNumber(format.number(value, "math", { maximumFractionDigits: digits }));
 
   return (
-    <VisualCard>
+    <VisualCard onReset={() => setEnergy(initialEnergy)}>
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
-        <div className="flex w-full flex-col gap-3">
-          <div className="flex items-center justify-between gap-4 text-sm">
-            <span>{labels.energy}</span>
-            <span className="shrink-0 tabular-nums">
-              <InlineMath math={`${number(energy, 1)}\\ \\mathrm{MeV}`} />
-            </span>
-          </div>
-          <Slider
-            aria-label={labels.energy}
-            max={ENERGY.max}
-            min={ENERGY.min}
-            onValueChange={(value: number) => setEnergy(value)}
-            step={ENERGY.step}
-            value={energy}
-          />
-        </div>
+        <VisualSlider
+          heading={labels.energy}
+          label={labels.energy}
+          max={ENERGY.max}
+          min={ENERGY.min}
+          onValueChange={setEnergy}
+          readout={<InlineMath math={`${number(energy, 1)}\\ \\mathrm{MeV}`} />}
+          step={ENERGY.step}
+          value={energy}
+        />
       </VisualCardToolbar>
 
       <VisualCardBody
@@ -138,10 +133,8 @@ export function RutherfordScatteringLab({
         render={<section />}
       >
         <ScienceStage reach={LIMIT / FEMTOMETRES} setting="space">
-          <Suspense>
-            <ScatteringCamera />
-            <ScatteringScene approach={approach} />
-          </Suspense>
+          <ScatteringCamera />
+          <ScatteringScene approach={approach} />
         </ScienceStage>
       </VisualCardBody>
 
@@ -191,6 +184,7 @@ export function RutherfordScatteringLab({
  */
 function ScatteringScene({ approach }: { readonly approach: number }) {
   const playing = useVisualScene((card) => card.playing, false);
+  const invalidate = useThree((state) => state.invalidate);
   const flights = useMemo(
     () =>
       Arr.flatMap(IMPACTS, (impact, index) => {
@@ -202,6 +196,7 @@ function ScatteringScene({ approach }: { readonly approach: number }) {
         return [
           {
             impact,
+            initial: index * 17,
             lengths,
             path,
             points: Arr.map(
@@ -217,6 +212,15 @@ function ScatteringScene({ approach }: { readonly approach: number }) {
     [approach]
   );
   const trail = new Color(PLOT_COLORS.amber).multiplyScalar(1.4);
+
+  useInvalidateOnChange(approach);
+
+  useVisualReset(() => {
+    for (const flight of flights) {
+      flight.travelled.distance = flight.initial;
+    }
+    invalidate();
+  });
 
   useFrame((_, seconds) => {
     for (const flight of flights) {

@@ -5,6 +5,11 @@ import {
   PerspectiveCamera,
 } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
+import {
+  cameraFitKey,
+  DEFAULT_CAMERA_POSITION,
+  DEFAULT_CAMERA_TARGET,
+} from "@repo/design-system/components/three/camera/fit";
 import { useCameraFraming } from "@repo/design-system/components/three/camera/framing";
 import { useCameraPlay } from "@repo/design-system/components/three/camera/play";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
@@ -20,28 +25,11 @@ import {
   resolveCameraPanOffset,
   resolveCameraRefit,
 } from "@repo/design-system/lib/geometry/camera/fit";
-import { Array as Arr, Effect, HashMap, Option } from "effect";
+import { Effect, HashMap, Option } from "effect";
 import type { ComponentRef } from "react";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
-import type { Box3 } from "three";
+import type { Box3, PerspectiveCamera as ThreePerspectiveCamera } from "three";
 import { OrthographicCamera as ThreeOrthographicCamera, Vector3 } from "three";
-
-const DEFAULT_CAMERA_X = 12;
-const DEFAULT_CAMERA_Y = 8;
-const DEFAULT_CAMERA_Z = 12;
-const DEFAULT_TARGET_X = 0;
-const DEFAULT_TARGET_Y = 0;
-const DEFAULT_TARGET_Z = 0;
-const DEFAULT_CAMERA_POSITION = [
-  DEFAULT_CAMERA_X,
-  DEFAULT_CAMERA_Y,
-  DEFAULT_CAMERA_Z,
-] satisfies readonly [number, number, number];
-const DEFAULT_CAMERA_TARGET = [
-  DEFAULT_TARGET_X,
-  DEFAULT_TARGET_Y,
-  DEFAULT_TARGET_Z,
-] satisfies readonly [number, number, number];
 
 /**
  * Owns the scene camera, finite-content framing, and OrbitControls together.
@@ -79,7 +67,16 @@ interface CameraControlsProps {
   minAzimuthAngle?: number;
   minDistance?: number | undefined;
   minPolarAngle?: number;
+  /**
+   * Whether pressing Play on the surrounding visual card gently orbits the
+   * camera. Defaults to `false` so simulation labs keep the camera steady
+   * while their physics or process runs; coordinate and static showcase scenes
+   * opt in.
+   */
+  orbitOnPlay?: boolean | undefined;
   projection?: CameraProjection | undefined;
+  /** Changing this key returns the camera to its authored pose in place without remounting. */
+  resetKey?: number | string | undefined;
 }
 
 export function CameraControls(props: CameraControlsProps) {
@@ -97,8 +94,12 @@ export function CameraControls(props: CameraControlsProps) {
     minAzimuthAngle,
     minDistance,
     minPolarAngle,
+    orbitOnPlay = false,
     projection = { kind: "perspective" },
+    resetKey,
   } = props;
+  const orthographicRef = useRef<ThreeOrthographicCamera>(null);
+  const perspectiveRef = useRef<ThreePerspectiveCamera>(null);
   const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
   const lastFit = useRef<{
     bounds: Box3;
@@ -124,9 +125,12 @@ export function CameraControls(props: CameraControlsProps) {
   const invalidate = useThree((state) => state.invalidate);
   const viewportWidth = useThree((state) => state.size.width);
   const viewportHeight = useThree((state) => state.size.height);
-  const autoRotate = useCameraPlay();
+  const autoRotate = useCameraPlay(orbitOnPlay);
   const view = useVisualScene((state) => state.view, 0);
   const shownView = useRef(view);
+  const shownResetKey = useRef(resetKey);
+
+  useLayoutEffect(() => framing?.registerController(), [framing]);
   const [cameraPositionX, cameraPositionY, cameraPositionZ] = cameraPosition;
   const [cameraTargetX, cameraTargetY, cameraTargetZ] = cameraTarget;
   const projectionFov =
@@ -200,6 +204,7 @@ export function CameraControls(props: CameraControlsProps) {
       if (!unchanged) {
         controls.saveState();
       }
+      framing.markFitted();
       invalidate();
     };
 
@@ -213,6 +218,14 @@ export function CameraControls(props: CameraControlsProps) {
       cameraTargetY,
       cameraTargetZ
     );
+    const ownsCamera = () => {
+      const owned =
+        projection.kind === "orthographic"
+          ? orthographicRef.current
+          : perspectiveRef.current;
+      return owned === null || camera === owned;
+    };
+
     if (framingMode !== "content") {
       if (lastFit.current?.camera === camera) {
         lastFit.current = null;
@@ -220,7 +233,7 @@ export function CameraControls(props: CameraControlsProps) {
       }
       const applyPose = () => {
         const controls = controlsRef.current;
-        if (controls?.object === camera) {
+        if (controls?.object === camera && ownsCamera()) {
           initializePose(controls, authoredPosition, authoredTarget);
         }
       };
@@ -234,7 +247,7 @@ export function CameraControls(props: CameraControlsProps) {
     // The registry batches geometry, font, and viewport changes into one frame.
     const fit = () => {
       const controls = controlsRef.current;
-      if (!controls || controls.object !== camera) {
+      if (!controls || controls.object !== camera || !ownsCamera()) {
         return;
       }
       const object = controls.object;
@@ -258,36 +271,22 @@ export function CameraControls(props: CameraControlsProps) {
         return;
       }
       const { bounds, labels } = measurement.value;
-      // Each part is written the way join writes it: undefined becomes an empty string.
-      const key = Arr.join(
-        Arr.map(
-          [
-            ...bounds.min.toArray(),
-            ...bounds.max.toArray(),
-            ...Arr.flatMap(labels, (label) => [
-              ...label.anchors.min.toArray(),
-              ...label.anchors.max.toArray(),
-              label.gap.x,
-              label.gap.y,
-              ...label.rectangle.min.toArray(),
-              ...label.rectangle.max.toArray(),
-            ]),
-            ...authoredPosition.toArray(),
-            ...authoredTarget.toArray(),
-            viewportWidth,
-            viewportHeight,
-            projectionFov,
-            projectionHeight,
-            projectionNear,
-            projectionFar,
-            minDistance,
-            maxDistance,
-          ],
-          (part) => String(part ?? "")
-        ),
-        ","
-      );
+      const key = cameraFitKey({
+        authoredPosition,
+        authoredTarget,
+        bounds,
+        labels,
+        maxDistance,
+        minDistance,
+        projectionFar,
+        projectionFov,
+        projectionHeight,
+        projectionNear,
+        viewportHeight,
+        viewportWidth,
+      });
       if (previous?.key === key) {
+        framing.markFitted();
         return;
       }
 
@@ -348,6 +347,7 @@ export function CameraControls(props: CameraControlsProps) {
         zoom: initialZoom.zoom,
       };
       controls.update();
+      framing.markFitted();
       invalidate();
     };
 
@@ -379,10 +379,13 @@ export function CameraControls(props: CameraControlsProps) {
   ]);
 
   useEffect(() => {
-    if (shownView.current === view) {
+    const viewChanged = shownView.current !== view;
+    const keyChanged = shownResetKey.current !== resetKey;
+    if (!(viewChanged || keyChanged)) {
       return;
     }
     shownView.current = view;
+    shownResetKey.current = resetKey;
     // The card's reset fits a fitted scene again and returns any other to its saved pose.
     if (framingMode === "content") {
       lastFit.current = null;
@@ -391,7 +394,7 @@ export function CameraControls(props: CameraControlsProps) {
       controlsRef.current?.reset();
     }
     invalidate();
-  }, [framing, framingMode, invalidate, view]);
+  }, [framing, framingMode, invalidate, resetKey, view]);
 
   const { start: startSettle, clear: clearSettle } = useTimeout(() => {
     settling.current = false;
@@ -456,6 +459,7 @@ export function CameraControls(props: CameraControlsProps) {
           {...(projection.far === undefined ? {} : { far: projection.far })}
           makeDefault
           {...(projection.near === undefined ? {} : { near: projection.near })}
+          ref={orthographicRef}
         />
       ) : (
         <PerspectiveCamera
@@ -463,6 +467,7 @@ export function CameraControls(props: CameraControlsProps) {
           fov={framingMode === "content" ? projectionFov : authoredView.fov}
           makeDefault
           {...(projection.near === undefined ? {} : { near: projection.near })}
+          ref={perspectiveRef}
         />
       )}
       <OrbitControls

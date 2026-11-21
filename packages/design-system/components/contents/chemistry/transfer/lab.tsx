@@ -2,7 +2,6 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { getAtomSceneColors } from "@repo/design-system/components/contents/chemistry/color";
 import { MathLines } from "@repo/design-system/components/contents/chemistry/lines";
 import { ELEMENTS } from "@repo/design-system/components/contents/chemistry/molecule/elements";
-import { HandSlider } from "@repo/design-system/components/contents/chemistry/slider";
 import type {
   IonAtom,
   PairId,
@@ -16,6 +15,10 @@ import {
   shellsTex,
 } from "@repo/design-system/components/contents/chemistry/transfer/ions";
 import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
+import {
+  useCycleClock,
+  useInvalidateOnChange,
+} from "@repo/design-system/components/contents/simulation/clock";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
@@ -28,7 +31,6 @@ import {
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
-  useVisualScene,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -38,11 +40,12 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { VisualSlider } from "@repo/design-system/components/visual/slider";
 import { getColor } from "@repo/design-system/lib/color";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr, Option, Schema } from "effect";
 import type { ReactNode } from "react";
-import { createRef, Suspense, useMemo, useRef, useState } from "react";
+import { createRef, useMemo, useRef, useState } from "react";
 import type { Mesh } from "three";
 import { useFormatter } from "use-intl";
 
@@ -111,46 +114,53 @@ export function IonFormationLab({
   const nonmetalAfter = shellsAfterGain(pair.nonmetal.shells, pair.electrons);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setChosen(undefined);
+        setProgress(0);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
-        <div className="flex w-full flex-col gap-3">
-          {offered.length > 1 ? (
-            <ToggleGroup
-              aria-label={labels.choose}
-              gridColumns={toggleColumns(offered.length)}
-              onValueChange={(value: string) => {
-                if (Schema.is(PairIdSchema)(value)) {
-                  setChosen(value);
-                }
-              }}
-              type="single"
-              value={shown}
-              variant="outline"
-            >
-              {Arr.map(offered, (id) => (
-                <ToggleGroupItem
-                  aria-label={`${getPair(id).metal.symbol} ${getPair(id).nonmetal.symbol}`}
-                  key={id}
-                  value={id}
-                >
-                  <InlineMath
-                    math={`\\mathrm{${getPair(id).metal.symbol}} + \\mathrm{${getPair(id).nonmetal.symbol}}`}
-                  />
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-          ) : null}
-          <span className="text-sm">{labels.progress}</span>
-          <HandSlider
-            label={labels.progress}
-            max={1}
-            onChange={setProgress}
-            step={0.01}
-            value={progress}
-          />
-        </div>
+        {offered.length > 1 ? (
+          <ToggleGroup
+            aria-label={labels.choose}
+            gridColumns={toggleColumns(offered.length)}
+            onValueChange={(value: string) => {
+              if (Schema.is(PairIdSchema)(value)) {
+                setChosen(value);
+                setProgress(0);
+              }
+            }}
+            type="single"
+            value={shown}
+            variant="outline"
+          >
+            {Arr.map(offered, (id) => (
+              <ToggleGroupItem
+                aria-label={`${getPair(id).metal.symbol} ${getPair(id).nonmetal.symbol}`}
+                key={id}
+                value={id}
+              >
+                <InlineMath
+                  math={`\\mathrm{${getPair(id).metal.symbol}} + \\mathrm{${getPair(id).nonmetal.symbol}}`}
+                />
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+        ) : null}
+        <VisualSlider
+          heading={labels.progress}
+          label={labels.progress}
+          max={1}
+          min={0}
+          onValueChange={setProgress}
+          pauseOnChange
+          readout={`${Math.round(progress * 100)}%`}
+          step={0.01}
+          value={progress}
+        />
       </VisualCardToolbar>
 
       <VisualCardBody
@@ -159,10 +169,12 @@ export function IonFormationLab({
         render={<section />}
       >
         <ScienceStage reach={APART + 2.4} setting="studio">
-          <Suspense>
-            <TransferCamera />
-            <TransferScene key={shown} pairId={shown} progress={progress} />
-          </Suspense>
+          <TransferCamera />
+          <TransferScene
+            onProgress={setProgress}
+            pairId={shown}
+            progress={progress}
+          />
         </ScienceStage>
       </VisualCardBody>
 
@@ -232,14 +244,16 @@ function smooth(share: number) {
  * by itself; paused, the slider sets it.
  */
 function TransferScene({
+  onProgress,
   pairId,
   progress,
 }: {
+  readonly onProgress: (progress: number) => void;
   readonly pairId: PairId;
   readonly progress: number;
 }) {
   const pair = getPair(pairId);
-  const playing = useVisualScene((card) => card.playing, false);
+  useInvalidateOnChange(pairId);
   const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const colors = getAtomSceneColors(resolvedTheme);
   const metalSphere = useRef<Mesh>(null);
@@ -252,14 +266,20 @@ function TransferScene({
       })),
     [pair.electrons]
   );
+  const clock = useCycleClock({
+    initial: 0,
+    onValue: onProgress,
+    rate: 1 / CYCLE,
+    steps: 100,
+    total: 1,
+    value: progress,
+  });
   const [ions, setIons] = useState(false);
   const metalOuter = shellRadius(pair.metal, pair.metal.shells.length);
   const nonmetalOuter = shellRadius(pair.nonmetal, pair.nonmetal.shells.length);
 
-  useFrame((state) => {
-    const share = playing
-      ? smooth(((state.clock.elapsedTime % CYCLE) / CYCLE) * 1.3 - 0.15)
-      : progress;
+  useFrame(() => {
+    const share = smooth(clock.current);
     const metalRadius =
       (pair.metal.atomic + (pair.metal.ionic - pair.metal.atomic) * share) /
       PICOMETRES;

@@ -11,12 +11,14 @@ import {
 } from "@repo/design-system/components/contents/biology/climate/rays";
 import { Ribbons } from "@repo/design-system/components/contents/biology/climate/ribbons";
 import { Sun } from "@repo/design-system/components/contents/biology/climate/sun";
+import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
+  useVisualScene,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -138,13 +140,14 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
 function GreenhouseScene() {
   const level = useGreenhouseGasLevel();
   const earthRef = useRef<Group>(null);
+  const playing = useVisualScene((card) => card.playing, true);
   const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
 
   useFrame((_, delta) => {
-    if (calm || earthRef.current === null) {
+    if (calm || !playing || earthRef.current === null) {
       return;
     }
-    earthRef.current.rotation.y += delta * 0.06;
+    earthRef.current.rotation.y += simulationStep(delta) * 0.06;
   });
 
   return (

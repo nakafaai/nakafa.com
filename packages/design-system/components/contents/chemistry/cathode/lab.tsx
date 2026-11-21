@@ -12,7 +12,6 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
-import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   VisualCard,
   VisualCardBody,
@@ -23,8 +22,9 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { VisualSlider } from "@repo/design-system/components/visual/slider";
 import type { ReactNode } from "react";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import { useFormatter } from "use-intl";
 
 /** The height of the bench under the tube's stand, in centimetres. */
@@ -66,26 +66,20 @@ export function CathodeRayLab({
     mathNumber(format.number(value, "math", { maximumFractionDigits: digits }));
 
   return (
-    <VisualCard>
+    <VisualCard onReset={() => setPlate(100)}>
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
-        <div className="flex w-full flex-col gap-3">
-          <div className="flex items-center justify-between gap-4 text-sm">
-            <span>{labels.plates}</span>
-            <span className="shrink-0 tabular-nums">
-              <InlineMath math={`${number(plate, 0)}\\ \\mathrm{V}`} />
-            </span>
-          </div>
-          <Slider
-            aria-label={labels.plates}
-            max={PLATE_LIMIT}
-            min={-PLATE_LIMIT}
-            onValueChange={(value: number) => setPlate(value)}
-            step={10}
-            value={plate}
-          />
-        </div>
+        <VisualSlider
+          heading={labels.plates}
+          label={labels.plates}
+          max={PLATE_LIMIT}
+          min={-PLATE_LIMIT}
+          onValueChange={setPlate}
+          readout={<InlineMath math={`${number(plate, 0)}\\ \\mathrm{V}`} />}
+          step={10}
+          value={plate}
+        />
       </VisualCardToolbar>
 
       <VisualCardBody
@@ -94,10 +88,8 @@ export function CathodeRayLab({
         render={<section />}
       >
         <ScienceStage floor={FLOOR} reach={9} setting="lab">
-          <Suspense>
-            <CathodeCamera />
-            <CathodeTube plate={plate} />
-          </Suspense>
+          <CathodeCamera />
+          <CathodeTube plate={plate} />
         </ScienceStage>
       </VisualCardBody>
 
