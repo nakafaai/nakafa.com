@@ -91,8 +91,8 @@ test("opens a chat at its end and stays there while the last answer grows", asyn
       page,
       Effect.gen(function* () {
         const origin = yield* Effect.fromNullishOr(baseURL);
-        const { shown } = yield* startTranscript(page, origin);
-        yield* showChat(page, shown, "id", [...EARLIER, ...LAST]);
+        const transcript = yield* startTranscript(page, origin);
+        yield* showChat(page, transcript, "id", [...EARLIER, ...LAST]);
         yield* Effect.promise(async () => {
           await expect(page.locator(ANSWER_ROW)).toBeVisible({
             timeout: readinessTimeoutMilliseconds,
@@ -135,9 +135,9 @@ test("opens a chat again where the reader left it, and at its end once they left
       page,
       Effect.gen(function* () {
         const origin = yield* Effect.fromNullishOr(baseURL);
-        const { shown } = yield* startTranscript(page, origin);
+        const transcript = yield* startTranscript(page, origin);
         const messages = [...EARLIER, ...LAST];
-        yield* showChat(page, shown, "id", messages);
+        yield* showChat(page, transcript, "id", messages);
         const left = yield* Effect.promise(async () => {
           await expect(page.locator(ANSWER_ROW)).toBeVisible({
             timeout: readinessTimeoutMilliseconds,
@@ -150,7 +150,7 @@ test("opens a chat again where the reader left it, and at its end once they left
         });
         expect(left.fromEnd).toBeGreaterThan(200);
 
-        yield* showChat(page, shown, "id", messages);
+        yield* showChat(page, transcript, "id", messages);
         yield* Effect.promise(async () => {
           await expect
             .poll(async () => (await standing(page, EARLIER_ROW)).top, {
@@ -172,7 +172,7 @@ test("opens a chat again where the reader left it, and at its end once they left
           await page.waitForTimeout(SETTLE_MILLISECONDS);
         });
 
-        yield* showChat(page, shown, "id", messages);
+        yield* showChat(page, transcript, "id", messages);
         yield* Effect.promise(() =>
           expect
             .poll(async () => (await standing(page, ANSWER_ROW)).fromEnd, {

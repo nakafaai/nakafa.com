@@ -45,14 +45,14 @@ const PIECES = ["Ratio", "Ratio of", "Ratio of two"];
  */
 const keepsSettledRows = Effect.fn("NakafaE2E.streamKeepsSettledRows")(
   function* (page: Page, baseURL: string) {
-    const { shown, stream } = yield* startTranscript(page, baseURL);
+    const transcript = yield* startTranscript(page, baseURL);
     yield* Effect.promise(() => watchRenders(page));
-    yield* showChat(page, shown, "en", SETTLED);
+    yield* showChat(page, transcript, "en", SETTLED);
 
     yield* Effect.forEach(PIECES, (words, index) =>
       Effect.gen(function* () {
         const before = yield* Effect.promise(() => commitCount(page));
-        yield* stream(streaming(words));
+        yield* transcript.stream(streaming(words));
 
         yield* Effect.promise(async () => {
           await expect(page.getByText(words, { exact: true })).toBeVisible({
