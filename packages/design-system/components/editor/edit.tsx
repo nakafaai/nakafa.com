@@ -20,7 +20,7 @@ import { useRequired } from "@repo/design-system/hooks/required";
 import { fieldBoxVariants } from "@repo/design-system/lib/input";
 import { NEW_FORMULA } from "@repo/editor/math";
 import { cn } from "cn";
-import { Effect, Fiber, Option, Schema } from "effect";
+import { Array as Arr, Effect, Fiber, Option, Schema } from "effect";
 import type * as MathLive from "mathlive";
 import type { ComponentProps, ReactNode, RefObject } from "react";
 import { createContext, useEffect, useMemo, useRef, useState } from "react";
@@ -80,9 +80,15 @@ function MathField({
   useEffect(() => {
     const element = new mathlive.MathfieldElement();
     element.mathVirtualKeyboardPolicy = "manual";
-    // The menu takes its items once the field has mounted; an empty menu leaves no context menu of MathLive's own.
+    // The menu and the keys take their settings once the field has mounted; an empty menu leaves no context menu of
+    // MathLive's own. Escape leaves the formula's editor, so MathLive's own Escape, which switches the field to typed
+    // LaTeX, gives way to the popover: the LaTeX segment is where LaTeX is typed.
     const mounted = () => {
       element.menuItems = [];
+      element.keybindings = Arr.filter(
+        element.keybindings,
+        (binding) => binding.key !== "[Escape]"
+      );
       element.focus();
       if (element.value === NEW_FORMULA) {
         element.executeCommand("selectAll");
@@ -251,6 +257,9 @@ export function FormulaEdit({
   const [mathlive, setMathlive] = useState<Option.Option<typeof MathLive>>(
     Option.none
   );
+  // Whether the formula was just inserted, latched as the editor mounts: the node view redraws with a new node as the
+  // document changes, which turns `defaultOpen` false while this first editor is still open. Its first close clears it.
+  const inserted = useRef(defaultOpen);
   const field = useRef<MathLive.MathfieldElement | null>(null);
   const problem = useMemo(() => Effect.runSync(formulaProblem(draft)), [draft]);
 
@@ -294,9 +303,11 @@ export function FormulaEdit({
       return;
     }
     setOpen(false);
+    const fresh = inserted.current;
+    inserted.current = false;
     if (!escaped && draft.trim() !== "") {
       onSave(draft.trim());
-    } else if (defaultOpen) {
+    } else if (fresh) {
       onRemove();
       return;
     }

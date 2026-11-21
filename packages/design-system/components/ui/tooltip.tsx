@@ -13,7 +13,8 @@ import { use } from "react";
 
 /**
  * The words of a control that shows only an icon, on hover and focus. It names the action; it never holds anything a
- * reader must read. It opens the moment the pointer rests, and the next one along a row opens at once.
+ * reader must read. It opens the moment the pointer rests, and the next one along a row opens at once. It never takes
+ * the pointer, so a press on the control it covers, such as the next row's in a table, reaches that control.
  */
 function Tooltip({
   delay = 0,
@@ -43,7 +44,7 @@ function TooltipContent({
       <TooltipContentPrimitive
         className={cn(
           popupMotion(),
-          "bg-foreground text-background z-50 w-fit max-w-xs rounded-md px-3 py-1.5 text-xs",
+          "bg-foreground text-background pointer-events-none z-50 w-fit max-w-xs rounded-md px-3 py-1.5 text-xs",
           className
         )}
         {...props}
