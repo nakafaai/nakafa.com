@@ -1890,7 +1890,7 @@
     "description": "Belajar Matematika, Sains, Komputer, AI, dan persiapan ujian di Nakafa. Materi gratis dari SD sampai universitas dengan latihan dan pembahasan.",
     "short-description": "Materi belajar gratis untuk SD sampai universitas.",
     "very-short-description": "Materi belajar gratis.",
-    "keywords": "materi belajar gratis, belajar matematika, belajar fisika, belajar kimia, belajar biologi, belajar komputer, belajar AI, belajar data science, latihan soal, pembahasan soal, persiapan ujian, try out online, materi SD, materi SMP, materi SMA, materi universitas, pendidikan terbuka, Nakafa",
+    "keywords": "materi belajar gratis, belajar matematika, belajar fisika, belajar kimia, belajar biologi, belajar komputer, belajar AI, belajar data science, latihan soal, pembahasan soal, persiapan ujian, try out online, materi SD, materi SMP, materi SMA, materi universitas, Nakafa",
     "knows-about": "Matematika, Fisika, Kimia, Biologi, Ilmu Komputer, Kecerdasan Artifisial, Sains Data, Persiapan Ujian, Pendidikan Dasar dan Menengah, Pendidikan Tinggi",
     "classification": "Pendidikan"
   },
@@ -4060,7 +4060,7 @@
     "q4": "Mata pelajaran dan kelas apa yang tercakup?",
     "a4": "Kami mencakup SD hingga universitas. Matematika, Fisika, Kimia, Biologi, Ilmu Komputer, dan lainnya. Dari konsep dasar SD hingga kursus universitas tingkat lanjut.",
     "q7": "Bagaimana Nakafa memastikan akurasi konten?",
-    "a7": "Semua konten dibuat oleh kontributor yang berkualifikasi dan ditinjau oleh komunitas. Pendekatan source-available kami membuat siapa pun bisa meninjau materi dan mengusulkan perbaikan. Latihan soal punya pembahasan supaya kamu belajar dari kesalahan, bukan hanya skor."
+    "a7": "Setiap materi mengikuti standar editorial tertulis: fakta harus punya sumber primer atau resmi, dan setiap rumus serta contoh dihitung ulang sebelum tayang. Sumbernya bisa dibaca siapa saja, jadi siapa pun bisa meninjau materi dan mengusulkan perbaikan. Latihan soal punya pembahasan supaya kamu belajar dari kesalahan, bukan hanya skor."
   },
   "Landing": {
     "hero-title": "Belajar sampai <mark>paham.</mark>",
@@ -4187,11 +4187,11 @@
       },
       "accuracy": {
         "question": "Bagaimana Nakafa memastikan akurasi konten?",
-        "answer": "Kontributor yang berkualifikasi menulis setiap materi, dan karena sumbernya terbuka, siapa pun bisa mengusulkan perbaikan."
+        "answer": "Setiap materi mengikuti standar editorial tertulis yang meminta sumber primer atau resmi untuk setiap fakta dan menghitung ulang setiap rumus dan contoh sebelum tayang, dan karena sumbernya bisa dibaca siapa saja, siapa pun bisa mengusulkan perbaikan."
       },
       "languages": {
         "question": "Nakafa tersedia dalam bahasa apa?",
-        "answer": "Bahasa Indonesia, Inggris, dan Jerman."
+        "answer": "Bahasa Indonesia, Inggris, Jerman, dan Melayu."
       },
       "nina": {
         "question": "Apakah jawaban Nina selalu benar?",
