@@ -92,6 +92,20 @@ D15. Motion loads with the parts that move (16 November 2026). The root document
 
 A page whose links warm a `_main` page (D3) still loads Motion within the window, now as its own chunks, about 3 KB more. Performance scores moved within the run-to-run spread (sign-in 81 to 85 before, 86 after).
 
+D16. The boot chunk holds only what a first load runs (21 November 2026). Under D9 the boot chunk holds every module the browser entry imports statically, and the entry imports the route tree, so it held each route's options with the router: every search schema, guard, head and loader, and all they import. A slow phone evaluates that chunk in one task before hydration, so a module one route's option imports cost every page. On production `/id` at 12x the chunk was 1,434 KB and its task took 656 ms. A set page's `loaderDeps` read `attemptOf` from the learner's live reads, which imported the Convex client, Confect's React bindings and the attempt's schemas down to Aksara's formula parser; its loader warmed those reads; the root's price currency read the country registry, which read the school schemas and every mascot family through their animal codes; school routes read their params and guards from the forum's and the tenancy's schemas. Each now reads a module of its own: `attemptOf` lives with the address intent, `canManageSchool` in `lib/tenant/manage.ts`, a class's address parts in `classroom/address.ts`, and a country profile's schema in `country/profile.ts`, so the registry imports no school schema. Every route's loader loads with its route (`codeSplittingOptions` in `apps/www/vite.config.ts`): hydration runs no loader, and D10 already preloads only a route's `component`. `verifyBootChunk` in `apps/www/output.config.ts` fails a build whose boot chunk is over `BOOT_CHUNK_BYTES` or holds a module only a signed-in island runs (`readBootProblems` in `apps/www/src/lib/static/boot.ts`).
+
+Measured on the production build of `2a878e38b54` and the same build with this change, served by the acceptance runtime on this Mac, Lighthouse mobile at 12x CPU, median of 5:
+
+|                            | Before    | After     |
+| -------------------------- | --------- | --------- |
+| Boot chunk                 | 1,434,463 | 1,041,544 |
+| `/id` blocking time        | 733 ms    | 465 ms    |
+| `/id` boot task            | 664 ms    | 379 ms    |
+| `/en/school` blocking time | 729 ms    | 712 ms    |
+| `/en/school` boot task     | 657 ms    | 401 ms    |
+
+The School landing's own code now evaluates in its hydration task (377 ms instead of 158), so its blocking time holds; its gain needs its own first paint lighter. A warmed route fetches its loader as a file of its own, so the JavaScript budget's graphs count a few more files and a little more text: the homepage, Quran and Memory limits moved by D9's rule, and main already measured the homepage and Quran over their old limits.
+
 ## Consequences
 
 Positive: every page loses those recalculations, the home page's first JavaScript no longer holds the sections under its first screen, and decoration leaves the thread to the reader.

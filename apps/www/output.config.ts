@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Rolldown, UserConfig } from "vite";
+import type { Plugin, Rolldown, UserConfig } from "vite";
+import { readBootProblems } from "#www/src/lib/static/boot";
 import { workerSettings } from "#www/worker";
 
 /*
@@ -156,3 +157,33 @@ export const ENVIRONMENT_OUTPUTS = {
     },
   },
 } satisfies UserConfig["environments"];
+
+/** The browser entry, which the boot chunk holds. */
+const BROWSER_ENTRY = /\/plugin\/default-entry\/client\.tsx$/u;
+
+/**
+ * Fails a client build whose boot chunk breaks the first-load contract of
+ * `readBootProblems`: too many bytes, or a module only an island runs. Every
+ * route's options sit in the boot chunk with the router, so one import from a
+ * route's search schema, guard or head reaches every page (ADR 0039 D16).
+ */
+export const verifyBootChunk: Plugin = {
+  apply: "build",
+  applyToEnvironment: (environment) => environment.name === "client",
+  generateBundle: (_, bundle) => {
+    // The entry's own chunk only imports the boot group, which holds the entry module itself.
+    const boot = Object.values(bundle).find(
+      (output): output is Rolldown.OutputChunk =>
+        output.type === "chunk" &&
+        output.moduleIds.some((id) => BROWSER_ENTRY.test(id))
+    );
+    if (boot === undefined) {
+      throw new Error("The client build wrote no boot chunk.");
+    }
+    const problems = readBootProblems(boot);
+    if (problems.length > 0) {
+      throw new Error(problems.join("\n"));
+    }
+  },
+  name: "www:verify-boot-chunk",
+};

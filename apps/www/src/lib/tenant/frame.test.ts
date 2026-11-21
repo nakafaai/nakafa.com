@@ -3,7 +3,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { GrantView } from "@repo/backend/confect/access/schema";
 import { Option, Schema } from "effect";
-import { canManageSchool, readAccountName, roleOf } from "@/lib/tenant/frame";
+import { readAccountName, roleOf } from "@/lib/tenant/frame";
 
 describe("readAccountName", () => {
   it("names an outsider's page after the account's name", () => {
@@ -21,12 +21,7 @@ describe("readAccountName", () => {
   });
 });
 
-describe("school viewer helpers", () => {
-  it("tells whether the viewer manages the school from the viewer's own actions", () => {
-    expect(canManageSchool(["tenant.manage"])).toBe(true);
-    expect(canManageSchool([])).toBe(false);
-  });
-
+describe("roleOf", () => {
   it("reads the first role of the viewer, or none when the viewer holds no grant", () => {
     const grant = Schema.decodeUnknownSync(GrantView)({
       id: "grant-1",

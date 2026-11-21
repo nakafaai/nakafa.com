@@ -2,6 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
+import { TaskAddress } from "@repo/backend/confect/classroom/address";
 import {
   ScoreOutOfRange,
   TaskClosed,
@@ -12,7 +13,6 @@ import {
   LatePolicy,
   MissingStudent,
   SubmissionView,
-  TaskAddress,
   TaskCategory,
   TaskPoints,
   TaskStanding,

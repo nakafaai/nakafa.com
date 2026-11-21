@@ -5,7 +5,8 @@ import type { HomeAccess } from "@/components/tenant/home/access";
 import { showsStudentHome } from "@/components/tenant/home/access";
 import { canOpenReports } from "@/components/tenant/reports/access";
 import type { SchoolViewer } from "@/lib/tenant/frame";
-import { canManageSchool, roleOf } from "@/lib/tenant/frame";
+import { roleOf } from "@/lib/tenant/frame";
+import { canManageSchool } from "@/lib/tenant/manage";
 
 /**
  * The page a member's school opens on, by the member's main work there: the

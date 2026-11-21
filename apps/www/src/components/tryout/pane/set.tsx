@@ -32,7 +32,7 @@ import {
 import { NO_GROWTH, starsLeft } from "@/components/tryout/pane/model";
 import { SetPath } from "@/components/tryout/pane/path";
 import { SetRewards } from "@/components/tryout/pane/rewards";
-import { attemptOf } from "@/components/tryout/route/live";
+import { attemptOf } from "@/components/tryout/route/intent";
 import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
 import { TryoutSetAction } from "@/components/tryout/set/action";
 import type {

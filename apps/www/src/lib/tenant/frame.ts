@@ -92,11 +92,6 @@ export function outsiderOf(
   );
 }
 
-/** Whether the viewer may manage the school, which the school's settings and its setup need. */
-export function canManageSchool(can: readonly string[]): boolean {
-  return Arr.contains(can, "tenant.manage");
-}
-
 /** The first role the viewer holds in the school, or none when the viewer holds no grant. */
 export function roleOf(
   grants: SchoolViewer["grants"]

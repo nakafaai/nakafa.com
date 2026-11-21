@@ -1,7 +1,7 @@
 import type { TableNames } from "@repo/backend/confect/_generated/id";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { DiscussionNumber } from "@repo/backend/confect/classroom/address";
 import { ClassAddress } from "@repo/backend/confect/classroom/class";
-import { DiscussionNumber } from "@repo/backend/confect/classroom/forum/message";
 import { Schema } from "effect";
 
 /**

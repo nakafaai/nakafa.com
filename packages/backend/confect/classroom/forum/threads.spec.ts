@@ -2,6 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
+import { DiscussionNumber } from "@repo/backend/confect/classroom/address";
 import {
   ChannelArchived,
   DiscussionsClosed,
@@ -13,7 +14,6 @@ import {
 import { Mentions } from "@repo/backend/confect/classroom/forum/mention";
 import {
   ClientKey,
-  DiscussionNumber,
   MessageBody,
   MessageText,
   MessageUploads,

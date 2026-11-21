@@ -1,4 +1,5 @@
 import { Id } from "@repo/backend/confect/_generated/id";
+import { TaskAddress } from "@repo/backend/confect/classroom/address";
 import { ClientKey } from "@repo/backend/confect/classroom/forum/message";
 import { Sealed } from "@repo/backend/confect/vault/schema";
 import { isSingleLine } from "@repo/utilities/line";
@@ -43,12 +44,6 @@ export const TaskTargets = Schema.Array(Id("tenantPeople")).check(
  * late, or the task closes at its deadline and takes no more work.
  */
 export const LatePolicy = Schema.Literals(["accept", "close"]);
-
-/** The address of a task in its class, as `classSlugOf` forms it from the title. */
-export const TaskAddress = Schema.String.check(
-  Schema.isPattern(/^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u),
-  Schema.isMaxLength(140)
-);
 
 /**
  * One task of a class (ADR 0025): its title and its address, what it asks,

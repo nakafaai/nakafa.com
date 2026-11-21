@@ -17,8 +17,8 @@ import {
 import { TryoutAttemptReview } from "@/components/tryout/review/deferred";
 import { readTryoutSetFn } from "@/components/tryout/route/attempt.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
+import { attemptOf } from "@/components/tryout/route/intent";
 import {
-  attemptOf,
   useAttemptSignIn,
   useKeptLearnerRead,
   useLearnerSet,
