@@ -353,14 +353,17 @@ function TryoutSetOpening({
  * press on and a running attempt holds the learner in it until they leave it.
  */
 function SetLock({ binding }: Pick<TryoutSetPageClientProps, "binding">) {
+  const { page, route } = useTryoutSetPage();
   const opening = useTryoutStartPhase() === "opening";
   if (binding?.initialState.attempt.status === "in-progress") {
     return (
       <ShellLock
-        remember={getTryoutAttemptLock(
-          binding.attemptId,
-          binding.initialState.attempt.expiresAt
-        )}
+        remember={getTryoutAttemptLock({
+          attemptId: binding.attemptId,
+          locale: route.locale,
+          setPath: page.set.publicPath,
+          until: binding.initialState.attempt.expiresAt,
+        })}
       />
     );
   }

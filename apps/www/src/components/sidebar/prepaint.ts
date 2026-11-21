@@ -12,10 +12,12 @@ const PREPAINT_LOCK_KEY = "nakafa-shell-lock";
 
 /**
  * One locked page the shell remembers: the query pair that names the page, as `?attemptId=` names a
- * running attempt's pages, and the moment the lock ends at the latest.
+ * running attempt's pages; the path whose bare address moves to those pages, as a running attempt's set
+ * does; and the moment the lock ends at the latest.
  */
 export const PrepaintLock = Schema.Struct({
   name: Schema.String,
+  path: Schema.String,
   until: Schema.Finite,
   value: Schema.String,
 });
@@ -51,8 +53,8 @@ export const forgetPrepaintLock = Effect.fn("shell.prepaint.forget")(function* (
  * The inline script, the shell wrapper's first child, that locks a page's first frame. A prerendered
  * page cannot know that the attempt its address names runs, so a reload would paint the open shell and
  * lock it only once the learner's attempt arrives. When the address carries the query pair of the lock
- * the browser remembers, and the lock has not ended, the script marks itself as the server marks a
- * locked page, before the browser paints. A lock it cannot read, and storage the page cannot read, leave
+ * the browser remembers, or is the bare address of its path, which moves to the locked pages, and the
+ * lock has not ended, the script marks itself as the server marks a locked page, before the browser paints. A lock it cannot read, and storage the page cannot read, leave
  * the page open, as a page with no lock is.
  */
 export const PREPAINT_LOCK_SCRIPT = Arr.join(
@@ -60,8 +62,10 @@ export const PREPAINT_LOCK_SCRIPT = Arr.join(
     "(function () {",
     "  try {",
     `    var lock = JSON.parse(localStorage.getItem('${PREPAINT_LOCK_KEY}') || 'null');`,
-    "    if (!lock || typeof lock.name !== 'string' || typeof lock.value !== 'string' || typeof lock.until !== 'number') return;",
-    "    if (new URLSearchParams(location.search).get(lock.name) !== lock.value || Date.now() >= lock.until) return;",
+    "    if (!lock || typeof lock.name !== 'string' || typeof lock.path !== 'string' || typeof lock.value !== 'string' || typeof lock.until !== 'number') return;",
+    "    if (Date.now() >= lock.until) return;",
+    "    var named = new URLSearchParams(location.search).get(lock.name);",
+    "    if (named !== lock.value && !(named === null && location.pathname === lock.path)) return;",
     `    document.currentScript.setAttribute('${SHELL_LOCK_ATTRIBUTE}', '');`,
     "  } catch (error) {}",
     "})();",

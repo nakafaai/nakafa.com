@@ -74,15 +74,17 @@ export function TryoutSectionPaper({ children }: { children: ReactNode }) {
  * a section here, so the page takes the whole screen from the press on.
  */
 export function TryoutSectionLock() {
-  const { binding } = useTryoutSectionPage();
+  const { binding, page, route } = useTryoutSectionPage();
   const opening = useTryoutStartPhase() === "opening";
   if (binding?.initialState.attempt.status === "in-progress") {
     return (
       <ShellLock
-        remember={getTryoutAttemptLock(
-          binding.attemptId,
-          binding.initialState.attempt.expiresAt
-        )}
+        remember={getTryoutAttemptLock({
+          attemptId: binding.attemptId,
+          locale: route.locale,
+          setPath: page.set.publicPath,
+          until: binding.initialState.attempt.expiresAt,
+        })}
       />
     );
   }
