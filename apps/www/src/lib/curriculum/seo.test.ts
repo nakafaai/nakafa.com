@@ -10,7 +10,7 @@ import {
 
 describe("curriculum route SEO context", () => {
   it("keeps root curriculum metadata scoped to the program title", () => {
-    expect(readCurriculumSeoContext(testProgramRoot, [])).toMatchObject({
+    expect(readCurriculumSeoContext(testProgramRoot, [], [])).toMatchObject({
       type: "curriculum-context",
       level: "track",
       parent: undefined,
@@ -23,15 +23,17 @@ describe("curriculum route SEO context", () => {
 
   it("includes parent and program context for nested curriculum pages", () => {
     expect(
-      readCurriculumSeoContext(testProgramSubject, [
-        testProgramRoot,
-        testProgramClass,
-      ])
+      readCurriculumSeoContext(
+        testProgramSubject,
+        [testProgramRoot, testProgramClass],
+        ["Algebra", "Geometry"]
+      )
     ).toMatchObject({
       type: "curriculum-context",
       level: "subject",
       parent: testProgramClass.title,
       program: testProgramRoot.title,
+      topics: ["Algebra", "Geometry"],
       data: {
         title: testProgramSubject.title,
       },
@@ -40,7 +42,7 @@ describe("curriculum route SEO context", () => {
 
   it("does not duplicate the root program as both parent and program", () => {
     expect(
-      readCurriculumSeoContext(testProgramClass, [testProgramRoot])
+      readCurriculumSeoContext(testProgramClass, [testProgramRoot], [])
     ).toMatchObject({
       level: "class",
       parent: testProgramRoot.title,
@@ -55,7 +57,8 @@ describe("curriculum route SEO context", () => {
     expect(
       readCurriculumSeoContext(
         { ...testProgramClass, title: testProgramRoot.title },
-        [testProgramRoot]
+        [testProgramRoot],
+        []
       )
     ).toMatchObject({
       parent: testProgramRoot.title,

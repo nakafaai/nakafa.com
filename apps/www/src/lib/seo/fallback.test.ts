@@ -41,6 +41,7 @@ describe("generateFallbackMetadata", () => {
     expect(
       generateFallbackMetadata({
         type: "curriculum-context",
+        topics: [],
         level: "track",
         program: "Kurikulum Merdeka",
         data: {
@@ -58,6 +59,7 @@ describe("generateFallbackMetadata", () => {
     expect(
       generateFallbackMetadata({
         type: "curriculum-context",
+        topics: [],
         level: "subject",
         program: "Kurikulum Merdeka",
         data: {
@@ -75,6 +77,7 @@ describe("generateFallbackMetadata", () => {
     expect(
       generateFallbackMetadata({
         type: "curriculum-context",
+        topics: [],
         level: "class",
         parent: "Kurikulum Merdeka",
         data: {
@@ -92,6 +95,7 @@ describe("generateFallbackMetadata", () => {
     expect(
       generateFallbackMetadata({
         type: "curriculum-context",
+        topics: [],
         level: "track",
         data: {},
       })

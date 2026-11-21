@@ -2,10 +2,14 @@ import { Array as Arr, Option } from "effect";
 import type { CurriculumViewRoute } from "@/lib/curriculum/model";
 import type { SEOContext } from "@/lib/seo/contract";
 
-/** Builds shared SEO metadata input from one projected curriculum route. */
+/**
+ * Builds shared SEO metadata input from one projected curriculum route and the
+ * titles of what it lists (`topics`), so its description names its own topics.
+ */
 export function readCurriculumSeoContext(
   route: CurriculumViewRoute,
-  ancestors: readonly CurriculumViewRoute[]
+  ancestors: readonly CurriculumViewRoute[],
+  topics: readonly string[]
 ): Extract<SEOContext, { type: "curriculum-context" }> {
   const parentTitle = Option.getOrUndefined(
     Option.map(Arr.last(ancestors), (parent) => parent.title)
@@ -23,6 +27,7 @@ export function readCurriculumSeoContext(
     level: route.level,
     parent: parentTitle,
     program: programContext,
+    topics,
     data: {
       title: route.title,
       description: route.materialCardDescription,

@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { readCurriculumPage } from "@/lib/curriculum/node.server";
 import { previewProjection } from "@/test/manifest";
 import {
@@ -15,6 +15,7 @@ import {
 } from "@/test/published/program";
 
 const program = vi.hoisted(() => ({ catalog: vi.fn(), route: vi.fn() }));
+const seo = vi.hoisted(() => ({ resolve: vi.fn() }));
 const canonical = vi.hoisted(() => ({ broken: false }));
 const revision = GitCommitShaSchema.make("a".repeat(40));
 
@@ -25,11 +26,8 @@ vi.mock("@/lib/content/program/route", () => ({
   readPublishedProgramRoute: program.route,
 }));
 vi.mock("@/lib/seo/generator", () => ({
-  resolveSEOMetadata: () =>
-    Effect.succeed({
-      description: "Test node description",
-      title: "Test node",
-    }),
+  /** Records the SEO context of the node, and answers with fixed copy. */
+  resolveSEOMetadata: seo.resolve,
 }));
 vi.mock("@repo/internationalization/src/rewrite", async (importOriginal) => {
   const original =
@@ -68,6 +66,12 @@ const INPUT = {
 
 beforeEach(() => {
   canonical.broken = false;
+  seo.resolve.mockReset().mockReturnValue(
+    Effect.succeed({
+      description: "Test node description",
+      title: "Test node",
+    })
+  );
   program.catalog.mockReset().mockReturnValue(
     Effect.succeed({
       entries: [
@@ -104,6 +108,37 @@ describe("readCurriculumPage", () => {
         });
         expect(page.kind === "found" && page.sourceUrl).toContain(revision);
         expect(page.kind === "found" && page.childCards).toHaveLength(1);
+        expect(seo.resolve).toHaveBeenCalledWith(
+          expect.objectContaining({
+            topics: Arr.map(
+              page.kind === "found" ? page.materialCards : [],
+              (card) => card.title
+            ),
+          }),
+          "en"
+        );
+      })
+  );
+
+  it.effect(
+    "names a node's child routes as its topics when it lists no materials",
+    () =>
+      Effect.gen(function* () {
+        program.route.mockReturnValue(
+          Effect.succeed({
+            ...publishedRoute(revision),
+            contexts: [],
+            groups: [],
+          })
+        );
+
+        const page = yield* readCurriculumPage(INPUT);
+
+        expect(page).toMatchObject({ kind: "found", materialCards: [] });
+        expect(seo.resolve).toHaveBeenCalledWith(
+          expect.objectContaining({ topics: [testProgramClass.title] }),
+          "en"
+        );
       })
   );
 

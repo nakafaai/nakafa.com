@@ -42,6 +42,11 @@ export const readCurriculumPage = Effect.fn("www.curricula.route.read")(
       path: data.path,
     });
     const { program, route } = model;
+    // The page's topics are what it lists: its material cards, or else its child routes.
+    const topics =
+      model.materialCards.length > 0
+        ? Arr.map(model.materialCards, (card) => card.title)
+        : Arr.map(model.childRoutes, (child) => child.title);
     const canonicalPath = Schema.decodeUnknownOption(LocalizedPath)(
       toCanonicalPath(`/${locale}/${route.publicPath}`)
     );
@@ -53,7 +58,7 @@ export const readCurriculumPage = Effect.fn("www.curricula.route.read")(
         readRuntimeCurriculumCatalog(locale),
         Effect.promise(() => loadLocaleMessages(locale)),
         resolveSEOMetadata(
-          readCurriculumSeoContext(route, model.ancestors),
+          readCurriculumSeoContext(route, model.ancestors, topics),
           locale
         ),
       ],

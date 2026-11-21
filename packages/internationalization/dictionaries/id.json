@@ -4249,7 +4249,8 @@
     },
     "curriculum": {
       "title": "{title}{parent, select, __EMPTY__ {} other { - {parent}}}{program, select, __EMPTY__ {} other { ({program})}}",
-      "description": "Jelajahi {title}{parent, select, __EMPTY__ {} other { dalam {parent}}}{program, select, __EMPTY__ {} other { untuk {program}}}. Indeks kurikulum ini menghubungkan pelajar ke materi dan latihan yang relevan.",
+      "description": "Jelajahi {title}{parent, select, __EMPTY__ {} other { dalam {parent}}}{program, select, __EMPTY__ {} other { untuk {program}}}{topics, select, __EMPTY__ {} other {: {topics}}}.",
+      "more": "{count} lainnya",
       "keywords": "{title}, {parent, select, __EMPTY__ {} other {{parent}, }}{program, select, __EMPTY__ {} other {{program}, }}kurikulum, alur belajar, materi, latihan"
     },
     "article": {

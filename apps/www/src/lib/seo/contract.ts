@@ -26,6 +26,8 @@ export const SEOContextSchema = Schema.Union([
     level: ProgramNavigationLevelSchema,
     parent: Schema.optional(Schema.String),
     program: Schema.optional(Schema.String),
+    /** The titles of what the page lists, in its order: its material cards, or else its child routes. */
+    topics: Schema.Array(Schema.String),
   }),
   Schema.Struct({
     type: Schema.Literal("article"),

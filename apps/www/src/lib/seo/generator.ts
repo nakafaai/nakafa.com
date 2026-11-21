@@ -1,6 +1,7 @@
 import { getGradeNonNumeric } from "@repo/contents/curriculum/grade";
 import type { Grade, PresentedMaterialDomain } from "@repo/contents/taxonomy";
-import { Effect, Match, Option } from "effect";
+import { formatterOf } from "@repo/internationalization/src/formats";
+import { Array as Arr, Effect, Match, Option } from "effect";
 import type { Locale } from "use-intl";
 import type {
   ContentSEOData,
@@ -13,6 +14,9 @@ import { generateQuranMetadata } from "@/lib/seo/quran";
 import { fetchSEOTranslationsNamespace } from "@/lib/seo/translations";
 
 const EMPTY_SELECT_VALUE = "__EMPTY__";
+
+/** How many topics a curriculum description names before it counts the rest. */
+const CURRICULUM_TOPIC_LIMIT = 3;
 
 /** Fetches translations for the Metadata namespace. */
 const fetchMetadataTranslations = (locale: Locale) =>
@@ -139,6 +143,24 @@ const generateSubjectMetadata = Effect.fn("SEO.generateSubjectMetadata")(
     })
 );
 
+/**
+ * The topics of a curriculum page as one phrase in its locale: the first few by
+ * name and the count of the rest (`more`), joined as the locale joins a list.
+ * A page that lists nothing has no phrase.
+ */
+function formatCurriculumTopics(
+  topics: readonly string[],
+  locale: Locale,
+  more: (count: number) => string
+) {
+  const named = Arr.take(topics, CURRICULUM_TOPIC_LIMIT);
+  const rest = topics.length - named.length;
+  const items = rest > 0 ? Arr.append(named, more(rest)) : named;
+  return items.length === 0
+    ? EMPTY_SELECT_VALUE
+    : formatterOf(locale).list(items, "and");
+}
+
 /** Generates SEO metadata for curriculum context pages. */
 const generateCurriculumMetadata = Effect.fn("SEO.generateCurriculumMetadata")(
   (
@@ -146,7 +168,7 @@ const generateCurriculumMetadata = Effect.fn("SEO.generateCurriculumMetadata")(
     locale: Locale
   ) =>
     Effect.gen(function* () {
-      const { data, parent, program } = context;
+      const { data, parent, program, topics } = context;
       const [t, effectiveTitle] = yield* Effect.all([
         fetchSEOTranslations(locale),
         getEffectiveTitle(data, locale),
@@ -166,6 +188,9 @@ const generateCurriculumMetadata = Effect.fn("SEO.generateCurriculumMetadata")(
             title: effectiveTitle,
             parent: parentValue,
             program: programValue,
+            topics: formatCurriculumTopics(topics, locale, (count) =>
+              t("curriculum.more", { count })
+            ),
           }),
         keywords: createSEOKeywords(
           t("curriculum.keywords", {
