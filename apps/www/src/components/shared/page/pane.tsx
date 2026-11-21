@@ -119,7 +119,8 @@ export function PaneHeader({
 }
 
 /**
- * A detail's body, which scrolls on its own under an overlay bar that takes no room. It keeps the same padding in
+ * A detail's body, which scrolls down on its own under an overlay bar that takes no room. It scrolls down only, so its
+ * content wraps and truncates at the pane's width instead of growing past it. It keeps the same padding in
  * the pane and in the phone's sheet: both headers end on a rule, so the body's first field needs the room above it,
  * and its focus ring stays inside the scrolling box.
  */
@@ -133,6 +134,7 @@ export function PaneBody({
 }) {
   return (
     <ScrollArea
+      axis="vertical"
       className="flex-1"
       viewportClassName="relative"
       viewportRef={viewportRef}
