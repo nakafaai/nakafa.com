@@ -160,6 +160,16 @@ describe("player store", () => {
     });
   });
 
+  it("keeps a held question that a layout moved by less than a device pixel", () => {
+    const store = listOfThree();
+    store.getState().goTo("c");
+    store.getState().anchorAt(120);
+
+    store.getState().moved(120.5);
+
+    expect(store.getState()).toMatchObject({ anchor: 120, pinned: true });
+  });
+
   it("gives current back to the reading line when the page moves away, however it moved", () => {
     const store = listOfThree();
     store.getState().goTo("c");

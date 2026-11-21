@@ -22,3 +22,17 @@ export function findArticle(root: ParentNode | null, key: string) {
       Option.exists(readArticleKey(article), (found) => found === key)
   );
 }
+
+/**
+ * Where a held question stands: the top of its article in the window, in pixels. A reflow that holds the reader's
+ * place keeps it, whatever scroll the browser makes to get there, and a move of the page by the reader changes it.
+ * A question that is not mounted stands where the page's scroll puts it, negated, so a scroll down moves it up as it
+ * moves a question.
+ */
+export function readHoldPosition(root: ParentNode | null, key: string | null) {
+  const article = key === null ? Option.none() : findArticle(root, key);
+  return Option.match(article, {
+    onNone: () => -window.scrollY,
+    onSome: (found) => found.getBoundingClientRect().top,
+  });
+}

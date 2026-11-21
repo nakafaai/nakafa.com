@@ -1,7 +1,7 @@
 import { Option } from "effect";
 import type { RefObject } from "react";
 import { useEffectEvent, useLayoutEffect } from "react";
-import { findArticle } from "@/components/player/article";
+import { findArticle, readHoldPosition } from "@/components/player/article";
 import { usePlayer } from "@/components/player/provider";
 
 /**
@@ -25,7 +25,7 @@ export function usePlayerReveal(list: RefObject<HTMLElement | null>) {
       }
       article.value.focus({ preventScroll: true });
     }
-    anchorAt(window.scrollY);
+    anchorAt(readHoldPosition(list.current, key));
   });
 
   useLayoutEffect(() => {

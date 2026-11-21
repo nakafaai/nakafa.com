@@ -1,7 +1,11 @@
 import { Option } from "effect";
 import type { RefObject } from "react";
 import { useEffect } from "react";
-import { ARTICLES_SELECTOR, readArticleKey } from "@/components/player/article";
+import {
+  ARTICLES_SELECTOR,
+  readArticleKey,
+  readHoldPosition,
+} from "@/components/player/article";
 import { usePlayer } from "@/components/player/provider";
 
 /**
@@ -30,7 +34,10 @@ export function usePlayerFocus(list: RefObject<HTMLElement | null>) {
       if (Option.isSome(key)) {
         focus(key.value);
         window.cancelAnimationFrame(frame);
-        frame = window.requestAnimationFrame(() => anchorAt(window.scrollY));
+        const held = key.value;
+        frame = window.requestAnimationFrame(() =>
+          anchorAt(readHoldPosition(element, held))
+        );
       }
     }
     element.addEventListener("focusin", onFocusIn);

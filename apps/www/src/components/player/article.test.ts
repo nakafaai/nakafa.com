@@ -5,6 +5,7 @@ import {
   ARTICLES_SELECTOR,
   findArticle,
   readArticleKey,
+  readHoldPosition,
 } from "@/components/player/article";
 
 describe("player articles", () => {
@@ -32,5 +33,22 @@ describe("player articles", () => {
     expect(readArticleKey(document.createElement("article"))).toEqual(
       Option.none()
     );
+  });
+
+  it("places a held question by its article's top, or by the page's scroll when it is not mounted", () => {
+    document.body.innerHTML = `
+      <section id="list">
+        <article data-player-key="held"></article>
+      </section>`;
+    const list = elementById("list");
+    const article = list?.querySelector("article");
+    if (article) {
+      article.getBoundingClientRect = () => DOMRect.fromRect({ y: 120 });
+    }
+    window.scrollTo(0, 0);
+
+    expect(readHoldPosition(list, "held")).toBe(120);
+    expect(readHoldPosition(list, "missing")).toBe(-0);
+    expect(readHoldPosition(list, null)).toBe(-window.scrollY);
   });
 });

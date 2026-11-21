@@ -1,8 +1,11 @@
-import { useWindowEvent } from "@mantine/hooks";
 import { Array as Arr, Option } from "effect";
 import type { RefObject } from "react";
-import { useEffect } from "react";
-import { ARTICLES_SELECTOR, readArticleKey } from "@/components/player/article";
+import { useEffect, useEffectEvent, useRef } from "react";
+import {
+  ARTICLES_SELECTOR,
+  readArticleKey,
+  readHoldPosition,
+} from "@/components/player/article";
 import { usePlayer } from "@/components/player/provider";
 import {
   endBand,
@@ -136,9 +139,13 @@ export function usePlayerSpy(
 ) {
   const keys = usePlayer((state) => state.keys);
   const mode = usePlayer((state) => state.mode);
-  const anchorAt = usePlayer((state) => state.anchorAt);
+  const anchor = usePlayer((state) => state.anchor);
+  const current = usePlayer((state) => state.current);
   const moved = usePlayer((state) => state.moved);
   const observe = usePlayer((state) => state.observe);
+  const pinned = usePlayer((state) => state.pinned);
+  // The list's height when the page last moved, which tells a reflow from a move of the reader.
+  const height = useRef<number | null>(null);
 
   useEffect(() => {
     if (mode !== "list" || !list.current || !end.current) {
@@ -147,16 +154,44 @@ export function usePlayerSpy(
     return watchList({ end: end.current, keys, list: list.current, observe });
   }, [end, keys, list, mode, observe]);
 
-  // A change of the list's size, as a pane's drag reflows the questions, is no move of the reader: the browser
-  // scrolls to hold their place, and the hold moves with it before that scroll reaches the page.
-  useEffect(() => {
-    if (!list.current) {
+  /**
+   * Puts the held question back where its hold left it after the list reflowed, as a pane's drag reflows the
+   * questions: the browser holds the reader's place by a node of its own choice, which need not be the held
+   * question, and the scroll it makes may reach the page before the list's resize does.
+   */
+  const restore = useEffectEvent(() => {
+    height.current = list.current?.getBoundingClientRect().height ?? null;
+    if (!pinned || anchor === null) {
       return;
     }
-    const resized = new ResizeObserver(() => anchorAt(window.scrollY));
-    resized.observe(list.current);
-    return () => resized.disconnect();
-  }, [anchorAt, list]);
+    const drift = readHoldPosition(list.current, current) - anchor;
+    if (Math.abs(drift) >= 1) {
+      window.scrollBy({ behavior: "instant", top: drift });
+    }
+  });
 
-  useWindowEvent("scroll", () => moved(window.scrollY));
+  /** Reports where the held question stands, unless the scroll comes with a new height of the list (`restore`). */
+  const report = useEffectEvent(() => {
+    if (list.current?.getBoundingClientRect().height !== height.current) {
+      restore();
+      return;
+    }
+    moved(readHoldPosition(list.current, current));
+  });
+
+  useEffect(() => {
+    const element = list.current;
+    if (!element) {
+      return;
+    }
+    height.current = element.getBoundingClientRect().height;
+    const resized = new ResizeObserver(() => restore());
+    resized.observe(element);
+    const onScroll = () => report();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      resized.disconnect();
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [list]);
 }
