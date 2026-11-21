@@ -15,6 +15,7 @@ import {
   sidebarOf,
 } from "@/e2e/support/player";
 import { pressInPopup } from "@/e2e/support/popup";
+import { waitForLoadsSettled } from "@/e2e/support/quiet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { tryoutViewports } from "@/e2e/support/viewport";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -131,7 +132,10 @@ const verifyFlags = Effect.fn("NakafaE2E.verifyPlayerFlags")(function* (
       timeout: readinessTimeoutMilliseconds,
     })
   );
-  yield* Effect.promise(() => page.reload({ waitUntil: "commit" }));
+  yield* Effect.promise(async () => {
+    await waitForLoadsSettled(page);
+    await page.reload({ waitUntil: "commit" });
+  });
   yield* Effect.promise(() =>
     waitUntilTakenOver(page.getByRole("button", { exact: true, name: "Flag" }))
   );

@@ -16,6 +16,7 @@ import {
   questionHeading,
   shownQuestions,
 } from "@/e2e/support/player";
+import { waitForLoadsSettled } from "@/e2e/support/quiet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   desktopViewport,
@@ -221,6 +222,7 @@ test.describe("The result of a finished try-out", () => {
 
           // A reload opens the same question, below the header, with its seat current.
           yield* Effect.promise(async () => {
+            await waitForLoadsSettled(page);
             await page.reload({ waitUntil: "commit" });
             await expect(
               pane.getByRole("button", {

@@ -5,6 +5,7 @@ import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { entrySetHref } from "@/e2e/support/entry";
 import { activate } from "@/e2e/support/input";
 import { questionArticle } from "@/e2e/support/player";
+import { waitForLoadsSettled } from "@/e2e/support/quiet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 
@@ -135,6 +136,7 @@ test.describe("Practice beside the try-out", () => {
 
         // The practice is the learner's own: a reload comes back to both checks.
         yield* Effect.promise(async () => {
+          await waitForLoadsSettled(page);
           await page.reload({ waitUntil: "commit" });
           await expect(verdictIn(questionArticle(page, 1))).toBeVisible({
             timeout: readinessTimeoutMilliseconds,

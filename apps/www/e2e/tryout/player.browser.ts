@@ -21,7 +21,7 @@ import {
   sidebarOf,
   waitForRunningSection,
 } from "@/e2e/support/player";
-import { waitForQuiet } from "@/e2e/support/quiet";
+import { waitForLoadsSettled, waitForQuiet } from "@/e2e/support/quiet";
 import { SERVER_FUNCTION_PATH } from "@/e2e/support/requests";
 import {
   expectStillShell,
@@ -139,9 +139,12 @@ const verifyView = Effect.fn("NakafaE2E.verifyPlayerView")(function* (
   yield* Effect.sync(() => expect(Option.isNone(unsaved)).toBe(true));
 
   // An unknown view is not a page.
-  yield* Effect.promise(() =>
-    page.goto(withView(address, "grid"), { waitUntil: "domcontentloaded" })
-  );
+  yield* Effect.promise(async () => {
+    await waitForLoadsSettled(page);
+    await page.goto(withView(address, "grid"), {
+      waitUntil: "domcontentloaded",
+    });
+  });
   yield* Effect.promise(() =>
     expect(
       page.locator('meta[name="robots"][content*="noindex"]').first()
@@ -151,7 +154,10 @@ const verifyView = Effect.fn("NakafaE2E.verifyPlayerView")(function* (
 
   // Choosing a view shows it at once, without moving the page, while the
   // timer keeps ticking, and the server remembers it.
-  yield* Effect.promise(() => page.goto(address, { waitUntil: "commit" }));
+  yield* Effect.promise(async () => {
+    await waitForLoadsSettled(page);
+    await page.goto(address, { waitUntil: "commit" });
+  });
   yield* expectView(page, opening);
   yield* Effect.promise(() =>
     expect(

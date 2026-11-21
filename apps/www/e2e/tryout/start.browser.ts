@@ -15,6 +15,7 @@ import { activate } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitForRunningSection } from "@/e2e/support/player";
+import { waitForLoadsSettled } from "@/e2e/support/quiet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { sectionHref } from "@/e2e/support/tryout";
 import { tryoutViewports } from "@/e2e/support/viewport";
@@ -386,6 +387,7 @@ test("a hard load of a set whose attempt runs never reads Start", async ({
             .click();
           await page.waitForURL(ATTEMPT_ADDRESS);
 
+          await waitForLoadsSettled(page);
           await page.goto(SET_HREF, { waitUntil: "commit" });
           await expect(
             page.locator("main").getByRole("link", {
@@ -455,6 +457,7 @@ test("a press while the learner read is pending resumes the running section it b
             .click();
           await page.waitForURL(ATTEMPT_ADDRESS);
 
+          await waitForLoadsSettled(page);
           holding = true;
           await page.goto(target.setHref, { waitUntil: "commit" });
           await page.locator(ACTION).click();

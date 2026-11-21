@@ -6,7 +6,7 @@ import { activate } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { finishSection, waitForRunningSection } from "@/e2e/support/player";
-import { waitForQuiet } from "@/e2e/support/quiet";
+import { waitForLoadsSettled, waitForQuiet } from "@/e2e/support/quiet";
 import {
   expectStillShell,
   observeShell,
@@ -107,7 +107,10 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
   const finish = page.getByRole("button", { exact: true, name: "Finish" });
 
   // A reload paints the running section locked from its first frame.
-  yield* Effect.promise(() => page.reload({ waitUntil: "commit" }));
+  yield* Effect.promise(async () => {
+    await waitForLoadsSettled(page);
+    await page.reload({ waitUntil: "commit" });
+  });
   yield* Effect.promise(() =>
     expect(finish).toBeVisible({ timeout: readinessTimeoutMilliseconds })
   );
@@ -207,9 +210,12 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
   });
 
   // Visiting a completed section's URL directly while its set still runs redirects straight back to the set pane.
-  yield* Effect.promise(() =>
-    page.goto(`${startedSection}${attemptSearch}`, { waitUntil: "commit" })
-  );
+  yield* Effect.promise(async () => {
+    await waitForLoadsSettled(page);
+    await page.goto(`${startedSection}${attemptSearch}`, {
+      waitUntil: "commit",
+    });
+  });
   yield* arriveLocked(page, isSet);
   yield* Effect.sync(() => {
     expect(new URL(page.url()).searchParams.has("attemptId")).toBe(true);
@@ -217,7 +223,10 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
 
   // The public set URL of a running attempt moves to the attempt's address,
   // with its heading in every frame and one change to the locked shell.
-  yield* Effect.promise(() => page.goto(setHref, { waitUntil: "commit" }));
+  yield* Effect.promise(async () => {
+    await waitForLoadsSettled(page);
+    await page.goto(setHref, { waitUntil: "commit" });
+  });
   yield* Effect.promise(() =>
     expect(page.locator(LOCKED_SHELL)).toBeAttached({
       timeout: readinessTimeoutMilliseconds,
