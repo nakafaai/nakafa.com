@@ -22,12 +22,7 @@ import { NEW_FORMULA } from "@repo/editor/math";
 import { cn } from "cn";
 import { Effect, Fiber, Option, Schema } from "effect";
 import type * as MathLive from "mathlive";
-import type {
-  ComponentProps,
-  KeyboardEvent,
-  ReactNode,
-  RefObject,
-} from "react";
+import type { ComponentProps, ReactNode, RefObject } from "react";
 import { createContext, useEffect, useMemo, useRef, useState } from "react";
 
 /** MathLive, which an editor needs only when its popover opens, so no page's first JavaScript holds it. */
@@ -256,7 +251,6 @@ export function FormulaEdit({
   const [mathlive, setMathlive] = useState<Option.Option<typeof MathLive>>(
     Option.none
   );
-  const discarded = useRef(false);
   const field = useRef<MathLive.MathfieldElement | null>(null);
   const problem = useMemo(() => Effect.runSync(formulaProblem(draft)), [draft]);
 
@@ -289,16 +283,18 @@ export function FormulaEdit({
     };
   }, [mathlive, open]);
 
-  /** Opens the editor on the saved formula, or closes it, saving the draft unless Escape kept the formula as it was. */
+  /**
+   * Opens the editor on the saved formula, or closes it, saving the draft unless Escape kept the formula as it was.
+   * Escape is read from the popover's own close reason, since the focus may still be in the text when it is pressed.
+   */
   function openEditor(next: boolean, escaped: boolean) {
     if (next) {
-      discarded.current = false;
       setDraft(latex);
       setOpen(true);
       return;
     }
     setOpen(false);
-    if (!discarded.current && draft.trim() !== "") {
+    if (!escaped && draft.trim() !== "") {
       onSave(draft.trim());
     } else if (defaultOpen) {
       onRemove();
@@ -306,13 +302,6 @@ export function FormulaEdit({
     }
     if (escaped) {
       onLeave();
-    }
-  }
-
-  /** Escape keeps the formula as it was saved, so the popover closes without a save. */
-  function discardOnEscape(event: KeyboardEvent) {
-    if (event.key === "Escape") {
-      discarded.current = true;
     }
   }
 
@@ -343,7 +332,6 @@ export function FormulaEdit({
         align="center"
         className="w-80 gap-3 p-3"
         finalFocus="none"
-        onKeyDown={discardOnEscape}
       >
         <ButtonGroup className="w-full">
           <Button
