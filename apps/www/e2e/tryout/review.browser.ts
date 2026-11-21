@@ -12,6 +12,7 @@ import {
 } from "@/e2e/support/entry";
 import { activate } from "@/e2e/support/input";
 import { questionArticle } from "@/e2e/support/player";
+import { waitForLoadsSettled } from "@/e2e/support/quiet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The questions of the set, each reviewed on the set page once the attempt ends. */
@@ -355,6 +356,7 @@ test.describe("The review of a finished try-out", () => {
 
         yield* recordFinishedFrames(page);
         yield* Effect.promise(async () => {
+          await waitForLoadsSettled(page);
           await page.goto(entrySetHref, { waitUntil: "commit" });
           await expect(panel).toBeVisible({
             timeout: readinessTimeoutMilliseconds,
