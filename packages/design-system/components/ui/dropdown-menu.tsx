@@ -17,6 +17,7 @@ import {
   sheetSurface,
 } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
+import type { MenuController } from "@ui-sdk/react/menu";
 import {
   createMenuController,
   MenuCheckboxItem,
@@ -37,7 +38,7 @@ import {
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type * as React from "react";
-import { use } from "react";
+import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 
 /**
@@ -205,8 +206,25 @@ function DropdownMenuItem({
   );
 }
 
-function DropdownMenuSub(props: React.ComponentProps<typeof MenuSub>) {
-  return <MenuSub {...props} />;
+/** The controller of the submenu a `DropdownMenuSubTrigger` opens. */
+const SubmenuController = createContext<MenuController | null>(null);
+
+/**
+ * A submenu. Its trigger takes Escape while the submenu stands open over it, as it does once a pointer opened it and
+ * left the focus on the trigger, and closes only the submenu, as every open layer leaves to the one above it. UI SDK
+ * 0.1.0-beta.13 closes the whole menu there (https://github.com/vercel-labs/ui/issues/1006).
+ */
+function DropdownMenuSub({
+  controller,
+  ...props
+}: React.ComponentProps<typeof MenuSub>) {
+  const [own] = useState<MenuController>(() => createMenuController());
+  const shared = controller ?? own;
+  return (
+    <SubmenuController value={shared}>
+      <MenuSub controller={shared} {...props} />
+    </SubmenuController>
+  );
 }
 
 /** Opens a submenu. Like every option it shows the icon of its kind before its words. */
@@ -214,9 +232,11 @@ function DropdownMenuSubTrigger({
   className,
   icon,
   children,
+  onKeyDown,
   ...props
 }: NodeChildren<React.ComponentProps<typeof MenuSubTrigger>> &
   Pick<React.ComponentProps<typeof OptionIcon>, "icon">) {
+  const submenu = use(SubmenuController);
   return (
     <MenuSubTrigger
       className={cn(
@@ -225,6 +245,16 @@ function DropdownMenuSubTrigger({
         "data-open:bg-accent data-open:text-accent-foreground",
         className
       )}
+      onKeyDown={(event) => {
+        onKeyDown?.(event);
+        if (event.key !== "Escape" || submenu === null || !submenu.isOpen()) {
+          return;
+        }
+        // The menu around the trigger would take this Escape and close itself.
+        event.preventDefault();
+        event.stopPropagation();
+        submenu.close({ reason: "escape-key" });
+      }}
       {...props}
     >
       <DropdownMenuIcon icon={icon} />
