@@ -49,8 +49,8 @@ interface TryoutSetEntryProps {
 
 /**
  * Renders a no-nested-section set's paper: the player while it runs, its opening frame while starting, or its
- * full review once it ends. Any settled paper address with neither returns straight to the set's pane, never
- * drawing a standalone card-only page.
+ * full review once it ends, waiting in the review's frame while either is on its way. An address that holds no
+ * attempt of the learner returns straight to the set's pane, never drawing a standalone card-only page.
  */
 export function TryoutSetEntry({ children, value }: TryoutSetEntryProps) {
   const opening = useTryoutStartPhase() === "opening";
@@ -121,19 +121,22 @@ function TryoutSetEntryBody({ children, value }: TryoutSetEntryProps) {
     );
   }
 
-  if (value.actionAttempt === undefined) {
-    return (
-      <TryoutPage>
-        <TryoutEntryHeader value={value} />
-        <TryoutFinishedPlace pending />
-      </TryoutPage>
-    );
+  // Only an address with no attempt of the learner and nothing to review returns to the pane. Any other state is
+  // on its way to the player or the review, such as a finished attempt whose score is still being published, and
+  // the set's pane sends a finished attempt back here, so returning then would bounce between the two.
+  if (value.actionAttempt === null && state.kind === "none") {
+    return <TryoutEntryRedirect publicPath={value.page.set.publicPath} />;
   }
 
-  return <TryoutEntryRedirect publicPath={value.page.set.publicPath} />;
+  return (
+    <TryoutPage>
+      <TryoutEntryHeader value={value} />
+      <TryoutFinishedPlace pending />
+    </TryoutPage>
+  );
 }
 
-/** Redirects a direct-entry paper URL with neither a running player nor a review back to the set pane. */
+/** Redirects a direct-entry paper URL that holds no attempt of the learner back to the set pane. */
 function TryoutEntryRedirect({ publicPath }: { publicPath: string }) {
   const navigate = useNavigate();
 

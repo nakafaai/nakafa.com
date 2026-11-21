@@ -314,7 +314,13 @@ function TryoutSectionSettled({
     );
   }
 
-  if (actionAttempt === undefined) {
+  // A section that ended while its attempt did, or as its clock ran out, reviews once the attempt's score is
+  // published; until then it waits in the review's frame instead of returning to the pane and bouncing back.
+  const reviewArriving =
+    runtimeState.kind === "review" &&
+    score === null &&
+    actionAttempt?.status !== "in-progress";
+  if (actionAttempt === undefined || reviewArriving) {
     return (
       <TryoutPage>
         <TryoutSectionLock />
