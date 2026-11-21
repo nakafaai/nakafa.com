@@ -257,7 +257,7 @@ function useTryoutSetView({
  * Renders one stable set view from its exact mutable state: the set's pane beside its track's table, or,
  * for an address that opens the paper of a set entered by its one section, that paper. A press that opens a
  * section with a page of its own draws its player here at once, and that page draws the same frame until it
- * reads the attempt; a press that opens the set's own entry draws it in the set's paper. A paper rendered for a
+ * reads the attempt; a press that opens the set's own entry draws it in the set's paper. A page rendered for a
  * running attempt locks the app shell until the learner leaves it, even once the attempt ends here, so the shell
  * never changes under a page.
  */
@@ -280,15 +280,16 @@ function ResolvedTryoutSetPage({
       ? view.entrySection
       : null;
 
-  if (entrySection === null) {
-    return opening && destination ? (
-      <TryoutSetOpening part={destination.part} view={view} />
-    ) : (
-      <TryoutSetPane view={view} />
-    );
+  if (entrySection === null && opening && destination) {
+    return <TryoutSetOpening part={destination.part} view={view} />;
   }
-  if (!(paper || opening)) {
-    return <TryoutSetPane view={view} />;
+  if (entrySection === null || !(paper || opening)) {
+    return (
+      <>
+        <SetLock binding={binding} />
+        <TryoutSetPane view={view} />
+      </>
+    );
   }
   return (
     <>
@@ -347,8 +348,9 @@ function TryoutSetOpening({
 }
 
 /**
- * Locks the app shell while the attempt this page is bound to runs, or while the learner's press opens
- * the set's entry section, so the page takes the whole screen from the press on.
+ * Locks the app shell while the attempt this page is bound to runs, its pane beside the table as its paper
+ * alike, or while the learner's press opens the set's entry section, so the page takes the whole screen from the
+ * press on and a running attempt holds the learner in it until they leave it.
  */
 function SetLock({ binding }: Pick<TryoutSetPageClientProps, "binding">) {
   const opening = useTryoutStartPhase() === "opening";
