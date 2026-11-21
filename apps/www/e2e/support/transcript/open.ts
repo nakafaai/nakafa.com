@@ -63,12 +63,6 @@ const declineIfAsked = Effect.fn("NakafaE2E.declineIfAsked")(function* (
   }).pipe(Effect.ignore);
 });
 
-/** A served conversation: the chat it is served in, and the messages it holds now. */
-interface Transcript {
-  readonly chatId: string;
-  readonly shown: MutableRef.MutableRef<readonly ServedMessage[]>;
-}
-
 /**
  * Serves the conversation that the returned reference holds, in a chat of a
  * learner it signs in. Pages that open afterwards show whatever the reference
@@ -103,6 +97,9 @@ export const startTranscript = Effect.fn("NakafaE2E.startTranscript")(
     return { chatId, shown, stream: served.stream };
   }
 );
+
+/** A served conversation: the chat it is served in, the messages it holds now, and its stream. */
+type Transcript = Effect.Success<ReturnType<typeof startTranscript>>;
 
 /**
  * A phone draws its scrollbars over the page and gives them no room. The root
