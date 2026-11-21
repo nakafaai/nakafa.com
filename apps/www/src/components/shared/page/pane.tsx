@@ -134,7 +134,6 @@ export function PaneBody({
 }) {
   return (
     <ScrollArea
-      axis="vertical"
       className="flex-1"
       viewportClassName="relative"
       viewportRef={viewportRef}

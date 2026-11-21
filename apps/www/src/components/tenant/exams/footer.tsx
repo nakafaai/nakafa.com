@@ -174,6 +174,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
         <div className="border-b">
           <ScrollArea
             aria-label={tCommon("pages")}
+            axis="both"
             className="w-full"
             render={<nav />}
           >

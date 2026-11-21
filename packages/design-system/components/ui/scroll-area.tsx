@@ -21,12 +21,13 @@ import type { Ref, UIEventHandler } from "react";
  * A scroller whose bars never take room: the viewport hides the native bar, and a thin overlay bar shows on
  * hover and while scrolling. The root is a column and the viewport fills it, so a root that a parent only caps,
  * such as a bottom sheet with a largest height, still scrolls. The viewport is the element that scrolls, so a caller that reads or writes its
- * scroll, observes it, or listens to it reaches it through `viewportRef` and `onViewportScroll`. A scroller of rows
- * that only ever scrolls down, such as a sidebar, sets `axis` to `"vertical"`: it draws no bar across and never moves
- * sideways.
+ * scroll, observes it, or listens to it reaches it through `viewportRef` and `onViewportScroll`. A scroller scrolls
+ * down only, so its content wraps and truncates at its width. A scroller whose content is wider than it on purpose,
+ * such as a table, a zoomed canvas or a row of pages, sets `axis` to `"both"`: it draws a bar across, and its content
+ * grows as wide as its widest child instead of wrapping.
  */
 function ScrollArea({
-  axis = "both",
+  axis = "vertical",
   className,
   children,
   onViewportScroll,
@@ -35,7 +36,7 @@ function ScrollArea({
   viewportRef,
   ...props
 }: React.ComponentProps<typeof ScrollAreaPrimitive> & {
-  /** The directions the viewport scrolls in. */
+  /** The directions the viewport scrolls in: down only, or also across for content wider than the scroller. */
   axis?: "both" | "vertical";
   /** Runs as the viewport scrolls. */
   onViewportScroll?: UIEventHandler<HTMLDivElement> | undefined;

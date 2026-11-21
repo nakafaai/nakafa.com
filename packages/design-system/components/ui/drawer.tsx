@@ -102,7 +102,7 @@ function DrawerPanel({
     );
   }
   return (
-    <ScrollArea axis="vertical" className="min-h-0 flex-1" scrollFade>
+    <ScrollArea className="min-h-0 flex-1" scrollFade>
       <div
         className={cn("flex min-w-0 flex-col gap-4 p-4", className)}
         data-slot="drawer-panel"
