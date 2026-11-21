@@ -2552,7 +2552,8 @@
     "rewards-held": "Alles erhalten",
     "reward-sections": "{count, number} Teile abgeschlossen",
     "reward-paper": "Fragen abgeschlossen",
-    "medal-name": "Medaille {name}"
+    "medal-name": "Medaille {name}",
+    "verdict": "{state, select, correct {Richtig} incorrect {Falsch} pending {Wartet auf die Bewertung} other {Noch offen}}"
   },
   "Player": {
     "navigator-answered": "{answered, number} von {total, number} beantwortet",

@@ -3,7 +3,10 @@ import type { TryoutQuestionBody as Body } from "@repo/backend/confect/tryouts/r
 import { useState } from "react";
 import { TryoutQuestionBody } from "@/components/tryout/runtime/question/body";
 import { TryoutResponseFields } from "@/components/tryout/runtime/response/fields";
-import { makePartsWriter } from "@/components/tryout/runtime/response/parts";
+import {
+  makePartsWriter,
+  onlyResponse,
+} from "@/components/tryout/runtime/response/parts";
 import { placeTryoutParts } from "@/components/tryout/runtime/response/place";
 import { useTryoutResponseSubmit } from "@/components/tryout/runtime/response/submit";
 import type { TryoutRuntimeQuestion } from "@/components/tryout/runtime/types";
@@ -29,7 +32,7 @@ export function TryoutResponse({ value }: TryoutResponseProps) {
         interaction,
         locked,
         onChange: (response) => submit(question, response),
-        response: question.response?.response ?? null,
+        response: onlyResponse(question.response?.response ?? null),
       }}
     />
   );

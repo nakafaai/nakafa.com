@@ -48,7 +48,7 @@ export const onlyResponse = (
 /** One write of a question of several parts: the response it sends, and the version it is numbered. */
 const PartsWrite = Schema.Struct({
   response: Schema.NullOr(QuestionResponse),
-  version: Schema.Number,
+  version: Schema.Finite,
 });
 type PartsWrite = typeof PartsWrite.Type;
 

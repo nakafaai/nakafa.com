@@ -9,6 +9,7 @@ import {
   reviewedParts,
   withPart,
 } from "@/components/tryout/runtime/response/parts";
+import type { TryoutRuntimeQuestion } from "@/components/tryout/runtime/types";
 
 const NUMBER = { text: "2" };
 const WORD = { text: "Haus" };
@@ -32,7 +33,7 @@ const SHOWN = {
     updatedAt: 1,
   },
   version: 3,
-};
+} satisfies Pick<TryoutRuntimeQuestion, "response" | "version">;
 
 describe("tryout/runtime/response/parts", () => {
   it("sets one part beside the others, replaces it, and clears the question once no part holds an answer", () => {
