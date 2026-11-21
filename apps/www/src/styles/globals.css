@@ -269,6 +269,17 @@
 }
 
 /*
+ * The attempt picker that the browser kept for a set it saw tried more than once
+ * is the learner's own, so it draws from the first frame in that hidden body,
+ * where the read's live picker takes its place (`TryoutAttemptPicker`).
+ */
+:root[data-signed-in="yes"]
+  [data-pane-read="pending"]
+  [data-attempt-picker]:not([hidden]) {
+  visibility: visible;
+}
+
+/*
  * A try-out track's first rows are the ones every visitor reads, so they can hold
  * no learner's progress. Under a signed-in hint their progress marks keep their
  * room and stay hidden until the learner's own rows replace them.

@@ -272,8 +272,8 @@ function ResolvedTryoutSectionPage({
 }
 
 /**
- * Renders a non-running section address: full review once the whole attempt ends, its pending frame while the
- * learner read settles, or an immediate redirect back to the set pane so no card-only summary page ever renders.
+ * Renders a non-running section address: full review once the whole attempt ends, or its pending frame while the
+ * learner read settles and while the page moves back to the set pane, so no card-only summary page ever renders.
  */
 function TryoutSectionSettled({
   actionAttempt,
@@ -320,24 +320,24 @@ function TryoutSectionSettled({
     );
   }
 
-  // The learner's read is on its way: the section's heading stands over the place its attempt takes.
-  if (actionAttempt === undefined) {
-    return (
-      <TryoutPage>
-        <TryoutSectionLock />
-        <TryoutSectionPageHeader
-          page={page}
-          parents="linked"
-          setPath={returnAddress.publicPath}
-        >
-          {null}
-        </TryoutSectionPageHeader>
-        <TryoutFinishedPlace pending />
-      </TryoutPage>
-    );
-  }
-
-  return <TryoutSectionRedirect address={returnAddress} />;
+  // The learner's read is on its way, or the page moves to its set: the section's heading stands over the place
+  // its attempt takes, which the static first paint of every section draws too.
+  return (
+    <TryoutPage>
+      <TryoutSectionLock />
+      <TryoutSectionPageHeader
+        page={page}
+        parents="linked"
+        setPath={returnAddress.publicPath}
+      >
+        {null}
+      </TryoutSectionPageHeader>
+      <TryoutFinishedPlace pending />
+      {actionAttempt === undefined ? null : (
+        <TryoutSectionRedirect address={returnAddress} />
+      )}
+    </TryoutPage>
+  );
 }
 
 /** Returns from a section review to its set's pane. */
