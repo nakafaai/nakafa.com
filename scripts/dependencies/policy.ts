@@ -73,7 +73,7 @@ export const ALCHEMY_COHORT = {
  * manifest that pins the cohort: the policy test reports each declaration that still
  * holds the old version, so none is missed.
  */
-const TIPTAP_COHORT_VERSION = "3.34.0";
+const TIPTAP_COHORT_VERSION = "3.35.0";
 /**
  * The Tiptap packages each manifest declares. The editor package holds the schema of
  * an assessment document, the design system holds the Memory editor, and the web app
@@ -294,7 +294,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "@types/node",
     minimumDeclarations: 1,
   },
-  // The marked that @tiptap/markdown lexes with: 3.34.0 depends on marked ^17.0.1.
+  // The marked that @tiptap/markdown lexes with: 3.35.0 depends on marked ^17.0.1.
   // The Memory page reads stored Markdown with the same lexer, so a row says what
   // the editor shows; it moves with the editor's lexer, which plain.test.ts checks,
   // never with the latest.
@@ -303,7 +303,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "marked-tiptap",
     minimumDeclarations: 1,
   },
-  // The collab plugin that steps sync uses (ADR 0028). Tiptap 3.34.0 does not
+  // The collab plugin that steps sync uses (ADR 0028). Tiptap 3.35.0 does not
   // ship it: @tiptap/pm exports no collab entry. It is MIT, depends on prosemirror-state alone, and its last
   // release is 1.3.1 of 17 May 2023, so it is pinned exactly, as Tiptap is. The
   // design system installs its extension, and the sync loop of the web app
@@ -317,7 +317,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "prosemirror-collab",
   },
   // The model and the transform that the server folds stored steps with (ADR
-  // 0028). They are the versions that `@tiptap/pm` 3.34.0 resolves in
+  // 0028). They are the versions that `@tiptap/pm` 3.35.0 resolves in
   // `bun.lock` (the transform through its root override), so the server applies
   // a step with the code the editors run. Transform 1.12.6 and 1.12.7 change
   // dropPoint and the appending of a sliced mapping, not Step.fromJSON or apply.

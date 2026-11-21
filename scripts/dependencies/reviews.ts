@@ -13,38 +13,38 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "effect@latest",
-    "4.1.4",
-    "Effect 4.1.4 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.3 and 4.1.4 are patch releases: Rational, CLI completion and validation fixes, cluster workflow retries, a TestClock finalizer fix, and OpenRouter schema regeneration. The contracts follow the cohort: @nakafa/aksara-contracts 8.4.0 peers effect 4.1.4 exactly. Checked 20 November 2026.",
+    "4.1.5",
+    "Effect 4.1.4 is the adopted cohort (EFFECT_COHORT_VERSION), and 4.1.5 is the latest release. 4.1.3 and 4.1.4 are patch releases: Rational, CLI completion and validation fixes, cluster workflow retries, a TestClock finalizer fix, and OpenRouter schema regeneration. The contracts follow the cohort and hold it: @nakafa/aksara-contracts 8.4.0, the declared version, and 8.8.0, the latest, both peer effect 4.1.4 exactly, so 4.1.5 waits for an Aksara release whose contracts peer it, adopted with that contracts version. Checked 21 November 2026.",
   ],
   [
     "@effect/platform-node@latest",
-    "4.1.4",
-    "@effect/platform-node follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
+    "4.1.5",
+    "@effect/platform-node follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release and 4.1.5 waits with effect.",
   ],
   [
     "@effect/platform-node-shared@latest",
-    "4.1.4",
-    "@effect/platform-node-shared follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
+    "4.1.5",
+    "@effect/platform-node-shared follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release and 4.1.5 waits with effect.",
   ],
   [
     "@effect/vitest@latest",
-    "4.1.4",
-    "@effect/vitest follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
+    "4.1.5",
+    "@effect/vitest follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release and 4.1.5 waits with effect.",
   ],
   [
     "@effect/ai-openai-compat@latest",
-    "4.1.4",
-    "@effect/ai-openai-compat follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
+    "4.1.5",
+    "@effect/ai-openai-compat follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release and 4.1.5 waits with effect.",
   ],
   [
     "@effect/ai-openrouter@latest",
-    "4.1.4",
-    "@effect/ai-openrouter follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
+    "4.1.5",
+    "@effect/ai-openrouter follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release and 4.1.5 waits with effect.",
   ],
   [
     "@effect/platform-bun@latest",
-    "4.1.4",
-    "@effect/platform-bun follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
+    "4.1.5",
+    "@effect/platform-bun follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release and 4.1.5 waits with effect.",
   ],
   [
     "@confect/core@latest",
@@ -78,8 +78,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "tsrs@latest",
-    "7.1.0-beta.tsrs3",
-    "tsrs is the Rust port of the TypeScript 7.1 checker, pinned exactly to 7.1.0-beta.tsrs3, the latest release and one of the two that @effect/tsgo 0.73.2 patches. From tsrs2 a version names the TypeScript release it targets and a tsrs revision, so 0.25.0-ts7.1.0-beta was the last of the old scheme. tsrs3 checks against TypeScript 7.1.0-beta at the same source commit, fixes compiler and lint edge cases, and leaves the tsrs/sync, tsrs/ast and tsrs/fs modules and the tsdk folder that the source check and the editors load unchanged byte for byte. Every typecheck, the language server, and the source check's compiler API run on it. Checked 20 November 2026.",
+    "7.1.0-beta.tsrs4",
+    "tsrs is the Rust port of the TypeScript 7.1 checker, pinned exactly to 7.1.0-beta.tsrs3, one of the two that @effect/tsgo 0.73.2, the latest, patches. 7.1.0-beta.tsrs4 is the latest release, and it waits for an @effect/tsgo release that patches it, because every typecheck runs the patched compiler. From tsrs2 a version names the TypeScript release it targets and a tsrs revision, so 0.25.0-ts7.1.0-beta was the last of the old scheme. tsrs3 checks against TypeScript 7.1.0-beta at the same source commit, fixes compiler and lint edge cases, and leaves the tsrs/sync, tsrs/ast and tsrs/fs modules and the tsdk folder that the source check and the editors load unchanged byte for byte. Every typecheck, the language server, and the source check's compiler API run on it. Checked 21 November 2026.",
   ],
   [
     "ai@latest",
@@ -108,8 +108,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@polar-sh/sdk@latest",
-    "1.3.1",
-    "The backend stays on 1.0.2. 1.3.1 moves the Outpost and its OpenTelemetry, ioredis and @vercel/oidc imports to the @polar-sh/sdk/outpost subpath, which nothing here imports, so the cause of the 1.1.0 hold is gone. But @polar-sh/sdk/2026-10, whose createPolarCore, errors and webhooks the billing client and the Polar webhook route import (confect/billing/polar, confect/routes/polar.ts), statically imports the metering chunk dist/client-Os3zkUrE.mjs, which imports node:timers/promises (sdk/typescript/src/metering/buffered.ts). Convex bundles the default runtime for the browser platform, so the HTTP router cannot resolve it and the deploy fails; 1.1.0 carried the same import in dist/client-Bz9G1UDp.mjs. Move when a release keeps node: built-ins out of the 2026-10 entry. Checked 20 November 2026.",
+    "1.3.2",
+    "The backend stays on 1.0.2. 1.3.1 moved the Outpost and its OpenTelemetry, ioredis and @vercel/oidc imports to the @polar-sh/sdk/outpost subpath, which nothing here imports, so the cause of the 1.1.0 hold is gone. But @polar-sh/sdk/2026-10, whose createPolarCore, errors and webhooks the billing client and the Polar webhook route import (confect/billing/polar, confect/routes/polar.ts), statically imports the metering client chunk, which imports node:timers/promises; in 1.3.2 that chunk is dist/client-BG5NBqal.mjs (sdk/typescript/src/metering/buffered.ts). Convex bundles the default runtime for the browser platform, so the HTTP router cannot resolve it and the deploy fails; 1.1.0 carried the same import in dist/client-Bz9G1UDp.mjs. Move when a release keeps node: built-ins out of the 2026-10 entry. Checked 21 November 2026.",
   ],
   [
     "convex-test@latest",

@@ -67,9 +67,9 @@ jobs:
       # the Convex deploy until the new Worker is live, the old Worker serves against
       # the new functions, so nothing else may run in between.
       - name: Set up uv for the CAS engine
-        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
         with:
-          version: "0.13.8"
+          version: "0.13.9"
           # The default glob walks every folder, node_modules included, for 3.5 minutes.
           cache-dependency-glob: apps/cas/uv.lock
 
