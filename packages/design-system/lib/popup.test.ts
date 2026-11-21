@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { keepClickOnTrigger } from "@repo/design-system/lib/press";
+import { keepClickOnTrigger } from "@repo/design-system/lib/popup";
 import { MutableHashSet } from "effect";
 
 afterEach(() => {

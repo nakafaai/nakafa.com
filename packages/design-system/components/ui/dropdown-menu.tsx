@@ -11,11 +11,11 @@ import {
   optionTickVariants,
 } from "@repo/design-system/lib/option";
 import {
+  keepClickOnTrigger,
   PopupContainer,
   popupMotion,
   sheetSurface,
 } from "@repo/design-system/lib/popup";
-import { keepClickOnTrigger } from "@repo/design-system/lib/press";
 import type { NodeChildren } from "@repo/design-system/lib/render";
 import {
   createMenuController,
