@@ -92,15 +92,22 @@ const numberFieldStepVariants = cva(
   }
 );
 
-/** The button of a number field that steps its number down, named in the page's locale. */
+/**
+ * The button of a number field that steps its number down, named in the page's
+ * locale. In a field with an id it names that input as the one it steps: UI SDK
+ * points `aria-controls` at the id it would give the input, and takes an input
+ * id only from its own field (vercel-labs/ui#1004).
+ */
 function NumberFieldDecrement({
   className,
   ...props
 }: React.ComponentProps<typeof NumberInputDecrement>) {
   const t = useTranslations("Common");
+  const fieldId = use(NumberFieldId);
 
   return (
     <NumberInputDecrement
+      aria-controls={fieldId}
       aria-label={t("decrease")}
       className={cn(numberFieldStepVariants({ side: "start" }), className)}
       {...props}
@@ -110,15 +117,17 @@ function NumberFieldDecrement({
   );
 }
 
-/** The button of a number field that steps its number up, named in the page's locale. */
+/** The button of a number field that steps its number up, named in the page's locale, naming the field's input as the decrease button does. */
 function NumberFieldIncrement({
   className,
   ...props
 }: React.ComponentProps<typeof NumberInputIncrement>) {
   const t = useTranslations("Common");
+  const fieldId = use(NumberFieldId);
 
   return (
     <NumberInputIncrement
+      aria-controls={fieldId}
       aria-label={t("increase")}
       className={cn(numberFieldStepVariants({ side: "end" }), className)}
       {...props}
