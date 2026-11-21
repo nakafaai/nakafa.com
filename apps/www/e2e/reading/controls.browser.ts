@@ -192,6 +192,9 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       yield* Effect.promise(() => page.keyboard.press("Escape"));
       yield* Effect.promise(() => expect(sidebar).toHaveCount(0));
       yield* Effect.promise(() => expect(headerOutline).toBeFocused());
+      // The pointer that pressed the toggle still rests on it, and WebKit hovers it again once the drawer leaves, so
+      // its tooltip would open over the keyboard steps below. The reader moves the pointer to the title first.
+      yield* Effect.promise(() => title.hover());
     } else {
       // From 1280 px the outline stands beside the page, and the header holds no
       // toggle: the panel's own toggle at its foot folds it into a rail and opens
