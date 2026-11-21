@@ -59,12 +59,15 @@ const translations: TranslationNamespaces = HashMap.fromIterable([
         (values) => {
           const parent = getValue(values, "parent");
           const program = getValue(values, "program");
+          const topics = getValue(values, "topics");
           const parentText = parent === "__EMPTY__" ? "" : ` in ${parent}`;
           const programText = program === "__EMPTY__" ? "" : ` for ${program}`;
+          const topicsText = topics === "__EMPTY__" ? "" : `: ${topics}`;
 
-          return `Browse ${getValue(values, "title")}${parentText}${programText}.`;
+          return `Browse ${getValue(values, "title")}${parentText}${programText}${topicsText}.`;
         },
       ],
+      ["curriculum.more", (values) => `${getValue(values, "count")} more`],
       [
         "curriculum.keywords",
         (values) =>
@@ -321,6 +324,13 @@ describe("resolveSEOMetadata", () => {
             level: "subject",
             parent: "Grade 11",
             program: "Kurikulum Merdeka",
+            topics: [
+              "Vectors",
+              "Matrices",
+              "Sequences",
+              "Limits",
+              "Derivatives",
+            ],
             data: { title: "Mathematics" },
           },
           "en"
@@ -329,6 +339,7 @@ describe("resolveSEOMetadata", () => {
           {
             type: "curriculum-context",
             level: "track",
+            topics: ["Algebra"],
             data: { title: "Mathematics" },
           },
           "en"
@@ -340,8 +351,22 @@ describe("resolveSEOMetadata", () => {
           "Grade 11",
           "Kurikulum Merdeka",
         ]);
+        expect(nested.description).toBe(
+          "Browse Mathematics in Grade 11 for Kurikulum Merdeka: Vectors, Matrices, Sequences, and 2 more."
+        );
+        const empty = yield* resolveSEOMetadata(
+          {
+            type: "curriculum-context",
+            level: "track",
+            topics: [],
+            data: { title: "Physics" },
+          },
+          "en"
+        );
+
         expect(root.title).toBe("Mathematics");
-        expect(root.description).toBe("Browse Mathematics.");
+        expect(root.description).toBe("Browse Mathematics: Algebra.");
+        expect(empty.description).toBe("Browse Physics.");
       })
   );
 

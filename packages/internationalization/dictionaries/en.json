@@ -4249,7 +4249,8 @@
     },
     "curriculum": {
       "title": "{title}{parent, select, __EMPTY__ {} other { - {parent}}}{program, select, __EMPTY__ {} other { ({program})}}",
-      "description": "Browse {title}{parent, select, __EMPTY__ {} other { in {parent}}}{program, select, __EMPTY__ {} other { for {program}}}. This curriculum index links learners to the relevant materials and practice routes.",
+      "description": "Browse {title}{parent, select, __EMPTY__ {} other { in {parent}}}{program, select, __EMPTY__ {} other { for {program}}}{topics, select, __EMPTY__ {} other {: {topics}}}.",
+      "more": "{count} more",
       "keywords": "{title}, {parent, select, __EMPTY__ {} other {{parent}, }}{program, select, __EMPTY__ {} other {{program}, }}curriculum, learning path, materials, practice"
     },
     "article": {

@@ -4249,7 +4249,8 @@
     },
     "curriculum": {
       "title": "{title}{parent, select, __EMPTY__ {} other { - {parent}}}{program, select, __EMPTY__ {} other { ({program})}}",
-      "description": "Entdecke {title}{parent, select, __EMPTY__ {} other { in {parent}}}{program, select, __EMPTY__ {} other { für {program}}}. Diese Lehrplanübersicht führt Lernende zu den passenden Materialien und Übungen.",
+      "description": "Entdecke {title}{parent, select, __EMPTY__ {} other { in {parent}}}{program, select, __EMPTY__ {} other { für {program}}}{topics, select, __EMPTY__ {} other {: {topics}}}.",
+      "more": "{count} weitere",
       "keywords": "{title}, {parent, select, __EMPTY__ {} other {{parent}, }}{program, select, __EMPTY__ {} other {{program}, }}Lehrplan, Lernweg, Lernmaterialien, Übungen"
     },
     "article": {

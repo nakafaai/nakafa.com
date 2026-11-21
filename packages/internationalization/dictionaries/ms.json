@@ -4249,7 +4249,8 @@
     },
     "curriculum": {
       "title": "{title}{parent, select, __EMPTY__ {} other { - {parent}}}{program, select, __EMPTY__ {} other { ({program})}}",
-      "description": "Layari {title}{parent, select, __EMPTY__ {} other { dalam {parent}}}{program, select, __EMPTY__ {} other { untuk {program}}}. Indeks kurikulum ini memautkan pelajar kepada bahan dan laluan latihan yang berkaitan.",
+      "description": "Layari {title}{parent, select, __EMPTY__ {} other { dalam {parent}}}{program, select, __EMPTY__ {} other { untuk {program}}}{topics, select, __EMPTY__ {} other {: {topics}}}.",
+      "more": "{count} lagi",
       "keywords": "{title}, {parent, select, __EMPTY__ {} other {{parent}, }}{program, select, __EMPTY__ {} other {{program}, }}kurikulum, laluan pembelajaran, bahan, latihan"
     },
     "article": {
