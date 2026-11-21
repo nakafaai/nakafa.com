@@ -273,9 +273,12 @@ export const chooseView = Effect.fn("NakafaE2E.chooseView")(function* (
     }, [Math.round((box?.x ?? 0) + (box?.width ?? 0) / 2), Math.round((box?.y ?? 0) + (box?.height ?? 0) / 2)] as const);
     console.log(`PROBE hit ${JSON.stringify(box)} ${hit}`);
   });
+  const widthOf = () => page.evaluate(() => Math.round(document.querySelector("[data-player-sidebar]")?.closest("aside")?.getBoundingClientRect().width ?? -1));
+  yield* Effect.promise(async () => console.log(`PROBE width before ${await widthOf()}`));
   yield* activate(menu, hasTouch);
   yield* Effect.promise(async () => {
     await page.waitForTimeout(800);
+    console.log(`PROBE width after ${await widthOf()}`);
     const expanded = await menu.getAttribute("aria-expanded");
     console.log(`PROBE after expanded=${expanded} items=${await page.getByRole("menuitemradio").count()}`);
   });
