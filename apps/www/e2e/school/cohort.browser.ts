@@ -371,7 +371,7 @@ test("a student added with a card joins a cohort and takes a parent at once, and
     .getByRole("button", { name: "Add student" });
   await waitUntilTakenOver(place);
   await place.click();
-  const placing = page.getByRole("dialog");
+  const placing = page.getByRole("dialog", { name: "Add student" });
   await pressInPopup(placing.getByRole("combobox", { name: "Student" }));
   await expect(page.getByText("No student is available.")).toBeVisible();
   await page.goto(address("/settings/students"));

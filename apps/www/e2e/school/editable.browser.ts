@@ -210,6 +210,8 @@ for (const viewport of [
       .fill("https://example.com/lama");
     await dialog.getByRole("textbox", { name: "Title" }).fill("Video lama");
     await dialog.getByRole("button", { exact: true, name: "Add" }).click();
+    // A press over a dialog that is still leaving is the dialog's, so the row's menu waits for it to go.
+    await expect(dialog).toBeHidden();
     // An item's title opens it: a link item opens its address in a new tab.
     await expect(
       page.getByRole("button", { name: "Video lama" })
@@ -222,6 +224,7 @@ for (const viewport of [
       .fill("https://example.com/baru");
     await edit.getByRole("textbox", { name: "Title" }).fill("Video baru");
     await edit.getByRole("button", { name: "Save" }).click();
+    await expect(edit).toBeHidden();
     await context.route("https://example.com/**", (route) =>
       route.fulfill({ body: "ok", contentType: "text/plain" })
     );

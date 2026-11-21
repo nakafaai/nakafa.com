@@ -29,14 +29,24 @@ async function waitForSettled(target: Locator) {
 }
 
 /**
+ * The controls of a locator that a press can reach: a popup that is leaving is inert while it fades out, and a popup
+ * of the same kind may already be opening over it, such as the menu of the next row.
+ */
+const reachable = (control: Locator) =>
+  control.and(
+    control.page().locator("xpath=//*[not(ancestor-or-self::*[@inert])]")
+  );
+
+/**
  * Presses a control inside a popup, such as a menu's item, a select's option or a dialog's field, once the popup has
  * settled. On a phone the popup rises as a sheet, which first rests below the screen and then slides up. Playwright
  * counts a control that holds its place for two frames as stable, so a plain press in that rest finds the control
  * outside the viewport and scrolls it into view, which scrolls the sheet's host and swipes the sheet away. Elsewhere
- * the popup has nothing to wait for.
+ * the popup has nothing to wait for. A touch screen taps the control.
  */
-export async function pressInPopup(control: Locator) {
-  await control.waitFor();
-  await waitForSettled(control);
-  await control.click();
+export async function pressInPopup(control: Locator, hasTouch = false) {
+  const live = reachable(control);
+  await live.waitFor();
+  await waitForSettled(live);
+  await (hasTouch ? live.tap() : live.click());
 }

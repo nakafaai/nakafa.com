@@ -56,6 +56,8 @@ test("an admin adds, renames, archives and restores a classroom of a cohort, ass
   );
   await addDialog.getByLabel("Subject").fill("Biologi");
   await addDialog.getByRole("button", { name: "Add classroom" }).click();
+  // A press over a dialog that is still leaving is the dialog's, so each next press waits for it to go.
+  await expect(addDialog).toBeHidden();
   const biology = page.getByRole("row", { name: "Biologi X-1" });
   await expect(biology.getByText("Active")).toBeVisible();
 
@@ -64,6 +66,7 @@ test("an admin adds, renames, archives and restores a classroom of a cohort, ass
   const renameDialog = page.getByRole("dialog");
   await renameDialog.getByLabel("Name").fill("Biologi Lanjut X-1");
   await renameDialog.getByRole("button", { name: "Save" }).click();
+  await expect(renameDialog).toBeHidden();
   const renamed = page.getByRole("row", { name: "Biologi Lanjut X-1" });
   await expect(renamed).toBeVisible();
 
@@ -84,8 +87,9 @@ test("an admin adds, renames, archives and restores a classroom of a cohort, ass
   );
   await addDialog.getByLabel("Subject").fill("Fisika");
   await addDialog.getByRole("button", { name: "Add classroom" }).click();
+  await expect(addDialog).toBeHidden();
   await expect(
-    page.getByText("This classroom name is already used.")
+    page.getByText("This classroom name is already used.", { exact: true })
   ).toBeVisible();
   await expect(page.getByRole("row", { name: SEEDED_CLASS })).toHaveCount(1);
 

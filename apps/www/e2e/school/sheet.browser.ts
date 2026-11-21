@@ -36,14 +36,18 @@ const CLASS = "Fisika X-1";
 function watchSheet({ key, selector }: { key: string; selector: string }) {
   const read = () => {
     const sheet = document.querySelector(selector);
-    // Keep-mounted menus render in place inside the sidebar, so links inside a closed popover stay out of the sheet's own list.
-    const visibleLinks = Array.from(sheet?.querySelectorAll("a") ?? []).filter(
-      (link) => link.closest("[popover]:not([data-open])") === null
-    );
+    // Keep-mounted menus render in place inside the sidebar, hidden while closed, so only what the sheet draws counts.
+    const drawn = (selectorOf: string) =>
+      Array.from(sheet?.querySelectorAll(selectorOf) ?? []).filter((element) =>
+        element.checkVisibility()
+      );
     return {
-      links: visibleLinks.map((link) => (link.textContent ?? "").trim()),
-      pictures: Array.from(sheet?.querySelectorAll("img") ?? []).map(
-        (picture) => picture.complete && picture.naturalWidth > 0
+      links: drawn("a").map((link) => (link.textContent ?? "").trim()),
+      pictures: drawn("img").map(
+        (picture) =>
+          picture instanceof HTMLImageElement &&
+          picture.complete &&
+          picture.naturalWidth > 0
       ),
     };
   };

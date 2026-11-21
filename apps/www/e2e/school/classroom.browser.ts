@@ -250,7 +250,9 @@ test("the school's Owner writes in a class's forum and adds to its library, as a
   await field.fill("Selamat pagi, kelas Fisika.");
   await field.press("Enter");
   await expect(
-    page.getByTestId("forum-list").getByText("Selamat pagi, kelas Fisika.")
+    page
+      .getByRole("region", { name: "Messages" })
+      .getByText("Selamat pagi, kelas Fisika.")
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
 
   await page.goto(address("/classes/fisika-x-1/library"));

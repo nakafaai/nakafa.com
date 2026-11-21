@@ -52,7 +52,7 @@ for (const viewport of [
     await field.fill("Tugas bab 3 dikumpulkan hari Jumat.");
     await field.press("Enter");
     // The rail's row quotes the chat's last message too, so a message is looked for in the chat itself.
-    const chat = page.getByTestId("forum-list");
+    const chat = page.getByRole("region", { name: "Messages" });
     await expect(
       chat.getByText("Tugas bab 3 dikumpulkan hari Jumat.")
     ).toBeVisible();
