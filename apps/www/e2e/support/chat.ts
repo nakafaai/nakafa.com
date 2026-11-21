@@ -8,6 +8,7 @@ import type { Changes } from "@/e2e/support/changes";
 import { trackChanges } from "@/e2e/support/changes";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForLoadsSettled } from "@/e2e/support/quiet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /**
@@ -342,6 +343,8 @@ export const openChatPage = Effect.fn("NakafaE2E.openChatPage")(function* (
   // its connection to the backend is open.
   yield* viewerKnown(changes);
   const learner = yield* learnerOf(page, baseURL, changes.origin);
+  // A test goes on to another page from here, so the page's loads finish first (`waitForLoadsSettled`).
+  yield* Effect.promise(() => waitForLoadsSettled(page));
   return { changes, learner };
 });
 

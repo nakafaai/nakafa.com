@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForLoadsSettled } from "@/e2e/support/quiet";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { isTakenOverNow, waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -31,6 +32,8 @@ test("a press on a row while the page's client arrives opens the set beside the 
           const link = page.locator(`main a[href='${SET_HREF}']`);
           await page.goto(TRACK_HREF);
           await link.hover();
+          // The hover preloads the set, and a load the next one cut off would fail its import (`waitForLoadsSettled`).
+          await waitForLoadsSettled(page);
           const socket = page.waitForEvent("websocket", {
             timeout: readinessTimeoutMilliseconds,
           });
