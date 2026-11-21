@@ -12,6 +12,7 @@ import { activateUntilVisible } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { readHeaderLineProblems } from "@/e2e/support/lines";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { pressInPopup } from "@/e2e/support/popup";
 import { appRoutes, openRoute } from "@/e2e/support/route";
 import {
   createSchool,
@@ -55,9 +56,14 @@ const publicRoutes = [
   "/en/articles/politics/merah-putih-cabinet-analysis",
 ];
 
-/** The try-out page of an exam's group, which a phone reaches from a set page's folded path. */
-/** The year's crumb opens its one track's set table, where its group's address leads. */
-const GROUP_PAGE = /\/en\/try-out\/indonesia\/snbt\/2027\/utbk$/u;
+/**
+ * A try-out group's page, whose path a phone folds into its More menu. A set's address opens the set's pane, which a
+ * phone raises as a sheet over the page, so the folded path is read from the group's page itself.
+ */
+const GROUP_PATH = "/en/try-out/indonesia/snbt/2027/utbk";
+
+/** The country's try-out page, which the folded country crumb opens as its own page among its siblings. */
+const COUNTRY_PAGE = /\/en\/try-out\/indonesia$/u;
 
 /** The pages of a signed-in learner, each with its own header. */
 const learnerRoutes = [
@@ -298,18 +304,27 @@ test("a signed-in learner's pages keep their headers to one row at every width",
   );
 });
 
+/** One page of a school whose header is checked, and what takes it to that state, such as an open pane or a running paper. */
+interface SchoolPage {
+  readonly path: string;
+  readonly reach?: (page: Page) => Effect.Effect<void>;
+}
+
+/** The pages at `paths`, each checked as it opens. */
+const openedPages = (paths: readonly string[]): readonly SchoolPage[] =>
+  Arr.map(paths, (path) => ({ path }));
+
 /**
  * Signs one account of a school into a fresh desktop context and checks the header of each of
- * its pages at every width, one page after another in the same tab. `reach` takes a page to the
- * state whose header is checked, such as an open pane or a running paper.
+ * its pages at every width, one page after another in the same tab. A session refreshes as its
+ * pages run and the refresh replaces its cookies, so one account's pages share one context.
  */
 const checkSchoolPages = <E>(
   browser: Parameters<typeof withBrowserContext>[0],
   baseURL: string,
   signIn: (context: BrowserContext) => Effect.Effect<void, E>,
   address: (path: string) => string,
-  paths: readonly string[],
-  reach: (page: Page) => Effect.Effect<void> = () => Effect.void
+  pages: readonly SchoolPage[]
 ) =>
   withBrowserContext(
     browser,
@@ -323,14 +338,16 @@ const checkSchoolPages = <E>(
         yield* signIn(context);
         const page = yield* Effect.promise(() => context.newPage());
         yield* Effect.forEach(
-          paths,
-          (path) =>
+          pages,
+          ({ path, reach }) =>
             Effect.gen(function* () {
               yield* Effect.promise(() =>
                 page.setViewportSize(viewportSize(desktopViewport))
               );
               yield* Effect.promise(() => page.goto(address(path)));
-              yield* reach(page);
+              if (reach !== undefined) {
+                yield* reach(page);
+              }
               yield* expectOneRowHeaders(page, `school ${path}`);
             }),
           { discard: true }
@@ -372,7 +389,7 @@ test("a school's own pages keep their headers to one row at every width", async 
       String(baseURL),
       (context) => signInOwner(context, school.slug, address("/")),
       address,
-      schoolPaths
+      openedPages(schoolPaths)
     )
   );
 });
@@ -396,51 +413,46 @@ test("an exam's pages keep their headers to one row at every width, for its Owne
       slug: school.slug,
     })
   );
+  // The student's cookies serve one context alone, since its session refreshes them as its pages run.
   const cookies = await studentContext.cookies();
   await studentContext.close();
   // The seed records its exam as made by the school's Owner, who must have signed in first.
   const ownerContext = await browser.newContext();
   await Effect.runPromise(signInOwner(ownerContext, school.slug, address("/")));
-  const ownerCookies = await ownerContext.cookies();
   await ownerContext.close();
   const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+  // Each of the Owner's contexts opens a session of its own.
+  const signInAgain = (context: BrowserContext) =>
+    signInOwner(context, school.slug, address("/"));
   await Effect.runPromise(
     checkSchoolPages(
       browser,
       String(baseURL),
-      (context) => Effect.promise(() => context.addCookies(ownerCookies)),
+      signInAgain,
       address,
-      examPaths(sitting)
+      openedPages(examPaths(sitting))
     )
   );
+  const sittingPath = `/sittings/${sitting.sittingId}`;
   await Effect.runPromise(
     checkSchoolPages(
       browser,
       String(baseURL),
       (context) => Effect.promise(() => context.addCookies(cookies)),
       address,
-      [`/sittings/${sitting.sittingId}`]
+      [
+        { path: sittingPath },
+        { path: sittingPath, reach: startPaper(sitting.token) },
+      ]
     )
   );
   await Effect.runPromise(
-    checkSchoolPages(
-      browser,
-      String(baseURL),
-      (context) => Effect.promise(() => context.addCookies(cookies)),
-      address,
-      [`/sittings/${sitting.sittingId}`],
-      startPaper(sitting.token)
-    )
-  );
-  await Effect.runPromise(
-    checkSchoolPages(
-      browser,
-      String(baseURL),
-      (context) => Effect.promise(() => context.addCookies(ownerCookies)),
-      address,
-      [`/exams/${sitting.examId}/sittings/${sitting.sittingId}`],
-      openPane
-    )
+    checkSchoolPages(browser, String(baseURL), signInAgain, address, [
+      {
+        path: `/exams/${sitting.examId}/sittings/${sitting.sittingId}`,
+        reach: openPane,
+      },
+    ])
   );
 });
 
@@ -458,7 +470,7 @@ test("a class and its forum keep their headers to one row at every width", async
       String(baseURL),
       (context) => signInClassTeacher(context, school.slug, address("/")),
       address,
-      classPaths
+      openedPages(classPaths)
     )
   );
 });
@@ -468,23 +480,21 @@ test("a phone opens a folded ancestor of the path with a tap", async ({
 }) => {
   await page.setViewportSize({ height: 844, width: 390 });
   await Effect.runPromise(
-    withObservedPageErrors(
-      page,
-      openRoute(page, "/en/try-out/indonesia/snbt/2027/utbk/set-1")
-    )
+    withObservedPageErrors(page, openRoute(page, GROUP_PATH))
   );
   const breadcrumb = page.getByRole("navigation", { name: "breadcrumb" });
   // The page answers before its scripts run, and a tap before React has taken the
   // button over opens nothing, so the tap repeats until the menu shows.
-  const ancestor = await Effect.runPromise(
+  const country = await Effect.runPromise(
     activateUntilVisible(
-      breadcrumb.getByRole("button"),
-      page
-        .getByRole("menu")
-        .locator('a[href="/en/try-out/indonesia/snbt/2027"]'),
+      breadcrumb.getByRole("button", { name: "More" }),
+      page.getByRole("menuitem", { name: "Indonesia" }),
       readinessTimeoutMilliseconds
     )
   );
-  await ancestor.click();
-  await expect(page).toHaveURL(GROUP_PAGE);
+  // A folded crumb with siblings opens them, its own page among them.
+  await pressInPopup(country);
+  const own = page.getByRole("menu").locator('a[href="/en/try-out/indonesia"]');
+  await pressInPopup(own);
+  await expect(page).toHaveURL(COUNTRY_PAGE);
 });

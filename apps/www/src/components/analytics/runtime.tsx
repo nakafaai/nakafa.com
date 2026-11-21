@@ -28,18 +28,24 @@ const loadGoogle = () => import("@/lib/analytics/google");
  * governs from its defaults on (`startGoogleAnalytics`), on production only, and
  * keeps each of the message's answers as the page's consent. Any other host
  * loads neither, and follows the same TCF API, which a test's stand-in message
- * answers; with none, the page counts only its cookieless baseline.
+ * answers; with none, no answer ever comes, so the page settles at once as a
+ * visitor the message does not ask and counts only its cookieless baseline.
  */
 const startConsent = Effect.suspend(() => {
   const follow = Effect.sync(() => followConsentAnswers(keepConsentAnswer));
-  if (location.hostname !== MAIN_DOMAIN) {
-    return follow;
+  if (location.hostname === MAIN_DOMAIN) {
+    return Effect.promise(loadGoogle).pipe(
+      Effect.andThen(({ startGoogleAnalytics }) => startGoogleAnalytics),
+      Effect.andThen(startConsentMessage),
+      Effect.andThen(follow)
+    );
   }
-  return Effect.promise(loadGoogle).pipe(
-    Effect.andThen(({ startGoogleAnalytics }) => startGoogleAnalytics),
-    Effect.andThen(startConsentMessage),
-    Effect.andThen(follow)
-  );
+  if (window.googlefc === undefined) {
+    return Effect.sync(() =>
+      keepConsentAnswer({ analytics: false, asks: false })
+    );
+  }
+  return follow;
 });
 
 /** The parts of the signed-in account that analytics reads, or none for a visitor. */

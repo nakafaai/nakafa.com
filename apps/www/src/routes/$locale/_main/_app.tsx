@@ -39,6 +39,9 @@ export const Route = createFileRoute("/$locale/_main/_app")({
     }),
   headers: () => ({ "Cache-Control": "private, no-store" }),
   component: AppLayout,
+  // The error part stays in this module, out of the split chunks: a page breaks when the chunks it asks for cannot
+  // load, and then a split error part could not load either (ADR 0039, D10).
+  codeSplitGroupings: [["loader"], ["component"], ["notFoundComponent"]],
   errorComponent: AppError,
   // The router draws this boundary only while the split error component's chunk
   // is unloaded, and dropping it remounts every page below, so it stays.

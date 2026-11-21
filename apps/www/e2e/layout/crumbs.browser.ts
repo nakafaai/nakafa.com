@@ -12,7 +12,7 @@ const SOME_ADDRESS = /./u;
 // path would cut it. A list's path ends at the list itself.
 test.use({ viewport: { height: 844, width: 390 } });
 
-test("every breadcrumb item is a link, the current page included", async ({
+test("every breadcrumb item leads to its page, the current page through the siblings it opens", async ({
   page,
 }) => {
   await page.goto(pinnedRoutes.article.en);
@@ -24,12 +24,17 @@ test("every breadcrumb item is a link, the current page included", async ({
     await expect(item).toHaveAttribute("href", SOME_ADDRESS);
   }
 
+  // The current page's crumb opens the pages at its place in the path, and its own page is a link among them.
   await page.goto("/en/articles/politics");
   const current = page
     .getByRole("navigation", { name: "breadcrumb" })
     .locator('[aria-current="page"]');
   await expect(current).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  await expect(current).toHaveAttribute("href", SOME_ADDRESS);
+  await waitUntilTakenOver(current);
+  await current.click();
+  await expect(
+    page.getByRole("menu").locator('[aria-current="page"]')
+  ).toHaveAttribute("href", SOME_ADDRESS);
 });
 
 test("every folded breadcrumb item carries its icon", async ({ page }) => {

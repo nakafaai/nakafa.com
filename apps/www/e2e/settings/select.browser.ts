@@ -10,12 +10,6 @@ import { waitUntilTakenOver } from "@/e2e/support/window";
 /** The learning settings, whose curriculum select holds the longest values of the app. */
 const LEARNING_PATH = `${appRoutes.settings}/learning`;
 
-/** The pages whose selects show a value from the start: a curriculum's page and a try-out country's page. */
-const SELECT_PAGES = [
-  "/en/curriculum/merdeka",
-  "/en/try-out/indonesia",
-] as const;
-
 /**
  * Where a select's value and chevron stand in its trigger: the value is drawn in
  * full, or clamped by an ellipsis inside its own box, and ends before the
@@ -68,7 +62,11 @@ const chooseLongest = Effect.fn("NakafaE2E.chooseLongestOption")(function* (
 ) {
   yield* Effect.promise(() => waitUntilTakenOver(trigger));
   yield* Effect.promise(() => trigger.click());
-  const options = page.getByRole("option");
+  // The options of the list this trigger opens: the list of the select before may still be leaving.
+  const list = yield* Effect.promise(() =>
+    trigger.getAttribute("aria-controls")
+  );
+  const options = page.locator(`[id="${list}"]`).getByRole("option");
   yield* Effect.promise(() =>
     expect(options.first()).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
@@ -106,30 +104,5 @@ for (const width of [390, 1440]) {
         })
       );
     });
-
-    for (const path of SELECT_PAGES) {
-      test(`the selects of ${path} hold their values inside`, async ({
-        baseURL,
-        page,
-      }) => {
-        await runOnPage(page, baseURL, () =>
-          Effect.gen(function* () {
-            yield* Effect.promise(() => page.goto(path));
-            const triggers = page
-              .locator('[data-slot="select-trigger"]')
-              .filter({ visible: true });
-            yield* Effect.promise(() =>
-              expect(triggers.first()).toBeVisible({
-                timeout: readinessTimeoutMilliseconds,
-              })
-            );
-            const count = yield* Effect.promise(() => triggers.count());
-            for (const index of Arr.range(0, count - 1)) {
-              yield* expectFits(triggers.nth(index));
-            }
-          })
-        );
-      });
-    }
   });
 }

@@ -65,6 +65,7 @@ test("a sign-in without the username or password answers at once and asks the se
 test("a student whose card an Admin printed signs in with the school username, the code, and a new password", async ({
   page,
   baseURL,
+  isMobile,
 }) => {
   const school = await Effect.runPromise(createSchool());
   const card = await Effect.runPromise(seedCard(school.slug));
@@ -78,7 +79,15 @@ test("a student whose card an Admin printed signs in with the school username, t
   await page.getByLabel("Password").fill("correct horse battery");
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page.getByText("Siswa Uji").first()).toBeVisible({
+  // The sidebar names the signed-in student, and a phone keeps it folded away until it opens.
+  if (isMobile) {
+    const toggle = page.getByRole("button", { name: "Toggle Sidebar" });
+    await waitUntilTakenOver(toggle);
+    await toggle.click();
+  }
+  await expect(
+    page.getByText("Siswa Uji").filter({ visible: true }).first()
+  ).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
   await expect(page.getByRole("link", { name: "Use a username" })).toHaveCount(

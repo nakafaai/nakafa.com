@@ -229,6 +229,23 @@ test("an admin opens a period, then creates a cohort of it in a grade its SMA un
   await context.close();
 });
 
+/**
+ * Closes the toasts an action raised, as a reader does: they stand over the bottom of the screen, where a phone raises
+ * the next menu as a sheet, so a press there would land on a toast. A touch holds a toast while it rests on it.
+ */
+async function closeToasts(page: Page) {
+  const toasts = page.locator('[data-slot="toast"]');
+  await expect(async () => {
+    if ((await toasts.count()) > 0) {
+      await page
+        .getByRole("button", { name: "Close notification" })
+        .first()
+        .click({ timeout: 1000 });
+    }
+    await expect(toasts).toHaveCount(0, { timeout: 1000 });
+  }).toPass({ timeout: readinessTimeoutMilliseconds });
+}
+
 test("an admin places a student in a cohort, moves the student to another, sets their NISN and age flag, and moves them out once that cohort is archived", async ({
   browser,
   baseURL,
@@ -267,17 +284,18 @@ test("an admin places a student in a cohort, moves the student to another, sets 
     .getByRole("button", { name: "Add student" })
     .click();
   const placeDialog = page.getByRole("dialog");
-  await placeDialog.getByRole("combobox", { name: "Student" }).click();
+  await pressInPopup(placeDialog.getByRole("combobox", { name: "Student" }));
   await pressInPopup(page.getByRole("option", { name: "Acceptance Learner" }));
   await placeDialog.getByRole("button", { name: "Add student" }).click();
   await expect(page.getByRole("button", { name: "More actions" })).toHaveCount(
     1
   );
+  await closeToasts(page);
 
   await page.getByRole("button", { name: "More actions" }).click();
   await pressInPopup(page.getByRole("menuitem", { name: "Move" }));
   const moveDialog = page.getByRole("dialog");
-  await moveDialog.getByRole("combobox", { name: "Move to" }).click();
+  await pressInPopup(moveDialog.getByRole("combobox", { name: "Move to" }));
   await pressInPopup(page.getByRole("option", { exact: true, name: "7B" }));
   const movedBefore = changes.sent;
   await moveDialog.getByRole("button", { exact: true, name: "Move" }).click();
@@ -323,6 +341,7 @@ test("an admin places a student in a cohort, moves the student to another, sets 
   await pressInPopup(page.getByRole("menuitem", { name: "Archive" }));
   await expect(archivedRow.getByText("Archived")).toBeVisible();
   await saved(changes, archivedBefore);
+  await closeToasts(page);
   await page.getByRole("link", { name: "7B" }).click();
   // The list stays until the cohort's page is ready, so the menu is the one in the student's own row.
   await page.waitForURL(COHORT_PAGE);
@@ -334,7 +353,7 @@ test("an admin places a student in a cohort, moves the student to another, sets 
   await leaving.click();
   await pressInPopup(page.getByRole("menuitem", { name: "Move" }));
   const outDialog = page.getByRole("dialog");
-  await outDialog.getByRole("combobox", { name: "Move to" }).click();
+  await pressInPopup(outDialog.getByRole("combobox", { name: "Move to" }));
   await pressInPopup(page.getByRole("option", { exact: true, name: "7A" }));
   const leftBefore = changes.sent;
   await outDialog.getByRole("button", { exact: true, name: "Move" }).click();
@@ -392,7 +411,7 @@ test("a student added with a card joins a cohort and takes a parent at once, and
   await page.goto(cohort);
   await waitUntilTakenOver(place);
   await place.click();
-  await placing.getByRole("combobox", { name: "Student" }).click();
+  await pressInPopup(placing.getByRole("combobox", { name: "Student" }));
   await pressInPopup(page.getByRole("option", { name: "Ayu Lestari" }));
   await placing.getByRole("button", { name: "Add student" }).click();
   await expect(placing).toBeHidden();
@@ -406,7 +425,7 @@ test("a student added with a card joins a cohort and takes a parent at once, and
     .getByRole("button", { name: "Link a parent" });
   await waitUntilTakenOver(link);
   await link.click();
-  await page.getByRole("dialog").getByRole("combobox").first().click();
+  await pressInPopup(page.getByRole("dialog").getByRole("combobox").first());
   await expect(page.getByRole("option", { name: "Ayu Lestari" })).toBeVisible();
   await context.close();
 });
