@@ -2,58 +2,95 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import { useRunClock } from "@repo/design-system/components/contents/biology/clock";
 import {
-  Bung,
-  FlatRule,
-  GlassTube,
-  Trestle,
-} from "@repo/design-system/components/contents/biology/glassware";
+  BEAKER,
+  Beaker,
+} from "@repo/design-system/components/contents/biology/respirometer/beaker";
+import {
+  along,
+  BOARD,
+  boardFrame,
+  FACE_GAP,
+  ScaleBoard,
+} from "@repo/design-system/components/contents/biology/respirometer/board";
 import type { Tube } from "@repo/design-system/components/contents/biology/respirometer/gas";
-import { dropTravel } from "@repo/design-system/components/contents/biology/respirometer/gas";
+import {
+  DROP_LENGTH,
+  dropTravel,
+  fillDepth,
+  scaleSpan,
+} from "@repo/design-system/components/contents/biology/respirometer/gas";
+import {
+  BOILING_TUBE,
+  CAPILLARY,
+  TUBE_BORE,
+} from "@repo/design-system/components/contents/biology/respirometer/glass";
+import {
+  ARM,
+  BoardJaws,
+  BossArm,
+  RetortStand,
+  STAND,
+  TubeJaws,
+  tubeStop,
+} from "@repo/design-system/components/contents/biology/respirometer/stand";
+import { BathThermometer } from "@repo/design-system/components/contents/biology/respirometer/thermometer";
+import {
+  Capillary,
+  HOLES,
+  Respirometer,
+} from "@repo/design-system/components/contents/biology/respirometer/tube";
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
-import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import {
-  GlassMaterial,
-  LiquidMaterial,
-  MetalMaterial,
-} from "@repo/design-system/components/three/physical";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
-import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
-import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
+import { useVisualScene } from "@repo/design-system/components/visual/card";
+import { RESPIROMETER_COLORS } from "@repo/design-system/lib/material/respirometer";
 import { Array as Arr } from "effect";
-import { useRef } from "react";
+import type { ReactNode, RefObject } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
+import { Vector3 } from "three";
 
-/** The water bath: a glass tank on the bench, its middle and size in metres. */
-const TANK = { depth: 0.17, height: 0.15, width: 0.17, x: -0.11 } as const;
+/** Both respirometers, each named by what stands in its foot. */
+const TUBES = ["potash", "water"] as const satisfies readonly Tube[];
 
-/** How high the bath's water stands, in metres. */
-const BATH_LEVEL = 0.115;
+/** Where each tube stands across the bath, in metres: water on the left, potassium hydroxide on the right. */
+const LANE = { potash: 0.023, water: -0.023 } as const;
 
-/** A boiling tube's outer radius and height, in metres. */
-const TUBE = { height: 0.155, radius: 0.0125 } as const;
+/** Where the two boiling tubes stand in the bath, so its water parts round them. */
+const WELLS = Arr.map(TUBES, (tube) => LANE[tube]);
 
-/** Where each respirometer stands across the bath, in metres: the potash one in front. */
-const LANE = { potash: 0.045, water: -0.045 } as const;
+/** How high each tube's foot stands, in metres: on the stand's base, 5 cm clear of the beaker's floor. */
+const TUBE_FOOT = STAND.base.thickness + BEAKER.wall + 0.05;
 
-/** How high the capillaries run over the rules, in metres. */
-const CAPILLARY_HEIGHT = 0.205;
+/** How high each capillary's level run lies above the bench, in metres: the water one passes over the other tube. */
+const RUN = { potash: 0.24, water: 0.272 } as const;
 
-/** The coloured drop's length, in metres. */
-const DROP = 0.012;
+/**
+ * How much solution stands in each tube's foot: 5 cm³ of potassium
+ * hydroxide solution, or the same of water (Edexcel International A level
+ * Biology Core Practical 16, rate of respiration and RQ).
+ */
+const SOLUTION = 5e-6;
 
-/** Where the coloured drop's middle starts, its leading edge on the rule's zero, in metres. */
-const DROP_START = 0.21 + DROP / 2;
+/** Where the stand that holds the tubes has its rod: behind the bath, in metres. */
+const ROD = { x: 0, z: -0.105 } as const;
+
+/** How high each tube's clamp grips it, in metres, one above the other on the one rod. */
+const GRIP = { potash: 0.158, water: 0.186 } as const;
+
+/** Where the scale board's left edge stands, in metres: just clear of the bath. */
+const BOARD_LEFT = BEAKER.radius + 0.012;
 
 /** How many minutes pass in a second while the card plays. */
 const MINUTES_PER_SECOND = 2;
 
 /**
- * Both respirometers in their bath, their capillaries over two rules, and the
- * coloured drops, drawn from the run's clock every frame. The drops move at
- * real size: a millimetre of travel is a millimetre on the rule.
+ * Two respirometers of germinating mung beans in one water bath, clamped to
+ * a retort stand, their capillaries running level along a scale board held
+ * by a second stand, and the coloured drops moving along them from the
+ * run's clock every frame. Every part stands at its real size, and the drops
+ * move at real size: a millimetre of travel is a millimetre on the scale.
  */
 export function RespirometerScene({
   carbonDioxide,
@@ -68,6 +105,13 @@ export function RespirometerScene({
   readonly onElapsed: (minutes: number) => void;
   readonly oxygen: number;
 }) {
+  const playing = useVisualScene((card) => card.playing, false);
+  const invalidate = useThree((state) => state.invalidate);
+  useEffect(() => {
+    if (playing) {
+      invalidate();
+    }
+  }, [invalidate, playing]);
   const clock = useRunClock({
     elapsed,
     onElapsed,
@@ -75,10 +119,14 @@ export function RespirometerScene({
     steps: 40,
     total: minutes,
   });
+  const narrow = useThree((state) => state.size.width < 600);
+  const span = scaleSpan(oxygen, carbonDioxide);
+  const zero = BOARD_LEFT + BOARD.margin - along(span.to);
+  const end = zero + along(span.from) + BOARD.margin;
   const drops = { potash: useRef<Group>(null), water: useRef<Group>(null) };
 
   useFrame(() => {
-    for (const tube of ["potash", "water"] as const) {
+    Arr.forEach(TUBES, (tube) => {
       const travel = dropTravel(
         tube,
         oxygen,
@@ -86,88 +134,92 @@ export function RespirometerScene({
         clock.current,
         minutes
       );
-      drops[tube].current?.position.set(
-        DROP_START - travel / 1000,
-        CAPILLARY_HEIGHT,
-        LANE[tube]
+      drops[tube].current?.position.setX(
+        zero + along(travel) + DROP_LENGTH / 2000
       );
-    }
+    });
   });
 
   return (
     <group>
       <RespirometerCamera />
-      <LabBench />
-      <group position={[0.12, 0, 0.1]}>
-        <Bath />
-        <Respirometer lane={LANE.potash} tube="potash" />
-        <Respirometer lane={LANE.water} tube="water" />
-        <Board />
-        {Arr.map(["potash", "water"] as const, (tube) => (
-          <group key={tube} ref={drops[tube]}>
-            <mesh rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry args={[0.0024, 0.0024, DROP, 14]} />
-              <LiquidMaterial color={BIOLOGY_COLORS.dye} opacity={0.92} />
-            </mesh>
-          </group>
+      <group position={[-0.62, 0, 0.1]}>
+        <LabBench />
+      </group>
+      <group position={[ROD.x, 0, ROD.z]}>
+        <RetortStand />
+        {Arr.map(TUBES, (tube) => (
+          <BossArm
+            height={GRIP[tube]}
+            key={tube}
+            stop={tubeStop(BOILING_TUBE.radius)}
+            target={[LANE[tube] - ROD.x, -ROD.z]}
+          >
+            <TubeJaws grip={BOILING_TUBE.radius} />
+          </BossArm>
         ))}
       </group>
+      <group position={[0, STAND.base.thickness, 0]}>
+        <Beaker wells={WELLS} />
+        <BathThermometer />
+      </group>
+      {Arr.map(TUBES, (tube) => (
+        <TubeSet drop={drops[tube]} end={end} key={tube} tube={tube} />
+      ))}
+      <group position={[zero, 0, -FACE_GAP]}>
+        <ScaleBoard
+          back={span.back}
+          from={span.from}
+          lanes={[
+            [RUN.potash, -1],
+            [RUN.water, 1],
+          ]}
+          step={narrow ? 20 : 10}
+          to={span.to}
+        />
+      </group>
+      <BoardStand from={span.from} to={span.to} zero={zero} />
+      <TubeLabels />
     </group>
   );
 }
 
-/** The glass tank of the water bath, its water, and a thermometer in one corner. */
-function Bath() {
-  const walls = [
-    {
-      key: "front",
-      position: [0, TANK.height / 2, TANK.depth / 2],
-      size: [TANK.width, TANK.height, 0.003],
-    },
-    {
-      key: "back",
-      position: [0, TANK.height / 2, -TANK.depth / 2],
-      size: [TANK.width, TANK.height, 0.003],
-    },
-    {
-      key: "right",
-      position: [TANK.width / 2, TANK.height / 2, 0],
-      size: [0.003, TANK.height, TANK.depth],
-    },
-    {
-      key: "left",
-      position: [-TANK.width / 2, TANK.height / 2, 0],
-      size: [0.003, TANK.height, TANK.depth],
-    },
-    {
-      key: "floor",
-      position: [0, 0.0015, 0],
-      size: [TANK.width, 0.003, TANK.depth],
-    },
-  ] as const;
+/**
+ * One respirometer at its lane in the bath, its capillary running level at
+ * its height to `end`, and its coloured drop, which the scene moves along
+ * the capillary through `drop`.
+ */
+function TubeSet({
+  drop,
+  end,
+  tube,
+}: {
+  readonly drop: RefObject<Group | null>;
+  readonly end: number;
+  readonly tube: Tube;
+}) {
+  const bend = LANE[tube] + HOLES.capillary + CAPILLARY.bend;
   return (
-    <group position={[TANK.x, 0, 0]}>
-      {Arr.map(walls, (wall) => (
-        <mesh key={wall.key} position={wall.position}>
-          <boxGeometry args={wall.size} />
-          <GlassMaterial color={BENCH_COLORS.glass} opacity={0.18} />
-        </mesh>
-      ))}
-      <mesh position={[0, BATH_LEVEL / 2, 0]}>
-        <boxGeometry
-          args={[TANK.width - 0.006, BATH_LEVEL, TANK.depth - 0.006]}
-        />
-        <LiquidMaterial color={BIOLOGY_COLORS.pondWater} opacity={0.32} />
-      </mesh>
-      <group position={[TANK.width / 2 - 0.02, 0, -TANK.depth / 2 + 0.02]}>
-        <GlassTube end={[0, 0.2, 0]} radius={0.003} start={[0, 0.03, 0]} />
-        <mesh position={[0, 0.032, 0]}>
-          <sphereGeometry args={[0.0035, 16, 12]} />
-          <meshStandardMaterial color={BIOLOGY_COLORS.dye} roughness={0.3} />
-        </mesh>
-        <mesh position={[0, 0.08, 0]}>
-          <cylinderGeometry args={[0.0009, 0.0009, 0.1, 8]} />
-          <meshStandardMaterial color={BIOLOGY_COLORS.dye} roughness={0.3} />
+    <group>
+      <group position={[LANE[tube], TUBE_FOOT, 0]}>
+        <Respirometer
+          depth={fillDepth(SOLUTION, TUBE_BORE)}
+          salt={tube === "potash" ? 3 : 7}
+        >
+          <Capillary reach={end - bend} rise={RUN[tube] - TUBE_FOOT} />
+        </Respirometer>
+      </group>
+      <group position={[0, RUN[tube], 0]} ref={drop}>
+        <mesh rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry
+            args={[CAPILLARY.bore, CAPILLARY.bore, DROP_LENGTH / 1000, 12]}
+          />
+          <meshPhysicalMaterial
+            clearcoat={1}
+            clearcoatRoughness={0.1}
+            color={RESPIROMETER_COLORS.dye}
+            roughness={0.25}
+          />
         </mesh>
       </group>
     </group>
@@ -175,129 +227,135 @@ function Bath() {
 }
 
 /**
- * One respirometer: a boiling tube with potassium hydroxide solution or water
- * at its foot, germinating seeds on a wire gauze above it, a bung, and a
- * capillary that rises and turns along the board.
+ * The second retort stand, behind the scale board's right end, its clamp
+ * holding the board by its top edge so its face stands just behind both
+ * capillaries.
  */
-function Respirometer({
-  lane,
-  tube,
+function BoardStand({
+  from,
+  to,
+  zero,
 }: {
+  readonly from: number;
+  readonly to: number;
+  readonly zero: number;
+}) {
+  const frame = boardFrame(from, to, [RUN.potash, RUN.water]);
+  const grip = zero + frame.right - 0.012;
+  const rod = { x: grip + ARM.offset, z: -FACE_GAP - BOARD.thickness - 0.075 };
+  return (
+    <group position={[rod.x, 0, rod.z]}>
+      <RetortStand />
+      <BossArm
+        height={frame.top}
+        stop={0.0032}
+        target={[grip - rod.x, -FACE_GAP - BOARD.thickness - rod.z]}
+      >
+        <BoardJaws drop={0.014} thickness={BOARD.thickness} />
+      </BossArm>
+    </group>
+  );
+}
+
+/** How far outside the bath's wall a solution's name stands, in metres, clear of the glass. */
+const LABEL_GAP = 0.016;
+
+/**
+ * The names of the two solutions beside the bath, at the height of the
+ * solution in each tube's foot.
+ */
+function TubeLabels() {
+  const height =
+    TUBE_FOOT + BOILING_TUBE.wall + fillDepth(SOLUTION, TUBE_BORE) / 2;
+  return (
+    <group>
+      <TubeLabel height={height} lane={LANE.water}>
+        <InlineMath math="\mathrm{H_2O}" />
+      </TubeLabel>
+      <TubeLabel height={height} lane={LANE.potash}>
+        <InlineMath math="\mathrm{KOH}" />
+      </TubeLabel>
+    </group>
+  );
+}
+
+/**
+ * The name of one tube's solution, kept beside the bath on the side of the
+ * screen its tube stands on however the reader turns the rig, so it never
+ * lies over the glass or meets the other name: every frame it stands just
+ * outside the bath's wall along the camera's right, and its anchor flips
+ * only when the tube crosses to the other side of the screen.
+ */
+function TubeLabel({
+  children,
+  height,
+  lane,
+}: {
+  readonly children: ReactNode;
+  readonly height: number;
   readonly lane: number;
-  readonly tube: Tube;
 }) {
   const ink = useLabelInk();
-  const seeds = Arr.map(Arr.range(0, 9), (index) => {
-    const angle = hashUnit(index, tube === "potash" ? 3 : 7) * Math.PI * 2;
-    const reach = 0.0085 * Math.sqrt(hashUnit(index + 11, 5));
-    return {
-      key: index,
-      position: [
-        Math.cos(angle) * reach,
-        0.058 + (index % 3) * 0.004,
-        Math.sin(angle) * reach,
-      ] as const,
-      turn: angle,
-    };
+  const holder = useRef<Group>(null);
+  const right = useMemo(() => new Vector3(), []);
+  const [side, setSide] = useState<1 | -1>(lane > 0 ? 1 : -1);
+  const reach = BEAKER.radius + LABEL_GAP;
+
+  useFrame(({ camera }) => {
+    const group = holder.current;
+    if (group === null) {
+      return;
+    }
+    right.setFromMatrixColumn(camera.matrixWorld, 0).setY(0).normalize();
+    const facing = lane * right.x >= 0 ? 1 : -1;
+    group.position.set(
+      right.x * facing * reach,
+      height,
+      right.z * facing * reach
+    );
+    if (facing !== side) {
+      setSide(facing);
+    }
   });
+
   return (
-    <group position={[TANK.x, 0, lane]}>
-      <GlassTube
-        end={[0, TUBE.height, 0]}
-        radius={TUBE.radius}
-        start={[0, 0.02, 0]}
-      />
-      <mesh position={[0, 0.02, 0]} rotation={[Math.PI, 0, 0]}>
-        <sphereGeometry
-          args={[TUBE.radius, 28, 14, 0, Math.PI * 2, 0, Math.PI / 2]}
-        />
-        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.3} />
-      </mesh>
-      <mesh position={[0, 0.03, 0]}>
-        <cylinderGeometry
-          args={[TUBE.radius - 0.0015, TUBE.radius - 0.0015, 0.024, 28]}
-        />
-        <LiquidMaterial
-          color={
-            tube === "potash" ? BIOLOGY_COLORS.potash : BIOLOGY_COLORS.pondWater
-          }
-          opacity={0.7}
-        />
-      </mesh>
-      <mesh position={[0, 0.054, 0]}>
-        <cylinderGeometry
-          args={[TUBE.radius - 0.0016, TUBE.radius - 0.0016, 0.0012, 28]}
-        />
-        <MetalMaterial color={REAGENT_COLORS.steelWool} roughness={0.55} />
-      </mesh>
-      {Arr.map(seeds, (seed) => (
-        <mesh
-          castShadow
-          key={seed.key}
-          position={seed.position}
-          rotation={[0.4, seed.turn, 0.2]}
-          scale={[1, 0.62, 0.72]}
-        >
-          <sphereGeometry args={[0.0034, 14, 10]} />
-          <meshStandardMaterial color={BIOLOGY_COLORS.seed} roughness={0.55} />
-        </mesh>
-      ))}
-      <group position={[0, TUBE.height + 0.008, 0]}>
-        <Bung height={0.02} radius={TUBE.radius - 0.0012} />
-      </group>
-      <GlassTube
-        end={[0, CAPILLARY_HEIGHT, 0]}
-        radius={0.0034}
-        start={[0, TUBE.height - 0.01, 0]}
-      />
-      <GlassTube
-        end={[0.33, CAPILLARY_HEIGHT, 0]}
-        opacity={0.14}
-        radius={0.0034}
-        start={[0, CAPILLARY_HEIGHT, 0]}
-      />
+    <group ref={holder}>
       <ThreeLabel
+        anchorX={side === 1 ? "left" : "right"}
         color={ink}
-        fontSize="compact"
-        position={[-0.03, TUBE.height + 0.03, 0]}
+        fontSize={0.012}
+        maximumFontSize={20}
+        minimumFontSize={14}
+        position={[0, 0, 0]}
       >
-        <InlineMath
-          math={tube === "potash" ? "\\mathrm{KOH}" : "\\mathrm{H_2O}"}
-        />
+        {children}
       </ThreeLabel>
     </group>
   );
 }
 
-/** The stand the capillaries lie on, with a rule under each. */
-function Board() {
-  return (
-    <group position={[0.11, 0, 0]}>
-      <Trestle depth={0.16} height={CAPILLARY_HEIGHT - 0.0114} length={0.23} />
-      {Arr.map([LANE.potash, LANE.water] as const, (lane) => (
-        <group
-          key={lane}
-          position={[0, CAPILLARY_HEIGHT - 0.0094, lane + 0.012]}
-        >
-          <FlatRule length={0.2} step={5} zero="right" />
-        </group>
-      ))}
-    </group>
-  );
-}
+/** The camera's aim, in metres: the middle of the rig, from the bath to the board. */
+const TARGET = [0.08, 0.16, 0] as const;
 
-/** Looks across the bath and along the capillaries from the front, farther back on a narrow card. */
+/** Looks at the rig from the front, a little from the right and above, farther back on a narrow card. */
 function RespirometerCamera() {
-  const size = useThree((state) => state.size);
-  const narrow = size.width < size.height * 1.2;
-  const distance = narrow ? 0.9 : 0.66;
+  const narrow = useThree(
+    (state) => state.size.width < state.size.height * 1.2
+  );
+  const distance = narrow ? 0.57 : 0.48;
+  const azimuth = 0.32;
+  const elevation = 0.2;
   return (
     <CameraControls
-      cameraPosition={[0.16, 0.2 + distance * 0.55, 0.1 + distance * 0.85]}
-      cameraTarget={[0.15, 0.13, 0.1]}
+      cameraPosition={[
+        TARGET[0] + distance * Math.sin(azimuth) * Math.cos(elevation),
+        TARGET[1] + distance * Math.sin(elevation),
+        TARGET[2] + distance * Math.cos(azimuth) * Math.cos(elevation),
+      ]}
+      cameraTarget={TARGET}
       fov={36}
       maxDistance={distance * 1.8}
-      minDistance={0.16}
+      minDistance={0.12}
     />
   );
 }

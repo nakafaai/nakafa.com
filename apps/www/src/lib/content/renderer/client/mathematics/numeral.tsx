@@ -18,3 +18,11 @@ export const BinaryLampLab = withHydrationBoundary(
     ).then((module) => ({ default: module.BinaryLampLab }))
   )
 );
+
+export const BundleCountLab = withHydrationBoundary(
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/mathematics/bundle/lab"
+    ).then((module) => ({ default: module.BundleCountLab }))
+  )
+);

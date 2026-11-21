@@ -6,6 +6,11 @@ import {
   DnaHelixLab,
 } from "@/lib/content/renderer/client/biology/cells";
 import {
+  BloodTypingLab,
+  CapillaryBedLab,
+  HeartCycleLab,
+} from "@/lib/content/renderer/client/biology/circulation";
+import {
   CarbonBudgetLab,
   ClimateObservationLab,
   CoralBleachLab,
@@ -24,6 +29,10 @@ import {
   YogurtLab,
 } from "@/lib/content/renderer/client/biology/microbes";
 import {
+  NeuronImpulseLab,
+  SynapseLab,
+} from "@/lib/content/renderer/client/biology/nerve";
+import {
   MicroscopeLab,
   NephronLab,
   RespirometerLab,
@@ -35,6 +44,12 @@ import {
   PotometerLab,
   TropismLab,
 } from "@/lib/content/renderer/client/biology/plants";
+import {
+  MitochondrionLab,
+  OxygenDebtLab,
+  PaddyRootLab,
+  YeastFermentationLab,
+} from "@/lib/content/renderer/client/biology/respiration";
 import { SarsCov2VirionLab } from "@/lib/content/renderer/client/biology/virion";
 import {
   AntibodyNeutralizeLab,
@@ -171,5 +186,41 @@ export const biologyRenderers = [
   {
     name: biologyComponentNames.tropismLab,
     component: TropismLab,
+  },
+  {
+    name: biologyComponentNames.bloodTypingLab,
+    component: BloodTypingLab,
+  },
+  {
+    name: biologyComponentNames.capillaryBedLab,
+    component: CapillaryBedLab,
+  },
+  {
+    name: biologyComponentNames.heartCycleLab,
+    component: HeartCycleLab,
+  },
+  {
+    name: biologyComponentNames.neuronImpulseLab,
+    component: NeuronImpulseLab,
+  },
+  {
+    name: biologyComponentNames.synapseLab,
+    component: SynapseLab,
+  },
+  {
+    name: biologyComponentNames.mitochondrionLab,
+    component: MitochondrionLab,
+  },
+  {
+    name: biologyComponentNames.oxygenDebtLab,
+    component: OxygenDebtLab,
+  },
+  {
+    name: biologyComponentNames.paddyRootLab,
+    component: PaddyRootLab,
+  },
+  {
+    name: biologyComponentNames.yeastFermentationLab,
+    component: YeastFermentationLab,
   },
 ] satisfies readonly RendererImplementation[];

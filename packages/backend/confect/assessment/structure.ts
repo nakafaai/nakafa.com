@@ -54,6 +54,7 @@ export const InteractionStructure = Schema.Union([
       "inlineChoice",
       "mathEntry",
       "order",
+      "sketch",
       "textEntry",
     ]),
   }),
