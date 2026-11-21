@@ -28,7 +28,7 @@ type PlayerJump = typeof PlayerJumpSchema.Type;
 
 /** What the learner is doing in the player, written only by its own actions and observers. */
 const PlayerStateSchema = Schema.Struct({
-  /** Where a jump or a focus left the page, in pixels from the top, once the page has settled there. */
+  /** Where the held question stood once a jump or a focus settled the page, in pixels from the window's top. */
   anchor: Schema.NullOr(Schema.Finite),
   /** Counts the views the learner chose, so a failed save knows whether a newer choice replaced it. */
   choice: Schema.Int,
@@ -62,9 +62,9 @@ type PlayerState = typeof PlayerStateSchema.Type;
 
 interface PlayerActions {
   /**
-   * Records where the page rests once a jump or a focus has scrolled it. While
-   * the page stays there, the question that the jump or the focus chose stays
-   * current.
+   * Records where the held question stands once a jump or a focus has scrolled
+   * the page (`readHoldPosition`). While it stays there, the question that the
+   * jump or the focus chose stays current.
    */
   anchorAt: (position: number) => void;
   /**
@@ -82,8 +82,8 @@ interface PlayerActions {
   /** Makes one question current and reveals it. */
   goTo: (key: string) => void;
   /**
-   * Reports that the page is at `position`. When that is not where a jump or a
-   * focus left it, the page moved away from the hold, and the reading line decides
+   * Reports that the held question stands at `position`. When that is not where a
+   * jump or a focus left it, the page moved away from the hold, and the reading line decides
    * `current` again from its next observation. A page move while an overlay is open
    * is the overlay's scroll lock at work, so it never releases the hold.
    */
@@ -107,6 +107,9 @@ export type PlayerStore = PlayerState & PlayerActions;
 
 /** The store of one player instance. */
 export type PlayerStoreApi = ReturnType<typeof createPlayerStore>;
+
+/** How far the held question may stand from its anchor, in pixels, before the page counts as moved: a layout that rounds to device pixels moves it less. */
+const HOLD_TOLERANCE = 1;
 
 /** The request that follows `previous` and reveals `key`. */
 function jumpTo(previous: PlayerJump | null, key: string): PlayerJump {
@@ -177,7 +180,7 @@ export function createPlayerStore(input: {
           state.pinned &&
           state.overlay === "none" &&
           state.anchor !== null &&
-          state.anchor !== position
+          Math.abs(state.anchor - position) >= HOLD_TOLERANCE
             ? { anchor: null, pinned: false }
             : state
         ),
