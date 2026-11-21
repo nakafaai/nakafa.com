@@ -49,13 +49,14 @@ describe("sitemap files", () => {
   );
 
   it.effect(
-    "lists every page the build writes, the search screen included, but no try-out section",
+    "lists every indexed page, and no Quran page, search screen or try-out section",
     () =>
       Effect.gen(function* () {
-        descriptorsMock.mockReturnValue(Effect.succeed([{ id: "quran_en" }]));
+        descriptorsMock.mockReturnValue(
+          Effect.succeed([{ id: "tryout_en_0" }])
+        );
         entriesMock.mockReturnValue(
           Effect.succeed([
-            { url: `${SITE_ORIGIN}/en/quran/1` },
             { url: `${SITE_ORIGIN}/en/search` },
             { url: `${SITE_ORIGIN}/en/try-out/indonesia/snbt/2027` },
             {
@@ -69,12 +70,39 @@ describe("sitemap files", () => {
 
         const [page] = yield* readSitemapFiles().pipe(Effect.map(Arr.drop(1)));
 
-        expect(page?.text).toContain(`<loc>${SITE_ORIGIN}/en/quran/1</loc>`);
         expect(page?.text).toContain(
           `<loc>${SITE_ORIGIN}/en/try-out/indonesia/snbt/2027/utbk/set-1</loc>`
         );
-        expect(page?.text).toContain(`<loc>${SITE_ORIGIN}/en/search</loc>`);
+        expect(page?.text).not.toContain("/en/search");
         expect(page?.text).not.toContain("set-1/reading");
+      })
+  );
+
+  it.effect(
+    "neither writes nor names a sitemap page that lists no indexed page",
+    () =>
+      Effect.gen(function* () {
+        descriptorsMock.mockReturnValue(
+          Effect.succeed([{ id: "base" }, { id: "quran_en" }])
+        );
+        entriesMock.mockImplementation(({ pageId }: { pageId: string }) =>
+          Effect.succeed(
+            pageId === "quran_en"
+              ? [
+                  { url: `${SITE_ORIGIN}/en/quran` },
+                  { url: `${SITE_ORIGIN}/en/quran/1` },
+                ]
+              : [{ url: `${SITE_ORIGIN}/en/pricing` }]
+          )
+        );
+
+        const files = yield* readSitemapFiles();
+
+        expect(Arr.map(files, (file) => file.path)).toEqual([
+          "sitemap.xml",
+          "sitemap/base.xml",
+        ]);
+        expect(files[0]?.text).not.toContain("quran_en");
       })
   );
 });

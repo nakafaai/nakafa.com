@@ -33,6 +33,14 @@ describe("pages the sitemap leaves out", () => {
     );
     expect(isUnlistedPath("/en/subjects/a/b/c/d/e")).toBe(false);
   });
+
+  it("leaves out the Quran index, every surah and the search page", () => {
+    expect(isUnlistedPath("/id/quran")).toBe(true);
+    expect(isUnlistedPath("/de/quran/2")).toBe(true);
+    expect(isUnlistedPath("/ms/search")).toBe(true);
+    expect(isUnlistedPath("/id/materi/matematika/lingkaran/busur")).toBe(false);
+    expect(isUnlistedPath("/en/articles/politics/x")).toBe(false);
+  });
 });
 
 describe("static page paths", () => {

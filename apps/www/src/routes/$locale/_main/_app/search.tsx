@@ -19,8 +19,8 @@ import { readStaticData } from "@/lib/static/data";
  * The search page. The build prerenders the bare page, so its loader reads the
  * static answers and the Worker renders none of it: the search runs in the
  * browser, and the greeting names a signed-in reader once their live session
- * opens. The bare page holds no learner's data, so it may be indexed; the head
- * keeps every page with a query out of indexes (`searchHead`).
+ * opens. The page is a search box with no content of its own, so the head keeps
+ * it out of indexes while engines follow its links (`searchHead`).
  */
 export const Route = createFileRoute("/$locale/_main/_app/search")({
   validateSearch: Schema.toStandardSchemaV1(SearchInput),
@@ -28,31 +28,24 @@ export const Route = createFileRoute("/$locale/_main/_app/search")({
   loader: async ({ params }) => {
     const messages = await readStaticData(readRouteMessages, {
       locale: params.locale,
-      namespaces: ["Common", "Utils"],
+      namespaces: ["Utils"],
     });
     const t = createTranslator({
       locale: params.locale,
       messages,
       namespace: "Utils",
     });
-    const tCommon = createTranslator({
-      locale: params.locale,
-      messages,
-      namespace: "Common",
-    });
     const seo: ScreenSeo = {
       canonicalPath: `/${params.locale}/search`,
       description: t("search-description"),
-      indexable: true,
+      indexable: false,
       locale: params.locale,
       title: t("search-title"),
     };
-    return { home: tCommon("home"), seo };
+    return { seo };
   },
-  head: ({ loaderData, match }) =>
-    loaderData === undefined
-      ? {}
-      : searchHead(loaderData.seo, match.search.q, loaderData.home),
+  head: ({ loaderData }) =>
+    loaderData === undefined ? {} : searchHead(loaderData.seo),
   component: SearchScreen,
 });
 

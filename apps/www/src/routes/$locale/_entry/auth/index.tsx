@@ -1,5 +1,4 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Schema } from "effect";
 import { useTranslations } from "use-intl";
@@ -15,9 +14,7 @@ import { isSignedIn } from "@/lib/auth/gate";
 import { readAuthLegalFn } from "@/lib/auth/legal.functions";
 import { TextSearchParam } from "@/lib/entry/search";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
-import { getAppSocialArtwork } from "@/lib/og/app";
-import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { createSeoHead, toRouterHead } from "@/lib/seo/head";
+import { createPrivateSeoHead, toRouterHead } from "@/lib/seo/head";
 import { readStaticData } from "@/lib/static/data";
 
 /**
@@ -30,8 +27,8 @@ const AuthSearch = Schema.Struct({
 });
 
 /**
- * The sign-in page names itself, says what signing in keeps, and stands under
- * home in its breadcrumb. The build
+ * The sign-in page names itself and says what signing in keeps. It is an
+ * account screen, so its head keeps it out of search indexes. The build
  * prerenders it, so its loader reads the static answers and every visitor opens the
  * static page. A signed-in visitor never sees it: a move between pages passes the
  * gate, which sends them on to the page the intent names, or home, before the loader
@@ -55,15 +52,10 @@ export const Route = createFileRoute("/$locale/_entry/auth/")({
     const [messages, legal] = await Promise.all([
       readStaticData(readRouteMessages, {
         locale: params.locale,
-        namespaces: ["Auth", "Common"],
+        namespaces: ["Auth"],
       }),
       readStaticData(readAuthLegalFn, { locale: params.locale }),
     ]);
-    const tCommon = createTranslator({
-      locale: params.locale,
-      messages,
-      namespace: "Common",
-    });
     const tAuth = createTranslator({
       locale: params.locale,
       messages,
@@ -71,35 +63,18 @@ export const Route = createFileRoute("/$locale/_entry/auth/")({
     });
     return {
       description: tAuth("login-cta-description"),
-      home: tCommon("home"),
       legal,
       title: tAuth("sign-in-title"),
     };
   },
-  head: ({ loaderData, params }) =>
+  head: ({ loaderData }) =>
     loaderData === undefined
       ? {}
       : toRouterHead(
-          createSeoHead({
+          createPrivateSeoHead({
             absoluteTitle: loaderData.title,
-            canonicalPath: `/${params.locale}/auth`,
             description: loaderData.description,
-            image: getAppSocialArtwork({
-              key: "home",
-              locale: params.locale,
-              publicPath: "",
-            }),
-            indexable: true,
-            jsonLd: makeBreadcrumbNodes(
-              createBreadcrumbItems(params.locale, [
-                { name: loaderData.home, path: "" },
-                { name: loaderData.title, path: "/auth" },
-              ])
-            ),
-            kind: "account",
-            locale: params.locale,
             parts: [],
-            type: "website",
           })
         ),
   component: AuthPage,

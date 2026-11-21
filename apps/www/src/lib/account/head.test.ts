@@ -114,40 +114,13 @@ describe("searchHead", () => {
   const search = {
     canonicalPath: "/en/search",
     description: "Search Nakafa",
-    indexable: true,
+    indexable: false,
     locale: "en",
     title: "Search",
   } as const;
 
-  it("lets engines index the bare search page", () => {
-    expect(searchHead(search, "", "Home").meta).toContainEqual({
-      content: "index,follow,max-snippet:-1,max-image-preview:large",
-      name: "robots",
-    });
-  });
-
-  it("names the page's place as a breadcrumb from the locale's home", () => {
-    expect(searchHead(search, "", "Home").meta).toContainEqual({
-      "script:ld+json": expect.objectContaining({
-        "@type": "BreadcrumbList",
-        itemListElement: [
-          expect.objectContaining({
-            item: "https://nakafa.com/en",
-            name: "Home",
-            position: 1,
-          }),
-          expect.objectContaining({
-            item: "https://nakafa.com/en/search",
-            name: "Search",
-            position: 2,
-          }),
-        ],
-      }),
-    });
-  });
-
-  it("keeps a page with a query out of indexes while its links are followed", () => {
-    const head = searchHead(search, "fraction", "Home");
+  it("keeps the search page out of indexes while its links are followed", () => {
+    const head = searchHead(search);
     expect(head.meta).toContainEqual({
       content: "noindex,follow",
       name: "robots",

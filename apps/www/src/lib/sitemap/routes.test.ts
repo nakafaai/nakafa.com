@@ -40,7 +40,6 @@ const storeMocks = vi.hoisted(() => ({
 const SNAPSHOT_DATES = {
   assessment: "2026-10-01",
   program: "2026-10-02",
-  quran: "2026-10-03",
 };
 
 vi.mock("@/lib/content/article/sitemap", () => articleMocks);
@@ -276,8 +275,8 @@ describe("sitemap route pages", () => {
         { lastModified: "2026-10-01", path: "/try-out/indonesia" },
       ]);
       expect((yield* readSitemapRoutePage("quran_en")).routes).toEqual([
-        { lastModified: "2026-10-03", path: "/quran/1" },
-        { lastModified: "2026-10-03", path: "/quran/2" },
+        { path: "/quran/1" },
+        { path: "/quran/2" },
       ]);
     })
   );
@@ -290,7 +289,7 @@ describe("sitemap route pages", () => {
         { path: "/contributor" },
         { lastModified: "2026-10-02", path: "/curricula" },
         { path: "/pricing" },
-        { lastModified: "2026-10-03", path: "/quran" },
+        { path: "/quran" },
         { path: "/school" },
         { path: "/school/pricing" },
         { path: "/search" },
@@ -303,11 +302,16 @@ describe("sitemap route pages", () => {
     () =>
       Effect.gen(function* () {
         storeMocks.queryContentStore.mockReturnValue(
-          Effect.succeed({ assessment: null, program: null, quran: null })
+          Effect.succeed({ assessment: null, program: null })
         );
-        expect((yield* readSitemapRoutePage("quran_en")).routes).toEqual([
-          { path: "/quran/1" },
-          { path: "/quran/2" },
+        programMocks.readPublishedProgramBuckets.mockReturnValue(
+          Effect.succeed({ buckets: ["001"], managed: true, routeCount: 1 })
+        );
+        programMocks.readPublishedProgramSitemap.mockReturnValue(
+          Effect.succeed({ routes: [{ publicPath: "curricula/merdeka" }] })
+        );
+        expect((yield* readSitemapRoutePage("program_en_p0")).routes).toEqual([
+          { path: "/curricula/merdeka" },
         ]);
       })
   );

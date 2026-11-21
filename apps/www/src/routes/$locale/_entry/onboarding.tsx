@@ -19,8 +19,7 @@ import {
 } from "@/lib/entry/page.functions";
 import { TextSearchParam } from "@/lib/entry/search";
 import { readRenderedRouteMessages } from "@/lib/i18n/rendered";
-import { getAppSocialArtwork } from "@/lib/og/app";
-import { createSeoHead, toRouterHead } from "@/lib/seo/head";
+import { createPrivateSeoHead, toRouterHead } from "@/lib/seo/head";
 
 /** The intent that the sign-in resumes after the questionnaire. */
 const OnboardingSearch = Schema.Struct({
@@ -70,25 +69,14 @@ export const Route = createFileRoute("/$locale/_entry/onboarding")({
       title: `${t("metadata-title")} - ${metadata("title")}`,
     };
   },
-  head: ({ loaderData, params }) =>
+  head: ({ loaderData }) =>
     loaderData === undefined
       ? {}
       : toRouterHead(
-          createSeoHead({
+          createPrivateSeoHead({
             absoluteTitle: loaderData.title,
-            canonicalPath: `/${params.locale}`,
             description: loaderData.description,
-            image: getAppSocialArtwork({
-              key: "home",
-              locale: params.locale,
-              publicPath: "",
-            }),
-            indexable: true,
-            jsonLd: [],
-            kind: "account",
-            locale: params.locale,
             parts: [],
-            type: "website",
           })
         ),
   component: OnboardingPage,

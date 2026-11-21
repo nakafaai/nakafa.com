@@ -81,7 +81,9 @@ export const Route = createFileRoute("/$locale/_main/quran/")({
         canonicalPath: `/${locale}/quran`,
         description,
         image,
-        indexable: true,
+        // The Quran's text and translations come from third parties (Tanzil and
+        // QuranEnc), so the page serves readers and stays out of search indexes.
+        indexable: false,
         jsonLd: [
           ...makeBreadcrumbNodes(breadcrumbs),
           makeCollectionPageNode({
