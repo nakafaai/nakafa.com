@@ -15,6 +15,7 @@ import {
   popupMotion,
   sheetSurface,
 } from "@repo/design-system/lib/popup";
+import { keepClickOnTrigger } from "@repo/design-system/lib/press";
 import {
   SelectContent as SelectContentPrimitive,
   SelectGroup,
@@ -119,10 +120,12 @@ const selectTriggerVariants = cva(
   }
 );
 
+/** The select's button. A click keeps its release on the button, so the list it opened stays open (`keepClickOnTrigger`). */
 function SelectTrigger({
   className,
   size = "default",
   children,
+  onPointerDown,
   ...props
 }: Omit<
   React.ComponentProps<typeof SelectTriggerPrimitive>,
@@ -136,6 +139,10 @@ function SelectTrigger({
     <SelectTriggerPrimitive
       className={cn(selectTriggerVariants(), className)}
       data-size={size}
+      onPointerDown={(event) => {
+        keepClickOnTrigger(event);
+        onPointerDown?.(event);
+      }}
       {...props}
     >
       {children}

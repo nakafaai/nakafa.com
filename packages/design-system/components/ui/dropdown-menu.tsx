@@ -15,6 +15,7 @@ import {
   popupMotion,
   sheetSurface,
 } from "@repo/design-system/lib/popup";
+import { keepClickOnTrigger } from "@repo/design-system/lib/press";
 import type { NodeChildren } from "@repo/design-system/lib/render";
 import {
   createMenuController,
@@ -76,8 +77,20 @@ function createDropdownMenuController() {
   return createMenuController();
 }
 
-function DropdownMenuTrigger(props: React.ComponentProps<typeof MenuTrigger>) {
-  return <MenuTrigger {...props} />;
+/** The menu's trigger. A click keeps its release on the trigger, so the menu it opened stays open (`keepClickOnTrigger`). */
+function DropdownMenuTrigger({
+  onPointerDown,
+  ...props
+}: React.ComponentProps<typeof MenuTrigger>) {
+  return (
+    <MenuTrigger
+      onPointerDown={(event) => {
+        keepClickOnTrigger(event);
+        onPointerDown?.(event);
+      }}
+      {...props}
+    />
+  );
 }
 
 /**
