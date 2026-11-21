@@ -495,10 +495,10 @@ otherwise.
 
 `scripts/check/scroll.ts` judges two places. In the three overlay modules of the
 design system (`ui/dialog.tsx`, `ui/drawer.tsx`, `ui/sheet.tsx`), every
-`ScrollArea` takes `axis="vertical"`. In application code, inside the element of
+`ScrollArea` keeps its default vertical axis. In application code, inside the element of
 an overlay (`ResponsiveDialog`, `DialogContent`, `AlertDialogContent`,
 `SheetContent`, `DrawerContent`) in the same module, the check refuses a
-`ScrollArea` without that axis, a `ScrollBar` with `orientation="horizontal"`,
+`ScrollArea` with `axis="both"`, a `ScrollBar` with `orientation="horizontal"`,
 and an `overflow-auto` or `overflow-x-auto` class or its `scroll` form, after
 any variant. A vertical axis clips what is too wide, so the fix also lets the
 content wrap, truncate or stack. The check reads one module: a component that

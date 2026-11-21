@@ -1,3 +1,4 @@
+import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr } from "effect";
 
 /*
@@ -81,7 +82,7 @@ export const UI_SDK_STYLES = [HIDDEN_STYLE, POPOVER_RESET_STYLE] as const;
 export const UI_SDK_HEAD_SCRIPT = `(function () {
   var resets = (globalThis[Symbol.for("ui-sdk.popover-reset@2")] = globalThis[Symbol.for("ui-sdk.popover-reset@2")] || new WeakMap());
   if (!resets.has(document)) {
-    resets.set(document, { selectors: new Set(${JSON.stringify(POPOVER_SELECTORS)}), css: ${JSON.stringify(POPOVER_RESET_STYLE.css)} });
+    resets.set(document, { selectors: new Set(${encodeJsonText(POPOVER_SELECTORS)}), css: ${encodeJsonText(POPOVER_RESET_STYLE.css)} });
   }
   if (typeof CSS === "undefined" || !CSS.registerProperty) {
     return;

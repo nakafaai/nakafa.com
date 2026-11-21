@@ -43,8 +43,9 @@ function names(node: Node, name: string, value: string) {
 /** What lets one element of an overlay scroll sideways, or none when it scrolls only downwards. */
 function sideways(node: Node) {
   return Option.flatMap(opening(node), ({ attributes, tag }) => {
-    if (tag === AREA_TAG && !names(node, "axis", "vertical")) {
-      return Option.some('a ScrollArea without axis="vertical"');
+    // A ScrollArea scrolls downwards unless its axis says otherwise.
+    if (tag === AREA_TAG && names(node, "axis", "both")) {
+      return Option.some('a ScrollArea with axis="both"');
     }
     if (tag === BAR_TAG && names(node, "orientation", "horizontal")) {
       return Option.some("a horizontal ScrollBar");
@@ -84,7 +85,7 @@ function overlayParts(file: string, nodes: readonly Node[]) {
 /**
  * Reports what lets a dialog, a sheet or a drawer scroll sideways. A phone shows an overlay at the screen's width, and a
  * sideways scroll there shifts every field and clips its label. An overlay of the design system scrolls its body only
- * downwards, so each ScrollArea it draws takes `axis="vertical"`, and what an overlay holds wraps, truncates or stacks:
+ * downwards, so each ScrollArea it draws keeps its default vertical axis, and what an overlay holds wraps, truncates or stacks:
  * no ScrollArea that scrolls both ways, no horizontal ScrollBar, and no `overflow-x-auto` or `overflow-auto`.
  */
 export function inspectScrollSource(file: string, sourceFile: SourceFile) {
@@ -95,7 +96,7 @@ export function inspectScrollSource(file: string, sourceFile: SourceFile) {
         onNone: () => Result.failVoid,
         onSome: (cause) =>
           Result.succeed(
-            `${place(file, sourceFile, node)}: ${cause} lets an overlay scroll sideways. A dialog, a sheet or a drawer scrolls only downwards: give its ScrollArea axis="vertical", and wrap, truncate or stack what it holds.`
+            `${place(file, sourceFile, node)}: ${cause} lets an overlay scroll sideways. A dialog, a sheet or a drawer scrolls only downwards: keep its ScrollArea on its default vertical axis, and wrap, truncate or stack what it holds.`
           ),
       })
     )

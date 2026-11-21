@@ -23,7 +23,7 @@ import {
   useParams,
 } from "@tanstack/react-router";
 import { cn } from "cn";
-import { Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import type { ReactNode } from "react";
 import { DeferredPreviewRefresh } from "@/components/dev/deferred";
 import { LOADED_JUMP_SCRIPT } from "@/components/marketing/shared/jump";
@@ -191,7 +191,7 @@ function RootDocument({ children }: { children: ReactNode }) {
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
           dangerouslySetInnerHTML={{ __html: UI_SDK_HEAD_SCRIPT }}
         />
-        {UI_SDK_STYLES.map(({ css, id }) => (
+        {Arr.map(UI_SDK_STYLES, ({ css, id }) => (
           <style id={id} key={id}>
             {css}
           </style>
