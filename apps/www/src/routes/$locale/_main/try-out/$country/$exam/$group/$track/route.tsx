@@ -157,15 +157,14 @@ function TryoutTrackFrame() {
         trail={route.trail}
       />
       <div className="contents has-[>script[data-set-paper]]:invisible">
-        {entered === undefined ? null : (
-          // The browser runs this script while it reads the server's markup, and React keeps the element without
-          // running it, so only a page load can mark it.
-          <script
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
-            dangerouslySetInnerHTML={{ __html: setPaperScript(entered) }}
-            suppressHydrationWarning
-          />
-        )}
+        {/* The browser runs this script while it reads the server's markup, and React keeps the element without
+          running it, so only a page load can mark it. It stands on every page of the track, so the markup the
+          server wrote and the page that hydrates it always hold it, whatever the set's read holds by then. */}
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
+          dangerouslySetInnerHTML={{ __html: setPaperScript(entered === true) }}
+          suppressHydrationWarning
+        />
         <TryoutSetTable
           bootstrap={route.list}
           key={`${locale}:${route.page.track.publicPath}`}
