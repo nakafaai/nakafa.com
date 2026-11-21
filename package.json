@@ -139,9 +139,6 @@
       "onFail": "download"
     }
   },
-  "patchedDependencies": {
-    "@ui-sdk/core@0.1.0-beta.13": "patches/@ui-sdk%2Fcore@0.1.0-beta.13.patch"
-  },
   "trustedDependencies": [
     "@parcel/watcher",
     "@swc/core",
