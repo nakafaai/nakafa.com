@@ -3,7 +3,6 @@ import {
   useMergedRef,
   useReducedMotion,
 } from "@mantine/hooks";
-import { AdaptiveDpr } from "@react-three/drei";
 import type { CanvasProps } from "@react-three/fiber";
 import {
   addAfterEffect,
@@ -13,6 +12,7 @@ import {
   useStore,
   useThree,
 } from "@react-three/fiber";
+import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraFraming } from "@repo/design-system/components/three/camera/framing";
 import { THREE_RENDER_MARGIN } from "@repo/design-system/components/three/data/constants";
 import {
@@ -23,11 +23,23 @@ import {
   SceneOverlay,
   SceneOverlayProvider,
 } from "@repo/design-system/components/three/overlay";
-import { SceneSpinner } from "@repo/design-system/components/three/placeholder";
+import {
+  SceneSpinner,
+  useNotifySceneDrawn,
+} from "@repo/design-system/components/three/placeholder";
 import { SceneDrawn } from "@repo/design-system/components/three/reveal";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { getPowerPreference } from "@repo/design-system/lib/device";
+import {
+  useHasVisualCard,
+  useStartVisualScene,
+  useVisualReset,
+  useVisualScene,
+} from "@repo/design-system/components/visual/card";
+import {
+  getCanvasDpr,
+  getPowerPreference,
+} from "@repo/design-system/lib/device";
 import { createFramePace } from "@repo/design-system/lib/pace";
 import { ClientOnly } from "@tanstack/react-router";
 import { cn } from "cn";
@@ -35,6 +47,7 @@ import type { ComponentProps, ReactNode } from "react";
 import {
   Suspense,
   useEffect,
+  useEffectEvent,
   useLayoutEffect,
   useRef,
   useState,
@@ -54,13 +67,28 @@ import type { ToneMapping, WebGLRenderer } from "three";
  *
  * @see https://r3f.docs.pmnd.rs/api/canvas
  */
-function SceneTime() {
+function SceneTime({ controlled }: { readonly controlled: boolean }) {
   const store = useStore();
+  const playing = useVisualScene((state) => state.playing, false);
+  const active = controlled ? playing : true;
   const elapsed = useRef(0);
 
-  useFrame(({ clock }) => {
-    elapsed.current = clock.elapsedTime;
+  useVisualReset(() => {
+    elapsed.current = 0;
+    const state = store.getState();
+    state.clock.elapsedTime = 0;
+    state.invalidate();
   });
+
+  // Negative priority runs before every scene's default-priority useFrame
+  // without taking over R3F rendering, keeping clock.elapsedTime frozen while
+  // paused while still passing live delta to OrbitControls damping.
+  useFrame(({ clock }, delta) => {
+    if (active) {
+      elapsed.current += simulationStep(delta);
+    }
+    clock.elapsedTime = elapsed.current;
+  }, -10);
 
   useLayoutEffect(
     () =>
@@ -107,6 +135,7 @@ function PacedFrames() {
       }
       request = requestAnimationFrame(tick);
     };
+    invalidate();
     request = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(request);
@@ -190,6 +219,13 @@ function ThreeCanvasComponent({
   toneMapping?: ToneMapping;
 } & Omit<CanvasProps, "camera" | "fallback" | "gl" | "orthographic">) {
   const powerPreference = getPowerPreference();
+  const dpr = getCanvasDpr();
+  const notifyDrawn = useNotifySceneDrawn();
+  const hasCard = useHasVisualCard();
+  const playing = useVisualScene((state) => state.playing, false);
+  const start = useStartVisualScene();
+  const startedAlways = useRef(false);
+  const startAlways = useEffectEvent(() => start());
   const { entry, ref } = useIntersection<HTMLDivElement>({
     rootMargin: `${THREE_RENDER_MARGIN}px`,
   });
@@ -199,11 +235,11 @@ function ThreeCanvasComponent({
   // The frame is placed once it nears the viewport, and its canvas starts then.
   const [placed, setPlaced] = useState(false);
   // Each start of the scene draws on a new canvas element.
-  const [start, setStart] = useState(1);
+  const [startCount, setStartCount] = useState(1);
   const [stage, setStage] = useState<"drawn" | "failed" | "loading">("loading");
   const drawn = stage === "drawn";
   const nearViewport = entry?.isIntersecting ?? true;
-  const paced = !calm && frameloop === "always";
+  const paced = hasCard ? playing : !calm && frameloop === "always";
   const behindInert = useSyncExternalStore(
     subscribeToInert,
     () => Boolean(frame?.closest("[inert]")),
@@ -211,10 +247,26 @@ function ThreeCanvasComponent({
   );
   const running = nearViewport && !behindInert;
 
+  // Continuous-motion labs (`frameloop="always"`) start playing once on their
+  // first drawn frame unless reduced motion is set, just like P5Sketch, so the
+  // card's Pause button accurately reflects state and halts frame pacing.
+  useEffect(() => {
+    if (
+      frameloop === "always" &&
+      hasCard &&
+      drawn &&
+      !calm &&
+      !startedAlways.current
+    ) {
+      startedAlways.current = true;
+      startAlways();
+    }
+  }, [calm, drawn, frameloop, hasCard]);
+
   /** Starts the scene again on a new canvas, now. */
   const restart = () => {
     setStage("loading");
-    setStart((count) => count + 1);
+    setStartCount((count) => count + 1);
   };
 
   /** Starts the scene again on a new canvas, once its frame nears the viewport. */
@@ -238,9 +290,9 @@ function ThreeCanvasComponent({
           <SceneOverlayProvider>
             <ErrorBoundary
               fallbackRender={() => null}
-              key={start}
+              key={startCount}
               onError={() => {
-                if (start < SCENE_STARTS) {
+                if (startCount < SCENE_STARTS) {
                   restart();
                   return;
                 }
@@ -252,7 +304,7 @@ function ThreeCanvasComponent({
                   "size-full overflow-hidden rounded-[inherit] [&_canvas]:size-full [&_canvas]:rounded-[inherit] [&>div]:rounded-[inherit]",
                   className
                 )}
-                dpr={[1, 2]}
+                dpr={dpr}
                 frameloop={running ? "demand" : "never"}
                 gl={{
                   antialias: true,
@@ -264,21 +316,20 @@ function ThreeCanvasComponent({
                   watchContextLoss(state.gl, replace);
                   onCreated?.(state);
                 }}
-                performance={{
-                  min: 0.8,
-                  max: 1.0,
-                  debounce: 100,
-                }}
                 shadows="percentage"
                 {...props}
               >
-                <AdaptiveDpr />
-                <SceneTime />
+                <SceneTime controlled={hasCard} />
                 {paced && running ? <PacedFrames /> : null}
                 <CameraFraming>
                   <Suspense fallback={null}>
                     {children}
-                    <SceneDrawn onDrawn={() => setStage("drawn")} />
+                    <SceneDrawn
+                      onDrawn={() => {
+                        setStage("drawn");
+                        notifyDrawn?.();
+                      }}
+                    />
                   </Suspense>
                 </CameraFraming>
               </Canvas>
@@ -290,7 +341,7 @@ function ThreeCanvasComponent({
         <Intersection
           aria-hidden="true"
           className="absolute inset-0"
-          key={start}
+          key={startCount}
           once
           onIntersect={() => setPlaced(true)}
           rootMargin={`${THREE_RENDER_MARGIN}px`}

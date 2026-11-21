@@ -1,9 +1,14 @@
 import type { Particle } from "@repo/design-system/components/contents/chemistry/equation/layout";
 import type { Point } from "@repo/design-system/components/contents/chemistry/molecule/geometry";
+import type { CycleState } from "@repo/design-system/components/contents/simulation/cycle";
+import { stepCycle } from "@repo/design-system/components/contents/simulation/cycle";
 import { Schema } from "effect";
 
 /** How long one run of a reaction lasts while the card plays, in seconds. */
 export const REACTION_SECONDS = 7;
+
+/** How long a finished reaction holds on its products before restarting, in seconds. */
+export const REACTION_HOLD_SECONDS = 1.05;
 
 /** How high an atom lifts out of the plane halfway along its path. */
 const LIFT = 0.9;
@@ -54,8 +59,15 @@ export function particlePosition(particle: Particle, progress: number): Point {
   ];
 }
 
-/** Moves a playing run on by `seconds`, starting over after a pause at the end. */
-export function advanceProgress(progress: number, seconds: number) {
-  const next = progress + seconds / REACTION_SECONDS;
-  return next > 1.15 ? 0 : next;
+/** Moves a playing run on by `seconds`, holding cleanly at `1` without overshooting before restarting. */
+export function advanceProgress(
+  state: CycleState,
+  seconds: number
+): CycleState {
+  return stepCycle(state, {
+    deltaSeconds: seconds,
+    holdSeconds: REACTION_HOLD_SECONDS,
+    rate: 1 / REACTION_SECONDS,
+    total: 1,
+  });
 }

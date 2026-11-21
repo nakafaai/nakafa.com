@@ -36,6 +36,7 @@ const MathScene = lazy(() =>
 export function DeferredMathScene(props: MathSceneProps) {
   const [near, setNear] = useState(false);
   const [intent, setIntent] = useState(false);
+  const [drawn, setDrawn] = useState(false);
 
   useEffect(() => {
     const wait = Effect.runFork(
@@ -48,23 +49,32 @@ export function DeferredMathScene(props: MathSceneProps) {
     };
   }, []);
 
+  const active = near && intent;
+
   return (
-    <SceneStill still={<MathPicture {...props} />}>
+    <SceneStill onDrawn={() => setDrawn(true)} still={null}>
       <Intersection
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         once
         onIntersect={() => setNear(true)}
       />
-      {near && intent ? (
+      {drawn ? null : (
+        <div
+          className={
+            active ? "pointer-events-none absolute inset-0" : "size-full"
+          }
+        >
+          <MathPicture {...props} />
+        </div>
+      )}
+      {active ? (
         <Suspense fallback={<ScenePlaceholder />}>
           <ClientOnly fallback={<ScenePlaceholder />}>
             <MathScene {...props} />
           </ClientOnly>
         </Suspense>
-      ) : (
-        <MathPicture {...props} />
-      )}
+      ) : null}
     </SceneStill>
   );
 }

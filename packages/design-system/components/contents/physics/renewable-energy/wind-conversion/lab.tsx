@@ -1,5 +1,6 @@
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -7,6 +8,7 @@ import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
+  useVisualScene,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -136,13 +138,14 @@ function WindConversionScene({
   windSpeed: number;
 }) {
   const rotorRef = useRef<Group>(null);
+  const playing = useVisualScene((card) => card.playing, true);
 
   useFrame((_, delta) => {
-    if (!rotorRef.current) {
+    if (!(playing && rotorRef.current)) {
       return;
     }
 
-    rotorRef.current.rotation.z -= delta * windSpeed * 1.05;
+    rotorRef.current.rotation.z -= simulationStep(delta) * windSpeed * 1.05;
   });
 
   return (

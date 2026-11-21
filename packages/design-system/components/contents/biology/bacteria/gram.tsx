@@ -31,7 +31,7 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CatmullRomCurve3,
   Color,
@@ -98,7 +98,7 @@ export function GramStainLab({
   const [step, setStep] = useState<StainStep>("safranin");
 
   return (
-    <VisualCard>
+    <VisualCard onReset={() => setStep("safranin")}>
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
@@ -127,9 +127,7 @@ export function GramStainLab({
         render={<section />}
       >
         <ScienceStage reach={60} setting="studio">
-          <Suspense fallback={null}>
-            <GramScene step={step} />
-          </Suspense>
+          <GramScene step={step} />
         </ScienceStage>
       </VisualCardBody>
 
@@ -208,6 +206,8 @@ function GramScene({ step }: { readonly step: StainStep }) {
   const soaking = useRef<StainStep>(step);
   const [settled, setSettled] = useState(step);
   const from = useRef({ negative: new Color(), positive: new Color() });
+  const targetColor = useMemo(() => new Color(), []);
+  const mixedColor = useMemo(() => new Color(), []);
 
   useEffect(
     () => () => {
@@ -230,10 +230,10 @@ function GramScene({ step }: { readonly step: StainStep }) {
     }
     soaked.current = Math.min(1, soaked.current + delta / SOAK);
     Arr.forEach(["negative", "positive"] as const, (gram: Gram) => {
-      const target = new Color(stainOf(gram, step));
-      const mixed = from.current[gram].clone().lerp(target, soaked.current);
+      targetColor.set(stainOf(gram, step));
+      mixedColor.copy(from.current[gram]).lerp(targetColor, soaked.current);
       Arr.forEach(materials[gram], (material, shade) => {
-        material.color.copy(mixed).multiplyScalar(SHADES[shade] ?? 1);
+        material.color.copy(mixedColor).multiplyScalar(SHADES[shade] ?? 1);
         material.opacity = step === "smear" ? 0.35 : 0.92;
       });
     });

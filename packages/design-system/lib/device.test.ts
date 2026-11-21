@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
+  getCanvasDpr,
   getPowerPreference,
   isMobileDevice,
   isSoftwareRenderer,
@@ -143,6 +144,18 @@ describe("getPowerPreference", () => {
     setNavigatorState(userAgent, cores);
 
     expect(getPowerPreference()).toBe(expected);
+  });
+});
+
+describe("getCanvasDpr", () => {
+  it("caps mobile canvases at 1.5x pixel ratio", () => {
+    setNavigatorProperty("userAgent", IPHONE_USER_AGENT);
+    expect(getCanvasDpr()).toEqual([1, 1.5]);
+  });
+
+  it("caps desktop canvases at 2x pixel ratio", () => {
+    setNavigatorProperty("userAgent", MAC_USER_AGENT);
+    expect(getCanvasDpr()).toEqual([1, 2]);
   });
 });
 

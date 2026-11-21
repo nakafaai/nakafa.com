@@ -8,10 +8,11 @@ import {
   projectToOverlay,
 } from "@repo/design-system/components/three/overlay/project";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { Array as Arr, MutableHashMap, Option } from "effect";
+import { Array as Arr, MutableHashMap, MutableHashSet, Option } from "effect";
 import type { CSSProperties, ReactNode, RefCallback } from "react";
 import {
   createContext,
+  use,
   useCallback,
   useLayoutEffect,
   useMemo,
@@ -38,6 +39,8 @@ interface SceneOverlayState {
   frames: MutableHashMap.MutableHashMap<number, HTMLElement>;
   /** Labels in mount order, so overlapping labels paint in the order they mounted. */
   items: readonly OverlayItem[];
+  /** Label ids that have been projected onto their DOM element at least once. */
+  placed: MutableHashSet.MutableHashSet<number>;
   /** Adds a label, or replaces the label with the same id in place. */
   put: (item: OverlayItem) => void;
   remove: (id: number) => void;
@@ -47,9 +50,11 @@ type SceneOverlayStore = StoreApi<SceneOverlayState>;
 
 function createSceneOverlayStore() {
   const frames = MutableHashMap.empty<number, HTMLElement>();
+  const placed = MutableHashSet.empty<number>();
   return createStore<SceneOverlayState>()((set) => ({
     frames,
     items: [],
+    placed,
     put(item) {
       set((state) => ({
         items: Arr.some(state.items, (known) => known.id === item.id)
@@ -60,6 +65,7 @@ function createSceneOverlayStore() {
       }));
     },
     remove(id) {
+      MutableHashSet.remove(placed, id);
       set((state) => ({
         items: Arr.filter(state.items, (known) => known.id !== id),
       }));
@@ -72,6 +78,21 @@ const SceneOverlayContext = createContext<SceneOverlayStore | null>(null);
 /** Reads the overlay store, which only a SceneOverlayProvider gives. */
 function useSceneOverlayStore(): SceneOverlayStore {
   return useRequired(SceneOverlayContext, "useSceneOverlayStore");
+}
+
+/** Reads the surrounding overlay store when present, so reveal logic can wait for label attachment. */
+export function useSceneOverlayStoreOptional(): SceneOverlayStore | null {
+  return use(SceneOverlayContext);
+}
+
+/** Whether every registered overlay label has attached its DOM node and been projected at least once. */
+export function isSceneOverlayReady(store: SceneOverlayStore): boolean {
+  const { frames, items, placed } = store.getState();
+  return Arr.every(
+    items,
+    (item) =>
+      MutableHashMap.has(frames, item.id) && MutableHashSet.has(placed, item.id)
+  );
 }
 
 /**
@@ -98,6 +119,7 @@ function OverlayLabel({ item }: { item: OverlayItem }) {
       wake();
       return () => {
         MutableHashMap.remove(store.getState().frames, id);
+        MutableHashSet.remove(store.getState().placed, id);
       };
     },
     [id, store, wake]
@@ -244,9 +266,11 @@ export function SceneHtml({
     const [x, y] = calculatePosition
       ? calculatePosition(group, camera, size)
       : projectToOverlay(point, camera, size);
+    const wasPlaced = MutableHashSet.has(store.getState().placed, group.id);
     // A non-finite x or y fails this test, so only a zoom change writes it, as in drei.
     const last = placement.current;
     const moved =
+      !wasPlaced ||
       Math.abs(last.zoom - camera.zoom) > PLACEMENT_TOLERANCE ||
       Math.abs(last.x - x) > PLACEMENT_TOLERANCE ||
       Math.abs(last.y - y) > PLACEMENT_TOLERANCE;
@@ -269,6 +293,7 @@ export function SceneHtml({
         : objectScale(point, camera) * distanceFactor;
     element.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
     placement.current = { visible, x, y, zoom: camera.zoom };
+    MutableHashSet.add(store.getState().placed, group.id);
   });
 
   return <group ref={anchor} />;

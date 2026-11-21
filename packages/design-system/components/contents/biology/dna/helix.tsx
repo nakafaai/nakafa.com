@@ -22,8 +22,14 @@ import {
   spanOf,
   turnsOf,
 } from "@repo/design-system/components/contents/biology/dna/strand";
+import { DEFAULT_CYCLE_HOLD } from "@repo/design-system/components/contents/simulation/clock";
+import type { CycleState } from "@repo/design-system/components/contents/simulation/cycle";
+import {
+  quantizeCycle,
+  stepCycle,
+} from "@repo/design-system/components/contents/simulation/cycle";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
-import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
+import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
@@ -32,12 +38,12 @@ import {
   threeSceneFrameVariants,
 } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
-import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
+  useVisualReset,
   useVisualScene,
   VisualCard,
   VisualCardBody,
@@ -48,10 +54,11 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { VisualSlider } from "@repo/design-system/components/visual/slider";
 import { CELL_COLORS } from "@repo/design-system/lib/material/cell";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
 /** A card narrower than this width-to-height ratio gets the farther camera. */
@@ -115,7 +122,12 @@ export function DnaHelixLab({
   );
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setShown("first");
+        setShare(copy ? 0.5 : 0);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
 
       {(variant !== undefined || copy) && (
@@ -139,20 +151,17 @@ export function DnaHelixLab({
             </ToggleGroup>
           )}
           {copy && (
-            <div className="flex min-w-48 flex-1 flex-col gap-2">
-              <div className="flex items-center justify-between gap-4 text-sm">
-                <span>{labels.copy}</span>
-                <span className="tabular-nums">{Math.round(share * 100)}%</span>
-              </div>
-              <Slider
-                aria-label={labels.copy}
-                max={1}
-                min={0}
-                onValueChange={setShare}
-                step={0.01}
-                value={share}
-              />
-            </div>
+            <VisualSlider
+              heading={labels.copy}
+              label={labels.copy ?? ""}
+              max={1}
+              min={0}
+              onValueChange={setShare}
+              pauseOnChange
+              readout={`${Math.round(share * 100)}%`}
+              step={0.01}
+              value={share}
+            />
           )}
         </VisualCardToolbar>
       )}
@@ -163,17 +172,15 @@ export function DnaHelixLab({
         render={<section />}
       >
         <ScienceStage reach={6} setting="studio">
-          <Suspense fallback={null}>
-            <HelixCamera />
-            <HelixScene
-              bases={bases}
-              changed={changed}
-              copy={copy}
-              nucleic={nucleic}
-              onShare={setShare}
-              share={copy ? share : 0}
-            />
-          </Suspense>
+          <HelixCamera />
+          <HelixScene
+            bases={bases}
+            changed={changed}
+            copy={copy}
+            nucleic={nucleic}
+            onShare={setShare}
+            share={copy ? share : 0}
+          />
         </ScienceStage>
       </VisualCardBody>
 
@@ -324,9 +331,11 @@ function HelixScene({
   readonly share: number;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
+  const invalidate = useThree((state) => state.invalidate);
   const spin = useRef<Group>(null);
-  const progress = useRef(share);
+  const cycle = useRef<CycleState>({ hold: 0, value: share });
   const sent = useRef(share);
+  const shownPlaying = useRef(false);
   const ladder = useMemo(
     () => ladderOf(bases.length, share),
     [bases.length, share]
@@ -336,24 +345,45 @@ function HelixScene({
 
   useEffect(() => {
     if (share !== sent.current) {
-      progress.current = share;
+      cycle.current = { hold: 0, value: share };
       sent.current = share;
+      invalidate();
     }
-  }, [share]);
+  }, [invalidate, share]);
+
+  useVisualReset(() => {
+    const start = copy ? 0.5 : 0;
+    cycle.current = { hold: 0, value: start };
+    sent.current = start;
+    if (spin.current) {
+      spin.current.rotation.x = 0;
+    }
+    invalidate();
+  });
 
   useFrame((_, delta) => {
     if (!playing) {
+      shownPlaying.current = false;
       return;
     }
-    const step = Math.min(delta, 0.1);
+    const step = simulationStep(delta);
     if (!copy) {
       if (spin.current) {
         spin.current.rotation.x += step * 0.5;
       }
       return;
     }
-    progress.current = (progress.current + step / COPY_SECONDS) % 1.1;
-    const shown = Math.min(1, Math.round(progress.current * 50) / 50);
+    if (!shownPlaying.current && cycle.current.value >= 1) {
+      cycle.current = { hold: 0, value: 0 };
+    }
+    shownPlaying.current = true;
+    cycle.current = stepCycle(cycle.current, {
+      deltaSeconds: step,
+      holdSeconds: DEFAULT_CYCLE_HOLD,
+      rate: 1 / COPY_SECONDS,
+      total: 1,
+    });
+    const shown = quantizeCycle(cycle.current.value, 1, 50);
     if (shown !== sent.current) {
       sent.current = shown;
       onShare(shown);
@@ -363,44 +393,41 @@ function HelixScene({
   const ink = useLabelInk();
 
   return (
-    <>
-      <SimulationTicker running={playing} />
-      <group position={[-middle, 0, 0]}>
-        <group ref={spin}>
+    <group position={[-middle, 0, 0]}>
+      <group ref={spin}>
+        <Backbone
+          color={CELL_COLORS.phosphate}
+          points={Arr.map(ladder, (rung) => rung.first)}
+        />
+        {!(single && share === 0) && (
           <Backbone
-            color={CELL_COLORS.phosphate}
-            points={Arr.map(ladder, (rung) => rung.first)}
+            color={single ? CELL_COLORS.phosphateNew : CELL_COLORS.phosphate}
+            points={Arr.map(ladder, (rung) => rung.second)}
           />
-          {!(single && share === 0) && (
-            <Backbone
-              color={single ? CELL_COLORS.phosphateNew : CELL_COLORS.phosphate}
-              points={Arr.map(ladder, (rung) => rung.second)}
-            />
-          )}
-          <NewStrands ladder={ladder} />
-          {Arr.map(ladder, (rung) => (
-            <BaseGlow key={rung.index} value={changed[rung.index] === true}>
-              <Pair
-                base={bases[rung.index] ?? "A"}
-                nucleic={nucleic}
-                rung={rung}
-                single={single}
-              />
-            </BaseGlow>
-          ))}
-        </group>
+        )}
+        <NewStrands ladder={ladder} />
         {Arr.map(ladder, (rung) => (
-          <ThreeLabel
-            color={ink}
-            fontSize="compact"
-            key={rung.index}
-            position={[rung.index * 0.34, rung.open ? 3.2 : 1.7, 0]}
-          >
-            {bases[rung.index]}
-          </ThreeLabel>
+          <BaseGlow key={rung.index} value={changed[rung.index] === true}>
+            <Pair
+              base={bases[rung.index] ?? "A"}
+              nucleic={nucleic}
+              rung={rung}
+              single={single}
+            />
+          </BaseGlow>
         ))}
       </group>
-    </>
+      {Arr.map(ladder, (rung) => (
+        <ThreeLabel
+          color={ink}
+          fontSize="compact"
+          key={rung.index}
+          position={[rung.index * 0.34, rung.open ? 3.2 : 1.7, 0]}
+        >
+          {bases[rung.index]}
+        </ThreeLabel>
+      ))}
+    </group>
   );
 }
 

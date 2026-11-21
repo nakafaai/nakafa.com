@@ -3,6 +3,7 @@ import {
   advanceProgress,
   bondStrengths,
   particlePosition,
+  REACTION_HOLD_SECONDS,
   REACTION_SECONDS,
 } from "@repo/design-system/components/contents/chemistry/equation/progress";
 
@@ -33,8 +34,19 @@ describe("reaction progress", () => {
     expect(bondStrengths(1)).toEqual({ products: 1, reactants: 0 });
   });
 
-  it("runs on while playing and starts over after the pause at the end", () => {
-    expect(advanceProgress(0.5, REACTION_SECONDS / 10)).toBeCloseTo(0.6, 9);
-    expect(advanceProgress(1.1, 1)).toBe(0);
+  it("runs on while playing, holds cleanly at 1 without overshooting, and restarts after the pause", () => {
+    const mid = advanceProgress({ hold: 0, value: 0.5 }, REACTION_SECONDS / 10);
+    expect(mid.value).toBeCloseTo(0.6, 9);
+    expect(mid.hold).toBe(0);
+
+    const end = advanceProgress({ hold: 0, value: 0.95 }, REACTION_SECONDS);
+    expect(end).toEqual({ hold: 0, value: 1 });
+
+    const holding = advanceProgress(end, REACTION_HOLD_SECONDS / 2);
+    expect(holding.value).toBe(1);
+    expect(holding.hold).toBeCloseTo(REACTION_HOLD_SECONDS / 2, 9);
+
+    const restarted = advanceProgress(holding, REACTION_HOLD_SECONDS);
+    expect(restarted).toEqual({ hold: 0, value: 0 });
   });
 });

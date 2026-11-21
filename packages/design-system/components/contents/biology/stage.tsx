@@ -11,7 +11,6 @@ import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import type { ReactNode } from "react";
-import { Suspense } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.3;
 
@@ -34,31 +33,33 @@ export function BiologyStage({
   view: NarrowCameraPose;
 }) {
   return (
-    <ScienceStage frameloop="always" setting="studio">
-      <Suspense>
-        <BiologyLabProvider colors={colors} store={store} view={view}>
-          <BiologyCamera />
-          {children}
-        </BiologyLabProvider>
-      </Suspense>
+    <ScienceStage setting="studio">
+      <BiologyLabProvider colors={colors} store={store} view={view}>
+        <BiologyCamera />
+        {children}
+      </BiologyLabProvider>
     </ScienceStage>
   );
 }
 
 /**
  * Frames the scene again for each item the reader picks, so every item opens
- * from the same camera position.
+ * from the same camera position without unmounting the camera or its controls.
  */
 function BiologyCamera() {
   const selectedIndex = useBiologyItemSelection((state) => state.selectedIndex);
 
-  return <ResponsiveBiologyCamera key={selectedIndex} />;
+  return <ResponsiveBiologyCamera selectedIndex={selectedIndex} />;
 }
 
 /**
  * Keeps the active biology scene framed on narrow and wide canvases.
  */
-function ResponsiveBiologyCamera() {
+function ResponsiveBiologyCamera({
+  selectedIndex,
+}: {
+  readonly selectedIndex: number;
+}) {
   const size = useThree((state) => state.size);
   const view = useBiologyView();
   const cameraPosition = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO)
@@ -70,6 +71,8 @@ function ResponsiveBiologyCamera() {
       cameraPosition={cameraPosition}
       cameraTarget={view.cameraTarget}
       fov={45}
+      orbitOnPlay
+      resetKey={selectedIndex}
     />
   );
 }

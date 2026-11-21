@@ -11,6 +11,10 @@ import {
   envelopeOutline,
   envelopeRadius,
 } from "@repo/design-system/components/contents/chemistry/cathode/envelope";
+import {
+  useInvalidateOnChange,
+  useSimulationClock,
+} from "@repo/design-system/components/contents/simulation/clock";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
@@ -19,7 +23,6 @@ import {
   VesselGlassMaterial,
 } from "@repo/design-system/components/three/physical";
 import { useStage } from "@repo/design-system/components/three/stage/context";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
@@ -65,7 +68,8 @@ const GRID_STEP = 0.4;
  * out completely, and electrons drift along it while the card plays.
  */
 export function CathodeTube({ plate }: { readonly plate: number }) {
-  const playing = useVisualScene((card) => card.playing, false);
+  const { advance } = useSimulationClock(0);
+  useInvalidateOnChange(plate);
   const end = TUBE.plates + TUBE.screen;
   const spot = new Color(BENCH_COLORS.phosphorGlow).multiplyScalar(2.6);
   const trace = new Color(BENCH_COLORS.residualGasGlow).multiplyScalar(1.6);
@@ -90,8 +94,8 @@ export function CathodeTube({ plate }: { readonly plate: number }) {
     [end]
   );
 
-  useFrame((state) => {
-    const seconds = playing ? state.clock.elapsedTime : 0;
+  useFrame((_, delta) => {
+    const seconds = advance(delta);
     for (const electron of electrons) {
       const x =
         CATHODE_X + ((electron.offset + seconds * DRIFT) % (end - CATHODE_X));

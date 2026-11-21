@@ -15,12 +15,14 @@ import {
   ReactionScenePointSchema,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
 import type { ReactionCharacteristicsLabProps } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/lab";
+import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   GlassMaterial,
   LiquidMaterial,
 } from "@repo/design-system/components/three/physical";
+import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { Array as Arr, Schema } from "effect";
 import { useRef } from "react";
 import type { Group } from "three";
@@ -352,13 +354,14 @@ function Precipitate({ color }: { color: string }) {
  */
 function ColorParticles({ color }: { color: string }) {
   const groupRef = useRef<Group>(null);
+  const playing = useVisualScene((card) => card.playing, true);
 
   useFrame((_, delta) => {
-    if (!groupRef.current) {
+    if (!(playing && groupRef.current)) {
       return;
     }
 
-    groupRef.current.rotation.y += delta * 0.35;
+    groupRef.current.rotation.y += simulationStep(delta) * 0.35;
   });
 
   return (

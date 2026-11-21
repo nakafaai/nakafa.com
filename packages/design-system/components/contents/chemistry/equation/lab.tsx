@@ -17,6 +17,7 @@ import {
 } from "@repo/design-system/components/contents/chemistry/equation/scene";
 import {
   ReactionProvider,
+  useReactionProgress,
   useReactionState,
 } from "@repo/design-system/components/contents/chemistry/equation/store";
 import { MathLines } from "@repo/design-system/components/contents/chemistry/lines";
@@ -26,13 +27,11 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
-import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
-  useVisual,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -42,9 +41,10 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { VisualSlider } from "@repo/design-system/components/visual/slider";
 import { Array as Arr, Option, Result, Schema } from "effect";
 import type { ReactNode } from "react";
-import { Suspense, useState } from "react";
+import { useState } from "react";
 import { useFormatter } from "use-intl";
 
 /** One reaction a lesson offers: its catalog id, toggle face, and spoken name. */
@@ -112,6 +112,7 @@ function ReactionCard({
   title,
 }: Parameters<typeof ReactionBalanceLab>[0]) {
   const format = useFormatter();
+  const progressStore = useReactionProgress();
   const offered = Arr.filter(reactions, (each) =>
     Schema.is(ReactionIdSchema)(each.id)
   );
@@ -136,11 +137,17 @@ function ReactionCard({
   function choose(value: string) {
     if (Schema.is(ReactionIdSchema)(value)) {
       setChosen(value);
+      progressStore.getState().setProgress(0);
     }
   }
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setChosen(undefined);
+        progressStore.getState().setProgress(0);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
@@ -164,10 +171,7 @@ function ReactionCard({
             ))}
           </ToggleGroup>
         ) : null}
-        <div className="flex w-full flex-col gap-3">
-          <span className="text-sm">{labels.progress}</span>
-          <ReactionSlider label={labels.progress} />
-        </div>
+        <ReactionSlider label={labels.progress} />
       </VisualCardToolbar>
 
       <VisualCardBody
@@ -180,15 +184,12 @@ function ReactionCard({
           reach={layout.span / 2 + 1}
           setting="studio"
         >
-          <Suspense>
-            <ReactionCamera layout={layout} />
-            <ReactionScene
-              key={shown}
-              layout={layout}
-              products={labels.products}
-              reactants={labels.reactants}
-            />
-          </Suspense>
+          <ReactionCamera layout={layout} />
+          <ReactionScene
+            layout={layout}
+            products={labels.products}
+            reactants={labels.reactants}
+          />
         </ScienceStage>
       </VisualCardBody>
 
@@ -235,24 +236,19 @@ function ReactionCard({
 function ReactionSlider({ label }: { readonly label: string }) {
   const progress = useReactionState((state) => state.progress);
   const setProgress = useReactionState((state) => state.setProgress);
-  const { playing, togglePlaying } = useVisual((state) => ({
-    playing: state.playing,
-    togglePlaying: state.togglePlaying,
-  }));
+  const clamped = Math.min(1, Math.max(0, progress));
 
   return (
-    <Slider
-      aria-label={label}
+    <VisualSlider
+      heading={label}
+      label={label}
       max={1}
       min={0}
-      onValueChange={(value: number) => {
-        if (playing) {
-          togglePlaying();
-        }
-        setProgress(value);
-      }}
+      onValueChange={setProgress}
+      pauseOnChange
+      readout={`${Math.round(clamped * 100)}%`}
       step={0.01}
-      value={Math.min(1, progress)}
+      value={clamped}
     />
   );
 }

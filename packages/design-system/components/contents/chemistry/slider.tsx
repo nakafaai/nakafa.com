@@ -1,5 +1,4 @@
-import { Slider } from "@repo/design-system/components/ui/slider";
-import { useVisual } from "@repo/design-system/components/visual/card";
+import { VisualSlider } from "@repo/design-system/components/visual/slider";
 
 /**
  * A slider that runs the scene by hand: taking it stops the card playing, so
@@ -18,22 +17,13 @@ export function HandSlider({
   readonly step: number;
   readonly value: number;
 }) {
-  const { playing, togglePlaying } = useVisual((state) => ({
-    playing: state.playing,
-    togglePlaying: state.togglePlaying,
-  }));
-
   return (
-    <Slider
-      aria-label={label}
+    <VisualSlider
+      label={label}
       max={max}
       min={0}
-      onValueChange={(next: number) => {
-        if (playing) {
-          togglePlaying();
-        }
-        onChange(next);
-      }}
+      onValueChange={onChange}
+      pauseOnChange
       step={step}
       value={value}
     />

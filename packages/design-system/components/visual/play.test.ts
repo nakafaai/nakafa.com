@@ -19,5 +19,9 @@ describe("visual card play", () => {
     store.getState().play();
     store.getState().play();
     expect(store.getState()).toMatchObject({ playing: true, view: 2 });
+
+    store.getState().pause();
+    store.getState().pause();
+    expect(store.getState()).toMatchObject({ playing: false, view: 2 });
   });
 });

@@ -14,6 +14,10 @@ import {
   SectorMagnet,
 } from "@repo/design-system/components/contents/chemistry/spectrometer/magnet";
 import { spreadLabels } from "@repo/design-system/components/contents/chemistry/spectrometer/placement";
+import {
+  useInvalidateOnChange,
+  useSimulationClock,
+} from "@repo/design-system/components/contents/simulation/clock";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
@@ -26,7 +30,6 @@ import {
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
-  useVisualScene,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -40,7 +43,7 @@ import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
 import type { ReactNode } from "react";
-import { createRef, Suspense, useMemo, useState } from "react";
+import { createRef, useMemo, useState } from "react";
 import type { Mesh } from "three";
 import { Color, DoubleSide } from "three";
 import { useFormatter } from "use-intl";
@@ -140,7 +143,7 @@ export function MassSpectrometerLab({
   const last = Option.getOrUndefined(Arr.last(isotopes));
 
   return (
-    <VisualCard>
+    <VisualCard onReset={() => setChosen(undefined)}>
       <VisualCardHeader description={description} title={title} />
 
       {offered.length > 1 ? (
@@ -176,15 +179,12 @@ export function MassSpectrometerLab({
         render={<section />}
       >
         <ScienceStage floor={-0.02} reach={8} setting="lab">
-          <Suspense>
-            <SpectrometerCamera />
-            <Spectrometer
-              key={shown}
-              north={labels.north}
-              sampleId={shown}
-              south={labels.south}
-            />
-          </Suspense>
+          <SpectrometerCamera />
+          <Spectrometer
+            north={labels.north}
+            sampleId={shown}
+            south={labels.south}
+          />
         </ScienceStage>
       </VisualCardBody>
 
@@ -260,7 +260,8 @@ function Spectrometer({
   readonly south: string;
 }) {
   const sample = getSample(sampleId);
-  const playing = useVisualScene((card) => card.playing, false);
+  const { advance } = useSimulationClock(FLIGHT * 0.5);
+  useInvalidateOnChange(sampleId);
   const beams = useMemo(
     () =>
       Arr.map(sample.isotopes, (isotope, index) => {
@@ -304,8 +305,8 @@ function Spectrometer({
     -rim * Math.sin(POLE_ANGLE),
   ] as const;
 
-  useFrame((state) => {
-    const time = playing ? state.clock.elapsedTime / FLIGHT : 0.5;
+  useFrame((_, delta) => {
+    const time = advance(delta) / FLIGHT;
     for (const beam of beams) {
       for (const ion of beam.ions) {
         const share = (time + ion.offset) % 1;

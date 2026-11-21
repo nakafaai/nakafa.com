@@ -1,21 +1,21 @@
 import { addAfterEffect, addEffect, useThree } from "@react-three/fiber";
+import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { createFramePace } from "@repo/design-system/lib/pace";
 import { useEffect } from "react";
 
 /**
- * Drives a simulation on a canvas that renders on demand. While `running`,
- * it asks for the next frame only once the last one has rested its share:
- * the pace measures what each frame cost, from the start of the frame loop
- * to the end of its render, and rests seven times as long (ADR 0039, D5).
- * A fast laptop still draws every display frame; a slow phone draws a few a
- * second and keeps the thread free for the reader. While stopped, the canvas
- * draws only when the camera moves.
+ * Drives a local simulation transition on a canvas that renders on demand,
+ * such as a stain soak or slider easing while the card itself is paused. While
+ * the card is playing, `ThreeCanvas` already drives paced frames at
+ * `createFramePace()`, so this stays quiet to avoid duplicate rAF loops.
  */
 export function SimulationTicker({ running }: { readonly running: boolean }) {
   const invalidate = useThree((state) => state.invalidate);
+  const cardPlaying = useVisualScene((state) => state.playing, false);
+  const active = running && !cardPlaying;
 
   useEffect(() => {
-    if (!running) {
+    if (!active) {
       return;
     }
     const pace = createFramePace();
@@ -48,7 +48,7 @@ export function SimulationTicker({ running }: { readonly running: boolean }) {
       removeEnd();
       cancelAnimationFrame(frame);
     };
-  }, [running, invalidate]);
+  }, [active, invalidate]);
 
   return null;
 }

@@ -28,16 +28,23 @@ import type {
   VisualStore,
 } from "@repo/design-system/components/visual/store";
 import { createVisualStore } from "@repo/design-system/components/visual/store";
+import {
+  visualBandVariants,
+  visualBodyVariants,
+  visualCardVariants,
+} from "@repo/design-system/components/visual/variants";
 import { useRequired } from "@repo/design-system/hooks/required";
 import type { RenderableProps } from "@repo/design-system/lib/render";
 import { renderElement } from "@ui-sdk/react/primitive";
-import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type { ComponentProps, ReactNode } from "react";
 import {
   createContext,
   use,
+  useEffect,
+  useEffectEvent,
   useLayoutEffect,
+  useRef,
   useState,
   useSyncExternalStore,
 } from "react";
@@ -65,6 +72,20 @@ function useStartVisualScene() {
   return () => store?.getState().play();
 }
 
+/**
+ * Stops the card's scene playing, such as when a learner drags a time slider.
+ * A scene outside a card has nothing to pause.
+ */
+function usePauseVisualScene() {
+  const store = use(VisualContext);
+  return () => store?.getState().pause();
+}
+
+/** Tells whether a scene renders inside a `VisualCard` store. */
+function useHasVisualCard() {
+  return use(VisualContext) !== null;
+}
+
 /** A scene outside a card has no store to follow. */
 const followNothing = () => () => undefined;
 
@@ -86,78 +107,22 @@ function useVisualScene<T extends boolean | number>(
 }
 
 /**
- * Off-screen cards skip rendering, and both full screen presentations fill
- * the screen. The browser's top layer places and sizes a Fullscreen API
- * element. The immersive card covers the dynamic viewport itself: in the top
- * layer where the browser has popovers, and above the page's own sticky bars
- * where it does not. Presentation classes come last, so a card's own classes
- * never undo them.
- *
- * The card is never a scroll anchor. WebKit can anchor the page to content
- * inside the card while it sits in the page, and keeps following that anchor
- * once the card fills the screen, so the page behind scrolls whenever a chart
- * or scene in the card resizes.
+ * Runs `onReset` whenever the surrounding card's reset action increments the
+ * view count, so controls, sliders and clocks restore their defaults together.
  */
-const visualCardVariants = cva(
-  "group/visual content-auto-card @container/visual [overflow-anchor:none]",
-  {
-    compoundVariants: [
-      // The screen-filling surface that both full screen presentations share.
-      // The card's own margins stay with its slot in the page, and its bands
-      // keep their spacing inside the safe area.
-      {
-        className:
-          "m-0 overflow-y-auto overscroll-contain rounded-none pt-[env(safe-area-inset-top,0px)] pr-[env(safe-area-inset-right,0px)] pb-[env(safe-area-inset-bottom,0px)] pl-[env(safe-area-inset-left,0px)] shadow-none ring-0",
-        presentation: ["fullscreen", "immersive"],
-      },
-    ],
-    variants: {
-      presentation: {
-        fullscreen: "",
-        immersive: "fixed inset-0 z-60 h-dvh w-auto border-0",
-        inline: "",
-      },
-    },
-  }
-);
+function useVisualReset(onReset: () => void) {
+  const view = useVisualScene((state) => state.view, 0);
+  const shown = useRef(view);
+  const reset = useEffectEvent(onReset);
 
-/**
- * The bands of a visual card, top to bottom: the header, an optional toolbar,
- * the body that holds only the visual, optional actions, and the footer with
- * what the visual shows. A line divides each band from the one above it, and
- * every band keeps the card's inset, so every visual reads the same way.
- */
-const visualBandVariants = cva(
-  "border-t px-(--card-spacing) group-data-fullscreen/visual:shrink-0 first:border-t-0",
-  {
-    variants: {
-      kind: {
-        // Rows of controls or buttons: as tall as a button and its breath.
-        controls: "flex flex-wrap items-center gap-2 py-3",
-        // The visual's own controls: a choice made of joined buttons spans the
-        // band, its options sharing the width, as the grid-column groups do.
-        toolbar:
-          "flex flex-wrap items-center gap-2 py-3 [&>[data-slot=button-group]]:w-full [&>[data-slot=button-group]>*]:flex-1 [&>[data-slot=toggle-group]]:w-full [&>[data-slot=toggle-group]:not([data-grid-columns]):not([data-orientation=vertical])>*]:flex-1",
-        // Text: the card's own spacing above and below.
-        text: "flex flex-col gap-3 py-(--card-spacing) text-sm",
-      },
-    },
-  }
-);
-
-/**
- * The body holds the visual alone, edge to edge. In full screen the body of the
- * card takes the free height and drops its aspect ratio, and size containment
- * keeps a chart's own aspect ratio from claiming more than the screen has. The
- * body is then a column, so a chart or a scene that grows into the free space
- * fills it, or keeps its minimum while the card scrolls. A body laid out as a
- * grid says so for full screen too (`[[data-fullscreen]>&]:grid`). A body inside
- * another body, such as a scene loaded into its frame, fills that body and adds
- * no line.
- */
-const visualBodyVariants = cva(
-  "relative border-t first:border-t-0 [[data-fullscreen]>&]:flex [[data-fullscreen]>&]:aspect-auto [[data-fullscreen]>&]:min-h-64 [[data-fullscreen]>&]:flex-1 [[data-fullscreen]>&]:flex-col [[data-fullscreen]>&]:contain-size [[data-slot=visual-card-body]>&]:size-full [[data-slot=visual-card-body]>&]:border-t-0"
-);
+  useEffect(() => {
+    if (shown.current === view) {
+      return;
+    }
+    shown.current = view;
+    reset();
+  }, [view]);
+}
 
 /**
  * A card for one interactive visual: a 3D scene, a chart, a diagram or a
@@ -179,24 +144,41 @@ const visualBodyVariants = cva(
 function VisualCard({
   children,
   className,
+  onReset,
   ref,
   ...props
-}: ComponentProps<typeof Card>) {
+}: ComponentProps<typeof Card> & {
+  /** Called whenever the card's reset action restores its initial view. */
+  readonly onReset?: () => void;
+}) {
   const [store] = useState(createVisualStore);
   const note = use(VisualNoteContext);
-  const { bind, place, presentation } = useStore(
+  const { bind, place, presentation, view } = useStore(
     store,
     useShallow((state) => ({
       bind: state.bind,
       place: state.place,
       presentation: state.presentation,
+      view: state.view,
     }))
   );
+  const shownView = useRef(view);
+  const resetCard = useEffectEvent(() => {
+    onReset?.();
+  });
   const cardRef = useMergedRef(ref, bind);
 
   // Activity hides a route and unmounting removes the card; both return it
   // to the page, so the page behind never stays inert.
   useLayoutEffect(() => () => store.getState().exit(), [store]);
+
+  useEffect(() => {
+    if (shownView.current === view) {
+      return;
+    }
+    shownView.current = view;
+    resetCard();
+  }, [view]);
 
   return (
     <VisualContext value={store}>
@@ -447,8 +429,11 @@ function VisualCardMenu({ children }: { children: ReactNode }) {
 }
 
 export {
+  useHasVisualCard,
+  usePauseVisualScene,
   useStartVisualScene,
   useVisual,
+  useVisualReset,
   useVisualScene,
   VisualCard,
   VisualCardActions,
