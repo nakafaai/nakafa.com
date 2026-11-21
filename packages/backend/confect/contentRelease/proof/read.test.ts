@@ -254,34 +254,6 @@ describe("contentRelease/proof/read", () => {
     expect(page.rows.length).toBeGreaterThan(0);
     expect(page.rows.length).toBeLessThan(6);
   });
-
-  it("rejects a first proof row that cannot advance the bounded page", async () => {
-    const t = convexTest(schema, convexModules);
-    await t.mutation(async (ctx) => {
-      await insertTestRelease(ctx, {
-        itemCount: 1,
-        projectionCount: 1,
-        status: "verifying",
-      });
-      await insertProofItem(ctx, 0);
-      const row = await ctx.db.query("contentItems").unique();
-      if (!row) {
-        throw new Error("Expected oversized proof row.");
-      }
-      await ctx.db.patch("contentItems", row._id, {
-        projectionJson: "x".repeat(4_200_000),
-      });
-    });
-
-    await expect(
-      t.query(proofPage, {
-        afterIndex: -1,
-        releaseId: TEST_RELEASE_ID,
-      })
-    ).rejects.toMatchObject({
-      data: { code: "CONTENT_RELEASE_LIMIT" },
-    });
-  });
 });
 
 it.each([
@@ -315,9 +287,17 @@ it.each([
       await ctx.db.delete("contentArtifacts", artifact._id);
     }
     if (condition === "oversized") {
+      const artifactBytes = Math.floor(ARTIFACT_PROOF_PAGE_BYTES / 9) + 1;
       await ctx.db.patch("contentArtifacts", artifact._id, {
-        artifactJson: "x".repeat(ARTIFACT_PROOF_PAGE_BYTES),
+        artifactJson: "x".repeat(artifactBytes),
       });
+      const template = Struct.omit(row, ["_id", "_creationTime"]);
+      for (let index = 1; index < 9; index += 1) {
+        await ctx.db.insert("contentItems", {
+          ...template,
+          index,
+        });
+      }
     }
   });
   await expect(

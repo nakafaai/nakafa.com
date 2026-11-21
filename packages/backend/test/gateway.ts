@@ -1,5 +1,7 @@
-import type { GatewayConfigurationError } from "@repo/backend/confect/gateway/failure";
-import { GatewayFailure } from "@repo/backend/confect/gateway/failure";
+import {
+  GatewayConfigurationError,
+  GatewayFailure,
+} from "@repo/backend/confect/gateway/failure";
 import { Gateway, make } from "@repo/backend/confect/gateway/handle";
 import { embeddingDimensions } from "@repo/backend/confect/gateway/model";
 import { Meter } from "@repo/backend/confect/spend/meter";
@@ -88,6 +90,20 @@ export const GatewayTest = Layer.effect(
  */
 export const GatewayIsolated = GatewayTest.pipe(
   Layer.provide(recordingMeter().layer)
+);
+
+/**
+ * The gateway of a deployment that has none, for a suite whose background work
+ * must reach no model. convex-test hands every action a service token for a
+ * reserved test URL, so the live adapter would build and try that URL instead.
+ */
+export const GatewayUnconfigured = Layer.effect(
+  Gateway,
+  Effect.fail(
+    new GatewayConfigurationError({
+      message: "The AI gateway is not available in this suite.",
+    })
+  )
 );
 
 /** What a decision model receives for one request. */
