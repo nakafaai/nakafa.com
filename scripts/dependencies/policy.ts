@@ -53,7 +53,7 @@ export const VITEST_COHORT_VERSION = "5.1.1";
  */
 export const AI_SDK_COHORT = {
   "@convex-dev/ai-sdk-provider": "0.3.0",
-  ai: "7.0.177",
+  ai: "7.0.179",
 } as const;
 /**
  * Alchemy's packages move as one exact cohort. Alchemy 2 is a beta whose releases
