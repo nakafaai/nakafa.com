@@ -1,5 +1,4 @@
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
-import { StagedPopup } from "@repo/design-system/components/ui/staged";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PopupContainer } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
@@ -12,16 +11,20 @@ import {
   Drawer as DrawerPrimitive,
   DrawerTitle as DrawerTitlePrimitive,
 } from "@ui-sdk/react/drawer";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 import { use } from "react";
 import { useTranslations } from "use-intl";
 
 /**
- * A sheet that rises from an edge of the screen in the floating style of an iPhone sheet: a card that stands off every
- * edge, rounded on every corner, with its handle at the edge it leaves by. It closes as that sheet does, by its
- * handle, a swipe or a press outside, so every drawer draws the handle and none draws a close button. It follows the
- * finger with the platform's spring, and the page behind it scales back as it opens (`DrawerStage`).
+ * A sheet that rises from an edge of the screen, the one surface every drawer wears: as wide as the screen from the
+ * bottom, rounded on its top corners, or as tall as the screen from a side, rounded on its inner corners, with its
+ * handle at the edge it leaves by. It matches the sheet a menu or a select becomes on a phone (`sheetSurface`), so a
+ * phone shows one kind of sheet. It closes as an iPhone sheet does, by its handle, a swipe or a press outside, so every
+ * drawer draws the handle and none draws a close button. It follows the finger with the platform's spring, over a page
+ * that stays where it is.
  */
 function Drawer({
   side = "bottom",
@@ -33,8 +36,11 @@ function Drawer({
 }
 
 /**
- * The dim over the page while a drawer is open. It draws no backdrop blur: the page under it scales back as the
- * drawer opens (`DrawerStage`), and a blur over a page that moves is computed again every frame.
+ * The drawer's surface, over a dim on the page. Its colour is `--drawer-surface`, which a drawer of another colour,
+ * such as the sidebar's, sets in place of a background. A drag past the resting edge stretches the drawer on by up to
+ * 24px (UI SDK's rubber band), so a fill of the surface's colour stands past that edge, drawn as a hard shadow, which
+ * the surface's own clip leaves alone. The surface clears the home indicator and the notch by their safe areas; a
+ * footer that ends the drawer (`DrawerFooter`) takes the bottom one onto its tinted band instead.
  */
 function DrawerContent({
   children,
@@ -48,13 +54,11 @@ function DrawerContent({
       <DrawerBackdrop className="bg-ink/30 fixed inset-0 z-50" />
       <DrawerContentPrimitive
         className={cn(
-          "group/drawer bg-popover text-popover-foreground dark:border-border border-popover z-50 m-2 mb-[max(--spacing(2),env(safe-area-inset-bottom))] flex min-h-0 flex-col overflow-hidden rounded-3xl border text-sm shadow-xl outline-none",
-          "data-[side=bottom]:max-h-[calc(100dvh-6rem)] data-[side=top]:max-h-[calc(100dvh-6rem)]",
-          "data-[side=left]:w-3/4 data-[side=left]:flex-row-reverse data-[side=right]:w-3/4 data-[side=right]:flex-row sm:data-[side=left]:w-96 sm:data-[side=right]:w-96",
+          "group/drawer text-popover-foreground border-border z-50 flex min-h-0 flex-col overflow-hidden bg-(--drawer-surface) pb-[env(safe-area-inset-bottom)] text-sm outline-none [--drawer-surface:var(--color-popover)] has-[[data-slot=drawer-footer]]:pb-0",
+          "data-[side=bottom]:max-h-[calc(var(--visual-viewport-height,100dvh)-3rem)] data-[side=bottom]:rounded-t-3xl data-[side=bottom]:border-t data-[side=bottom]:shadow-[0_2rem_0_var(--drawer-surface)]",
+          "data-[side=top]:max-h-[calc(var(--visual-viewport-height,100dvh)-3rem)] data-[side=top]:rounded-b-3xl data-[side=top]:border-b data-[side=top]:pt-[env(safe-area-inset-top)] data-[side=top]:shadow-[0_-2rem_0_var(--drawer-surface)]",
+          "data-[side=left]:w-3/4 data-[side=left]:flex-row-reverse data-[side=left]:rounded-e-3xl data-[side=left]:border-e data-[side=left]:ps-[env(safe-area-inset-left)] data-[side=left]:pt-[env(safe-area-inset-top)] data-[side=left]:shadow-[-2rem_0_0_var(--drawer-surface)] data-[side=right]:w-3/4 data-[side=right]:flex-row data-[side=right]:rounded-s-3xl data-[side=right]:border-s data-[side=right]:pe-[env(safe-area-inset-right)] data-[side=right]:pt-[env(safe-area-inset-top)] data-[side=right]:shadow-[2rem_0_0_var(--drawer-surface)] sm:data-[side=left]:w-96 sm:data-[side=right]:w-96",
           className
-        )}
-        render={(contentProps, state) => (
-          <StagedPopup {...contentProps} open={state.open} />
         )}
         {...props}
       >
@@ -117,17 +121,32 @@ function DrawerPanel({
 }
 
 /**
- * The actions, stacked on the tinted, ruled band a dialog's footer stands on. A caller writes the way out first
- * and the main action last, as a dialog's row reads, so the column turns them over and the main action stands on
- * top, as in shadcn's own.
+ * The actions, on the tinted, ruled band a dialog's footer stands on, which runs on under the home indicator and clears
+ * it by its safe area. Stacked, each action is as wide as the drawer: a caller writes the way out first and the main
+ * action last, as a dialog's row reads, so the column turns them over and the main action stands on top, as in
+ * shadcn's own. In a row, the actions keep their own widths and stand at the end, as a pane's footer holds them.
  */
-function DrawerFooter({ className, ...props }: ComponentProps<"div">) {
+const drawerFooterVariants = cva(
+  "bg-muted/70 mt-auto flex shrink-0 gap-2 border-t p-4 pb-[max(--spacing(4),env(safe-area-inset-bottom))]",
+  {
+    defaultVariants: { layout: "stack" },
+    variants: {
+      layout: {
+        row: "items-center justify-end",
+        stack: "flex-col-reverse [&>[data-slot=button]]:w-full",
+      },
+    },
+  }
+);
+
+function DrawerFooter({
+  className,
+  layout,
+  ...props
+}: ComponentProps<"div"> & VariantProps<typeof drawerFooterVariants>) {
   return (
     <div
-      className={cn(
-        "bg-muted/70 mt-auto flex shrink-0 flex-col-reverse gap-2 border-t p-4 [&>[data-slot=button]]:w-full",
-        className
-      )}
+      className={cn(drawerFooterVariants({ layout }), className)}
       data-slot="drawer-footer"
       {...props}
     />

@@ -119,11 +119,7 @@ function layoutTop(element: HTMLElement): number {
 
 /**
  * Scrolls the page so that the heading a link names stands at the line its
- * scroll margin sets. The heading is measured in the page's layout, not by its
- * box on screen as `scrollIntoView` measures it: on a phone the page behind the
- * outline sheet is scaled down (`DrawerStage`) and still scaling back as the
- * jump lands, so a box on screen left the heading tens of pixels off its line
- * once the page stood at full size.
+ * scroll margin sets.
  */
 function revealHeading(link: HTMLAnchorElement) {
   const heading = elementById(decodeURIComponent(link.hash.slice(1)));

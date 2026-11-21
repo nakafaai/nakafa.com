@@ -2,6 +2,7 @@ import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DrawerDescription,
+  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from "@repo/design-system/components/ui/drawer";
@@ -178,9 +179,16 @@ export function PaneFill({
 
 /**
  * A detail's footer: one row as tall as the pane's header (`h-16`), its actions at the end, never wrapping onto
- * a second row and never holding prose, so its border meets a page's footer flush at every width.
+ * a second row and never holding prose, so its border meets a page's footer flush at every width. In the phone's
+ * sheet it is the drawer's footer, laid out as a row, so its band runs on under the home indicator as every
+ * drawer's footer does.
  */
 export function PaneFooter({ children }: { children: ReactNode }) {
+  const { place } = use(PaneModeContext);
+
+  if (place === "sheet") {
+    return <DrawerFooter layout="row">{children}</DrawerFooter>;
+  }
   return (
     <footer className="bg-muted/70 flex h-16 shrink-0 items-center justify-end gap-2 border-t px-(--pane-end,1rem)">
       {children}

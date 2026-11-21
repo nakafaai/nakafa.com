@@ -106,7 +106,7 @@ function DatePicker({
       value={value === "" ? null : value}
     >
       <DatePickerInput
-        className="placeholder:text-muted-foreground h-full min-w-0 flex-1 bg-transparent ps-3 text-base outline-none md:text-sm"
+        className="placeholder:text-muted-foreground h-full min-w-0 flex-1 bg-transparent ps-3 text-base outline-none md:pointer-fine:text-sm"
         placeholder={placeholder}
         {...props}
       />

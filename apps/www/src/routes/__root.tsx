@@ -1,5 +1,5 @@
 import { PageScrollbar } from "@repo/design-system/components/ui/scrollbar";
-import { DrawerStage } from "@repo/design-system/components/ui/stage";
+import { AppStage } from "@repo/design-system/components/ui/stage";
 import alloLatin from "@repo/design-system/fonts/allo/latin.woff2?url";
 import { UI_SDK_HEAD_SCRIPT, UI_SDK_STYLES } from "@repo/design-system/lib/sdk";
 import { ThemeProvider } from "@repo/design-system/providers/theme";
@@ -211,9 +211,9 @@ function RootDocument({ children }: { children: ReactNode }) {
         <ThemeProvider>
           <Announcer />
           <AgentBridge />
-          <DrawerStage>
+          <AppStage>
             <ContentPageAnchorProvider>{children}</ContentPageAnchorProvider>
-          </DrawerStage>
+          </AppStage>
           <PageScrollbar />
         </ThemeProvider>
         <script

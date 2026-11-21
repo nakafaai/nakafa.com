@@ -12,9 +12,24 @@ const PHONE = { height: 844, width: 390 };
 /** A wide screen, where the same dialog opens in the middle. */
 const DESKTOP = { height: 900, width: 1440 };
 
-/** The scale of the page behind the sheet, as its computed style reads it. */
-function stageScale(stage: Locator) {
-  return stage.evaluate((element) => getComputedStyle(element).scale);
+/**
+ * The box of the page behind the sheet, as the screen draws it: a page that scaled or slid back behind the sheet
+ * would draw it narrower than the screen.
+ */
+function stageWidth(stage: Locator) {
+  return stage.evaluate((element) => element.getBoundingClientRect().width);
+}
+
+/** Where the sheet's edges stand on the screen, which a sheet as wide as the screen and resting on its bottom fills. */
+function sheetEdges(sheet: Locator) {
+  return sheet.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return {
+      bottom: Math.round(box.bottom),
+      left: Math.round(box.left),
+      right: Math.round(box.right),
+    };
+  });
 }
 
 /**
@@ -42,7 +57,7 @@ async function settled(sheet: Locator) {
   await waitForStill(sheet);
 }
 
-test("a dialog opens as a sheet on a phone, scales the page back, keeps the focus, and closes on Escape and on a swipe down", async ({
+test("a dialog opens as a sheet on a phone, edge to edge over a page that stays still, keeps the focus, and closes on Escape and on a swipe down", async ({
   baseURL,
   browser,
 }) => {
@@ -60,7 +75,7 @@ test("a dialog opens as a sheet on a phone, scales the page back, keeps the focu
   await page.goto(hostAddress(baseURL, host, "/exams"));
   const create = page.getByRole("button", { name: "Create exam" });
   await waitUntilTakenOver(create);
-  const stage = page.locator('[data-slot="drawer-stage"]');
+  const stage = page.locator('[data-slot="app-stage"]');
   const sheet = page.locator(
     '[data-slot="dialog-content"][data-presentation="sheet"]'
   );
@@ -68,12 +83,19 @@ test("a dialog opens as a sheet on a phone, scales the page back, keeps the focu
     '[data-slot="dialog-content"][data-presentation="dialog"]'
   );
 
-  // The dialog opens from the bottom as a sheet, the page behind it scales back, and the page is locked.
+  // The dialog opens from the bottom as a sheet as wide as the screen, the page behind it stays as it is, and the page
+  // is locked.
   await create.click();
   await expect(sheet).toBeVisible();
   await expect(centered).toHaveCount(0);
   await expect.poll(() => scrollLocked(page)).toBe(true);
-  await expect.poll(() => stageScale(stage)).toBe("0.94");
+  await settled(sheet);
+  expect(await sheetEdges(sheet)).toEqual({
+    bottom: PHONE.height,
+    left: 0,
+    right: PHONE.width,
+  });
+  expect(await stageWidth(stage)).toBe(PHONE.width);
 
   // The focus stays in the sheet however far the writer tabs, forward and back. Past the last control, or
   // before the first, a press lands on the trap's guard, which hands the focus to the control at the other end
@@ -89,13 +111,12 @@ test("a dialog opens as a sheet on a phone, scales the page back, keeps the focu
     }
   }
 
-  // Escape closes it, and the page takes its size back and scrolls again.
+  // Escape closes it, and the page scrolls again.
   await page.keyboard.press("Escape");
   await expect(sheet).toHaveCount(0);
   await expect.poll(() => scrollLocked(page)).toBe(false);
-  await expect.poll(() => stageScale(stage)).toBe("none");
 
-  // A swipe down closes it, and the page takes its size back and scrolls again. A touch screen moves the sheet by
+  // A swipe down closes it, and the page scrolls again. A touch screen moves the sheet by
   // scrolling its host (UI SDK's scroll-snap driver).
   await create.click();
   await expect(sheet).toBeVisible();
@@ -103,13 +124,11 @@ test("a dialog opens as a sheet on a phone, scales the page back, keeps the focu
   await swipeAway(sheet);
   await expect(sheet).toHaveCount(0);
   await expect.poll(() => scrollLocked(page)).toBe(false);
-  await expect.poll(() => stageScale(stage)).toBe("none");
 
-  // On a wide screen the same dialog opens in the middle, and the page keeps its size.
+  // On a wide screen the same dialog opens in the middle.
   await page.setViewportSize(DESKTOP);
   await create.click();
   await expect(centered).toBeVisible();
   await expect(sheet).toHaveCount(0);
-  expect(await stageScale(stage)).toBe("none");
   await context.close();
 });

@@ -4746,11 +4746,7 @@ export declare const api: {
           "query",
           "public",
           {},
-          {
-            assessment: string | null;
-            program: string | null;
-            quran: string | null;
-          }
+          { assessment: string | null; program: string | null }
         >;
         frame: FunctionReference<
           "query",
@@ -5275,6 +5271,18 @@ export declare const api: {
                   kind: "extendedText";
                   label: string;
                 }
+              | {
+                  frame: {
+                    kind: "cartesian";
+                    x: { max: number; min: number };
+                    y: { max: number; min: number };
+                  };
+                  grid?: number;
+                  id: string;
+                  kind: "sketch";
+                  label: string;
+                  marks: Array<"asymptote" | "point">;
+                }
             >;
             explanation: Id<"editorDocuments">;
             id: Id<"examQuestions">;
@@ -5336,10 +5344,75 @@ export declare const api: {
               | {
                   criteria: Array<{
                     criterion: string;
+                    feedback?: { earned: string; missed: string };
                     levels: Array<{ descriptor: string; level: string }>;
                   }>;
                   interaction: string;
                   kind: "extendedText";
+                }
+              | {
+                  criteria: Array<{
+                    check: {
+                      feature:
+                        | {
+                            contact: "cross" | "touch";
+                            kind: "zero";
+                            x: string;
+                          }
+                        | { kind: "yIntercept"; y: string }
+                        | {
+                            kind: "extremum";
+                            turn: "maximum" | "minimum";
+                            x: string;
+                            y: string;
+                          }
+                        | {
+                            kind: "asymptote";
+                            line:
+                              | { kind: "vertical"; x: string }
+                              | {
+                                  intercept: string;
+                                  kind: "sloped";
+                                  slope: string;
+                                };
+                          }
+                        | {
+                            direction: "falling" | "rising";
+                            from: string | null;
+                            kind: "interval";
+                            to: string | null;
+                          }
+                        | {
+                            kind: "end";
+                            limit:
+                              "negativeInfinity" | "positiveInfinity" | string;
+                            side: "left" | "right";
+                          }
+                        | { kind: "inflection"; x: string; y: string }
+                        | {
+                            end?: "closed" | "open";
+                            kind: "point";
+                            x: string;
+                            y: string;
+                          };
+                      kind: "feature";
+                    };
+                    criterion: string;
+                    feedback: { earned: string; missed: string };
+                    requires?: Array<string>;
+                  }>;
+                  interaction: string;
+                  kind: "sketch";
+                  tolerances: {
+                    asymptote?: string;
+                    end?: string;
+                    extremum?: string;
+                    inflection?: string;
+                    interval?: string;
+                    point?: string;
+                    yIntercept?: string;
+                    zero?: string;
+                  };
                 }
             > | null;
             media: Array<
@@ -5575,6 +5648,18 @@ export declare const api: {
                   kind: "extendedText";
                   label: string;
                 }
+              | {
+                  frame: {
+                    kind: "cartesian";
+                    x: { max: number; min: number };
+                    y: { max: number; min: number };
+                  };
+                  grid?: number;
+                  id: string;
+                  kind: "sketch";
+                  label: string;
+                  marks: Array<"asymptote" | "point">;
+                }
             >;
             explanation: Id<"editorDocuments">;
             id: Id<"examQuestions">;
@@ -5636,10 +5721,75 @@ export declare const api: {
               | {
                   criteria: Array<{
                     criterion: string;
+                    feedback?: { earned: string; missed: string };
                     levels: Array<{ descriptor: string; level: string }>;
                   }>;
                   interaction: string;
                   kind: "extendedText";
+                }
+              | {
+                  criteria: Array<{
+                    check: {
+                      feature:
+                        | {
+                            contact: "cross" | "touch";
+                            kind: "zero";
+                            x: string;
+                          }
+                        | { kind: "yIntercept"; y: string }
+                        | {
+                            kind: "extremum";
+                            turn: "maximum" | "minimum";
+                            x: string;
+                            y: string;
+                          }
+                        | {
+                            kind: "asymptote";
+                            line:
+                              | { kind: "vertical"; x: string }
+                              | {
+                                  intercept: string;
+                                  kind: "sloped";
+                                  slope: string;
+                                };
+                          }
+                        | {
+                            direction: "falling" | "rising";
+                            from: string | null;
+                            kind: "interval";
+                            to: string | null;
+                          }
+                        | {
+                            kind: "end";
+                            limit:
+                              "negativeInfinity" | "positiveInfinity" | string;
+                            side: "left" | "right";
+                          }
+                        | { kind: "inflection"; x: string; y: string }
+                        | {
+                            end?: "closed" | "open";
+                            kind: "point";
+                            x: string;
+                            y: string;
+                          };
+                      kind: "feature";
+                    };
+                    criterion: string;
+                    feedback: { earned: string; missed: string };
+                    requires?: Array<string>;
+                  }>;
+                  interaction: string;
+                  kind: "sketch";
+                  tolerances: {
+                    asymptote?: string;
+                    end?: string;
+                    extremum?: string;
+                    inflection?: string;
+                    interval?: string;
+                    point?: string;
+                    yIntercept?: string;
+                    zero?: string;
+                  };
                 }
             > | null;
             media: Array<
@@ -5905,6 +6055,18 @@ export declare const api: {
                   kind: "extendedText";
                   label: string;
                 }
+              | {
+                  frame: {
+                    kind: "cartesian";
+                    x: { max: number; min: number };
+                    y: { max: number; min: number };
+                  };
+                  grid?: number;
+                  id: string;
+                  kind: "sketch";
+                  label: string;
+                  marks: Array<"asymptote" | "point">;
+                }
             >;
             explanation: Id<"editorDocuments">;
             id: Id<"examQuestions">;
@@ -5966,10 +6128,75 @@ export declare const api: {
               | {
                   criteria: Array<{
                     criterion: string;
+                    feedback?: { earned: string; missed: string };
                     levels: Array<{ descriptor: string; level: string }>;
                   }>;
                   interaction: string;
                   kind: "extendedText";
+                }
+              | {
+                  criteria: Array<{
+                    check: {
+                      feature:
+                        | {
+                            contact: "cross" | "touch";
+                            kind: "zero";
+                            x: string;
+                          }
+                        | { kind: "yIntercept"; y: string }
+                        | {
+                            kind: "extremum";
+                            turn: "maximum" | "minimum";
+                            x: string;
+                            y: string;
+                          }
+                        | {
+                            kind: "asymptote";
+                            line:
+                              | { kind: "vertical"; x: string }
+                              | {
+                                  intercept: string;
+                                  kind: "sloped";
+                                  slope: string;
+                                };
+                          }
+                        | {
+                            direction: "falling" | "rising";
+                            from: string | null;
+                            kind: "interval";
+                            to: string | null;
+                          }
+                        | {
+                            kind: "end";
+                            limit:
+                              "negativeInfinity" | "positiveInfinity" | string;
+                            side: "left" | "right";
+                          }
+                        | { kind: "inflection"; x: string; y: string }
+                        | {
+                            end?: "closed" | "open";
+                            kind: "point";
+                            x: string;
+                            y: string;
+                          };
+                      kind: "feature";
+                    };
+                    criterion: string;
+                    feedback: { earned: string; missed: string };
+                    requires?: Array<string>;
+                  }>;
+                  interaction: string;
+                  kind: "sketch";
+                  tolerances: {
+                    asymptote?: string;
+                    end?: string;
+                    extremum?: string;
+                    inflection?: string;
+                    interval?: string;
+                    point?: string;
+                    yIntercept?: string;
+                    zero?: string;
+                  };
                 }
             > | null;
             media: Array<
@@ -6292,6 +6519,18 @@ export declare const api: {
                 kind: "extendedText";
                 label: string;
               }
+            | {
+                frame: {
+                  kind: "cartesian";
+                  x: { max: number; min: number };
+                  y: { max: number; min: number };
+                };
+                grid?: number;
+                id: string;
+                kind: "sketch";
+                label: string;
+                marks: Array<"asymptote" | "point">;
+              }
           >;
           explanation: Id<"editorDocuments">;
           id: Id<"examQuestions">;
@@ -6350,10 +6589,71 @@ export declare const api: {
             | {
                 criteria: Array<{
                   criterion: string;
+                  feedback?: { earned: string; missed: string };
                   levels: Array<{ descriptor: string; level: string }>;
                 }>;
                 interaction: string;
                 kind: "extendedText";
+              }
+            | {
+                criteria: Array<{
+                  check: {
+                    feature:
+                      | { contact: "cross" | "touch"; kind: "zero"; x: string }
+                      | { kind: "yIntercept"; y: string }
+                      | {
+                          kind: "extremum";
+                          turn: "maximum" | "minimum";
+                          x: string;
+                          y: string;
+                        }
+                      | {
+                          kind: "asymptote";
+                          line:
+                            | { kind: "vertical"; x: string }
+                            | {
+                                intercept: string;
+                                kind: "sloped";
+                                slope: string;
+                              };
+                        }
+                      | {
+                          direction: "falling" | "rising";
+                          from: string | null;
+                          kind: "interval";
+                          to: string | null;
+                        }
+                      | {
+                          kind: "end";
+                          limit:
+                            "negativeInfinity" | "positiveInfinity" | string;
+                          side: "left" | "right";
+                        }
+                      | { kind: "inflection"; x: string; y: string }
+                      | {
+                          end?: "closed" | "open";
+                          kind: "point";
+                          x: string;
+                          y: string;
+                        };
+                    kind: "feature";
+                  };
+                  criterion: string;
+                  feedback: { earned: string; missed: string };
+                  requires?: Array<string>;
+                }>;
+                interaction: string;
+                kind: "sketch";
+                tolerances: {
+                  asymptote?: string;
+                  end?: string;
+                  extremum?: string;
+                  inflection?: string;
+                  interval?: string;
+                  point?: string;
+                  yIntercept?: string;
+                  zero?: string;
+                };
               }
           > | null;
           media: Array<
@@ -6570,6 +6870,18 @@ export declare const api: {
                 kind: "extendedText";
                 label: string;
               }
+            | {
+                frame: {
+                  kind: "cartesian";
+                  x: { max: number; min: number };
+                  y: { max: number; min: number };
+                };
+                grid?: number;
+                id: string;
+                kind: "sketch";
+                label: string;
+                marks: Array<"asymptote" | "point">;
+              }
           >;
           examId: Id<"exams">;
           key: Array<
@@ -6627,10 +6939,71 @@ export declare const api: {
             | {
                 criteria: Array<{
                   criterion: string;
+                  feedback?: { earned: string; missed: string };
                   levels: Array<{ descriptor: string; level: string }>;
                 }>;
                 interaction: string;
                 kind: "extendedText";
+              }
+            | {
+                criteria: Array<{
+                  check: {
+                    feature:
+                      | { contact: "cross" | "touch"; kind: "zero"; x: string }
+                      | { kind: "yIntercept"; y: string }
+                      | {
+                          kind: "extremum";
+                          turn: "maximum" | "minimum";
+                          x: string;
+                          y: string;
+                        }
+                      | {
+                          kind: "asymptote";
+                          line:
+                            | { kind: "vertical"; x: string }
+                            | {
+                                intercept: string;
+                                kind: "sloped";
+                                slope: string;
+                              };
+                        }
+                      | {
+                          direction: "falling" | "rising";
+                          from: string | null;
+                          kind: "interval";
+                          to: string | null;
+                        }
+                      | {
+                          kind: "end";
+                          limit:
+                            "negativeInfinity" | "positiveInfinity" | string;
+                          side: "left" | "right";
+                        }
+                      | { kind: "inflection"; x: string; y: string }
+                      | {
+                          end?: "closed" | "open";
+                          kind: "point";
+                          x: string;
+                          y: string;
+                        };
+                    kind: "feature";
+                  };
+                  criterion: string;
+                  feedback: { earned: string; missed: string };
+                  requires?: Array<string>;
+                }>;
+                interaction: string;
+                kind: "sketch";
+                tolerances: {
+                  asymptote?: string;
+                  end?: string;
+                  extremum?: string;
+                  inflection?: string;
+                  interval?: string;
+                  point?: string;
+                  yIntercept?: string;
+                  zero?: string;
+                };
               }
           > | null;
           questionId: Id<"examQuestions">;
@@ -6814,6 +7187,18 @@ export declare const api: {
                 kind: "extendedText";
                 label: string;
               }
+            | {
+                frame: {
+                  kind: "cartesian";
+                  x: { max: number; min: number };
+                  y: { max: number; min: number };
+                };
+                grid?: number;
+                id: string;
+                kind: "sketch";
+                label: string;
+                marks: Array<"asymptote" | "point">;
+              }
           >;
           explanation: Id<"editorDocuments">;
           id: Id<"examQuestions">;
@@ -6872,10 +7257,71 @@ export declare const api: {
             | {
                 criteria: Array<{
                   criterion: string;
+                  feedback?: { earned: string; missed: string };
                   levels: Array<{ descriptor: string; level: string }>;
                 }>;
                 interaction: string;
                 kind: "extendedText";
+              }
+            | {
+                criteria: Array<{
+                  check: {
+                    feature:
+                      | { contact: "cross" | "touch"; kind: "zero"; x: string }
+                      | { kind: "yIntercept"; y: string }
+                      | {
+                          kind: "extremum";
+                          turn: "maximum" | "minimum";
+                          x: string;
+                          y: string;
+                        }
+                      | {
+                          kind: "asymptote";
+                          line:
+                            | { kind: "vertical"; x: string }
+                            | {
+                                intercept: string;
+                                kind: "sloped";
+                                slope: string;
+                              };
+                        }
+                      | {
+                          direction: "falling" | "rising";
+                          from: string | null;
+                          kind: "interval";
+                          to: string | null;
+                        }
+                      | {
+                          kind: "end";
+                          limit:
+                            "negativeInfinity" | "positiveInfinity" | string;
+                          side: "left" | "right";
+                        }
+                      | { kind: "inflection"; x: string; y: string }
+                      | {
+                          end?: "closed" | "open";
+                          kind: "point";
+                          x: string;
+                          y: string;
+                        };
+                    kind: "feature";
+                  };
+                  criterion: string;
+                  feedback: { earned: string; missed: string };
+                  requires?: Array<string>;
+                }>;
+                interaction: string;
+                kind: "sketch";
+                tolerances: {
+                  asymptote?: string;
+                  end?: string;
+                  extremum?: string;
+                  inflection?: string;
+                  interval?: string;
+                  point?: string;
+                  yIntercept?: string;
+                  zero?: string;
+                };
               }
           > | null;
           media: Array<
@@ -7093,6 +7539,18 @@ export declare const api: {
                 kind: "extendedText";
                 label: string;
               }
+            | {
+                frame: {
+                  kind: "cartesian";
+                  x: { max: number; min: number };
+                  y: { max: number; min: number };
+                };
+                grid?: number;
+                id: string;
+                kind: "sketch";
+                label: string;
+                marks: Array<"asymptote" | "point">;
+              }
           >;
           explanation: Id<"editorDocuments">;
           id: Id<"examQuestions">;
@@ -7151,10 +7609,71 @@ export declare const api: {
             | {
                 criteria: Array<{
                   criterion: string;
+                  feedback?: { earned: string; missed: string };
                   levels: Array<{ descriptor: string; level: string }>;
                 }>;
                 interaction: string;
                 kind: "extendedText";
+              }
+            | {
+                criteria: Array<{
+                  check: {
+                    feature:
+                      | { contact: "cross" | "touch"; kind: "zero"; x: string }
+                      | { kind: "yIntercept"; y: string }
+                      | {
+                          kind: "extremum";
+                          turn: "maximum" | "minimum";
+                          x: string;
+                          y: string;
+                        }
+                      | {
+                          kind: "asymptote";
+                          line:
+                            | { kind: "vertical"; x: string }
+                            | {
+                                intercept: string;
+                                kind: "sloped";
+                                slope: string;
+                              };
+                        }
+                      | {
+                          direction: "falling" | "rising";
+                          from: string | null;
+                          kind: "interval";
+                          to: string | null;
+                        }
+                      | {
+                          kind: "end";
+                          limit:
+                            "negativeInfinity" | "positiveInfinity" | string;
+                          side: "left" | "right";
+                        }
+                      | { kind: "inflection"; x: string; y: string }
+                      | {
+                          end?: "closed" | "open";
+                          kind: "point";
+                          x: string;
+                          y: string;
+                        };
+                    kind: "feature";
+                  };
+                  criterion: string;
+                  feedback: { earned: string; missed: string };
+                  requires?: Array<string>;
+                }>;
+                interaction: string;
+                kind: "sketch";
+                tolerances: {
+                  asymptote?: string;
+                  end?: string;
+                  extremum?: string;
+                  inflection?: string;
+                  interval?: string;
+                  point?: string;
+                  yIntercept?: string;
+                  zero?: string;
+                };
               }
           > | null;
           media: Array<
@@ -7380,6 +7899,18 @@ export declare const api: {
                 kind: "extendedText";
                 label: string;
               }
+            | {
+                frame: {
+                  kind: "cartesian";
+                  x: { max: number; min: number };
+                  y: { max: number; min: number };
+                };
+                grid?: number;
+                id: string;
+                kind: "sketch";
+                label: string;
+                marks: Array<"asymptote" | "point">;
+              }
           >;
           explanation: Id<"editorDocuments">;
           id: Id<"examQuestions">;
@@ -7438,10 +7969,71 @@ export declare const api: {
             | {
                 criteria: Array<{
                   criterion: string;
+                  feedback?: { earned: string; missed: string };
                   levels: Array<{ descriptor: string; level: string }>;
                 }>;
                 interaction: string;
                 kind: "extendedText";
+              }
+            | {
+                criteria: Array<{
+                  check: {
+                    feature:
+                      | { contact: "cross" | "touch"; kind: "zero"; x: string }
+                      | { kind: "yIntercept"; y: string }
+                      | {
+                          kind: "extremum";
+                          turn: "maximum" | "minimum";
+                          x: string;
+                          y: string;
+                        }
+                      | {
+                          kind: "asymptote";
+                          line:
+                            | { kind: "vertical"; x: string }
+                            | {
+                                intercept: string;
+                                kind: "sloped";
+                                slope: string;
+                              };
+                        }
+                      | {
+                          direction: "falling" | "rising";
+                          from: string | null;
+                          kind: "interval";
+                          to: string | null;
+                        }
+                      | {
+                          kind: "end";
+                          limit:
+                            "negativeInfinity" | "positiveInfinity" | string;
+                          side: "left" | "right";
+                        }
+                      | { kind: "inflection"; x: string; y: string }
+                      | {
+                          end?: "closed" | "open";
+                          kind: "point";
+                          x: string;
+                          y: string;
+                        };
+                    kind: "feature";
+                  };
+                  criterion: string;
+                  feedback: { earned: string; missed: string };
+                  requires?: Array<string>;
+                }>;
+                interaction: string;
+                kind: "sketch";
+                tolerances: {
+                  asymptote?: string;
+                  end?: string;
+                  extremum?: string;
+                  inflection?: string;
+                  interval?: string;
+                  point?: string;
+                  yIntercept?: string;
+                  zero?: string;
+                };
               }
           > | null;
           media: Array<
@@ -7675,6 +8267,18 @@ export declare const api: {
                 kind: "extendedText";
                 label: string;
               }
+            | {
+                frame: {
+                  kind: "cartesian";
+                  x: { max: number; min: number };
+                  y: { max: number; min: number };
+                };
+                grid?: number;
+                id: string;
+                kind: "sketch";
+                label: string;
+                marks: Array<"asymptote" | "point">;
+              }
           >;
           explanation: Id<"editorDocuments">;
           id: Id<"examQuestions">;
@@ -7733,10 +8337,71 @@ export declare const api: {
             | {
                 criteria: Array<{
                   criterion: string;
+                  feedback?: { earned: string; missed: string };
                   levels: Array<{ descriptor: string; level: string }>;
                 }>;
                 interaction: string;
                 kind: "extendedText";
+              }
+            | {
+                criteria: Array<{
+                  check: {
+                    feature:
+                      | { contact: "cross" | "touch"; kind: "zero"; x: string }
+                      | { kind: "yIntercept"; y: string }
+                      | {
+                          kind: "extremum";
+                          turn: "maximum" | "minimum";
+                          x: string;
+                          y: string;
+                        }
+                      | {
+                          kind: "asymptote";
+                          line:
+                            | { kind: "vertical"; x: string }
+                            | {
+                                intercept: string;
+                                kind: "sloped";
+                                slope: string;
+                              };
+                        }
+                      | {
+                          direction: "falling" | "rising";
+                          from: string | null;
+                          kind: "interval";
+                          to: string | null;
+                        }
+                      | {
+                          kind: "end";
+                          limit:
+                            "negativeInfinity" | "positiveInfinity" | string;
+                          side: "left" | "right";
+                        }
+                      | { kind: "inflection"; x: string; y: string }
+                      | {
+                          end?: "closed" | "open";
+                          kind: "point";
+                          x: string;
+                          y: string;
+                        };
+                    kind: "feature";
+                  };
+                  criterion: string;
+                  feedback: { earned: string; missed: string };
+                  requires?: Array<string>;
+                }>;
+                interaction: string;
+                kind: "sketch";
+                tolerances: {
+                  asymptote?: string;
+                  end?: string;
+                  extremum?: string;
+                  inflection?: string;
+                  interval?: string;
+                  point?: string;
+                  yIntercept?: string;
+                  zero?: string;
+                };
               }
           > | null;
           media: Array<
@@ -7959,6 +8624,18 @@ export declare const api: {
                 kind: "extendedText";
                 label: string;
               }
+            | {
+                frame: {
+                  kind: "cartesian";
+                  x: { max: number; min: number };
+                  y: { max: number; min: number };
+                };
+                grid?: number;
+                id: string;
+                kind: "sketch";
+                label: string;
+                marks: Array<"asymptote" | "point">;
+              }
           >;
           explanation: Id<"editorDocuments">;
           id: Id<"examQuestions">;
@@ -8017,10 +8694,71 @@ export declare const api: {
             | {
                 criteria: Array<{
                   criterion: string;
+                  feedback?: { earned: string; missed: string };
                   levels: Array<{ descriptor: string; level: string }>;
                 }>;
                 interaction: string;
                 kind: "extendedText";
+              }
+            | {
+                criteria: Array<{
+                  check: {
+                    feature:
+                      | { contact: "cross" | "touch"; kind: "zero"; x: string }
+                      | { kind: "yIntercept"; y: string }
+                      | {
+                          kind: "extremum";
+                          turn: "maximum" | "minimum";
+                          x: string;
+                          y: string;
+                        }
+                      | {
+                          kind: "asymptote";
+                          line:
+                            | { kind: "vertical"; x: string }
+                            | {
+                                intercept: string;
+                                kind: "sloped";
+                                slope: string;
+                              };
+                        }
+                      | {
+                          direction: "falling" | "rising";
+                          from: string | null;
+                          kind: "interval";
+                          to: string | null;
+                        }
+                      | {
+                          kind: "end";
+                          limit:
+                            "negativeInfinity" | "positiveInfinity" | string;
+                          side: "left" | "right";
+                        }
+                      | { kind: "inflection"; x: string; y: string }
+                      | {
+                          end?: "closed" | "open";
+                          kind: "point";
+                          x: string;
+                          y: string;
+                        };
+                    kind: "feature";
+                  };
+                  criterion: string;
+                  feedback: { earned: string; missed: string };
+                  requires?: Array<string>;
+                }>;
+                interaction: string;
+                kind: "sketch";
+                tolerances: {
+                  asymptote?: string;
+                  end?: string;
+                  extremum?: string;
+                  inflection?: string;
+                  interval?: string;
+                  point?: string;
+                  yIntercept?: string;
+                  zero?: string;
+                };
               }
           > | null;
           media: Array<
@@ -8249,6 +8987,18 @@ export declare const api: {
                 kind: "extendedText";
                 label: string;
               }
+            | {
+                frame: {
+                  kind: "cartesian";
+                  x: { max: number; min: number };
+                  y: { max: number; min: number };
+                };
+                grid?: number;
+                id: string;
+                kind: "sketch";
+                label: string;
+                marks: Array<"asymptote" | "point">;
+              }
           >;
           explanation: Id<"editorDocuments">;
           id: Id<"examQuestions">;
@@ -8307,10 +9057,71 @@ export declare const api: {
             | {
                 criteria: Array<{
                   criterion: string;
+                  feedback?: { earned: string; missed: string };
                   levels: Array<{ descriptor: string; level: string }>;
                 }>;
                 interaction: string;
                 kind: "extendedText";
+              }
+            | {
+                criteria: Array<{
+                  check: {
+                    feature:
+                      | { contact: "cross" | "touch"; kind: "zero"; x: string }
+                      | { kind: "yIntercept"; y: string }
+                      | {
+                          kind: "extremum";
+                          turn: "maximum" | "minimum";
+                          x: string;
+                          y: string;
+                        }
+                      | {
+                          kind: "asymptote";
+                          line:
+                            | { kind: "vertical"; x: string }
+                            | {
+                                intercept: string;
+                                kind: "sloped";
+                                slope: string;
+                              };
+                        }
+                      | {
+                          direction: "falling" | "rising";
+                          from: string | null;
+                          kind: "interval";
+                          to: string | null;
+                        }
+                      | {
+                          kind: "end";
+                          limit:
+                            "negativeInfinity" | "positiveInfinity" | string;
+                          side: "left" | "right";
+                        }
+                      | { kind: "inflection"; x: string; y: string }
+                      | {
+                          end?: "closed" | "open";
+                          kind: "point";
+                          x: string;
+                          y: string;
+                        };
+                    kind: "feature";
+                  };
+                  criterion: string;
+                  feedback: { earned: string; missed: string };
+                  requires?: Array<string>;
+                }>;
+                interaction: string;
+                kind: "sketch";
+                tolerances: {
+                  asymptote?: string;
+                  end?: string;
+                  extremum?: string;
+                  inflection?: string;
+                  interval?: string;
+                  point?: string;
+                  yIntercept?: string;
+                  zero?: string;
+                };
               }
           > | null;
           media: Array<
@@ -8545,6 +9356,18 @@ export declare const api: {
                 kind: "extendedText";
                 label: string;
               }
+            | {
+                frame: {
+                  kind: "cartesian";
+                  x: { max: number; min: number };
+                  y: { max: number; min: number };
+                };
+                grid?: number;
+                id: string;
+                kind: "sketch";
+                label: string;
+                marks: Array<"asymptote" | "point">;
+              }
           >;
           explanation: Id<"editorDocuments">;
           id: Id<"examQuestions">;
@@ -8603,10 +9426,71 @@ export declare const api: {
             | {
                 criteria: Array<{
                   criterion: string;
+                  feedback?: { earned: string; missed: string };
                   levels: Array<{ descriptor: string; level: string }>;
                 }>;
                 interaction: string;
                 kind: "extendedText";
+              }
+            | {
+                criteria: Array<{
+                  check: {
+                    feature:
+                      | { contact: "cross" | "touch"; kind: "zero"; x: string }
+                      | { kind: "yIntercept"; y: string }
+                      | {
+                          kind: "extremum";
+                          turn: "maximum" | "minimum";
+                          x: string;
+                          y: string;
+                        }
+                      | {
+                          kind: "asymptote";
+                          line:
+                            | { kind: "vertical"; x: string }
+                            | {
+                                intercept: string;
+                                kind: "sloped";
+                                slope: string;
+                              };
+                        }
+                      | {
+                          direction: "falling" | "rising";
+                          from: string | null;
+                          kind: "interval";
+                          to: string | null;
+                        }
+                      | {
+                          kind: "end";
+                          limit:
+                            "negativeInfinity" | "positiveInfinity" | string;
+                          side: "left" | "right";
+                        }
+                      | { kind: "inflection"; x: string; y: string }
+                      | {
+                          end?: "closed" | "open";
+                          kind: "point";
+                          x: string;
+                          y: string;
+                        };
+                    kind: "feature";
+                  };
+                  criterion: string;
+                  feedback: { earned: string; missed: string };
+                  requires?: Array<string>;
+                }>;
+                interaction: string;
+                kind: "sketch";
+                tolerances: {
+                  asymptote?: string;
+                  end?: string;
+                  extremum?: string;
+                  inflection?: string;
+                  interval?: string;
+                  point?: string;
+                  yIntercept?: string;
+                  zero?: string;
+                };
               }
           > | null;
           media: Array<
@@ -9165,6 +10049,18 @@ export declare const api: {
                 kind: "extendedText";
                 label: string;
               }
+            | {
+                frame: {
+                  kind: "cartesian";
+                  x: { max: number; min: number };
+                  y: { max: number; min: number };
+                };
+                grid?: number;
+                id: string;
+                kind: "sketch";
+                label: string;
+                marks: Array<"asymptote" | "point">;
+              }
           >;
           number: number;
           prompt: string;
@@ -9627,6 +10523,18 @@ export declare const api: {
                   id: string;
                   kind: "extendedText";
                   label: string;
+                }
+              | {
+                  frame: {
+                    kind: "cartesian";
+                    x: { max: number; min: number };
+                    y: { max: number; min: number };
+                  };
+                  grid?: number;
+                  id: string;
+                  kind: "sketch";
+                  label: string;
+                  marks: Array<"asymptote" | "point">;
                 }
             >;
             number: number;
@@ -13110,7 +14018,17 @@ export declare const api: {
             | Array<string>
             | { text: string }
             | { pairs: Array<{ source: string; target: string }> }
-            | { cells: Array<{ column: string; statement: string }> };
+            | { cells: Array<{ column: string; statement: string }> }
+            | {
+                parts: Array<{
+                  interaction: string;
+                  response:
+                    | Array<string>
+                    | { text: string }
+                    | { pairs: Array<{ source: string; target: string }> }
+                    | { cells: Array<{ column: string; statement: string }> };
+                }>;
+              };
         },
         { verdict: "correct" | "incorrect" | "partial" | "pending" }
       >;
@@ -13136,7 +14054,7 @@ export declare const api: {
         },
         {
           explanation?: any;
-          key:
+          keys: Array<
             | { correct: Array<string>; interaction: string; kind: "choice" }
             | {
                 answers: Array<{ column: string; statement: string }>;
@@ -13191,11 +14109,73 @@ export declare const api: {
             | {
                 criteria: Array<{
                   criterion: string;
+                  feedback?: { earned: string; missed: string };
                   levels: Array<{ descriptor: string; level: string }>;
                 }>;
                 interaction: string;
                 kind: "extendedText";
-              };
+              }
+            | {
+                criteria: Array<{
+                  check: {
+                    feature:
+                      | { contact: "cross" | "touch"; kind: "zero"; x: string }
+                      | { kind: "yIntercept"; y: string }
+                      | {
+                          kind: "extremum";
+                          turn: "maximum" | "minimum";
+                          x: string;
+                          y: string;
+                        }
+                      | {
+                          kind: "asymptote";
+                          line:
+                            | { kind: "vertical"; x: string }
+                            | {
+                                intercept: string;
+                                kind: "sloped";
+                                slope: string;
+                              };
+                        }
+                      | {
+                          direction: "falling" | "rising";
+                          from: string | null;
+                          kind: "interval";
+                          to: string | null;
+                        }
+                      | {
+                          kind: "end";
+                          limit:
+                            "negativeInfinity" | "positiveInfinity" | string;
+                          side: "left" | "right";
+                        }
+                      | { kind: "inflection"; x: string; y: string }
+                      | {
+                          end?: "closed" | "open";
+                          kind: "point";
+                          x: string;
+                          y: string;
+                        };
+                    kind: "feature";
+                  };
+                  criterion: string;
+                  feedback: { earned: string; missed: string };
+                  requires?: Array<string>;
+                }>;
+                interaction: string;
+                kind: "sketch";
+                tolerances: {
+                  asymptote?: string;
+                  end?: string;
+                  extremum?: string;
+                  inflection?: string;
+                  interval?: string;
+                  point?: string;
+                  yIntercept?: string;
+                  zero?: string;
+                };
+              }
+          >;
         } | null
       >;
       open: FunctionReference<
@@ -13233,13 +14213,52 @@ export declare const api: {
             answer: {
               checkedAt: number;
               grade:
-                | { category: number; ceiling: number; status: "scored" }
-                | { ceiling: number; status: "pending" };
+                | {
+                    category: number;
+                    ceiling: number;
+                    parts?: Array<{
+                      grade:
+                        | {
+                            category: number;
+                            ceiling: number;
+                            status: "scored";
+                          }
+                        | { ceiling: number; status: "pending" };
+                      interaction: string;
+                    }>;
+                    status: "scored";
+                  }
+                | {
+                    ceiling: number;
+                    parts?: Array<{
+                      grade:
+                        | {
+                            category: number;
+                            ceiling: number;
+                            status: "scored";
+                          }
+                        | { ceiling: number; status: "pending" };
+                      interaction: string;
+                    }>;
+                    status: "pending";
+                  };
               response:
                 | Array<string>
                 | { text: string }
                 | { pairs: Array<{ source: string; target: string }> }
-                | { cells: Array<{ column: string; statement: string }> };
+                | { cells: Array<{ column: string; statement: string }> }
+                | {
+                    parts: Array<{
+                      interaction: string;
+                      response:
+                        | Array<string>
+                        | { text: string }
+                        | { pairs: Array<{ source: string; target: string }> }
+                        | {
+                            cells: Array<{ column: string; statement: string }>;
+                          };
+                    }>;
+                  };
             } | null;
             questionId: Id<"practiceQuestions">;
             questionOrder: number;
@@ -15639,6 +16658,16 @@ export declare const api: {
               | { text: string }
               | { pairs: Array<{ source: string; target: string }> }
               | { cells: Array<{ column: string; statement: string }> }
+              | {
+                  parts: Array<{
+                    interaction: string;
+                    response:
+                      | Array<string>
+                      | { text: string }
+                      | { pairs: Array<{ source: string; target: string }> }
+                      | { cells: Array<{ column: string; statement: string }> };
+                  }>;
+                }
               | null;
             version: number;
           },
@@ -15808,15 +16837,58 @@ export declare const api: {
                         | {
                             category: number;
                             ceiling: number;
+                            parts?: Array<{
+                              grade:
+                                | {
+                                    category: number;
+                                    ceiling: number;
+                                    status: "scored";
+                                  }
+                                | { ceiling: number; status: "pending" };
+                              interaction: string;
+                            }>;
                             status: "scored";
                           }
-                        | { ceiling: number; status: "pending" };
+                        | {
+                            ceiling: number;
+                            parts?: Array<{
+                              grade:
+                                | {
+                                    category: number;
+                                    ceiling: number;
+                                    status: "scored";
+                                  }
+                                | { ceiling: number; status: "pending" };
+                              interaction: string;
+                            }>;
+                            status: "pending";
+                          };
                       response:
                         | Array<string>
                         | { text: string }
                         | { pairs: Array<{ source: string; target: string }> }
                         | {
                             cells: Array<{ column: string; statement: string }>;
+                          }
+                        | {
+                            parts: Array<{
+                              interaction: string;
+                              response:
+                                | Array<string>
+                                | { text: string }
+                                | {
+                                    pairs: Array<{
+                                      source: string;
+                                      target: string;
+                                    }>;
+                                  }
+                                | {
+                                    cells: Array<{
+                                      column: string;
+                                      statement: string;
+                                    }>;
+                                  };
+                            }>;
                           };
                       updatedAt: number;
                     } | null;
@@ -15999,15 +17071,58 @@ export declare const api: {
                         | {
                             category: number;
                             ceiling: number;
+                            parts?: Array<{
+                              grade:
+                                | {
+                                    category: number;
+                                    ceiling: number;
+                                    status: "scored";
+                                  }
+                                | { ceiling: number; status: "pending" };
+                              interaction: string;
+                            }>;
                             status: "scored";
                           }
-                        | { ceiling: number; status: "pending" };
+                        | {
+                            ceiling: number;
+                            parts?: Array<{
+                              grade:
+                                | {
+                                    category: number;
+                                    ceiling: number;
+                                    status: "scored";
+                                  }
+                                | { ceiling: number; status: "pending" };
+                              interaction: string;
+                            }>;
+                            status: "pending";
+                          };
                       response:
                         | Array<string>
                         | { text: string }
                         | { pairs: Array<{ source: string; target: string }> }
                         | {
                             cells: Array<{ column: string; statement: string }>;
+                          }
+                        | {
+                            parts: Array<{
+                              interaction: string;
+                              response:
+                                | Array<string>
+                                | { text: string }
+                                | {
+                                    pairs: Array<{
+                                      source: string;
+                                      target: string;
+                                    }>;
+                                  }
+                                | {
+                                    cells: Array<{
+                                      column: string;
+                                      statement: string;
+                                    }>;
+                                  };
+                            }>;
                           };
                       updatedAt: number;
                     } | null;
@@ -16186,15 +17301,58 @@ export declare const api: {
                         | {
                             category: number;
                             ceiling: number;
+                            parts?: Array<{
+                              grade:
+                                | {
+                                    category: number;
+                                    ceiling: number;
+                                    status: "scored";
+                                  }
+                                | { ceiling: number; status: "pending" };
+                              interaction: string;
+                            }>;
                             status: "scored";
                           }
-                        | { ceiling: number; status: "pending" };
+                        | {
+                            ceiling: number;
+                            parts?: Array<{
+                              grade:
+                                | {
+                                    category: number;
+                                    ceiling: number;
+                                    status: "scored";
+                                  }
+                                | { ceiling: number; status: "pending" };
+                              interaction: string;
+                            }>;
+                            status: "pending";
+                          };
                       response:
                         | Array<string>
                         | { text: string }
                         | { pairs: Array<{ source: string; target: string }> }
                         | {
                             cells: Array<{ column: string; statement: string }>;
+                          }
+                        | {
+                            parts: Array<{
+                              interaction: string;
+                              response:
+                                | Array<string>
+                                | { text: string }
+                                | {
+                                    pairs: Array<{
+                                      source: string;
+                                      target: string;
+                                    }>;
+                                  }
+                                | {
+                                    cells: Array<{
+                                      column: string;
+                                      statement: string;
+                                    }>;
+                                  };
+                            }>;
                           };
                       updatedAt: number;
                     } | null;
@@ -16758,13 +17916,60 @@ export declare const api: {
                 response: {
                   answeredAt: number;
                   grade?:
-                    | { category: number; ceiling: number; status: "scored" }
-                    | { ceiling: number; status: "pending" };
+                    | {
+                        category: number;
+                        ceiling: number;
+                        parts?: Array<{
+                          grade:
+                            | {
+                                category: number;
+                                ceiling: number;
+                                status: "scored";
+                              }
+                            | { ceiling: number; status: "pending" };
+                          interaction: string;
+                        }>;
+                        status: "scored";
+                      }
+                    | {
+                        ceiling: number;
+                        parts?: Array<{
+                          grade:
+                            | {
+                                category: number;
+                                ceiling: number;
+                                status: "scored";
+                              }
+                            | { ceiling: number; status: "pending" };
+                          interaction: string;
+                        }>;
+                        status: "pending";
+                      };
                   response:
                     | Array<string>
                     | { text: string }
                     | { pairs: Array<{ source: string; target: string }> }
-                    | { cells: Array<{ column: string; statement: string }> };
+                    | { cells: Array<{ column: string; statement: string }> }
+                    | {
+                        parts: Array<{
+                          interaction: string;
+                          response:
+                            | Array<string>
+                            | { text: string }
+                            | {
+                                pairs: Array<{
+                                  source: string;
+                                  target: string;
+                                }>;
+                              }
+                            | {
+                                cells: Array<{
+                                  column: string;
+                                  statement: string;
+                                }>;
+                              };
+                        }>;
+                      };
                   updatedAt: number;
                 } | null;
                 version?: number;
@@ -16864,13 +18069,60 @@ export declare const api: {
                 response: {
                   answeredAt: number;
                   grade?:
-                    | { category: number; ceiling: number; status: "scored" }
-                    | { ceiling: number; status: "pending" };
+                    | {
+                        category: number;
+                        ceiling: number;
+                        parts?: Array<{
+                          grade:
+                            | {
+                                category: number;
+                                ceiling: number;
+                                status: "scored";
+                              }
+                            | { ceiling: number; status: "pending" };
+                          interaction: string;
+                        }>;
+                        status: "scored";
+                      }
+                    | {
+                        ceiling: number;
+                        parts?: Array<{
+                          grade:
+                            | {
+                                category: number;
+                                ceiling: number;
+                                status: "scored";
+                              }
+                            | { ceiling: number; status: "pending" };
+                          interaction: string;
+                        }>;
+                        status: "pending";
+                      };
                   response:
                     | Array<string>
                     | { text: string }
                     | { pairs: Array<{ source: string; target: string }> }
-                    | { cells: Array<{ column: string; statement: string }> };
+                    | { cells: Array<{ column: string; statement: string }> }
+                    | {
+                        parts: Array<{
+                          interaction: string;
+                          response:
+                            | Array<string>
+                            | { text: string }
+                            | {
+                                pairs: Array<{
+                                  source: string;
+                                  target: string;
+                                }>;
+                              }
+                            | {
+                                cells: Array<{
+                                  column: string;
+                                  statement: string;
+                                }>;
+                              };
+                        }>;
+                      };
                   updatedAt: number;
                 } | null;
                 version?: number;
