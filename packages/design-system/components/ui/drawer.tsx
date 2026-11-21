@@ -15,6 +15,7 @@ import {
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 import { use } from "react";
+import { useTranslations } from "use-intl";
 
 /**
  * A sheet that rises from an edge of the screen in the floating style of an iPhone sheet: a card that stands off every
@@ -40,6 +41,8 @@ function DrawerContent({
   className,
   ...props
 }: NodeChildren<ComponentProps<typeof DrawerContentPrimitive>>) {
+  const t = useTranslations("Common");
+
   return (
     <ButtonGroupVariant value={undefined}>
       <DrawerBackdrop className="bg-ink/30 fixed inset-0 z-50" />
@@ -56,6 +59,7 @@ function DrawerContent({
         {...props}
       >
         <DrawerHandle
+          aria-label={t("resize-drawer")}
           className="after:bg-muted focus-visible:after:bg-ring flex shrink-0 cursor-grab touch-none items-center justify-center outline-none group-data-[side=bottom]/drawer:h-5 group-data-[side=left]/drawer:w-4 group-data-[side=right]/drawer:w-4 group-data-[side=top]/drawer:order-last group-data-[side=top]/drawer:h-5 after:rounded-full group-data-[side=bottom]/drawer:after:h-1.5 group-data-[side=bottom]/drawer:after:w-25 group-data-[side=left]/drawer:after:h-25 group-data-[side=left]/drawer:after:w-1.5 group-data-[side=right]/drawer:after:h-25 group-data-[side=right]/drawer:after:w-1.5 group-data-[side=top]/drawer:after:h-1.5 group-data-[side=top]/drawer:after:w-25 active:cursor-grabbing"
           ref={releaseSheetExit}
         />

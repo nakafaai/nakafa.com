@@ -4,7 +4,11 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
+import {
+  desktopViewport,
+  touchViewport,
+  viewportSize,
+} from "@/e2e/support/viewport";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const TRACK_PATH = "/en/try-out/indonesia/snbt/2027/utbk";
@@ -179,5 +183,20 @@ test.describe("The set pane beside a track's table", () => {
         timeout: readinessTimeoutMilliseconds,
       });
     }
+  });
+});
+
+test.describe("The set sheet on a phone", () => {
+  test.use({ hasTouch: true, viewport: viewportSize(touchViewport) });
+
+  test("names its grabber, which resizes the sheet", async ({ page }) => {
+    await page.goto(SET_PATH, { waitUntil: "load" });
+
+    await expect(
+      page.getByRole("button", {
+        exact: true,
+        name: en.Common["resize-drawer"],
+      })
+    ).toBeAttached({ timeout: readinessTimeoutMilliseconds });
   });
 });

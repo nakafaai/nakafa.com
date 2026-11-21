@@ -322,6 +322,15 @@ const verifySchoolPricing = Effect.fn("NakafaE2E.verifySchoolPricing")(
       calculator.getByRole("button", { name: "Max" }).click()
     );
     const added = calculator.getByLabel("Akun yang ditambah");
+    // Each step button names the input it steps.
+    const inputId = yield* Effect.promise(() => added.getAttribute("id"));
+    for (const name of ["Kurangi", "Tambah"]) {
+      yield* Effect.promise(() =>
+        expect(
+          calculator.getByRole("button", { exact: true, name })
+        ).toHaveAttribute("aria-controls", inputId ?? "")
+      );
+    }
     yield* Effect.promise(() => added.fill("550"));
     yield* Effect.promise(() => added.blur());
     const figures = calculator.locator("dl");
