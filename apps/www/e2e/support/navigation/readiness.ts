@@ -213,10 +213,11 @@ const ensureLinkInViewport = Effect.fn("NakafaE2E.ensureLinkInViewport")(
 /**
  * Loads one source route, waits until its router has started, brings the target
  * Link into the viewport, and returns it once it has been hydrated. A Link in a
- * section under the first screen hydrates only when the reader nears it
- * (`LaterSection`, ADR 0039), as the homepage's curricula do, so the Link reaches
- * the viewport first. The caller shows intent toward the Link and settles the
- * router before it presses.
+ * section under the first screen hydrates only when the reader nears it and has
+ * made a gesture (`LaterSection`, ADR 0039 D17), as the homepage's curricula do,
+ * so the Link reaches the viewport first and the pointer moves as a reader's
+ * would. The caller shows intent toward the Link and settles the router before it
+ * presses.
  */
 export const prepareClientNavigation = Effect.fn(
   "NakafaE2E.prepareClientNavigation"
@@ -241,6 +242,7 @@ export const prepareClientNavigation = Effect.fn(
     targetHref,
     timeoutMilliseconds
   );
+  yield* Effect.promise(() => page.mouse.move(1, 1));
   yield* waitForHydratedLink(link, sourceHref, targetHref, timeoutMilliseconds);
   return link;
 });
