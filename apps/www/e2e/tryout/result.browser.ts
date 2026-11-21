@@ -153,7 +153,7 @@ test.describe("The result of a finished try-out", () => {
   test.describe("on desktop", () => {
     test.use({ viewport: viewportSize(desktopViewport) });
 
-    test("stands in a pane with its facts, its verdicts and its footer, sends a seat's question below the header, keeps it through a reload, shows it alone, and drags its edge without work per move", async ({
+    for (const round of [1, 2, 3, 4, 5, 6]) test(`stands in a pane with its facts, its verdicts and its footer, sends a seat's question below the header, keeps it through a reload, shows it alone, and drags its edge without work per move ${round}`, async ({
       baseURL,
       page,
     }) => {

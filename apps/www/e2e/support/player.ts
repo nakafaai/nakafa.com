@@ -251,7 +251,46 @@ export const chooseView = Effect.fn("NakafaE2E.chooseView")(function* (
   }
   const menu = viewOf(page, hasTouch).getByRole("button");
   yield* Effect.promise(() => waitUntilTakenOver(menu));
+  const relay = (message: { text: () => string }) => {
+    if (message.text().startsWith("EV ")) console.log(`PROBE ${message.text()}`);
+  };
+  page.on("console", relay);
+  yield* Effect.promise(() =>
+    page.evaluate(() => {
+      const t0 = performance.now();
+      const describe = (node: EventTarget | null) => {
+        const element = node instanceof Element ? node : null;
+        return element ? `${element.tagName}${element.getAttribute("data-slot") ? `[${element.getAttribute("data-slot")}]` : ""}${element.getAttribute("role") ? `{${element.getAttribute("role")}}` : ""}:${(element.textContent ?? "").trim().slice(0, 14)}` : String(node);
+      };
+      for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "click", "gotpointercapture", "lostpointercapture", "focusin"]) {
+        window.addEventListener(type, (event) => {
+          const target = describe(event.target);
+          const pointer = event as PointerEvent;
+          setTimeout(() => console.log(`EV ${Math.round(performance.now() - t0)} ${type} id=${pointer.pointerId ?? "-"} type=${pointer.pointerType ?? "-"} target=${target} prevented=${event.defaultPrevented} buttons=${(event as MouseEvent).buttons}`));
+        }, { capture: true });
+      }
+      new MutationObserver((records) => {
+        for (const record of records) {
+          if (record.attributeName === "aria-expanded" || record.attributeName === "data-open") console.log(`EV ${Math.round(performance.now() - t0)} attr ${record.attributeName}=${(record.target as Element).getAttribute(record.attributeName ?? "")} on ${describe(record.target)}`);
+        }
+      }).observe(document.body, { attributes: true, subtree: true, attributeFilter: ["aria-expanded", "data-open"] });
+    })
+  );
+  yield* Effect.promise(async () => {
+    const box = await menu.boundingBox();
+    const state = await menu.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+      return `hit=${hit?.tagName}:${(hit?.textContent ?? "").trim().slice(0, 12)} inside=${element.contains(hit)} pe=${getComputedStyle(element).pointerEvents} inert=${element.closest("[inert]")?.tagName ?? "-"} expanded=${element.getAttribute("aria-expanded")} resizing=${document.documentElement.hasAttribute("data-resizing")} url=${location.search}`;
+    });
+    console.log(`PROBE before ${JSON.stringify(box)} ${state}`);
+  });
   yield* activate(menu, hasTouch);
+  yield* Effect.promise(async () => {
+    await page.waitForTimeout(1200);
+    console.log(`PROBE after expanded=${await menu.getAttribute("aria-expanded")} items=${await page.getByRole("menuitemradio").count()}`);
+    page.off("console", relay);
+  });
   yield* Effect.promise(() =>
     pressInPopup(
       page.getByRole("menuitemradio", { exact: true, name: view }),
