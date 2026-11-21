@@ -48,8 +48,11 @@ export const Route = createFileRoute(
   "/$locale/_main/try-out/$country/$exam/$group/$track/$set/"
 )({
   validateSearch: Schema.toStandardSchemaV1(TryoutAttemptSearch),
-  loaderDeps: ({ search }) => ({ attemptId: attemptOf(search) }),
-  loader: async ({ deps, params }) => {
+  // The loader's data is the set as the build prerendered it, the same for every address of the set, so the
+  // attempt an address names is no dependency of it. Were it one, the router would name the match of an
+  // attempt's address apart from the prerendered match it hydrates, read the set again in the browser, and
+  // hydrate the pane against the learner's tree instead of the visitor's markup the server wrote.
+  loader: async ({ location, params }) => {
     const route = await readStaticData(readTryoutSetFn, {
       country: params.country,
       exam: params.exam,
@@ -64,7 +67,7 @@ export const Route = createFileRoute(
     // A learner's set opens whole: the page stays until their reads of it answer (`warmSetReads`).
     await Effect.runPromise(
       warmSetReads({
-        attemptId: deps.attemptId,
+        attemptId: attemptOf(location.search),
         locale: params.locale,
         set: route.page.set,
       })
