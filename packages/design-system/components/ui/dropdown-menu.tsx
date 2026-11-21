@@ -11,6 +11,7 @@ import {
   optionTickVariants,
 } from "@repo/design-system/lib/option";
 import {
+  keepClickOnTrigger,
   PopupContainer,
   popupMotion,
   sheetSurface,
@@ -76,8 +77,20 @@ function createDropdownMenuController() {
   return createMenuController();
 }
 
-function DropdownMenuTrigger(props: React.ComponentProps<typeof MenuTrigger>) {
-  return <MenuTrigger {...props} />;
+/** The menu's trigger. A click keeps its release on the trigger, so the menu it opened stays open (`keepClickOnTrigger`). */
+function DropdownMenuTrigger({
+  onPointerDown,
+  ...props
+}: React.ComponentProps<typeof MenuTrigger>) {
+  return (
+    <MenuTrigger
+      onPointerDown={(event) => {
+        keepClickOnTrigger(event);
+        onPointerDown?.(event);
+      }}
+      {...props}
+    />
+  );
 }
 
 /**
