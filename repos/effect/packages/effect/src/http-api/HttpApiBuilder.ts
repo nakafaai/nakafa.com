@@ -31,6 +31,7 @@ import { HttpServerRequest } from "../http/HttpServerRequest.ts"
 import * as Respondable from "../http/HttpServerRespondable.ts"
 import * as Response from "../http/HttpServerResponse.ts"
 import type { HttpServerResponse } from "../http/HttpServerResponse.ts"
+import * as MediaType from "../http/internal/mediaType.ts"
 import { addRedactedNamesUnsafe } from "../http/internal/requestState.ts"
 import * as Multipart from "../http/Multipart.ts"
 import * as UrlParams from "../http/UrlParams.ts"
@@ -56,7 +57,6 @@ import type * as HttpApiGroup from "./HttpApiGroup.ts"
 import * as HttpApiMiddleware from "./HttpApiMiddleware.ts"
 import * as HttpApiSchema from "./HttpApiSchema.ts"
 import type * as HttpApiSecurity from "./HttpApiSecurity.ts"
-import * as MediaType from "./internal/mediaType.ts"
 import * as HttpApiPath from "./internal/path.ts"
 import * as OpenApi from "./OpenApi.ts"
 
@@ -1081,7 +1081,10 @@ export function handlerToRoute(
     endpoint.method,
     HttpApiPath.toRouterPath(endpoint.path, endpoint.params) as HttpRouter.PathInput,
     handlerToHttpEffect(api, group, endpoint, context, handler.handler, handler.isRaw),
-    { uninterruptible: handler.uninterruptible }
+    {
+      uninterruptible: handler.uninterruptible,
+      redactedParams: HttpApi.getEndpointRedactedParams(api, group, endpoint)
+    }
   )
 }
 

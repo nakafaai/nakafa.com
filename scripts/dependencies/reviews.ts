@@ -13,38 +13,38 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "effect@latest",
-    "4.1.4",
-    "Effect 4.1.4 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). 4.1.3 and 4.1.4 are patch releases: Rational, CLI completion and validation fixes, cluster workflow retries, a TestClock finalizer fix, and OpenRouter schema regeneration. The contracts follow the cohort: @nakafa/aksara-contracts 8.4.0 peers effect 4.1.4 exactly. Checked 20 November 2026.",
+    "4.1.5",
+    "Effect 4.1.5 is the latest release and the adopted cohort (EFFECT_COHORT_VERSION). It is a patch release: Arbitrary reports unsupported regex patterns and shrinks strings anywhere, Cache and ScopedCache entries expire under a provided clock after an interrupted shared lookup, Chunk.fromIterable copies its array, field discovery handles own enumerable string and symbol fields (a field map declared as an interface is no longer accepted), cluster workflow and entity redelivery fixes, and the new effect/crypto/Password, Base64.encodeUnpadded and nthRoot helpers; the Node HTTP server answers 503 while not serving and survives request errors after an aborted stream. The contracts follow the cohort: @nakafa/aksara-contracts 8.4.0 peers effect 4.1.4 exactly, and the Aksara release that moves to this cohort peers 4.1.5. Checked 21 November 2026.",
   ],
   [
     "@effect/platform-node@latest",
-    "4.1.4",
-    "@effect/platform-node follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
+    "4.1.5",
+    "@effect/platform-node follows the Effect cohort and moves with effect@latest; 4.1.5 is the adopted release.",
   ],
   [
     "@effect/platform-node-shared@latest",
-    "4.1.4",
-    "@effect/platform-node-shared follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
+    "4.1.5",
+    "@effect/platform-node-shared follows the Effect cohort and moves with effect@latest; 4.1.5 is the adopted release.",
   ],
   [
     "@effect/vitest@latest",
-    "4.1.4",
-    "@effect/vitest follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
+    "4.1.5",
+    "@effect/vitest follows the Effect cohort and moves with effect@latest; 4.1.5 is the adopted release.",
   ],
   [
     "@effect/ai-openai-compat@latest",
-    "4.1.4",
-    "@effect/ai-openai-compat follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
+    "4.1.5",
+    "@effect/ai-openai-compat follows the Effect cohort and moves with effect@latest; 4.1.5 is the adopted release.",
   ],
   [
     "@effect/ai-openrouter@latest",
-    "4.1.4",
-    "@effect/ai-openrouter follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
+    "4.1.5",
+    "@effect/ai-openrouter follows the Effect cohort and moves with effect@latest; 4.1.5 is the adopted release.",
   ],
   [
     "@effect/platform-bun@latest",
-    "4.1.4",
-    "@effect/platform-bun follows the Effect cohort and moves with effect@latest; 4.1.4 is the adopted release.",
+    "4.1.5",
+    "@effect/platform-bun follows the Effect cohort and moves with effect@latest; 4.1.5 is the adopted release.",
   ],
   [
     "@confect/core@latest",
@@ -59,7 +59,7 @@ export const REGISTRY_REVIEWS = [
   [
     "vitest@latest",
     "5.1.1",
-    "The Effect 4 test adapter requires Vitest 5; @effect/vitest 4.1.4 admits >=5.0.0 <6.0.0. 5.1.1 is the latest release and the adopted one: fixes for fixture teardown, a new signal and reset assertion counts on each retry, --shard, coverage of untested files and stuck fork workers, and timeouts throw their own error classes. Checked 20 November 2026.",
+    "The Effect 4 test adapter requires Vitest 5; @effect/vitest 4.1.5 admits >=5.0.0 <6.0.0. 5.1.1 is the latest release and the adopted one: fixes for fixture teardown, a new signal and reset assertion counts on each retry, --shard, coverage of untested files and stuck fork workers, and timeouts throw their own error classes. Checked 20 November 2026.",
   ],
   [
     "@vitest/coverage-istanbul@latest",
@@ -74,7 +74,7 @@ export const REGISTRY_REVIEWS = [
   [
     "@nakafa/aksara-contracts@latest",
     "8.4.0",
-    "nakafa.com declares 8.4.0, which peers effect 4.1.4 exactly, the adopted cohort. 7.1.0 added the 100 labs of the science stack to the Visual Catalog, 8.0.0 removes LineEquation, NumberLine and UnitCircle, which MathVisual replaces and no document used, and 8.0.2 adds ElectrolysisLab, TitrationLab, ChemicalCellLab and GasRateLab and the SPM organic molecules of MoleculeShapeLab, and 8.0.3 sends snapshot rows in batches of at most 512 KiB, so the largest Quran row (369 KiB) still fits one batch, and 8.0.4 decides whether a region figure shows without tracing its outline, so decoding a region row costs milliseconds instead of up to 0.8 s and every stageSnapshotBatch mutation stays inside Convex's one second, and 8.1.0 adds the eight biology labs (potometer, respirometer, Hydrilla, microscope, nephron, tropism, double fertilisation and osmosis), decides whether an equation draws without tracing it, and shades a region's whole cells as one rectangle per column run, so the renderer no longer joins fill cells itself, and 8.2.0 adds the forty SPM physics labs and requires a title and a description on every visual card, and 8.3.0 adds the probability and place-value labs (marble, dice, Galton board, abacus and binary lamp), and 8.4.0 gives every visual card an optional authored footer, keeps scene labels to 32 characters and joins contour outlines both ways. The acceptance runtime publishes Aksara's corpus at a reviewed revision whose content every contract rule up to the declared version accepts (`source.json`). Every catalog figure renders in lessons and try-outs through one renderer, whose registry equals the catalog. Checked 20 November 2026.",
+    "nakafa.com declares 8.4.0, which peers effect 4.1.4 exactly, the cohort before 4.1.5; the contracts release that Aksara cuts on 4.1.5 peers the adopted one. 7.1.0 added the 100 labs of the science stack to the Visual Catalog, 8.0.0 removes LineEquation, NumberLine and UnitCircle, which MathVisual replaces and no document used, and 8.0.2 adds ElectrolysisLab, TitrationLab, ChemicalCellLab and GasRateLab and the SPM organic molecules of MoleculeShapeLab, and 8.0.3 sends snapshot rows in batches of at most 512 KiB, so the largest Quran row (369 KiB) still fits one batch, and 8.0.4 decides whether a region figure shows without tracing its outline, so decoding a region row costs milliseconds instead of up to 0.8 s and every stageSnapshotBatch mutation stays inside Convex's one second, and 8.1.0 adds the eight biology labs (potometer, respirometer, Hydrilla, microscope, nephron, tropism, double fertilisation and osmosis), decides whether an equation draws without tracing it, and shades a region's whole cells as one rectangle per column run, so the renderer no longer joins fill cells itself, and 8.2.0 adds the forty SPM physics labs and requires a title and a description on every visual card, and 8.3.0 adds the probability and place-value labs (marble, dice, Galton board, abacus and binary lamp), and 8.4.0 gives every visual card an optional authored footer, keeps scene labels to 32 characters and joins contour outlines both ways. The acceptance runtime publishes Aksara's corpus at a reviewed revision whose content every contract rule up to the declared version accepts (`source.json`). Every catalog figure renders in lessons and try-outs through one renderer, whose registry equals the catalog. Checked 20 November 2026.",
   ],
   [
     "tsrs@latest",

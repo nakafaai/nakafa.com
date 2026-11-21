@@ -26,6 +26,7 @@ import * as HttpClientError from "../http/HttpClientError.ts"
 import * as HttpClientRequest from "../http/HttpClientRequest.ts"
 import type * as HttpClientResponse from "../http/HttpClientResponse.ts"
 import * as HttpMethod from "../http/HttpMethod.ts"
+import * as MediaType from "../http/internal/mediaType.ts"
 import * as internalUrlParams from "../http/internal/urlParams.ts"
 import * as UrlParams from "../http/UrlParams.ts"
 import * as InternalRecord from "../internal/record.ts"
@@ -43,7 +44,6 @@ import * as HttpApiEndpoint from "./HttpApiEndpoint.ts"
 import type * as HttpApiGroup from "./HttpApiGroup.ts"
 import type * as HttpApiMiddleware from "./HttpApiMiddleware.ts"
 import * as HttpApiSchema from "./HttpApiSchema.ts"
-import * as MediaType from "./internal/mediaType.ts"
 import * as HttpApiPath from "./internal/path.ts"
 
 /**
@@ -1028,7 +1028,7 @@ function toCodecArrayBufferWithHeaders(
     : HttpApiSchema.isWithHeaders(schema)
     ? { body: schema.schema, headers: schema.headers, toValue: HttpApiSchema.withHeaders }
     : { body: schema, headers: Schema.Unknown, toValue: (pair) => pair.body }
-  const decodeBody = Schema.decodeUnknownEffect(fromArrayBuffer(parts.body).pipe(Schema.decodeTo(parts.body)), options)
+  const decodeBody = Schema.decodeUnknownEffect(toBodyCodec(parts.body), options)
   const decodeHeaders = Schema.decodeUnknownEffect(parts.headers, headersOptions)
   return ResponsePair.pipe(Schema.decodeTo(
     HttpApiSchema.isWithHeaders(schema) ? schema : Schema.toType(schema),
@@ -1418,11 +1418,15 @@ const UnknownFromArrayBuffer = StringFromArrayBuffer.pipe(Schema.decodeTo(
 ))
 
 function toCodecArrayBuffer(schemas: readonly [Schema.Constraint, ...Array<Schema.Constraint>]): Schema.Top {
-  return Schema.Union(schemas.map(onSchema))
+  return Schema.Union(schemas.map(toBodyCodec))
+}
 
-  function onSchema(schema: Schema.Constraint) {
-    return fromArrayBuffer(schema).pipe(Schema.decodeTo(schema))
-  }
+function toBodyCodec(schema: Schema.Constraint): Schema.Top {
+  return fromArrayBuffer(schema).pipe(Schema.decodeTo(
+    HttpApiSchema.getResponseEncoding(schema.ast)._tag === "FormUrlEncoded"
+      ? Schema.toCodecArrayFromSingle(schema)
+      : schema
+  ))
 }
 
 function fromArrayBuffer(schema: Schema.Constraint): Schema.Top {
