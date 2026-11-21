@@ -136,6 +136,7 @@ export function usePlayerSpy(
 ) {
   const keys = usePlayer((state) => state.keys);
   const mode = usePlayer((state) => state.mode);
+  const anchorAt = usePlayer((state) => state.anchorAt);
   const moved = usePlayer((state) => state.moved);
   const observe = usePlayer((state) => state.observe);
 
@@ -145,6 +146,17 @@ export function usePlayerSpy(
     }
     return watchList({ end: end.current, keys, list: list.current, observe });
   }, [end, keys, list, mode, observe]);
+
+  // A change of the list's size, as a pane's drag reflows the questions, is no move of the reader: the browser
+  // scrolls to hold their place, and the hold moves with it before that scroll reaches the page.
+  useEffect(() => {
+    if (!list.current) {
+      return;
+    }
+    const resized = new ResizeObserver(() => anchorAt(window.scrollY));
+    resized.observe(list.current);
+    return () => resized.disconnect();
+  }, [anchorAt, list]);
 
   useWindowEvent("scroll", () => moved(window.scrollY));
 }
