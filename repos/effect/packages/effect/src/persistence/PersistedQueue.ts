@@ -36,6 +36,7 @@ import * as Migrator from "../sql/Migrator.ts"
 import * as SqlClient from "../sql/SqlClient.ts"
 import type { SqlError } from "../sql/SqlError.ts"
 import type { Fragment } from "../sql/Statement.ts"
+import * as Str from "../String.ts"
 import * as Redis from "./Redis.ts"
 
 /**
@@ -978,7 +979,7 @@ export const makeStoreRedis = Effect.fnUntraced(function*(
       const keys = keysFor(name)
       // replace lone surrogates like Redis' UTF-8 encoding does, so the id in
       // the payload matches the id keys
-      id = id.replace(/[\uD800-\uDFFF]/gu, "\uFFFD")
+      id = Str.toWellFormed(id)
       const payload = JSON.stringify({ id, element })
       const untilExecuted = deduplicate === "untilExecuted" ? 1 : 0
       const send = Effect.suspend(() => {
@@ -1636,7 +1637,7 @@ export const makeStoreSql: (
 
   yield* Effect.orDie(
     Migrator.make({})({
-      loader: sqlMigrations(tableName),
+      loader: sqlMigrations(tableName, sql),
       table: `${tableName}_migrations`
     })
   )
@@ -2192,7 +2193,7 @@ export const makeStoreSql: (
   })
 })
 
-const sqlMigrations = (tableName: string) =>
+const sqlMigrations = (tableName: string, client: SqlClient.SqlClient) =>
   Migrator.fromRecord({
     "0001_create_table": Effect.gen(function*() {
       const sql = (yield* SqlClient.SqlClient).withoutTransforms()
@@ -2417,6 +2418,22 @@ const sqlMigrations = (tableName: string) =>
           sql`CREATE INDEX ${takeIndex} ON ${tableNameSql} (queue_name, visible_at)
             WHERE state = 'pending'`
       })
+    }),
+    ...client.onDialectOrElse({
+      pg: () => ({
+        // Migration 0002 widened the column but not its SERIAL sequence.
+        "0003_widen_sequence": Effect.gen(function*() {
+          const [relation] = client`${client(tableName)}`.compile()
+          const [row] = yield* client<{ readonly sequence: string | null }>`
+            SELECT pg_get_serial_sequence(${relation}, 'sequence') AS sequence
+          `
+          if (row.sequence !== null) {
+            // PostgreSQL already quotes and qualifies the sequence name.
+            yield* client`ALTER SEQUENCE ${client.literal(row.sequence)} AS bigint`
+          }
+        })
+      }),
+      orElse: () => ({})
     })
   })
 
