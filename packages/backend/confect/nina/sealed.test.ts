@@ -409,7 +409,7 @@ describe("sealed message", () => {
   );
 
   it.effect(
-    "keeps a field that the row holds in the clear, and fails when the sealed content holds it too",
+    "keeps a field that the row holds in the clear, drops the empty reasoning the Agent derives from the skeleton, and fails when the sealed content holds a field too",
     () =>
       scenario(
         Effect.gen(function* () {
@@ -432,6 +432,16 @@ describe("sealed message", () => {
               reasoning: "Dicek ulang.",
             })
           ).toMatchObject({ reasoning: "Dicek ulang." });
+          const reasoned = storedRow(
+            yield* sealMessage(owner, IDENTITY, answer),
+            IDENTITY
+          );
+          expect(
+            yield* openMessage(owner, IDENTITY, {
+              ...reasoned,
+              reasoningDetails: [{ text: "", type: "reasoning" }],
+            })
+          ).toEqual(storedRow(answer, IDENTITY));
           const both = {
             ...storedRow(
               yield* sealMessage(owner, IDENTITY, plantedAnswer),

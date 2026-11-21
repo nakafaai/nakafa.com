@@ -129,6 +129,110 @@ describe("the recent context of a turn through the sealed module", () => {
     expect(sealed.existingResponses.length).toBeGreaterThan(1);
   });
 
+  it("reads a continued order across multiple boundary pages, and stops after one page for an older order", async () => {
+    const f = await createThreadTest();
+    const owner = f.identity.userId;
+    const thread = await f.t.mutation(async (ctx) => {
+      const threadId = await createThread(ctx, components.nina, {
+        userId: owner,
+      });
+      const firstPrompt = await saveMessage(ctx, components.nina, {
+        prompt: "Pertanyaan pertama.",
+        threadId,
+      });
+      await saveMessages(ctx, components.nina, {
+        messages: [
+          { content: "Langkah 1.", role: "assistant" },
+          { content: "Langkah 2.", role: "assistant" },
+          { content: "Langkah 3.", role: "assistant" },
+        ],
+        promptMessageId: firstPrompt.messageId,
+        threadId,
+      });
+      const secondPrompt = await saveMessage(ctx, components.nina, {
+        prompt: "Pertanyaan kedua.",
+        threadId,
+      });
+      const secondSteps = await saveMessages(ctx, components.nina, {
+        messages: [
+          { content: "Jawaban 1.", role: "assistant" },
+          { content: "Jawaban 2.", role: "assistant" },
+          { content: "Jawaban 3.", role: "assistant" },
+        ],
+        promptMessageId: secondPrompt.messageId,
+        threadId,
+      });
+      return {
+        firstPromptId: firstPrompt.messageId,
+        secondPromptId: secondPrompt.messageId,
+        secondStepId: secondSteps.messages[1]?._id ?? "",
+        threadId,
+      };
+    });
+
+    // Continued order (all rows of the first page belong to order 1, prompt is step 0):
+    // loops boundary pages of size 1 until step 0 of order 1 is reached, and stops before order 0.
+    const multiPage = await inAction(
+      f.t,
+      readRecentContext(owner, {
+        boundaryLimit: 1,
+        excludeToolMessages: false,
+        promptMessageId: thread.secondPromptId,
+        recentMessages: 1,
+        threadId: thread.threadId,
+      })
+    );
+    expect(multiPage.inputPrompt).toHaveLength(1);
+    expect(multiPage.existingResponses).toHaveLength(3);
+    expect(multiPage.recent).toEqual([]);
+
+    // Continued order where the target message itself is already inside the first page (step > 0):
+    // still loops back to step 0 of the continued order.
+    const targetInFirstPage = await inAction(
+      f.t,
+      readRecentContext(owner, {
+        boundaryLimit: 1,
+        excludeToolMessages: false,
+        promptMessageId: thread.secondStepId,
+        recentMessages: 2,
+        threadId: thread.threadId,
+      })
+    );
+    expect(targetInFirstPage.recent).toHaveLength(2);
+    expect(targetInFirstPage.inputPrompt).toHaveLength(1);
+    expect(targetInFirstPage.existingResponses).toHaveLength(1);
+
+    // Continued order at order 0 reaches the start of the thread (next.isDone = true).
+    const firstOrderMultiPage = await inAction(
+      f.t,
+      readRecentContext(owner, {
+        boundaryLimit: 1,
+        excludeToolMessages: false,
+        promptMessageId: thread.firstPromptId,
+        recentMessages: 1,
+        threadId: thread.threadId,
+      })
+    );
+    expect(firstOrderMultiPage.inputPrompt).toHaveLength(1);
+    expect(firstOrderMultiPage.existingResponses).toHaveLength(3);
+
+    // Older order split by a window that starts in order 1: reads only one boundary page
+    // (1 row) and trims the still-incomplete older order instead of looping.
+    const olderSplit = await inAction(
+      f.t,
+      readRecentContext(owner, {
+        boundaryLimit: 1,
+        excludeToolMessages: false,
+        promptMessageId: thread.secondPromptId,
+        recentMessages: 5,
+        threadId: thread.threadId,
+      })
+    );
+    expect(olderSplit.recent).toEqual([]);
+    expect(olderSplit.inputPrompt).toHaveLength(1);
+    expect(olderSplit.existingResponses).toHaveLength(3);
+  });
+
   it("drops an order that the window cut short when no step of it is in the window", async () => {
     const f = await createThreadTest();
     const cancelled = await turnThread(f.t, f.identity.userId, {
