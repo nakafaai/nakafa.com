@@ -106,9 +106,15 @@ export function useResizable({
     });
   };
 
-  /** Ends a drag where the pointer last was, which is the one width it keeps. */
-  const handlePointerEnd = () => {
+  /**
+   * Ends a drag where the pointer last was, which is the one width it keeps, and lets the pointer go. WebKit can keep
+   * a mouse captured past its release, which would send the next press elsewhere to the edge.
+   */
+  const handlePointerEnd = (event: React.PointerEvent<HTMLElement>) => {
     const current = drag.current;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
     if (current === null) {
       return;
     }
