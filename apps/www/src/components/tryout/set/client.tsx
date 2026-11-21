@@ -196,30 +196,21 @@ function LiveTryoutSetPage({
 }
 
 /**
- * Renders one stable set view from its exact mutable state: the set's pane beside its track's table, or,
- * for an address that opens the paper of a set entered by its one section, that paper. A paper rendered
- * for a running attempt locks the app shell until the learner leaves it, even once the attempt ends here,
- * so the shell never changes under a page.
+ * Reads one set view from its exact mutable state: the attempt that runs now, the action's attempt, which the
+ * set's next hard load keeps the name of, the links of the attempt to restart, and where a start leads.
  */
-function ResolvedTryoutSetPage({
+function useTryoutSetView({
   binding,
-  children,
-  finish,
   state,
-}: Pick<TryoutSetPageClientProps, "binding" | "children"> & {
-  /** The finish of the attempt the page is bound to; a page bound to none has none. */
-  finish: TryoutFinish | null;
+}: {
+  binding: TryoutSetPageClientProps["binding"];
   state: SetState;
 }) {
-  const { page, paper, pending, restartTarget, route } = useTryoutSetPage();
-  const opening = useTryoutStartPhase() === "opening";
+  const { page, pending, restartTarget, route } = useTryoutSetPage();
   const currentAttempt = state?.attempt ?? null;
-  const runtime = state?.runtime ?? null;
   const entrySection = page.entrySection;
-  const isInternalEntry = entrySection?.visibility === "internal-entry";
   const now = useNow(currentAttempt?.status === "in-progress");
   const activeAttempt = getActiveTryoutAttempt(currentAttempt, now);
-
   const actionAttempt = selectActionAttempt({
     activeAttempt,
     currentAttempt,
@@ -259,13 +250,44 @@ function ResolvedTryoutSetPage({
       set: page.set,
     },
   };
+  return { now, view };
+}
 
-  // A press that opens a section with a page of its own draws its player here at once, and that page draws the
-  // same frame until it reads the attempt; a press that opens the set's own entry draws it in the set's paper.
-  if (opening && !isInternalEntry && destination) {
-    return <TryoutSetOpening part={destination.part} view={view} />;
+/**
+ * Renders one stable set view from its exact mutable state: the set's pane beside its track's table, or,
+ * for an address that opens the paper of a set entered by its one section, that paper. A press that opens a
+ * section with a page of its own draws its player here at once, and that page draws the same frame until it
+ * reads the attempt; a press that opens the set's own entry draws it in the set's paper. A paper rendered for a
+ * running attempt locks the app shell until the learner leaves it, even once the attempt ends here, so the shell
+ * never changes under a page.
+ */
+function ResolvedTryoutSetPage({
+  binding,
+  children,
+  finish,
+  state,
+}: Pick<TryoutSetPageClientProps, "binding" | "children"> & {
+  /** The finish of the attempt the page is bound to; a page bound to none has none. */
+  finish: TryoutFinish | null;
+  state: SetState;
+}) {
+  const { paper } = useTryoutSetPage();
+  const opening = useTryoutStartPhase() === "opening";
+  const { now, view } = useTryoutSetView({ binding, state });
+  const { destination } = view.start;
+  const entrySection =
+    view.entrySection?.visibility === "internal-entry"
+      ? view.entrySection
+      : null;
+
+  if (entrySection === null) {
+    return opening && destination ? (
+      <TryoutSetOpening part={destination.part} view={view} />
+    ) : (
+      <TryoutSetPane view={view} />
+    );
   }
-  if (!((paper || opening) && isInternalEntry && entrySection)) {
+  if (!(paper || opening)) {
     return <TryoutSetPane view={view} />;
   }
   return (
@@ -278,7 +300,7 @@ function ResolvedTryoutSetPage({
           // A page without an attempt runs and reviews nothing, so its view is never read.
           finish: binding ? finish : null,
           mode: binding?.mode ?? "list",
-          runtime,
+          runtime: state?.runtime ?? null,
           view,
         }}
       >
