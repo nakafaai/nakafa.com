@@ -41,9 +41,16 @@ test("a click on a busy main thread keeps the menu it opened open", async ({
         );
         yield* Effect.promise(() => page.mouse.down());
         // The release waits behind a long task, as on a slow phone, though
-        // the pointer never moved: the press is a click, not a hold.
+        // the pointer never moved: the press is a click, not a hold. A layer
+        // then stands over the button, as an open sheet or a list aligned
+        // with its button does, so the release lands on the button only if
+        // the button holds the pointer.
         yield* Effect.promise(() =>
           page.evaluate((busy) => {
+            const cover = document.createElement("div");
+            cover.dataset.e2eCover = "";
+            cover.style.cssText = "position:fixed;inset:0;z-index:2147483647";
+            document.body.append(cover);
             const end = performance.now() + busy;
             let spins = 0;
             while (performance.now() < end) {
@@ -53,6 +60,9 @@ test("a click on a busy main thread keeps the menu it opened open", async ({
           }, BUSY_CLICK_MILLISECONDS)
         );
         yield* Effect.promise(() => page.mouse.up());
+        yield* Effect.promise(() =>
+          page.locator("[data-e2e-cover]").evaluate((cover) => cover.remove())
+        );
         const menu = page.getByRole("menu");
         yield* Effect.promise(() =>
           expect(more).toHaveAttribute("aria-expanded", "true")
