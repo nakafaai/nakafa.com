@@ -1,7 +1,42 @@
 import { VisualCardNoteProvider } from "@repo/design-system/components/visual/card";
+import { untilNearScreen } from "@repo/design-system/lib/screen";
+import { useHydrated } from "@tanstack/react-router";
+import { Deferred, Effect, Exit, Fiber, Option } from "effect";
 import type { ComponentType, ReactNode } from "react";
-import { Activity, Suspense } from "react";
+import { Activity, Suspense, use, useEffect, useRef, useState } from "react";
 import { SETTLED_RENDERER } from "@/lib/static/settle";
+
+/** How far past the screen a visual of a served lesson starts to hydrate, as a share of the screen. */
+const NEAR_SCREEN = "50%";
+
+/** A visual's wait for the screen: done once the visual nears it, and the promise React waits on. */
+interface ScreenWait {
+  readonly near: Deferred.Deferred<void>;
+  readonly reached: Promise<void>;
+}
+
+/** A wait that the visual's box completes once it nears the screen. */
+function makeScreenWait(): ScreenWait {
+  const near = Deferred.makeUnsafe<void>();
+  return { near, reached: Effect.runPromise(Deferred.await(near)) };
+}
+
+/**
+ * Renders its children, once the visual nears the screen when it waits for it. Until then the boundary keeps the
+ * server's HTML. The server and the browser draw the same tree; only the browser's first load waits.
+ */
+function UntilNearScreen({
+  children,
+  wait,
+}: {
+  readonly children: ReactNode;
+  readonly wait: Option.Option<ScreenWait>;
+}) {
+  if (Option.isSome(wait)) {
+    use(wait.value.reached);
+  }
+  return children;
+}
 
 /**
  * Gives a lesson renderer whose code loads on demand its own hydration
@@ -18,6 +53,13 @@ import { SETTLED_RENDERER } from "@/lib/static/settle";
  * renderer's code with the lesson's tree.
  * https://react.dev/reference/react/Activity
  *
+ * On a served lesson the renderer loads its code and hydrates only once its box
+ * nears the screen. Until then React keeps the server's HTML of the visual, so
+ * a chart, a scene or a lab under the first screen costs a slow phone nothing
+ * while the lesson loads: the charts of a lesson drew in tasks of up to 284 ms at
+ * 4x CPU right after hydration, wherever they stood (ADR 0039 D22). A visual of
+ * a client navigation draws at once, in the page's first frame.
+ *
  * The document's `footer`, the note its author wrote under a visual, goes to
  * the visual's card through `VisualCardNoteProvider`, so every visual of the
  * catalog ends with its note without reading it itself.
@@ -26,13 +68,47 @@ export function withHydrationBoundary<P extends object>(
   Renderer: ComponentType<P>
 ) {
   function HydrationBoundary(props: P & { readonly footer?: ReactNode }) {
+    const hydrated = useHydrated();
+    const box = useRef<HTMLDivElement>(null);
+    // Only the browser's first load of a served lesson waits: the server's
+    // render and a client navigation draw the visual at once.
+    const [wait] = useState(() =>
+      hydrated || import.meta.env.SSR
+        ? Option.none<ScreenWait>()
+        : Option.some(makeScreenWait())
+    );
+
+    useEffect(() => {
+      const target = box.current?.firstElementChild ?? box.current;
+      if (Option.isNone(wait) || target === null) {
+        return;
+      }
+      const { near } = wait.value;
+      const watching = Effect.runFork(
+        untilNearScreen(target, NEAR_SCREEN).pipe(
+          Effect.andThen(
+            Effect.sync(() => {
+              Deferred.doneUnsafe(near, Exit.void);
+            })
+          )
+        )
+      );
+      return () => {
+        Effect.runFork(Fiber.interrupt(watching));
+      };
+    }, [wait]);
+
     return (
       <VisualCardNoteProvider note={props.footer}>
-        <Activity mode="visible">
-          <Suspense fallback={null}>
-            <Renderer {...props} />
-          </Suspense>
-        </Activity>
+        <div ref={box}>
+          <Activity mode="visible">
+            <Suspense fallback={null}>
+              <UntilNearScreen wait={wait}>
+                <Renderer {...props} />
+              </UntilNearScreen>
+            </Suspense>
+          </Activity>
+        </div>
       </VisualCardNoteProvider>
     );
   }
