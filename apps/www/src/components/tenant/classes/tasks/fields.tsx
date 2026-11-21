@@ -122,8 +122,8 @@ export function TaskFields({
             value={draft.points}
           >
             <NumberFieldGroup>
-              <NumberFieldDecrement />
               <NumberFieldInput />
+              <NumberFieldDecrement />
               <NumberFieldIncrement />
             </NumberFieldGroup>
           </NumberField>

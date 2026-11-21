@@ -167,8 +167,8 @@ export function SchemeVersionDialog({
               value={draft.kktp}
             >
               <NumberFieldGroup>
-                <NumberFieldDecrement />
                 <NumberFieldInput />
+                <NumberFieldDecrement />
                 <NumberFieldIncrement />
               </NumberFieldGroup>
             </NumberField>

@@ -178,8 +178,8 @@ export function SchoolOrderDialog({
               value={accounts}
             >
               <NumberFieldGroup>
-                <NumberFieldDecrement />
                 <NumberFieldInput />
+                <NumberFieldDecrement />
                 <NumberFieldIncrement />
               </NumberFieldGroup>
             </NumberField>

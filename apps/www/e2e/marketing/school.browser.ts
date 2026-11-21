@@ -318,12 +318,15 @@ const verifySchoolPricing = Effect.fn("NakafaE2E.verifySchoolPricing")(
     // Max with 550 added accounts holds a school of 1,050 for Rp16.735.000 a month.
     const calculator = page.locator("#accounts [data-school-calculator]");
     yield* stepTo(page, calculator.getByRole("button", { name: "Max" }));
-    yield* Effect.promise(() =>
-      calculator.getByRole("button", { name: "Max" }).click()
-    );
     const added = calculator.getByLabel("Akun yang ditambah");
-    // Each step button names the input it steps.
+    // Each step button names the input it steps, the decrease button too while
+    // the fewest accounts disable it, and the decrease button stands first.
     const inputId = yield* Effect.promise(() => added.getAttribute("id"));
+    const decrease = calculator.getByRole("button", {
+      exact: true,
+      name: "Kurangi",
+    });
+    yield* Effect.promise(() => expect(decrease).toBeDisabled());
     for (const name of ["Kurangi", "Tambah"]) {
       yield* Effect.promise(() =>
         expect(
@@ -331,6 +334,15 @@ const verifySchoolPricing = Effect.fn("NakafaE2E.verifySchoolPricing")(
         ).toHaveAttribute("aria-controls", inputId ?? "")
       );
     }
+    const [decreaseBox, inputBox] = yield* Effect.promise(() =>
+      Promise.all([decrease.boundingBox(), added.boundingBox()])
+    );
+    yield* Effect.sync(() =>
+      expect(decreaseBox?.x ?? 0).toBeLessThan(inputBox?.x ?? 0)
+    );
+    yield* Effect.promise(() =>
+      calculator.getByRole("button", { name: "Max" }).click()
+    );
     yield* Effect.promise(() => added.fill("550"));
     yield* Effect.promise(() => added.blur());
     const figures = calculator.locator("dl");

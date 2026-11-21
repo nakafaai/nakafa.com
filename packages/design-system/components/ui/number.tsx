@@ -94,22 +94,26 @@ const numberFieldStepVariants = cva(
 
 /**
  * The button of a number field that steps its number down, named in the page's
- * locale. In a field with an id it names that input as the one it steps: UI SDK
- * points `aria-controls` at the id it would give the input, and takes an input
- * id only from its own field (vercel-labs/ui#1004).
+ * locale. It is written after the field's input and drawn before it
+ * (`order-first`): UI SDK names the input a step button controls by the input's
+ * own id only in a part written after the input, so a decrease button written
+ * first named an id no element has (vercel-labs/ui#1004). The step buttons take
+ * no focus, so the order the keys reach the field is the same.
  */
 function NumberFieldDecrement({
   className,
   ...props
 }: React.ComponentProps<typeof NumberInputDecrement>) {
   const t = useTranslations("Common");
-  const fieldId = use(NumberFieldId);
 
   return (
     <NumberInputDecrement
-      aria-controls={fieldId}
       aria-label={t("decrease")}
-      className={cn(numberFieldStepVariants({ side: "start" }), className)}
+      className={cn(
+        numberFieldStepVariants({ side: "start" }),
+        "order-first",
+        className
+      )}
       {...props}
     >
       <HugeIcons icon={MinusSignIcon} />
@@ -117,17 +121,15 @@ function NumberFieldDecrement({
   );
 }
 
-/** The button of a number field that steps its number up, named in the page's locale, naming the field's input as the decrease button does. */
+/** The button of a number field that steps its number up, named in the page's locale, written after the input as the decrease button is. */
 function NumberFieldIncrement({
   className,
   ...props
 }: React.ComponentProps<typeof NumberInputIncrement>) {
   const t = useTranslations("Common");
-  const fieldId = use(NumberFieldId);
 
   return (
     <NumberInputIncrement
-      aria-controls={fieldId}
       aria-label={t("increase")}
       className={cn(numberFieldStepVariants({ side: "end" }), className)}
       {...props}

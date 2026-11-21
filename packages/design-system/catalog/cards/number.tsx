@@ -22,8 +22,8 @@ export function Preview() {
         <FieldLabel htmlFor="points">Points</FieldLabel>
         <NumberField defaultValue={4} id="points" max={100} min={1}>
           <NumberFieldGroup className="w-36">
-            <NumberFieldDecrement />
             <NumberFieldInput placeholder="1" />
+            <NumberFieldDecrement />
             <NumberFieldIncrement />
           </NumberFieldGroup>
         </NumberField>
