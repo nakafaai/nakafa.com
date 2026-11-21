@@ -1,7 +1,7 @@
 import { VisualCardNoteProvider } from "@repo/design-system/components/visual/card";
 import { untilNearScreen } from "@repo/design-system/lib/screen";
 import { useHydrated } from "@tanstack/react-router";
-import { Deferred, Effect, Exit, Fiber } from "effect";
+import { Deferred, Effect, Exit, Fiber, Option } from "effect";
 import type { ComponentType, ReactNode } from "react";
 import { Activity, Suspense, use, useEffect, useRef, useState } from "react";
 import { SETTLED_RENDERER } from "@/lib/static/settle";
@@ -21,15 +21,20 @@ function makeScreenWait(): ScreenWait {
   return { near, reached: Effect.runPromise(Deferred.await(near)) };
 }
 
-/** Renders its children once the visual nears the screen. Until then the boundary keeps the server's HTML. */
+/**
+ * Renders its children, once the visual nears the screen when it waits for it. Until then the boundary keeps the
+ * server's HTML. The server and the browser draw the same tree; only the browser's first load waits.
+ */
 function UntilNearScreen({
   children,
   wait,
 }: {
   readonly children: ReactNode;
-  readonly wait: ScreenWait;
+  readonly wait: Option.Option<ScreenWait>;
 }) {
-  use(wait.reached);
+  if (Option.isSome(wait)) {
+    use(wait.value.reached);
+  }
   return children;
 }
 
@@ -52,7 +57,7 @@ function UntilNearScreen({
  * nears the screen. Until then React keeps the server's HTML of the visual, so
  * a chart, a scene or a lab under the first screen costs a slow phone nothing
  * while the lesson loads: the charts of a lesson drew in tasks of up to 284 ms at
- * 4x CPU right after hydration, wherever they stood (ADR 0039 D21). A visual of
+ * 4x CPU right after hydration, wherever they stood (ADR 0039 D22). A visual of
  * a client navigation draws at once, in the page's first frame.
  *
  * The document's `footer`, the note its author wrote under a visual, goes to
@@ -65,22 +70,25 @@ export function withHydrationBoundary<P extends object>(
   function HydrationBoundary(props: P & { readonly footer?: ReactNode }) {
     const hydrated = useHydrated();
     const box = useRef<HTMLDivElement>(null);
-    // Only a served lesson waits: the server and a client navigation draw the
-    // visual at once.
+    // Only the browser's first load of a served lesson waits: the server's
+    // render and a client navigation draw the visual at once.
     const [wait] = useState(() =>
-      hydrated || typeof window === "undefined" ? null : makeScreenWait()
+      hydrated || import.meta.env.SSR
+        ? Option.none<ScreenWait>()
+        : Option.some(makeScreenWait())
     );
 
     useEffect(() => {
       const target = box.current?.firstElementChild ?? box.current;
-      if (wait === null || target === null) {
+      if (Option.isNone(wait) || target === null) {
         return;
       }
+      const { near } = wait.value;
       const watching = Effect.runFork(
         untilNearScreen(target, NEAR_SCREEN).pipe(
           Effect.andThen(
             Effect.sync(() => {
-              Deferred.doneUnsafe(wait.near, Exit.void);
+              Deferred.doneUnsafe(near, Exit.void);
             })
           )
         )
@@ -95,13 +103,9 @@ export function withHydrationBoundary<P extends object>(
         <div ref={box}>
           <Activity mode="visible">
             <Suspense fallback={null}>
-              {wait === null ? (
+              <UntilNearScreen wait={wait}>
                 <Renderer {...props} />
-              ) : (
-                <UntilNearScreen wait={wait}>
-                  <Renderer {...props} />
-                </UntilNearScreen>
-              )}
+              </UntilNearScreen>
             </Suspense>
           </Activity>
         </div>
