@@ -37,10 +37,12 @@ function runScript(webkit: boolean) {
 const POPOVER_RESET_TEXT =
   /^@layer ui-sdk \{ :where\(\[data-slot="navigation-menu-viewport"\]\[popover\], .+\[data-slot="hover-card-backdrop"\]\[popover\]\) \{ inset: auto; width: auto; height: auto; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; overflow: visible; color: inherit; background: none \} \}$/u;
 
-/** What UI SDK registers for a positioned popup and for a sheet, the same in every engine. */
+/** What UI SDK registers for a positioned popup, a scroll area's progress and a sheet, the same in every engine. */
 const POPUP_AND_SHEET = [
   { inherits: false, name: "--available-height", syntax: "*" },
   { inherits: false, name: "--available-width", syntax: "*" },
+  { inherits: false, name: "--scroll-area-progress-x", syntax: "*" },
+  { inherits: false, name: "--scroll-area-progress-y", syntax: "*" },
   ...Arr.map(["progress", "dim", "expand", "stack"], (part) => ({
     inherits: false,
     initialValue: "0",
@@ -124,7 +126,7 @@ describe("UI SDK's document-wide styles before the first paint", () => {
     vi.stubGlobal("CSS", { registerProperty, supports: () => false });
     new Function(UI_SDK_HEAD_SCRIPT)();
 
-    expect(registerProperty).toHaveBeenCalledTimes(10);
+    expect(registerProperty).toHaveBeenCalledTimes(12);
   });
 
   it("still records the reset in a browser that cannot register a property", () => {

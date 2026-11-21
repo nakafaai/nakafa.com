@@ -132,6 +132,8 @@ Measured on the acceptance runtime on this Mac, 12x CPU, the largest boot task o
 
 D19. A formula after the first screen preloads no math face (21 November 2026). The server render preloads the KaTeX faces each formula draws (`MathFontPreload`), so a lesson's math draws with the page. The home page draws a formula in its lesson section, below the first screen of a phone, and its two preloads, `KaTeX_Main-Regular` and `KaTeX_Math-Italic`, about 44 KB, went out at high priority beside the global stylesheet and Inter while the page waited for that stylesheet to paint. `LaterSection` now wraps its section in `LaterMath`, under which `MathFontPreload` preloads nothing; the faces load when the browser first lays the formula out, which the section's `later-section` box holds back until it nears the screen. A lesson keeps its preloads.
 
+D20. The head registers a scroll area's progress too (21 November 2026). UI SDK registers `--scroll-area-progress-x` and `--scroll-area-progress-y` when a scroll area's code first runs, and the head script of D17 registered neither, so the sidebar's scroll area restyled every element of the page once its code arrived: 7,490 elements and 95 ms on a lesson at 4x CPU in production. `UI_SDK_HEAD_SCRIPT` now registers both the way UI SDK does, to take any value without inheriting, in every engine.
+
 ## Consequences
 
 Positive: every page loses those recalculations, the home page's first JavaScript no longer holds the sections under its first screen, and decoration leaves the thread to the reader.
