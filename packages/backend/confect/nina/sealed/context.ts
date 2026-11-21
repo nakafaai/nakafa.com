@@ -1,6 +1,7 @@
 import type { MessageDoc } from "@convex-dev/agent";
 import { filterOutOrphanedToolMessages } from "@convex-dev/agent";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import type { ThreadPage } from "@repo/backend/confect/nina/sealed/action";
 import {
   readMessageFromAction,
   readThreadFromAction,
@@ -10,8 +11,9 @@ import type { ThreadRead } from "@repo/backend/confect/nina/sealed/thread";
 import { Array as Arr, Effect, Option, Order } from "effect";
 
 type LearnerId = Docs["users"]["_id"];
+type WindowRead = Omit<ThreadRead, "paginationOpts">;
 
-/** Most messages the boundary read may take to finish the oldest order of a window. */
+/** Most messages one boundary page may take to finish the oldest order of a window. */
 const MAX_BOUNDARY_MESSAGES = 1000;
 
 /** The rows of a thread, oldest first, by order and then by step. */
@@ -32,53 +34,106 @@ function trimIncompleteOldest(docs: MessageDoc[]) {
 }
 
 /**
+ * Whether the split oldest order is the order being continued, the one holding
+ * the prompt: every row of the first page belongs to that order, and so does the
+ * prompt. Mirrors the Agent's `fetchRecentAndSearchMessages`.
+ */
+const isContinuedOrder = Effect.fn("nina.sealed.continued")(function* (
+  owner: LearnerId,
+  promptMessageId: string,
+  page: Arr.NonEmptyReadonlyArray<MessageDoc>
+) {
+  const order = Arr.lastNonEmpty(page).order;
+  if (Arr.headNonEmpty(page).order !== order) {
+    return false;
+  }
+  if (Arr.some(page, (doc) => doc._id === promptMessageId)) {
+    return true;
+  }
+  const prompt = yield* readMessageFromAction(owner, promptMessageId);
+  return prompt?.order === order;
+});
+
+/**
  * The newest `recentMessages` successful messages of a thread up to and including
  * the prompt, with the rest of the oldest order when the window cut it short.
  * This is the window the Agent's own context fetch reads, so the model receives
  * the same messages as before the rows were sealed.
  */
 const readWindow = Effect.fn("nina.sealed.window")(function* (
-  read: Omit<ThreadRead, "paginationOpts">,
-  recentMessages: number
+  read: WindowRead,
+  promptMessageId: string,
+  recentMessages: number,
+  boundaryLimit: number
 ) {
   const first = yield* readThreadFromAction({
     ...read,
     paginationOpts: { cursor: null, numItems: recentMessages },
     statuses: ["success"],
   });
-  const boundary = yield* boundaryOf(read, first);
+  const boundary = yield* boundaryOf(
+    read,
+    promptMessageId,
+    first,
+    boundaryLimit
+  );
   return filterOutOrphanedToolMessages(
     trimIncompleteOldest(oldestFirst([...first.page, ...boundary]))
   );
 });
 
 /**
- * The rest of the oldest order of a window that a read cut short: one more read
- * from the window's cursor, for the steps of that order that the window missed.
+ * The rest of the oldest order of a window that a read cut short. The order
+ * being continued holds the prompt, so it is read whole in pages of at most
+ * `boundaryLimit`; an older order gets one page and is trimmed if still split.
  * Nothing is read when the window holds no message, when it holds the first
  * step, or when it is the whole thread.
  */
 const boundaryOf = Effect.fn("nina.sealed.boundary")(function* (
-  read: Omit<ThreadRead, "paginationOpts">,
-  first: {
-    readonly continueCursor: string;
-    readonly isDone: boolean;
-    readonly page: readonly MessageDoc[];
-  }
+  read: WindowRead,
+  promptMessageId: string,
+  first: ThreadPage,
+  boundaryLimit: number
 ) {
-  const oldest = Arr.last(first.page);
-  if (Option.isNone(oldest) || first.isDone || oldest.value.stepOrder === 0) {
+  if (
+    !Arr.isReadonlyArrayNonEmpty(first.page) ||
+    first.isDone ||
+    Arr.lastNonEmpty(first.page).stepOrder === 0
+  ) {
     return [];
   }
-  const rest = yield* readThreadFromAction({
-    ...read,
-    paginationOpts: {
-      cursor: first.continueCursor,
-      numItems: Math.min(oldest.value.stepOrder, MAX_BOUNDARY_MESSAGES),
-    },
-    statuses: ["success"],
-  });
-  return Arr.filter(rest.page, (doc) => doc.order === oldest.value.order);
+  const oldest = Arr.lastNonEmpty(first.page);
+  const continued = yield* isContinuedOrder(
+    read.owner,
+    promptMessageId,
+    first.page
+  );
+  let boundary: readonly MessageDoc[] = [];
+  let cursor = first.continueCursor;
+  let stepOrder = oldest.stepOrder;
+  while (true) {
+    const next = yield* readThreadFromAction({
+      ...read,
+      paginationOpts: {
+        cursor,
+        numItems: Math.min(stepOrder, boundaryLimit),
+      },
+      statuses: ["success"],
+    });
+    boundary = Arr.appendAll(
+      boundary,
+      Arr.filter(next.page, (doc) => doc.order === oldest.order)
+    );
+    const tail = Option.filter(
+      Arr.last(next.page),
+      (doc) => doc.order === oldest.order && doc.stepOrder > 0
+    );
+    if (!continued || next.isDone || Option.isNone(tail)) {
+      return boundary;
+    }
+    cursor = next.continueCursor;
+    stepOrder = tail.value.stepOrder;
+  }
 });
 
 /**
@@ -89,6 +144,7 @@ const boundaryOf = Effect.fn("nina.sealed.boundary")(function* (
 export const readRecentContext = Effect.fn("nina.sealed.context")(function* (
   owner: LearnerId,
   read: {
+    readonly boundaryLimit?: number;
     readonly excludeToolMessages: boolean;
     readonly promptMessageId: string;
     readonly recentMessages: number;
@@ -102,7 +158,9 @@ export const readRecentContext = Effect.fn("nina.sealed.context")(function* (
       threadId: read.threadId,
       upToAndIncludingMessageId: read.promptMessageId,
     },
-    read.recentMessages
+    read.promptMessageId,
+    read.recentMessages,
+    read.boundaryLimit ?? MAX_BOUNDARY_MESSAGES
   );
   const index = Arr.findFirstIndex(
     recent,

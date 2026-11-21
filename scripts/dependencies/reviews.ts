@@ -83,8 +83,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "ai@latest",
-    "7.0.177",
-    "AI SDK packages move as one reviewed cohort. 7.0.177 is the latest release and the adopted one (7.0.174 to 7.0.177 add batch output, extraction models in provider registries, a steering interrupt and one-pass validation of UI message metadata, and move @ai-sdk/provider to 4.0.39 and provider-utils to 5.0.82; none of these is used here): @convex-dev/agent 0.7.9 peers ai ^7.0.129, the gateway provider 0.3.0 peers ^7.0.105, and the gateway module (confect/gateway) typechecks against it. From 7.0.171 a failed tool's error text reaches the client as the model received it, and the agent offers no redactToolErrors, so a Nina capability that breaks on a defect settles as a failure whose text names no cause (confect/nina/capability/progress.ts). Checked 20 November 2026.",
+    "7.0.179",
+    "AI SDK packages move as one reviewed cohort. 7.0.179 is the latest release and the adopted one. 7.0.178 creates the messages array of each step for that step, so the array that prepareStep returns is copied (confect/nina/generation.ts already returns a new array for each step, so the copy changes nothing here), forwards the preliminary flag of provider-executed tool results, and stops signing the approval request of a tool call that the approval policy denied, which no Nina tool requests; 7.0.179 adds Live models over WebSocket to the gateway client, which nothing here imports. It moves @ai-sdk/provider-utils to 5.0.83 and keeps @ai-sdk/provider at 4.0.39. @convex-dev/agent 0.7.11 peers ai ^7.0.129, the gateway provider 0.3.0 peers ^7.0.105, and the gateway module (confect/gateway) typechecks against it. From 7.0.171 a failed tool's error text reaches the client as the model received it, and the agent offers no redactToolErrors, so a Nina capability that breaks on a defect settles as a failure whose text names no cause (confect/nina/capability/progress.ts). Checked 21 November 2026.",
   ],
   [
     "@convex-dev/ai-sdk-provider@latest",
@@ -93,8 +93,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@convex-dev/agent@latest",
-    "0.7.10",
-    "The backend stays on 0.7.9. 0.7.10 reads the recent window differently: when the window cuts the oldest order short and that order holds the prompt, it reads the order whole in a loop of pages instead of one bounded page (vercel/client/search.js), and it stores reasoning once in content, drops the unused memories table from its schema, and renders error-text and error-json tool results as output-error. The sealed module mirrors 0.7.9's window read step for step (confect/nina/sealed/context.ts), so a sealed thread reads what a plain one reads, and on 0.7.10 eighteen Nina tests fail across sealed/context, sealed/thread, sealed/turn, presentation, response, generation, messages/page and memory/tool: the follow-up suggestions call no model and the sealed window differs from the Agent's. The move ports the new window read into the sealed module and proves those suites again. Checked 20 November 2026.",
+    "0.7.11",
+    "0.7.11 is the latest release and the adopted one. 0.7.10 reads the whole oldest order of a window in pages of at most 1,000 when that order holds the prompt, and one page otherwise (vercel/client/search.js), derives reasoning and reasoningDetails on read from the reasoning parts that it stores once in content (withDerivedReasoning), drops the unused memories table from its schema, and renders error-text and error-json tool results as output-error. The sealed module mirrors both reads (confect/nina/sealed/context.ts and sealed.ts): it reads the continued order whole the same way, ignores the empty reasoning that the component derives from a sealed row's skeleton, and derives reasoning from the opened content, so a sealed thread reads what a plain one reads. 0.7.11 changes the approval continuation, which applies only when a tool requests approval, and no Nina tool does. Checked 21 November 2026.",
   ],
   [
     "@convex-dev/auth@latest",

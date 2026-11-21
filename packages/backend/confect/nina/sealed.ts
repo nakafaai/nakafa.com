@@ -11,6 +11,10 @@ import {
   vSource,
 } from "@convex-dev/agent/validators";
 import {
+  withDerivedReasoning,
+  withoutSkeletonReasoning,
+} from "@repo/backend/confect/nina/sealed/reasoning";
+import {
   SEALED_KEY,
   skeletonMessage,
 } from "@repo/backend/confect/nina/sealed/skeleton";
@@ -166,20 +170,22 @@ const openContent = Effect.fn("nina.sealed.openContent")(function* (
 /**
  * Opens a stored message. A row with no sealed content is a plain row, and it is
  * returned as it is. A sealed row comes back as the message was written: its
- * content opened, its `text` and its `tool` derived the way the Agent derives
- * them, and no sealed key left. A field that the row keeps in the clear beside its
- * sealed content comes back as stored, such as the error that a cut-off turn writes
- * after the row is sealed. It fails with `VaultError` reason `cipher` when the
- * content does not open for these keys and this identity, or when the row and its
- * sealed content both hold the same field, because neither value can be the right one.
+ * content opened, its `text`, its `tool` and its reasoning derived the way the
+ * Agent derives them, and no sealed key left. A field that the row keeps in the
+ * clear beside its sealed content comes back as stored, such as the error that a
+ * cut-off turn writes after the row is sealed. It fails with `VaultError` reason
+ * `cipher` when the content does not open for these keys and this identity, or
+ * when the row and its sealed content both hold the same field, because neither
+ * value can be the right one.
  */
 export const openMessage = Effect.fn("nina.sealed.open")(function* (
   keys: LearnerKeys,
   identity: MessageIdentity,
   stored: MessageDoc
 ) {
-  const sealedOptions = stored.message?.providerOptions?.[SEALED_KEY];
-  if (sealedOptions === undefined) {
+  const skeleton = stored.message;
+  const sealedOptions = skeleton?.providerOptions?.[SEALED_KEY];
+  if (skeleton === undefined || sealedOptions === undefined) {
     return stored;
   }
   const sealed: unknown = sealedOptions.sealed;
@@ -187,18 +193,20 @@ export const openMessage = Effect.fn("nina.sealed.open")(function* (
     return yield* cipherError();
   }
   const content = yield* openContent(keys, identity, sealed);
+  const base = withoutSkeletonReasoning(stored, skeleton);
   const held = Arr.some(
     fieldsBesideMessage,
-    (field) => stored[field] !== undefined && content[field] !== undefined
+    (field) => base[field] !== undefined && content[field] !== undefined
   );
   if (held) {
     return yield* cipherError();
   }
-  return {
-    ...stored,
+  const message = withoutSealed(content.message);
+  return withDerivedReasoning({
+    ...base,
     ...content,
-    message: withoutSealed(content.message),
-    text: extractText(content.message),
-    tool: isTool(content.message),
-  };
+    message,
+    text: extractText(message),
+    tool: isTool(message),
+  });
 });
