@@ -34,8 +34,16 @@ describe("tryout route paths", () => {
     expect(getTryoutPublicPathHref("try-out/indonesia/tka")).toBe(
       "/try-out/indonesia/tka"
     );
-    expect(getTryoutAttemptLock("attempt/id", 42)).toEqual({
+    expect(
+      getTryoutAttemptLock({
+        attemptId: "attempt/id",
+        locale: "en",
+        setPath: "try-out/id/set-1",
+        until: 42,
+      })
+    ).toEqual({
       name: "attemptId",
+      path: "/en/try-out/id/set-1",
       until: 42,
       value: "attempt/id",
     });

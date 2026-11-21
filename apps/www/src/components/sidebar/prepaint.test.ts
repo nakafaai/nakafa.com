@@ -11,7 +11,12 @@ import {
 } from "@/components/sidebar/prepaint";
 
 /** A lock that has not ended, and its stored text. */
-const LOCK = { name: "attemptId", until: Number.MAX_SAFE_INTEGER, value: "a1" };
+const LOCK = {
+  name: "attemptId",
+  path: "/en/try-out/set",
+  until: Number.MAX_SAFE_INTEGER,
+  value: "a1",
+};
 
 /** Writes any value as JSON text, as storage holds it. */
 const jsonText = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
@@ -19,9 +24,9 @@ const jsonText = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
 /** Writes one lock as the store keeps it. */
 const lockText = Schema.encodeSync(Schema.fromJsonString(PrepaintLock));
 
-/** Runs the script as the page does, from a script element in the body, at `search`. */
-function runScript(search: string) {
-  window.history.replaceState(null, "", `/en/try-out/set${search}`);
+/** Runs the script as the page does, from a script element in the body, at `search` on `path`. */
+function runScript(search: string, path = "/en/try-out/set") {
+  window.history.replaceState(null, "", `${path}${search}`);
   const script = document.createElement("script");
   script.setAttribute(PREPAINT_LOCK_ATTRIBUTE, "");
   document.body.append(script);
@@ -51,12 +56,24 @@ describe("PREPAINT_LOCK_SCRIPT", () => {
     ).toBe(true);
   });
 
-  it("leaves the page open for another attempt, an ended lock, no lock, and a lock it cannot read", () => {
+  it("marks the first frame locked at the bare address of the remembered lock's path, which moves to its pages", () => {
+    rememberInBrowser(LOCK);
+    expect(runScript("").hasAttribute("data-shell-lock")).toBe(true);
+    expect(runScript("?view=single").hasAttribute("data-shell-lock")).toBe(
+      true
+    );
+  });
+
+  it("leaves the page open for another attempt, another path, an ended lock, no lock, and a lock it cannot read", () => {
     rememberInBrowser(LOCK);
     expect(runScript("?attemptId=b2").hasAttribute("data-shell-lock")).toBe(
       false
     );
+    expect(
+      runScript("", "/en/try-out/other").hasAttribute("data-shell-lock")
+    ).toBe(false);
     rememberInBrowser({ ...LOCK, until: 0 });
+    expect(runScript("").hasAttribute("data-shell-lock")).toBe(false);
     expect(runScript("?attemptId=a1").hasAttribute("data-shell-lock")).toBe(
       false
     );
@@ -68,7 +85,14 @@ describe("PREPAINT_LOCK_SCRIPT", () => {
     expect(runScript("?attemptId=a1").hasAttribute("data-shell-lock")).toBe(
       false
     );
-    localStorage.setItem("nakafa-shell-lock", jsonText({ name: "attemptId" }));
+    localStorage.setItem(
+      "nakafa-shell-lock",
+      jsonText({
+        name: "attemptId",
+        until: Number.MAX_SAFE_INTEGER,
+        value: "a1",
+      })
+    );
     expect(runScript("?attemptId=a1").hasAttribute("data-shell-lock")).toBe(
       false
     );

@@ -144,6 +144,7 @@ export function ShellLock({
   const setLocks = useShellLocks();
   const hydrated = useHydrated();
   const name = remember?.name;
+  const path = remember?.path;
   const until = remember?.until;
   const value = remember?.value;
 
@@ -153,11 +154,16 @@ export function ShellLock({
   }, [setLocks]);
 
   useLayoutEffect(() => {
-    if (name === undefined || until === undefined || value === undefined) {
+    if (
+      name === undefined ||
+      path === undefined ||
+      until === undefined ||
+      value === undefined
+    ) {
       return;
     }
     Effect.runFork(
-      rememberPrepaintLock({ name, until, value }).pipe(
+      rememberPrepaintLock({ name, path, until, value }).pipe(
         Effect.provide(keptStorage),
         Effect.catch((error) =>
           reportClientException(error, { source: "shell-prepaint-lock" })
@@ -174,7 +180,7 @@ export function ShellLock({
         )
       );
     };
-  }, [name, until, value]);
+  }, [name, path, until, value]);
 
   return hydrated ? null : <span data-shell-lock="" hidden />;
 }
