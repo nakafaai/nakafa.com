@@ -9,8 +9,10 @@ import { ContentLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { EndReason } from "@repo/backend/confect/assessment/gate/end";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
-import { Grade } from "@repo/backend/confect/assessment/grade";
-import { ExamResponse } from "@repo/backend/confect/assessment/response";
+import {
+  QuestionGrade,
+  QuestionResponse,
+} from "@repo/backend/confect/assessment/parts";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
 import { tryoutScoreResultValidator } from "@repo/backend/confect/tryouts/score";
 import { tryoutStatusValidator } from "@repo/backend/confect/tryouts/status";
@@ -59,9 +61,9 @@ export const tryoutAttemptStateValidator = Schema.Struct({
 });
 const runtimeResponseValidator = Schema.Struct({
   answeredAt: Schema.Finite,
-  /** How the answer graded, present only once answers may be reviewed. */
-  grade: Schema.optionalKey(Grade),
-  response: ExamResponse,
+  /** How the answer graded, a question of several part by part, present only once answers may be reviewed. */
+  grade: Schema.optionalKey(QuestionGrade),
+  response: QuestionResponse,
   updatedAt: Schema.Finite,
 });
 const runtimeQuestionValidator = Schema.Struct({
@@ -89,15 +91,16 @@ export const tryoutRuntimeStateValidator = Schema.Struct({
 });
 /**
  * One question of a section as the learner reads it in one language: the prompt of that language's item
- * version, its one interaction with its labels, and the document of the shared reading it was written
- * against. After its section finishes, a learner entitled to the answers also receives the key's answer
- * for the interaction, which accepts the typed answers of every language, and that version's
- * explanation in the app locale, when it has one.
+ * version, which places each of its interactions, the interactions with their labels in the item's order,
+ * and the document of the shared reading it was written against. After its section finishes, a learner
+ * entitled to the answers also receives the key's answer for each interaction, in the same order, which
+ * accepts the typed answers of every language, and that version's explanation in the app locale, when it
+ * has one.
  */
 export const TryoutQuestionBodySchema = Schema.Struct({
   explanation: Schema.optionalKey(ContentDocumentSchema),
-  interaction: InteractionSchema,
-  key: Schema.optionalKey(InteractionKeySchema),
+  interactions: Schema.NonEmptyArray(InteractionSchema),
+  keys: Schema.optionalKey(Schema.NonEmptyArray(InteractionKeySchema)),
   prompt: AssessmentDocumentSchema,
   stimulus: Schema.optionalKey(ContentDocumentSchema),
 });

@@ -15,6 +15,14 @@ export type Written = Extract<
 >;
 
 /**
+ * A typed interaction: a written one (`Written`), or a math entry, whose response is its formula as LaTeX text, as
+ * the parts of an exam task take them.
+ */
+export type Typed =
+  | Written
+  | Extract<Interaction, { readonly kind: "mathEntry" }>;
+
+/**
  * The written interaction of a question, when the question holds exactly one interaction and that
  * interaction is a text entry, a numeric entry or a long text, as a short answer, a numeric answer and an
  * essay do. This is the rule that the server applies.

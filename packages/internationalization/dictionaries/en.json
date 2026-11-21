@@ -2552,7 +2552,8 @@
     "rewards-held": "All earned",
     "reward-sections": "{count, number} parts finished",
     "reward-paper": "Questions finished",
-    "medal-name": "{name} medal"
+    "medal-name": "{name} medal",
+    "verdict": "{state, select, correct {Correct} incorrect {Wrong} pending {Waiting for its grade} other {Unanswered}}"
   },
   "Player": {
     "navigator-answered": "{answered, number} of {total, number} answered",
@@ -2591,6 +2592,7 @@
     "time": "Time left",
     "placeholder": {
       "essay": "Write your answer",
+      "math": "Type a formula",
       "number": "Type a number",
       "short": "Type your answer"
     }

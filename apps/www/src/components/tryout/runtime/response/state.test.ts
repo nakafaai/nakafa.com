@@ -81,6 +81,18 @@ describe("isAnsweredQuestion", () => {
     expect(
       isAnsweredQuestion(makeTryoutQuestion("first", { response: stored([]) }))
     ).toBe(false);
+    expect(
+      isAnsweredQuestion(
+        makeTryoutQuestion("first", {
+          response: {
+            ...stored([]),
+            response: {
+              parts: [{ interaction: "part-b", response: { text: "Haus" } }],
+            },
+          },
+        })
+      )
+    ).toBe(true);
   });
 });
 

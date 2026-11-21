@@ -9,7 +9,7 @@ import { Array as Arr, Effect, Option } from "effect";
 
 /**
  * Reads one place as a learner reads it in one language: the hash of that language's item version,
- * its prompt, its one interaction with the labels written in that language, and the document of the
+ * its prompt, its interactions with the labels written in that language, and the document of the
  * shared reading the version was written against, none without one. Every reader of a question's words
  * reads through here, the exam page, its review, Nina, and the landing's featured question, so nothing
  * else picks a version. A language the place holds no version in fails as
@@ -38,7 +38,7 @@ export const placeVersion = Effect.fn("tryouts.runtime.placeVersion")(
         : Option.some((yield* readStimulus(version.stimulus.hash)).document);
     return {
       hash: version.hash,
-      interaction: Arr.headNonEmpty(version.interactions),
+      interactions: version.interactions,
       language,
       prompt: version.prompt,
       stimulus,

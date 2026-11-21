@@ -2,11 +2,14 @@ import { describe, expect, it } from "@effect/vitest";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { formatterOf } from "@repo/internationalization/src/formats";
+import { Option } from "effect";
 import type { Entry } from "@/components/tryout/runtime/response/entry";
 import {
   decimalOf,
   entryResponse,
+  gradedMark,
   isEntry,
+  isTyped,
   reviewEntry,
 } from "@/components/tryout/runtime/response/entry";
 
@@ -60,6 +63,18 @@ describe("tryout/runtime/response/entry", () => {
     expect(isEntry(SHORT)).toBe(true);
     expect(isEntry(LENGTH)).toBe(true);
     expect(isEntry(CHOICE)).toBe(false);
+  });
+
+  it("types a short answer, a number, a formula and an essay, and nothing else", () => {
+    expect(isTyped(SHORT)).toBe(true);
+    expect(isTyped(LENGTH)).toBe(true);
+    expect(
+      isTyped({ id: "formula", kind: "mathEntry", label: "Formula" })
+    ).toBe(true);
+    expect(isTyped({ id: "essay", kind: "extendedText", label: "Essay" })).toBe(
+      true
+    );
+    expect(isTyped(CHOICE)).toBe(false);
   });
 
   it("sends what the learner typed, and clears the answer once it is blank", () => {
@@ -126,5 +141,27 @@ describe("tryout/runtime/response/entry", () => {
         response: { text: "Jakarta" },
       })
     ).toMatchObject({ accepted: [], earned: false, tone: "wrong" });
+  });
+
+  it("marks a formula or an essay by the server's grade: open while blank, waiting until graded, then correct with every point", () => {
+    const written = { text: "x^2" };
+    expect(gradedMark(null, Option.none())).toBe("blank");
+    expect(gradedMark({ text: " " }, Option.none())).toBe("blank");
+    expect(gradedMark(written, Option.none())).toBe("pending");
+    expect(
+      gradedMark(written, Option.some({ ceiling: 3, status: "pending" }))
+    ).toBe("pending");
+    expect(
+      gradedMark(
+        written,
+        Option.some({ category: 3, ceiling: 3, status: "scored" })
+      )
+    ).toBe("correct");
+    expect(
+      gradedMark(
+        written,
+        Option.some({ category: 1, ceiling: 3, status: "scored" })
+      )
+    ).toBe("wrong");
   });
 });

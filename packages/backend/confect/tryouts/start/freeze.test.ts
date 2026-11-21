@@ -1,4 +1,5 @@
 import { assert, describe, expect, it } from "@effect/vitest";
+import { QUESTION_PARTS_MAX } from "@repo/backend/confect/assessment/parts";
 import { readPlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
 import {
   freezeAttempt,
@@ -20,6 +21,65 @@ const sourceOf = (
     sections: Arr.flatMap(snapshot.catalog, (row) =>
       row.kind === "section" && row.appLocale === "id" ? [row] : []
     ),
+  };
+};
+
+/**
+ * An item of `count` parts, as Aksara publishes an exam task: part `a` a typed number, every later part a typed
+ * text, each placed in its prompt and scored per part with points rising by its place.
+ */
+const partsItem = (
+  item: PlacedItem,
+  count: number
+): typeof PlacedItem.Encoded => {
+  const ids = Arr.makeBy(count, (index) =>
+    index === 0 ? "part-a" : `part-b${index === 1 ? "" : `-${index}`}`
+  );
+  return {
+    key: {
+      ...item.key,
+      answers: Arr.map(ids, (id, index) =>
+        index === 0
+          ? { interaction: id, kind: "numericEntry" as const, value: "2" }
+          : {
+              accepted: {
+                acceptedAnswers: ["Haus"],
+                collapseWhitespace: true,
+                ignoreCase: false,
+                kind: "text" as const,
+              },
+              interaction: id,
+              kind: "textEntry" as const,
+            }
+      ),
+    },
+    version: {
+      ...item.version,
+      interactions: Arr.map(ids, (id, index) =>
+        index === 0
+          ? {
+              acceptsFractions: false,
+              id,
+              kind: "numericEntry" as const,
+              label: "Antwort a",
+            }
+          : { id, kind: "textEntry" as const, label: `Antwort ${id}` }
+      ),
+      prompt: {
+        content: [
+          { content: [{ text: "Rechne.", type: "text" }], type: "paragraph" },
+          ...Arr.map(ids, (id) => ({
+            attrs: { interaction: id },
+            type: "interaction",
+          })),
+        ],
+        type: "doc",
+      },
+      scoring: Arr.map(ids, (id, index) => ({
+        interaction: id,
+        rule: { floor: 0, kind: "perPart" as const, pointsPerPart: index + 1 },
+      })),
+    },
   };
 };
 
@@ -90,23 +150,28 @@ describe("tryouts/start/freeze", () => {
           ],
         });
         expect(yield* readPlacedQuestion(placed)).toEqual({
-          interaction: {
-            id: "choice",
-            kind: "choice",
-            maxChoices: 1,
-            minChoices: 0,
-            options: [
-              { id: "option-1" },
-              { id: "option-2" },
-              { id: "option-3" },
-              { id: "option-4" },
-            ],
-            shuffle: false,
-          },
-          key: malay.key.answers[0],
-          rule: { kind: "allOrNothing" },
+          interactions: [
+            {
+              interaction: {
+                id: "choice",
+                kind: "choice",
+                maxChoices: 1,
+                minChoices: 0,
+                options: [
+                  { id: "option-1" },
+                  { id: "option-2" },
+                  { id: "option-3" },
+                  { id: "option-4" },
+                ],
+                shuffle: false,
+              },
+              key: malay.key.answers[0],
+              rule: { kind: "allOrNothing" },
+            },
+          ],
         });
         expect(placed.interactionJson).not.toContain("label");
+        expect(placed).not.toHaveProperty("laterInteractions");
       })
   );
 
@@ -160,7 +225,7 @@ describe("tryouts/start/freeze", () => {
         const { placements } = yield* freezeAttempt({ ...source, items });
         const [placed] = placements;
         assert(placed);
-        expect((yield* readPlacedQuestion(placed)).key).toEqual(
+        expect((yield* readPlacedQuestion(placed)).interactions[0].key).toEqual(
           textIn(["tiga", "3", "three"])
         );
         // A version whose answer is no text entry adds no text to the first's.
@@ -170,7 +235,7 @@ describe("tryouts/start/freeze", () => {
         const [alone] = (yield* freezeAttempt({ ...source, items: mixed }))
           .placements;
         assert(alone);
-        expect((yield* readPlacedQuestion(alone)).key).toEqual(
+        expect((yield* readPlacedQuestion(alone)).interactions[0].key).toEqual(
           textIn(["tiga", "3"])
         );
       })
@@ -222,7 +287,47 @@ describe("tryouts/start/freeze", () => {
   );
 
   it.effect(
-    "refuses a section without its paper section, a place without its item, a version of two interactions, a key without the answer, and a kind without a rule",
+    "freezes every interaction of a question of several parts in the item's order, each with its key answer and its own rule",
+    () =>
+      Effect.gen(function* () {
+        const snapshot = yield* makeAssessmentSnapshot();
+        const source = sourceOf(snapshot);
+        const [first] = source.items;
+        assert(first);
+        const parts = yield* Schema.decodeEffect(PlacedItem)(
+          partsItem(first, 2)
+        );
+        const { placements } = yield* freezeAttempt({
+          ...source,
+          items: [parts, ...Arr.drop(source.items, 1)],
+        });
+        const [placed] = placements;
+        assert(placed);
+        const question = yield* readPlacedQuestion(placed);
+        expect(
+          Arr.map(question.interactions, ({ interaction, key, rule }) => [
+            interaction,
+            key.kind,
+            rule,
+          ])
+        ).toEqual([
+          [
+            { acceptsFractions: false, id: "part-a", kind: "numericEntry" },
+            "numericEntry",
+            { floor: 0, kind: "perPart", pointsPerPart: 1 },
+          ],
+          [
+            { id: "part-b", kind: "textEntry" },
+            "textEntry",
+            { floor: 0, kind: "perPart", pointsPerPart: 2 },
+          ],
+        ]);
+        expect(placed.laterInteractions).toHaveLength(1);
+      })
+  );
+
+  it.effect(
+    "refuses a section without its paper section, a place without its item, a version of more parts than a question holds or of one joint rule, a key without the answer, and a kind without a rule",
     () =>
       Effect.gen(function* () {
         const snapshot = yield* makeAssessmentSnapshot();
@@ -240,27 +345,28 @@ describe("tryouts/start/freeze", () => {
         ).toBe("TRYOUT_ITEM_MISSING");
         const [first] = source.items;
         assert(first);
-        const twice = yield* Schema.decodeEffect(PlacedItem)({
-          ...first,
+        const crowded = yield* Schema.decodeEffect(PlacedItem)(
+          partsItem(first, QUESTION_PARTS_MAX + 1)
+        );
+        expect(
+          yield* codeOf({
+            ...source,
+            items: [crowded, ...Arr.drop(source.items, 1)],
+          })
+        ).toBe("TRYOUT_ITEM_SHAPE");
+        const pair = partsItem(first, 2);
+        const joint = yield* Schema.decodeEffect(PlacedItem)({
+          ...pair,
           version: {
-            ...first.version,
-            interactions: [
-              ...first.version.interactions,
-              { ...first.version.interactions[0], id: "second" },
-            ],
-            prompt: {
-              ...first.version.prompt,
-              content: [
-                ...first.version.prompt.content,
-                { attrs: { interaction: "second" }, type: "interaction" },
-              ],
-            },
+            ...pair.version,
+            joint: { levels: [{ correct: ["part-a", "part-b"], points: 2 }] },
+            scoring: [],
           },
         });
         expect(
           yield* codeOf({
             ...source,
-            items: [twice, ...Arr.drop(source.items, 1)],
+            items: [joint, ...Arr.drop(source.items, 1)],
           })
         ).toBe("TRYOUT_ITEM_SHAPE");
         const keyless = yield* Schema.decodeEffect(PlacedItem)({

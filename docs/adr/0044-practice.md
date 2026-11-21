@@ -12,11 +12,11 @@ A try-out runs like the real exam: a timer per section, a 24-hour window, sectio
 
 **Its own records.** Practice keeps three tables of its own in `confect/practice`, never a mode of `tryoutAttempts`. A try-out attempt carries a deadline, timed sections, a scale version, access for competitions and a score; none of them applies to practice, and every reader of attempts (scores, history, catalog progress, deadlines, calibration, reminders) would otherwise have to filter practice out. Keeping practice apart keeps it out of the score and the calibration by construction.
 
-| Table               | Holds                                                                                                                                                                |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `practiceSessions`  | One per learner, set and section: the snapshot and release it froze from, its paper, its locale, and when it started and was last used.                              |
-| `practiceQuestions` | The section's questions frozen when the session started, as a try-out's placements are: item version, interaction and key as JSON text, the scoring rule, the order. |
-| `practiceAnswers`   | One per checked question: the response, its grade and when it was checked.                                                                                           |
+| Table               | Holds                                                                                                                                                                             |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `practiceSessions`  | One per learner, set and section: the snapshot and release it froze from, its paper, its locale, and when it started and was last used.                                           |
+| `practiceQuestions` | The section's questions frozen when the session started, as a try-out's placements are: item version, each interaction and its key as JSON text with its scoring rule, the order. |
+| `practiceAnswers`   | One per checked question: the response, its grade (a question of several parts part by part) and when it was checked.                                                             |
 
 **One freeze.** A session freezes its section exactly as a try-out start does: `loadTryoutStartSource` reads the set, its paper, its profile and every item from the active snapshot, and `freezeAttempt` builds the places, of which the session keeps its section's. The question bodies are read by `readSectionBodies` from the frozen rows, so a later release never changes a session mid-way.
 

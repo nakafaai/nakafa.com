@@ -2552,7 +2552,8 @@
     "rewards-held": "Sudah diperoleh",
     "reward-sections": "{count, number} bahagian selesai",
     "reward-paper": "Soalan selesai",
-    "medal-name": "Pingat {name}"
+    "medal-name": "Pingat {name}",
+    "verdict": "{state, select, correct {Betul} incorrect {Salah} pending {Menunggu markah} other {Belum dijawab}}"
   },
   "Player": {
     "navigator-answered": "{answered, number} daripada {total, number} dijawab",
@@ -2591,6 +2592,7 @@
     "time": "Baki masa",
     "placeholder": {
       "essay": "Tulis jawapan kamu",
+      "math": "Taip formula",
       "number": "Taip nombor",
       "short": "Taip jawapan kamu"
     }

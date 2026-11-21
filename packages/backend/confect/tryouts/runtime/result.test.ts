@@ -55,6 +55,38 @@ describe("tryouts/runtime/result", () => {
       })
   );
 
+  it.effect(
+    "sums a question of several parts into the raw score, counting its scored parts while another part waits",
+    () =>
+      Effect.gen(function* () {
+        const parts = scored({
+          answered: true,
+          grade: {
+            ceiling: 5,
+            parts: [
+              {
+                grade: { category: 2, ceiling: 2, status: "scored" },
+                interaction: "part-a",
+              },
+              {
+                grade: { ceiling: 3, status: "pending" },
+                interaction: "part-b",
+              },
+            ],
+            status: "pending",
+          },
+          placementId: "placement-parts",
+        });
+        expect(
+          yield* scoreAnswers([correct, parts], { kind: "raw" }, 2)
+        ).toMatchObject({
+          rawScore: 50,
+          scoreStatus: "provisional",
+          totalCorrect: 1,
+        });
+      })
+  );
+
   it.effect("stores a section's ability estimate whole or not at all", () =>
     Effect.gen(function* () {
       expect(yield* getSectionScoreSnapshot(official)).toEqual({

@@ -1,7 +1,7 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import tryoutAttemptPlacementsTable from "@repo/backend/confect/_generated/tables/tryoutAttemptPlacements";
-import { Grade } from "@repo/backend/confect/assessment/grade";
+import { QuestionGrade } from "@repo/backend/confect/assessment/parts";
 import { gradeAnswer } from "@repo/backend/confect/tryouts/response/answer";
 import { responseIntegrity } from "@repo/backend/confect/tryouts/response/spec";
 import { readPlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
@@ -156,7 +156,7 @@ export const validateTryoutResponsePlacementInventory = Effect.fn(
   return input.placements;
 });
 
-const sameGrade = Schema.toEquivalence(Grade);
+const sameGrade = Schema.toEquivalence(QuestionGrade);
 
 /**
  * Validates response rows against their verified placements and keeps their stored order. Each

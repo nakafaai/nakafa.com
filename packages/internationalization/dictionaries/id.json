@@ -2552,7 +2552,8 @@
     "rewards-held": "Sudah kamu dapat",
     "reward-sections": "{count, number} bagian selesai",
     "reward-paper": "Soal selesai",
-    "medal-name": "Medali {name}"
+    "medal-name": "Medali {name}",
+    "verdict": "{state, select, correct {Benar} incorrect {Salah} pending {Menunggu dinilai} other {Belum dijawab}}"
   },
   "Player": {
     "navigator-answered": "{answered, number} dari {total, number} terjawab",
@@ -2591,6 +2592,7 @@
     "time": "Sisa waktu",
     "placeholder": {
       "essay": "Tulis jawabanmu",
+      "math": "Ketik rumus",
       "number": "Ketik angka",
       "short": "Ketik jawabanmu"
     }

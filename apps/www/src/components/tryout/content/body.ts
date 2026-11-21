@@ -44,7 +44,7 @@ export type TryoutBody = Effect.Success<
   ReturnType<typeof decodeTryoutBodies>
 >[number];
 
-/** One language of a question: its prompt, interaction, reading, and, in a review, key and explanation. */
+/** One language of a question: its prompt, interactions, reading, and, in a review, keys and explanation. */
 export type TryoutBodyVersion = TryoutBody["versions"][number];
 
 /** A section's questions that the bodies beside them do not all cover, or not in the language shown. */

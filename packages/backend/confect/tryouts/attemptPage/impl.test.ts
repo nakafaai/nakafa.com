@@ -239,8 +239,8 @@ describe("tryouts/attemptPage", () => {
         const [table] = yield* bodiesOf(section);
         expect(table).toMatchObject({
           explanation: { type: "doc" },
-          interaction: { kind: "matrix" },
-          key: { kind: "matrix" },
+          interactions: [{ kind: "matrix" }],
+          keys: [{ kind: "matrix" }],
           prompt: { type: "doc" },
           stimulus: { type: "doc" },
         });
@@ -303,7 +303,10 @@ describe("tryouts/attemptPage", () => {
         );
         const bodies = yield* bodiesOf(section);
         expect(
-          Arr.map(bodies, (body) => [body.key?.kind, body.explanation?.type])
+          Arr.map(bodies, (body) => [
+            body.keys?.[0].kind,
+            body.explanation?.type,
+          ])
         ).toEqual([
           ["choice", "doc"],
           ["choice", "doc"],
@@ -333,11 +336,11 @@ describe("tryouts/attemptPage", () => {
           },
         });
         const bodies = yield* bodiesOf(page);
-        expect(Arr.map(bodies, (body) => body.interaction.kind)).toEqual([
+        expect(Arr.map(bodies, (body) => body.interactions[0].kind)).toEqual([
           "choice",
           "choice",
         ]);
-        expect(Arr.some(bodies, (body) => body.key !== undefined)).toBe(false);
+        expect(Arr.some(bodies, (body) => body.keys !== undefined)).toBe(false);
         const other = yield* Effect.promise(() =>
           world.t.mutation((ctx) =>
             seedAuthenticatedUser(ctx, { now: TRYOUT_NOW, suffix: "other" })

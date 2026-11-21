@@ -2,19 +2,38 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { fitsQuestion } from "@repo/backend/confect/assessment/fit";
 import type { Version } from "@repo/backend/confect/assessment/gate/rules";
-import { Grade, grade } from "@repo/backend/confect/assessment/grade";
+import type { Grade } from "@repo/backend/confect/assessment/grade";
+import { grade } from "@repo/backend/confect/assessment/grade";
 import {
-  ExamResponse,
-  isAnswered,
-} from "@repo/backend/confect/assessment/response";
+  answersQuestion,
+  findPart,
+  fitsParts,
+  isPartsResponse,
+  QuestionGrade,
+  QuestionResponse,
+  sumParts,
+} from "@repo/backend/confect/assessment/parts";
+import type { ExamResponse } from "@repo/backend/confect/assessment/response";
+import { NO_RESPONSE } from "@repo/backend/confect/assessment/response";
 import { TryoutResponseUnfitError } from "@repo/backend/confect/tryouts/response/spec";
-import type { PlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
-import { Effect, Number as Num, Option, Result, Schema, Struct } from "effect";
+import type {
+  PlacedInteraction,
+  PlacedQuestion,
+} from "@repo/backend/confect/tryouts/runtime/question";
+import {
+  Array as Arr,
+  Effect,
+  Number as Num,
+  Option,
+  Result,
+  Schema,
+  Struct,
+} from "effect";
 
-/** A learner's admitted answer to one place: the response and how its frozen rule grades it. */
+/** A learner's admitted answer to one place: the response and how its frozen rules grade it. */
 export const GradedAnswer = Schema.Struct({
-  grade: Grade,
-  response: ExamResponse,
+  grade: QuestionGrade,
+  response: QuestionResponse,
 });
 export type GradedAnswer = typeof GradedAnswer.Type;
 
@@ -25,24 +44,69 @@ export const isCorrectGrade = (graded: Grade) =>
 /**
  * Settles the grade of a short answer that no accepted answer matches. The shared grader leaves it for a person,
  * as a School teacher decides it, but no person grades a try-out, so it scores nothing, as a number outside its
- * tolerance does, and every try-out scores itself when it ends.
+ * tolerance does. A math entry and a written answer stay pending: no grader reads them yet, so the attempt's score
+ * stays provisional and says so, and nothing marks them for the learner.
  */
-const settled = (question: PlacedQuestion, graded: Grade): Grade =>
-  graded.status === "pending" && question.interaction.kind === "textEntry"
+const settled = (placed: PlacedInteraction, graded: Grade): Grade =>
+  graded.status === "pending" && placed.interaction.kind === "textEntry"
     ? { category: 0, ceiling: graded.ceiling, status: "scored" }
     : graded;
 
+/** Grades one interaction's response by its own frozen key and rule, settled for a try-out (`settled`). */
+const gradeInteraction = (placed: PlacedInteraction, response: ExamResponse) =>
+  settled(placed, grade({ ...placed, response }));
+
 /**
- * Grades one response to a place with the place's frozen interaction, key, and rule
- * (`readPlacedQuestion`), with a short answer that no accepted answer matches scored nothing (`settled`). A
- * response that does not fit the interaction (`fitsQuestion`) is refused. It returns a `Result`, not an
- * Effect, so the integrity check re-grades stored answers with the same synchronous step.
+ * Grades a response to a question by its frozen interactions. A question of one interaction grades its response by
+ * that interaction's rule. A question of several grades each part's response by the part's own rule, a blank part
+ * scoring nothing, and sums them (`sumParts`), so the question is worth every part's points.
+ */
+export function gradeQuestion(
+  question: PlacedQuestion,
+  response: QuestionResponse
+): QuestionGrade {
+  const [first, ...later] = question.interactions;
+  if (Arr.isReadonlyArrayEmpty(later) && !isPartsResponse(response)) {
+    return gradeInteraction(first, response);
+  }
+  return sumParts(
+    Arr.map(question.interactions, (placed) => ({
+      grade: gradeInteraction(
+        placed,
+        Option.getOrElse(
+          findPart(response, placed.interaction.id),
+          () => NO_RESPONSE
+        )
+      ),
+      interaction: placed.interaction.id,
+    }))
+  );
+}
+
+/**
+ * Whether a response fits a place's frozen question: the response to its one interaction (`fitsQuestion`), or the
+ * parts of a question of several (`fitsParts`).
+ */
+const fitsPlaced = (question: PlacedQuestion, response: QuestionResponse) => {
+  const interactions = Arr.map(
+    question.interactions,
+    (placed) => placed.interaction
+  );
+  return interactions.length === 1
+    ? !isPartsResponse(response) && fitsQuestion(interactions, response)
+    : fitsParts(interactions, response);
+};
+
+/**
+ * Grades one response to a place with the place's frozen interactions, keys, and rules (`readPlacedQuestion`,
+ * `gradeQuestion`). A response that does not fit the question (`fitsPlaced`) is refused. It returns a `Result`, not
+ * an Effect, so the integrity check re-grades stored answers with the same synchronous step.
  */
 export function gradeAnswer(
   question: PlacedQuestion,
-  response: ExamResponse
+  response: QuestionResponse
 ): Result.Result<GradedAnswer, TryoutResponseUnfitError> {
-  if (!fitsQuestion([question.interaction], response)) {
+  if (!fitsPlaced(question, response)) {
     return Result.fail(
       new TryoutResponseUnfitError({
         code: "TRYOUT_RESPONSE_UNFIT",
@@ -51,7 +115,7 @@ export function gradeAnswer(
     );
   }
   return Result.succeed({
-    grade: settled(question, grade({ ...question, response })),
+    grade: gradeQuestion(question, response),
     response,
   });
 }
@@ -62,7 +126,7 @@ const uncounted = { answered: 0, correct: 0 };
 /** What one answer adds to its section's counters: answered questions and correct grades. */
 function countOf(answer: GradedAnswer) {
   return {
-    answered: isAnswered(answer.response) ? 1 : 0,
+    answered: answersQuestion(answer.response) ? 1 : 0,
     correct: isCorrectGrade(answer.grade) ? 1 : 0,
   };
 }

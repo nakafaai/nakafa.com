@@ -20,17 +20,16 @@ import {
   TryoutReviewQuestionExplanation,
   TryoutReviewQuestionShell,
 } from "@/components/tryout/runtime/question/shell";
-import { TryoutResponseFields } from "@/components/tryout/runtime/response/fields";
-import { TryoutReviewedFields } from "@/components/tryout/runtime/response/review";
+import { TryoutReviewedAnswer } from "@/components/tryout/runtime/response/review";
 
 /**
  * The questions of the finished attempt a page was loaded with, in the review's player
  * (`TryoutReviewFrame`), in the list or one at a time: each with its body, the learner's own answer, and
- * how it went, which every reader sees, as a score is free. The backend sends a question's key and
+ * how it went, which every reader sees, as a score is free. The backend sends a question's keys and
  * explanation only to a reader who may read them, a Pro learner or anyone on the section's free samples,
- * so such a question marks the answer against its key and opens its explanation, and any other question
- * opens the Pro offer in its explanation's place. Nina answers about any question, for the learner's Nina
- * credits.
+ * so such a question marks the answer against its keys, shows the points of each part of a question of
+ * several, and opens its explanation, and any other question opens the Pro offer in its explanation's
+ * place. Nina answers about any question, for the learner's Nina credits.
  */
 export function TryoutAttemptReview({
   binding,
@@ -69,29 +68,18 @@ export function TryoutAttemptReview({
               <TryoutQuestionBody body={body} />
             </PlayerQuestionPrompt>
             <PlayerQuestionAnswer>
-              {body.key === undefined ? (
-                <TryoutResponseFields
-                  value={{
-                    id: `review-${question.placementId}`,
-                    interaction: body.interaction,
-                    locked: true,
-                    onChange: () => undefined,
-                    response: question.response?.response ?? null,
-                  }}
-                />
-              ) : (
-                <TryoutReviewedFields
-                  answer={body.key}
-                  id={`review-${question.placementId}`}
-                  interaction={body.interaction}
-                  response={question.response?.response ?? null}
-                />
-              )}
+              <TryoutReviewedAnswer
+                grade={question.response?.grade}
+                id={`review-${question.placementId}`}
+                interactions={body.interactions}
+                keys={body.keys}
+                response={question.response?.response ?? null}
+              />
             </PlayerQuestionAnswer>
             <TryoutReviewQuestionExplanation
               questionOrder={question.questionOrder}
             >
-              {body.key === undefined ? (
+              {body.keys === undefined ? (
                 <TryoutExplanationOffer />
               ) : (
                 <TryoutExplanationBody body={body} />

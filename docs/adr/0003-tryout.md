@@ -138,9 +138,11 @@ Choice and category answers are correct or incorrect. A short answer is graded
 only through the contract's `matchesAnswerKey` and `readNumberAnswer`, which
 read no language: a number is read in any script with a dot or a comma as its
 decimal point, and fractions only when the key accepts them. A place freezes
-the structure of its interaction without words and one key, whose text entry
-accepts the typed answers of every language version of the place, so a learner
-who switches language is graded the same. A numeric key decides the answer. A text answer that matches
+the structure of each of its interactions without words, with its key and its
+rule; a text entry's key accepts the typed answers of every language version of
+the place, so a learner who switches language is graded the same. A place of
+several interactions, the parts of an exam task, is graded part by part and
+summed (ADR 0031, section 4). A numeric key decides the answer. A text answer that matches
 no accepted answer stays `pending` until the grader judges text variants. A
 rubric earns the upper level of each final-answer criterion whose typed final
 answer matches its key; a written response leaves its judged criteria, and so

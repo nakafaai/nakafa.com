@@ -98,7 +98,7 @@ describe("practice/sessions", () => {
           sessionId,
         });
         expect(bodies).toHaveLength(questions.length);
-        expect(Arr.some(bodies, ({ body }) => body.includes('"key"'))).toBe(
+        expect(Arr.some(bodies, ({ body }) => body.includes('"keys"'))).toBe(
           false
         );
         // A question is explained only once it is checked.
@@ -111,7 +111,7 @@ describe("practice/sessions", () => {
         });
         expect(
           yield* world.learner.query(explain, { locale: "id", questionId: one })
-        ).toMatchObject({ key: { kind: "choice" } });
+        ).toMatchObject({ keys: [{ kind: "choice" }] });
         // Past the two free samples a free learner reads no key; a Pro learner does.
         yield* Effect.promise(() =>
           world.t.mutation((ctx) =>
@@ -134,7 +134,7 @@ describe("practice/sessions", () => {
           yield* world.learner.query(explain, { locale: "id", questionId: two })
         ).toMatchObject({
           explanation: expect.anything(),
-          key: { kind: "choice" },
+          keys: [{ kind: "choice" }],
         });
         // A question whose explanation the release does not hold reads its key alone.
         yield* Effect.promise(() =>
@@ -154,7 +154,7 @@ describe("practice/sessions", () => {
           locale: "id",
           questionId: two,
         });
-        expect(bare).toMatchObject({ key: { kind: "choice" } });
+        expect(bare).toMatchObject({ keys: [{ kind: "choice" }] });
         expect(bare).not.toHaveProperty("explanation");
       })
   );

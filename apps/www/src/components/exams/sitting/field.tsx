@@ -1,8 +1,3 @@
-import {
-  useDebouncedCallback,
-  useDidUpdate,
-  useWindowEvent,
-} from "@mantine/hooks";
 import { TEXT_RESPONSE_MAX } from "@repo/backend/confect/assessment/response";
 import {
   InputGroup,
@@ -10,7 +5,6 @@ import {
   InputGroupInput,
   InputGroupText,
 } from "@repo/design-system/components/ui/input-group";
-import { useRef } from "react";
 import { useTranslations } from "use-intl";
 import {
   SittingEssay,
@@ -19,24 +13,17 @@ import {
 } from "@/components/exams/sitting/essay";
 import { SittingKeypad } from "@/components/exams/sitting/keypad";
 import { usePaperLocked } from "@/components/exams/sitting/lock";
-import type { Written } from "@/components/player/response";
-
-/** How long the student pauses typing before the answer is saved. */
-const TYPING_PAUSE_MILLISECONDS = 800;
-
-/** The longest the answer waits while the student keeps typing, so a long answer is saved as it grows. */
-const TYPING_WAIT_MILLISECONDS = 4000;
+import { useSittingTyping } from "@/components/exams/sitting/typing";
+import type { Typed } from "@/components/player/response";
 
 /**
- * The answer field of a short answer, a numeric answer or an essay: one line the student types a short
- * answer on, one line for a number with its unit beside it, or an essay, written with its formulas in the answer
- * editor (`SittingEssay`), as a paper exam leaves room to write. The field shows each key at
- * once and keeps the text in the browser on every key, then sends it once the student pauses, leaves the
- * field, leaves the question, or the page hides or closes, so a typed answer is not one save per key and a
- * reload or a closed tab loses no key. Words saved from another tab take the field's place unless the
- * student is typing here, so a later key never writes over words the field did not show. The Arabic keypad
- * beside the field types an Arabic answer with its harakat, and the field follows the direction of the
- * words the student writes.
+ * The answer field of a short answer, a numeric answer, a formula or an essay: one line the student types a short
+ * answer on, one line for a number with its unit beside it, one line for a formula written as LaTeX, or an essay,
+ * written with its formulas in the answer editor (`SittingEssay`), as a paper exam leaves room to write. The field
+ * saves as the student types (`useSittingTyping`). The Arabic keypad beside a word or a number types an Arabic
+ * answer with its harakat, and the field follows the direction of the words the student writes. A line never
+ * corrects, capitalizes or marks the spelling of what the student types, because the answer is read as it was
+ * typed.
  */
 export function SittingField({
   entry,
@@ -46,7 +33,7 @@ export function SittingField({
   saved,
   text,
 }: {
-  readonly entry: Written;
+  readonly entry: Typed;
   /** The id of the heading that names the question. */
   readonly labelledBy: string;
   /**
@@ -63,46 +50,43 @@ export function SittingField({
 }) {
   const disabled = usePaperLocked();
   const t = useTranslations("Player");
-  const line = useRef<HTMLInputElement>(null);
-  const save = useDebouncedCallback(onType, {
-    delay: TYPING_PAUSE_MILLISECONDS,
-    flushOnUnmount: true,
-    maxWait: TYPING_WAIT_MILLISECONDS,
-  });
-  // A page that hides or closes unmounts nothing, so it sends the text waiting for a pause at once.
-  useWindowEvent("pagehide", () => save.flush());
-  useWindowEvent("visibilitychange", () => {
-    if (document.visibilityState === "hidden") {
-      save.flush();
-    }
-  });
-
-  // The field takes its text once, so a save from elsewhere reaches it here. The page's own save only
-  // repeats what the field shows.
-  useDidUpdate(() => {
-    const field = line.current;
-    if (field !== null && field !== document.activeElement) {
-      field.value = saved;
-    }
-  }, [saved]);
-
-  /** Keeps every key at once, and sends the text after a pause. */
-  function write(value: string) {
-    onKeep?.(value);
-    save(value);
-  }
+  const { flush, line, write } = useSittingTyping({ onKeep, onType, saved });
 
   if (entry.kind === "extendedText") {
     return (
       <SittingEssay fallback={<SittingEssayWords text={text} />}>
         <SittingEssayEditor
           labelledBy={labelledBy}
-          onBlur={() => save.flush()}
+          onBlur={flush}
           onChange={write}
           saved={saved}
           text={text}
         />
       </SittingEssay>
+    );
+  }
+
+  if (entry.kind === "mathEntry") {
+    // A formula reads left to right whatever language the question is in.
+    return (
+      <InputGroup data-disabled={disabled}>
+        <InputGroupInput
+          aria-labelledby={labelledBy}
+          autoCapitalize="off"
+          autoComplete="off"
+          autoCorrect="off"
+          defaultValue={text}
+          dir="ltr"
+          disabled={disabled}
+          maxLength={TEXT_RESPONSE_MAX}
+          name={entry.id}
+          onBlur={flush}
+          onChange={(event) => write(event.currentTarget.value)}
+          placeholder={t("placeholder.math")}
+          ref={line}
+          spellCheck={false}
+        />
+      </InputGroup>
     );
   }
 
@@ -120,7 +104,7 @@ export function SittingField({
           inputMode="decimal"
           maxLength={TEXT_RESPONSE_MAX}
           name={entry.id}
-          onBlur={() => save.flush()}
+          onBlur={flush}
           onChange={(event) => write(event.currentTarget.value)}
           placeholder={t("placeholder.number")}
           ref={line}
@@ -140,13 +124,15 @@ export function SittingField({
     <InputGroup data-disabled={disabled}>
       <InputGroupInput
         aria-labelledby={labelledBy}
+        autoCapitalize="off"
         autoComplete="off"
+        autoCorrect="off"
         defaultValue={text}
         dir="auto"
         disabled={disabled}
         maxLength={TEXT_RESPONSE_MAX}
         name={entry.id}
-        onBlur={() => save.flush()}
+        onBlur={flush}
         onChange={(event) => write(event.currentTarget.value)}
         placeholder={t("placeholder.short")}
         ref={line}

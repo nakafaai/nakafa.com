@@ -14,12 +14,13 @@ import {
 } from "@repo/design-system/components/markdown/mdx";
 import { Array as Arr, Match } from "effect";
 import type { ReactNode } from "react";
+import { AssessmentInteraction } from "@/components/assessment/interaction";
 import { placeNodes } from "@/components/assessment/place";
 
 /**
  * The inline content of one block, or the rich text of a figure's title, label, or caption: text with
- * its marks, inline math, and line breaks. The place of an inline interaction draws nothing, because
- * the question draws the interaction's fields below its prompt.
+ * its marks, inline math, and line breaks. The place of an inline interaction draws its field inside the
+ * line when the question draws its fields at their places (`AssessmentInteraction`), and nothing otherwise.
  */
 export function InlineContent({
   nodes,
@@ -36,7 +37,9 @@ function InlinePiece({ node }: { readonly node: InlineNode }) {
   return Match.value(node).pipe(
     Match.discriminatorsExhaustive("type")({
       hardBreak: () => <br />,
-      inlineInteraction: () => null,
+      inlineInteraction: ({ attrs }) => (
+        <AssessmentInteraction inline interaction={attrs.interaction} />
+      ),
       mathInline: ({ attrs }) => <InlineMath math={attrs.latex} />,
       text: ({ marks, text }) => <MarkedText marks={marks ?? []} text={text} />,
     })

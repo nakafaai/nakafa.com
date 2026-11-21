@@ -4,7 +4,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import type { EndReason } from "@repo/backend/confect/assessment/gate/end";
 import { statusOf } from "@repo/backend/confect/assessment/gate/end";
-import { isAnswered } from "@repo/backend/confect/assessment/response";
+import { answersQuestion } from "@repo/backend/confect/assessment/parts";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import { writeTryoutSetProgress } from "@repo/backend/confect/tryouts/progress/write";
 import { recordSetBest } from "@repo/backend/confect/tryouts/rank/write";
@@ -93,7 +93,7 @@ export const loadSectionScoreSource = Effect.fn(
 export function summarizeResponses(responses: readonly TryoutResponse[]) {
   return {
     answeredCount: Arr.countBy(responses, ({ response }) =>
-      isAnswered(response)
+      answersQuestion(response)
     ),
     correctAnswers: Arr.countBy(responses, ({ grade }) =>
       isCorrectGrade(grade)

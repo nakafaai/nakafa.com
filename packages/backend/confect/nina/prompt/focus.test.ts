@@ -4,6 +4,7 @@ import { InteractionKeySchema } from "@nakafa/aksara-contracts/assessment/key";
 import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import {
   formatFocusAnswer,
+  formatFocusAnswers,
   formatFocusPrompt,
   formatFocusTaskPrompt,
 } from "@repo/backend/confect/nina/prompt/focus";
@@ -224,6 +225,39 @@ describe("nina/prompt/focus", () => {
     );
     expect(formatFocusAnswer(essay, null)).toBe(
       "## Learner's Answer\n\nno written answer"
+    );
+  });
+
+  it("formats a question of one interaction as its answer section, and each part of a question of several under its label", () => {
+    expect(formatFocusAnswers([typed], { text: "Jakarta" })).toBe(
+      formatFocusAnswer(typed, { text: "Jakarta" })
+    );
+    expect(
+      formatFocusAnswers([numeric, typed], {
+        parts: [{ interaction: "typed", response: { text: "Bandung" } }],
+      })
+    ).toBe(
+      Arr.join(
+        [
+          "## Pecahan",
+          "",
+          "### Answer Key",
+          "",
+          "- correct number: 0.75",
+          "- learner's answer: no answer",
+          "",
+          "## Ibu kota",
+          "",
+          "### Answer Key",
+          "",
+          "- accepted answers: Jakarta; DKI Jakarta",
+          "- learner's answer: Bandung",
+        ],
+        "\n"
+      )
+    );
+    expect(formatFocusAnswers([numeric, essay], null)).toContain(
+      "## Jelaskan\n\n### Learner's Answer\n\nno written answer"
     );
   });
 

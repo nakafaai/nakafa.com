@@ -3,8 +3,10 @@ import { ContentDocumentSchema } from "@nakafa/aksara-contracts/assessment/docum
 import { InteractionKeySchema } from "@nakafa/aksara-contracts/assessment/key";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import { Grade } from "@repo/backend/confect/assessment/grade";
-import { ExamResponse } from "@repo/backend/confect/assessment/response";
+import {
+  QuestionGrade,
+  QuestionResponse,
+} from "@repo/backend/confect/assessment/parts";
 import { Verdict } from "@repo/backend/confect/assessment/verdict";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
@@ -46,8 +48,8 @@ const practiceStateValidator = Schema.Struct({
       answer: Schema.NullOr(
         Schema.Struct({
           checkedAt: Schema.Finite,
-          grade: Grade,
-          response: ExamResponse,
+          grade: QuestionGrade,
+          response: QuestionResponse,
         })
       ),
       questionId: IdSchema("practiceQuestions"),
@@ -66,10 +68,10 @@ const practiceContentValidator = Schema.Array(
   })
 );
 
-/** A checked question's key and explanation, for a reader who may read them. */
+/** A checked question's key, its answer for each interaction in the item's order, and its explanation, for a reader who may read them. */
 const practiceExplanationValidator = Schema.Struct({
   explanation: Schema.optionalKey(ContentDocumentSchema),
-  key: InteractionKeySchema,
+  keys: Schema.NonEmptyArray(InteractionKeySchema),
 });
 
 const refusals = () =>
@@ -106,7 +108,7 @@ export default GroupSpec.make()
       name: "check",
       args: () => ({
         questionId: IdSchema("practiceQuestions"),
-        response: ExamResponse,
+        response: QuestionResponse,
       }),
       returns: () => Schema.Struct({ verdict: Verdict }),
       error: refusals,

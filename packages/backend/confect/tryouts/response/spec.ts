@@ -1,12 +1,15 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { Version } from "@repo/backend/confect/assessment/gate/rules";
-import { ExamResponse } from "@repo/backend/confect/assessment/response";
+import { QuestionResponse } from "@repo/backend/confect/assessment/parts";
 import { publicFailure } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 export const saveTryoutResponseArgsValidator = Schema.Struct({
   placementId: IdSchema("tryoutAttemptPlacements"),
-  /** The learner's response to the question's one interaction, or `null` to clear the answer. */
-  response: Schema.Union([ExamResponse, Schema.Null]),
+  /**
+   * The learner's response to the question: to its one interaction, or to each answered part of a question of
+   * several, or `null` to clear the answer.
+   */
+  response: Schema.Union([QuestionResponse, Schema.Null]),
   /**
    * Numbers the writes of one question, so a write another one overtook is
    * refused.

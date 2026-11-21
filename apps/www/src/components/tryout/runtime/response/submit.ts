@@ -1,6 +1,6 @@
 import { useMutation } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import type { ExamResponse } from "@repo/backend/confect/assessment/response";
+import type { QuestionResponse } from "@repo/backend/confect/assessment/parts";
 import { Clock, Effect } from "effect";
 import { keptStorage } from "@/components/player/storage";
 import { updateRuntimeQueries } from "@/components/tryout/runtime/cache";
@@ -55,19 +55,21 @@ export function usePickLedger() {
 
 /**
  * Picks one response for a question: the browser keeps it before it is sent, numbered one above the version
- * the question shows, so a reload, a closed tab, or a connection that is down or still signing in never loses
- * it. The player sends every kept pick again once its questions show.
+ * the question shows unless the write names its own (`nextPartsWrite`), so a reload, a closed tab, or a
+ * connection that is down or still signing in never loses it. The player sends every kept pick again once its
+ * questions show.
  */
 export function useTryoutResponseSubmit() {
   const ledger = usePickLedger();
 
-  return (question: TryoutRuntimeQuestion, response: ExamResponse | null) => {
+  return (
+    question: TryoutRuntimeQuestion,
+    response: QuestionResponse | null,
+    version = nextTryoutResponseVersion(question)
+  ) => {
     Effect.runFork(
       ledger
-        .choose(question.placementId, {
-          response,
-          version: nextTryoutResponseVersion(question),
-        })
+        .choose(question.placementId, { response, version })
         .pipe(Effect.provide(keptStorage))
     );
   };

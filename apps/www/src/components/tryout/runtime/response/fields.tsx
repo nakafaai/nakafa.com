@@ -20,7 +20,7 @@ import { markedWith, toggleOption } from "@/components/player/response";
 import { ChoiceTable } from "@/components/player/table";
 import {
   entryResponse,
-  isEntry,
+  isTyped,
 } from "@/components/tryout/runtime/response/entry";
 import { optionLabelId } from "@/components/tryout/runtime/response/id";
 import { TryoutResponseLabel } from "@/components/tryout/runtime/response/label";
@@ -32,6 +32,8 @@ interface TryoutResponseFieldsProps {
     readonly answer?: InteractionKey | undefined;
     readonly id: string;
     readonly interaction: Interaction;
+    /** What names the fields to a screen reader: the part they answer, or the question's answer when it has one part. */
+    readonly label?: string | undefined;
     readonly locked: boolean;
     readonly onChange: (response: ExamResponse | null) => void;
     readonly replayEarlyChoice?: boolean;
@@ -40,10 +42,10 @@ interface TryoutResponseFieldsProps {
 }
 
 /**
- * Renders the one interaction of a question as the learner answers it: a choice that takes one option as
+ * Renders one interaction of a question as the learner answers it: a choice that takes one option as
  * radios, a choice that takes more as checks, a matrix as one table with a row per statement, and a short
- * answer or a numeric answer as the field School's paper types it in. A try-out sets no other kind, so any
- * other renders nothing.
+ * answer, a number, a formula or an essay as the field School's paper types it in (`SittingField`). A
+ * try-out sets no other kind, so any other renders nothing.
  */
 export function TryoutResponseFields({ value }: TryoutResponseFieldsProps) {
   const tCommon = useTranslations("Common");
@@ -51,14 +53,14 @@ export function TryoutResponseFields({ value }: TryoutResponseFieldsProps) {
   if (interaction.kind === "matrix") {
     return <MatrixFields table={interaction} value={value} />;
   }
-  if (isEntry(interaction)) {
-    // School's field, with its Arabic keypad and the number's unit, saves once the learner pauses typing or leaves
+  if (isTyped(interaction)) {
+    // School's field, with its Arabic keypad and a number's unit, saves once the learner pauses typing or leaves
     // it, and stays read-only while the question is locked; a blank field clears the answer.
     const text = typedText(response ?? NO_RESPONSE);
     return (
       <PaperLockProvider locked={locked}>
         <span className="sr-only" id={`${id}-answer-label`}>
-          {tCommon("answer")}
+          {value.label ?? tCommon("answer")}
         </span>
         <SittingField
           entry={interaction}
@@ -98,7 +100,7 @@ function SingleChoiceFields({
   return (
     <fieldset className="min-w-0 border-0 p-0">
       <legend className="sr-only" id={labelId}>
-        {tCommon("answer")}
+        {value.label ?? tCommon("answer")}
       </legend>
       <RadioGroup
         aria-labelledby={labelId}
@@ -150,7 +152,7 @@ function MultipleChoiceFields({
       className="grid min-w-0 grid-cols-1 gap-2 border-0 p-0 md:grid-cols-2"
       dir={partDirection(parts)}
     >
-      <legend className="sr-only">{tCommon("answer")}</legend>
+      <legend className="sr-only">{value.label ?? tCommon("answer")}</legend>
       {Arr.map(choice.options, (option, index) => (
         <ChoiceCheck
           appearance={revealedAppearance(value.answer, option.id)}

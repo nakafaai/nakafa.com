@@ -25,29 +25,31 @@ export function Tryout() {
   const t = useTranslations("Landing");
   const common = useTranslations("Common");
   const question = {
-    interaction: {
-      id: "choice",
-      kind: "choice",
-      label: common("answer"),
-      maxChoices: 1,
-      minChoices: 1,
-      options: Arr.map([10, 13, 19, 15, 18], (answer) => ({
-        id: `option-${answer}`,
-        label: {
-          content: [
-            {
-              content: [
-                { attrs: { latex: String(answer) }, type: "mathInline" },
-              ],
-              type: "paragraph",
-            },
-          ],
-          type: "doc",
-        },
-      })),
-      shuffle: false,
-    },
-    key: { correct: ["option-19"], interaction: "choice", kind: "choice" },
+    interactions: [
+      {
+        id: "choice",
+        kind: "choice",
+        label: common("answer"),
+        maxChoices: 1,
+        minChoices: 1,
+        options: Arr.map([10, 13, 19, 15, 18], (answer) => ({
+          id: `option-${answer}`,
+          label: {
+            content: [
+              {
+                content: [
+                  { attrs: { latex: String(answer) }, type: "mathInline" },
+                ],
+                type: "paragraph",
+              },
+            ],
+            type: "doc",
+          },
+        })),
+        shuffle: false,
+      },
+    ],
+    keys: [{ correct: ["option-19"], interaction: "choice", kind: "choice" }],
     prompt: {
       content: [
         {
@@ -88,9 +90,9 @@ export function Tryout() {
           </PlayerQuestionPrompt>
           <PlayerQuestionAnswer className="my-0">
             <TryoutDemoQuestion
-              answer={question.key}
+              answer={question.keys[0]}
               id="home-tryout-response"
-              interaction={question.interaction}
+              interaction={question.interactions[0]}
             />
           </PlayerQuestionAnswer>
         </FeatureCard>

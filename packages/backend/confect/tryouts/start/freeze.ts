@@ -1,10 +1,12 @@
 import type { CatalogRow } from "@nakafa/aksara-contracts/assessment/catalog";
+import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import { ItemVersionSchema } from "@nakafa/aksara-contracts/assessment/item";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { ItemKeySchema } from "@nakafa/aksara-contracts/assessment/key";
 import type { Paper } from "@nakafa/aksara-contracts/assessment/paper";
 import type { ExamProfile } from "@nakafa/aksara-contracts/assessment/profile";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { QUESTION_PARTS_MAX } from "@repo/backend/confect/assessment/parts";
 import { encodePlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
 import type { TryoutSection } from "@repo/backend/confect/tryouts/runtime/schema";
 import { Array as Arr, Effect, HashMap, Option, Schema, Tuple } from "effect";
@@ -29,9 +31,10 @@ const isTextAnswer = (answer: InteractionKey): answer is TextAnswer =>
 
 /**
  * A snapshot cannot be frozen into an attempt: a section of the profile has no section in the paper
- * or the catalog, a place names an item version the snapshot does not hold, a version holds other than
- * one interaction, its key has no answer for it, or no rule scores it. Ingress proves a snapshot's
- * closure, so each is a snapshot the player cannot run, never a learner's mistake.
+ * or the catalog, a place names an item version the snapshot does not hold, a version holds more
+ * interactions than one question answers (`QUESTION_PARTS_MAX`) or is scored by one joint rule, which no
+ * try-out grades, its key has no answer for one of its interactions, or no rule scores one. Ingress
+ * proves a snapshot's closure, so each is a snapshot the player cannot run, never a learner's mistake.
  */
 class TryoutFreezeError extends Schema.TaggedError<
   TryoutFreezeError,
@@ -102,11 +105,70 @@ const placedItemOf = Effect.fn("tryouts.start.placedItemOf")(function* (
 });
 
 /**
- * Freezes one place: its family and its version in each language of its section, the structure of its
- * one interaction, the key's answer for it across every version (`unionAnswer`), and its rule, the
- * version's override for the interaction, else the profile's default for its kind. Every version of a
- * place shares the first's structure, scoring, and key, which the contract checks at publication, so
- * the first decides them. The player and the grader read one interaction per question, as School's do.
+ * Freezes one interaction of a place: its structure, the key's answer for it across every version
+ * (`unionAnswer`), and its rule, the version's override for the interaction, else the profile's default
+ * for its kind. Every version of a place shares the first's structure, scoring, and key, which the
+ * contract checks at publication, so the first decides them.
+ */
+const freezeInteraction = Effect.fn("tryouts.start.freezeInteraction")(
+  function* (
+    profile: ExamProfile,
+    items: readonly [PlacedItem, ...PlacedItem[]],
+    interaction: Interaction
+  ) {
+    const { key, version } = Arr.headNonEmpty(items);
+    const answer = Arr.findFirst(
+      key.answers,
+      (candidate) => candidate.interaction === interaction.id
+    );
+    if (Option.isNone(answer)) {
+      return yield* new TryoutFreezeError({
+        code: "TRYOUT_KEY_MISSING",
+        message: `The key of item version ${version.hash} has no answer for ${interaction.id}.`,
+      });
+    }
+    const rule = Option.orElse(
+      Option.map(
+        Arr.findFirst(
+          version.scoring,
+          (override) => override.interaction === interaction.id
+        ),
+        ({ rule }) => rule
+      ),
+      () =>
+        Option.map(
+          Arr.findFirst(
+            profile.defaults,
+            (fallback) => fallback.interaction === interaction.kind
+          ),
+          ({ rule }) => rule
+        )
+    );
+    if (Option.isNone(rule)) {
+      return yield* new TryoutFreezeError({
+        code: "TRYOUT_RULE_MISSING",
+        message: `No rule scores the ${interaction.kind} of item version ${version.hash}.`,
+      });
+    }
+    const answers = Arr.flatMap(items, (item) =>
+      Arr.filter(
+        item.key.answers,
+        (candidate) => candidate.interaction === interaction.id
+      )
+    );
+    return {
+      interaction,
+      key: unionAnswer(answer.value, answers),
+      rule: rule.value,
+    };
+  }
+);
+
+/**
+ * Freezes one place: its family and its version in each language of its section, and each interaction of
+ * its item in the item's order (`freezeInteraction`), so a question of several parts, such as an exam task's
+ * Teilaufgaben or a C-Test's gaps, grades each part by its own rule. The player and the grader read the
+ * interactions a place stores, one for most questions.
  */
 const freezePlace = Effect.fn("tryouts.start.freezePlace")(function* (
   profile: ExamProfile,
@@ -117,61 +179,28 @@ const freezePlace = Effect.fn("tryouts.start.freezePlace")(function* (
     readonly versions: PaperPlace["versions"];
   }
 ) {
-  const { key, version } = Arr.headNonEmpty(items);
-  if (version.interactions.length !== 1) {
+  const { version } = Arr.headNonEmpty(items);
+  if (version.interactions.length > QUESTION_PARTS_MAX) {
     return yield* new TryoutFreezeError({
       code: "TRYOUT_ITEM_SHAPE",
-      message: `Item version ${version.hash} holds ${version.interactions.length} interactions; a try-out question holds one.`,
+      message: `Item version ${version.hash} holds ${version.interactions.length} interactions; a try-out question holds at most ${QUESTION_PARTS_MAX}.`,
     });
   }
-  const interaction = Arr.headNonEmpty(version.interactions);
-  const answer = Arr.findFirst(
-    key.answers,
-    (candidate) => candidate.interaction === interaction.id
-  );
-  if (Option.isNone(answer)) {
+  if (version.joint !== undefined) {
     return yield* new TryoutFreezeError({
-      code: "TRYOUT_KEY_MISSING",
-      message: `The key of item version ${version.hash} has no answer for ${interaction.id}.`,
+      code: "TRYOUT_ITEM_SHAPE",
+      message: `Item version ${version.hash} is scored by a joint rule, which no try-out grades.`,
     });
   }
-  const rule = Option.orElse(
-    Option.map(
-      Arr.findFirst(
-        version.scoring,
-        (override) => override.interaction === interaction.id
-      ),
-      ({ rule }) => rule
-    ),
-    () =>
-      Option.map(
-        Arr.findFirst(
-          profile.defaults,
-          (fallback) => fallback.interaction === interaction.kind
-        ),
-        ({ rule }) => rule
-      )
-  );
-  if (Option.isNone(rule)) {
-    return yield* new TryoutFreezeError({
-      code: "TRYOUT_RULE_MISSING",
-      message: `No rule scores the ${interaction.kind} of item version ${version.hash}.`,
-    });
-  }
-  const answers = Arr.flatMap(items, (item) =>
-    Arr.filter(
-      item.key.answers,
-      (candidate) => candidate.interaction === interaction.id
-    )
+  const [first, ...later] = version.interactions;
+  const head = yield* freezeInteraction(profile, items, first);
+  const tail = yield* Effect.forEach(later, (interaction) =>
+    freezeInteraction(profile, items, interaction)
   );
   return {
-    ...(yield* encodePlacedQuestion({
-      interaction,
-      key: unionAnswer(answer.value, answers),
-    })),
+    ...(yield* encodePlacedQuestion([head, ...tail])),
     family: version.family,
     questionOrder: place.questionOrder,
-    rule: rule.value,
     sectionKey: place.sectionKey,
     versions: place.versions,
   } satisfies FrozenPlacement;

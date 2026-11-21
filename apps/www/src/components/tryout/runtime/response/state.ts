@@ -1,10 +1,11 @@
 import type { Ref } from "@confect/core";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import type { QuestionResponse } from "@repo/backend/confect/assessment/parts";
+import { answersQuestion } from "@repo/backend/confect/assessment/parts";
 import type { ExamResponse } from "@repo/backend/confect/assessment/response";
 import {
   chosenOptions,
-  isAnswered,
   markedCells,
 } from "@repo/backend/confect/assessment/response";
 import { Array as Arr, Number as Num, Option, Struct } from "effect";
@@ -15,9 +16,14 @@ import type {
 
 type SaveResponseArgs = Ref.Args<typeof tryouts.mutations.responses.save>;
 
-/** Whether a question holds an answer the server counts: a response that answers something. */
+/**
+ * Whether a question holds an answer the server counts: a response that answers something, in any part of a
+ * question of several (`answersQuestion`).
+ */
 export function isAnsweredQuestion(question: TryoutRuntimeQuestion) {
-  return question.response !== null && isAnswered(question.response.response);
+  return (
+    question.response !== null && answersQuestion(question.response.response)
+  );
 }
 
 /**
@@ -85,7 +91,7 @@ export function tryoutSubmitFailureOf(
 
 /**
  * Applies one local response while Convex remains authoritative for time. The
- * answered count moves as the server counts it (`isAnswered`), so a response
+ * answered count moves as the server counts it (`answersQuestion`), so a response
  * that answers nothing, such as a cleared multiple choice, counts as none. A
  * response for a question the section does not hold changes nothing, as the
  * flag's change does (`updateRuntimeQueries`).
@@ -102,7 +108,7 @@ export function applyOptimisticTryoutResponse(
     ),
     (current) => {
       const answered = Number(
-        args.response !== null && isAnswered(args.response)
+        args.response !== null && answersQuestion(args.response)
       );
       return {
         ...runtime,
@@ -145,7 +151,7 @@ function withResponse(
 /** The stored shape of a local response chosen at `selectedAt`. */
 function responseAt(
   question: TryoutRuntimeQuestion,
-  response: ExamResponse,
+  response: QuestionResponse,
   selectedAt: number
 ) {
   return {
