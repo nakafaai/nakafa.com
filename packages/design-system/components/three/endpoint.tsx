@@ -90,6 +90,10 @@ export function EndpointLine({
     } else {
       geometry.setPositions(Arr.flatMap(clipped, (point) => point.toArray()));
     }
+    // A dashed line measures its dashes along its points, so clipped ends are measured again.
+    if (props.dashed) {
+      line.current.computeLineDistances();
+    }
   });
 
   return <Line {...props} lineWidth={lineWidth} points={points} ref={line} />;

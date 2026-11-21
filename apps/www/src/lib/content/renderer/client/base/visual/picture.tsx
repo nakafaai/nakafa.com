@@ -1,6 +1,6 @@
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { getColor } from "@repo/design-system/lib/color";
-import { AXIS_COLORS, REGION_DASH } from "@repo/design-system/lib/plot";
+import { AXIS_COLORS, STROKE_DASH } from "@repo/design-system/lib/plot";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
@@ -65,7 +65,7 @@ export function MathPicture({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
   const down = (y: number) => `calc(50cqh - ${y - middle.y} * ${scale})`;
   // A stroke that keeps its width on screen also dashes on screen, so the dash in scene units scales like a label.
   const dash = {
-    strokeDasharray: `calc(${REGION_DASH.dash} * ${scale}) calc(${REGION_DASH.gap} * ${scale})`,
+    strokeDasharray: `calc(${STROKE_DASH.dash} * ${scale}) calc(${STROKE_DASH.gap} * ${scale})`,
   };
 
   return (

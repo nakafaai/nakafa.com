@@ -112,6 +112,33 @@ describe("formula shapes", () => {
     ]);
   });
 
+  it("dashes a graph its author dashed and draws every other curve solid", () => {
+    const resolved = shapes(
+      plane([
+        {
+          ...fields,
+          formula: "2 - 2 x / 5",
+          id: "boundary",
+          kind: "function",
+          stroke: "dashed",
+        },
+        { ...fields, formula: "x^2", id: "parabola", kind: "function" },
+        { ...fields, equation: "x^2 + y^2 = 4", id: "ring", kind: "implicit" },
+      ])
+    );
+
+    expect(
+      Arr.map(resolved, (shape) => [
+        shape.id,
+        shape.kind === "curve" && shape.dashed,
+      ])
+    ).toStrictEqual([
+      ["boundary", true],
+      ["parabola", false],
+      ["ring", false],
+    ]);
+  });
+
   it("projects regions, surfaces, and solids into scene units", () => {
     const region = shapes(
       plane([

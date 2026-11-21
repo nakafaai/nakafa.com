@@ -17,7 +17,7 @@ import type { LineEndpoints } from "@repo/design-system/lib/geometry/endpoint";
 import { resolveLineEndpoints } from "@repo/design-system/lib/geometry/endpoint";
 import type { LineMarkerIndices } from "@repo/design-system/lib/geometry/markers";
 import { resolveLineMarkers } from "@repo/design-system/lib/geometry/markers";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
+import { PLOT_COLORS, STROKE_DASH } from "@repo/design-system/lib/plot";
 import {
   Array as Arr,
   Effect,
@@ -120,6 +120,8 @@ export interface Props {
    * Higher values will create a smoother curve but may impact performance
    */
   curvePoints?: number;
+  /** Draws the line in dashes, for points that do not belong to what it shows. */
+  dashed?: boolean;
   /** Included or excluded first/last points, independent of sample markers. */
   endpoints?: LineEndpoints;
   /**
@@ -158,9 +160,10 @@ export type LineLabel = NonNullable<Props["labels"]>[number];
 
 const DEFAULT_LABELS: NonNullable<Props["labels"]> = [];
 
-/** The line of one equation: its color, its endpoints, its width and its points. */
+/** The line of one equation: its color, its dashes, its endpoints, its width and its points. */
 interface EquationLineValues {
   color: string | Color;
+  dashed: boolean;
   endpoints: LineEndpoints | undefined;
   lineWidth: number;
   points: Vector3[];
@@ -175,15 +178,21 @@ function useEquationLine() {
 
 /** The line through the equation's points, with open endpoints drawn as rings. */
 function EquationLine() {
-  const { color, endpoints, lineWidth, points } = useEquationLine();
+  const { color, dashed, endpoints, lineWidth, points } = useEquationLine();
 
   if (points.length <= 1) {
     return null;
   }
+  const dashes = {
+    dashed,
+    dashSize: STROKE_DASH.dash,
+    gapSize: STROKE_DASH.gap,
+  };
 
   if (endpoints?.start === "open" || endpoints?.end === "open") {
     return (
       <EndpointLine
+        {...dashes}
         color={color}
         endpoints={endpoints}
         frustumCulled
@@ -195,7 +204,13 @@ function EquationLine() {
   }
 
   return (
-    <Line color={color} frustumCulled lineWidth={lineWidth} points={points} />
+    <Line
+      {...dashes}
+      color={color}
+      frustumCulled
+      lineWidth={lineWidth}
+      points={points}
+    />
   );
 }
 
@@ -207,6 +222,7 @@ export function LineEquation({
   pointIndices,
   endpoints,
   color = PLOT_COLORS.amber,
+  dashed = false,
   lineWidth = 2,
   showPoints = true,
   smooth = false,
@@ -391,8 +407,8 @@ export function LineEquation({
   );
 
   const line = useMemo(
-    () => ({ color, endpoints, lineWidth, points: linePoints }),
-    [color, endpoints, lineWidth, linePoints]
+    () => ({ color, dashed, endpoints, lineWidth, points: linePoints }),
+    [color, dashed, endpoints, lineWidth, linePoints]
   );
 
   return (

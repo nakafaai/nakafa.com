@@ -180,6 +180,38 @@ describe("the still of a MathVisual scene", () => {
     ]);
   });
 
+  it("dashes the lines and graphs the scene dashes, and draws the rest solid", () => {
+    const drawn = still(
+      plane(
+        {
+          ...fields,
+          id: "boundary",
+          kind: "line",
+          stroke: "dashed",
+          through: [
+            { x: 0, y: 2 },
+            { x: 5, y: 0 },
+          ],
+        },
+        { ...fields, formula: "x / 2", id: "rate", kind: "function" },
+        {
+          ...fields,
+          formula: "1 - x",
+          id: "edge",
+          kind: "function",
+          stroke: "dashed",
+        }
+      )
+    );
+    expect(
+      Arr.map(drawn.strokes, ({ dashed, id }) => [id, dashed])
+    ).toStrictEqual([
+      ["boundary", true],
+      ["rate", false],
+      ["edge", true],
+    ]);
+  });
+
   it("draws formula curves, markers and regions at the sliders' values", () => {
     const drawn = still(
       {

@@ -42,11 +42,13 @@ const VisualMarkerSchema = Schema.Struct({
 type VisualMarker = typeof VisualMarkerSchema.Type;
 /**
  * One drawn path. An unbounded one, a line or a ray, runs to the reach, past
- * every view, so the camera's fit and the still's view leave it out.
+ * every view, so the camera's fit and the still's view leave it out. A dashed
+ * one shows points that do not belong to it, such as a strict boundary.
  */
 const VisualPathSchema = Schema.Struct({
   appearance: MathAppearanceSchema,
   arrows: MathPathArrowsSchema,
+  dashed: Schema.Boolean,
   id: Schema.String,
   points: Schema.Array(SpacePointSchema),
   unbounded: Schema.Boolean,
@@ -110,6 +112,7 @@ function appendPaths(
     appendPath(geometry, {
       appearance: object.appearance,
       arrows: arrows(object.kind),
+      dashed: "stroke" in object && object.stroke === "dashed",
       id: paths.length === 1 ? object.id : `${object.id}:part:${index + 1}`,
       points: Arr.map(points, (point) => projectVisualPoint(point, projection)),
       unbounded: object.kind === "line" || object.kind === "ray",
@@ -143,6 +146,7 @@ function appendPlane(
     appendPath(geometry, {
       appearance: object.appearance,
       arrows: "none",
+      dashed: false,
       id: object.id,
       points: resolvePlaneCurve(object, projection),
       unbounded: false,
