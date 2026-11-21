@@ -328,13 +328,15 @@ export default defineConfig(async ({ command, isPreview }) => {
         rsc: { enabled: true },
         // A route loader loads with its route, on a navigation or a preload, never in
         // the boot chunk: hydration reads the data the server rendered and runs no
-        // loader, so a loader and what it imports stay out of every first load. A
-        // route's error part stays with the route: a page breaks when the chunks it
-        // asks for cannot load, a deploy having replaced them or the network gone,
-        // and then its error part could not load either (ADR 0039, D10).
+        // loader, so a loader and what it imports stay out of every first load.
         router: {
           codeSplittingOptions: {
-            defaultBehavior: [["loader"], ["component"], ["notFoundComponent"]],
+            defaultBehavior: [
+              ["loader"],
+              ["component"],
+              ["errorComponent"],
+              ["notFoundComponent"],
+            ],
           },
         },
         // Only the given pages prerender: discovery would add the root route,
