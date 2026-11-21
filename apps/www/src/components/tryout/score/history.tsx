@@ -24,10 +24,10 @@ import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageHeaderLabel } from "@/components/shared/page/header";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
-import { useFactsWaiting } from "@/components/tryout/section/summary";
 import { KEPT_ATTEMPT_SCRIPT } from "@/components/tryout/set/kept";
 import type { CurrentAttempt, SetPage } from "@/components/tryout/set/model";
 import {
+  useFactsWaiting,
   useKeepAttemptLabel,
   useKeptPageAttempt,
 } from "@/components/tryout/set/name";

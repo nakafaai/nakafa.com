@@ -1,3 +1,5 @@
+import { Array as Arr } from "effect";
+
 const SECONDS_PER_MINUTE = 60;
 const SECONDS_PER_HOUR = 3600;
 const LAST_MINUTE = 60;
@@ -10,6 +12,15 @@ export function splitTime(totalSeconds: number) {
     minutes: Math.floor((totalSeconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE),
     seconds: totalSeconds % SECONDS_PER_MINUTE,
   };
+}
+
+/** Formats a duration in seconds as a zero-padded clock string, such as `00:30:00`. */
+export function formatClock(totalSeconds: number) {
+  const { hours, minutes, seconds } = splitTime(totalSeconds);
+  return Arr.join(
+    Arr.map([hours, minutes, seconds], (part) => String(part).padStart(2, "0")),
+    ":"
+  );
 }
 
 /**

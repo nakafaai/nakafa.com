@@ -44,6 +44,7 @@ import {
   readAuthoredTree,
   readOtherModules,
 } from "#scripts/check/files";
+import { inspectPaneFooters } from "#scripts/check/footers";
 import { inspectFormatSource } from "#scripts/check/formats";
 import { inspectFrameSource } from "#scripts/check/frame";
 import { inspectGatewaySource } from "#scripts/check/gateway";
@@ -158,6 +159,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
     ),
     inspectExports(parsed.modules, otherModules, unjudged),
     inspectHeaderActions(parsed.modules),
+    inspectPaneFooters(parsed.modules),
     inspectTables(parsed.modules),
     yield* classFindings(parsed),
     inspectPoses(parsed.modules),

@@ -259,16 +259,6 @@
 }
 
 /*
- * A try-out page's card holds the section's facts, a score, or nothing once
- * the learner's read answers, so under a signed-in hint it keeps its room and
- * draws nothing until then, never an empty frame
- * (`components/tryout/section/card.tsx`).
- */
-:root[data-signed-in="yes"] [data-summary-read="pending"] {
-  visibility: hidden;
-}
-
-/*
  * A try-out set's pane draws the learner's level, attempt, Stars and board, so
  * under a signed-in hint its header's line and its body keep their room and draw
  * nothing until every read of the learner answers, then paint whole, never a

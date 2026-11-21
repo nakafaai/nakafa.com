@@ -271,28 +271,23 @@ function TryoutPracticeRestart({
   const [pending, startTransition] = useTransition();
 
   return (
-    <>
-      <p className="text-muted-foreground me-auto text-sm">
-        {t("practice-footer")}
-      </p>
-      <Button
-        disabled={pending}
-        onClick={() =>
-          startTransition(async () => {
-            await Effect.runPromise(
-              Effect.tryPromise(() => restart({ sessionId })).pipe(
-                Effect.flatMap(Effect.fromResult),
-                Effect.catch(reportPracticeFailure)
-              )
-            );
-          })
-        }
-        type="button"
-        variant="outline"
-      >
-        <Spinner icon={Target02Icon} isLoading={pending} />
-        {t("practice-restart")}
-      </Button>
-    </>
+    <Button
+      disabled={pending}
+      onClick={() =>
+        startTransition(async () => {
+          await Effect.runPromise(
+            Effect.tryPromise(() => restart({ sessionId })).pipe(
+              Effect.flatMap(Effect.fromResult),
+              Effect.catch(reportPracticeFailure)
+            )
+          );
+        })
+      }
+      type="button"
+      variant="outline"
+    >
+      <Spinner icon={Target02Icon} isLoading={pending} />
+      {t("practice-restart")}
+    </Button>
   );
 }

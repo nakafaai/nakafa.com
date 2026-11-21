@@ -48,9 +48,19 @@ const TryoutSetRouteSchema = Schema.Struct({
 /** URL route coordinates for one try-out set page. */
 export type TryoutSetRoute = typeof TryoutSetRouteSchema.Type;
 
+/** Facts of one try-out part shown in its start confirmation and info dialogs. */
+export const TryoutPartSchema = Schema.Struct({
+  questionCount: Schema.Finite,
+  sectionKey: Schema.String,
+  timeLimitSeconds: Schema.Finite,
+  title: Schema.String,
+});
+
+export type TryoutPart = typeof TryoutPartSchema.Type;
+
 const TryoutSetDestinationSchema = Schema.Struct({
   address: TryoutPageAddressSchema,
-  sectionKey: Schema.String,
+  part: TryoutPartSchema,
 });
 
 /** Section route and query identity selected for the current set action. */

@@ -7,10 +7,20 @@ import {
   starsLeft,
 } from "@/components/tryout/pane/model";
 
+const scoredVerbal = {
+  completedAt: 120_000,
+  publishedScore: 725,
+  scoreStatus: "provisional" as const,
+  sectionKey: "verbal",
+  startedAt: 0,
+  totalCorrect: 21,
+  totalQuestions: 30,
+};
+
 const running = {
   completedSectionKeys: ["verbal"],
   resumeSectionKey: "numeric",
-  sectionScores: [{ publishedScore: 725, sectionKey: "verbal" }],
+  sectionScores: [scoredVerbal],
   status: "in-progress" as const,
 };
 
@@ -64,7 +74,7 @@ describe("partScore", () => {
     expect(partScore(running, "numeric")).toEqual(Option.none());
   });
 
-  it("returns the published score of a scored part", () => {
-    expect(partScore(running, "verbal")).toEqual(Option.some(725));
+  it("returns the score summary of a scored part", () => {
+    expect(partScore(running, "verbal")).toEqual(Option.some(scoredVerbal));
   });
 });

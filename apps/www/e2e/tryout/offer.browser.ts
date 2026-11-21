@@ -87,7 +87,7 @@ const attemptRows = (page: Page) =>
 const paneOf = (page: Page) =>
   page.getByRole("complementary", { name: en.Tryouts["set-pane"] });
 
-/** The pane's Continue, which starts the attempt's next part and opens it running. */
+/** The pane's Continue, which asks for confirmation before starting the attempt's next part. */
 const continueOf = (page: Page) =>
   paneOf(page).getByRole("button", {
     exact: true,
@@ -95,9 +95,9 @@ const continueOf = (page: Page) =>
   });
 
 /**
- * Starts the attempt's next part from the pane's Continue and finishes it. Any part but the last returns to the
- * set page, still locked. The last one completes the attempt, which unlocks the shell, so this waits for the set
- * page instead.
+ * Starts the attempt's next part from the pane's Continue, confirms its start dialog, and finishes it. Any part
+ * but the last returns to the set page, still locked. The last one completes the attempt, which unlocks the
+ * shell, so this waits for the set page instead.
  */
 const finishNextSection = Effect.fn("NakafaE2E.finishNextTryoutSection")(
   function* (page: Page, last: boolean) {
@@ -106,6 +106,13 @@ const finishNextSection = Effect.fn("NakafaE2E.finishNextTryoutSection")(
       expect(next).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
     );
     yield* activate(next, false);
+    yield* activate(
+      page.getByRole("dialog").getByRole("button", {
+        exact: true,
+        name: en.Tryouts.action["start-cta"],
+      }),
+      false
+    );
     yield* waitForRunningSection(page);
     if (!last) {
       yield* finishSection(page, false);
@@ -125,7 +132,7 @@ const finishNextSection = Effect.fn("NakafaE2E.finishNextTryoutSection")(
 /**
  * Finishes every part of the running attempt that has not started. A free learner's review opens only once the
  * whole attempt is over, so each part is started from the pane and finished in turn. Each part not started yet is
- * a press on the pane's path.
+ * a next or todo step on the pane's path.
  */
 const finishOtherSections = Effect.fn("NakafaE2E.finishOtherTryoutSections")(
   function* (page: Page) {
@@ -135,7 +142,11 @@ const finishOtherSections = Effect.fn("NakafaE2E.finishOtherTryoutSections")(
       })
     );
     const left = yield* Effect.promise(() =>
-      paneOf(page).locator("ol button").count()
+      paneOf(page)
+        .locator(
+          'ol button[data-part-step="next"], ol button[data-part-step="todo"]'
+        )
+        .count()
     );
     for (let part = 1; part <= left; part += 1) {
       yield* finishNextSection(page, part === left);

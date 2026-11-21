@@ -44,8 +44,8 @@ export function TryoutSetAction({ value }: TryoutSetActionProps) {
     // any other start opens the destination section and lands on its page, where it already runs.
     ...(entrySectionKey === undefined
       ? {
-          destinationSectionKey: value.destination.sectionKey,
-          entrySectionKey: value.destination.sectionKey,
+          destinationPart: value.destination.part,
+          entrySectionKey: value.destination.part.sectionKey,
         }
       : { entrySectionKey }),
     examKey: value.set.examKey,

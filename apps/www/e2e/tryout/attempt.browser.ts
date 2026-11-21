@@ -123,21 +123,47 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
 
   // Finishing the section returns to the attempt's set, still locked.
   yield* observeStep(page, [true], finishSection(page, hasTouch));
+  const attemptSearch = new URL(page.url()).search;
 
-  // The finished section links back to its own attempt's set, so going
-  // there and back never passes the public set.
-  const back = page.getByRole("link", { exact: true, name: "Back" });
-  const revisited = yield* observeStep(
+  // A completed part of an in-progress attempt opens its info dialog right in the pane (never a card-only page),
+  // and an unstarted part asks for confirmation instead of auto-starting its clock.
+  const dialog = page.getByRole("dialog");
+  yield* observeStep(
     page,
     [true],
     Effect.gen(function* () {
       yield* activate(
-        page.locator(`main a[href^="${startedSection}?"]`).first(),
+        page.locator('ol button[data-part-step="done"]').first(),
         hasTouch
       );
-      yield* arriveLocked(page, (pathname) => pathname === startedSection);
-      yield* activate(back, hasTouch);
-      yield* arriveLocked(page, isSet);
+      yield* Effect.promise(async () => {
+        await expect(dialog).toBeVisible({
+          timeout: readinessTimeoutMilliseconds,
+        });
+        await expect(
+          dialog.getByText("Correct answers", { exact: true })
+        ).toBeVisible();
+        expect(new URL(page.url()).pathname).toBe(setHref);
+        await page.keyboard.press("Escape");
+        await expect(dialog).toBeHidden({
+          timeout: readinessTimeoutMilliseconds,
+        });
+      });
+
+      yield* activate(
+        page.locator('ol button[data-part-step="next"]').first(),
+        hasTouch
+      );
+      yield* Effect.promise(async () => {
+        await expect(
+          dialog.getByRole("button", { exact: true, name: "Start" })
+        ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+        expect(new URL(page.url()).pathname).toBe(setHref);
+        await page.keyboard.press("Escape");
+        await expect(dialog).toBeHidden({
+          timeout: readinessTimeoutMilliseconds,
+        });
+      });
     })
   );
 
@@ -163,9 +189,18 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     })
   );
   yield* Effect.sync(() => {
-    for (const url of [...revisited, ...reopened]) {
+    for (const url of reopened) {
       expect(new URL(url).searchParams.has("attemptId")).toBe(true);
     }
+  });
+
+  // Visiting a completed section's URL directly while its set still runs redirects straight back to the set pane.
+  yield* Effect.promise(() =>
+    page.goto(`${startedSection}${attemptSearch}`, { waitUntil: "commit" })
+  );
+  yield* arriveLocked(page, isSet);
+  yield* Effect.sync(() => {
+    expect(new URL(page.url()).searchParams.has("attemptId")).toBe(true);
   });
 
   // The public set URL of a running attempt moves to the attempt's address,

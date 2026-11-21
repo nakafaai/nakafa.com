@@ -16,6 +16,7 @@ import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitForRunningSection } from "@/e2e/support/player";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { sectionHref } from "@/e2e/support/tryout";
 import { tryoutViewports } from "@/e2e/support/viewport";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -38,23 +39,27 @@ const ACTION = `main :is(a, button):has(${ACTION_NAME})`;
 const SCRIPTS = /\/assets\/.*\.js/u;
 
 /**
- * The first section of SNBT 2027 set 1 in each locale, at its own address: a set and a section have their own
- * slug in each locale, and the section's title names the page.
+ * SNBT 2027 set 1 and its first section in each locale: starting from the set's pane opens its first section
+ * running in the player, with each locale's own slug and title.
  */
-const SECTIONS = [
+const SETS = [
   {
-    href: "/en/try-out/indonesia/snbt/2027/utbk/set-1/general-reasoning",
     messages: en,
+    sectionHref: "/en/try-out/indonesia/snbt/2027/utbk/set-1/general-reasoning",
+    setHref: "/en/try-out/indonesia/snbt/2027/utbk/set-1",
     title: "General Reasoning",
   },
   {
-    href: "/id/try-out/indonesia/snbt/2027/utbk/set-1/penalaran-umum",
     messages: id,
+    sectionHref: "/id/try-out/indonesia/snbt/2027/utbk/set-1/penalaran-umum",
+    setHref: "/id/try-out/indonesia/snbt/2027/utbk/set-1",
     title: "Penalaran Umum",
   },
   {
-    href: "/de/try-out/indonesien/snbt/2027/utbk/aufgabensatz-1/allgemeines-schlussfolgern",
     messages: de,
+    sectionHref:
+      "/de/try-out/indonesien/snbt/2027/utbk/aufgabensatz-1/allgemeines-schlussfolgern",
+    setHref: "/de/try-out/indonesien/snbt/2027/utbk/aufgabensatz-1",
     title: "Allgemeines Schlussfolgern",
   },
 ] as const;
@@ -129,23 +134,23 @@ const recordStartFrames = Effect.fn("NakafaE2E.recordStartFrames")(function* (
 });
 
 /**
- * Opens a section's own page signed in, presses its Start and confirms the start once, then requires the
- * player in the frame after the press: the dialog gone and the player's frame drawn within two frames, the
- * shell locked and the player on screen in every frame after it, and the first question once the server
- * has started the attempt and its section. The timings go to the test's report as an attachment.
+ * Opens a set's pane signed in, presses its Start and confirms once, then requires the dialog to close
+ * immediately and the first section's running player to open locked with its timer and first question.
  */
 const verifyOnePress = Effect.fn("NakafaE2E.verifyOnePressStart")(function* (
   page: Page,
   hasTouch: boolean,
   baseURL: string,
-  section: (typeof SECTIONS)[number]
+  target: (typeof SETS)[number]
 ) {
   yield* signInLearner(page.context(), baseURL);
   yield* recordStartFrames(page);
-  yield* Effect.promise(() => page.goto(section.href, { waitUntil: "commit" }));
+  yield* Effect.promise(() =>
+    page.goto(target.setHref, { waitUntil: "commit" })
+  );
   const start = page.locator("main").getByRole("button", {
     exact: true,
-    name: section.messages.Tryouts.action["start-cta"],
+    name: target.messages.Tryouts.action["start-cta"],
   });
   yield* Effect.promise(() =>
     expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
@@ -155,7 +160,7 @@ const verifyOnePress = Effect.fn("NakafaE2E.verifyOnePressStart")(function* (
   yield* activate(
     page.getByRole("dialog").getByRole("button", {
       exact: true,
-      name: section.messages.Tryouts["free-cta"],
+      name: target.messages.Tryouts["free-cta"],
     }),
     hasTouch
   );
@@ -164,12 +169,12 @@ const verifyOnePress = Effect.fn("NakafaE2E.verifyOnePressStart")(function* (
     expect(
       page
         .locator("main")
-        .getByRole("heading", { level: 1, name: section.title })
+        .getByRole("heading", { level: 1, name: target.title })
     ).toBeVisible()
   );
   yield* Effect.sync(() => {
     const address = new URL(page.url());
-    expect(address.pathname).toBe(section.href);
+    expect(address.pathname).toBe(target.sectionHref);
     expect(address.searchParams.has("attemptId")).toBe(true);
   });
 
@@ -192,26 +197,26 @@ const verifyOnePress = Effect.fn("NakafaE2E.verifyOnePressStart")(function* (
     })
   );
   yield* Effect.sync(() => {
-    // The second frame after the press at the latest, so no frame waits on the server.
+    // The dialog closes within two frames of confirming, so no modal lingers while the attempt starts.
     const frames = Arr.take(after, 2);
     expect(Arr.some(frames, (frame) => !frame.dialog)).toBe(true);
-    expect(Arr.some(frames, (frame) => frame.timer)).toBe(true);
     // From the player's first frame on, the player and the locked shell stay on screen.
     const shown = Arr.dropWhile(after, (frame) => !frame.timer);
+    expect(Arr.isReadonlyArrayNonEmpty(shown)).toBe(true);
     expect(Arr.every(shown, (frame) => frame.timer && frame.locked)).toBe(true);
     expect(Option.isSome(questionIn)).toBe(true);
   });
 });
 
 for (const viewport of tryoutViewports) {
-  for (const section of SECTIONS) {
+  for (const target of SETS) {
     test.describe(`One-press try-out start on ${viewport.name}`, () => {
       test.use({
         hasTouch: viewport.hasTouch,
         viewport: { height: viewport.height, width: viewport.width },
       });
 
-      test(`opens the player of ${section.href} with one press`, async ({
+      test(`opens the player of ${target.sectionHref} from ${target.setHref}`, async ({
         baseURL,
         page,
       }) => {
@@ -220,7 +225,7 @@ for (const viewport of tryoutViewports) {
             page,
             Effect.fromNullishOr(baseURL).pipe(
               Effect.flatMap((origin) =>
-                verifyOnePress(page, viewport.hasTouch, origin, section)
+                verifyOnePress(page, viewport.hasTouch, origin, target)
               )
             )
           )
@@ -231,17 +236,56 @@ for (const viewport of tryoutViewports) {
 }
 
 /**
+ * No standalone card-only section page exists: visiting a bare section URL directly (visitor or signed-in
+ * learner without a running section) redirects straight to the set's pane.
+ */
+test("a bare section URL redirects straight to its set pane", async ({
+  baseURL,
+  page,
+}) => {
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        const origin = yield* Effect.fromNullishOr(baseURL);
+        yield* Effect.promise(async () => {
+          await page.goto(sectionHref, { waitUntil: "commit" });
+          await expect
+            .poll(() => new URL(page.url()).pathname, {
+              timeout: readinessTimeoutMilliseconds,
+            })
+            .toBe(SET_HREF);
+          await expect(
+            page.getByRole("complementary", { name: en.Tryouts["set-pane"] })
+          ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+        });
+        yield* signInLearner(page.context(), origin);
+        yield* Effect.promise(async () => {
+          await page.goto(sectionHref, { waitUntil: "commit" });
+          await expect
+            .poll(() => new URL(page.url()).pathname, {
+              timeout: readinessTimeoutMilliseconds,
+            })
+            .toBe(SET_HREF);
+          await expect(
+            page.getByRole("complementary", { name: en.Tryouts["set-pane"] })
+          ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+        });
+      })
+    )
+  );
+});
+
+/**
  * A slow phone paints the start button seconds before the page can act. A learner's
  * press in that moment shows the loader, and the confirmation opens once the page's
- * client and its reads arrive, so the press is never lost. A signed-in learner's first visit draws no
- * button until the learner read answers, so the learner has opened the set once, and the section's page
- * names its set's action with what this browser kept.
+ * client and its reads arrive, so the press is never lost.
  */
 test("a press on the start before the page can act opens the confirmation", async ({
   baseURL,
   page,
 }) => {
-  const section = SECTIONS[0];
+  const target = SETS[0];
   await Effect.runPromise(
     withObservedPageErrors(
       page,
@@ -257,7 +301,7 @@ test("a press on the start before the page can act opens the confirmation", asyn
           await page.route(SCRIPTS, (route) => {
             MutableList.append(held, route);
           });
-          await page.goto(section.href, { waitUntil: "domcontentloaded" });
+          await page.goto(target.setHref, { waitUntil: "domcontentloaded" });
           await page.locator(ACTION).click();
           for (const route of MutableList.toArray(held)) {
             await route.continue();
@@ -266,7 +310,7 @@ test("a press on the start before the page can act opens the confirmation", asyn
           await expect(
             page.getByRole("dialog").getByRole("button", {
               exact: true,
-              name: section.messages.Tryouts["free-cta"],
+              name: target.messages.Tryouts["free-cta"],
             })
           ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
         });
@@ -369,12 +413,12 @@ test("a hard load of a set whose attempt runs never reads Start", async ({
  * button that was pressed. The press stays, and the section starts from it. The socket's answers wait
  * through the press, so the press lands while the read is pending.
  */
-test("a press while the learner read is pending starts the section it brings", async ({
+test("a press while the learner read is pending resumes the running section it brings", async ({
   baseURL,
   page,
 }) => {
-  const section = SECTIONS[0];
-  const messages = section.messages.Tryouts;
+  const target = SETS[0];
+  const messages = target.messages.Tryouts;
   let holding = false;
   const held = MutableList.make<() => void>();
   await page.routeWebSocket(CONVEX_SOCKET, (socket) => {
@@ -411,7 +455,7 @@ test("a press while the learner read is pending starts the section it brings", a
           await page.waitForURL(ATTEMPT_ADDRESS);
 
           holding = true;
-          await page.goto(section.href, { waitUntil: "commit" });
+          await page.goto(target.setHref, { waitUntil: "commit" });
           await page.locator(ACTION).click();
           holding = false;
           for (const answer of MutableList.toArray(held)) {

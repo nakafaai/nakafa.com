@@ -36,10 +36,9 @@ const bundleCommonJsReactPeers: Plugin = {
  * Cloudflare's plugin does). workerd is no browser, so there `esm-env/browser`
  * is `false`, as esm-env's own fallback (`typeof window !== "undefined"`) finds
  * at runtime. Otherwise every library that asks renders as it would in a
- * browser: NumberFlow's server markup came out empty, so a try-out section
- * showed no numbers until it hydrated. The Worker environments pre-bundle no
- * `esm-env`, because Vite's dependency optimizer resolves with its alias and
- * resolve plugins only, never this one.
+ * browser: NumberFlow's server markup came out empty until it hydrated. The
+ * Worker environments pre-bundle no `esm-env`, because Vite's dependency
+ * optimizer resolves with its alias and resolve plugins only, never this one.
  */
 const ESM_ENV_BROWSER = "esm-env/browser";
 const WORKER_ESM_ENV_BROWSER = "\0www:esm-env-browser";

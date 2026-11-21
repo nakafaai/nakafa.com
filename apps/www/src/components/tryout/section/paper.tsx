@@ -1,3 +1,4 @@
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { use } from "react";
 import { PlayerTimer, PlayerTimerCard } from "@/components/player/timer";
@@ -45,6 +46,15 @@ export function TryoutSectionPaper({ children }: { children: ReactNode }) {
   const { binding, page, parts, route, setPath } = useTryoutSectionPage();
   const opening = useTryoutStartPhase() === "opening";
   const running = binding?.initialState.attempt.status === "in-progress";
+  const visibleParts =
+    binding && !running
+      ? Arr.filter(parts, (part) =>
+          Arr.contains(
+            binding.initialState.attempt.completedSectionKeys,
+            part.key
+          )
+        )
+      : parts;
   const path = useTryoutPlayerPath({
     page,
     parents:
@@ -58,7 +68,7 @@ export function TryoutSectionPaper({ children }: { children: ReactNode }) {
       attemptId={binding?.attemptId}
       current={page.section.sectionKey}
       locked={running || opening}
-      parts={parts}
+      parts={visibleParts}
       path={path}
       title={page.section.title}
     >

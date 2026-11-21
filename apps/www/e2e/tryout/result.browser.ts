@@ -191,6 +191,18 @@ test.describe("The result of a finished try-out", () => {
             await expect(
               pane.getByRole("button", { exact: true, name: "Explanation" })
             ).toBeEnabled();
+            // The player's footer and the result pane's footer align on one flush 64 px row.
+            const [playerFooter, paneFooter] = await Promise.all([
+              page.locator("[data-player-footer]").boundingBox(),
+              pane.locator("footer").boundingBox(),
+            ]);
+            expect(playerFooter).not.toBeNull();
+            expect(paneFooter).not.toBeNull();
+            expect(Math.round(playerFooter?.y ?? 0)).toBe(
+              Math.round(paneFooter?.y ?? -1)
+            );
+            expect(Math.round(playerFooter?.height ?? 0)).toBe(64);
+            expect(Math.round(paneFooter?.height ?? 0)).toBe(64);
           });
 
           // A seat sends its question below the sticky header, and the address names it.

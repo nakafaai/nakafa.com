@@ -36,13 +36,13 @@ export function PlayerFooter({ children }: { children: ReactNode }) {
 
   return (
     <footer
-      className="bg-background sticky bottom-0 z-10 border-t pb-[env(safe-area-inset-bottom,0px)]"
+      className="bg-background sticky bottom-0 z-10 flex min-h-16 w-full shrink-0 items-center border-t pb-[env(safe-area-inset-bottom,0px)]"
       data-player-footer=""
     >
       <fieldset
         className={cn(
           pageRowVariants(),
-          "grid h-16 min-w-0 grid-cols-[1fr_auto_1fr] items-center gap-x-2 border-0"
+          "grid min-w-0 grid-cols-[1fr_auto_1fr] items-center gap-x-2 border-0 py-3"
         )}
       >
         <legend className="sr-only">{t("controls")}</legend>

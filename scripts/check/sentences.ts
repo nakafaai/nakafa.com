@@ -121,9 +121,12 @@ export const SENTENCE_KEYS = HashSet.make(
   "Toast.failure-request-conflict.description",
   "Tryouts.complete-part-description",
   "Tryouts.free-dialog-description",
+  "Tryouts.part-done-description",
+  "Tryouts.part-missed-description",
   "Tryouts.paywall-description",
   "Tryouts.restart-dialog-description",
-  "Tryouts.start-dialog-description"
+  "Tryouts.start-dialog-description",
+  "Tryouts.start-part-description"
 );
 
 /** A sentence ends with a period, a question mark or an exclamation mark, optionally followed by a closing quote. */

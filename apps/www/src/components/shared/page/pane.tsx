@@ -176,12 +176,12 @@ export function PaneFill({
 }
 
 /**
- * A detail's footer: its actions at the end, on a second row where a narrow pane cannot hold them in one. It keeps the
- * height of a row with a button, so a state that asks for nothing moves nothing above it.
+ * A detail's footer: one row as tall as the pane's header (`h-16`), its actions at the end, never wrapping onto
+ * a second row and never holding prose, so its border meets a page's footer flush at every width.
  */
 export function PaneFooter({ children }: { children: ReactNode }) {
   return (
-    <footer className="bg-muted/70 flex min-h-16 shrink-0 flex-wrap items-center justify-end gap-2 border-t px-(--pane-end,1rem) py-3">
+    <footer className="bg-muted/70 flex h-16 shrink-0 items-center justify-end gap-2 border-t px-(--pane-end,1rem)">
       {children}
     </footer>
   );
