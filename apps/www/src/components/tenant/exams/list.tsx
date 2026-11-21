@@ -14,8 +14,10 @@ import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageList } from "@/components/shared/page/body";
 import { Page } from "@/components/shared/page/frame";
-import { useFormatTimeZone } from "@/components/shared/table/calendar";
-import { tableColumns } from "@/components/shared/table/columns";
+import {
+  datedColumns,
+  useFormatTimeZone,
+} from "@/components/shared/table/calendar";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { RowItems, RowOpen } from "@/components/shared/table/menu";
@@ -44,7 +46,7 @@ import { Link } from "@/lib/routing/link";
 const EXAM_PAGE_SIZE = 20;
 
 /** The columns of the exams table. */
-const examColumns = tableColumns<ListedExam>();
+const examColumns = datedColumns<ListedExam>();
 
 /**
  * The exams of the school, newest first, each with its title, its unit, its questions and its day. An exam that the

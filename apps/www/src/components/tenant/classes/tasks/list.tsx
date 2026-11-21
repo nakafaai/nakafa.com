@@ -27,7 +27,7 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { PageList } from "@/components/shared/page/body";
 import { PaneOpen } from "@/components/shared/page/pane";
 import { PagePane, Panes, PanesList } from "@/components/shared/page/panes";
-import { tableColumns } from "@/components/shared/table/columns";
+import { datedColumns } from "@/components/shared/table/calendar";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne, namedOptions } from "@/components/shared/table/filter";
 import { TablePages } from "@/components/shared/table/pages";
@@ -55,7 +55,7 @@ import { useKeptRows } from "@/lib/data/kept";
 const TASK_PAGE_SIZE = 20;
 
 /** The columns of the task table. */
-const taskColumns = tableColumns<ClassTask>();
+const taskColumns = datedColumns<ClassTask>();
 
 /** The icons of the categories in the category filter, each a kind of file or mark. */
 const CATEGORY_ICONS: readonly [IconSvgElement, ...IconSvgElement[]] = [

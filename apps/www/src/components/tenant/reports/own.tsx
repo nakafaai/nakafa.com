@@ -16,8 +16,10 @@ import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { PageList } from "@/components/shared/page/body";
 import { Page } from "@/components/shared/page/frame";
-import { useFormatTimeZone } from "@/components/shared/table/calendar";
-import { tableColumns } from "@/components/shared/table/columns";
+import {
+  datedColumns,
+  useFormatTimeZone,
+} from "@/components/shared/table/calendar";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { RowItems } from "@/components/shared/table/menu";
@@ -44,7 +46,7 @@ const PERIOD_ICONS = [
 ] as const;
 
 /** The columns of the report cards table. */
-const cardColumns = tableColumns<OwnCard>();
+const cardColumns = datedColumns<OwnCard>();
 
 /**
  * The viewer's own locked report cards in the school, the newest first: a table that finds a class group, filters by

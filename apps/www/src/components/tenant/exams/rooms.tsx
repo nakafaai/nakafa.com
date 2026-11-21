@@ -27,7 +27,7 @@ import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header
 import { PageList } from "@/components/shared/page/body";
 import { Page } from "@/components/shared/page/frame";
 import { reloadPage } from "@/components/shared/reload";
-import { tableColumns } from "@/components/shared/table/columns";
+import { datedColumns } from "@/components/shared/table/calendar";
 import { DataTable } from "@/components/shared/table/data";
 import { chosenOne } from "@/components/shared/table/filter";
 import { TableEnd } from "@/components/shared/table/pages";
@@ -228,7 +228,7 @@ function ExamRoomsContent({
 }
 
 /** The columns of the rooms table. */
-const roomColumns = tableColumns<Room>();
+const roomColumns = datedColumns<Room>();
 
 /**
  * The rooms in a table that loads more rows as its end comes into view, its state column choosing the state the server

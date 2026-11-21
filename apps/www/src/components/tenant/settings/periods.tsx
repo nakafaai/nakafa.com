@@ -13,7 +13,7 @@ import { Array as Arr, DateTime, Option } from "effect";
 import { startTransition, useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { tableColumns } from "@/components/shared/table/columns";
+import { datedColumns } from "@/components/shared/table/calendar";
 import { DataTable } from "@/components/shared/table/data";
 import { RowCopy } from "@/components/shared/table/menu";
 import { TablePages } from "@/components/shared/table/pages";
@@ -60,7 +60,7 @@ const PAGE_SIZE = 25;
 type PeriodItem = PaginatedQueryItem<typeof tenancy.periods.list>;
 
 /** The columns of the periods table. */
-const periodColumns = tableColumns<PeriodItem>();
+const periodColumns = datedColumns<PeriodItem>();
 
 /** The moment a period's calendar date starts in UTC, the clock its cells print it by, so its column filters by calendar. */
 const dayMoment = (day: string) =>

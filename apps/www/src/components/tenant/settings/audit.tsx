@@ -22,8 +22,10 @@ import { Array as Arr, Effect, Option } from "effect";
 import { useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { useFormatTimeZone } from "@/components/shared/table/calendar";
-import { tableColumns } from "@/components/shared/table/columns";
+import {
+  datedColumns,
+  useFormatTimeZone,
+} from "@/components/shared/table/calendar";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
 import { TableNote } from "@/components/shared/table/inset";
@@ -51,7 +53,7 @@ const PAGE_SIZE = 25;
 type EntryItem = PaginatedQueryItem<typeof journal.audit.list>;
 
 /** The columns of the audit table. */
-const entryColumns = tableColumns<EntryItem>();
+const entryColumns = datedColumns<EntryItem>();
 
 /**
  * The audit trail as the page's table. The header row searches the changes and exports the

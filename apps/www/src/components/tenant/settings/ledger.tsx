@@ -15,7 +15,7 @@ import { BILLING_TIME_ZONE } from "@repo/internationalization/src/formats";
 import { Array as Arr, DateTime, Record as Rec } from "effect";
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 import { useInvoiceDownload } from "@/components/billing/invoice";
-import { tableColumns } from "@/components/shared/table/columns";
+import { datedColumns } from "@/components/shared/table/calendar";
 import { DataTable } from "@/components/shared/table/data";
 import { RowItems } from "@/components/shared/table/menu";
 import type { StatusLook } from "@/components/shared/table/status";
@@ -37,7 +37,7 @@ const INVOICE_LOOKS = {
 } as const satisfies Record<ReturnType<typeof invoiceStanding>, StatusLook>;
 
 /** The columns of the school's invoices. */
-const invoiceColumns = tableColumns<SchoolBilling["invoices"][number]>();
+const invoiceColumns = datedColumns<SchoolBilling["invoices"][number]>();
 
 /**
  * The invoices of the school in the sheet the invoices card opens, newest first, each

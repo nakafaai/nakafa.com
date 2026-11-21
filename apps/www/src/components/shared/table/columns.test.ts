@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Building01Icon } from "@hugeicons/core-free-icons";
 import { Array as Arr, Schema } from "effect";
-import { tableColumns } from "@/components/shared/table/columns";
+import { daysColumn, tableColumns } from "@/components/shared/table/columns";
 
 /** One row of a table in these tests. */
 const Row = Schema.Struct({
@@ -15,16 +15,21 @@ const Row = Schema.Struct({
 const columns = tableColumns<typeof Row.Type>();
 const options = [{ icon: Building01Icon, label: "Open", value: "open" }];
 
+/** The panel a column of moments filters its days with, as `HeadDays` does in a page. */
+function DaysPanel() {
+  return null;
+}
+
 describe("the columns of a table", () => {
   it("gives every column of data the filter of what it holds", () => {
     const declared = [
       columns.text((row) => row.name, { header: "Name", id: "name" }),
       columns.number((row) => row.score, { header: "Score", id: "score" }),
-      columns.days((row) => row.at, {
-        header: "Date",
-        id: "date",
-        timeZone: () => "Asia/Jakarta",
-      }),
+      daysColumn(
+        (row) => row.at,
+        { header: "Date", id: "date", timeZone: () => "Asia/Jakarta" },
+        DaysPanel
+      ),
       columns.values((row) => row.status, {
         header: "Status",
         id: "status",
@@ -45,7 +50,7 @@ describe("the columns of a table", () => {
     expect(Arr.map(declared, (column) => column.meta)).toEqual([
       { filter: { kind: "text" }, title: "Name" },
       { filter: { kind: "number" }, title: "Score" },
-      { filter: { kind: "days" }, title: "Date" },
+      { filter: { kind: "days", panel: DaysPanel }, title: "Date" },
       { filter: { kind: "values", options }, title: "Status" },
       { filter: { kind: "values", options }, title: "Roles" },
       { filter: { kind: "choice", options }, title: "State" },

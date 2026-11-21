@@ -16,7 +16,7 @@ import { forgetSubmittedKept } from "@/components/exams/sitting/forget";
 import { PageList } from "@/components/shared/page/body";
 import { Page } from "@/components/shared/page/frame";
 import { reloadPage } from "@/components/shared/reload";
-import { tableColumns } from "@/components/shared/table/columns";
+import { datedColumns } from "@/components/shared/table/calendar";
 import { DataTable } from "@/components/shared/table/data";
 import { RowItems, RowOpen } from "@/components/shared/table/menu";
 import type { StatusLook } from "@/components/shared/table/status";
@@ -45,7 +45,7 @@ import { schoolSittingTarget } from "@/lib/routing/school/target";
 type Sitting = typeof StudentSittingRow.Type;
 
 /** The columns of the student's exams table. */
-const sittingColumns = tableColumns<Sitting>();
+const sittingColumns = datedColumns<Sitting>();
 
 /** The look of each status of a sitting: open to enter now, still to open, and finished. */
 const STATUS_LOOKS = {

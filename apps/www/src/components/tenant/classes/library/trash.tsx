@@ -18,8 +18,10 @@ import { ResponsiveDialogSubject } from "@repo/design-system/components/ui/respo
 import { Array as Arr, Match } from "effect";
 import { useFormatter, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
-import { useFormatTimeZone } from "@/components/shared/table/calendar";
-import { tableColumns } from "@/components/shared/table/columns";
+import {
+  datedColumns,
+  useFormatTimeZone,
+} from "@/components/shared/table/calendar";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import { namedOptions } from "@/components/shared/table/filter";
@@ -85,7 +87,7 @@ const shownOf = (row: TrashRow) =>
     }),
   });
 
-const trashColumns = tableColumns<TrashRow>();
+const trashColumns = datedColumns<TrashRow>();
 
 /**
  * The trash of the class library: each folder that went to the trash itself, with everything inside it, and each
