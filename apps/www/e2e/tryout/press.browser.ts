@@ -17,7 +17,7 @@ const SET_HREF = `${TRACK_HREF}/set-1`;
  * hydrates the table early. The press lands once React holds the page's shell, which
  * comes before the client, and the release once the socket says the client is there.
  */
-for (const round of [1, 2, 3, 4, 5, 6, 7, 8]) test(`a press on a row while the page's client arrives opens the set beside the table ${round}`, async ({
+for (const round of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]) test(`a press on a row while the page's client arrives opens the set beside the table ${round % 2 === 0 ? "settled" : "raw"} ${round}`, async ({
   baseURL,
   page,
 }) => {
@@ -45,7 +45,7 @@ for (const round of [1, 2, 3, 4, 5, 6, 7, 8]) test(`a press on a row while the p
             });
           });
           page.on("console", (message) => {
-            if (message.text().startsWith("preloadError")) console.log(`PROBE ${Date.now() - started} ${message.text().slice(0, 12000)}`);
+            console.log(`PROBE console ${round} ${Date.now() - started} ${message.type()} ${message.text().slice(0, 600)}`);
           });
           page.on("requestfailed", (request) => console.log(`PROBE failed ${Date.now() - started} ${request.url()} ${request.failure()?.errorText}`));
           page.on("response", (response) => {
@@ -56,6 +56,10 @@ for (const round of [1, 2, 3, 4, 5, 6, 7, 8]) test(`a press on a row while the p
           });
           await page.goto(TRACK_HREF);
           await link.hover();
+          if (round % 2 === 0) {
+            await page.waitForLoadState("networkidle");
+            await page.waitForTimeout(1500);
+          }
           const socket = page.waitForEvent("websocket", {
             timeout: readinessTimeoutMilliseconds,
           });
