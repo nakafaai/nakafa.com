@@ -30,14 +30,16 @@ function pointer(type: string, id: number, x: number, y: number) {
   return event;
 }
 
-/** Presses the trigger with the given button and pointer type at (10, 10), as pointer 1. */
+/** Presses the trigger with the given button and pointer type at (10, 10), as pointer 1, from a real input unless `isTrusted` is false. */
 function press(
   element: HTMLButtonElement,
   button = 0,
-  pointerType: "mouse" | "pen" | "touch" = "mouse"
+  pointerType: "mouse" | "pen" | "touch" = "mouse",
+  isTrusted = true
 ) {
   keepClickOnTrigger({
     button,
+    isTrusted,
     clientX: 10,
     clientY: 10,
     currentTarget: element,
@@ -66,6 +68,12 @@ describe("keepClickOnTrigger", () => {
     press(secondary, 2);
     expect(touched.hasPointerCapture(1)).toBe(false);
     expect(secondary.hasPointerCapture(1)).toBe(false);
+  });
+
+  it("leaves a press a script dispatched alone", () => {
+    const element = trigger();
+    press(element, 0, "mouse", false);
+    expect(element.hasPointerCapture(1)).toBe(false);
   });
 
   it("holds the pointer while it stays within a click's travel", () => {

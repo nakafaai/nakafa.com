@@ -10,6 +10,7 @@ type TriggerPress = Pick<
   | "clientX"
   | "clientY"
   | "currentTarget"
+  | "isTrusted"
   | "pointerId"
   | "pointerType"
 >;
@@ -24,11 +25,12 @@ type TriggerPress = Pick<
  * never moved. A click on a busy main thread, or on a slow phone, closed the popup it had just opened
  * (vercel-labs/ui#1005). The trigger captures the pointer while it stays within a click's travel, so the release
  * lands on the trigger, and lets it go once the pointer travels further, so a press dragged onto an item still
- * chooses it. A touch press is captured by its target already, and UI SDK does not open on it.
+ * chooses it. A touch press is captured by its target already, and UI SDK does not open on it. A press a script
+ * dispatched has no pointer to capture, so it is left alone.
  * https://developer.mozilla.org/docs/Web/API/Element/setPointerCapture
  */
 export function keepClickOnTrigger(press: TriggerPress) {
-  if (press.button !== 0 || press.pointerType === "touch") {
+  if (!press.isTrusted || press.button !== 0 || press.pointerType === "touch") {
     return;
   }
   const trigger: HTMLElement = press.currentTarget;
