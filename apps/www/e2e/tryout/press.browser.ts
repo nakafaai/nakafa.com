@@ -17,7 +17,7 @@ const SET_HREF = `${TRACK_HREF}/set-1`;
  * hydrates the table early. The press lands once React holds the page's shell, which
  * comes before the client, and the release once the socket says the client is there.
  */
-test("a press on a row while the page's client arrives opens the set beside the table", async ({
+for (const round of [1, 2, 3, 4, 5, 6, 7, 8]) test(`a press on a row while the page's client arrives opens the set beside the table ${round}`, async ({
   baseURL,
   page,
 }) => {
@@ -29,6 +29,31 @@ test("a press on a row while the page's client arrives opens the set beside the 
         yield* signInLearner(page.context(), origin);
         yield* Effect.promise(async () => {
           const link = page.locator(`main a[href='${SET_HREF}']`);
+          const started = Date.now();
+          await page.addInitScript(() => {
+            window.addEventListener("vite:preloadError", (event) => {
+              const payload = (event as unknown as { payload: unknown }).payload;
+              const resources = performance
+                .getEntriesByType("resource")
+                .filter((entry) => entry.name.endsWith(".js"))
+                .map((entry) => {
+                  const timing = entry as PerformanceResourceTiming;
+                  return `${timing.name.split("/").pop()}:${timing.initiatorType}:${Math.round(timing.startTime)}+${Math.round(timing.duration)}:${timing.transferSize}:${timing.responseStatus}`;
+                });
+              const links = Array.from(document.querySelectorAll("link[rel=modulepreload]")).map((link) => `${(link as HTMLLinkElement).href.split("/").pop()}|${link.getAttribute("crossorigin")}`);
+              console.log(`preloadError t=${Math.round(performance.now())} ${String(payload)} STACK ${payload instanceof Error ? payload.stack : ""} RES ${resources.join(" ")} LINKS ${links.join(" ")}`);
+            });
+          });
+          page.on("console", (message) => {
+            if (message.text().startsWith("preloadError")) console.log(`PROBE ${Date.now() - started} ${message.text().slice(0, 12000)}`);
+          });
+          page.on("requestfailed", (request) => console.log(`PROBE failed ${Date.now() - started} ${request.url()} ${request.failure()?.errorText}`));
+          page.on("response", (response) => {
+            if (response.url().includes("/assets/") && response.status() !== 200) console.log(`PROBE status ${Date.now() - started} ${response.status()} ${response.url()}`);
+          });
+          page.on("request", (request) => {
+            if (request.isNavigationRequest() && request.frame() === page.mainFrame()) console.log(`PROBE nav ${Date.now() - started} ${request.url()}`);
+          });
           await page.goto(TRACK_HREF);
           await link.hover();
           const socket = page.waitForEvent("websocket", {
