@@ -444,7 +444,8 @@ test("says so while the connection is gone, and stops once it is back", async ({
       Effect.gen(function* () {
         const origin = yield* Effect.fromNullishOr(baseURL);
         yield* runFirstSection(page, false, origin);
-        const note = page.getByText(OFFLINE_NOTE);
+        // The note's tooltip repeats its text and stays in the page while closed, so the note is the one shown.
+        const note = page.getByText(OFFLINE_NOTE).filter({ visible: true });
         yield* Effect.promise(async () => {
           await expect(note).toBeHidden();
           down = true;
