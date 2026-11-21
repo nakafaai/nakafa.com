@@ -11,7 +11,7 @@ import { PageNumber, TotalPages } from "takumi-pdf/primitives";
 export const PAGE_SIDE = 56;
 
 /** The family every document draws with. */
-export const PDF_FONT = "Inter";
+export const PDF_FONT = "Allo";
 
 /** Who a document comes from: Nakafa itself, or a school that issues it through Nakafa. */
 const PdfBrand = Schema.Union([

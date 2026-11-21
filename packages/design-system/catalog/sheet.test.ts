@@ -6,6 +6,7 @@ import { catalogSheet } from "#catalog/sheet";
 
 const globals = `@import "tailwindcss";
 @import "./identity.css";
+@import "./allo.css";
 @source "../../**/*.{ts,tsx}";
 @custom-variant dark (&:is(.dark *));
 :root {
@@ -19,7 +20,7 @@ const globals = `@import "tailwindcss";
   color-scheme: dark;
 }
 @theme inline {
-  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --font-sans: "Allo", "Allo Fallback Arial", system-ui, sans-serif;
 }
 .geist-mono {
   --font-geist-mono: "Geist Mono Variable";
@@ -60,9 +61,10 @@ describe("catalogSheet", () => {
     expect(sheet).toContain('@import "/www/public/themes.css";');
   });
 
-  it("names Inter and Geist Mono as the page loads them", () => {
+  it("leaves Allo's faces to the page and names Allo and Geist Mono as it loads them", () => {
+    expect(sheet).not.toContain("allo.css");
     expect(sheet).toContain(
-      '--font-sans: "Inter", "Inter Variable", system-ui, sans-serif;'
+      '--font-sans: "Allo", "Allo Fallback Arial", system-ui, sans-serif;'
     );
     expect(sheet).toContain('--font-geist-mono: "Geist Mono"');
   });

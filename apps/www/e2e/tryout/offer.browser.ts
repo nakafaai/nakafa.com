@@ -204,7 +204,7 @@ const verifyOfferActions = Effect.fn("NakafaE2E.verifyTryoutOfferActions")(
       exact: true,
       name: app.Pricing["pro-cta"],
     });
-    // Labels are measured in the loaded Inter typeface, not in a fallback.
+    // Labels are measured in the loaded Allo typeface, not in a fallback.
     yield* Effect.promise(async () => {
       await expect(checkout).toBeVisible();
       await page.evaluate(async () => {

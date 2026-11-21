@@ -61,6 +61,8 @@ import { renderSocialImage } from "@/scripts/static/social";
 
 /** The logo that every social image shows, read from the same file the image route bundled. */
 const LOGO_FILE = "public/logo.svg";
+/** Allo's Latin face, which every social image draws its words in. */
+const ALLO_LATIN_FILE = "../../packages/design-system/fonts/allo/latin.woff2";
 
 /** One text artifact of the release, at its path under the client output. */
 const TextArtifact = Schema.Struct({
@@ -287,6 +289,7 @@ const writeSearchIndexes = Effect.fn("www.static.searchIndexes")(function* (
 const writeSocialImage = Effect.fn("www.static.socialImage")(function* (
   outDir: string,
   logoSvg: string,
+  face: Uint8Array,
   source: SocialImageSource
 ) {
   const segments = Arr.filter(source.slug.split("/"), (part) => part !== "");
@@ -297,6 +300,7 @@ const writeSocialImage = Effect.fn("www.static.socialImage")(function* (
   const png = yield* Effect.promise(() =>
     renderSocialImage({
       description: copy.value.description,
+      face,
       logoSvg,
       title: copy.value.title,
     })
@@ -364,11 +368,12 @@ const write = Effect.fn("www.static.build")(function* (
   );
 
   const logoSvg = yield* fs.readFileString(path.resolve(LOGO_FILE));
+  const face = yield* fs.readFile(path.resolve(ALLO_LATIN_FILE));
   const sources = listSocialImageSources(LOCALES);
   const started = yield* Clock.currentTimeMillis;
   const written = yield* Effect.forEach(
     sources,
-    (source) => writeSocialImage(outDir, logoSvg, source),
+    (source) => writeSocialImage(outDir, logoSvg, face, source),
     { concurrency: 8 }
   );
   const images = Arr.filter(written, Boolean).length;

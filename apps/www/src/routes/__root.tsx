@@ -1,7 +1,6 @@
-import "@fontsource-variable/inter";
-import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
 import { PageScrollbar } from "@repo/design-system/components/ui/scrollbar";
 import { DrawerStage } from "@repo/design-system/components/ui/stage";
+import alloLatin from "@repo/design-system/fonts/allo/latin.woff2?url";
 import { UI_SDK_HEAD_SCRIPT, UI_SDK_STYLES } from "@repo/design-system/lib/sdk";
 import { ThemeProvider } from "@repo/design-system/providers/theme";
 import { textDirection } from "@repo/internationalization/src/direction";
@@ -94,13 +93,13 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      // Every page's text draws in Inter's Latin face. Found only from the
+      // Every page's text draws in Allo's Latin face. Found only from the
       // stylesheet, it arrived after the first paint: the text swapped from its
       // fallback in sight, and every element of the page recalculated its style.
       {
         as: "font",
         crossOrigin: "anonymous",
-        href: interLatin,
+        href: alloLatin,
         rel: "preload",
         type: "font/woff2",
       },

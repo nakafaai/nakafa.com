@@ -121,7 +121,7 @@ export function Footer({
         className="hover:text-primary mx-auto flex w-full max-w-7xl px-6 py-16 transition-colors ease-out"
         to="/$locale"
       >
-        <span className="hover:text-primary mx-auto text-7xl font-bold transition-colors duration-300 ease-out sm:text-8xl md:text-9xl lg:text-[12rem] xl:text-[18rem]">
+        <span className="hover:text-primary mx-auto text-7xl font-semibold transition-colors duration-300 ease-out sm:text-8xl md:text-9xl lg:text-[12rem] xl:text-[18rem]">
           Nakafa
         </span>
       </Link>

@@ -348,6 +348,12 @@ export const readTokens = Effect.fn("designSystem.catalog.readTokens")(
       type: {
         fonts: [
           {
+            family: "Allo",
+            file: "fonts/allo-latin.woff2",
+            weight: "400 600",
+            style: "normal",
+          },
+          {
             family: "Geist Mono",
             file: "fonts/geist-mono-latin-wght-normal.woff2",
             weight: "100 900",
@@ -355,7 +361,7 @@ export const readTokens = Effect.fn("designSystem.catalog.readTokens")(
           },
         ],
         families: {
-          sans: '"Inter", system-ui, sans-serif',
+          sans: '"Allo", system-ui, sans-serif',
           mono: '"Geist Mono", ui-monospace, monospace',
         },
         groups: [

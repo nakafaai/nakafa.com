@@ -157,6 +157,11 @@ const generate = Effect.gen(function* () {
   );
   yield* fs.makeDirectory(`${out}/fonts`, { recursive: true });
   yield* fs.copyFile(
+    `${root}/fonts/allo/latin.woff2`,
+    `${out}/fonts/allo-latin.woff2`
+  );
+  yield* fs.copyFile(`${root}/fonts/allo/OFL.txt`, `${out}/fonts/OFL.txt`);
+  yield* fs.copyFile(
     `${root}/node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2`,
     `${out}/fonts/geist-mono-latin-wght-normal.woff2`
   );

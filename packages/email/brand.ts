@@ -18,9 +18,13 @@ export const EMAIL_COLORS = {
   light: THEME_COMPATIBILITY_COLORS.light,
 };
 
-/** Inter where the reader has it, then each platform's own interface face. */
+/**
+ * Allo, the face the app draws in, where the reader's client has it, then each
+ * platform's own interface face. Mail clients load no web font Nakafa could
+ * rely on, so most readers see the platform face.
+ */
 export const EMAIL_FONTS = [
-  "Inter",
+  "Allo",
   "-apple-system",
   "BlinkMacSystemFont",
   '"Segoe UI"',

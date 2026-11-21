@@ -75,6 +75,7 @@
     "doctor": "bun --filter www doctor",
     "effect:source:check": "node scripts/effect/source.ts check",
     "effect:source:update": "node scripts/effect/source.ts update",
+    "fonts:allo": "node scripts/fonts/allo.ts",
     "format": "ultracite fix && turbo run format --filter=cas",
     "format:doctor": "ultracite doctor",
     "gate": "node scripts/gate/main.ts",
@@ -121,6 +122,7 @@
     "esbuild": "0.28.2",
     "portless": "0.18.1",
     "sigstore": "5.0.1",
+    "subset-font": "2.9.0",
     "tsrs": "catalog:",
     "turbo": "2.11.13",
     "ultracite": "8.3.1",
@@ -136,6 +138,9 @@
       "version": "26.13.1",
       "onFail": "download"
     }
+  },
+  "patchedDependencies": {
+    "@ui-sdk/core@0.1.0-beta.13": "patches/@ui-sdk%2Fcore@0.1.0-beta.13.patch"
   },
   "trustedDependencies": [
     "@parcel/watcher",
