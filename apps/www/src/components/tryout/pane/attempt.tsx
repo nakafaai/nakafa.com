@@ -1,4 +1,5 @@
-import { Option } from "effect";
+import { cn } from "cn";
+import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { PaneFact, PaneFacts } from "@/components/shared/page/pane";
@@ -14,10 +15,21 @@ const TAKEN = { day: "numeric", month: "short", year: "numeric" } as const;
  * The first part of the pane, with no title, since its facts already say whether the attempt runs or ended: the
  * picker of the set's attempts, then the attempt's facts. A line across the pane parts it from the path.
  */
-function AttemptPart({ children }: { children: ReactNode }) {
+function AttemptPart({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   const { view } = useSetPane();
   return (
-    <section className="-mx-(--pane-end,1rem) flex flex-col gap-4 border-b px-(--pane-end,1rem) py-4 first:pt-0 last:border-b-0 last:pb-0">
+    <section
+      className={cn(
+        "-mx-(--pane-end,1rem) flex flex-col gap-4 border-b px-(--pane-end,1rem) py-4 first:pt-0 last:border-b-0 last:pb-0",
+        className
+      )}
+    >
       <TryoutAttemptPicker
         attempt={view.actionAttempt}
         locale={view.route.locale}
@@ -54,9 +66,38 @@ function RunningFacts({
 }
 
 /**
+ * The attempt part while the learner's read is on its way. A set this browser last saw finished and tried more
+ * than once holds its picker from the first frame (`TryoutAttemptPicker`), and with it the room its result's facts
+ * take, so nothing in the pane moves when the read answers. Any other set's place stays hidden, and the part with it.
+ */
+function WaitingAttempt() {
+  const t = useTranslations("Tryouts");
+  const tCommon = useTranslations("Common");
+  const labels = [
+    t("score-label.standard"),
+    t("correct-answers-label"),
+    t("rank-label"),
+    tCommon("date"),
+  ];
+  return (
+    <AttemptPart className="hidden has-[[data-attempt-picker]:not([hidden])]:flex">
+      <PaneFacts layout="grid">
+        {Arr.map(labels, (label) => (
+          <PaneFact key={label} label={label}>
+            <span aria-hidden className="invisible">
+              0
+            </span>
+          </PaneFact>
+        ))}
+      </PaneFacts>
+    </AttemptPart>
+  );
+}
+
+/**
  * The attempt the pane shows (the owner's notes of 20 Nov): the clock and the parts done of one that runs, or the
  * result of one that ended, with the place its score takes on the set's board and the day it was taken. A set the
- * learner has not started, and a visitor's pane, show none.
+ * learner has not started shows none, and a pane whose read is on its way holds the room a kept result takes.
  */
 export function SetAttempt() {
   const t = useTranslations("Tryouts");
@@ -64,7 +105,10 @@ export function SetAttempt() {
   const format = useFormatter();
   const { board, view } = useSetPane();
   const attempt = view.actionAttempt;
-  if (attempt === undefined || attempt === null) {
+  if (attempt === undefined) {
+    return <WaitingAttempt />;
+  }
+  if (attempt === null) {
     return null;
   }
   if (attempt.status === "in-progress") {
