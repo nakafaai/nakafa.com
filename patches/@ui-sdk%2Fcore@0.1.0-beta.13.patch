@@ -1,0 +1,57 @@
+diff --git a/dist/components/menu/menu-api.js b/dist/components/menu/menu-api.js
+index e34ddc25ab9895964ba9ba5886deb18647e50132..0e93b0e5283d4915aea0c02b7d8c88f4b415a7f3 100644
+--- a/dist/components/menu/menu-api.js
++++ b/dist/components/menu/menu-api.js
+@@ -553,7 +553,7 @@ function menuApiBody(context) {
+     const start = {
+       x: event.clientX,
+       y: event.clientY,
+-      time: performance.now()
++      time: event.timeStamp
+     };
+     const off = on(window, "pointerup", (up) => {
+       off();
+@@ -564,16 +564,18 @@ function menuApiBody(context) {
+       if (!opening) {
+         return;
+       }
+-      const held = performance.now() - start.time >= 200;
++      const held = up.timeStamp - start.time >= 200;
+       const moved = Math.hypot(up.clientX - start.x, up.clientY - start.y) > 4;
+-      if (!held || !moved && composedContains(trigger, target)) {
++      const rect = trigger.getBoundingClientRect();
++      const onTrigger = composedContains(trigger, target) || up.clientX >= rect.left && up.clientX <= rect.right && up.clientY >= rect.top && up.clientY <= rect.bottom;
++      if (!held || !moved && onTrigger) {
+         return;
+       }
+       const item = composedClosest(target, itemSelector);
+       const entry = item && findEntry(item);
+       if (entry && !entry.entry.disabled() && !entry.entry.openSubmenu) {
+         entry.entry.activate(up);
+-      } else if (!item && !composedContains(trigger, target) && !root().treeContains(target)) {
++      } else if (!item && !onTrigger && !root().treeContains(target)) {
+         hide({ reason: "trigger-release", event: up, focus: false });
+       }
+     });
+diff --git a/dist/components/select/select-keyboard.js b/dist/components/select/select-keyboard.js
+index 7fe55d9da4e7116cae6a1f45a47be373b04f7217..1f9384f7a837a387ed433f260a7fddd806c00d92 100644
+--- a/dist/components/select/select-keyboard.js
++++ b/dist/components/select/select-keyboard.js
+@@ -183,7 +183,7 @@ function createSelectKeyboard({
+     const start = {
+       x: event.clientX,
+       y: event.clientY,
+-      time: performance.now()
++      time: event.timeStamp
+     };
+     const off = on(window, "pointerup", (up) => {
+       off();
+@@ -194,7 +194,7 @@ function createSelectKeyboard({
+       if (!opening) {
+         return;
+       }
+-      const held = performance.now() - start.time >= HOLD_MS;
++      const held = up.timeStamp - start.time >= HOLD_MS;
+       const moved = Math.hypot(up.clientX - start.x, up.clientY - start.y) > DRAG_PX;
+       if (!held && !moved || composedContains(trigger, target)) {
+         return;
