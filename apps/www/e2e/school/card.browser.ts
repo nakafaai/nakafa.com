@@ -78,7 +78,10 @@ test("a student whose card an Admin printed signs in with the school username, t
   await page.getByLabel("Password").fill("correct horse battery");
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page.getByText("Siswa Uji").first()).toBeVisible({
+  // A phone keeps the sidebar, which also names the student, folded away until it opens.
+  await expect(
+    page.getByText("Siswa Uji").filter({ visible: true }).first()
+  ).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
   await expect(page.getByRole("link", { name: "Use a username" })).toHaveCount(

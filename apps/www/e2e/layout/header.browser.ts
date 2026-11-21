@@ -12,6 +12,7 @@ import { activateUntilVisible } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { readHeaderLineProblems } from "@/e2e/support/lines";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { pressInPopup } from "@/e2e/support/popup";
 import { appRoutes, openRoute } from "@/e2e/support/route";
 import {
   createSchool,
@@ -55,9 +56,14 @@ const publicRoutes = [
   "/en/articles/politics/merah-putih-cabinet-analysis",
 ];
 
-/** The try-out page of an exam's group, which a phone reaches from a set page's folded path. */
-/** The year's crumb opens its one track's set table, where its group's address leads. */
-const GROUP_PAGE = /\/en\/try-out\/indonesia\/snbt\/2027\/utbk$/u;
+/**
+ * A try-out group's page, whose path a phone folds into its More menu. A set's address opens the set's pane, which a
+ * phone raises as a sheet over the page, so the folded path is read from the group's page itself.
+ */
+const GROUP_PATH = "/en/try-out/indonesia/snbt/2027/utbk";
+
+/** The country's try-out page, which the folded country crumb opens as its own page among its siblings. */
+const COUNTRY_PAGE = /\/en\/try-out\/indonesia$/u;
 
 /** The pages of a signed-in learner, each with its own header. */
 const learnerRoutes = [
@@ -468,23 +474,21 @@ test("a phone opens a folded ancestor of the path with a tap", async ({
 }) => {
   await page.setViewportSize({ height: 844, width: 390 });
   await Effect.runPromise(
-    withObservedPageErrors(
-      page,
-      openRoute(page, "/en/try-out/indonesia/snbt/2027/utbk/set-1")
-    )
+    withObservedPageErrors(page, openRoute(page, GROUP_PATH))
   );
   const breadcrumb = page.getByRole("navigation", { name: "breadcrumb" });
   // The page answers before its scripts run, and a tap before React has taken the
   // button over opens nothing, so the tap repeats until the menu shows.
-  const ancestor = await Effect.runPromise(
+  const country = await Effect.runPromise(
     activateUntilVisible(
-      breadcrumb.getByRole("button"),
-      page
-        .getByRole("menu")
-        .locator('a[href="/en/try-out/indonesia/snbt/2027"]'),
+      breadcrumb.getByRole("button", { name: "More" }),
+      page.getByRole("menuitem", { name: "Indonesia" }),
       readinessTimeoutMilliseconds
     )
   );
-  await ancestor.click();
-  await expect(page).toHaveURL(GROUP_PAGE);
+  // A folded crumb with siblings opens them, its own page among them.
+  await pressInPopup(country);
+  const own = page.getByRole("menu").locator('a[href="/en/try-out/indonesia"]');
+  await pressInPopup(own);
+  await expect(page).toHaveURL(COUNTRY_PAGE);
 });
