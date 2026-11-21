@@ -4,7 +4,7 @@ import { canWarm, readPressableLinks, warmLinks } from "@/lib/routing/warm";
 
 vi.mock("@repo/design-system/lib/settle", async () => {
   const { Effect: Fx } = await import("effect");
-  return { untilPageSettled: Fx.void };
+  return { untilPageRead: Fx.void };
 });
 
 /** One link of a page: its address and how far down the page it stands. */

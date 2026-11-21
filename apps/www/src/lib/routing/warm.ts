@@ -1,4 +1,4 @@
-import { untilPageSettled } from "@repo/design-system/lib/settle";
+import { untilPageRead } from "@repo/design-system/lib/settle";
 import { Array as Arr, Effect, Option, Schema, String as Str } from "effect";
 import { PRERENDERED_ROUTE_TEMPLATES } from "@/lib/routing/prerendered";
 import { namesFile, readPathSegments } from "@/lib/routing/template";
@@ -113,15 +113,19 @@ function isStaticLink(router: WarmRouter, href: string) {
 }
 
 /**
- * Loads the pages a reader can press next, once the page in front of them has
- * settled, so a press finds its code and its data in hand. A press on a slow network
- * cannot be fast any other way: one round trip alone costs a phone most of what a
- * press may take. A link that cannot load stays cold, and its press reads as before.
+ * Loads the pages a reader can press next, once the page in front of them has its
+ * reader (`untilPageRead`), so a press finds its code and its data in hand. A press
+ * on a slow network cannot be fast any other way: one round trip alone costs a
+ * phone most of what a press may take. A warmed page evaluates its code, about 180
+ * ms of a slow phone's thread for a learn page, so it waits for the reader's first
+ * gesture, or ten seconds on a page nobody touches, as decoration does (ADR 0039
+ * D4 and D17): at load and idle it landed inside the page's own start. A link that
+ * cannot load stays cold, and its press reads as before.
  */
 export const warmLinks = Effect.fn("www.routing.warmLinks")(function* (
   router: WarmRouter
 ) {
-  yield* untilPageSettled;
+  yield* untilPageRead;
   if (!canWarm(Reflect.get(navigator, "connection"))) {
     return;
   }

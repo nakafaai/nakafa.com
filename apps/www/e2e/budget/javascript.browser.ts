@@ -7,9 +7,9 @@ import { measureRouteJavascript } from "@/e2e/support/resources";
 import { appRoutes } from "@/e2e/support/route";
 
 // Each graph counts every script a route loads until the JavaScript stops
-// arriving: its first paint, then the pages `warmLinks` warms once the page
-// settles (up to six links on screen, a page's tabs first), because a reader's
-// phone pays for both. A warm is a preload, so it takes a page's code and data
+// arriving: its first paint, then the pages `warmLinks` warms at the reader's
+// first gesture, which the graph makes once the page took over (up to six links
+// on screen, a page's tabs first), because a reader's phone pays for both. A warm is a preload, so it takes a page's code and data
 // but never the sections under its first screen (ADR 0039 D3). Measured on the
 // Start build of 8 November 2026 (production build, 1440 by 900, three uncached
 // runs, all equal). Each limit keeps the ~6% margin over its measurement.

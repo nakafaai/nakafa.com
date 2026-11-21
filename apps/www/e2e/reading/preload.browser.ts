@@ -13,8 +13,8 @@ const STATIC_ANSWER = "/_data/";
 /**
  * A reader who asked the browser to save data loads no neighbouring lesson
  * before they show intent: the page warms no link for them (`warmLinks` in
- * `lib/routing/warm.ts`, which warms the links on screen once a page settled for
- * every other reader), and the pagination loads the next lesson's content on
+ * `lib/routing/warm.ts`, which warms the links on screen at every other reader's
+ * first gesture), and the pagination loads the next lesson's content on
  * hover, focus or touch, never when the page is drawn.
  */
 test("a lesson loads its next lesson for a reader who saves data only when they reach for it", async ({
