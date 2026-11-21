@@ -159,8 +159,11 @@ test("each submenu of the account menu shows its items in its first frame", asyn
             { steps: 10 }
           );
           await item.hover();
+          // A submenu stands inside its menu, so the menu holds its text too, and only its name tells it apart.
           await expect(
-            page.getByRole("menu").filter({ hasText: submenu.contains })
+            page
+              .getByRole("menu", { exact: true, name: submenu.name })
+              .filter({ hasText: submenu.contains })
           ).toBeVisible();
           await untilRecorded(page);
           await expectFinalFirstFrame(page);
