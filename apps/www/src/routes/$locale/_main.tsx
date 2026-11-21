@@ -7,6 +7,7 @@ import { PageProviders } from "@/components/providers/page";
 import { SharedProviders } from "@/components/providers/shared";
 import { pageFrameVariants } from "@/components/shared/page/width";
 import { AppShell } from "@/components/sidebar/shell";
+import { TryoutStartProvider } from "@/components/tryout/runtime/start";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { MessagesProvider } from "@/lib/i18n/provider";
 import { SHELL_MESSAGE_NAMESPACES } from "@/lib/i18n/shell";
@@ -81,18 +82,20 @@ function MainLayout() {
     >
       <PageProviders pageNavigation={pageNavigation}>
         <TryoutEntryProvider entryPath={tryoutEntry}>
-          <SharedProviders>
-            <AppShell articleNavigation={articleNavigation}>
-              <div
-                className={cn(
-                  monospace,
-                  pageFrameVariants({ width: "column" })
-                )}
-              >
-                <Outlet />
-              </div>
-            </AppShell>
-          </SharedProviders>
+          <TryoutStartProvider>
+            <SharedProviders>
+              <AppShell articleNavigation={articleNavigation}>
+                <div
+                  className={cn(
+                    monospace,
+                    pageFrameVariants({ width: "column" })
+                  )}
+                >
+                  <Outlet />
+                </div>
+              </AppShell>
+            </SharedProviders>
+          </TryoutStartProvider>
         </TryoutEntryProvider>
       </PageProviders>
     </MessagesProvider>

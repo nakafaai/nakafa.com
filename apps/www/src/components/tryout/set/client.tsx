@@ -16,6 +16,8 @@ import type { TryoutSetPaneProps } from "@/components/tryout/pane/set";
 import { TryoutSetPane } from "@/components/tryout/pane/set";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
 import { useTryoutFinish } from "@/components/tryout/player/finish";
+import { TryoutPartOpening } from "@/components/tryout/player/opening";
+import { TryoutPaperProvider } from "@/components/tryout/player/paper";
 import { useTryoutLeave } from "@/components/tryout/route/leave";
 import { selectTryoutSetLinks } from "@/components/tryout/route/owner";
 import type { TryoutPageAddress } from "@/components/tryout/route/path";
@@ -25,7 +27,7 @@ import {
   getTryoutPublicPathHref,
 } from "@/components/tryout/route/path";
 import {
-  TryoutStartProvider,
+  useEndTryoutStart,
   useTryoutStartPhase,
 } from "@/components/tryout/runtime/start";
 import {
@@ -34,7 +36,9 @@ import {
   isTryoutStateLive,
   selectActionAttempt,
 } from "@/components/tryout/runtime/state";
+import { tryoutSectionPartsOf } from "@/components/tryout/section/model";
 import { TryoutSetEntry } from "@/components/tryout/set/entry";
+import { useTryoutSetPartPath } from "@/components/tryout/set/header";
 import { tryoutActionNameOf } from "@/components/tryout/set/kept";
 import type {
   LoadedRuntime,
@@ -45,6 +49,7 @@ import type {
   TryoutSetRoute,
 } from "@/components/tryout/set/model";
 import { useKeepActionName } from "@/components/tryout/set/name";
+import { TryoutPage } from "@/components/tryout/shell/header";
 import { useLastValue } from "@/lib/data/kept";
 
 type SetState = TryoutSetInitialState | null;
@@ -99,17 +104,15 @@ export function TryoutSetPageClient({
       <TryoutSetPageContext
         value={{ page, paper, pending, restartTarget, route }}
       >
-        <TryoutStartProvider>
-          {binding === null ? (
-            <ResolvedTryoutSetPage binding={null} finish={null} state={null}>
-              {children}
-            </ResolvedTryoutSetPage>
-          ) : (
-            <LiveTryoutSetPage binding={binding} key={binding.attemptId}>
-              {children}
-            </LiveTryoutSetPage>
-          )}
-        </TryoutStartProvider>
+        {binding === null ? (
+          <ResolvedTryoutSetPage binding={null} finish={null} state={null}>
+            {children}
+          </ResolvedTryoutSetPage>
+        ) : (
+          <LiveTryoutSetPage binding={binding} key={binding.attemptId}>
+            {children}
+          </LiveTryoutSetPage>
+        )}
       </TryoutSetPageContext>
     </TryoutContentContext>
   );
@@ -132,6 +135,8 @@ function LiveTryoutSetPage({
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const locale = useLocale();
   const [terminalState, setTerminalState] = useState<SetState | undefined>();
+  // The page shows the attempt a start opened, so the start ends here.
+  useEndTryoutStart();
   // Nothing follows an attempt that ended here, or one the page's read already holds as ended.
   const following =
     isTryoutStateLive(binding.initialState) && terminalState === undefined;
@@ -207,6 +212,7 @@ function ResolvedTryoutSetPage({
   state: SetState;
 }) {
   const { page, paper, pending, restartTarget, route } = useTryoutSetPage();
+  const opening = useTryoutStartPhase() === "opening";
   const currentAttempt = state?.attempt ?? null;
   const runtime = state?.runtime ?? null;
   const entrySection = page.entrySection;
@@ -254,7 +260,12 @@ function ResolvedTryoutSetPage({
     },
   };
 
-  if (!(paper && isInternalEntry && entrySection)) {
+  // A press that opens a section with a page of its own draws its player here at once, and that page draws the
+  // same frame until it reads the attempt; a press that opens the set's own entry draws it in the set's paper.
+  if (opening && !isInternalEntry && destination) {
+    return <TryoutSetOpening part={destination.part} view={view} />;
+  }
+  if (!((paper || opening) && isInternalEntry && entrySection)) {
     return <TryoutSetPane view={view} />;
   }
   return (
@@ -274,6 +285,42 @@ function ResolvedTryoutSetPage({
         {children}
       </TryoutInternalSet>
     </>
+  );
+}
+
+/**
+ * The player of the section that a press opens from the set's pane, drawn the moment the learner confirms. It
+ * takes the whole page with the shell locked, as the section's page does, which draws the same frame from the
+ * address the router moves to until it reads the attempt, so the start shows as one player opening.
+ */
+function TryoutSetOpening({
+  part,
+  view,
+}: {
+  part: NonNullable<ReturnType<typeof getStartDestination>>["part"];
+  view: TryoutSetPaneProps["view"];
+}) {
+  const path = useTryoutSetPartPath(
+    {
+      currentPath: view.currentPath,
+      page: view.page,
+      returnPath: view.returnPath,
+    },
+    part.title
+  );
+  return (
+    <TryoutPaperProvider
+      current={part.sectionKey}
+      locked
+      parts={tryoutSectionPartsOf(view.page.sections)}
+      path={path}
+      title={part.title}
+    >
+      <ShellLock />
+      <TryoutPage>
+        <TryoutPartOpening part={part} />
+      </TryoutPage>
+    </TryoutPaperProvider>
   );
 }
 

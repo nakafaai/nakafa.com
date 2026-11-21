@@ -32,7 +32,7 @@ import {
   PRACTICE_SEARCH,
 } from "@/components/tryout/route/path";
 import {
-  TryoutStartProvider,
+  useEndTryoutStart,
   useTryoutStartPhase,
 } from "@/components/tryout/runtime/start";
 import type { TryoutRuntimeState } from "@/components/tryout/runtime/state";
@@ -96,21 +96,19 @@ export function TryoutSectionPageClient({
         setPath={setPath}
         visitor={visitor}
       >
-        <TryoutStartProvider>
-          <TryoutSectionPaper>
-            {binding === null ? (
-              <ResolvedTryoutSectionPage finish={null} state={null}>
-                {children}
-              </ResolvedTryoutSectionPage>
-            ) : (
-              <LiveTryoutSectionPage
-                key={`${binding.attemptId}:${page.section.sectionKey}`}
-              >
-                {children}
-              </LiveTryoutSectionPage>
-            )}
-          </TryoutSectionPaper>
-        </TryoutStartProvider>
+        <TryoutSectionPaper>
+          {binding === null ? (
+            <ResolvedTryoutSectionPage finish={null} state={null}>
+              {children}
+            </ResolvedTryoutSectionPage>
+          ) : (
+            <LiveTryoutSectionPage
+              key={`${binding.attemptId}:${page.section.sectionKey}`}
+            >
+              {children}
+            </LiveTryoutSectionPage>
+          )}
+        </TryoutSectionPaper>
       </TryoutSectionPageProvider>
     </TryoutContentContext>
   );
@@ -129,6 +127,8 @@ function LiveTryoutSectionPage({ children }: { children: ReactNode }) {
   const [terminalState, setTerminalState] = useState<
     SectionState | undefined
   >();
+  // The page shows the attempt a start opened, so the start ends here.
+  useEndTryoutStart();
   // Nothing follows an attempt that ended here, or one the page's read already holds as ended.
   const following =
     binding !== null &&

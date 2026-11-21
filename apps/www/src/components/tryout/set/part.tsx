@@ -16,7 +16,7 @@ import type { TryoutPageAddress } from "@/components/tryout/route/path";
 import { getTryoutPageTarget } from "@/components/tryout/route/path";
 import {
   useAnswerPress,
-  useSetTryoutStartPhase,
+  useTryoutStart,
   useTryoutStartPhase,
 } from "@/components/tryout/runtime/start";
 import { START_PART_ERROR } from "@/components/tryout/set/copy";
@@ -36,7 +36,7 @@ export function useStartPart() {
   const navigate = useNavigate();
   const convex = useConvex();
   const startSection = useMutation(tryouts.mutations.sections.start);
-  const setPhase = useSetTryoutStartPhase();
+  const start = useTryoutStart();
   return (part: {
     /** The section's page, bound to the attempt; none runs the section where the page shows it. */
     readonly address: Option.Option<TryoutPageAddress>;
@@ -44,8 +44,8 @@ export function useStartPart() {
     readonly sectionKey: string;
   }) => {
     const target = Option.flatMap(part.address, getTryoutPageTarget);
-    const returnPage = Effect.sync(() => setPhase("idle"));
-    setPhase(Option.isSome(part.address) ? "starting" : "opening");
+    const returnPage = Effect.sync(start.end);
+    start.begin(Option.isSome(part.address) ? "starting" : "opening");
     Effect.runPromise(
       requireConvexOnline(convex).pipe(
         Effect.andThen(
@@ -56,7 +56,10 @@ export function useStartPart() {
             onFailure: returnPage,
             onSuccess: Option.match(target, {
               onNone: () => returnPage,
-              onSome: (page) => Effect.promise(() => navigate(page)),
+              onSome: (page) =>
+                Effect.sync(() => start.lead(page)).pipe(
+                  Effect.andThen(Effect.promise(() => navigate(page)))
+                ),
             }),
             sectionKey: part.sectionKey,
           })

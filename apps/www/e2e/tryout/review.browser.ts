@@ -345,7 +345,8 @@ test.describe("The review of a finished try-out", () => {
         );
         yield* takeAttempt(page, "Start", "Start free", false);
         yield* takeAttempt(page, "Restart", "Start free", false);
-        const panel = page.getByRole("complementary", { name: "Your result" });
+        // A hard load of the set's own address opens its pane beside the table, whose picker holds the latest attempt.
+        const panel = page.getByRole("complementary", { name: "Set details" });
         yield* Effect.promise(() =>
           expect(page.getByRole("button", { name: "Attempt 2" })).toBeVisible({
             timeout: readinessTimeoutMilliseconds,

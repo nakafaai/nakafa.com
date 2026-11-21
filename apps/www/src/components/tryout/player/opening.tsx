@@ -20,6 +20,7 @@ import {
   PlayerSidebar,
 } from "@/components/player/navigator/sidebar";
 import { PlayerProvider } from "@/components/player/provider";
+import { PlayerTimer, PlayerTimerCard } from "@/components/player/timer";
 import { ConvexIsland } from "@/components/providers/island";
 import { OfflineNote } from "@/components/shared/offline";
 import { TryoutPlayerHeader } from "@/components/tryout/player/paper";
@@ -145,5 +146,24 @@ export function TryoutPlayerOpening({
         </PlayerSheet>
       </PlayerProvider>
     </div>
+  );
+}
+
+/**
+ * The opening frame of one section, at its whole time limit with none of its questions answered: what a press
+ * that opens the section draws until the section's page reads the attempt.
+ */
+export function TryoutPartOpening({
+  part,
+}: {
+  part: { readonly questionCount: number; readonly timeLimitSeconds: number };
+}) {
+  return (
+    <TryoutPlayerOpening
+      card={<PlayerTimerCard seconds={part.timeLimitSeconds} />}
+      questionCount={part.questionCount}
+    >
+      <PlayerTimer seconds={part.timeLimitSeconds} />
+    </TryoutPlayerOpening>
   );
 }
