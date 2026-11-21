@@ -182,7 +182,7 @@ function SelectContent({
         className={cn(
           popupMotion(),
           sheetSurface(),
-          "bg-popover text-popover-foreground z-50 max-h-(--available-height) w-max max-w-(--available-width) min-w-(--anchor-width) scroll-py-1 overflow-x-hidden overflow-y-auto overscroll-contain rounded-md border p-1 shadow-md inset-shadow-[0_-1px_--theme(--color-black/4%)] outline-none not-dark:bg-clip-padding data-[presentation=sheet]:px-2 dark:inset-shadow-[0_1px_--theme(--color-white/6%)] [&:not(:has([data-slot=select-item]))]:[--select-nothing:block]",
+          "bg-popover text-popover-foreground z-50 max-h-(--available-height) w-max max-w-(--available-width) min-w-(--anchor-width) scroll-py-1 overflow-x-hidden overflow-y-auto overscroll-contain rounded-md border p-1 text-start whitespace-normal shadow-md inset-shadow-[0_-1px_--theme(--color-black/4%)] outline-none not-dark:bg-clip-padding data-[presentation=sheet]:px-2 dark:inset-shadow-[0_1px_--theme(--color-white/6%)] [&:not(:has([data-slot=select-item]))]:[--select-nothing:block]",
           className
         )}
         {...props}

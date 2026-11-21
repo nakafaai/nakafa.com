@@ -2,7 +2,7 @@ import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PopupContainer } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
-import { releaseSheetExit } from "@repo/design-system/lib/sheet";
+import { attachSheetGrip } from "@repo/design-system/lib/sheet";
 import {
   DrawerBackdrop,
   DrawerContent as DrawerContentPrimitive,
@@ -40,7 +40,9 @@ function Drawer({
  * such as the sidebar's, sets in place of a background. A drag past the resting edge stretches the drawer on by up to
  * 24px (UI SDK's rubber band), so a fill of the surface's colour stands past that edge, drawn as a hard shadow, which
  * the surface's own clip leaves alone. The surface clears the home indicator and the notch by their safe areas; a
- * footer that ends the drawer (`DrawerFooter`) takes the bottom one onto its tinted band instead.
+ * footer that ends the drawer (`DrawerFooter`) takes the bottom one onto its tinted band instead. A sheet that rises
+ * over it makes it step back as every sheet does (`sheetSurface`). It opens with the
+ * focus on itself, so a screen reader names the drawer first, never its handle, and a phone raises no keyboard.
  */
 function DrawerContent({
   children,
@@ -54,18 +56,19 @@ function DrawerContent({
       <DrawerBackdrop className="bg-ink/30 fixed inset-0 z-50" />
       <DrawerContentPrimitive
         className={cn(
-          "group/drawer text-popover-foreground border-border z-50 flex min-h-0 flex-col overflow-hidden bg-(--drawer-surface) pb-[env(safe-area-inset-bottom)] text-sm outline-none [--drawer-surface:var(--color-popover)] has-[[data-slot=drawer-footer]]:pb-0",
+          "group/drawer text-popover-foreground border-border z-50 flex min-h-0 origin-top [transform:translateY(calc(var(--drawer-stack,0)*(-0.75rem-max(0px,var(--sheet-front-height,0px)-100%))))_scale(calc(1-var(--drawer-stack,0)*0.04))] flex-col overflow-hidden bg-(--drawer-surface) pb-[env(safe-area-inset-bottom)] text-sm outline-none [--drawer-surface:var(--color-popover)] has-[[data-slot=drawer-footer]]:pb-0",
           "data-[side=bottom]:max-h-[calc(var(--visual-viewport-height,100dvh)-3rem)] data-[side=bottom]:rounded-t-3xl data-[side=bottom]:border-t data-[side=bottom]:shadow-[0_2rem_0_var(--drawer-surface)]",
           "data-[side=top]:max-h-[calc(var(--visual-viewport-height,100dvh)-3rem)] data-[side=top]:rounded-b-3xl data-[side=top]:border-b data-[side=top]:pt-[env(safe-area-inset-top)] data-[side=top]:shadow-[0_-2rem_0_var(--drawer-surface)]",
           "data-[side=left]:w-3/4 data-[side=left]:flex-row-reverse data-[side=left]:rounded-e-3xl data-[side=left]:border-e data-[side=left]:ps-[env(safe-area-inset-left)] data-[side=left]:pt-[env(safe-area-inset-top)] data-[side=left]:shadow-[-2rem_0_0_var(--drawer-surface)] data-[side=right]:w-3/4 data-[side=right]:flex-row data-[side=right]:rounded-s-3xl data-[side=right]:border-s data-[side=right]:pe-[env(safe-area-inset-right)] data-[side=right]:pt-[env(safe-area-inset-top)] data-[side=right]:shadow-[2rem_0_0_var(--drawer-surface)] sm:data-[side=left]:w-96 sm:data-[side=right]:w-96",
           className
         )}
+        initialFocus="content"
         {...props}
       >
         <DrawerHandle
           aria-label={t("resize-drawer")}
           className="after:bg-muted focus-visible:after:bg-ring flex shrink-0 cursor-grab touch-none items-center justify-center outline-none group-data-[side=bottom]/drawer:h-5 group-data-[side=left]/drawer:w-4 group-data-[side=right]/drawer:w-4 group-data-[side=top]/drawer:order-last group-data-[side=top]/drawer:h-5 after:rounded-full group-data-[side=bottom]/drawer:after:h-1.5 group-data-[side=bottom]/drawer:after:w-25 group-data-[side=left]/drawer:after:h-25 group-data-[side=left]/drawer:after:w-1.5 group-data-[side=right]/drawer:after:h-25 group-data-[side=right]/drawer:after:w-1.5 group-data-[side=top]/drawer:after:h-1.5 group-data-[side=top]/drawer:after:w-25 active:cursor-grabbing"
-          ref={releaseSheetExit}
+          ref={attachSheetGrip}
         />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
       </DrawerContentPrimitive>

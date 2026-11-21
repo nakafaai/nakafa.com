@@ -38,7 +38,7 @@ import {
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type * as React from "react";
-import { createContext, use, useState } from "react";
+import { createContext, use, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "use-intl";
 
 /**
@@ -55,18 +55,56 @@ const menuRowVariants = cva(
  * bottom as a sheet, as an iPhone's action sheet does, and on a wide or a mouse screen it opens under its trigger.
  */
 function DropdownMenu({
+  controller,
   presentation = "auto",
   ...props
 }: React.ComponentProps<typeof MenuPrimitive>) {
   const t = useTranslations("Common");
+  const [own] = useState<MenuController>(() => createMenuController());
+  const shared = controller ?? own;
 
   return (
-    <MenuPrimitive
-      container={use(PopupContainer)}
-      pendingAnnouncement={t("loading")}
-      presentation={presentation}
-      {...props}
-    />
+    <RootMenu value={{ controller: shared, presentation }}>
+      <MenuPrimitive
+        container={use(PopupContainer)}
+        controller={shared}
+        pendingAnnouncement={t("loading")}
+        presentation={presentation}
+        {...props}
+      />
+    </RootMenu>
+  );
+}
+
+/** The menu a submenu stands in: its controller, and how it presents (`presentation`). */
+const RootMenu = createContext<{
+  controller: MenuController;
+  presentation: React.ComponentProps<typeof MenuPrimitive>["presentation"];
+} | null>(null);
+
+/**
+ * When UI SDK presents a menu of `presentation="auto"` as a sheet: on a phone, a narrow screen with a coarse pointer, as
+ * `createPresentation` in `@ui-sdk/core` resolves it as the menu opens.
+ */
+const PHONE_SHEET = "(max-width: 640px) and (pointer: coarse)";
+
+function subscribePhoneSheet(change: () => void) {
+  const query = matchMedia(PHONE_SHEET);
+  query.addEventListener("change", change);
+  return () => query.removeEventListener("change", change);
+}
+
+/** Whether the menu around a submenu stands as a sheet. A server render holds no sheet. */
+function useMenuSheet() {
+  const root = use(RootMenu);
+  const phone = useSyncExternalStore(
+    subscribePhoneSheet,
+    () => matchMedia(PHONE_SHEET).matches,
+    () => false
+  );
+  return (
+    root !== null &&
+    (root.presentation === "sheet" || (root.presentation === "auto" && phone))
   );
 }
 
@@ -114,7 +152,7 @@ function DropdownMenuContent({
         className={cn(
           popupMotion(),
           sheetSurface(),
-          "bg-popover text-popover-foreground z-50 max-h-(--available-height) w-max max-w-(--available-width) min-w-(--anchor-width) overflow-x-hidden overflow-y-auto overscroll-contain rounded-md border p-1 shadow-md inset-shadow-[0_-1px_--theme(--color-black/4%)] outline-none not-dark:bg-clip-padding data-[presentation=sheet]:px-2 dark:inset-shadow-[0_1px_--theme(--color-white/6%)] [&:not(:has([role^=menuitem]))]:[--dropdown-menu-nothing:block]",
+          "bg-popover text-popover-foreground z-50 max-h-(--available-height) w-max max-w-(--available-width) min-w-(--anchor-width) overflow-x-hidden overflow-y-auto overscroll-contain rounded-md border p-1 text-start whitespace-normal shadow-md inset-shadow-[0_-1px_--theme(--color-black/4%)] outline-none not-dark:bg-clip-padding data-[presentation=sheet]:px-2 dark:inset-shadow-[0_1px_--theme(--color-white/6%)] [&:not(:has([role^=menuitem]))]:[--dropdown-menu-nothing:block]",
           className
         )}
         {...props}
@@ -210,19 +248,58 @@ function DropdownMenuItem({
 const SubmenuController = createContext<MenuController | null>(null);
 
 /**
- * A submenu. Its trigger takes Escape while the submenu stands open over it, as it does once a pointer opened it and
- * left the focus on the trigger, and closes only the submenu, as every open layer leaves to the one above it. UI SDK
- * 0.1.0-beta.13 closes the whole menu there (https://github.com/vercel-labs/ui/issues/1006).
+ * A submenu that a phone's sheet stacks as a sheet of its own: its controller, the options of its menu, and how to
+ * close the menu it stands on.
+ */
+const StackedSubmenu = createContext<{
+  closeMenu: () => void;
+  controller: MenuController;
+  options: Omit<
+    React.ComponentProps<typeof MenuSub>,
+    "children" | "controller"
+  >;
+} | null>(null);
+
+/**
+ * A submenu. Beside its menu, its trigger takes Escape while the submenu stands open over it, as it does once a pointer
+ * opened it and left the focus on the trigger, and closes only the submenu, as every open layer leaves to the one above
+ * it. UI SDK 0.1.0-beta.13 closes the whole menu there (https://github.com/vercel-labs/ui/issues/1006).
+ *
+ * On a phone's sheet the submenu rises as a sheet of its own over its menu's sheet, which stays in view behind it, as
+ * stacked sheets do: a swipe down or a press on the menu returns to the menu. UI SDK would draw it in its menu's place
+ * instead, inside the menu's sheet, with the menu's other rows hidden, so the submenu is a menu of its own there,
+ * opened by its trigger row through a controller. The trigger row stays inside the menu's sheet, so the submenu's sheet
+ * stacks on the menu's layer, and a press in it is no press outside the menu. A choice that closes the submenu closes
+ * the menu too, as it does beside the menu.
  */
 function DropdownMenuSub({
+  children,
   controller,
-  ...props
+  ...options
 }: React.ComponentProps<typeof MenuSub>) {
   const [own] = useState<MenuController>(() => createMenuController());
   const shared = controller ?? own;
+  const root = use(RootMenu);
+  const sheet = useMenuSheet();
+
+  if (sheet && root !== null) {
+    return (
+      <StackedSubmenu
+        value={{
+          closeMenu: () => root.controller.close({ reason: "item-press" }),
+          controller: shared,
+          options,
+        }}
+      >
+        {children}
+      </StackedSubmenu>
+    );
+  }
   return (
     <SubmenuController value={shared}>
-      <MenuSub controller={shared} {...props} />
+      <MenuSub controller={shared} {...options}>
+        {children}
+      </MenuSub>
     </SubmenuController>
   );
 }
@@ -234,17 +311,47 @@ function DropdownMenuSubTrigger({
   children,
   onKeyDown,
   ...props
-}: NodeChildren<React.ComponentProps<typeof MenuSubTrigger>> &
+}: Omit<
+  NodeChildren<React.ComponentProps<typeof MenuSubTrigger>>,
+  "render" | "style"
+> &
   Pick<React.ComponentProps<typeof OptionIcon>, "icon">) {
   const submenu = use(SubmenuController);
+  const stacked = use(StackedSubmenu);
+  const rowClassName = cn(
+    optionRowVariants(),
+    menuRowVariants(),
+    "data-open:bg-accent data-open:text-accent-foreground",
+    className
+  );
+  const row = (
+    <>
+      <DropdownMenuIcon icon={icon} />
+      {children}
+      <HugeIcons
+        className="ml-auto opacity-80 rtl:rotate-180"
+        icon={ArrowRight01Icon}
+      />
+    </>
+  );
+
+  if (stacked !== null) {
+    // A row of the menu, which keeps the menu open, and the trigger of the submenu's own sheet.
+    return (
+      <MenuItem
+        className={rowClassName}
+        closeOnSelect={false}
+        onKeyDown={onKeyDown}
+        render={<MenuTrigger controller={stacked.controller} />}
+        {...props}
+      >
+        {row}
+      </MenuItem>
+    );
+  }
   return (
     <MenuSubTrigger
-      className={cn(
-        optionRowVariants(),
-        menuRowVariants(),
-        "data-open:bg-accent data-open:text-accent-foreground",
-        className
-      )}
+      className={rowClassName}
       onKeyDown={(event) => {
         onKeyDown?.(event);
         if (event.key !== "Escape" || submenu === null || !submenu.isOpen()) {
@@ -257,27 +364,41 @@ function DropdownMenuSubTrigger({
       }}
       {...props}
     >
-      <DropdownMenuIcon icon={icon} />
-      {children}
-      <HugeIcons
-        className="ml-auto opacity-80 rtl:rotate-180"
-        icon={ArrowRight01Icon}
-      />
+      {row}
     </MenuSubTrigger>
   );
 }
 
 /**
- * A submenu's popup, beside its trigger, or in the place of its menu on a phone's sheet, where the back gesture, Escape
- * or the arrow toward the menu returns to it. UI SDK draws both from the one content part, so a submenu's popup is a
- * menu's popup, with its own label.
+ * A submenu's popup, beside its trigger, or on a phone a sheet of its own over its menu's sheet. Both are a menu's popup,
+ * with its own label.
  */
 function DropdownMenuSubContent({
   className,
   ...props
 }: React.ComponentProps<typeof DropdownMenuContent>) {
-  return (
+  const stacked = use(StackedSubmenu);
+  const content = (
     <DropdownMenuContent className={cn("min-w-24", className)} {...props} />
+  );
+
+  if (stacked === null) {
+    return content;
+  }
+  return (
+    <DropdownMenu
+      {...stacked.options}
+      controller={stacked.controller}
+      onOpenChange={(open, details) => {
+        stacked.options.onOpenChange?.(open, details);
+        if (!open && details.reason === "item-press") {
+          stacked.closeMenu();
+        }
+      }}
+      presentation="sheet"
+    >
+      {content}
+    </DropdownMenu>
   );
 }
 

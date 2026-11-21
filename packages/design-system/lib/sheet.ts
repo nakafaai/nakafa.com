@@ -40,3 +40,54 @@ export function releaseSheetExit(grip: HTMLElement | null) {
   observer.observe(sheet, { attributeFilter: ["data-ending-style"] });
   return () => observer.disconnect();
 }
+
+/** The sheet that a sheet was opened from: the sheet or drawer holding the trigger that names it (`aria-controls`). */
+function openerSheet(sheet: HTMLElement) {
+  if (sheet.id === "") {
+    return null;
+  }
+  const opener = sheet.ownerDocument.querySelector(
+    `[aria-controls="${CSS.escape(sheet.id)}"]`
+  );
+  return (
+    opener?.closest<HTMLElement>(
+      '[data-presentation="sheet"], [data-slot="drawer-content"]'
+    ) ?? null
+  );
+}
+
+/**
+ * Tells the sheet a sheet was opened from how tall the sheet in front stands, so the one behind steps back far enough
+ * to keep its top edge in view above it, however much shorter it is (`sheetSurface`). A ref of the grip, the sheet's
+ * first child, as `releaseSheetExit` is. The height is written on the sheet behind as `--sheet-front-height` while
+ * the sheet in front is in the page, and as it resizes, and it is taken off as the sheet in front leaves.
+ */
+export function reportSheetHeight(grip: HTMLElement | null) {
+  const sheet = grip?.parentElement;
+  if (!sheet) {
+    return;
+  }
+  let behind: HTMLElement | null = null;
+  const observer = new ResizeObserver(() => {
+    behind ??= openerSheet(sheet);
+    behind?.style.setProperty(
+      "--sheet-front-height",
+      `${sheet.offsetHeight}px`
+    );
+  });
+  observer.observe(sheet);
+  return () => {
+    observer.disconnect();
+    behind?.style.removeProperty("--sheet-front-height");
+  };
+}
+
+/** Every ref a sheet's grip carries: its exit after a swipe (`releaseSheetExit`) and its height (`reportSheetHeight`). */
+export function attachSheetGrip(grip: HTMLElement | null) {
+  const release = releaseSheetExit(grip);
+  const report = reportSheetHeight(grip);
+  return () => {
+    release?.();
+    report?.();
+  };
+}
