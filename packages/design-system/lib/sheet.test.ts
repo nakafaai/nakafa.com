@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import {
   attachSheetGrip,
   releaseSheetExit,
@@ -120,15 +120,20 @@ let resized: () => void = () => undefined;
 
 /** A ResizeObserver that keeps its callback, so that the test reports the resizes itself. */
 class ResizeObserverDouble {
+  /** Whether it watches the sheet; the test reports the resizes itself. */
+  observing = false;
+
   constructor(callback: () => void) {
     resized = callback;
   }
 
   disconnect() {
-    resized = () => undefined;
+    this.observing = false;
   }
 
-  observe() {}
+  observe() {
+    this.observing = true;
+  }
 }
 
 /** A sheet of the given height with its grip, opened from a trigger inside the sheet behind it. */

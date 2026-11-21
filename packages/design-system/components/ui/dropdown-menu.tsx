@@ -265,12 +265,10 @@ const StackedSubmenu = createContext<{
  * opened it and left the focus on the trigger, and closes only the submenu, as every open layer leaves to the one above
  * it. UI SDK 0.1.0-beta.13 closes the whole menu there (https://github.com/vercel-labs/ui/issues/1006).
  *
- * On a phone's sheet the submenu rises as a sheet of its own over its menu's sheet, which stays in view behind it, as
- * stacked sheets do: a swipe down or a press on the menu returns to the menu. UI SDK would draw it in its menu's place
- * instead, inside the menu's sheet, with the menu's other rows hidden, so the submenu is a menu of its own there,
- * opened by its trigger row through a controller. The trigger row stays inside the menu's sheet, so the submenu's sheet
- * stacks on the menu's layer, and a press in it is no press outside the menu. A choice that closes the submenu closes
- * the menu too, as it does beside the menu.
+ * On a phone the submenu rises as a sheet of its own over its menu's sheet, which steps back in view behind it; a swipe
+ * down returns to the menu. UI SDK would draw it inside the menu's sheet with the menu's other rows hidden, so there it
+ * is a menu of its own, opened by its trigger row through a controller. The row stays in the menu's sheet, so the new
+ * sheet stacks on the menu's layer. A choice that closes the submenu closes the menu too, as it does beside the menu.
  */
 function DropdownMenuSub({
   children,
@@ -304,6 +302,26 @@ function DropdownMenuSub({
   );
 }
 
+/** What a submenu's trigger row shows: the icon of its kind, its words, and the arrow toward the submenu. */
+function SubTriggerRow({
+  children,
+  icon,
+}: { children: React.ReactNode } & Pick<
+  React.ComponentProps<typeof OptionIcon>,
+  "icon"
+>) {
+  return (
+    <>
+      <DropdownMenuIcon icon={icon} />
+      {children}
+      <HugeIcons
+        className="ml-auto opacity-80 rtl:rotate-180"
+        icon={ArrowRight01Icon}
+      />
+    </>
+  );
+}
+
 /** Opens a submenu. Like every option it shows the icon of its kind before its words. */
 function DropdownMenuSubTrigger({
   className,
@@ -324,16 +342,6 @@ function DropdownMenuSubTrigger({
     "data-open:bg-accent data-open:text-accent-foreground",
     className
   );
-  const row = (
-    <>
-      <DropdownMenuIcon icon={icon} />
-      {children}
-      <HugeIcons
-        className="ml-auto opacity-80 rtl:rotate-180"
-        icon={ArrowRight01Icon}
-      />
-    </>
-  );
 
   if (stacked !== null) {
     // A row of the menu, which keeps the menu open, and the trigger of the submenu's own sheet.
@@ -345,7 +353,7 @@ function DropdownMenuSubTrigger({
         render={<MenuTrigger controller={stacked.controller} />}
         {...props}
       >
-        {row}
+        <SubTriggerRow icon={icon}>{children}</SubTriggerRow>
       </MenuItem>
     );
   }
@@ -364,7 +372,7 @@ function DropdownMenuSubTrigger({
       }}
       {...props}
     >
-      {row}
+      <SubTriggerRow icon={icon}>{children}</SubTriggerRow>
     </MenuSubTrigger>
   );
 }
@@ -378,12 +386,11 @@ function DropdownMenuSubContent({
   ...props
 }: React.ComponentProps<typeof DropdownMenuContent>) {
   const stacked = use(StackedSubmenu);
-  const content = (
-    <DropdownMenuContent className={cn("min-w-24", className)} {...props} />
-  );
 
   if (stacked === null) {
-    return content;
+    return (
+      <DropdownMenuContent className={cn("min-w-24", className)} {...props} />
+    );
   }
   return (
     <DropdownMenu
@@ -397,7 +404,7 @@ function DropdownMenuSubContent({
       }}
       presentation="sheet"
     >
-      {content}
+      <DropdownMenuContent className={cn("min-w-24", className)} {...props} />
     </DropdownMenu>
   );
 }
