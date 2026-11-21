@@ -165,11 +165,11 @@ export function CirclePlaceholder({
           >
             <NumberField readOnly value={UNIT_CIRCLE_DEFAULT_ANGLE}>
               <NumberFieldGroup>
-                <NumberFieldDecrement />
                 <NumberFieldInput
                   className="font-mono"
                   placeholder={`${UNIT_CIRCLE_DEFAULT_ANGLE}`}
                 />
+                <NumberFieldDecrement />
                 <NumberFieldIncrement />
               </NumberFieldGroup>
             </NumberField>

@@ -168,12 +168,12 @@ function Content() {
             value={angleValue}
           >
             <NumberFieldGroup>
-              <NumberFieldDecrement aria-label={t("decrease-angle")} />
               <NumberFieldInput
                 aria-label={t("angle")}
                 className="font-mono"
                 placeholder={`${UNIT_CIRCLE_DEFAULT_ANGLE}`}
               />
+              <NumberFieldDecrement aria-label={t("decrease-angle")} />
               <NumberFieldIncrement aria-label={t("increase-angle")} />
             </NumberFieldGroup>
           </NumberField>

@@ -121,8 +121,8 @@ function PointsField({ editable, points, questionId }: PointsFieldProps) {
         value={Option.getOrElse(draft, () => points)}
       >
         <NumberFieldGroup>
-          <NumberFieldDecrement />
           <NumberFieldInput />
+          <NumberFieldDecrement />
           <NumberFieldIncrement />
         </NumberFieldGroup>
       </NumberField>

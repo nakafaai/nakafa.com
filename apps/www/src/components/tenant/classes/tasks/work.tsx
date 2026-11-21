@@ -251,10 +251,10 @@ function WorkPoints({ points, work }: { points: number; work: TaskWork }) {
       onValueCommit={give}
     >
       <NumberFieldGroup>
-        <NumberFieldDecrement />
         <NumberFieldInput
           aria-label={t("task-points-for", { name: work.person.name })}
         />
+        <NumberFieldDecrement />
         <NumberFieldIncrement />
       </NumberFieldGroup>
     </NumberField>

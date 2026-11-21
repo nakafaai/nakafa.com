@@ -55,12 +55,12 @@ export function FunctionMachine({ title, description, inputLabel }: Props) {
           value={input}
         >
           <NumberFieldGroup>
-            <NumberFieldDecrement />
             <NumberFieldInput
               aria-label={inputLabel}
               className="font-mono"
               placeholder={`${DEFAULT_INPUT}`}
             />
+            <NumberFieldDecrement />
             <NumberFieldIncrement />
           </NumberFieldGroup>
         </NumberField>

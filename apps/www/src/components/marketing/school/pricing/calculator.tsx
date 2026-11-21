@@ -219,8 +219,8 @@ export function SchoolCalculator() {
                   value={added}
                 >
                   <NumberFieldGroup>
-                    <NumberFieldDecrement />
                     <NumberFieldInput />
+                    <NumberFieldDecrement />
                     <NumberFieldIncrement />
                   </NumberFieldGroup>
                 </NumberField>
