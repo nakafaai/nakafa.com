@@ -10,6 +10,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
+  createPopoverController,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -249,6 +250,7 @@ export function FormulaEdit({
   onSave: (latex: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [controller] = useState(createPopoverController);
   const [draft, setDraft] = useState(latex);
   const [view, setView] = useState<typeof FormulaView.Type>("formula");
   const [mathlive, setMathlive] = useState<Option.Option<typeof MathLive>>(
@@ -258,18 +260,18 @@ export function FormulaEdit({
   const field = useRef<MathLive.MathfieldElement | null>(null);
   const problem = useMemo(() => Effect.runSync(formulaProblem(draft)), [draft]);
 
-  // The formula just inserted opens its editor a frame after it draws. A toolbar's press gives the
-  // caret back to the text in the next frame (tiptap's `focus`), and a popover closes when the focus
-  // leaves it, so the editor opens once the caret has landed and then takes the focus from the text.
+  // The formula just inserted opens its editor from code a frame after it draws, so the editor takes
+  // the focus. A toolbar's press gives the caret back to the text in the next frame (tiptap's
+  // `focus`), and a popover closes when the focus leaves it, so the editor opens once the caret landed.
   useEffect(() => {
     if (!defaultOpen) {
       return;
     }
-    const frame = requestAnimationFrame(() => setOpen(true));
+    const frame = requestAnimationFrame(() => controller.setOpen(true));
     return () => {
       cancelAnimationFrame(frame);
     };
-  }, [defaultOpen]);
+  }, [controller, defaultOpen]);
 
   // MathLive loads the first time the popover shows, which may be as the formula first draws.
   useEffect(() => {
@@ -316,6 +318,7 @@ export function FormulaEdit({
 
   return (
     <Popover
+      controller={controller}
       onOpenChange={(next, details) =>
         openEditor(next, details.reason === "escape-key")
       }

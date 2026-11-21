@@ -48,10 +48,17 @@ function readFacts() {
     const box = element.getBoundingClientRect();
     return box.width > 0 && box.height > 0;
   };
-  const name = (element: HTMLElement) =>
-    element.getAttribute("aria-label") ??
-    element.textContent?.trim().slice(0, 24) ??
-    element.tagName;
+  const name = (element: HTMLElement) => {
+    const labelledBy = element.getAttribute("aria-labelledby");
+    return (
+      (labelledBy
+        ? document.querySelector(`#${CSS.escape(labelledBy)}`)?.textContent
+        : null) ??
+      element.getAttribute("aria-label") ??
+      element.textContent?.trim().slice(0, 24) ??
+      element.tagName
+    );
+  };
   const controls = Array.from(
     document.querySelectorAll<HTMLElement>(
       'main button, main input, main textarea, main [role="combobox"]'
@@ -130,7 +137,10 @@ function followPopup({ popups, span }: { popups: string; span: number }) {
     const tick = (now: number) => {
       const popup = Array.from(document.querySelectorAll<HTMLElement>(popups))
         .filter(
-          (one) => one.offsetHeight > 0 && !one.hasAttribute("data-closed")
+          (one) =>
+            one.offsetHeight > 0 &&
+            one.hasAttribute("data-open") &&
+            !one.hasAttribute("data-ending-style")
         )
         .at(-1);
       if (
@@ -154,7 +164,12 @@ function followPopup({ popups, span }: { popups: string; span: number }) {
 /** What the popup on top holds, or `null` when no popup stands. The page serializes this function. */
 function readPopup(popups: string) {
   const popup = Array.from(document.querySelectorAll<HTMLElement>(popups))
-    .filter((one) => one.offsetHeight > 0 && !one.hasAttribute("data-closed"))
+    .filter(
+      (one) =>
+        one.offsetHeight > 0 &&
+        one.hasAttribute("data-open") &&
+        !one.hasAttribute("data-ending-style")
+    )
     .at(-1);
   if (popup === undefined) {
     return null;
@@ -287,7 +302,11 @@ const nameOf = (trigger: Locator) =>
           null
             ? ""
             : "sidebar ";
+        const labelledBy = control.getAttribute("aria-labelledby");
         const words =
+          (labelledBy
+            ? document.querySelector(`#${CSS.escape(labelledBy)}`)?.textContent
+            : null) ??
           control.getAttribute("aria-label") ??
           control.textContent?.trim().slice(0, 32) ??
           "";
@@ -336,7 +355,10 @@ const pressTrigger = async (
     .waitForFunction(
       (popups) =>
         Array.from(document.querySelectorAll<HTMLElement>(popups)).every(
-          (one) => one.offsetHeight === 0 || one.hasAttribute("data-closed")
+          (one) =>
+            one.offsetHeight === 0 ||
+            !one.hasAttribute("data-open") ||
+            one.hasAttribute("data-ending-style")
         ),
       POPUPS,
       { timeout: PRESS_TIMEOUT_MILLISECONDS }

@@ -9,11 +9,13 @@ const readSheet = (page: Page) =>
   page
     .locator('[data-mobile="true"][data-slot="sidebar"]')
     .evaluate((sheet) => {
-      const box = sheet.getBoundingClientRect();
+      const card = sheet.closest('[data-slot="drawer-content"]') ?? sheet;
+      const box = card.getBoundingClientRect();
+      const after = getComputedStyle(card, "::after");
       return {
-        bleed: Number(getComputedStyle(sheet, "::after").opacity),
+        bleed: after.content === "none" ? 0 : Number(after.opacity),
         left: box.left,
-        radius: Number.parseFloat(getComputedStyle(sheet).borderTopLeftRadius),
+        radius: Number.parseFloat(getComputedStyle(card).borderTopLeftRadius),
         right: window.innerWidth - box.right,
       };
     });

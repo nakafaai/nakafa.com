@@ -49,12 +49,6 @@
   }
 }
 
-@custom-variant data-closed {
-  &:where([data-closed]:not([data-closed="false"])) {
-    @slot;
-  }
-}
-
 @custom-variant data-checked {
   &:where([data-checked]:not([data-checked="false"])) {
     @slot;

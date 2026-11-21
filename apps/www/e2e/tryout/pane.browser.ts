@@ -81,7 +81,12 @@ test.describe("The set pane beside a track's table", () => {
     // The pane stands at the set's own address, so a learner can send it.
     expect(new URL(page.url()).pathname).toBe(SET_PATH);
     // The set's measured level stands at the start of the pane's footer, never in its title.
-    const cell = await first.getByRole("cell").nth(1).textContent();
+    // Read the trigger rather than the whole cell, since UI SDK keeps the closed tooltip beside it.
+    const cell = await first
+      .getByRole("cell")
+      .nth(1)
+      .locator('[data-slot="tooltip-trigger"]')
+      .textContent();
     const level = cell?.trim() ?? "";
     expect(LEVELS).toContain(level);
     await expect(

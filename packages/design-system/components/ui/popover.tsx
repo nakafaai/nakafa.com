@@ -7,6 +7,7 @@ import {
 } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
 import {
+  createPopoverController as createPopoverControllerPrimitive,
   PopoverContent as PopoverContentPrimitive,
   PopoverDescription as PopoverDescriptionPrimitive,
   Popover as PopoverPrimitive,
@@ -24,6 +25,14 @@ import { use } from "react";
  */
 function Popover(props: React.ComponentProps<typeof PopoverPrimitive>) {
   return <PopoverPrimitive container={use(PopupContainer)} {...props} />;
+}
+
+/**
+ * Opens or closes a popover from code. A popover that renders open leaves the focus where it is, so one that opens as
+ * it mounts, for a press that came before its code, opens through this and takes the focus as a press would.
+ */
+function createPopoverController() {
+  return createPopoverControllerPrimitive();
 }
 
 function PopoverTrigger(
@@ -92,6 +101,7 @@ function PopoverDescription({
 }
 
 export {
+  createPopoverController,
   Popover,
   PopoverContent,
   PopoverDescription,

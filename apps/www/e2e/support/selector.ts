@@ -67,7 +67,7 @@ export function noticeWith(page: Page, text: string) {
 export const TOOLTIP = '[data-slot="tooltip-content"][data-open]';
 /**
  * The header's open section. The navigation menu's viewport stays in the page while every section is closed
- * (`data-closed`), so only the open one is selected.
+ * (without `data-open`), so only the open one is selected.
  */
 export const HEADER_SECTION =
   '[data-slot="navigation-menu-viewport"][data-open]';

@@ -182,8 +182,17 @@ const readCover = (notice: HTMLElement, names: readonly string[]) => {
     return Math.max(0, width) * Math.max(0, height);
   };
   const [input, send] = names;
+  const sendButton =
+    Array.from(form.querySelectorAll("button")).find((button) => {
+      const labelledBy = button.getAttribute("aria-labelledby");
+      const label =
+        (labelledBy
+          ? document.querySelector(`#${CSS.escape(labelledBy)}`)?.textContent
+          : null) ?? button.getAttribute("aria-label");
+      return label?.trim() === send;
+    }) ?? null;
   return {
-    send: covered(form.querySelector(`button[aria-label="${send}"]`)),
+    send: covered(sendButton),
     text: covered(form.querySelector(`textarea[aria-label="${input}"]`)),
   };
 };

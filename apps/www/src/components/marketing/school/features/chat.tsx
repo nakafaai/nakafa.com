@@ -28,18 +28,19 @@ export function ForumChat() {
   const [text, setText] = useState("");
   const post = useRoom((state) => state.post);
 
+  const submit = () => {
+    const trimmed = text.trim();
+    if (trimmed === "") {
+      return;
+    }
+    post(trimmed);
+    setText("");
+  };
+
   return (
     <form
+      action={submit}
       className="flex w-full min-w-0 shrink-0 flex-col gap-2 px-2 pb-3 sm:px-4 sm:pb-4"
-      onSubmit={(event) => {
-        event.preventDefault();
-        const trimmed = text.trim();
-        if (trimmed === "") {
-          return;
-        }
-        post(trimmed);
-        setText("");
-      }}
     >
       <InputGroup className="bg-muted/50 text-chat rounded-3xl shadow-none">
         <InputGroupAddon align="inline-start" className="self-end pb-1.5">

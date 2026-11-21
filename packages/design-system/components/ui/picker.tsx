@@ -11,6 +11,7 @@ import {
   OptionIcon,
 } from "@repo/design-system/components/ui/huge-icons";
 import {
+  createPopoverController,
   Popover,
   PopoverContent,
   PopoverTitle,
@@ -19,7 +20,7 @@ import {
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Array as Arr, HashMap, Option } from "effect";
 import type { ComponentProps, ReactNode } from "react";
-import { createContext, use, useState } from "react";
+import { createContext, use, useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
 
 /**
@@ -65,12 +66,16 @@ function Picker({
   search,
 }: {
   children: ReactNode;
-  /** Opens the picker as it mounts, for a picker whose code the press that opens it loads. */
+  /**
+   * Opens the picker as it mounts, for a picker whose code the press that opens it loads. It opens from code, so its
+   * search takes the focus, as it does when a press opens it.
+   */
   defaultOpen?: boolean | undefined;
   /** The server's search, for a list too long to send at once. Without it the picker filters its own options. */
   search?: ServerSearch | undefined;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
+  const [open, setOpen] = useState(false);
+  const [controller] = useState(createPopoverController);
   const change = (next: boolean) => {
     setOpen(next);
     if (!next) {
@@ -78,9 +83,20 @@ function Picker({
     }
   };
 
+  useEffect(() => {
+    if (defaultOpen) {
+      controller.setOpen(true);
+    }
+  }, [controller, defaultOpen]);
+
   return (
     <PickerContext value={{ search, setOpen: change }}>
-      <Popover onOpenChange={change} open={open} presentation="auto">
+      <Popover
+        controller={controller}
+        onOpenChange={change}
+        open={open}
+        presentation="auto"
+      >
         {children}
       </Popover>
     </PickerContext>

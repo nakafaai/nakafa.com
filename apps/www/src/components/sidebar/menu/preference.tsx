@@ -34,7 +34,7 @@ const ThemeSubmenuContent = lazy(() =>
   }))
 );
 
-/** Renders the shared language capability as a hoverable guest sidebar menu. */
+/** Renders the shared language capability as a guest sidebar menu. */
 export function GuestLanguageMenu() {
   const t = useTranslations("Common");
   const side = useSidebar(selectMenuSide);

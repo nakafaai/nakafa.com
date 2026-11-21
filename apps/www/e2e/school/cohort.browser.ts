@@ -395,6 +395,7 @@ test("a student added with a card joins a cohort and takes a parent at once, and
   await placing.getByRole("combobox", { name: "Student" }).click();
   await pressInPopup(page.getByRole("option", { name: "Ayu Lestari" }));
   await placing.getByRole("button", { name: "Add student" }).click();
+  await expect(placing).toBeHidden();
   await expect(
     page.getByRole("main").getByText("Ayu Lestari", { exact: true })
   ).toBeVisible();

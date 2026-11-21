@@ -59,7 +59,7 @@ export function LearnMoreSubmenu({ children }: { children: ReactNode }) {
 }
 
 /**
- * The Learn more menu of a visitor's sidebar. It opens on hover, as the language
+ * The Learn more menu of a visitor's sidebar. It opens on a press, as the language
  * menu beside it does, and composes the same rows as the account's submenu.
  */
 export function GuestLearnMoreMenu({ children }: { children: ReactNode }) {
