@@ -15,11 +15,14 @@ const LONG_TITLE = "Expected Value of a Normal Distribution";
 const LONG_DESCRIPTION =
   "The expected value of a normal distribution is its mean. Prove it with symmetry and an integral, then use it for scaling, sums, and variance.";
 
-/** Measures the text box and the row separately. An ancestor can clip a row without ellipsizing its text. */
+/**
+ * Measures the text box and the row separately. An ancestor can clip a row without ellipsizing its text. A row is a
+ * link, or the button of a try-out part that opens its dialog before its clock starts.
+ */
 const verifyEllipsis = async (line: Locator) => {
   await expect(line).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   const geometry = await line.evaluate((element) => {
-    const row = element.closest("a");
+    const row = element.closest("a, button");
     const card = row?.closest('[data-slot="card"],section');
     if (!(row && card)) {
       return null;
@@ -62,11 +65,16 @@ test("a long try-out part ends in an ellipsis when the set path has little room"
         await page.setViewportSize({ height: 844, width: 320 });
         await page.goto(SET);
         // The set's address opens its pane, whose path names each part in one line with its full name as a title.
-        const title = page.getByTitle(LONG_SECTION, { exact: true });
+        // The pane draws beside the list on a desktop and in a sheet on a phone, so the part is read where it shows.
+        const title = page
+          .getByTitle(LONG_SECTION, { exact: true })
+          .filter({ visible: true });
         await verifyEllipsis(title);
         await expect(title).toHaveAttribute("title", LONG_SECTION);
 
         await page.setViewportSize({ height: 900, width: 1440 });
+        // The phone's sheet leaves as the pane moves beside the list.
+        await expect(page.getByRole("dialog")).toHaveCount(0);
         const list = page.locator("section").filter({ has: title }).last();
         // The same path can be squeezed in the resizable pane beside the table on a desktop.
         await list.evaluate((element) => {

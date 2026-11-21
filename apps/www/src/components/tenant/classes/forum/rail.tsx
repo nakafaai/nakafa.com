@@ -137,7 +137,8 @@ function ChatList() {
 
   return (
     <>
-      <div className="flex shrink-0 flex-col gap-2 pt-2 lg:pe-2">
+      {/* The search starts one rhythm under the tab row, as every tab's body does, so a press between tabs moves nothing. */}
+      <div className="flex shrink-0 flex-col gap-2 pt-6 lg:pe-2">
         <div className="flex items-center gap-2">
           <ChatSearch />
           {Arr.contains(can, "forum.manage") ? (

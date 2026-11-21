@@ -190,7 +190,8 @@ function readPopup(popups: string) {
         button.textContent.trim()
       )
     ).length,
-    closes: popup.querySelectorAll('[data-slot="dialog-close"]').length,
+    // The sheet's close in its corner, which a Button draws and so wears the Button's slot.
+    closes: popup.querySelectorAll('[data-sheet="close"]').length,
     orphans: Array.from(popup.querySelectorAll<HTMLLabelElement>("label[for]"))
       .filter((label) => label.control === null)
       .map((label) => label.textContent.trim().slice(0, 24)),

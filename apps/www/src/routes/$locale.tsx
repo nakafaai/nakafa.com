@@ -70,6 +70,9 @@ export const Route = createFileRoute("/$locale")({
       ? {}
       : toLocaleHead({ ...loaderData.organization, locale: params.locale }),
   component: LocaleRoot,
+  // The error part stays in this module, out of the split chunks: a page breaks when the chunks it asks for cannot
+  // load, and then a split error part could not load either (ADR 0039, D10).
+  codeSplitGroupings: [["loader"], ["component"], ["notFoundComponent"]],
   errorComponent: LocaleError,
   notFoundComponent: LocaleNotFound,
   // The router draws this boundary only while the split error component's chunk

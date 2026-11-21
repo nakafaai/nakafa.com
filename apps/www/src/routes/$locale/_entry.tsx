@@ -46,6 +46,9 @@ export const Route = createFileRoute("/$locale/_entry")({
       namespaces: ENTRY_NAMESPACES,
     }),
   component: EntryLayout,
+  // The error part stays in this module, out of the split chunks: a page breaks when the chunks it asks for cannot
+  // load, and then a split error part could not load either (ADR 0039, D10).
+  codeSplitGroupings: [["loader"], ["component"], ["notFoundComponent"]],
   errorComponent: EntryError,
   // The router draws this boundary only while the split error component's chunk
   // is unloaded, and dropping it remounts every page below, so it stays.

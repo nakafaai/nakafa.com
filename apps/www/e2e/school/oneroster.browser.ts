@@ -72,7 +72,11 @@ test("an admin previews a OneRoster zip and imports its students into their clas
     .locator("header")
     .getByRole("button", { name: "Import students" })
     .click();
-  await expect(page.getByText("The students are in the roster.")).toBeVisible();
+  await expect(
+    page
+      .locator("[data-slot=toast]")
+      .getByText("The students are in the roster.")
+  ).toBeVisible();
 
   // An import names a student and holds no address, so the school invites them from their row.
   await page.goto(address("/settings/members"));

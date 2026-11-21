@@ -91,7 +91,10 @@ function CalendarCaptionSelect({
     >
       <SelectTrigger
         aria-label={label}
-        className={width === "fill" ? "min-w-0 flex-1" : "shrink-0"}
+        className={cn(
+          "data-[size=sm]:h-(--cell-size)",
+          width === "fill" ? "min-w-0 flex-1" : "shrink-0"
+        )}
         size="sm"
       >
         <SelectValue />
@@ -114,7 +117,8 @@ function CalendarCaptionSelect({
 
 /**
  * What a calendar draws, alone or in a date field's popup: the month it shows as one button group, the previous
- * month, the month, the year and the next month, then the month's grid. A calendar that names no bounds offers ten
+ * month, the month, the year and the next month, then the month's grid. The month's controls stand as tall as its
+ * days, so a calendar that draws larger days, such as a table's filter beside its other controls, keeps one height. A calendar that names no bounds offers ten
  * years on each side of the shown year. The month's name stays in the page for screen readers, which hear it change.
  */
 function CalendarBody({
@@ -135,7 +139,13 @@ function CalendarBody({
       <ButtonGroup className="w-full">
         <CalendarPrevious
           aria-label={t("previous-month")}
-          render={<Button size="icon-sm" tooltip={t("previous-month")} />}
+          render={
+            <Button
+              className="size-(--cell-size)"
+              size="icon-sm"
+              tooltip={t("previous-month")}
+            />
+          }
         >
           <HugeIcons className="rtl:rotate-180" icon={ArrowLeft01Icon} />
         </CalendarPrevious>
@@ -167,7 +177,13 @@ function CalendarBody({
         />
         <CalendarNext
           aria-label={t("next-month")}
-          render={<Button size="icon-sm" tooltip={t("next-month")} />}
+          render={
+            <Button
+              className="size-(--cell-size)"
+              size="icon-sm"
+              tooltip={t("next-month")}
+            />
+          }
         >
           <HugeIcons className="rtl:rotate-180" icon={ArrowRight01Icon} />
         </CalendarNext>

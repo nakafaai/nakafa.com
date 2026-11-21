@@ -57,7 +57,7 @@ test("a teacher gives a question a shared reading and a video, and the student m
     .getByRole("textbox", { name: "YouTube link" })
     .fill("https://youtu.be/dQw4w9WgXcQ");
   await save.click();
-  await expect(panel.getByText("Percakapan")).toBeVisible();
+  await expect(panel.getByText("Percakapan", { exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Try as student" }).click();
   await page.waitForURL(TRY_PATH);

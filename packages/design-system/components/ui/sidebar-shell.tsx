@@ -175,6 +175,10 @@ export function SidebarTrigger({
       onClick={(event, details) => {
         press.onClick();
         onClick?.(event, details);
+        // WebKit leaves the focus where it was when a button is pressed, so the phone's drawer, which hands the
+        // focus back to what held it before it opened, would hand it to the page. The toggle takes it, as the
+        // other engines give it on a press.
+        event.currentTarget.focus({ preventScroll: true });
         toggleSidebar();
       }}
       size={size}

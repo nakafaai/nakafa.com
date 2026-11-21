@@ -112,9 +112,11 @@ for (const viewport of [
       .locator("header")
       .getByRole("button", { name: "Import students" })
       .click();
-    await expect(page.getByText("The students are in the roster.")).toBeVisible(
-      { timeout: readinessTimeoutMilliseconds }
-    );
+    await expect(
+      page
+        .locator("[data-slot=toast]")
+        .getByText("The students are in the roster.")
+    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
 
     await page.goto(address("/settings/cohorts"));
     await page.getByRole("link", { name: COHORT }).click();

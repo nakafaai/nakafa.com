@@ -187,7 +187,7 @@ for (const viewport of WIDTHS) {
       mimeType: "image/png",
       name: "segitiga.png",
     });
-    const added = page.getByRole("dialog");
+    const added = page.getByRole("dialog", { name: "Add image" });
     await added.getByRole("textbox", { name: "Alt text" }).fill("Segitiga");
     await added.getByRole("button", { name: "Add image" }).click();
     const picture = prompt.locator("[data-picture]");
@@ -205,7 +205,8 @@ for (const viewport of WIDTHS) {
       (pictureBox?.y ?? 0) + 1
     );
     await pictureBar.getByRole("button", { name: "Edit alt text" }).click();
-    const edit = page.getByRole("dialog");
+    // The image's dialog may still be leaving, so the press names the dialog it opened.
+    const edit = page.getByRole("dialog", { name: "Edit alt text" });
     await edit.getByRole("textbox", { name: "Alt text" }).fill("Segitiga siku");
     await edit.getByRole("button", { name: "Save" }).click();
     await expect(picture.locator("img")).toHaveAttribute(
