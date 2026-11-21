@@ -1,4 +1,4 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useRunClock } from "@repo/design-system/components/contents/biology/clock";
 import {
   FRONT,
@@ -22,7 +22,7 @@ import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Schema } from "effect";
 import type { ReactNode, RefObject } from "react";
-import { createContext, useRef } from "react";
+import { createContext, useEffect, useRef } from "react";
 
 /** How many minutes of the run pass in a second while the card plays: the whole run in 20 s. */
 const MINUTES_PER_SECOND = 0.8;
@@ -98,6 +98,12 @@ export function PoseProvider({
   readonly work: number;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
+  const invalidate = useThree((state) => state.invalidate);
+  useEffect(() => {
+    if (playing) {
+      invalidate();
+    }
+  }, [invalidate, playing]);
   const clock = useRunClock({
     elapsed,
     onElapsed,

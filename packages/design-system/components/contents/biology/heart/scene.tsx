@@ -40,9 +40,11 @@ export function HeartScene({
   readonly time: number;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
+  const view = useVisualScene((card) => card.view, 0);
   const pose = useMemo(createPose, []);
   const clock = useRef(time);
   const sent = useRef(time);
+  const seenView = useRef(view);
   const since = useRef(0);
   const filled = useMemo(
     () => Math.max(...Arr.map(beat.moments, (moment) => moment.volume)),
@@ -56,6 +58,12 @@ export function HeartScene({
   }
 
   useFrame((_, delta) => {
+    if (seenView.current !== view) {
+      seenView.current = view;
+      clock.current = time;
+      sent.current = time;
+      since.current = 0;
+    }
     if (playing) {
       clock.current = (clock.current + simulationStep(delta)) % beat.period;
       since.current += delta;

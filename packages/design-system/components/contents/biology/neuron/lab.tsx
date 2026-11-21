@@ -6,6 +6,7 @@ import {
   travel,
 } from "@repo/design-system/components/contents/biology/neuron/conduction";
 import { NeuronScene } from "@repo/design-system/components/contents/biology/neuron/scene";
+import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -77,6 +78,12 @@ export function NeuronImpulseLab({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
+      <ViewReset
+        onReset={() => {
+          setChosen(0);
+          setPotential(null);
+        }}
+      />
 
       {fibres.length > 1 && (
         <VisualCardToolbar>

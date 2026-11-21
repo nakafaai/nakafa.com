@@ -118,11 +118,9 @@ export function VennSortLab({
           {Arr.map(operations, (each, index) => (
             <ToggleGroupItem
               aria-label={OPERATION_TEXT[each]}
-              className={
-                toolbar.lastSpan === 2 && index === operations.length - 1
-                  ? "col-span-2"
-                  : undefined
-              }
+              {...(toolbar.lastSpan === 2 && index === operations.length - 1
+                ? { className: "col-span-2" }
+                : {})}
               key={each}
               value={each}
             >

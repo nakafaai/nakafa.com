@@ -8,6 +8,7 @@ import {
   oncoticRange,
   turning,
 } from "@repo/design-system/components/contents/biology/capillary/starling";
+import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -112,6 +113,12 @@ export function CapillaryBedLab({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
+      <ViewReset
+        onReset={() => {
+          setArterial(pressure.arterial);
+          setPull(oncotic);
+        }}
+      />
 
       <VisualCardToolbar>
         <div className="flex min-w-48 flex-1 flex-col gap-2">

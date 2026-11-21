@@ -19,9 +19,11 @@ import { RUN } from "@repo/design-system/components/contents/biology/synapse/tra
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { SYNAPSE_COLORS } from "@repo/design-system/lib/material/synapse";
 import { Schema } from "effect";
 import type { ReactNode } from "react";
+import { useEffect } from "react";
 
 /** The parts and molecules the scene names. */
 const PartSchema = Schema.Literals([
@@ -66,6 +68,13 @@ export function SynapseScene({
   readonly rate: number;
   readonly treatment: Treatment;
 }) {
+  const playing = useVisualScene((card) => card.playing, false);
+  const invalidate = useThree((state) => state.invalidate);
+  useEffect(() => {
+    if (playing) {
+      invalidate();
+    }
+  }, [invalidate, playing]);
   const clock = useRunClock({
     elapsed,
     onElapsed,

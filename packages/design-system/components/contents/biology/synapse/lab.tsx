@@ -1,3 +1,4 @@
+import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { SynapseScene } from "@repo/design-system/components/contents/biology/synapse/scene";
 import type {
   Drug,
@@ -97,6 +98,13 @@ export function SynapseLab({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
+      <ViewReset
+        onReset={() => {
+          setRate(OPENING_RATE);
+          setTreatment("none");
+          setElapsed(OPENING);
+        }}
+      />
 
       <VisualCardToolbar>
         <div className="flex min-w-48 flex-1 flex-col gap-2">

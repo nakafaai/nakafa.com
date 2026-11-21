@@ -13,6 +13,7 @@ import {
   LacticGauge,
   OxygenTrace,
 } from "@repo/design-system/components/contents/biology/muscle/trace";
+import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { HandSlider } from "@repo/design-system/components/contents/chemistry/slider";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -96,6 +97,12 @@ export function OxygenDebtLab({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
+      <ViewReset
+        onReset={() => {
+          setWork(range.value);
+          setMinute(OPENING);
+        }}
+      />
 
       <VisualCardToolbar>
         <div className="flex min-w-48 flex-1 flex-col gap-2">

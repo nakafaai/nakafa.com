@@ -1,6 +1,19 @@
 import { PADDY_COLORS } from "@repo/design-system/lib/material/paddy";
-import type { Material } from "three";
+import type { WebGLProgramParametersWithUniforms } from "three";
 import { Color } from "three";
+
+type SoilShader = Pick<
+  WebGLProgramParametersWithUniforms,
+  "fragmentShader" | "uniforms" | "vertexShader"
+>;
+
+interface SoilMaterial<
+  TShader extends SoilShader,
+  TRest extends readonly unknown[],
+> {
+  customProgramCacheKey: () => string;
+  onBeforeCompile: (shader: TShader, ...rest: TRest) => void;
+}
 
 /**
  * The X-ray view into the soil. `zone` is the middle of the patch of field
@@ -164,12 +177,15 @@ export function xrayUniforms() {
  * sky's, as the soil around it is lit. The soil's flooding follows
  * `uniforms.uFlood`.
  */
-export function buryInSoil(
-  material: Material,
+export function buryInSoil<
+  TShader extends SoilShader,
+  TRest extends readonly unknown[],
+>(
+  material: SoilMaterial<TShader, TRest>,
   uniforms: ReturnType<typeof xrayUniforms>,
   key: string
 ) {
-  material.onBeforeCompile = (shader) => {
+  material.onBeforeCompile = (shader, ..._rest) => {
     shader.uniforms = { ...shader.uniforms, ...uniforms };
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nvarying vec3 vXray;")

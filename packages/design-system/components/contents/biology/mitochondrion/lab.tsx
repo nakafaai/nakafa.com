@@ -16,6 +16,7 @@ import {
   MitochondrionScene,
   PartLabels,
 } from "@repo/design-system/components/contents/biology/mitochondrion/scene";
+import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -95,6 +96,12 @@ export function MitochondrionLab({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
+      <ViewReset
+        onReset={() => {
+          setOxygen(true);
+          setChosen(cells[0]);
+        }}
+      />
 
       <VisualCardToolbar>
         <ToggleGroup

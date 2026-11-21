@@ -1,3 +1,4 @@
+import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import type { Substrate } from "@repo/design-system/components/contents/biology/respirometer/gas";
 import {
   dropTravel,
@@ -64,6 +65,7 @@ export function RespirometerLab({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
+      <ViewReset onReset={() => setElapsed(minutes)} />
 
       <VisualCardToolbar>
         <div className="flex min-w-48 flex-1 flex-col gap-2">

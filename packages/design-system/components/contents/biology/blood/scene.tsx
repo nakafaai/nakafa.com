@@ -60,11 +60,18 @@ export function BloodScene({
   readonly samples: readonly Sample[];
 }) {
   const playing = useVisualScene((card) => card.playing, false);
+  const view = useVisualScene((card) => card.view, 0);
   const clock = useRef(FINISH);
-  const seen = useRef({ chosen, playing: false, sent: FINISH });
+  const seen = useRef({ chosen, playing: false, sent: FINISH, view });
 
   useFrame((_, delta) => {
     const last = seen.current;
+    if (last.view !== view) {
+      last.view = view;
+      last.chosen = chosen;
+      clock.current = FINISH;
+      last.sent = FINISH;
+    }
     if (last.chosen !== chosen) {
       last.chosen = chosen;
       clock.current = playing ? 0 : FINISH;

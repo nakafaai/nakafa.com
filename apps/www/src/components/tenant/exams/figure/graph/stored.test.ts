@@ -201,9 +201,9 @@ describe("exams/figure/stored", () => {
             appearance: "primary",
             id: "c",
             kind: "parametric",
-            parameter: { max: 1, min: 0 },
-            x: "t",
-            y: "t",
+            parameter: { max: 6.28, min: 0 },
+            x: "cos(t)",
+            y: "sin(t)",
           },
         ])
       ),

@@ -53,7 +53,7 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 /** How many minutes the run lasts: an hour, as a school lesson allows. */
 export const RUN_MINUTES = 60;
@@ -129,6 +129,12 @@ export function YeastScene({
     total: RUN_MINUTES,
   });
   const playing = useVisualScene((card) => card.playing, false);
+  const invalidate = useThree((state) => state.invalidate);
+  useEffect(() => {
+    if (playing) {
+      invalidate();
+    }
+  }, [invalidate, playing]);
   const seconds = useRef(17.3);
   useFrame((_, delta) => {
     if (playing) {

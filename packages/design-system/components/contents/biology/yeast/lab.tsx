@@ -1,3 +1,4 @@
+import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import {
   carbonDioxideOut,
   gasFlow,
@@ -101,6 +102,12 @@ export function YeastFermentationLab({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
+      <ViewReset
+        onReset={() => {
+          setCelsius(temperature.value);
+          setElapsed(RUN_MINUTES);
+        }}
+      />
 
       <VisualCardToolbar>
         <div className="flex min-w-48 flex-1 flex-col gap-2">

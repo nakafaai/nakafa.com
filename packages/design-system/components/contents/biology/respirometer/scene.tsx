@@ -43,10 +43,11 @@ import { LabBench } from "@repo/design-system/components/contents/chemistry/benc
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { RESPIROMETER_COLORS } from "@repo/design-system/lib/material/respirometer";
 import { Array as Arr } from "effect";
 import type { ReactNode, RefObject } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 import { Vector3 } from "three";
 
@@ -104,6 +105,13 @@ export function RespirometerScene({
   readonly onElapsed: (minutes: number) => void;
   readonly oxygen: number;
 }) {
+  const playing = useVisualScene((card) => card.playing, false);
+  const invalidate = useThree((state) => state.invalidate);
+  useEffect(() => {
+    if (playing) {
+      invalidate();
+    }
+  }, [invalidate, playing]);
   const clock = useRunClock({
     elapsed,
     onElapsed,

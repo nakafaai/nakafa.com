@@ -8,6 +8,7 @@ import {
   strokeVolume,
 } from "@repo/design-system/components/contents/biology/heart/cycle";
 import { HeartScene } from "@repo/design-system/components/contents/biology/heart/scene";
+import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -86,6 +87,16 @@ export function HeartCycleLab({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
+      <ViewReset
+        onReset={() => {
+          const opening = heartBeat(rate, { endDiastolic, endSystolic });
+          setHeartRate(rate);
+          setTime(
+            opening.events.refill +
+              0.25 * (opening.events.atrium - opening.events.refill)
+          );
+        }}
+      />
 
       <VisualCardToolbar>
         <div className="flex min-w-48 flex-1 flex-col gap-2">

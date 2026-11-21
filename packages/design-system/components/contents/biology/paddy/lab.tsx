@@ -12,6 +12,7 @@ import {
   WaterSchema,
 } from "@repo/design-system/components/contents/biology/paddy/oxygen";
 import { PaddyScene } from "@repo/design-system/components/contents/biology/paddy/scene";
+import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -94,6 +95,12 @@ export function PaddyRootLab({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
+      <ViewReset
+        onReset={() => {
+          setWater("flooded");
+          setPlant(plants[0]);
+        }}
+      />
 
       <VisualCardToolbar>
         <ToggleGroup

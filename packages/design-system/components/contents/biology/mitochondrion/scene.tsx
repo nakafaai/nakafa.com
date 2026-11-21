@@ -57,10 +57,16 @@ export function MitochondrionScene({
   readonly condition: Condition;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
+  const view = useVisualScene((card) => card.view, 0);
   const clock = useRef(STILL * CYCLE);
+  const seenView = useRef(view);
   const trips = useMemo(() => tripsOf(condition, atp), [atp, condition]);
 
   useFrame((_, delta) => {
+    if (seenView.current !== view) {
+      seenView.current = view;
+      clock.current = STILL * CYCLE;
+    }
     if (playing) {
       clock.current = (clock.current + simulationStep(delta)) % CYCLE;
     }

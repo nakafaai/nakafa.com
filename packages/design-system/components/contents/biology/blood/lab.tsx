@@ -18,6 +18,7 @@ import {
   rhesusSign,
   SERA,
 } from "@repo/design-system/components/contents/biology/blood/serology";
+import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -87,6 +88,12 @@ export function BloodTypingLab({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
+      <ViewReset
+        onReset={() => {
+          setChosen(0);
+          setTime(FINISH);
+        }}
+      />
 
       {samples.length > 1 && (
         <VisualCardToolbar>
