@@ -58,7 +58,7 @@ function TryoutAttemptOption({
         </span>
       }
       icon={TransactionHistoryIcon}
-      onClick={onChoose}
+      onSelect={onChoose}
       selected={selected}
       value={attempt}
     >

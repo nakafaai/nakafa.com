@@ -287,7 +287,7 @@ function ThreadShelf({ row }: { row: typeof ThreadRow.Type }) {
             {row.archived ? (
               <DropdownMenuItem
                 icon={ArrowTurnBackwardIcon}
-                onClick={() =>
+                onSelect={() =>
                   runSchoolWrite(
                     schoolCall(() =>
                       restore.withOptimisticUpdate(restoreThreadUpdate)(args)
@@ -300,7 +300,7 @@ function ThreadShelf({ row }: { row: typeof ThreadRow.Type }) {
             ) : (
               <DropdownMenuItem
                 icon={Archive02Icon}
-                onClick={() =>
+                onSelect={() =>
                   runSchoolWrite(
                     schoolCall(() =>
                       archive.withOptimisticUpdate(archiveThreadUpdate)(args)

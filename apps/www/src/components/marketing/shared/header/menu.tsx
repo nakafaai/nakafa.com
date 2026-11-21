@@ -33,7 +33,7 @@ function HeaderMenuLink({ link }: { link: HeaderLink }) {
 
   return (
     <NavigationMenuLink
-      closeOnClick
+      closeOnSelect
       render={
         <TargetLink
           hash={"hash" in link ? link.hash : undefined}

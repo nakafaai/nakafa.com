@@ -153,10 +153,6 @@ export function NinaInput({
           autoFocus={autoFocus}
           className="max-h-[min(12rem,35dvh)] px-3 py-3 text-(length:--text-chat) md:text-(length:--text-chat)"
           dir="auto"
-          onChange={(event) => {
-            setText(event.target.value);
-            onEngage?.();
-          }}
           onFocus={() => {
             onEngage?.();
             // Load the stylesheet's math faces before streamed formulas arrive.
@@ -168,6 +164,10 @@ export function NinaInput({
                 ])
               ).pipe(Effect.ignore)
             );
+          }}
+          onValueChange={(next) => {
+            setText(next);
+            onEngage?.();
           }}
           placeholder={t("text-placeholder")}
           ref={field}
@@ -186,7 +186,7 @@ export function NinaInput({
             <InputGroupButton
               {...attachPress}
               className="rounded-full"
-              disabled={disabled}
+              disabled={disabled === true}
               size="icon"
               tooltip={t("attach-files")}
               type="button"
@@ -198,8 +198,12 @@ export function NinaInput({
           <div className="flex items-center gap-1">
             <InputGroupButton
               className="rounded-full"
-              disabled={disabled}
-              onClick={stopping ? onStop : undefined}
+              disabled={disabled === true}
+              onClick={() => {
+                if (stopping) {
+                  onStop?.();
+                }
+              }}
               size="icon"
               tooltip={stopping ? t("stop-response") : t("send-message")}
               type={stopping ? "button" : "submit"}
@@ -257,7 +261,7 @@ export function NinaSuggestions({
       {Arr.map(suggestions, (suggestion) => (
         <Button
           className="group h-auto min-h-9 w-full justify-start py-1.5 font-normal whitespace-normal shadow-none"
-          disabled={disabled}
+          disabled={disabled === true}
           key={suggestion.label}
           onClick={(event) => {
             // A suggestion is a send from this composer, so it takes the refused

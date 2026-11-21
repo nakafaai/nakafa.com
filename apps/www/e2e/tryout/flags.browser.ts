@@ -14,6 +14,7 @@ import {
   runFirstSection,
   sidebarOf,
 } from "@/e2e/support/player";
+import { pressInPopup } from "@/e2e/support/popup";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { tryoutViewports } from "@/e2e/support/viewport";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -207,13 +208,16 @@ const verifyFlags = Effect.fn("NakafaE2E.verifyPlayerFlags")(function* (
     ).toHaveCount(0)
   );
 
-  // A flagged number leads back to its question, where the flag comes off.
-  yield* activate(
-    review.getByRole("button", {
-      exact: true,
-      name: "Question 1, unanswered, flagged for review",
-    }),
-    hasTouch
+  // A flagged number leads back to its question, where the flag comes off. On a phone the review rises as a sheet,
+  // so the press waits for it to settle.
+  yield* Effect.promise(() =>
+    pressInPopup(
+      review.getByRole("button", {
+        exact: true,
+        name: "Question 1, unanswered, flagged for review",
+      }),
+      hasTouch
+    )
   );
   yield* Effect.promise(() =>
     expect(review).toBeHidden({ timeout: readinessTimeoutMilliseconds })

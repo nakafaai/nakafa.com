@@ -1,6 +1,5 @@
 import { Array as Arr, HashMap, Option } from "effect";
 import type {
-  Expression,
   JsxAttributes,
   JsxTagNameExpression,
   Node,
@@ -10,18 +9,14 @@ import {
   isIdentifier,
   isJsxAttribute,
   isJsxElement,
-  isJsxExpression,
   isJsxSelfClosingElement,
   isStringLiteral,
-  SyntaxKind,
 } from "tsrs/ast";
 import { children } from "#scripts/check/source";
 
 const JSX_MODULE_PATTERN = /\.tsx$/u;
 /** An intrinsic element's tag starts lower case; a component's starts upper case. */
 const INTRINSIC_TAG_PATTERN = /^[a-z]/u;
-/** A link: an anchor, or a component named for one, such as `Link` or `PublicPathLink`. */
-const LINK_TAG_PATTERN = /^a$|Link$/u;
 
 /** The application's code, where every table is a `DataTable`, and the one module set that may draw a head. */
 const APPLICATION_PATTERN = /^apps\/www\/src\//u;
@@ -66,28 +61,6 @@ function literalType(attributes: JsxAttributes) {
   );
 }
 
-/** The expression written in braces for one attribute of an element, such as `render={...}`. */
-function attributeExpression(attributes: JsxAttributes, name: string) {
-  return Arr.findFirst(attributes.properties, (property) =>
-    isJsxAttribute(property) &&
-    isIdentifier(property.name) &&
-    property.name.text === name &&
-    property.initializer !== undefined &&
-    isJsxExpression(property.initializer) &&
-    property.initializer.expression !== undefined
-      ? Option.some(property.initializer.expression)
-      : Option.none()
-  );
-}
-
-/** Whether an expression is an element written as a link. */
-function isLinkElement(expression: Expression) {
-  return Option.match(opening(expression), {
-    onNone: () => false,
-    onSome: ({ tag }) => isIdentifier(tag) && LINK_TAG_PATTERN.test(tag.text),
-  });
-}
-
 /** The tag and attributes of a JSX element that opens one, or none for any other node. */
 function opening(node: Node) {
   if (isJsxSelfClosingElement(node)) {
@@ -100,30 +73,6 @@ function opening(node: Node) {
     });
   }
   return Option.none();
-}
-
-/**
- * The violation of a `Button` that renders a link. Base UI's Button gives the element it renders the
- * button role, so a screen reader announced the link as a button and a search by link missed it.
- */
-function linkButtonViolation(
-  file: string,
-  attributes: JsxAttributes,
-  tag: JsxTagNameExpression
-) {
-  const rendersLink =
-    isIdentifier(tag) &&
-    tag.text === "Button" &&
-    Option.exists(
-      attributeExpression(attributes, "nativeButton"),
-      (expression) => expression.kind === SyntaxKind.FalseKeyword
-    ) &&
-    Option.exists(attributeExpression(attributes, "render"), isLinkElement);
-  return rendersLink
-    ? Option.some(
-        `${file}: style the link with buttonVariants from @repo/design-system/lib/button instead of rendering it through Button, which gives it the button role.`
-      )
-    : Option.none();
 }
 
 /**
@@ -144,33 +93,29 @@ function tableHeadViolation(file: string, tag: JsxTagNameExpression) {
 }
 
 /**
- * The violation of one element: a native select, an input whose type the browser draws, a table head
- * outside the shared table, or a Button that renders a link.
+ * The violation of one element: a native select, an input whose type the browser draws, or a table head
+ * outside the shared table.
  */
 function elementViolation(file: string, node: Node) {
   return Option.flatMap(opening(node), ({ attributes, tag }) =>
-    Option.orElse(
-      Option.orElse(linkButtonViolation(file, attributes, tag), () =>
-        tableHeadViolation(file, tag)
-      ),
-      () =>
-        Option.flatMap(intrinsicName(tag), (name) => {
-          if (name === "select") {
-            return Option.some(
-              `${file}: use Select from @repo/design-system/components/ui/select instead of a native <select>, which the browser draws itself.`
-            );
-          }
-          if (name !== "input") {
-            return Option.none();
-          }
-          return Option.flatMap(literalType(attributes), (type) =>
-            Option.map(
-              HashMap.get(NATIVE_INPUTS, type),
-              (field) =>
-                `${file}: use ${field} instead of <input type="${type}">, whose control the browser draws itself.`
-            )
+    Option.orElse(tableHeadViolation(file, tag), () =>
+      Option.flatMap(intrinsicName(tag), (name) => {
+        if (name === "select") {
+          return Option.some(
+            `${file}: use Select from @repo/design-system/components/ui/select instead of a native <select>, which the browser draws itself.`
           );
-        })
+        }
+        if (name !== "input") {
+          return Option.none();
+        }
+        return Option.flatMap(literalType(attributes), (type) =>
+          Option.map(
+            HashMap.get(NATIVE_INPUTS, type),
+            (field) =>
+              `${file}: use ${field} instead of <input type="${type}">, whose control the browser draws itself.`
+          )
+        );
+      })
     )
   );
 }

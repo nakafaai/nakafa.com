@@ -73,7 +73,7 @@ export function AiSheetHeader() {
               >
                 <DropdownMenuItem
                   icon={Add01Icon}
-                  onClick={() => setActiveChatId(null)}
+                  onSelect={() => setActiveChatId(null)}
                 >
                   {t("Ai.new-chat")}
                 </DropdownMenuItem>

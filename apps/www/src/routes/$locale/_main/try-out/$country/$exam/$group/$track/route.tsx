@@ -107,10 +107,22 @@ function TryoutTrackLayout() {
   );
 }
 
+/** What a set's match tells of its entry: the loaded page's section that enters it, when one does. */
+const EnteredSetMatchSchema = Schema.Struct({
+  loaderData: Schema.optional(
+    Schema.Struct({
+      page: Schema.Struct({
+        entrySection: Schema.NullOr(
+          Schema.Struct({ visibility: Schema.String })
+        ),
+      }),
+    })
+  ),
+});
+
 /** Whether a set's match is entered by its one section, whose paper its attempt's address opens. */
-const isEnteredSet = (match: {
-  loaderData?: { page: { entrySection: { visibility: string } | null } };
-}) => match.loaderData?.page.entrySection?.visibility === "internal-entry";
+const isEnteredSet = (match: typeof EnteredSetMatchSchema.Type) =>
+  match.loaderData?.page.entrySection?.visibility === "internal-entry";
 
 /**
  * The track's table, with the open set's pane beside it, or the set's paper on the whole page: the paper its address

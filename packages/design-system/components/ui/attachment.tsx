@@ -1,7 +1,7 @@
-import type { Button as ButtonPrimitive } from "@base-ui/react/button";
-import { mergeProps } from "@base-ui/react/merge-props";
-import { useRender } from "@base-ui/react/use-render";
 import { Button } from "@repo/design-system/components/ui/button";
+import type { RenderableProps } from "@repo/design-system/lib/render";
+import type { Button as ButtonPrimitive } from "@ui-sdk/react/button";
+import { renderElement } from "@ui-sdk/react/primitive";
 import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
@@ -152,19 +152,12 @@ export function AttachmentActions({
 export function AttachmentAction({
   variant = "ghost",
   ...props
-}: ButtonPrimitive.Props &
+}: ComponentProps<typeof ButtonPrimitive> &
   Pick<ComponentProps<typeof Button>, "variant"> & {
     /** The action in words, shown on hover and focus and read as the button's name. */
     tooltip: string;
   }) {
-  return (
-    <Button
-      data-slot="attachment-action"
-      size="icon-sm"
-      variant={variant}
-      {...props}
-    />
-  );
+  return <Button size="icon-sm" variant={variant} {...props} />;
 }
 
 export function AttachmentTrigger({
@@ -172,19 +165,17 @@ export function AttachmentTrigger({
   render,
   type,
   ...props
-}: useRender.ComponentProps<"button">) {
-  return useRender({
-    defaultTagName: "button",
-    props: mergeProps<"button">(
-      {
-        type: render ? type : (type ?? "button"),
-        className: cn("absolute inset-0 z-10 outline-none", className),
-      },
-      props
-    ),
-    render,
-    state: { slot: "attachment-trigger" },
-  });
+}: RenderableProps<"button">) {
+  return renderElement(
+    "button",
+    {
+      "data-slot": "attachment-trigger",
+      ...props,
+      type: render ? type : (type ?? "button"),
+      className: cn("absolute inset-0 z-10 outline-none", className),
+    },
+    render
+  );
 }
 
 export function AttachmentGroup({

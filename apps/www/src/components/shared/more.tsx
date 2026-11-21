@@ -70,7 +70,7 @@ export function MoreMenu({
         >
           <DropdownMenuItem
             icon={Delete02Icon}
-            onClick={() => setDeleting(true)}
+            onSelect={() => setDeleting(true)}
             variant="destructive"
           >
             {t("delete")}

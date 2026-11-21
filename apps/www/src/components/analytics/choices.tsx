@@ -22,7 +22,7 @@ export function PrivacyChoicesMenuItem() {
     return null;
   }
   return (
-    <DropdownMenuItem icon={Analytics01Icon} onClick={showConsentChoices}>
+    <DropdownMenuItem icon={Analytics01Icon} onSelect={showConsentChoices}>
       {t("title")}
     </DropdownMenuItem>
   );

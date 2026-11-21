@@ -161,7 +161,7 @@ function TenantSwitcher() {
         <DropdownMenuTrigger
           render={
             <SidebarMenuButton
-              className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground"
+              className="data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
               onFocus={warm}
               onPointerDown={warm}
               onPointerEnter={warm}

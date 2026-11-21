@@ -91,7 +91,7 @@ export function TaskFields({
           className="min-h-28"
           dir="auto"
           id={`${id}-text`}
-          onChange={(event) => onChange({ ...draft, text: event.target.value })}
+          onValueChange={(text) => onChange({ ...draft, text })}
           placeholder={t("task-text-placeholder")}
           value={draft.text}
         />

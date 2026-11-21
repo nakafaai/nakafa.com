@@ -33,7 +33,7 @@ test("a class in the school sidebar carries its animal, and no group label carri
   const page = await context.newPage();
   await page.goto(home);
 
-  const sidebar = page.locator('[data-slot="sidebar-content"]');
+  const sidebar = page.locator('[data-sidebar="content"]');
   const entry = sidebar.getByRole("link", { exact: true, name: "Fisika X-1" });
   await expect(entry.locator('[data-slot="avatar"]')).toHaveCount(1);
   await expect(

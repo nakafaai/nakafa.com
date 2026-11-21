@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect, Option } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -30,11 +31,14 @@ const OPEN_TILE = /^Open question/u;
 /** The first page of the canvas, whose name starts with its number. */
 const FIRST_PAGE = /^Question 1\b/u;
 
-/** The zoom the column of pages is drawn at, read from its style: the one child of the canvas's held paper. */
+/**
+ * The zoom the column of pages is drawn at, read from its style: the one child of the canvas's held paper, which
+ * stands in the scroll area's content.
+ */
 const columnZoom = (page: Page) =>
   page
     .getByRole("region", { name: "Exam pages" })
-    .locator('[data-slot="scroll-area-viewport"] > div > div')
+    .locator('[data-slot="scroll-area-content"] > div > div')
     .evaluate((column) => Number(getComputedStyle(column).zoom));
 
 /** Creates an exam of three questions with their prompts, and waits until the server holds them. */
@@ -103,20 +107,20 @@ test.describe("at 1440", () => {
     const options = page.getByRole("button", { name: "Zoom options" });
     for (const preset of [150, 100, 75, 50]) {
       await options.click();
-      await page
-        .getByRole("menuitemradio", { exact: true, name: `${preset}%` })
-        .click();
+      await pressInPopup(
+        page.getByRole("menuitemradio", { exact: true, name: `${preset}%` })
+      );
       await expect(options).toHaveText(`${preset}%`);
       expect(await columnZoom(page)).toBeCloseTo(preset / 100);
     }
     await options.click();
-    await page.getByRole("menuitemradio", { name: "Fill" }).click();
+    await pressInPopup(page.getByRole("menuitemradio", { name: "Fill" }));
     await expect.poll(() => columnZoom(page)).toBeGreaterThan(1);
     await options.click();
     await expect(
       page.getByRole("menuitemradio", { name: "Fill" })
     ).toHaveAttribute("aria-checked", "true");
-    await page.getByRole("menuitemradio", { name: "Fit" }).click();
+    await pressInPopup(page.getByRole("menuitemradio", { name: "Fit" }));
     await expect(options).toHaveText("100%");
     expect(await columnZoom(page)).toBeCloseTo(1);
   });
@@ -217,6 +221,8 @@ test.describe("at 1440", () => {
       .getByRole("button", { name: "Delete", exact: true })
       .click();
     await expect(tiles).toHaveCount(4);
+    // The question renders in the grid beside its button, so the grid's own Delete is pressed once it has gone.
+    await expect(page.getByRole("dialog")).toHaveCount(0);
 
     await grid.getByRole("checkbox", { name: "Select question 2" }).click();
     await grid.getByRole("button", { name: "Delete", exact: true }).click();

@@ -374,9 +374,9 @@ function JsonInput({
       className="font-mono"
       dir="ltr"
       id={id}
-      onChange={(event) => {
-        setText(event.target.value);
-        Option.map(Schema.decodeOption(JsonText)(event.target.value), (value) =>
+      onValueChange={(next) => {
+        setText(next);
+        Option.map(Schema.decodeOption(JsonText)(next), (value) =>
           write(path, value)
         );
       }}

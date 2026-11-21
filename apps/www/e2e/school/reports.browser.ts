@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import { Effect, Option, String as Str } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { assignHomeroom } from "@/e2e/support/homeroom";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   grantStudent,
@@ -26,7 +27,7 @@ async function chooseFromRow(page: Page, student: string, item: string) {
   const menu = row.getByRole("button", { name: "More actions" });
   await waitUntilTakenOver(menu);
   await menu.click();
-  await page.getByRole("menuitem", { name: item }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: item }));
 }
 
 test("a homeroom teacher writes and hands in a report card, the Owner approves it, its student opens it, and its check page answers", async ({
@@ -66,7 +67,9 @@ test("a homeroom teacher writes and hands in a report card, the Owner approves i
     .click();
   const placeDialog = settings.getByRole("dialog");
   await placeDialog.getByRole("combobox", { name: "Student" }).click();
-  await settings.getByRole("option", { name: "Acceptance Learner" }).click();
+  await pressInPopup(
+    settings.getByRole("option", { name: "Acceptance Learner" })
+  );
   await placeDialog.getByRole("button", { name: "Add student" }).click();
   await settings.goto(address("/settings/cohorts"));
   await assignHomeroom(settings, "X-1", "Acceptance Class Teacher");
@@ -86,7 +89,7 @@ test("a homeroom teacher writes and hands in a report card, the Owner approves i
   await expect(gradeRow).toContainText("Draft");
   const sentBefore = changes.sent;
   await gradeRow.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Release" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Release" }));
   await expect(gradeRow).toContainText("Released");
   // The next page closes the connection and drops a change still on its way, so it waits for the server's answer.
   await saved(changes, sentBefore);

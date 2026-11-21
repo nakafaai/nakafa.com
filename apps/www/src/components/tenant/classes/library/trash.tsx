@@ -258,7 +258,7 @@ function TrashRowMenu({ row }: { row: TrashRow }) {
       onConfirm={purge}
       title={t("library-purge-title")}
     >
-      <DropdownMenuItem icon={RotateLeft01Icon} onClick={restore}>
+      <DropdownMenuItem icon={RotateLeft01Icon} onSelect={restore}>
         {tCommon("restore")}
       </DropdownMenuItem>
     </ConfirmRowMenu>

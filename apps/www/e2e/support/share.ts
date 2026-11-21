@@ -8,7 +8,9 @@ import type { Changes } from "@/e2e/support/changes";
 import { ANSWER_MILLISECONDS, live, saved } from "@/e2e/support/changes";
 import { CHAT_PAGE, onThePage, openChatPage } from "@/e2e/support/chat";
 import { lastCopy, recordCopies } from "@/e2e/support/clipboard";
+import { pressInPopup } from "@/e2e/support/popup";
 import { SERVER_FUNCTION_PATH } from "@/e2e/support/requests";
+import { noticeWith } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { SHARE_ENTRY } from "@/lib/share/fragment";
 
@@ -71,7 +73,7 @@ export function linkOn(origin: string, link: string) {
 /** Opens the share dialog of the open chat, from the menu of the chat. */
 export const openShareDialog = async (page: Page) => {
   await chatMenu(page).click();
-  await page.getByRole("menuitem", { name: "Share chat" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Share chat" }));
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   return dialog;
@@ -94,7 +96,7 @@ export const shareChat = async (page: Page, changes: Changes) => {
   await expect(copy).toBeEnabled({ timeout: ANSWER_MILLISECONDS });
   await saved(changes, before);
   await copy.click();
-  await expect(page.getByText("Link copied!")).toBeVisible();
+  await expect(noticeWith(page, "Link copied!")).toBeVisible();
   const link = await lastCopy(page);
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);

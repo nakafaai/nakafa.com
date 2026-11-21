@@ -91,7 +91,7 @@ function BreadcrumbMenuItem({
   return (
     <DropdownMenuItem
       icon={Folder02Icon}
-      onClick={onChoose}
+      onSelect={onChoose}
       render={<BreadcrumbAnchor target={item.target} />}
     >
       <span className="min-w-0 truncate" title={label}>

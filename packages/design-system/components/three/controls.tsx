@@ -67,9 +67,10 @@ export function CoordinateControls({ inert = false }: { inert?: boolean }) {
     <VisualCardSceneActions inert={inert}>
       <DropdownMenuCheckboxItem
         checked={showGrid}
-        closeOnClick
+        closeOnSelect
         icon={GridIcon}
         onCheckedChange={toggleGrid}
+        value="grid"
       >
         {t("grid")}
       </DropdownMenuCheckboxItem>

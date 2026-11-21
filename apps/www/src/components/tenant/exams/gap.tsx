@@ -41,9 +41,8 @@ export function QuestionGapMark({
         gap === "empty" ? emptyMark(question.template) : "page-no-key"
       );
       return (
-        <Popover>
+        <Popover openOnHover>
           <PopoverTrigger
-            openOnHover
             render={
               <Button
                 aria-label={mark}

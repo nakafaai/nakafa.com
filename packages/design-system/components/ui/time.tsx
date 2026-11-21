@@ -54,7 +54,7 @@ function TimeSelect({
 
   return (
     <Select
-      disabled={disabled}
+      disabled={disabled === true}
       items={items}
       onValueChange={(time: string | null) => {
         if (time !== null) {

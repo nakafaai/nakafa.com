@@ -152,7 +152,7 @@ export function StartDiscussion({
               className="min-h-28"
               dir="auto"
               id={`${id}-text`}
-              onChange={(event) => setText(event.target.value)}
+              onValueChange={setText}
               placeholder={t("discussion-first-placeholder")}
               value={text}
             />

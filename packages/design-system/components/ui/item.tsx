@@ -1,6 +1,6 @@
-import { mergeProps } from "@base-ui/react/merge-props";
-import { useRender } from "@base-ui/react/use-render";
 import { Separator } from "@repo/design-system/components/ui/separator";
+import type { RenderableProps } from "@repo/design-system/lib/render";
+import { renderElement } from "@ui-sdk/react/primitive";
 import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
@@ -29,7 +29,6 @@ export function ItemSeparator({
   return (
     <Separator
       className={cn("my-2", className)}
-      data-slot="item-separator"
       orientation="horizontal"
       {...props}
     />
@@ -68,22 +67,18 @@ export function Item({
   size = "default",
   render,
   ...props
-}: useRender.ComponentProps<"div"> & VariantProps<typeof itemVariants>) {
-  return useRender({
-    defaultTagName: "div",
-    props: mergeProps<"div">(
-      {
-        className: cn(itemVariants({ variant, size, className })),
-      },
-      props
-    ),
-    render,
-    state: {
-      slot: "item",
-      variant,
-      size,
+}: RenderableProps<"div"> & VariantProps<typeof itemVariants>) {
+  return renderElement(
+    "div",
+    {
+      "data-slot": "item",
+      "data-variant": variant,
+      "data-size": size,
+      ...props,
+      className: cn(itemVariants({ variant, size, className })),
     },
-  });
+    render
+  );
 }
 
 const itemMediaVariants = cva(

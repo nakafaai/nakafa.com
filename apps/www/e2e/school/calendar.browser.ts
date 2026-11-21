@@ -1,6 +1,9 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { calendarButton } from "@/e2e/support/date";
+import { pressInPopup } from "@/e2e/support/popup";
+import { waitForStill } from "@/e2e/support/quiet";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -18,27 +21,48 @@ const WIDTHS = [
 ] as const;
 
 /**
- * Chooses a day from the calendar that `picker` opens through its month and year selects: December of the year
- * after the one it shows, then the 15th. The selects lie under the calendar's arrows bar, so a press reaching
- * them proves the bar lets it through. The picker then shows the day.
+ * Presses the option of the open select's list and waits until the list has left: while it leaves, its sheet on a
+ * phone still covers the page and takes the next press. The list that leaves stays in the page until it has gone, so
+ * the option is the one in the open list.
  */
-async function chooseThroughSelects(page: Page, picker: Locator) {
-  await picker.click();
-  const calendar = page.locator('[data-slot="calendar"]');
+async function pickOption(page: Page, name: string) {
+  await pressInPopup(
+    page
+      .locator('[role="listbox"][data-open]')
+      .getByRole("option", { exact: true, name })
+  );
+  await expect(page.getByRole("listbox")).toHaveCount(0);
+}
+
+/**
+ * Chooses a day from the calendar that a date field opens through its month and year selects: December of the year
+ * after the one it shows, then the 15th. The field's text then holds the day, in the page's locale.
+ */
+async function chooseThroughSelects(page: Page, field: Locator) {
+  // On a phone the dialog, the calendar and each select's list rise as sheets, so each press waits until its sheet
+  // stands still (`chooseDay` says why).
+  await waitForStill(field);
+  await calendarButton(field).click();
+  const calendar = page.locator('[data-slot="date-picker-content"]');
   await expect(calendar).toBeVisible();
+  await waitForStill(calendar);
   const year = calendar.getByRole("combobox", { name: "Year" });
   const next = String(Number(await year.innerText()) + 1);
   await calendar.getByRole("combobox", { name: "Month" }).click();
-  await page.getByRole("option", { exact: true, name: "December" }).click();
+  await pickOption(page, "December");
+  await waitForStill(calendar);
   await year.click();
-  await page.getByRole("option", { exact: true, name: next }).click();
+  await pickOption(page, next);
   await expect(calendar.getByRole("combobox", { name: "Month" })).toHaveText(
     "December"
   );
   await expect(year).toHaveText(next);
-  await calendar.getByRole("button", { name: CHOSEN_DAY }).click();
+  await waitForStill(calendar);
+  await calendar.getByRole("gridcell", { name: CHOSEN_DAY }).click();
   await expect(calendar).toHaveCount(0);
-  await expect(picker).toHaveText(`Dec 15, ${next}`);
+  await expect(field.locator('[data-slot="date-picker-input"]')).toHaveValue(
+    `12/15/${next}`
+  );
 }
 
 for (const viewport of WIDTHS) {
@@ -78,7 +102,12 @@ for (const viewport of WIDTHS) {
     const add = page.getByRole("button", { name: "Add period" }).first();
     await waitUntilTakenOver(add);
     await add.click();
-    await chooseThroughSelects(page, page.getByLabel("First day"));
+    await chooseThroughSelects(
+      page,
+      page.locator('[data-slot="date-picker"]', {
+        has: page.getByLabel("First day"),
+      })
+    );
     await context.close();
   });
 }

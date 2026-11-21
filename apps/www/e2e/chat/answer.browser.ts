@@ -96,7 +96,7 @@ const keepsLongContentInTheColumn = async (page: Page) => {
   const wide = await (await drawnRow(page, TABLE.answer)).evaluate((row) => {
     // The table scrolls in its container's viewport, under an overlay bar.
     const box = row.querySelector(
-      '[data-slot="table-container"] > [data-slot="scroll-area-viewport"]'
+      '[data-table="container"] > [data-slot="scroll-area-viewport"]'
     );
     return {
       scrolls: (box?.scrollWidth ?? 0) > (box?.clientWidth ?? 0),
@@ -139,9 +139,8 @@ const keepsTableFrameToItsRows = async (page: Page) => {
           .querySelector('[data-slot="message-footer"]')
           ?.getBoundingClientRect().top ?? null,
       frame:
-        row
-          .querySelector('[data-slot="table-container"]')
-          ?.getBoundingClientRect().bottom ?? null,
+        row.querySelector('[data-table="container"]')?.getBoundingClientRect()
+          .bottom ?? null,
       rows:
         row.querySelector('[data-slot="table"]')?.getBoundingClientRect()
           .bottom ?? null,

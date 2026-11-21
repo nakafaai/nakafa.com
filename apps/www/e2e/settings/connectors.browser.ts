@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
+import { shownAlerts } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -66,10 +67,8 @@ for (const viewport of [
     await page.waitForURL(FAILED, {
       timeout: readinessTimeoutMilliseconds,
     });
-    await expect(page.getByRole("alert")).toContainText(
-      "Connect failed, try again."
-    );
-    await expect(page.getByRole("alert")).toHaveCount(1);
+    await expect(shownAlerts(page)).toContainText("Connect failed, try again.");
+    await expect(shownAlerts(page)).toHaveCount(1);
 
     await page.goto(`${site}/en/user/settings/connectors`);
     const second = await startConnect();
@@ -77,7 +76,7 @@ for (const viewport of [
       `${site}/api/connectors/callback?state=${second.searchParams.get("state") ?? ""}&error=access_denied`
     );
     await page.waitForURL(CANCELLED);
-    await expect(page.getByRole("alert")).toHaveCount(0);
+    await expect(shownAlerts(page)).toHaveCount(0);
     await expect(plus).toBeVisible();
 
     // A replayed code goes home, and the root answers in the reader's language, English here.

@@ -11,7 +11,7 @@ import {
 import { researchMaxSources } from "@repo/backend/client/nina/research";
 import {
   Collapsible,
-  CollapsibleContent,
+  CollapsiblePanel,
   CollapsibleTrigger,
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -53,12 +53,12 @@ export function Activity({
         disabled={invocation.artifacts.length === 0}
       >
         <ActivityTrigger />
-        <CollapsibleContent className="motion-reduce:transition-none">
+        <CollapsiblePanel className="motion-reduce:transition-none">
           {/* The line runs under the middle of the row's icon, and the evidence starts where the row's words start (8 + 1 + 15 = 24 px), so it reads as their children. */}
           <div className="ms-2 mt-3 flex min-w-0 flex-col gap-4 border-s ps-3.75">
             {children}
           </div>
-        </CollapsibleContent>
+        </CollapsiblePanel>
       </Collapsible>
     </ActivityContext>
   );
@@ -134,7 +134,7 @@ function ActivityTrigger() {
       </span>
       {artifactCount > 0 ? (
         <HugeIcons
-          className="mt-0.5 transition-transform group-data-panel-open/activity:rotate-180 motion-reduce:transition-none"
+          className="mt-0.5 transition-transform group-data-open/activity:rotate-180 motion-reduce:transition-none"
           icon={ArrowDown01Icon}
         />
       ) : null}

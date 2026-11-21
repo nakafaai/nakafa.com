@@ -26,7 +26,10 @@ function watchPlaceholder(label: string) {
   const look = () => {
     const placeholder = Array.from(
       document.querySelectorAll('[data-sidebar="menu-button"] span')
-    ).find((span) => span.textContent === label);
+    ).find(
+      (span) =>
+        span.textContent === label && span.getBoundingClientRect().height > 0
+    );
     if (placeholder !== undefined) {
       heights.push(Math.round(placeholder.getBoundingClientRect().height));
     }

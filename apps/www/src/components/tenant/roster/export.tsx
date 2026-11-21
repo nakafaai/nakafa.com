@@ -115,7 +115,7 @@ export function RosterExport() {
         className="w-52"
         label={common("menu-export")}
       >
-        <DropdownMenuItem icon={UserListIcon} onClick={saveStudentsOfUnit}>
+        <DropdownMenuItem icon={UserListIcon} onSelect={saveStudentsOfUnit}>
           {t("export-students")}
         </DropdownMenuItem>
         <GradeDownloadContext value={saveGrades}>

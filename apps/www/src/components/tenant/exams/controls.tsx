@@ -130,28 +130,28 @@ export function PageActions({
             <DropdownMenuItem
               disabled={index === 0}
               icon={ArrowUp02Icon}
-              onClick={moveUp}
+              onSelect={moveUp}
             >
               {t("move-up")}
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={index === count - 1}
               icon={ArrowDown02Icon}
-              onClick={moveDown}
+              onSelect={moveDown}
             >
               {t("move-down")}
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={actions.room < 1}
               icon={Copy01Icon}
-              onClick={copy}
+              onSelect={copy}
             >
               {t("copy")}
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={actions.room < 1}
               icon={Add01Icon}
-              onClick={addBelow}
+              onSelect={addBelow}
             >
               {t("add-below")}
             </DropdownMenuItem>
@@ -160,7 +160,7 @@ export function PageActions({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   icon={Delete02Icon}
-                  onClick={() => setAsking(true)}
+                  onSelect={() => setAsking(true)}
                   variant="destructive"
                 >
                   {t("remove")}

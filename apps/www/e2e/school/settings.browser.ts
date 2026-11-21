@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import { Effect, FileSystem } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { chooseDay } from "@/e2e/support/date";
+import { pressInPopup } from "@/e2e/support/popup";
 import { giveRole, revokeRole } from "@/e2e/support/roles";
 import {
   createSchool,
@@ -69,7 +70,7 @@ test("an admin opens the profile and the periods of a school", async ({
   ).toBeVisible();
 
   await (
-    await settingsLink(page.locator('[data-slot="sidebar-content"]'), "periods")
+    await settingsLink(page.locator('[data-sidebar="content"]'), "periods")
   ).click();
   await expect(page).toHaveURL(address("/settings/periods"));
   await expect(
@@ -141,7 +142,7 @@ test("an admin edits a period's name and dates in the dialog that added it, fill
     .getByRole("row", { name: "Semester 1" })
     .getByRole("button", { name: "More actions" })
     .click();
-  await page.getByRole("menuitem", { name: "Edit" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Edit" }));
   const editDialog = page.getByRole("dialog");
   await expect(editDialog.getByLabel("Name")).toHaveValue("Semester 1");
   await expect(editDialog.getByRole("button", { name: "Save" })).toBeDisabled();

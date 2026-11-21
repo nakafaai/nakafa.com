@@ -61,7 +61,7 @@ export function SchoolPeriodRestore({
     <ConfirmRowMenu {...remove}>
       <DropdownMenuItem
         icon={ArchiveRestoreIcon}
-        onClick={() =>
+        onSelect={() =>
           startTransition(() =>
             runSchoolWrite(
               schoolCall(() => restore({ periodId: period.id, slug }))
@@ -154,7 +154,7 @@ export function SchoolPeriodMenu({
           period.status === "active" ? (
             <DropdownMenuItem
               icon={Archive02Icon}
-              onClick={() =>
+              onSelect={() =>
                 startTransition(() =>
                   runSchoolWrite(
                     schoolCall(() => archive({ periodId: period.id, slug })),
@@ -188,14 +188,14 @@ export function SchoolPeriodMenu({
       >
         <DropdownMenuItem
           icon={PencilEdit02Icon}
-          onClick={() => dialogs.show("edit")}
+          onSelect={() => dialogs.show("edit")}
         >
           {tCommon("edit")}
         </DropdownMenuItem>
         {period.status === "planned" ? (
           <DropdownMenuItem
             icon={CheckmarkCircle02Icon}
-            onClick={() =>
+            onSelect={() =>
               startTransition(() =>
                 runSchoolWrite(
                   schoolCall(() => open({ periodId: period.id, slug }))

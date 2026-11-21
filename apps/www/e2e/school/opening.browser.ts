@@ -45,23 +45,28 @@ test("a dialog that opens as it mounts is a dialog from its first frame on a wid
   await expect(schedule).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await waitUntilTakenOver(schedule);
 
-  // The schedule's dialog mounts open on the press. Every element the page adds from here is checked, so a
-  // drawer drawn for a single frame before the dialog is caught.
+  // The schedule's dialog mounts open on the press. Every element the page adds or turns from here is checked,
+  // so a sheet drawn for a single frame before the dialog is caught.
   await page.evaluate((flag) => {
     Reflect.set(window, flag, false);
+    const SHEET = '[data-presentation="sheet"]';
     new MutationObserver((records) => {
       for (const record of records) {
-        for (const node of record.addedNodes) {
+        const nodes = [record.target, ...record.addedNodes];
+        for (const node of nodes) {
           if (
             node instanceof Element &&
-            (node.matches('[data-slot="drawer-popup"]') ||
-              node.querySelector('[data-slot="drawer-popup"]') !== null)
+            (node.matches(SHEET) || node.querySelector(SHEET) !== null)
           ) {
             Reflect.set(window, flag, true);
           }
         }
       }
-    }).observe(document.body, { childList: true, subtree: true });
+    }).observe(document.body, {
+      attributeFilter: ["data-presentation"],
+      childList: true,
+      subtree: true,
+    });
   }, DRAWER_SEEN);
   await schedule.click();
   await expect(

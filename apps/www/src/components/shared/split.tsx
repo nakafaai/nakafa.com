@@ -9,11 +9,17 @@ import { useTranslations } from "use-intl";
  * is named More actions for assistive technology and in its tooltip. It renders inside the
  * group's DropdownMenu.
  */
-export function SplitMenuTrigger() {
+export function SplitMenuTrigger({
+  disabled = false,
+}: {
+  /** Whether the menu does not open yet, such as while the page waits for what it holds. */
+  disabled?: boolean;
+}) {
   const common = useTranslations("Common");
 
   return (
     <DropdownMenuTrigger
+      disabled={disabled}
       render={
         <Button
           size="icon"

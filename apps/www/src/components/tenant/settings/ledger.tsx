@@ -148,7 +148,7 @@ function SchoolInvoiceMenu({
       <DropdownMenuItem
         disabled={!(hasNumber && isActiveLocale(locale)) || isPending}
         icon={Download04Icon}
-        onClick={() => {
+        onSelect={() => {
           if (isActiveLocale(locale)) {
             download(() => draw({ locale, number: invoice.number, slug }));
           }

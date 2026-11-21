@@ -1,6 +1,4 @@
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { DesignSystemProvider } from "@repo/design-system/providers/system";
-import { textDirection } from "@repo/internationalization/src/direction";
 import { FORMATS } from "@repo/internationalization/src/formats";
 import { localeTimeZone } from "@repo/internationalization/src/locale";
 import { createFileRoute } from "@tanstack/react-router";
@@ -68,31 +66,29 @@ function SchoolEntryPage() {
       messages={messages}
       timeZone={localeTimeZone(locale)}
     >
-      <DesignSystemProvider direction={textDirection(locale)}>
-        <div
-          className="bg-background fixed inset-0 z-50 overflow-y-auto"
-          id={SCHOOL_ENTRY_ID}
-        >
-          <EntryShell>
-            <EntryShellPanel>
-              <EntryShellHeader>
-                <div className="ms-auto">
-                  <ThemePicker variant="ghost" />
-                </div>
-              </EntryShellHeader>
-              {/* The school's mark and name are not known here, so their places stand empty at their size. */}
-              <SignInScreen
-                action={<SchoolEntryActions />}
-                figure={<div className="size-24" />}
-                legal={<AuthLegal links={legal} />}
-              >
-                <div className="h-8" />
-              </SignInScreen>
-            </EntryShellPanel>
-            <EntryShellArtwork />
-          </EntryShell>
-        </div>
-      </DesignSystemProvider>
+      <div
+        className="bg-background fixed inset-0 z-50 overflow-y-auto"
+        id={SCHOOL_ENTRY_ID}
+      >
+        <EntryShell>
+          <EntryShellPanel>
+            <EntryShellHeader>
+              <div className="ms-auto">
+                <ThemePicker variant="ghost" />
+              </div>
+            </EntryShellHeader>
+            {/* The school's mark and name are not known here, so their places stand empty at their size. */}
+            <SignInScreen
+              action={<SchoolEntryActions />}
+              figure={<div className="size-24" />}
+              legal={<AuthLegal links={legal} />}
+            >
+              <div className="h-8" />
+            </SignInScreen>
+          </EntryShellPanel>
+          <EntryShellArtwork />
+        </EntryShell>
+      </div>
     </MessagesProvider>
   );
 }

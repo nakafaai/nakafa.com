@@ -145,7 +145,7 @@ function PostComposerFields() {
         aria-label={t("placeholder")}
         className="min-h-10 min-w-0 flex-1 px-0 py-2"
         name="text"
-        onChange={(event) => setText(event.target.value)}
+        onValueChange={setText}
         placeholder={t("placeholder")}
         ref={field}
         value={text}

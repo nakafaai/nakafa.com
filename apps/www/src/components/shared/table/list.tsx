@@ -31,10 +31,10 @@ export function TableList<TItem extends string>({
       <span className="inline-flex max-w-full items-center gap-1 align-middle">
         <span className="flex min-w-0">{children(first)}</span>
         {rest > 0 ? (
-          <Popover>
+          <Popover openOnHover>
             <Badge
               aria-label={t("more", { count: rest })}
-              render={<PopoverTrigger openOnHover />}
+              render={<PopoverTrigger />}
               variant="outline"
             >
               +{rest}

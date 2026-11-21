@@ -1,48 +1,59 @@
-import { NavigationMenu as NavigationMenuPrimitive } from "@base-ui/react/navigation-menu";
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { PortalContainer } from "@repo/design-system/lib/portal";
+import {
+  NavigationMenuContent as NavigationMenuContentPrimitive,
+  NavigationMenuItem as NavigationMenuItemPrimitive,
+  NavigationMenuLink as NavigationMenuLinkPrimitive,
+  NavigationMenuList as NavigationMenuListPrimitive,
+  NavigationMenu as NavigationMenuPrimitive,
+  NavigationMenuTrigger as NavigationMenuTriggerPrimitive,
+  NavigationMenuViewport,
+} from "@ui-sdk/react/navigation-menu";
 import { cn } from "cn";
-import { use } from "react";
-
-// Source: https://ui.shadcn.com/docs/components/base/navigation-menu
+import type * as React from "react";
 
 /**
- * A row of sections whose links open in one shared popup. A section opens when
- * a pointer rests on its trigger or when the trigger is pressed, and the popup
- * stays open while the pointer moves from one trigger to the next, changing its
- * size and sliding its content toward the new section, so it never closes and
- * reopens between them. The keyboard moves through the triggers and into the
- * links, and Escape closes it.
+ * A row of sections whose links open in one shared popup. A section opens when a pointer rests on its trigger or
+ * when the trigger is pressed, and the popup stays open while the pointer moves from one trigger to the next,
+ * changing its size and sliding its content toward the new section, so it never closes and reopens between them.
+ * The keyboard moves through the triggers and into the links, Escape closes it, and a link pressed closes it too.
  */
 function NavigationMenu({
   align = "start",
   children,
   className,
+  closeOnSelect = true,
   ...props
-}: NavigationMenuPrimitive.Root.Props &
-  Pick<NavigationMenuPrimitive.Positioner.Props, "align">) {
+}: Omit<React.ComponentProps<typeof NavigationMenuPrimitive>, "children"> &
+  Pick<React.ComponentProps<typeof NavigationMenuViewport>, "align"> & {
+    children?: React.ReactNode;
+  }) {
   return (
-    <NavigationMenuPrimitive.Root
+    <NavigationMenuPrimitive
       className={cn("relative flex items-center", className)}
-      data-slot="navigation-menu"
+      closeOnSelect={closeOnSelect}
       {...props}
     >
       {children}
-      <NavigationMenuPositioner align={align} />
-    </NavigationMenuPrimitive.Root>
+      {/* The shared popup takes the open section's size and slides to its trigger. Its sections stand at its
+          corner, so a wider one grows it toward the reading end. */}
+      <NavigationMenuViewport
+        align={align}
+        className="bg-popover text-popover-foreground duration-surface relative z-50 h-(--viewport-height) w-(--viewport-width) origin-(--transform-origin) overflow-hidden rounded-xl border shadow-md transition-[opacity,scale,width,height,left,top] ease-out outline-none [--panel-height:var(--available-height)] data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-none"
+        sideOffset={8}
+      />
+    </NavigationMenuPrimitive>
   );
 }
 
 function NavigationMenuList({
   className,
   ...props
-}: NavigationMenuPrimitive.List.Props) {
+}: React.ComponentProps<typeof NavigationMenuListPrimitive>) {
   return (
-    <NavigationMenuPrimitive.List
+    <NavigationMenuListPrimitive
       className={cn("flex list-none items-center gap-0.5", className)}
-      data-slot="navigation-menu-list"
       {...props}
     />
   );
@@ -51,115 +62,77 @@ function NavigationMenuList({
 function NavigationMenuItem({
   className,
   ...props
-}: NavigationMenuPrimitive.Item.Props) {
+}: React.ComponentProps<typeof NavigationMenuItemPrimitive>) {
   return (
-    <NavigationMenuPrimitive.Item
+    <NavigationMenuItemPrimitive
       className={cn("relative", className)}
-      data-slot="navigation-menu-item"
       {...props}
     />
   );
 }
 
-/**
- * A section's trigger: a ghost button with a chevron that turns while its section is open. While a
- * section opened by hover is open, Base UI's safe polygon turns off pointer events on the list that
- * holds the triggers, so the way to the popup hovers nothing on the way. A navigation bar is a row of
- * triggers, as a menubar is, where Base UI blocks none, so each trigger keeps them: the pointer moves
- * from one section's trigger to the next, as it does across a menubar.
- */
+/** A section's trigger: a ghost button with a chevron that turns while its section is open. */
 function NavigationMenuTrigger({
   children,
   className,
   ...props
-}: NavigationMenuPrimitive.Trigger.Props) {
+}: Omit<
+  React.ComponentProps<typeof NavigationMenuTriggerPrimitive>,
+  "children"
+> & { children?: React.ReactNode }) {
   return (
-    <NavigationMenuPrimitive.Trigger
+    <NavigationMenuTriggerPrimitive
       className={cn(
         buttonVariants({ variant: "ghost" }),
-        "group/navigation-menu-trigger data-popup-open:bg-muted pointer-events-auto gap-1",
+        "group/navigation-menu-trigger data-open:bg-muted gap-1",
         className
       )}
-      data-slot="navigation-menu-trigger"
       {...props}
     >
       {children}
       <HugeIcons
         aria-hidden="true"
-        className="duration-ui transition-transform group-data-popup-open/navigation-menu-trigger:rotate-180 motion-reduce:transition-none"
+        className="duration-ui transition-transform group-data-open/navigation-menu-trigger:rotate-180 motion-reduce:transition-none"
         icon={ArrowDown01Icon}
       />
-    </NavigationMenuPrimitive.Trigger>
+    </NavigationMenuTriggerPrimitive>
   );
 }
 
 /**
- * What one section shows in the shared popup. When the reader moves to another
- * section, the old content slides out on the side it came from and the new one
- * slides in from the other side.
+ * What one section shows in the shared popup, from its corner, scrolling when it is taller than the screen leaves.
+ * When the reader moves to another section, the old content slides out on the side it came from and the new one
+ * slides in from the other side, mirrored in right-to-left text.
  */
 function NavigationMenuContent({
   className,
   ...props
-}: NavigationMenuPrimitive.Content.Props) {
+}: React.ComponentProps<typeof NavigationMenuContentPrimitive>) {
   return (
-    <NavigationMenuPrimitive.Content
+    <NavigationMenuContentPrimitive
       className={cn(
-        "duration-surface h-full w-auto p-2 transition-[opacity,translate] ease-out data-ending-style:opacity-0 data-starting-style:opacity-0 data-ending-style:data-[activation-direction=left]:translate-x-1/2 data-starting-style:data-[activation-direction=left]:-translate-x-1/2 data-ending-style:data-[activation-direction=right]:-translate-x-1/2 data-starting-style:data-[activation-direction=right]:translate-x-1/2 motion-reduce:transition-none",
+        "duration-surface absolute start-0 top-0 max-h-(--panel-height) w-max overflow-y-auto p-2 transition-[opacity,translate] ease-out data-ending-style:opacity-0 data-starting-style:opacity-0 data-[motion=from-end]:data-starting-style:translate-x-12 data-[motion=from-start]:data-starting-style:-translate-x-12 data-[motion=to-end]:data-ending-style:translate-x-12 data-[motion=to-start]:data-ending-style:-translate-x-12 motion-reduce:transition-none rtl:data-[motion=from-end]:data-starting-style:-translate-x-12 rtl:data-[motion=from-start]:data-starting-style:translate-x-12 rtl:data-[motion=to-end]:data-ending-style:-translate-x-12 rtl:data-[motion=to-start]:data-ending-style:translate-x-12",
         className
       )}
-      data-slot="navigation-menu-content"
       {...props}
     />
   );
 }
 
-/** The shared popup under the triggers, which takes the size of the open section's content. */
-function NavigationMenuPositioner({
-  align = "start",
-  alignOffset = 0,
-  className,
-  side = "bottom",
-  sideOffset = 8,
-  ...props
-}: NavigationMenuPrimitive.Positioner.Props) {
-  return (
-    <NavigationMenuPrimitive.Portal container={use(PortalContainer)}>
-      <NavigationMenuPrimitive.Positioner
-        align={align}
-        alignOffset={alignOffset}
-        className={cn(
-          "duration-surface isolate z-50 h-(--positioner-height) w-(--positioner-width) max-w-(--available-width) transition-[top,left,right,bottom] ease-out data-instant:transition-none motion-reduce:transition-none",
-          className
-        )}
-        data-slot="navigation-menu-positioner"
-        side={side}
-        sideOffset={sideOffset}
-        {...props}
-      >
-        <NavigationMenuPrimitive.Popup
-          className="bg-popover text-popover-foreground duration-surface relative h-(--popup-height) w-(--popup-width) origin-(--transform-origin) rounded-xl border shadow-md transition-[opacity,scale,width,height] ease-out outline-none data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:transition-none"
-          data-slot="navigation-menu-popup"
-        >
-          <NavigationMenuPrimitive.Viewport className="relative size-full overflow-hidden" />
-        </NavigationMenuPrimitive.Popup>
-      </NavigationMenuPrimitive.Positioner>
-    </NavigationMenuPrimitive.Portal>
-  );
-}
-
-/** One link of a section: its icon and its name, on the row a menu item draws. */
+/**
+ * One link of a section: its icon and its name, on the row a menu item draws. A link to the page the reader is on
+ * passes `current`, which marks it for screen readers and shades it.
+ */
 function NavigationMenuLink({
   className,
   ...props
-}: NavigationMenuPrimitive.Link.Props) {
+}: React.ComponentProps<typeof NavigationMenuLinkPrimitive>) {
   return (
-    <NavigationMenuPrimitive.Link
+    <NavigationMenuLinkPrimitive
       className={cn(
-        "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground hover:**:text-accent-foreground focus-visible:**:text-accent-foreground data-active:bg-muted [&_svg:not([class*='text-'])]:text-muted-foreground flex min-h-9 items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground hover:**:text-accent-foreground focus-visible:**:text-accent-foreground data-current:bg-muted [&_svg:not([class*='text-'])]:text-muted-foreground flex min-h-9 items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
-      data-slot="navigation-menu-link"
       {...props}
     />
   );

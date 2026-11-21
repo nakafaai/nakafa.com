@@ -158,14 +158,14 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
       <RowItems>
         <DropdownMenuItem
           icon={UserStar01Icon}
-          onClick={() => dialogs.show("give")}
+          onSelect={() => dialogs.show("give")}
         >
           {t("roles-assign-dialog")}
         </DropdownMenuItem>
         <DropdownMenuItem
           disabled={!grant.revocable}
           icon={UserEdit01Icon}
-          onClick={() => dialogs.show("change")}
+          onSelect={() => dialogs.show("change")}
         >
           {t("grant-change")}
         </DropdownMenuItem>
@@ -173,7 +173,7 @@ function SchoolGrantMenu({ grant }: { grant: GrantItem }) {
         <DropdownMenuItem
           disabled={!grant.revocable}
           icon={Delete02Icon}
-          onClick={() => dialogs.show("revoke")}
+          onSelect={() => dialogs.show("revoke")}
           variant="destructive"
         >
           {t("grant-revoke")}

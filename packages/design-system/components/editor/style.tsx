@@ -115,10 +115,8 @@ export function RichEditorStyle({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         className="w-44"
-        // After a pick with the pointer the caret goes back to the text.
-        finalFocus={(closed) =>
-          closed === "keyboard" ? true : (editor?.view.dom ?? true)
-        }
+        // After a pick the caret goes back to the text, where the next key lands.
+        finalFocus={() => editor?.view.dom}
         label={labels.styleMenu}
       >
         <DropdownMenuRadioGroup onValueChange={apply} value={used}>

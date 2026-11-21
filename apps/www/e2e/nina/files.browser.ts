@@ -64,7 +64,7 @@ test.describe("Files that a pick does not attach", () => {
             REJECTIONS.empty
           );
           // A refusal is never a toast, so no toast shows the names.
-          await expect(page.locator("[data-sonner-toast]")).toHaveCount(0);
+          await expect(page.locator("[data-slot=toast]")).toHaveCount(0);
         });
       })
     );

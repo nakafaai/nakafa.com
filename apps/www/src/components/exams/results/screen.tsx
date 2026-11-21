@@ -178,13 +178,13 @@ function SittingResultsContent({
                   <DropdownMenuContent align="end" label={common("menu-view")}>
                     <DropdownMenuItem
                       icon={ChartHistogramIcon}
-                      onClick={() => setQuestionsOpen(true)}
+                      onSelect={() => setQuestionsOpen(true)}
                     >
                       {common("questions")}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       icon={SecurityCheckIcon}
-                      onClick={() => setIntegrityOpen(true)}
+                      onSelect={() => setIntegrityOpen(true)}
                     >
                       {t("integrity")}
                     </DropdownMenuItem>

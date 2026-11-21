@@ -1,10 +1,8 @@
-import { Toaster } from "@repo/design-system/components/ui/sonner";
+import { Toaster } from "@repo/design-system/components/ui/toast";
 import {
   PRESS_ATTRIBUTE,
   PRESSED_ATTRIBUTE,
 } from "@repo/design-system/hooks/press";
-import { DesignSystemProvider } from "@repo/design-system/providers/system";
-import { textDirection } from "@repo/internationalization/src/direction";
 import { FORMATS } from "@repo/internationalization/src/formats";
 import { localeTimeZone } from "@repo/internationalization/src/locale";
 import {
@@ -15,7 +13,6 @@ import {
 import { Effect } from "effect";
 import type { ReactElement } from "react";
 import { useLayoutEffect } from "react";
-import { useTranslations } from "use-intl";
 import { SchoolPending } from "@/components/tenant/pending";
 import { MessagesProvider } from "@/lib/i18n/provider";
 import { SCHOOL_ENTRY_ID } from "@/lib/routing/shell";
@@ -88,23 +85,10 @@ function SchoolRoot(): ReactElement {
       now={now}
       timeZone={localeTimeZone(locale)}
     >
-      <DesignSystemProvider direction={textDirection(locale)}>
-        <div className="isolate">
-          <Outlet />
-        </div>
-        <SchoolToaster />
-      </DesignSystemProvider>
+      <div className="isolate">
+        <Outlet />
+      </div>
+      <Toaster />
     </MessagesProvider>
-  );
-}
-
-/** The toaster names its close and region labels in the school's messages. */
-function SchoolToaster(): ReactElement {
-  const t = useTranslations("Common");
-  return (
-    <Toaster
-      closeButtonAriaLabel={t("close-notification")}
-      containerAriaLabel={t("notifications")}
-    />
   );
 }

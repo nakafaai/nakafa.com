@@ -1,5 +1,8 @@
+/* UI SDK writes its popup resets into this layer at run time. Declared first, it ranks under every layer Tailwind
+ * declares, so a part's own classes always win over them. */
+@layer ui-sdk;
+
 @import "tailwindcss";
-@import "tw-animate-css";
 @import "./identity.css";
 
 @source "../../**/*.{ts,tsx}";
@@ -41,35 +44,25 @@
  */
 @custom-variant dark (&:is(.dark *));
 @custom-variant data-open {
-  &:where([data-state="open"]),
   &:where([data-open]:not([data-open="false"])) {
     @slot;
   }
 }
 
-@custom-variant data-closed {
-  &:where([data-state="closed"]),
-  &:where([data-closed]:not([data-closed="false"])) {
-    @slot;
-  }
-}
-
 @custom-variant data-checked {
-  &:where([data-state="checked"]),
   &:where([data-checked]:not([data-checked="false"])) {
     @slot;
   }
 }
 
 @custom-variant data-unchecked {
-  &:where([data-state="unchecked"]),
   &:where([data-unchecked]:not([data-unchecked="false"])) {
     @slot;
   }
 }
 
 @custom-variant data-selected {
-  &:where([data-selected="true"]) {
+  &:where([data-selected]:not([data-selected="false"])) {
     @slot;
   }
 }
@@ -82,7 +75,6 @@
 }
 
 @custom-variant data-active {
-  &:where([data-state="active"]),
   &:where([data-active]:not([data-active="false"])) {
     @slot;
   }
@@ -371,10 +363,6 @@
   --shadow-xl: var(--shadow-xl);
   /* The strongest lift. */
   --shadow-2xl: var(--shadow-2xl);
-  --animate-accordion-down: accordion-down var(--transition-duration-ui)
-    var(--ease-out);
-  --animate-accordion-up: accordion-up var(--transition-duration-ui)
-    var(--ease-out);
   --animate-marquee: marquee 60s linear infinite;
   --animate-skeleton: skeleton-shimmer 1.6s linear infinite;
 
@@ -397,26 +385,6 @@
 
     to {
       background-position: -100% 0;
-    }
-  }
-
-  @keyframes accordion-down {
-    from {
-      height: 0;
-    }
-
-    to {
-      height: var(--accordion-panel-height);
-    }
-  }
-
-  @keyframes accordion-up {
-    from {
-      height: var(--accordion-panel-height);
-    }
-
-    to {
-      height: 0;
     }
   }
 }

@@ -47,7 +47,7 @@ export function SchoolClassRestore({
     <RowItems>
       <DropdownMenuItem
         icon={ArchiveRestoreIcon}
-        onClick={() =>
+        onSelect={() =>
           startTransition(() =>
             runSchoolWrite(schoolCall(() => restore({ classId: row.id, slug })))
           )
@@ -94,20 +94,20 @@ export function SchoolClassMenu({
       <RowItems onOpenChange={setIsMenuOpen}>
         <DropdownMenuItem
           icon={UserStar01Icon}
-          onClick={() => dialogs.show("teach")}
+          onSelect={() => dialogs.show("teach")}
         >
           {t("class-teachers")}
         </DropdownMenuItem>
         <DropdownMenuItem
           icon={PencilEdit02Icon}
-          onClick={() => dialogs.show("rename")}
+          onSelect={() => dialogs.show("rename")}
         >
           {tCommon("rename")}
         </DropdownMenuItem>
         {row.subject === undefined ? null : (
           <DropdownMenuItem
             icon={Edit02Icon}
-            onClick={() => dialogs.show("subject")}
+            onSelect={() => dialogs.show("subject")}
           >
             {t("class-subject-change")}
           </DropdownMenuItem>
@@ -115,7 +115,7 @@ export function SchoolClassMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem
           icon={Archive02Icon}
-          onClick={() =>
+          onSelect={() =>
             startTransition(() =>
               runSchoolWrite(
                 schoolCall(() => archive({ classId: row.id, slug })),

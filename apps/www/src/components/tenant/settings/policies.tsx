@@ -274,7 +274,7 @@ function SchoolDomainsPolicy({ policies }: { policies: SchoolPolicies }) {
           aria-invalid={problem !== null}
           aria-label={t("policy-domains")}
           className="max-w-md"
-          onChange={(event) => setDraft(event.target.value)}
+          onValueChange={setDraft}
           placeholder={t("policy-domains-placeholder")}
           value={draft}
         />

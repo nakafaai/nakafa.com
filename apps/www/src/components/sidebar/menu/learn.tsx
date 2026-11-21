@@ -59,7 +59,7 @@ export function LearnMoreSubmenu({ children }: { children: ReactNode }) {
 }
 
 /**
- * The Learn more menu of a visitor's sidebar. It opens on hover, as the language
+ * The Learn more menu of a visitor's sidebar. It opens on a press, as the language
  * menu beside it does, and composes the same rows as the account's submenu.
  */
 export function GuestLearnMoreMenu({ children }: { children: ReactNode }) {
@@ -71,7 +71,6 @@ export function GuestLearnMoreMenu({ children }: { children: ReactNode }) {
     <SidebarMenuItem>
       <DropdownMenu>
         <DropdownMenuTrigger
-          openOnHover
           render={
             <SidebarMenuButton title={label}>
               <HugeIcons icon={InformationCircleIcon} />
@@ -107,7 +106,7 @@ export function NakafaAboutMenuItem() {
   return (
     <DropdownMenuItem
       icon={FavouriteIcon}
-      onClick={() => navigate({ params: { locale }, to: "/$locale" })}
+      onSelect={() => navigate({ params: { locale }, to: "/$locale" })}
     >
       {t("about-nakafa")}
     </DropdownMenuItem>
@@ -182,13 +181,13 @@ export function LegalMenuItems() {
     <>
       <DropdownMenuItem
         icon={FileValidationIcon}
-        onClick={() => openPage(pageNavigation.termsOfServicePath)}
+        onSelect={() => openPage(pageNavigation.termsOfServicePath)}
       >
         {tLegal("terms-of-service")}
       </DropdownMenuItem>
       <DropdownMenuItem
         icon={LockIcon}
-        onClick={() => openPage(pageNavigation.privacyPolicyPath)}
+        onSelect={() => openPage(pageNavigation.privacyPolicyPath)}
       >
         {tLegal("privacy-policy")}
       </DropdownMenuItem>

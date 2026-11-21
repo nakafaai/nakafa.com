@@ -260,14 +260,14 @@ function SchemeVersionMenu({ version }: { version: SchemeVersion }) {
       <RowItems>
         <DropdownMenuItem
           icon={PencilEdit02Icon}
-          onClick={() => dialogs.show("edit")}
+          onSelect={() => dialogs.show("edit")}
         >
           {tCommon("edit")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           icon={Delete02Icon}
-          onClick={() => dialogs.show("remove")}
+          onSelect={() => dialogs.show("remove")}
           variant="destructive"
         >
           {tCommon("delete")}

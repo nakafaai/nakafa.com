@@ -1,12 +1,20 @@
 "use client";
 
-import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
 import {
   scrollFadeVariants,
   scrollThumbVariants,
   scrollTrackVariants,
 } from "@repo/design-system/lib/scrollbar";
+import {
+  ScrollAreaContent,
+  ScrollAreaCorner,
+  ScrollArea as ScrollAreaPrimitive,
+  ScrollAreaScrollbar,
+  ScrollAreaThumb,
+  ScrollAreaViewport,
+} from "@ui-sdk/react/scroll-area";
 import { cn } from "cn";
+import type * as React from "react";
 import type { Ref, UIEventHandler } from "react";
 
 /**
@@ -26,7 +34,7 @@ function ScrollArea({
   viewportClassName,
   viewportRef,
   ...props
-}: ScrollAreaPrimitive.Root.Props & {
+}: React.ComponentProps<typeof ScrollAreaPrimitive> & {
   /** The directions the viewport scrolls in. */
   axis?: "both" | "vertical";
   /** Runs as the viewport scrolls. */
@@ -43,32 +51,30 @@ function ScrollArea({
   viewportRef?: Ref<HTMLDivElement> | undefined;
 }) {
   return (
-    <ScrollAreaPrimitive.Root
-      className={cn("relative flex size-full min-h-0 flex-col", className)}
-      data-slot="scroll-area"
+    <ScrollAreaPrimitive
+      className={cn("flex size-full min-h-0 flex-col", className)}
       {...props}
     >
-      <ScrollAreaPrimitive.Viewport
+      <ScrollAreaViewport
         className={cn(
-          "focus-visible:ring-ring focus-visible:ring-offset-background min-h-0 flex-1 rounded-[inherit] transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-offset-1 data-has-overflow-x:overscroll-x-contain data-has-overflow-y:overscroll-y-contain",
+          "focus-visible:ring-ring focus-visible:ring-offset-background min-h-0 flex-1 overscroll-contain rounded-[inherit] transition-shadow outline-none focus-visible:ring-2 focus-visible:ring-offset-1",
           scrollFade && scrollFadeVariants({ start: scrollFade === true }),
           axis === "vertical" && "overflow-x-hidden!",
           viewportClassName
         )}
-        data-slot="scroll-area-viewport"
         onScroll={onViewportScroll}
         ref={viewportRef}
       >
-        {children}
-      </ScrollAreaPrimitive.Viewport>
+        <ScrollAreaContent>{children}</ScrollAreaContent>
+      </ScrollAreaViewport>
       <ScrollBar />
       {axis === "both" ? (
         <>
           <ScrollBar orientation="horizontal" />
-          <ScrollAreaPrimitive.Corner />
+          <ScrollAreaCorner />
         </>
       ) : null}
-    </ScrollAreaPrimitive.Root>
+    </ScrollAreaPrimitive>
   );
 }
 
@@ -76,20 +82,15 @@ function ScrollBar({
   className,
   orientation = "vertical",
   ...props
-}: ScrollAreaPrimitive.Scrollbar.Props) {
+}: React.ComponentProps<typeof ScrollAreaScrollbar>) {
   return (
-    <ScrollAreaPrimitive.Scrollbar
+    <ScrollAreaScrollbar
       className={cn(scrollTrackVariants({ orientation }), className)}
-      data-orientation={orientation}
-      data-slot="scroll-area-scrollbar"
       orientation={orientation}
       {...props}
     >
-      <ScrollAreaPrimitive.Thumb
-        className={scrollThumbVariants({ orientation })}
-        data-slot="scroll-area-thumb"
-      />
-    </ScrollAreaPrimitive.Scrollbar>
+      <ScrollAreaThumb className={scrollThumbVariants({ orientation })} />
+    </ScrollAreaScrollbar>
   );
 }
 

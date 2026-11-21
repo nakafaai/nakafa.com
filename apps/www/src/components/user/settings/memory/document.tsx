@@ -24,7 +24,6 @@ import {
   MemoryOrigin,
 } from "@/components/user/settings/memory/facts";
 import {
-  focusAfterDelete,
   memoryNeighbour,
   NO_NEIGHBOUR,
 } from "@/components/user/settings/memory/focus";
@@ -90,7 +89,14 @@ function SavedWords({ markdown }: { markdown: string }) {
  * cannot load, so nothing moves when the editor arrives. `open` is false while a
  * closing editor is still on the page, and such an editor takes no focus.
  */
-export function MemoryDocument({ memory }: { memory: Memory | null }) {
+export function MemoryDocument({
+  handFocusTo,
+  memory,
+}: {
+  /** Names the memory that takes the focus when a delete closes the editor. */
+  handFocusTo: (neighbour: Option.Option<Memory["id"]>) => void;
+  memory: Memory | null;
+}) {
   const open = useMemoryPage((state) => state.open);
   const t = useTranslations("Memory");
   const labels = useTranslations("Editor");
@@ -102,18 +108,8 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
   const [draft, setDraft] = useState(starting);
   const [written, setWritten] = useState(() => !isBlank(starting));
   const [asking, setAsking] = useState(false);
-  // The memory after this one in the list, read when the learner confirms the
-  // delete. A new memory has none, so the focus goes to the Add memory button.
-  const neighbour = useRef<Option.Option<Memory["id"]>>(NO_NEIGHBOUR);
-  // Set when the learner confirms the delete, so the question gives the focus to
-  // the neighbour. Cleared each time the question opens.
-  const confirmed = useRef(false);
   const body = useRef<HTMLDivElement>(null);
   const length = Str.length(Str.trim(draft.text));
-  // A confirmed delete hands the focus to the neighbour's row. A cancelled
-  // question returns it to where it was, as the dialog does on its own.
-  const focusAfterQuestion = () =>
-    confirmed.current ? focusAfterDelete(neighbour.current) : true;
 
   /** Shows what the learner wrote and hands it to the saving. */
   function write(next: MemoryDraft) {
@@ -226,21 +222,20 @@ export function MemoryDocument({ memory }: { memory: Memory | null }) {
         </p>
         <Button
           disabled={memory === null && !written}
-          onClick={() => {
-            confirmed.current = false;
-            setAsking(true);
-          }}
+          onClick={() => setAsking(true)}
           variant="destructive"
         >
           {common("delete")}
         </Button>
       </footer>
       <MemoryDeleteDialog
-        finalFocus={focusAfterQuestion}
+        // The delete closes the editor, and the question inside it, so the focus goes on from the editor: to the
+        // memory after this one in the list, or the one before it. A new memory has none, so the focus goes to
+        // the Add memory button. A cancelled question returns the focus to where it was, as a dialog does.
         onConfirm={() => {
-          neighbour.current =
-            memory === null ? NO_NEIGHBOUR : memoryNeighbour(shown, memory.id);
-          confirmed.current = true;
+          handFocusTo(
+            memory === null ? NO_NEIGHBOUR : memoryNeighbour(shown, memory.id)
+          );
           setAsking(false);
           discard();
           close();

@@ -54,13 +54,12 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
 
   return (
     <form
-      id="user-settings-bio-form"
-      onSubmit={(event) => {
-        event.preventDefault();
+      action={() => {
         if (canSave) {
           save(text);
         }
       }}
+      id="user-settings-bio-form"
     >
       <CardSection description={t("bio-description")} title={t("bio")}>
         <CardContent>
@@ -73,7 +72,7 @@ export function UserSettingsBio({ user }: { user: CurrentUser }) {
               className="max-w-md"
               id="user-settings-bio"
               name="bio"
-              onChange={(event) => setTyped(event.target.value)}
+              onValueChange={setTyped}
               placeholder={t("bio-placeholder")}
               value={typed}
             />

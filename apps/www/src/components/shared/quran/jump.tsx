@@ -26,7 +26,7 @@ function QuranSurahOption({ surah }: { surah: typeof QuranIndexSurah.Type }) {
   return (
     <PickerItem
       icon={<QuranSurahNumber number={surah.number} />}
-      onClick={() => navigate(quranSurahTarget(surah.number))}
+      onSelect={() => navigate(quranSurahTarget(surah.number))}
       value={surah}
     >
       <span className="flex min-w-0 flex-1 flex-col">

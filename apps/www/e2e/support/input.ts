@@ -1,16 +1,9 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { Effect, Schema } from "effect";
-
-const TouchPointSchema = Schema.Struct({
-  x: Schema.Finite,
-  y: Schema.Finite,
-});
-
-type TouchPoint = typeof TouchPointSchema.Type;
+import { waitForStill } from "@/e2e/support/quiet";
 
 const ACTIVATION_PROBE_TIMEOUT_MILLISECONDS = 1000;
-const TOUCH_MOVE_STEPS = 5;
 
 /** How a press reaches its control. Unset options keep Playwright's defaults. */
 const PressOptionsSchema = Schema.Struct({
@@ -98,122 +91,19 @@ export const activateUntilVisible = Effect.fn("NakafaE2E.activateUntilVisible")(
   }
 );
 
-/** The interactive surfaces a swipe starts on. */
-const SwipeSurfaceSchema = Schema.Literals([
-  "consent-drawer",
-  "memory-question",
-]);
-
-/** One interactive surface did not expose measurable bounds for a gesture. */
-class SurfaceBoundsMissing extends Schema.TaggedError<
-  SurfaceBoundsMissing,
-  { readonly brand: unique symbol }
->()("SurfaceBoundsMissing", { surface: SwipeSurfaceSchema }) {
-  get message() {
-    return `Surface bounds are missing: surface=${this.surface}.`;
-  }
-}
-
-/** Reads the bounds a gesture starts from, failing by surface name when absent. */
-export const readBounds = Effect.fn("NakafaE2E.readBounds")(function* (
-  locator: Locator,
-  surface: typeof SwipeSurfaceSchema.Type
-) {
-  const bounds = yield* Effect.promise(() => locator.boundingBox());
-  if (!bounds) {
-    return yield* new SurfaceBoundsMissing({ surface });
-  }
-  return bounds;
-});
-
-/** Dispatches one real touch drag while always releasing its CDP session. */
-const dragTouch = Effect.fn("NakafaE2E.dragTouch")(function* (
-  page: Page,
-  start: TouchPoint,
-  end: TouchPoint
-) {
-  yield* Effect.acquireUseRelease(
-    Effect.promise(() => page.context().newCDPSession(page)),
-    (session) =>
-      Effect.gen(function* () {
-        yield* Effect.promise(() =>
-          session.send("Input.dispatchTouchEvent", {
-            touchPoints: [start],
-            type: "touchStart",
-          })
-        );
-        for (let step = 1; step <= TOUCH_MOVE_STEPS; step += 1) {
-          yield* Effect.promise(() =>
-            session.send("Input.dispatchTouchEvent", {
-              touchPoints: [
-                {
-                  x: start.x + ((end.x - start.x) * step) / TOUCH_MOVE_STEPS,
-                  y: start.y + ((end.y - start.y) * step) / TOUCH_MOVE_STEPS,
-                },
-              ],
-              type: "touchMove",
-            })
-          );
-        }
-        yield* Effect.promise(() =>
-          session.send("Input.dispatchTouchEvent", {
-            touchPoints: [],
-            type: "touchEnd",
-          })
-        );
-      }),
-    (session) => Effect.promise(() => session.detach())
-  );
-});
-
-/** How far a swipe travels once its touch starts, in CSS pixels. */
-const SWIPE_DISTANCE = 320;
-
-/** The rectangle of one surface, in CSS pixels. */
-const SurfaceBoundsSchema = Schema.Struct({
-  height: Schema.Finite,
-  width: Schema.Finite,
-  x: Schema.Finite,
-  y: Schema.Finite,
-});
-
-type SurfaceBounds = typeof SurfaceBoundsSchema.Type;
-
-/** Where a downward swipe starts and which edge stops it. */
-const SwipeDownSchema = Schema.Struct({
-  /** Pixels below the surface's top edge where the touch starts. */
-  inset: Schema.Finite,
-  /**
-   * The edge that stops the swipe: the viewport's bottom, or the surface's
-   * bottom less four pixels.
-   */
-  stopAt: Schema.Literals(["surface", "viewport"]),
-});
-
-type SwipeDown = typeof SwipeDownSchema.Type;
-
 /**
- * Swipes down through the middle of a surface, the way a learner dismisses a
- * drawer. The touch starts `inset` pixels below the top edge and travels
- * `SWIPE_DISTANCE` pixels, or until `stopAt` allows.
+ * Swipes a sheet down and away, the way a reader dismisses it on a touch screen. There the sheet stands in a host that
+ * scrolls (UI SDK's scroll-snap driver, `data-driver="scroll-snap"`), and a swipe down scrolls the host to its top,
+ * which carries the sheet out of sight. Playwright drives no touch scroll in every engine, so the host is scrolled
+ * there as the swipe leaves it. The sheet must stand still first, since it slides up as it opens.
  */
-export const swipeDown = Effect.fn("NakafaE2E.swipeDown")(function* (
-  page: Page,
-  bounds: SurfaceBounds,
-  swipe: SwipeDown
-) {
-  const x = bounds.x + bounds.width / 2;
-  const startY = bounds.y + swipe.inset;
-  const stopY =
-    swipe.stopAt === "viewport"
-      ? (page.viewportSize()?.height ?? 844)
-      : bounds.y + bounds.height - 4;
-  yield* dragTouch(
-    page,
-    { x, y: startY },
-    { x, y: Math.min(startY + SWIPE_DISTANCE, stopY) }
+export async function swipeAway(sheet: Locator) {
+  await waitForStill(sheet);
+  await expect(sheet).toHaveAttribute("data-driver", "scroll-snap");
+  await sheet.evaluate((element) =>
+    element.parentElement?.scrollTo({ top: 0 })
   );
-});
+}
 
 /**
  * Scrolls the page until the element sits at `block` in the viewport, the way

@@ -6,14 +6,7 @@ import { Array as Arr, Effect, HashSet, Record as Rec, Schema } from "effect";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { appRoutes, waitForServedRoute } from "@/e2e/support/route";
-import {
-  DRAWER_HANDLE,
-  DRAWER_PANEL,
-  DRAWER_POPUP,
-  DRAWER_TITLE,
-  SHEET_POPUP,
-  SURAH_SIDEBAR_TRIGGER,
-} from "@/e2e/support/selector";
+import { SHEET_POPUP, SURAH_SIDEBAR_TRIGGER } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -105,8 +98,8 @@ function quranMeaningLocator(
   );
 }
 
-const verifyQuranInterpretationDrawer = Effect.fn(
-  "NakafaE2E.verifyQuranInterpretationDrawer"
+const verifyQuranInterpretationDialog = Effect.fn(
+  "NakafaE2E.verifyQuranInterpretationDialog"
 )(function* (page: Page) {
   const response = yield* Effect.promise(() =>
     page.goto(appRoutes.quranSurahId, { waitUntil: "domcontentloaded" })
@@ -128,22 +121,17 @@ const verifyQuranInterpretationDrawer = Effect.fn(
   );
   yield* Effect.promise(() => trigger.click());
 
-  const drawer = page.locator(DRAWER_POPUP);
+  // The tafsir opens in one dialog on every screen (ResponsiveDialog), named by its title.
+  const dialog = page.getByRole("dialog", { name: "Tafsir" });
   yield* Effect.promise(() =>
-    expect(drawer).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+    expect(dialog).toBeVisible({ timeout: readinessTimeoutMilliseconds })
   );
   yield* Effect.promise(() =>
-    expect(drawer.locator(DRAWER_HANDLE)).toBeVisible()
-  );
-  yield* Effect.promise(() =>
-    expect(drawer.locator(DRAWER_TITLE)).toHaveText("Tafsir")
-  );
-  yield* Effect.promise(() =>
-    expect(drawer.locator(DRAWER_PANEL)).not.toBeEmpty()
+    expect(dialog.locator('[data-slot="dialog-panel"]')).not.toBeEmpty()
   );
 
   yield* Effect.promise(() => page.keyboard.press("Escape"));
-  yield* Effect.promise(() => expect(drawer).toHaveCount(0));
+  yield* Effect.promise(() => expect(dialog).toHaveCount(0));
 
   // The header's folded path holds the index. Back must bring the surah again
   // with that menu closed, or its backdrop would take the next tap.
@@ -171,10 +159,10 @@ const verifyQuranInterpretationDrawer = Effect.fn(
   yield* Effect.promise(() => expect(trigger).toHaveCSS("opacity", "1"));
   yield* Effect.promise(() => trigger.click());
   yield* Effect.promise(() =>
-    expect(drawer).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+    expect(dialog).toBeVisible({ timeout: readinessTimeoutMilliseconds })
   );
   yield* Effect.promise(() => page.keyboard.press("Escape"));
-  yield* Effect.promise(() => expect(drawer).toHaveCount(0));
+  yield* Effect.promise(() => expect(dialog).toHaveCount(0));
 });
 
 const verifyQuranLocaleCoverage = Effect.fn(
@@ -270,9 +258,16 @@ const verifyQuranLocaleCoverage = Effect.fn(
   const interpretationActions = page.locator(
     "[data-quran-interpretation-verse], [data-quran-interpretation-link]"
   );
+  // A tafsir button's tooltip names it from the page (`aria-labelledby`), and a link names itself.
   const interpretationNames = yield* Effect.promise(() =>
     interpretationActions.evaluateAll((elements) =>
-      elements.map((element) => element.getAttribute("aria-label"))
+      elements.map((element) => {
+        const label = element.getAttribute("aria-labelledby");
+        return label
+          ? (document.querySelector(`#${CSS.escape(label)}`)?.textContent ??
+              null)
+          : element.getAttribute("aria-label");
+      })
     )
   );
   yield* Effect.sync(() => {
@@ -398,11 +393,11 @@ const verifyQuranLocaleCoverage = Effect.fn(
 test.describe("Quran source and tafsir coverage", () => {
   test.use({ viewport: { height: 844, width: 390 } });
 
-  test("keeps the tafsir drawer content and dismissal behavior", async ({
+  test("keeps the tafsir dialog's content and dismissal behavior", async ({
     page,
   }) => {
     await Effect.runPromise(
-      withObservedPageErrors(page, verifyQuranInterpretationDrawer(page))
+      withObservedPageErrors(page, verifyQuranInterpretationDialog(page))
     );
   });
 

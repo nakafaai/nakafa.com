@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { chooseDay } from "@/e2e/support/date";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   grantStudent,
@@ -51,7 +52,7 @@ async function publishTask(page: Page) {
   // The deadline is a day from the calendar and a time from the list, with no native picker.
   await chooseDay(page, dialog.getByLabel("Deadline"), "2027-10-30");
   await dialog.getByRole("combobox", { name: "Time" }).click();
-  await page.getByRole("option", { name: LATE_EVENING }).click();
+  await pressInPopup(page.getByRole("option", { name: LATE_EVENING }));
   await dialog.getByRole("button", { name: "Publish" }).click();
   await expect(dialog).toBeHidden();
 }
@@ -129,7 +130,7 @@ for (const viewport of [
       .filter({ hasText: "Latihan Gerak Lurus" })
       .getByRole("button", { name: "More actions" })
       .click();
-    await page.getByRole("menuitem", { name: "Delete task" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Delete task" }));
     const confirm = page.getByRole("dialog", { name: "Delete this task" });
     await confirm.getByRole("button", { name: "Delete task" }).click();
     await expect(page.getByText("No task yet")).toBeVisible({
@@ -178,7 +179,9 @@ test("a student's work stays in the field after a hand-in, and Hand in keeps its
     .click();
   const placeDialog = settings.getByRole("dialog");
   await placeDialog.getByRole("combobox", { name: "Student" }).click();
-  await settings.getByRole("option", { name: "Acceptance Learner" }).click();
+  await pressInPopup(
+    settings.getByRole("option", { name: "Acceptance Learner" })
+  );
   await placeDialog.getByRole("button", { name: "Add student" }).click();
   await expect(
     settings.getByRole("row").filter({ hasText: "Acceptance Learner" })
@@ -202,9 +205,9 @@ test("a student's work stays in the field after a hand-in, and Hand in keeps its
     .fill("Kerjakan soal 1 lagi.");
   await chooseDay(tasks, part.getByLabel("Deadline"), "2027-10-30");
   await part.getByRole("combobox", { name: "Time" }).click();
-  await tasks.getByRole("option", { name: LATE_EVENING }).click();
+  await pressInPopup(tasks.getByRole("option", { name: LATE_EVENING }));
   await part.getByRole("combobox", { name: "Who gets it" }).click();
-  await tasks.getByRole("option", { name: "Some students" }).click();
+  await pressInPopup(tasks.getByRole("option", { name: "Some students" }));
   const publish = part.getByRole("button", { name: "Publish" });
   await expect(publish).toBeDisabled();
   await part.getByRole("checkbox", { name: "Acceptance Learner" }).click();

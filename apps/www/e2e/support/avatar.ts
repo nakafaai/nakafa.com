@@ -2,9 +2,14 @@ import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-/** The avatar of the account button in the sidebar footer, which holds the animal until a photo loads. */
+/**
+ * The avatar of the account button in the sidebar footer, which holds the animal until a photo loads. The account
+ * menu renders beside its button and draws the avatar again, so the button is named, not the footer alone.
+ */
 export function sidebarAvatar(page: Page) {
-  return page.locator('[data-sidebar="footer"] [data-slot="avatar"]');
+  return page.locator(
+    '[data-sidebar="footer"] [data-sidebar="menu-button"] [data-slot="avatar"]'
+  );
 }
 
 /** The Select of the profile picture card that chooses the animal or the Google photo. */

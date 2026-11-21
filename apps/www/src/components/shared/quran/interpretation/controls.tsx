@@ -37,7 +37,7 @@ interface Props {
   surahNumber: number;
 }
 /** Reads the exact verse identity selected by one tafsir button. */
-function getVerseNumber(button: HTMLButtonElement) {
+function getVerseNumber(button: HTMLElement) {
   const verseNumber = Number(button.dataset.quranInterpretationVerse);
   if (!Number.isSafeInteger(verseNumber) || verseNumber < 1) {
     return null;
@@ -78,7 +78,7 @@ export function QuranInterpretationControls({
     },
     [close, toastId]
   );
-  const selectInterpretation = (event: MouseEvent<HTMLButtonElement>) => {
+  const selectInterpretation = (event: MouseEvent<HTMLElement>) => {
     const verseNumber = getVerseNumber(event.currentTarget);
     if (verseNumber === null) {
       return;

@@ -140,7 +140,7 @@ function SittingProctorActions({
         >
           <DropdownMenuItem
             icon={CancelCircleIcon}
-            onClick={() => onOpen("close")}
+            onSelect={() => onOpen("close")}
             variant="destructive"
           >
             {t("close-sitting")}

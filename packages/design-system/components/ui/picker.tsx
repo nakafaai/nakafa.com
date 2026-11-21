@@ -1,40 +1,27 @@
-import type { Autocomplete as AutocompletePrimitive } from "@base-ui/react/autocomplete";
-import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer";
-import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
-import { useMediaQuery } from "@base-ui/react/unstable-use-media-query";
-import { Search02Icon, Tick01Icon } from "@hugeicons/core-free-icons";
+import { Tick01Icon } from "@hugeicons/core-free-icons";
 import {
-  Autocomplete,
-  AutocompleteEmpty,
-  AutocompleteInput,
-  AutocompleteItem,
-  AutocompleteList,
-} from "@repo/design-system/components/ui/autocomplete";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-} from "@repo/design-system/components/ui/drawer";
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@repo/design-system/components/ui/command";
 import {
   HugeIcons,
   OptionIcon,
 } from "@repo/design-system/components/ui/huge-icons";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
+  createPopoverController,
   Popover,
   PopoverContent,
+  PopoverTitle,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
-import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
-import { cva } from "class-variance-authority";
+import { Array as Arr, HashMap, Option } from "effect";
 import type { ComponentProps, ReactNode } from "react";
-import { createContext, use, useRef, useState } from "react";
+import { createContext, use, useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
-
-/** Where a picker's list opens: a popover under its trigger on a wide screen, a drawer on a phone. */
-type Surface = "drawer" | "popover";
 
 /**
  * A search the server answers: the text of the box, which the caller reads its options by, and its change. The
@@ -45,14 +32,18 @@ interface ServerSearch {
   readonly text: string;
 }
 
-/** What every part of a picker reads: where its list opens, how it closes, and the server's search, if any. */
+/** What every part of a picker reads: how it closes, and the server's search, if any. */
 interface PickerState {
   readonly search: ServerSearch | undefined;
   readonly setOpen: (open: boolean) => void;
-  readonly surface: Surface;
 }
 
 const PickerContext = createContext<PickerState | null>(null);
+
+/** The words the search matches each option by, keyed by the option the caller drew it from. */
+const PickerLabelsContext = createContext<HashMap.HashMap<unknown, string>>(
+  HashMap.empty()
+);
 
 /** Reads the picker around a part. Every part renders inside `Picker`, so a missing one is a composition error. */
 function usePicker() {
@@ -63,72 +54,11 @@ function usePicker() {
   return picker;
 }
 
-const pickerSearchVariants = cva("", {
-  variants: {
-    surface: {
-      drawer: "shrink-0 px-4 pb-3",
-      popover: "shrink-0",
-    },
-  },
-});
-
-const pickerInputVariants = cva("", {
-  variants: {
-    surface: {
-      drawer: "",
-      popover:
-        "focus-visible:border-border rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:ring-0",
-    },
-  },
-});
-
-const pickerScrollVariants = cva("", {
-  variants: {
-    surface: {
-      drawer: "flex-1",
-      popover: "max-h-72",
-    },
-  },
-});
-
-const pickerLabelVariants = cva("text-muted-foreground text-xs", {
-  variants: {
-    surface: {
-      drawer: "px-4 pt-1 pb-1",
-      popover: "px-3 pt-2.5 pb-0.5",
-    },
-  },
-});
-
-const pickerListVariants = cva("", {
-  variants: {
-    surface: {
-      drawer: "p-2 not-empty:p-2",
-      popover: "p-1 not-empty:p-1",
-    },
-  },
-});
-
-const pickerItemVariants = cva(
-  "group/picker-item icon-first-line text-sm sm:text-sm",
-  {
-    variants: {
-      surface: {
-        drawer: "min-h-11 py-3 sm:min-h-11",
-        popover: "min-h-8 py-1.5 sm:min-h-8",
-      },
-    },
-  }
-);
-
 /**
- * One searchable choice among many: a trigger, and the list it opens with a search field at its top. On a wide
- * screen the list opens in a popover under the trigger; on a phone it opens in a drawer, which closes by its handle,
- * a swipe or a press outside, as every drawer does. Choosing an option closes the picker, and closing it empties a
- * search the server answers, so the next opening starts from the whole list.
- *
- * The screen's width is read through the browser's media query as an external store, so a picker the server renders
- * hydrates as the drawer the server drew, then becomes the popover on a wide screen before the first paint.
+ * One searchable choice among many: a trigger, and the list it opens with a search field at its top. On a wide or a
+ * mouse screen the list opens in a popover under the trigger; on a phone it rises from the bottom as a sheet, which
+ * closes as every sheet does, by its handle, a swipe or a press outside. Choosing an option closes the picker, and
+ * closing it empties a search the server answers, so the next opening starts from the whole list.
  */
 function Picker({
   children,
@@ -136,39 +66,39 @@ function Picker({
   search,
 }: {
   children: ReactNode;
-  /** Opens the picker as it mounts, for a picker whose code the press that opens it loads. */
+  /**
+   * Opens the picker as it mounts, for a picker whose code the press that opens it loads. It opens from code, so its
+   * search takes the focus, as it does when a press opens it.
+   */
   defaultOpen?: boolean | undefined;
   /** The server's search, for a list too long to send at once. Without it the picker filters its own options. */
   search?: ServerSearch | undefined;
 }) {
-  const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp, {});
-  const [open, setOpen] = useState(defaultOpen);
+  const [open, setOpen] = useState(false);
+  const [controller] = useState(createPopoverController);
   const change = (next: boolean) => {
     setOpen(next);
     if (!next) {
       search?.onTextChange("");
     }
   };
-  const state = {
-    search,
-    setOpen: change,
-    surface: isDesktop ? "popover" : "drawer",
-  } satisfies PickerState;
 
-  if (isDesktop) {
-    return (
-      <PickerContext value={state}>
-        <Popover onOpenChange={change} open={open}>
-          {children}
-        </Popover>
-      </PickerContext>
-    );
-  }
+  useEffect(() => {
+    if (defaultOpen) {
+      controller.setOpen(true);
+    }
+  }, [controller, defaultOpen]);
+
   return (
-    <PickerContext value={state}>
-      <Drawer onOpenChange={change} open={open}>
+    <PickerContext value={{ search, setOpen: change }}>
+      <Popover
+        controller={controller}
+        onOpenChange={change}
+        open={open}
+        presentation="auto"
+      >
         {children}
-      </Drawer>
+      </Popover>
     </PickerContext>
   );
 }
@@ -177,79 +107,17 @@ function Picker({
  * The button that opens the picker, which shows what is chosen. It renders the caller's element through `render`,
  * such as an outline Button, so the trigger looks like the field or the header button it stands for.
  */
-function PickerTrigger(
-  props: Omit<
-    PopoverPrimitive.Trigger.Props,
-    "closeDelay" | "delay" | "handle" | "openOnHover" | "payload"
-  >
-) {
-  const { surface } = usePicker();
-  if (surface === "popover") {
-    return <PopoverTrigger data-slot="picker-trigger" {...props} />;
-  }
-  return <DrawerTrigger data-slot="picker-trigger" {...props} />;
+function PickerTrigger(props: ComponentProps<typeof PopoverTrigger>) {
+  return <PopoverTrigger {...props} />;
 }
 
 /**
- * The popover or the drawer the list opens in. The popover is as wide as its trigger, and never narrower than a
- * row of options needs. The drawer stands at one height whatever the list holds, so the search field never moves
- * while the list filters; a keyboard that opens over it leaves the rows room to scroll above it. A press focuses the
- * search field, and a touch focuses the drawer itself, so no keyboard covers the list before the learner asks for it.
- */
-function PickerSurface({ children }: { children: ReactNode }) {
-  const { surface } = usePicker();
-  const body = useRef<HTMLDivElement>(null);
-
-  if (surface === "popover") {
-    return (
-      <PopoverContent
-        align="start"
-        className="w-(--anchor-width) max-w-(--available-width) min-w-72 gap-0 p-0"
-      >
-        {children}
-      </PopoverContent>
-    );
-  }
-  return (
-    <DrawerPrimitive.VirtualKeyboardProvider>
-      <DrawerContent
-        className="[--drawer-content-height:calc(100dvh-6rem)]"
-        initialFocus={(type) => (type === "touch" ? body.current : true)}
-      >
-        <div
-          className="flex min-h-0 flex-1 flex-col outline-none"
-          ref={body}
-          tabIndex={-1}
-        >
-          {children}
-        </div>
-      </DrawerContent>
-    </DrawerPrimitive.VirtualKeyboardProvider>
-  );
-}
-
-/** The one word over the options that names what is chosen, which also names the popover or the drawer. */
-function PickerLabel({ children }: { children: string }) {
-  const { surface } = usePicker();
-  if (surface === "popover") {
-    return (
-      <PopoverPrimitive.Title className={pickerLabelVariants({ surface })}>
-        {children}
-      </PopoverPrimitive.Title>
-    );
-  }
-  return (
-    <DrawerPrimitive.Title className={pickerLabelVariants({ surface })}>
-      {children}
-    </DrawerPrimitive.Title>
-  );
-}
-
-/**
- * The list a picker opens: the search field at the top, then the label and the options under it. The options are
- * the caller's rows, one `PickerItem` each. A list with no option says so in one sentence, in the middle of the
- * list, and while the first page of a server's list is read it shows a spinner instead. A list read a page at a
- * time loads its next page as its end comes into view.
+ * The list a picker opens: the search field at the top, then the label and the options under it. The options are the
+ * caller's rows, one `PickerItem` each. The popover is as wide as its trigger, and never narrower than a row of
+ * options needs; the sheet stands at one height whatever the list holds, so the search field never moves while the
+ * list filters. A list with no option says so in one sentence, in the middle of the list, and while the first page of
+ * a server's list is read it shows a spinner instead. A list read a page at a time loads its next page as its end
+ * comes into view or into the keys' reach.
  */
 function PickerContent<Item>({
   children,
@@ -267,84 +135,78 @@ function PickerContent<Item>({
   /** The one sentence the list shows when it holds no option. */
   empty: string;
   items: readonly Item[];
-  /** The text the search field matches an option by, and reads aloud for it. */
+  /** The words the search field matches an option by. */
   itemToStringValue: (item: Item) => string;
   /** The one word, read from a `menu-` key, that names what is chosen. */
   label: string;
   /** The longest text the search field takes. */
   maxLength?: number | undefined;
-  /** Loads the next page as the end of the list comes into view; left out once the list holds every option. */
+  /** Loads the next page as the end of the list comes into reach; left out once the list holds every option. */
   onEnd?: (() => void) | undefined;
   /** What the search field shows while empty, which says what to search for. */
   placeholder: string;
   /** Whether the first page of the list is still being read, which shows a spinner in place of `empty`. */
   waiting?: boolean | undefined;
 }) {
-  const { search, surface } = usePicker();
+  const { search } = usePicker();
   const common = useTranslations("Common");
+  const labels = HashMap.fromIterable(
+    Arr.map(items, (item) => [item, itemToStringValue(item)] as const)
+  );
 
   return (
-    <PickerSurface>
-      <Autocomplete
-        autoHighlight="always"
-        filter={search === undefined ? undefined : null}
-        inline
-        items={items}
-        itemToStringValue={itemToStringValue}
-        keepHighlight
-        onValueChange={search?.onTextChange}
-        open
-        value={search?.text}
-      >
-        <div className={pickerSearchVariants({ surface })}>
-          <AutocompleteInput
-            className={pickerInputVariants({ surface })}
+    <PopoverContent
+      align="start"
+      className="max-h-[min(var(--available-height),26rem)] w-(--anchor-width) max-w-(--available-width) min-w-72 gap-0 overflow-hidden p-0 data-[presentation=sheet]:h-[calc(100dvh-6rem)] data-[presentation=sheet]:max-h-none"
+    >
+      <PickerLabelsContext value={labels}>
+        <Command
+          {...(search === undefined
+            ? {}
+            : {
+                filter: false,
+                onQueryChange: search.onTextChange,
+                query: search.text,
+              })}
+          {...(onEnd === undefined ? {} : { onLoadMore: onEnd })}
+          status={waiting ? "loading" : "idle"}
+        >
+          <CommandInput
+            className="h-9"
             clearLabel={common("clear-search")}
-            enterKeyHint="search"
             maxLength={maxLength}
             placeholder={placeholder}
-            showClear
-            size={surface === "drawer" ? "lg" : "default"}
-            startAddon={<HugeIcons icon={Search02Icon} />}
           />
-        </div>
-        <ScrollArea
-          axis="vertical"
-          className={pickerScrollVariants({ surface })}
-          scrollFade
-        >
-          <PickerLabel>{label}</PickerLabel>
-          <AutocompleteList
-            className={pickerListVariants({ surface })}
-            scrollArea={false}
-          >
-            {children}
-          </AutocompleteList>
-          <AutocompleteEmpty className="not-empty:flex not-empty:justify-center not-empty:px-4 not-empty:py-6">
-            {waiting ? <Spinner /> : empty}
-          </AutocompleteEmpty>
-          {onEnd === undefined ? null : <Intersection onIntersect={onEnd} />}
-        </ScrollArea>
-      </Autocomplete>
-    </PickerSurface>
+          <PopoverTitle className="text-muted-foreground border-t px-3 pt-2.5 pb-0.5 text-xs font-normal">
+            {label}
+          </PopoverTitle>
+          <CommandList className="p-1 [[data-presentation=sheet]_&]:p-2">
+            {Arr.map(items, children)}
+          </CommandList>
+          <CommandEmpty>{waiting ? <Spinner /> : empty}</CommandEmpty>
+        </Command>
+      </PickerLabelsContext>
+    </PopoverContent>
   );
 }
 
 /**
  * One option of a picker: the icon of its kind, the same icon the sidebar or the page uses for it, the caller's words,
  * and a tick on the chosen one, or the option's own value at its end in the tick's place. Choosing it runs the
- * caller's `onClick`, then closes the picker.
+ * caller's `onSelect`, by pointer, keys or an agent alike, then closes the picker.
  */
 function PickerItem({
   children,
+  disabled,
   end,
   icon,
-  onClick,
+  onSelect,
   selected = false,
-  ...props
-}: Pick<AutocompletePrimitive.Item.Props, "disabled" | "onClick" | "value"> & {
+  value,
+}: {
   /** The words of the option, such as a name and a fact under it. */
   children: ReactNode;
+  disabled?: boolean | undefined;
   /**
    * What the option ends with, such as an attempt's score. It stands where the tick would, so the end stays one
    * column; the trigger already names the chosen option.
@@ -352,20 +214,29 @@ function PickerItem({
   end?: ReactNode;
   /** The icon of the option's kind: a Hugeicons icon, or an element such as a flag. */
   icon: ComponentProps<typeof OptionIcon>["icon"];
+  /** What choosing the option does. */
+  onSelect?: (() => void) | undefined;
   /** Whether the option is the chosen one, which shows its tick. */
   selected?: boolean | undefined;
+  /** The option the caller drew this row from, among the picker's `items`. */
+  value: unknown;
 }) {
-  const { setOpen, surface } = usePicker();
+  const { setOpen } = usePicker();
+  const label = Option.getOrUndefined(
+    HashMap.get(use(PickerLabelsContext), value)
+  );
 
   return (
-    <AutocompleteItem
-      className={pickerItemVariants({ surface })}
+    <CommandItem
+      className="group/picker-item rounded-sm"
       data-chosen={selected ? "" : undefined}
-      onClick={(event) => {
-        onClick?.(event);
+      disabled={disabled === true}
+      size="default"
+      {...(label === undefined ? {} : { label })}
+      onSelect={() => {
+        onSelect?.();
         setOpen(false);
       }}
-      {...props}
     >
       <OptionIcon icon={icon} />
       <span className="flex min-w-0 flex-1 items-center gap-2">{children}</span>
@@ -375,7 +246,7 @@ function PickerItem({
           icon={Tick01Icon}
         />
       )}
-    </AutocompleteItem>
+    </CommandItem>
   );
 }
 

@@ -96,9 +96,9 @@ for (const viewport of sidebarViewports) {
             name: "Learn more",
           });
           yield* Effect.promise(() => expect(learnMoreButton).toBeVisible());
-          // A hover opens the menu only once React has taken the button over.
+          // A press opens the menu only once React has taken the button over.
           yield* Effect.promise(() => waitUntilTakenOver(learnMoreButton));
-          yield* Effect.promise(() => learnMoreButton.hover());
+          yield* Effect.promise(() => learnMoreButton.click());
           const privacyPolicy = page.getByRole("menuitem", {
             exact: true,
             name: "Privacy Policy",
@@ -125,7 +125,7 @@ for (const viewport of sidebarViewports) {
               languageButton.locator('[data-slot="language-menu-indicator"]')
             ).toBeVisible()
           );
-          yield* Effect.promise(() => languageButton.hover());
+          yield* Effect.promise(() => languageButton.click());
           yield* Effect.promise(() =>
             expect(
               page.getByRole("menuitem", {

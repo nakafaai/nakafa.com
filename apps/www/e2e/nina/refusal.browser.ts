@@ -8,16 +8,11 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect, Schema } from "effect";
-import {
-  composerOf,
-  GERMAN,
-  noticeWith,
-  write,
-} from "@/e2e/support/attachment";
+import { composerOf, GERMAN, write } from "@/e2e/support/attachment";
 import { onThePage, openChatPage, runOnPage, START } from "@/e2e/support/chat";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { waitForSlide } from "@/e2e/support/layout";
-import { SHEET_POPUP } from "@/e2e/support/selector";
+import { noticeWith, SHEET_POPUP } from "@/e2e/support/selector";
 import { UNCONFIRMED_TOAST } from "@/e2e/support/sheet";
 
 /**
@@ -170,9 +165,7 @@ test.describe("A prompt in a conversation at 390px", () => {
  * notice overlaps the text box and the send button, in square pixels.
  */
 const readCover = (notice: HTMLElement, names: readonly string[]) => {
-  const form = document.querySelector(
-    '[data-slot="sheet-popup"][data-open] form'
-  );
+  const form = document.querySelector('[data-surface="sheet"][data-open] form');
   if (!form) {
     return null;
   }
@@ -189,8 +182,17 @@ const readCover = (notice: HTMLElement, names: readonly string[]) => {
     return Math.max(0, width) * Math.max(0, height);
   };
   const [input, send] = names;
+  const sendButton =
+    Array.from(form.querySelectorAll("button")).find((button) => {
+      const labelledBy = button.getAttribute("aria-labelledby");
+      const label =
+        (labelledBy
+          ? document.querySelector(`#${CSS.escape(labelledBy)}`)?.textContent
+          : null) ?? button.getAttribute("aria-label");
+      return label?.trim() === send;
+    }) ?? null;
   return {
-    send: covered(form.querySelector(`button[aria-label="${send}"]`)),
+    send: covered(sendButton),
     text: covered(form.querySelector(`textarea[aria-label="${input}"]`)),
   };
 };
@@ -239,7 +241,6 @@ for (const { failure, reason, sentence } of GERMAN_REFUSALS) {
           // The notice slides into place; its place is read once it stopped.
           yield* Effect.promise(async () => {
             await expect(notice).toBeVisible();
-            await expect(notice).toHaveAttribute("data-mounted", "true");
           });
           yield* waitForSlide(notice);
 

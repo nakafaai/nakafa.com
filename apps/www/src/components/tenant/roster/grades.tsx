@@ -104,7 +104,7 @@ function RosterGradeItem({ cohort }: { cohort: GradeCohort }) {
   return (
     <DropdownMenuItem
       icon={UserMultiple02Icon}
-      onClick={() => download(cohort)}
+      onSelect={() => download(cohort)}
     >
       {cohort.name}
     </DropdownMenuItem>

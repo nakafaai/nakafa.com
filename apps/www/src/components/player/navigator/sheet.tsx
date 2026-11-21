@@ -58,10 +58,9 @@ export function PlayerSheet({
       open={overlay === "navigator"}
     >
       <DrawerContent
-        finalFocus={!landed}
+        finalFocus={landed ? "none" : "trigger"}
         initialFocus={() =>
-          body.current?.querySelector<HTMLElement>('[aria-current="step"]') ??
-          true
+          body.current?.querySelector<HTMLElement>('[aria-current="step"]')
         }
       >
         <PaneModeContext value={{ close, place: "sheet" }}>

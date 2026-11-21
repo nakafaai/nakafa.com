@@ -282,7 +282,7 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
         >
           <DropdownMenuItem
             icon={Delete02Icon}
-            onClick={() => setConfirmDelete(true)}
+            onSelect={() => setConfirmDelete(true)}
             variant="destructive"
           >
             {t("delete")}

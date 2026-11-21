@@ -108,7 +108,7 @@ export function RichEditorLink({
         align="start"
         className="w-72 p-2"
         // The focus goes back to the text, never to the control, so the caret is where the next key lands.
-        finalFocus={() => editor?.view.dom ?? true}
+        finalFocus={() => editor?.view.dom}
       >
         {/* The field checks no address itself: the editor decides, and says why it refused. */}
         <form

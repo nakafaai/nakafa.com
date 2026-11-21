@@ -1,5 +1,5 @@
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import de from "@repo/internationalization/dictionaries/de.json" with {
   type: "json",
 };
@@ -12,6 +12,13 @@ import id from "@repo/internationalization/dictionaries/id.json" with {
 import ms from "@repo/internationalization/dictionaries/ms.json" with {
   type: "json",
 };
+
+/**
+ * The alerts a page or a part of it shows. UI SDK keeps a live region of its own for what it announces, an empty
+ * `role="alert"` until it speaks (`data-ui-sdk-announcer`), which is no alert of the page, so it is left out.
+ */
+export const shownAlerts = (scope: Page | Locator) =>
+  scope.getByRole("alert").and(scope.locator(":not([data-ui-sdk-announcer])"));
 
 /** The site's messages in each of its languages. */
 const MESSAGES = { de, en, id, ms } satisfies Record<
@@ -36,20 +43,41 @@ export const MARKDOWN_MARKUP = "em, strong, code, pre, a, ul, ol, h1, h2, h3";
  * The list that holds the toasts. They stack over the page and move on their
  * own, so a toast moving is not the page moving.
  */
-export const TOASTER = "[data-sonner-toaster]";
-/** The popup of a drawer, which a phone opens for the consent and contributor surfaces. */
-export const DRAWER_POPUP = '[data-slot="drawer-popup"]';
-/** The handle at the top of a drawer, which a swipe drags. */
-export const DRAWER_HANDLE = '[data-slot="drawer-swipe-handle"]';
-/** The title of a drawer, which names the surface a learner opened. */
-export const DRAWER_TITLE = '[data-slot="drawer-title"]';
-/** The content panel of a drawer, below its title. */
-export const DRAWER_PANEL = '[data-slot="drawer-panel"]';
+export const TOASTER = "[data-slot=toast-region]";
+/** A drawer's surface, which rises from the screen's edge over the page. */
+export const DRAWER_CONTENT = '[data-slot="drawer-content"]';
+/**
+ * The dialog on top. A popup renders where it is written, so a dialog that a
+ * control inside another dialog opens, such as a phone's sheet, renders inside
+ * that dialog and comes after it in the page.
+ */
+export function topDialog(page: Page) {
+  return page.getByRole("dialog").last();
+}
+/**
+ * The toasts on the page that contain `text`. A toast's words are also in the
+ * live region that announces it to a screen reader, so a toast is read from the
+ * toast itself, never from the page's text.
+ */
+export function noticeWith(page: Page, text: string) {
+  return page.locator("[data-slot=toast]").filter({ hasText: text });
+}
+/**
+ * The tooltip that shows. Every tooltip stays in the page, hidden, from the first HTML, since it names or describes
+ * its trigger (`@ui-sdk/react/docs/components/tooltip.md`), so only the open one is selected.
+ */
+export const TOOLTIP = '[data-slot="tooltip-content"][data-open]';
+/**
+ * The header's open section. The navigation menu's viewport stays in the page while every section is closed
+ * (without `data-open`), so only the open one is selected.
+ */
+export const HEADER_SECTION =
+  '[data-slot="navigation-menu-viewport"][data-open]';
 /**
  * The popup of an open sheet, which a learner opens from the side of a page.
  * Nina's sheet stays mounted while closed, so only the open one is selected.
  */
-export const SHEET_POPUP = '[data-slot="sheet-popup"][data-open]';
+export const SHEET_POPUP = '[data-surface="sheet"][data-open]';
 /** A deferred MathVisual scene inside a lesson card, plane or space. */
 export const MATH_SCENE = '[data-scene="math"]';
 /** The actions band of a 3D scene: its own actions, then play, reset and full screen. */
@@ -58,7 +86,7 @@ export const SCENE_ACTIONS = "[data-scene-actions]";
 export const SURAH_SIDEBAR_TRIGGER =
   'header [data-slot="page-actions"] button[data-sidebar="trigger"]';
 /** The sidebar trigger that a narrow viewport shows, which opens the sidebar. */
-export const VISIBLE_SIDEBAR_TRIGGER = '[data-slot="sidebar-trigger"]:visible';
+export const VISIBLE_SIDEBAR_TRIGGER = '[data-sidebar="trigger"]:visible';
 /** The main element of a marketing page, which marks the page as one. */
 export const MARKETING_PAGE = 'main[data-marketing-page="true"]';
 /** The Nina part of the homepage, which holds its own composer. */

@@ -23,7 +23,7 @@ function readAsymmetry({
   const MOST = 60;
   const MARKER_TEXT = new RegExp(marker, "u");
   const CONTROL =
-    '[role="radio"], [role="checkbox"], [role="switch"], input[type="radio"], input[type="checkbox"], [data-slot="radio"], [data-slot="checkbox"], [data-slot="switch"]';
+    '[role="radio"], [role="checkbox"], [role="switch"], input[type="radio"], input[type="checkbox"], [data-slot="radio"], [data-slot="radio-mark"], [data-slot="checkbox"], [data-slot="switch"]';
   const BUTTON = "button, a, [role='button']";
   const FIELD = "input, textarea, select, [contenteditable='true']";
   const PLACEHOLDER = ".is-editor-empty[data-placeholder]";

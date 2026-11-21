@@ -140,25 +140,25 @@ const panesVariants = cva("min-h-0 w-full [--pane-end:1.5rem]", {
   compoundVariants: [
     {
       className:
-        "max-md:[&>[data-separator]]:hidden! max-md:[&>[data-separator]~[data-panel]]:hidden!",
+        "max-md:[&>[data-slot=resizable-handle]]:hidden! max-md:[&>[data-slot=resizable-handle]~[data-slot=resizable-panel]]:hidden!",
       keeps: "first",
       wideFrom: "md",
     },
     {
       className:
-        "max-lg:[&>[data-separator]]:hidden! max-lg:[&>[data-separator]~[data-panel]]:hidden!",
+        "max-lg:[&>[data-slot=resizable-handle]]:hidden! max-lg:[&>[data-slot=resizable-handle]~[data-slot=resizable-panel]]:hidden!",
       keeps: "first",
       wideFrom: "lg",
     },
     {
       className:
-        "max-lg:[&>[data-panel]:first-child]:hidden! max-lg:[&>[data-separator]]:hidden!",
+        "max-lg:[&>[data-slot=resizable-handle]]:hidden! max-lg:[&>[data-slot=resizable-panel]:first-child]:hidden!",
       keeps: "second",
       wideFrom: "lg",
     },
     {
       className:
-        "max-xl:[&>[data-panel]:first-child]:hidden! max-xl:[&>[data-separator]]:hidden!",
+        "max-xl:[&>[data-slot=resizable-handle]]:hidden! max-xl:[&>[data-slot=resizable-panel]:first-child]:hidden!",
       keeps: "second",
       wideFrom: "xl",
     },

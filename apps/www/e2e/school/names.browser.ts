@@ -42,6 +42,8 @@ async function invite(page: Page, name: string, email: string) {
   await dialog.getByLabel("Name", { exact: true }).fill(name);
   await dialog.getByLabel("Email", { exact: true }).fill(email);
   await dialog.getByRole("button", { exact: true, name: "Invite" }).click();
+  // The dialog leaves from inside the header, where its own Invite would match the next invite's.
+  await expect(dialog).toHaveCount(0);
   await expect(page.getByText(name, { exact: true })).toBeVisible();
 }
 

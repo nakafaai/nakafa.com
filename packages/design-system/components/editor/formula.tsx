@@ -2,13 +2,10 @@ import {
   FormulaEdit,
   FormulaMarkup,
 } from "@repo/design-system/components/editor/edit";
+import { EditorNodeView } from "@repo/design-system/components/editor/node";
 import { useRequired } from "@repo/design-system/hooks/required";
 import type { ReactNodeViewProps } from "@tiptap/react";
-import {
-  NodeViewWrapper,
-  ReactNodeViewRenderer,
-  useEditorState,
-} from "@tiptap/react";
+import { ReactNodeViewRenderer, useEditorState } from "@tiptap/react";
 import { Option } from "effect";
 import type { ComponentProps, ReactNode } from "react";
 import { createContext } from "react";
@@ -67,7 +64,7 @@ function FormulaNode({
   );
 
   return (
-    <NodeViewWrapper
+    <EditorNodeView
       as={block ? "div" : "span"}
       contentEditable={false}
       data-formula={block ? "block" : "inline"}
@@ -97,7 +94,7 @@ function FormulaNode({
       ) : (
         <FormulaMarkup block={block} latex={latex} />
       )}
-    </NodeViewWrapper>
+    </EditorNodeView>
   );
 }
 

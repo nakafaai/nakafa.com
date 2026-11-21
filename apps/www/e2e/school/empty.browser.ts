@@ -79,7 +79,10 @@ async function expectEmptyPages(
         page.locator('[data-slot="page-header"]'),
         label
       ).toBeVisible();
-      await expect(page.locator(DRAWN).first(), label).toBeVisible({
+      await expect(
+        page.locator(DRAWN).filter({ visible: true }).first(),
+        label
+      ).toBeVisible({
         timeout: readinessTimeoutMilliseconds,
       });
       await expect(

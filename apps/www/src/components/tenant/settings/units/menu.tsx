@@ -59,7 +59,7 @@ export function UnitMenu({ unit }: { unit: Unit }) {
         {isArchived ? (
           <DropdownMenuItem
             icon={ArchiveRestoreIcon}
-            onClick={() =>
+            onSelect={() =>
               startTransition(() =>
                 runSchoolWrite(
                   schoolCall(() => restore({ slug, unitId: unit.id }))
@@ -73,14 +73,14 @@ export function UnitMenu({ unit }: { unit: Unit }) {
           <>
             <DropdownMenuItem
               icon={PencilEdit02Icon}
-              onClick={() => dialogs.show("edit")}
+              onSelect={() => dialogs.show("edit")}
             >
               {common("edit")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               icon={Archive02Icon}
-              onClick={() => dialogs.show("archive")}
+              onSelect={() => dialogs.show("archive")}
               variant="destructive"
             >
               {common("archive")}

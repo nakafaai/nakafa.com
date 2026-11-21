@@ -40,9 +40,9 @@ import {
 } from "@repo/design-system/components/ui/select";
 import {
   Sheet,
-  SheetContent,
   SheetFooter,
   SheetHeader,
+  SheetPopup,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { Array as Arr, Option, Schema } from "effect";
@@ -364,7 +364,7 @@ export function QuestionsSheet({
 
   return (
     <Sheet onOpenChange={onOpenChange} open={open}>
-      <SheetContent size="xl">
+      <SheetPopup size="xl">
         <SheetHeader className="flex-row items-center gap-3 pe-12">
           <HugeIcons icon={ChartHistogramIcon} />
           <SheetTitle>{common("questions")}</SheetTitle>
@@ -425,7 +425,7 @@ export function QuestionsSheet({
             </TableFiltersProvider>
           ),
         })}
-      </SheetContent>
+      </SheetPopup>
     </Sheet>
   );
 }

@@ -1,7 +1,8 @@
 import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
+import { EditorNodeView } from "@repo/design-system/components/editor/node";
 import { useRequired } from "@repo/design-system/hooks/required";
 import type { NodeViewProps } from "@tiptap/react";
-import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
+import { ReactNodeViewRenderer } from "@tiptap/react";
 import { cn } from "cn";
 import type { ComponentType, ReactNode } from "react";
 import { createContext, use } from "react";
@@ -52,7 +53,7 @@ function FigureNode({
   const Figure = use(FigureViewContext);
 
   return (
-    <NodeViewWrapper
+    <EditorNodeView
       className={cn("relative rounded-lg", selected && "ring-primary ring-2")}
       contentEditable={false}
       data-figure=""
@@ -69,7 +70,7 @@ function FigureNode({
           <Figure />
         </FigureNodeContext>
       )}
-    </NodeViewWrapper>
+    </EditorNodeView>
   );
 }
 

@@ -48,7 +48,7 @@ export function SittingKeypad({
       onOpenChange={(next, details) => {
         const inField =
           details.reason === "outside-press" &&
-          details.event.target instanceof Node &&
+          details.event?.target instanceof Node &&
           field.current?.contains(details.event.target) === true;
         if (!inField) {
           setOpen(next);
@@ -73,8 +73,8 @@ export function SittingKeypad({
       <PopoverContent
         align="end"
         className="w-auto max-w-(--available-width) p-2"
-        finalFocus={false}
-        initialFocus={false}
+        finalFocus="none"
+        initialFocus="none"
       >
         {keys === "digits" ? (
           <ArabicNumberPad onKey={typeKey} />

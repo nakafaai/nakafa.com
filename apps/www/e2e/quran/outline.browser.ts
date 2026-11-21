@@ -64,9 +64,7 @@ const verifyVerseActive = Effect.fn("NakafaE2E.verifyVerseActive")(function* (
     href,
     readinessTimeoutMilliseconds
   );
-  const outline = page.locator(
-    '[data-side="right"] [data-slot="sidebar-content"]'
-  );
+  const outline = page.locator('[data-side="right"] [data-sidebar="content"]');
   const entry = outline.getByRole("link", { exact: true, name: "Verse 200" });
   yield* Effect.promise(() => entry.click());
   yield* Effect.promise(() =>

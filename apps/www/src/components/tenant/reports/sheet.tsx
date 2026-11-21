@@ -247,7 +247,7 @@ function ReportLineMenu({ line }: { line: ReportLine }) {
         {menu.write ? (
           <DropdownMenuItem
             icon={PencilEdit02Icon}
-            onClick={() => setIsWriting(true)}
+            onSelect={() => setIsWriting(true)}
           >
             {t("write")}
           </DropdownMenuItem>
@@ -284,7 +284,7 @@ function ReportStateItems({
       {menu.complete ? (
         <DropdownMenuItem
           icon={SentIcon}
-          onClick={() => actions.complete(report.id)}
+          onSelect={() => actions.complete(report.id)}
         >
           {t("complete")}
         </DropdownMenuItem>
@@ -292,7 +292,7 @@ function ReportStateItems({
       {menu.reopen ? (
         <DropdownMenuItem
           icon={ArrowTurnBackwardIcon}
-          onClick={() => actions.reopen(report.id)}
+          onSelect={() => actions.reopen(report.id)}
         >
           {t("reopen")}
         </DropdownMenuItem>
@@ -300,7 +300,7 @@ function ReportStateItems({
       {menu.approve ? (
         <DropdownMenuItem
           icon={CheckmarkCircle02Icon}
-          onClick={() => actions.approve(report.id)}
+          onSelect={() => actions.approve(report.id)}
         >
           {t("approve")}
         </DropdownMenuItem>
@@ -308,7 +308,7 @@ function ReportStateItems({
       {menu.lock ? (
         <DropdownMenuItem
           icon={RefreshIcon}
-          onClick={() => actions.approve(report.id)}
+          onSelect={() => actions.approve(report.id)}
         >
           {t("lock-again")}
         </DropdownMenuItem>

@@ -2,7 +2,7 @@ import type { IconSvgElement } from "@hugeicons/react";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva } from "class-variance-authority";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { use } from "react";
 import type { HeadAlign } from "@/components/shared/table/align";
 import { HeadAlignContext } from "@/components/shared/table/align";
@@ -41,8 +41,9 @@ export function TableHeadButton({
   ...props
 }: Omit<
   ComponentProps<typeof Button>,
-  "className" | "size" | "tooltip" | "variant"
+  "children" | "className" | "size" | "tooltip" | "variant"
 > & {
+  readonly children: ReactNode;
   readonly active?: boolean;
   readonly align?: typeof HeadAlign.Type;
   readonly icon: IconSvgElement;

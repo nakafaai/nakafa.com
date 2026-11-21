@@ -5,7 +5,7 @@ import { createContext } from "react";
 interface QuranInterpretationContextValue {
   isActive: boolean;
   pendingVerseNumber: number | null;
-  selectInterpretation: MouseEventHandler<HTMLButtonElement>;
+  selectInterpretation: MouseEventHandler<HTMLElement>;
 }
 
 export const QuranInterpretationContext =

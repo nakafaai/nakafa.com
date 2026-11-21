@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import { Effect } from "effect";
 import { live } from "@/e2e/support/changes";
 import { CHAT_PAGE, openChatPage } from "@/e2e/support/chat";
+import { pressInPopup } from "@/e2e/support/popup";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 export const OLD = "Limits of sine";
@@ -23,7 +24,7 @@ export const startRename = async (page: Page) => {
     .locator(`${CHAT_PAGE} header`)
     .getByRole("button", { name: "More actions" })
     .click();
-  await page.getByRole("menuitem", { name: "Rename chat" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Rename chat" }));
   await expect(editorOf(page)).toBeFocused();
   await page.keyboard.press("ControlOrMeta+a");
 };

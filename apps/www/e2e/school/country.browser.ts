@@ -44,8 +44,12 @@ for (const viewport of [
     const card = page
       .locator('[data-slot="card"]')
       .filter({ hasText: "Country and currency" });
-    const country = card.getByLabel("Country", { exact: true });
-    const currency = card.getByLabel("Currency", { exact: true });
+    // Each picker's popup renders beside its button and takes the same name, so the button is found by its role.
+    const country = card.getByRole("button", { exact: true, name: "Country" });
+    const currency = card.getByRole("button", {
+      exact: true,
+      name: "Currency",
+    });
     await waitUntilTakenOver(country);
     await expect(country).toContainText("Indonesia");
     await expect.poll(() => drawsFlag(country)).toBe(true);

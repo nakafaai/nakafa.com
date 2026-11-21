@@ -195,7 +195,7 @@ test("every search placeholder shows whole in every language: a table page's box
   // From 1024 px the box stands in the header at its narrowest, before it widens at 1280 px.
   await page.setViewportSize({ height: 800, width: 1024 });
   await page.goto(address("/settings/members"));
-  const box = '[data-slot="input-group-control"][aria-label="Find a name"]';
+  const box = '[data-input-group="control"][aria-label="Find a name"]';
   await expect(page.locator(box)).toBeVisible();
   // Chrome keeps a fieldset's content at its own height unless the group allows less, which cuts every line in it.
   expect(
@@ -220,7 +220,7 @@ test("every search placeholder shows whole in every language: a table page's box
     await waitUntilTakenOver(open);
     await open.click();
     const popover =
-      '[data-slot="popover-content"] [data-slot="input-group-control"]';
+      '[data-slot="popover-content"] [data-input-group="control"]';
     await expect(page.locator(popover)).toBeVisible();
     expect(
       await Effect.runPromise(cutPlaceholders(page, popover, tables)),
@@ -239,7 +239,7 @@ test("every search placeholder shows whole in every language: a table page's box
       .locator('[data-mobile="true"][data-slot="sidebar"]')
       .getByRole("button", { name: "Search the school..." })
       .click();
-    const palette = '[role="dialog"] [data-slot="autocomplete-input"]';
+    const palette = '[role="dialog"] [data-slot="command-input"]';
     await expect(page.locator(palette)).toBeVisible();
     expect(
       await Effect.runPromise(cutPlaceholders(page, palette, palettes)),

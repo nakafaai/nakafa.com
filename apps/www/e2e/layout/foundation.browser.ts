@@ -49,7 +49,7 @@ const headerPills = (page: Page) =>
         shown(button) &&
         button.closest('[data-slot="button-group"]') === null &&
         button.closest("nav") === null &&
-        button.getAttribute("aria-label") !== "Toggle Sidebar"
+        !button.matches('[data-sidebar="trigger"]')
     );
     return groups.length + alone.length;
   });

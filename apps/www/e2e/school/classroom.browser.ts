@@ -7,6 +7,7 @@ import {
   signInClassTeacher,
   signInOwner,
 } from "@/e2e/support/school";
+import { TOOLTIP } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -24,7 +25,7 @@ const TABS = [
   // New announcement stands alone as the primary, and the poll stands in the header's one group.
   // Home's views stand once the class has loaded, so its header is read only after them.
   { groups: 1, name: "Home", part: "toggle-group", viewGap: 12 },
-  { groups: 0, name: "Forum", part: "resizable-panel-group", viewGap: null },
+  { groups: 0, name: "Forum", part: "resizable", viewGap: null },
   // The library's search and New folder read as one group, so a phone's header holds two controls.
   { groups: 1, name: "Library", part: "table-card", viewGap: 12 },
   { groups: 0, name: "Tasks", part: "table-card", viewGap: null },
@@ -52,7 +53,7 @@ const overflowOf = (page: Page) =>
     const frame = tabs?.getBoundingClientRect();
     const parts = Array.from(
       document.querySelectorAll(
-        'main [data-slot="table-card"], main [data-slot="resizable-panel-group"]'
+        'main [data-slot="table-card"], main [data-slot="resizable"]'
       ),
       (part) => part.getBoundingClientRect()
     ).filter((box) => box.width > 0);
@@ -65,7 +66,7 @@ const overflowOf = (page: Page) =>
       (card) => {
         const box = card.getBoundingClientRect();
         const table = card
-          .querySelector('[data-slot="table-container"]')
+          .querySelector('[data-table="container"]')
           ?.getBoundingClientRect();
         return {
           border: Number.parseFloat(getComputedStyle(card).borderBottomWidth),
@@ -75,14 +76,16 @@ const overflowOf = (page: Page) =>
       }
     );
     // The header holds the path and two controls at most: a button standing alone, or one group of the
-    // actions that belong together, as the library's search and New folder do.
+    // actions that belong together, as the library's search and New folder do. The sidebar's toggle at its start
+    // belongs to the sidebar, not to the page.
     const header = document.querySelector('header[data-slot="page-header"]');
     const alone = Array.from(
       header?.querySelectorAll('[data-slot="button"]') ?? []
     ).filter(
       (button) =>
         button.closest("nav") === null &&
-        button.closest('[data-slot="button-group"]') === null
+        button.closest('[data-slot="button-group"]') === null &&
+        !button.matches('[data-sidebar="trigger"]')
     );
     const groups =
       header?.querySelectorAll('[data-slot="button-group"]').length ?? 0;
@@ -247,7 +250,9 @@ test("the school's Owner writes in a class's forum and adds to its library, as a
   await field.fill("Selamat pagi, kelas Fisika.");
   await field.press("Enter");
   await expect(
-    page.getByTestId("forum-list").getByText("Selamat pagi, kelas Fisika.")
+    page
+      .getByRole("region", { name: "Messages" })
+      .getByText("Selamat pagi, kelas Fisika.")
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
 
   await page.goto(address("/classes/fisika-x-1/library"));
@@ -285,9 +290,7 @@ test("the selects of New task open with a one-word label and an icon on every op
       if (width === 390) {
         // A phone's header shows New task as its plus alone, and its name in a tooltip.
         await create.hover();
-        await expect(page.locator('[data-slot="tooltip-content"]')).toHaveText(
-          "New task"
-        );
+        await expect(page.locator(TOOLTIP)).toHaveText("New task");
         await page.screenshot({
           path: info.outputPath(`tooltip-new-task-${width}-${scheme}.png`),
         });

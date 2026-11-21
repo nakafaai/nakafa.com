@@ -2,12 +2,12 @@ import {
   editorTask,
   editorTaskWords,
 } from "@repo/design-system/components/editor/frame";
+import { EditorNodeView } from "@repo/design-system/components/editor/node";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { lineMark } from "@repo/design-system/lib/mark";
 import type { ReactNodeViewProps } from "@tiptap/react";
 import {
   NodeViewContent,
-  NodeViewWrapper,
   ReactNodeViewRenderer,
   useEditorState,
 } from "@tiptap/react";
@@ -26,7 +26,7 @@ function TaskNode({ editor, node, updateAttributes }: ReactNodeViewProps) {
   });
 
   return (
-    <NodeViewWrapper className={editorTask()}>
+    <EditorNodeView className={editorTask()}>
       <span className={lineMark()} contentEditable={false}>
         <Checkbox
           aria-labelledby={words}
@@ -37,7 +37,7 @@ function TaskNode({ editor, node, updateAttributes }: ReactNodeViewProps) {
         />
       </span>
       <NodeViewContent className={editorTaskWords()} id={words} />
-    </NodeViewWrapper>
+    </EditorNodeView>
   );
 }
 

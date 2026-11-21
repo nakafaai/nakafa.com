@@ -17,7 +17,7 @@ import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 /** A bottom sheet that runs the window's width and rests at its bottom, one even inset off its edges. */
 function readSheetProblems(page: Page) {
   return page.evaluate(() => {
-    const sheet = document.querySelector('[data-slot="drawer-popup"]');
+    const sheet = document.querySelector('[data-slot="drawer-content"]');
     if (sheet === null) {
       return ["no sheet opened"];
     }
@@ -90,7 +90,7 @@ test("a connector's detail opens at the screen's right edge on a desktop and as 
       await expect(page.locator("[data-pane-side]")).toBeVisible();
       expect(await readFrameProblems(page)).toEqual([]);
     } else {
-      await expect(page.locator('[data-slot="drawer-popup"]')).toBeVisible();
+      await expect(page.locator('[data-slot="drawer-content"]')).toBeVisible();
       // The sheet slides up from the bottom, so it is read where it comes to rest.
       await expect.poll(() => readSheetProblems(page)).toEqual([]);
     }

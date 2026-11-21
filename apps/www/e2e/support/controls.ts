@@ -143,7 +143,8 @@ function readPartRadii(page: Page) {
       )
       .map((group) =>
         Array.from(group.children)
-          .filter(seen)
+          // A popup renders beside its trigger, in the top layer while open, and is no part of the group.
+          .filter((part) => seen(part) && !part.hasAttribute("popover"))
           .map((part) => {
             const shown = part.hasAttribute("data-slot")
               ? part
@@ -170,7 +171,7 @@ const OPEN_OVERLAY =
 
 /** What is open and not on its way out. */
 const STAYS_OPEN =
-  '[role="menu"]:not([data-closed]):visible, [role="dialog"]:not([data-closed]):visible, [data-slot="popover-content"]:not([data-closed]):visible';
+  '[role="menu"][data-open]:not([data-ending-style]):visible, [role="dialog"][data-open]:not([data-ending-style]):visible, [data-slot="popover-content"][data-open]:not([data-ending-style]):visible';
 
 /**
  * The owner's rule (31 Oct): a control never changes shape on any state. Takes one control of a group through hover,

@@ -2,12 +2,10 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { pressTool, TOOLBAR } from "@/e2e/support/toolbar";
 
 /** The address of an exam's editor on the school host. */
 const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
-
-/** The toolbar that the editor draws above the question text. */
-const TOOLBAR = '[data-slot="editor-toolbar"]';
 
 /** Kitābun, "a book", as the keypad types it: kaf with fatha, ta, alif, ba with dammatan. */
 const KITABUN = "كَتَابٌ";
@@ -36,9 +34,14 @@ test("a teacher writes an Arabic word with its harakat into an Indonesian questi
   await page.keyboard.type("Apa arti kata ini?");
   await page.keyboard.press("Enter");
 
-  const toolbar = page.locator(TOOLBAR);
-  const keyboard = toolbar.getByRole("button", { name: "Arabic keyboard" });
-  await keyboard.click();
+  // A phone's row has no room for the keyboard's control, so it is pressed under More there, as a teacher does. The
+  // control drawn where it was pressed, in the row or under More, says that the keypad is open.
+  await pressTool(page, "Arabic keyboard");
+  const keyboard = page.locator(TOOLBAR).first().getByRole("button", {
+    includeHidden: true,
+    name: "Arabic keyboard",
+    pressed: true,
+  });
   const keypad = page.locator('[data-slot="arabic-keypad"]');
   await expect(keypad).toBeVisible();
   // The keys draw in Amiri Quran, which holds the tatweel each mark sits on and the marks: its block display keeps
@@ -55,7 +58,7 @@ test("a teacher writes an Arabic word with its harakat into an Indonesian questi
       )
     )
     .toBe(true);
-  await expect(keyboard).toHaveAttribute("aria-pressed", "true");
+  await expect(keyboard).toHaveCount(1);
 
   // Each key types at the caret, and the text keeps the focus.
   for (const key of ["ك", "Fatha", "ت", "Fatha", "ا", "ب", "Dammatan"]) {

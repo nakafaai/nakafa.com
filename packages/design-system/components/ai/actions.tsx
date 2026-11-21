@@ -1,6 +1,6 @@
-import type { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
+import type { Button as ButtonPrimitive } from "@ui-sdk/react/button";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 
@@ -23,7 +23,7 @@ export function Action({
   children,
   label,
   ...props
-}: ButtonPrimitive.Props & {
+}: ComponentProps<typeof ButtonPrimitive> & {
   /** The action in words. */
   label: string;
 }) {

@@ -48,10 +48,17 @@ function readFacts() {
     const box = element.getBoundingClientRect();
     return box.width > 0 && box.height > 0;
   };
-  const name = (element: HTMLElement) =>
-    element.getAttribute("aria-label") ??
-    element.textContent?.trim().slice(0, 24) ??
-    element.tagName;
+  const name = (element: HTMLElement) => {
+    const labelledBy = element.getAttribute("aria-labelledby");
+    return (
+      (labelledBy
+        ? document.querySelector(`#${CSS.escape(labelledBy)}`)?.textContent
+        : null) ??
+      element.getAttribute("aria-label") ??
+      element.textContent?.trim().slice(0, 24) ??
+      element.tagName
+    );
+  };
   const controls = Array.from(
     document.querySelectorAll<HTMLElement>(
       'main button, main input, main textarea, main [role="combobox"]'
@@ -105,6 +112,12 @@ function readFacts() {
     links: Array.from(
       document.querySelectorAll<HTMLAnchorElement>("a[href]")
     ).map((link) => link.href),
+    // A label whose `for` names no control, such as the root of a composed field, leaves the control unnamed.
+    orphans: Array.from(
+      document.querySelectorAll<HTMLLabelElement>("label[for]")
+    )
+      .filter((label) => label.control === null)
+      .map((label) => label.textContent.trim().slice(0, 24)),
     problems: [...problems, ...stubs],
     sideways:
       document.documentElement.scrollWidth -
@@ -124,7 +137,10 @@ function followPopup({ popups, span }: { popups: string; span: number }) {
     const tick = (now: number) => {
       const popup = Array.from(document.querySelectorAll<HTMLElement>(popups))
         .filter(
-          (one) => one.offsetHeight > 0 && !one.hasAttribute("data-closed")
+          (one) =>
+            one.offsetHeight > 0 &&
+            one.hasAttribute("data-open") &&
+            !one.hasAttribute("data-ending-style")
         )
         .at(-1);
       if (
@@ -148,7 +164,12 @@ function followPopup({ popups, span }: { popups: string; span: number }) {
 /** What the popup on top holds, or `null` when no popup stands. The page serializes this function. */
 function readPopup(popups: string) {
   const popup = Array.from(document.querySelectorAll<HTMLElement>(popups))
-    .filter((one) => one.offsetHeight > 0 && !one.hasAttribute("data-closed"))
+    .filter(
+      (one) =>
+        one.offsetHeight > 0 &&
+        one.hasAttribute("data-open") &&
+        !one.hasAttribute("data-ending-style")
+    )
     .at(-1);
   if (popup === undefined) {
     return null;
@@ -169,7 +190,18 @@ function readPopup(popups: string) {
         button.textContent.trim()
       )
     ).length,
-    closes: popup.querySelectorAll('[data-slot="sheet-close"]').length,
+    closes: popup.querySelectorAll('[data-slot="dialog-close"]').length,
+    orphans: Array.from(popup.querySelectorAll<HTMLLabelElement>("label[for]"))
+      .filter((label) => label.control === null)
+      .map((label) => label.textContent.trim().slice(0, 24)),
+    // A popup renders beside its trigger (`@ui-sdk/react/docs/popups.md`), so a link, a button or a label around it
+    // would take its presses as their own, and a form around one that holds a form would take its submit.
+    caught:
+      popup.parentElement?.closest("a[href], button, label, summary")
+        ?.tagName ?? null,
+    nestedForm:
+      popup.querySelector("form") !== null &&
+      popup.parentElement?.closest("form") !== null,
     inside:
       box.left >= -1 &&
       box.top >= -1 &&
@@ -177,7 +209,7 @@ function readPopup(popups: string) {
       box.bottom <= window.innerHeight + 1,
     items: popup.querySelectorAll('[role^="menuitem"], [role="option"]').length,
     labels: Array.from(
-      popup.querySelectorAll<HTMLElement>('[data-slot="dropdown-menu-label"]')
+      popup.querySelectorAll<HTMLElement>('[data-slot="menu-group-label"]')
     ).flatMap((label) =>
       // The account menu's face, its name and role beside its picture, stands under the menu's own label.
       label.querySelector('[data-slot="avatar"]') === null
@@ -192,7 +224,10 @@ function readPopup(popups: string) {
         label.getBoundingClientRect().height >
         Number.parseFloat(getComputedStyle(label).lineHeight) * 1.5
     ).length,
-    slot: popup.getAttribute("data-slot") ?? "",
+    slot:
+      popup.getAttribute("data-surface") ??
+      popup.getAttribute("data-slot") ??
+      "",
     // The popup, or a body that scrolls inside it, that is wider than its frame and lets the reader scroll sideways.
     // A body that clips sideways (overflow-x hidden) scrolls down only. A table's own scroll inside its card is the
     // table's, which may scroll sideways (docs/adr/0021-rules.md, "Overlays scroll downwards only").
@@ -203,7 +238,7 @@ function readPopup(popups: string) {
           '[data-slot="scroll-area-viewport"]'
         )
       ).filter(
-        (viewport) => viewport.closest('[data-slot="table-container"]') === null
+        (viewport) => viewport.closest('[data-table="container"]') === null
       ),
     ].some(
       (box) =>
@@ -221,19 +256,28 @@ const expectWhole = (
   expect.soft(popup.inside, `${label}: stands inside the screen`).toBe(true);
   expect.soft(popup.wide, `${label}: never scrolls sideways`).toBe(false);
   expect.soft(popup.broken, `${label}: breaks no field label`).toBe(0);
-  if (popup.slot === "sheet-popup") {
+  expect
+    .soft(popup.orphans, `${label}: every label names its control`)
+    .toEqual([]);
+  expect
+    .soft(popup.caught, `${label}: sits in no link, button or label`)
+    .toBeNull();
+  expect
+    .soft(popup.nestedForm, `${label}: holds no form inside another`)
+    .toBe(false);
+  if (popup.slot === "sheet") {
     expect.soft(popup.footer, `${label}: has a footer`).toBe(true);
   }
   expect
     .soft(popup.repeats, `${label}: repeats no close in its footer`)
     .toBe(0);
-  if (popup.slot === "sheet-popup") {
+  if (popup.slot === "sheet") {
     expect.soft(popup.closes, `${label}: closes from its corner only`).toBe(1);
   }
   if (popup.slot === "select-content") {
     expect.soft(popup.items, `${label}: holds an item`).toBeGreaterThan(0);
   }
-  if (popup.slot !== "dropdown-menu-content") {
+  if (popup.slot !== "menu-content") {
     return;
   }
   expect.soft(popup.items, `${label}: holds an item`).toBeGreaterThan(0);
@@ -254,12 +298,15 @@ const nameOf = (trigger: Locator) =>
     .evaluate(
       (control) => {
         const side =
-          control.closest(
-            '[data-slot="sidebar-content"], [data-slot="sidebar"]'
-          ) === null
+          control.closest('[data-sidebar="content"], [data-slot="sidebar"]') ===
+          null
             ? ""
             : "sidebar ";
+        const labelledBy = control.getAttribute("aria-labelledby");
         const words =
+          (labelledBy
+            ? document.querySelector(`#${CSS.escape(labelledBy)}`)?.textContent
+            : null) ??
           control.getAttribute("aria-label") ??
           control.textContent?.trim().slice(0, 32) ??
           "";
@@ -308,7 +355,10 @@ const pressTrigger = async (
     .waitForFunction(
       (popups) =>
         Array.from(document.querySelectorAll<HTMLElement>(popups)).every(
-          (one) => one.offsetHeight === 0 || one.hasAttribute("data-closed")
+          (one) =>
+            one.offsetHeight === 0 ||
+            !one.hasAttribute("data-open") ||
+            one.hasAttribute("data-ending-style")
         ),
       POPUPS,
       { timeout: PRESS_TIMEOUT_MILLISECONDS }
@@ -395,6 +445,9 @@ export const walkSchool = async (
     await page.waitForLoadState("networkidle");
     const facts = await page.evaluate(readFacts);
     expect.soft(facts.problems, `${shape}: stands apart`).toEqual([]);
+    expect
+      .soft(facts.orphans, `${shape}: every label names its control`)
+      .toEqual([]);
     expect
       .soft(
         await page.evaluate(readTallRows),

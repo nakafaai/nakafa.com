@@ -77,7 +77,7 @@ export function ExamMenu() {
             <DropdownMenuGroup>
               <DropdownMenuItem
                 icon={FileImportIcon}
-                onClick={() => setDialog("import")}
+                onSelect={() => setDialog("import")}
               >
                 {common("import")}
               </DropdownMenuItem>
@@ -85,7 +85,7 @@ export function ExamMenu() {
                 <DropdownMenuItem
                   disabled={isPending}
                   icon={Copy01Icon}
-                  onClick={press}
+                  onSelect={press}
                 >
                   {t("duplicate-action")}
                 </DropdownMenuItem>
@@ -124,7 +124,7 @@ function DeleteExamItem({ onPress }: { onPress: () => void }) {
       <DropdownMenuGroup>
         <DropdownMenuItem
           icon={Delete02Icon}
-          onClick={onPress}
+          onSelect={onPress}
           variant="destructive"
         >
           {t("delete-action")}
@@ -146,8 +146,8 @@ export function ExamMenuFrame() {
       <Button aria-label={t("try-action")} disabled>
         <TryAsStudentLabel />
       </Button>
-      <DropdownMenu disabled>
-        <SplitMenuTrigger />
+      <DropdownMenu>
+        <SplitMenuTrigger disabled />
       </DropdownMenu>
     </ButtonGroup>
   );

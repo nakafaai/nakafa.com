@@ -125,7 +125,7 @@ export function AddMenu() {
           <DropdownMenuItem
             icon={SHAPE_ICON[kind]}
             key={kind}
-            onClick={() => addShape(kind)}
+            onSelect={() => addShape(kind)}
           >
             {label(SHAPE_NAME[kind])}
           </DropdownMenuItem>
@@ -133,7 +133,7 @@ export function AddMenu() {
         <DropdownMenuItem
           disabled={full}
           icon={SlidersHorizontalIcon}
-          onClick={addSlider}
+          onSelect={addSlider}
         >
           {t("figure-slider-add")}
         </DropdownMenuItem>
@@ -165,13 +165,16 @@ function ShapeMenu({ shape }: { readonly shape: ShapeDraft }) {
         <HugeIcons aria-hidden="true" icon={MoreHorizontalIcon} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" label={common("menu-actions")}>
-        <DropdownMenuItem icon={Copy01Icon} onClick={() => copyShape(shape.id)}>
+        <DropdownMenuItem
+          icon={Copy01Icon}
+          onSelect={() => copyShape(shape.id)}
+        >
           {t("grid-duplicate")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           icon={Delete02Icon}
-          onClick={() => removeShape(shape.id)}
+          onSelect={() => removeShape(shape.id)}
           variant="destructive"
         >
           {common("delete")}

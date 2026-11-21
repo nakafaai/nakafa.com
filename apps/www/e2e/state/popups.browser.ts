@@ -21,11 +21,11 @@ const RECORD_MILLISECONDS = 1500;
 /** The popup of a menu, which a sub-menu or the account menu opens as. */
 const MENU = '[role="menu"]';
 /** The popup of the Nina sheet while it is open. */
-const SHEET = '[data-slot="sheet-popup"][data-open]';
+const SHEET = '[data-surface="sheet"][data-open]';
 /** The popup of the command palette. */
-const PALETTE = '[data-slot="command-dialog-popup"]';
+const PALETTE = '[data-surface="palette"]';
 /** The popup of a desktop dialog, which the chat share dialog is. */
-const DIALOG = '[data-slot="dialog-content"]';
+const DIALOG = '[data-slot="dialog-content"]:not([data-surface])';
 /** The account footer of a signed-in learner that is on screen. */
 const ACCOUNT_FOOTER = '[data-account="member"]:visible';
 /** The title of the chat that the share dialog shares. */
@@ -147,9 +147,10 @@ test("each submenu of the account menu shows its items in its first frame", asyn
             exact: true,
             name: submenu.name,
           });
-          // A reader's pointer travels to the next item. Base UI closes the
-          // open submenu once the pointer leaves the path to it, and the menu
-          // takes pointer events again only then, so a single jump never lands.
+          // A reader's pointer travels to the next item. UI SDK lets a
+          // pointer cross diagonally toward an open submenu without choosing
+          // what it passes, so the menu answers a pointer that moves, never a
+          // single jump.
           const box = await item.boundingBox();
           expect(box).not.toBeNull();
           await page.mouse.move(

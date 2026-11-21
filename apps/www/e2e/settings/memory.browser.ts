@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import type { Changes } from "@/e2e/support/changes";
 import { ANSWER_MILLISECONDS, reloadUntil, saved } from "@/e2e/support/changes";
-import { readBounds, swipeDown } from "@/e2e/support/input";
+import { swipeAway } from "@/e2e/support/input";
 import {
   confirmDelete,
   deleteQuestion,
@@ -15,7 +15,6 @@ import {
 } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitForAnimations } from "@/e2e/support/quiet";
-import { DRAWER_HANDLE } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { isTakenOver, waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -25,8 +24,6 @@ const NAMED = "Study habits";
 const LINKED = "https://nakafa.com/en";
 /** From this width on, the button that adds a memory shows its word. */
 const LABEL_WIDTH = 640;
-/** The width from which a question is a dialog with its corner close, Tailwind's `md`; a phone shows a drawer. */
-const DIALOG_WIDTH = 768;
 
 /** The title of a memory in its editor. */
 const titleOf = (page: Page) =>
@@ -171,21 +168,15 @@ const pauseMemory = Effect.fn("NakafaE2E.pauseMemory")(function* (
 });
 
 /**
- * Leaves the delete question without deleting: its corner close where it is a dialog, and a swipe down its drawer on a
- * phone, the way a learner dismisses it.
+ * Leaves the delete question without deleting: its corner close where it is a dialog, and a swipe down where it rises
+ * as a sheet, which a touch screen shows and which has no close of its own.
  */
-async function leaveQuestion(page: Page, question: Locator) {
-  if ((page.viewportSize()?.width ?? 0) >= DIALOG_WIDTH) {
+async function leaveQuestion(question: Locator) {
+  if ((await question.getAttribute("data-presentation")) === "dialog") {
     await question.getByRole("button", { exact: true, name: "Close" }).click();
     return;
   }
-  // Raw touch coordinates need the opening drawer to finish moving first.
-  await question.locator(DRAWER_HANDLE).click({ trial: true });
-  await Effect.runPromise(
-    Effect.flatMap(readBounds(question, "memory-question"), (bounds) =>
-      swipeDown(page, bounds, { inset: 12, stopAt: "viewport" })
-    )
-  );
+  await swipeAway(question);
 }
 
 const removeMemory = Effect.fn("NakafaE2E.removeMemory")(function* (
@@ -197,15 +188,13 @@ const removeMemory = Effect.fn("NakafaE2E.removeMemory")(function* (
     const editor = editorOf(page);
 
     // The editor asks before it deletes the memory it shows. Leaving the
-    // question keeps the memory with the title and words the learner wrote: its
-    // corner close on a wide screen, and a swipe down on a phone's drawer, which
-    // has no close of its own.
+    // question keeps the memory with the title and words the learner wrote.
     await row.getByText(NAMED).click();
     await opened(page, REWRITTEN);
     await page.getByRole("button", { exact: true, name: "Delete" }).click();
     const question = deleteQuestion(page);
     await expect(question).toBeVisible();
-    await leaveQuestion(page, question);
+    await leaveQuestion(question);
     await expect(question).toHaveCount(0);
     // The editor still shows the memory's words. At 390px the editor is a dialog
     // over the list, which hides the list from the accessibility tree, so the

@@ -82,7 +82,7 @@ export function PlayerFinish({
           </Button>
         }
         description={description}
-        finalFocus={!landed}
+        finalFocus={landed ? "none" : "trigger"}
         onOpenChangeComplete={(next) => {
           if (!next) {
             settle();

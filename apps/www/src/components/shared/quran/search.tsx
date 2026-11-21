@@ -4,8 +4,14 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
 
+/** What a header gives its search button: what it does on a press, and its name for the dialog it opens. */
+type QuranSurahSearchProps = Omit<
+  ComponentProps<typeof Button>,
+  "children" | "className" | "size" | "tooltip" | "variant"
+>;
+
 /** The search of a wide header: a button drawn as the search field it opens, with its icon and its words. */
-export function QuranSurahSearchField(props: ComponentProps<"button">) {
+export function QuranSurahSearchField(props: QuranSurahSearchProps) {
   const t = useTranslations("Holy");
   return (
     <Button
@@ -20,7 +26,7 @@ export function QuranSurahSearchField(props: ComponentProps<"button">) {
 }
 
 /** The search of a phone's header: its icon alone, which its tooltip names. */
-export function QuranSurahSearchIcon(props: ComponentProps<"button">) {
+export function QuranSurahSearchIcon(props: QuranSurahSearchProps) {
   const t = useTranslations("Holy");
   return (
     <Button

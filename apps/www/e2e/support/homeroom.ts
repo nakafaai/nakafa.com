@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { pressInPopup } from "@/e2e/support/popup";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -19,10 +20,10 @@ export async function assignHomeroom(
   const menu = row.getByRole("button", { name: "More actions" });
   await waitUntilTakenOver(menu);
   await menu.click();
-  await page.getByRole("menuitem", { name: "Homeroom teacher" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Homeroom teacher" }));
   const dialog = page.getByRole("dialog", { name: "Homeroom teacher" });
   await dialog.getByRole("combobox", { name: "Teacher" }).click();
-  await page.getByRole("option", { name: teacher }).click();
+  await pressInPopup(page.getByRole("option", { name: teacher }));
   await dialog.getByRole("button", { exact: true, name: "Save" }).click();
   await expect(dialog).toBeHidden();
   await expect(row.getByText(teacher)).toBeVisible({

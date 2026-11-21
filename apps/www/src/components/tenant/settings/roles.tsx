@@ -6,10 +6,10 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
   Sheet,
-  SheetContent,
   SheetDescription,
   SheetFooter,
   SheetHeader,
+  SheetPopup,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { Array as Arr } from "effect";
@@ -88,7 +88,7 @@ function SchoolRoleGuide({
 
   return (
     <Sheet onOpenChange={setOpen} open={open}>
-      <SheetContent>
+      <SheetPopup>
         <SheetHeader>
           <SheetTitle>{t("roles-overview")}</SheetTitle>
           <SheetDescription>{t("roles-overview-description")}</SheetDescription>
@@ -110,7 +110,7 @@ function SchoolRoleGuide({
             {t("roles-overview-footer")}
           </p>
         </SheetFooter>
-      </SheetContent>
+      </SheetPopup>
     </Sheet>
   );
 }

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import { waitForQuiet } from "@/e2e/support/quiet";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -76,7 +77,7 @@ test("a teacher deletes a draft from its editor and lands on the exams without a
   );
 
   await examActions.click();
-  await page.getByRole("menuitem", { name: "Delete exam" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Delete exam" }));
   const confirm = page.getByRole("dialog");
   await expect(confirm.getByText("Delete this exam?")).toBeVisible();
   await confirm.getByRole("button", { name: "Delete", exact: true }).click();

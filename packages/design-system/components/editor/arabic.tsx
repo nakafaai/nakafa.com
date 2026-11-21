@@ -8,24 +8,40 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { useCurrentEditor } from "@tiptap/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * The toolbar control that opens the Arabic keypad under the toolbar. A key types into the text at
  * its caret, and the keypad stays open while the writer moves the caret in the text, so a word can be
- * written letter by letter with its harakat. It closes from its control, Escape, or a press outside
- * the text and the keypad.
+ * written letter by letter with its harakat. It closes from its control, Escape in the text or the keypad, or a
+ * press outside the text and the keypad.
  */
 export function EditorArabicKeyboard({ label }: { label: string }) {
   const { editor } = useCurrentEditor();
   const [open, setOpen] = useState(false);
+
+  // The focus stays in the text while the keypad is open, and ProseMirror takes every Escape there as its own
+  // (`preventDefault`), which a popup reads as handled already. So the text's own Escape closes the keypad.
+  useEffect(() => {
+    if (!open || editor === null) {
+      return;
+    }
+    const text = editor.view.dom;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !event.isComposing) {
+        setOpen(false);
+      }
+    };
+    text.addEventListener("keydown", closeOnEscape);
+    return () => text.removeEventListener("keydown", closeOnEscape);
+  }, [editor, open]);
 
   return (
     <Popover
       onOpenChange={(next, details) => {
         const inText =
           details.reason === "outside-press" &&
-          details.event.target instanceof Node &&
+          details.event?.target instanceof Node &&
           editor?.view.dom.contains(details.event.target) === true;
         if (!inText) {
           setOpen(next);
@@ -51,8 +67,8 @@ export function EditorArabicKeyboard({ label }: { label: string }) {
       <PopoverContent
         align="end"
         className="w-auto max-w-(--available-width) p-2"
-        finalFocus={false}
-        initialFocus={false}
+        finalFocus="none"
+        initialFocus="none"
       >
         <ArabicKeypad
           onKey={(text) => editor?.chain().focus().insertContent(text).run()}

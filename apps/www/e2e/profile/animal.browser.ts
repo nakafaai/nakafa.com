@@ -38,10 +38,10 @@ const OTHER_SCRIPT = "Наталья Петровна Иванова";
 const AUTHOR_AVATAR =
   ':scope > [data-slot="feed-row"] > div > [data-slot="avatar"]';
 
-/** The name the sidebar footer shows for the account. */
+/** The name the account button in the sidebar footer shows, not its menu's, which renders beside it. */
 function sidebarName(page: Page, name: string) {
   return page
-    .locator('[data-sidebar="footer"]')
+    .locator('[data-sidebar="footer"] [data-sidebar="menu-button"]')
     .getByText(name, { exact: true });
 }
 

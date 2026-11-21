@@ -2,36 +2,32 @@ import { DragDropVerticalIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator as Rule } from "@repo/design-system/components/ui/separator";
 import type { useResizable } from "@repo/design-system/hooks/resizable";
+import {
+  Resizable,
+  ResizableHandle as ResizableHandlePrimitive,
+  ResizablePanel as ResizablePanelPrimitive,
+} from "@ui-sdk/react/resizable";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type * as React from "react";
-import {
-  Group,
-  Panel,
-  Separator,
-  useDefaultLayout,
-} from "react-resizable-panels";
 import { useTranslations } from "use-intl";
 
 /**
- * Panes the reader resizes by dragging the grip on their shared edge. Every resizable edge shows the one grip, never
- * a line that changes colour.
+ * Panes the reader resizes by dragging the grip on their shared edge, or by its keys, as a window splitter moves. Every
+ * resizable edge shows the one grip, never a line that changes colour. A panel's size is a share of the row, or a
+ * length such as `"20rem"` that holds as the row narrows; a panel with no size takes the room the others leave.
  */
 function ResizablePanelGroup({
   className,
   ...props
-}: React.ComponentProps<typeof Group>) {
-  return (
-    <Group
-      className={cn("flex h-full w-full", className)}
-      data-slot="resizable-panel-group"
-      {...props}
-    />
-  );
+}: React.ComponentProps<typeof Resizable>) {
+  return <Resizable className={cn("h-full w-full", className)} {...props} />;
 }
 
-function ResizablePanel({ ...props }: React.ComponentProps<typeof Panel>) {
-  return <Panel data-slot="resizable-panel" {...props} />;
+function ResizablePanel(
+  props: React.ComponentProps<typeof ResizablePanelPrimitive>
+) {
+  return <ResizablePanelPrimitive {...props} />;
 }
 
 /** The grip that says an edge resizes, drawn the same on every resizable edge of Nakafa. */
@@ -43,21 +39,27 @@ function ResizeGrip() {
   );
 }
 
+/**
+ * The edge between two panes. It reads as the row's 1px line with the grip in its middle, and a pointer or a finger
+ * takes it from a band wider than the line. Its name says what it does, for a screen reader and an agent alike.
+ */
 function ResizableHandle({
   className,
   ...props
-}: React.ComponentProps<typeof Separator>) {
+}: React.ComponentProps<typeof ResizableHandlePrimitive>) {
+  const t = useTranslations("Common");
+
   return (
-    <Separator
+    <ResizableHandlePrimitive
+      aria-label={t("resize")}
       className={cn(
-        "bg-border focus-visible:ring-ring relative z-999 flex w-px items-center justify-center after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden aria-[orientation=horizontal]:h-px aria-[orientation=horizontal]:w-full aria-[orientation=horizontal]:after:left-0 aria-[orientation=horizontal]:after:h-1 aria-[orientation=horizontal]:after:w-full aria-[orientation=horizontal]:after:translate-x-0 aria-[orientation=horizontal]:after:-translate-y-1/2 [&[aria-orientation=horizontal]>div]:rotate-90",
+        "bg-border focus-visible:ring-ring relative z-10 flex w-px items-center justify-center outline-none focus-visible:ring-1 data-[orientation=vertical]:h-px data-[orientation=vertical]:w-full [&[data-orientation=vertical]>div]:rotate-90",
         className
       )}
-      data-slot="resizable-handle"
       {...props}
     >
       <ResizeGrip />
-    </Separator>
+    </ResizableHandlePrimitive>
   );
 }
 
@@ -80,7 +82,7 @@ const resizeEdgeVariants = cva(
  * that takes the focus, as a window splitter does, and says the width the panel has and the widths it can have. It
  * lies on the panel's ordinary border, so the line stays 1px, the grip in its middle says that it moves, and it takes
  * no colour of its own on hover, as the panes of a row do. A finger drags it as a pointer does, so it takes no touch
- * gesture of the page's.
+ * gesture of the page's. A row of panes resizes with `ResizableHandle`; this edge moves one panel alone.
  */
 function ResizeEdge({
   anchor,
@@ -98,7 +100,6 @@ function ResizeEdge({
     <Rule
       aria-label={t("resize")}
       className={cn(resizeEdgeVariants({ anchor }), className)}
-      data-slot="resize-edge"
       orientation={resizer["aria-orientation"]}
       tabIndex={0}
       {...resizer}
@@ -108,13 +109,10 @@ function ResizeEdge({
   );
 }
 
-const useResizableDefaultLayout = useDefaultLayout;
-
 export {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
   ResizeEdge,
   ResizeGrip,
-  useResizableDefaultLayout,
 };

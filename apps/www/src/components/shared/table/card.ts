@@ -6,7 +6,7 @@ import { cva } from "class-variance-authority";
  * covered there, and the two never read as a double border.
  */
 export const tableCardVariants = cva(
-  "[&_[data-slot=table-container]]:after:bg-card [&_[data-slot=table-body]_tr:last-child]:border-b [&_[data-slot=table-container]]:relative [&_[data-slot=table-container]]:after:pointer-events-none [&_[data-slot=table-container]]:after:absolute [&_[data-slot=table-container]]:after:inset-x-0 [&_[data-slot=table-container]]:after:bottom-0 [&_[data-slot=table-container]]:after:z-20 [&_[data-slot=table-container]]:after:h-px"
+  "[&_[data-table=container]]:after:bg-card [&_[data-slot=table-body]_tr:last-child]:border-b [&_[data-table=container]]:relative [&_[data-table=container]]:after:pointer-events-none [&_[data-table=container]]:after:absolute [&_[data-table=container]]:after:inset-x-0 [&_[data-table=container]]:after:bottom-0 [&_[data-table=container]]:after:z-20 [&_[data-table=container]]:after:h-px"
 );
 
 /**

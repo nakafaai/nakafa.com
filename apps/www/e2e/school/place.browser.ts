@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -326,7 +327,7 @@ for (const viewport of SCREENS) {
       .first()
       .getByRole("button", { name: "More actions" })
       .click();
-    await page.getByRole("menuitem", { name: "Archive" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Archive" }));
     await expect(list.getByRole("listitem")).toHaveCount(1);
 
     // Every frame from here holds the views and at least one row, while the reader switches back and forth.

@@ -122,7 +122,7 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
           <WithAction action="person.manage">
             <DropdownMenuItem
               icon={UserEdit01Icon}
-              onClick={() => dialogs.show("rename")}
+              onSelect={() => dialogs.show("rename")}
             >
               {t("link-rename")}
             </DropdownMenuItem>
@@ -131,13 +131,13 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
             <>
               <DropdownMenuItem
                 icon={PencilEdit02Icon}
-                onClick={() => dialogs.show("readdress")}
+                onSelect={() => dialogs.show("readdress")}
               >
                 {t("link-readdress")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 icon={CheckmarkBadge01Icon}
-                onClick={() =>
+                onSelect={() =>
                   startTransition(() =>
                     runSchoolWrite(
                       schoolCall(() => verify({ linkId: link.id, slug }))
@@ -152,7 +152,7 @@ export function GuardianLinkMenu({ link }: { link: LinkItem }) {
           <DropdownMenuSeparator />
           <DropdownMenuItem
             icon={Unlink01Icon}
-            onClick={() => dialogs.show("revoke")}
+            onSelect={() => dialogs.show("revoke")}
             variant="destructive"
           >
             {t("link-revoke")}

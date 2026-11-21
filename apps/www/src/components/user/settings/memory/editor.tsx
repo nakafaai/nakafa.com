@@ -2,7 +2,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import { ResizeEdge } from "@repo/design-system/components/ui/resizable";
 import {
   Sheet,
-  SheetContent,
+  SheetPopup,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/resizable";
@@ -142,12 +142,19 @@ function HostedMemoryEditor({ host }: { host: HTMLElement }) {
   const { memory, open, opener, session } = useMemoryEditor();
   const { place, remember, slot } = useEditorHost(host);
 
-  useFocusAfterClose(open, opener, host);
+  const handFocusTo = useFocusAfterClose(open, opener, host);
 
   return (
     <>
       {open || slot
-        ? createPortal(<MemoryDocument key={session} memory={memory} />, host)
+        ? createPortal(
+            <MemoryDocument
+              handFocusTo={handFocusTo}
+              key={session}
+              memory={memory}
+            />,
+            host
+          )
         : null}
       {wide ? (
         <MemoryEditorPanel
@@ -218,6 +225,15 @@ function MemoryEditorPanel({
 /** The sheet over the page on a narrow screen, which takes the focus when it opens. */
 const SHEET_ID = "user-settings-memory-sheet";
 
+/** The element that holds the focus inside the sheet, else the sheet itself. */
+function keepFocusIn() {
+  const sheet = elementById(SHEET_ID);
+  const focused = document.activeElement;
+  return focused instanceof HTMLElement && sheet?.contains(focused)
+    ? focused
+    : sheet;
+}
+
 /** The editor as a sheet over the page, for a screen too narrow for a panel. */
 function MemoryEditorSheet({
   memory,
@@ -238,7 +254,8 @@ function MemoryEditorSheet({
 
   // A dialog focuses its first field when it opens, which is the title, and the
   // editor keeps out of a field that has the focus. So the sheet focuses its own
-  // element instead, and the editor takes the caret once it exists.
+  // element instead, and the editor takes the caret once it exists. An editor
+  // that moved in from the panel already holds the caret, which stays.
   return (
     <Sheet
       onOpenChange={(next) => {
@@ -248,31 +265,36 @@ function MemoryEditorSheet({
       }}
       open={open}
     >
-      <SheetContent
+      <SheetPopup
         className="w-full max-w-none gap-0 border-l-0"
-        finalFocus={() => {
-          // The sheet also goes when the window widens past the panel's width.
-          // The editor is still open then, and it moves into the panel with its
-          // caret, so the focus stays in it.
-          if (open) {
-            return false;
-          }
-          if (opener === null) {
-            return elementById(MEMORY_ADD_ID);
-          }
-          // A deleted memory has no row, and its delete question has placed the
-          // focus already, so the sheet leaves it where the question put it.
-          return elementById(memoryRowId(opener)) ?? false;
-        }}
+        // The sheet also goes when the window widens past the panel's width.
+        // The editor is still open then, and it moves into the panel with its
+        // caret, so the focus stays in it.
+        finalFocus={
+          open
+            ? "none"
+            : () => {
+                if (opener === null) {
+                  return elementById(MEMORY_ADD_ID);
+                }
+                // A deleted memory has no row, and its delete question has placed the
+                // focus already, so the sheet leaves it where the question put it.
+                const focused = document.activeElement;
+                return (
+                  elementById(memoryRowId(opener)) ??
+                  (focused instanceof HTMLElement ? focused : undefined)
+                );
+              }
+        }
         id={SHEET_ID}
-        initialFocus={() => elementById(SHEET_ID)}
+        initialFocus={keepFocusIn}
         ref={place}
         showCloseButton={false}
       >
         <SheetTitle className="sr-only">
           {memory ? t("edit") : t("new")}
         </SheetTitle>
-      </SheetContent>
+      </SheetPopup>
     </Sheet>
   );
 }

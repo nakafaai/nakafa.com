@@ -68,7 +68,9 @@ export function Source({ href, children }: SourceProps) {
 
   return (
     <SourceContext value={source}>
-      <HoverCard>{children}</HoverCard>
+      <HoverCard closeDelay={0} delay={150}>
+        {children}
+      </HoverCard>
     </SourceContext>
   );
 }
@@ -108,8 +110,6 @@ export function SourceTrigger({
         "group/source focus-visible:ring-ring flex min-w-0 items-start gap-2 rounded-sm text-start outline-none focus-visible:ring-2",
         className
       )}
-      closeDelay={0}
-      delay={150}
       href={href}
       rel="noopener noreferrer"
       target="_blank"

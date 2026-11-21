@@ -3,10 +3,11 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@repo/design-system/components/ui/resizable";
-import { Option, Record as Rec, Schema } from "effect";
+import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import type { ComponentProps, ReactNode } from "react";
-import { use, useState } from "react";
+import { use, useRef, useState } from "react";
 import { PanesGroupContext } from "@/components/shared/page/panes/group";
+import type { PaneSize } from "@/components/shared/page/panes/start";
 import { PaneStartContext } from "@/components/shared/page/panes/start";
 
 /** The share of a group's width each sized pane took when a person last moved its handle, by the pane's ID. */
@@ -47,16 +48,26 @@ export function PanesGroupProvider({
   id: string;
 }) {
   const [, keepSizes] = useKeptSizes(id);
+  const row = useRef<HTMLDivElement>(null);
 
   return (
     <ResizablePanelGroup
       className={className}
-      onLayoutChanged={(layout, { isUserInteraction, requestedLayout }) => {
-        if (isUserInteraction) {
-          keepSizes(requestedLayout ?? layout);
+      onLayoutCommit={(layout, { reason }) => {
+        if (reason === "resize" || reason === "imperative") {
+          return;
         }
+        // The layout lists each pane's share in the row's order, so the panes' IDs, in the same order, name them.
+        const ids = Array.from(
+          row.current?.querySelectorAll<HTMLElement>(
+            ':scope > [data-slot="resizable-panel"]'
+          ) ?? [],
+          (pane) => pane.id
+        );
+        keepSizes(Rec.fromEntries(Arr.zip(ids, layout)));
       }}
       orientation="horizontal"
+      ref={row}
     >
       <PanesGroupContext value={id}>{children}</PanesGroupContext>
     </ResizablePanelGroup>
@@ -79,7 +90,7 @@ export function SizedPane({
   const [start] = useState(() =>
     Option.match(Rec.get(sizes, `${group}-${id}`), {
       onNone: () => fallback,
-      onSome: (kept) => `${kept}%`,
+      onSome: (kept): PaneSize => `${kept}%`,
     })
   );
 

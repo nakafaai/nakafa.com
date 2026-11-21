@@ -4,10 +4,10 @@ import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
-  SheetContent,
   SheetDescription,
   SheetFooter,
   SheetHeader,
+  SheetPopup,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { lazy } from "@repo/design-system/lib/lazy";
@@ -73,7 +73,7 @@ export function SchoolInvoicesCard({
         </CardSectionActions>
       </CardSectionFooter>
       <Sheet onOpenChange={setIsOpen} open={isOpen}>
-        <SheetContent className="w-full max-w-none" size="xl">
+        <SheetPopup className="w-full max-w-none" size="xl">
           <SheetHeader>
             <SheetTitle>{t("billing-invoices")}</SheetTitle>
             <SheetDescription>
@@ -92,7 +92,7 @@ export function SchoolInvoicesCard({
               {t("billing-invoices-sheet-footer")}
             </p>
           </SheetFooter>
-        </SheetContent>
+        </SheetPopup>
       </Sheet>
     </CardSection>
   );

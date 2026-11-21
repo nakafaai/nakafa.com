@@ -7,10 +7,10 @@ import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 export const POPUPS = Arr.join(
   [
     '[data-slot="dialog-content"]',
-    '[data-slot="sheet-popup"]',
+    '[data-surface="sheet"]',
     '[data-slot="drawer-content"]',
     '[data-slot="popover-content"]',
-    '[data-slot="dropdown-menu-content"]',
+    '[data-slot="menu-content"]',
     '[data-slot="select-content"]',
   ],
   ","
@@ -33,7 +33,7 @@ const WATCHED = Arr.join(
   [
     '[data-slot="page-header"] a',
     '[data-slot="page-header"] button',
-    '[data-slot="sidebar-content"] a',
+    '[data-sidebar="content"] a',
     "main h1",
     "main h2",
     "main th",

@@ -159,9 +159,7 @@ const givesBackAfterClosingTheSheet = Effect.fn(
   yield* viewerKnown(changes);
   yield* Effect.promise(async () => {
     const sheet = inTheSheet(page);
-    const hiddenComposer = composerOf(
-      page.locator('[data-slot="sheet-popup"]')
-    );
+    const hiddenComposer = composerOf(page.locator('[data-surface="sheet"]'));
 
     await write(sheet);
     changes.hold();
@@ -175,7 +173,7 @@ const givesBackAfterClosingTheSheet = Effect.fn(
     await expect(page.getByText(UNCONFIRMED).first()).toBeVisible();
     // The toast covers the entry for a moment, and a press that lands on it
     // holds it there for as long as the pointer stays, so the press waits.
-    await expect(page.locator("[data-sonner-toast]")).toHaveCount(0, {
+    await expect(page.locator("[data-slot=toast]")).toHaveCount(0, {
       timeout: readinessTimeoutMilliseconds,
     });
 

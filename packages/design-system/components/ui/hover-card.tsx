@@ -1,67 +1,55 @@
-import { PreviewCard as HoverCardPrimitive } from "@base-ui/react/preview-card";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
-import { PortalContainer } from "@repo/design-system/lib/portal";
+import { PopupContainer, popupMotion } from "@repo/design-system/lib/popup";
+import {
+  HoverCardContent as HoverCardContentPrimitive,
+  HoverCard as HoverCardPrimitive,
+  HoverCardTrigger as HoverCardTriggerPrimitive,
+} from "@ui-sdk/react/hover-card";
 import { cn } from "cn";
+import type * as React from "react";
 import { use } from "react";
 
 /**
  * A preview that opens while a pointer rests on its trigger, such as a person's card over their name. It holds
  * nothing a reader needs to act on, since touch screens never hover.
  */
-function HoverCard({ ...props }: HoverCardPrimitive.Root.Props) {
-  return <HoverCardPrimitive.Root data-slot="hover-card" {...props} />;
-}
-
-function HoverCardTrigger({
+function HoverCard({
   closeDelay = 0,
   delay = 0,
   ...props
-}: HoverCardPrimitive.Trigger.Props) {
+}: React.ComponentProps<typeof HoverCardPrimitive>) {
   return (
-    <HoverCardPrimitive.Trigger
+    <HoverCardPrimitive
       closeDelay={closeDelay}
-      data-slot="hover-card-trigger"
+      container={use(PopupContainer)}
       delay={delay}
       {...props}
     />
   );
 }
 
+function HoverCardTrigger(
+  props: React.ComponentProps<typeof HoverCardTriggerPrimitive>
+) {
+  return <HoverCardTriggerPrimitive {...props} />;
+}
+
 function HoverCardContent({
   className,
-  align = "center",
-  alignOffset = 4,
   side = "bottom",
-  sideOffset = 4,
   ...props
-}: HoverCardPrimitive.Popup.Props &
-  Pick<
-    HoverCardPrimitive.Positioner.Props,
-    "align" | "alignOffset" | "side" | "sideOffset"
-  >) {
+}: React.ComponentProps<typeof HoverCardContentPrimitive>) {
   return (
     <ButtonGroupVariant value={undefined}>
-      <HoverCardPrimitive.Portal
-        container={use(PortalContainer)}
-        data-slot="hover-card-portal"
-      >
-        <HoverCardPrimitive.Positioner
-          align={align}
-          alignOffset={alignOffset}
-          className="isolate z-50"
-          side={side}
-          sideOffset={sideOffset}
-        >
-          <HoverCardPrimitive.Popup
-            className={cn(
-              "data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 bg-popover text-popover-foreground duration-ui motion-safe:data-closed:animate-out motion-safe:data-open:animate-in z-50 w-64 origin-(--transform-origin) rounded-md border p-4 shadow-md outline-hidden ease-out",
-              className
-            )}
-            data-slot="hover-card-content"
-            {...props}
-          />
-        </HoverCardPrimitive.Positioner>
-      </HoverCardPrimitive.Portal>
+      <HoverCardContentPrimitive
+        className={cn(
+          popupMotion(),
+          "bg-popover text-popover-foreground z-50 w-64 rounded-md border p-4 shadow-md outline-hidden",
+          className
+        )}
+        side={side}
+        {...props}
+      />
     </ButtonGroupVariant>
   );
 }

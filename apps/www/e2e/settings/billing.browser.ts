@@ -4,6 +4,7 @@ import { seedXendit } from "@repo/backend/scripts/content/acceptance/xendit";
 import { Effect } from "effect";
 import { runFixture } from "@/e2e/support/acceptance";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
+import { noticeWith } from "@/e2e/support/selector";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The billing settings of the signed-in learner. */
@@ -90,7 +91,7 @@ test("a checkout the payment provider refuses says so once, and the learner can 
         // The local runtime holds no real Xendit key, so Xendit refuses the session.
         await dialog.getByRole("button", { name: "Continue" }).dblclick();
         await expect(dialog).toBeHidden();
-        const failure = page.getByText("We could not open Pro checkout.");
+        const failure = noticeWith(page, "We could not open Pro checkout.");
         await expect(failure).toHaveCount(1);
         await expect(upgrade).toBeEnabled();
         await picture(page, "refused");
@@ -120,7 +121,7 @@ test.describe("outside Indonesia", () => {
           await waitUntilTakenOver(upgrade);
           // The local runtime holds no real Polar token, so Polar refuses the checkout.
           await upgrade.dblclick();
-          const failure = page.getByText("We could not open Pro checkout.");
+          const failure = noticeWith(page, "We could not open Pro checkout.");
           await expect(failure).toHaveCount(1);
           await expect(upgrade).toBeEnabled();
         });

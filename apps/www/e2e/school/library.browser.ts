@@ -1,11 +1,13 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
   signInClassTeacher,
 } from "@/e2e/support/school";
+import { noticeWith } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -127,7 +129,7 @@ for (const viewport of [
 
     await openMenu(page, "Modul gerak lurus");
     const download = page.waitForEvent("download");
-    await page.getByRole("menuitem", { name: "Download" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Download" }));
     expect((await download).suggestedFilename()).toBe("Modul gerak lurus.pdf");
 
     await add.click();
@@ -137,13 +139,13 @@ for (const viewport of [
       name: "Catatan.pdf",
     });
     await dialog.getByRole("button", { name: "Add", exact: true }).click();
-    await expect(page.getByText("The file was not added.")).toBeVisible({
+    await expect(noticeWith(page, "The file was not added.")).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
     await expect(page.getByText("Catatan", { exact: true })).toBeHidden();
 
     await openMenu(page, "Video gerak lurus");
-    await page.getByRole("menuitem", { name: "Move to trash" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Move to trash" }));
     await expect(
       page.getByRole("button", { name: "Video gerak lurus" })
     ).toBeHidden();
@@ -205,7 +207,7 @@ test("a subject teacher nests folders, uploads into the deepest, moves the file 
 
   // The Move dialog sends the file to the top of the library.
   await openMenu(page, "Modul GLB");
-  await page.getByRole("menuitem", { exact: true, name: "Move" }).click();
+  await pressInPopup(page.getByRole("menuitem", { exact: true, name: "Move" }));
   await dialog.getByRole("button", { name: "Library" }).click();
   await dialog.getByRole("button", { name: "Move", exact: true }).click();
   await expect(page.getByRole("button", { name: "Modul GLB" })).toBeHidden();
@@ -219,7 +221,7 @@ test("a subject teacher nests folders, uploads into the deepest, moves the file 
   await page.getByRole("link", { exact: true, name: "Bab 1" }).click();
   await page.waitForURL(FOLDER_ADDRESS);
   await openMenu(page, "Gerak lurus");
-  await page.getByRole("menuitem", { exact: true, name: "Move" }).click();
+  await pressInPopup(page.getByRole("menuitem", { exact: true, name: "Move" }));
   await dialog.getByRole("button", { name: "Library" }).click();
   await dialog.getByRole("button", { name: "Move", exact: true }).click();
   await expect(
@@ -234,7 +236,7 @@ test("a subject teacher nests folders, uploads into the deepest, moves the file 
   // The trash keeps the file until it is restored, then deletes it forever.
   await top.click();
   await openMenu(page, "Modul GLB");
-  await page.getByRole("menuitem", { name: "Move to trash" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Move to trash" }));
   await expect(page.getByRole("button", { name: "Modul GLB" })).toBeHidden();
   // The library's views stand in the body above its card, never in the header.
   const views = page.getByRole("group", { name: "Show items" });
@@ -243,16 +245,16 @@ test("a subject teacher nests folders, uploads into the deepest, moves the file 
     timeout: readinessTimeoutMilliseconds,
   });
   await openMenu(page, "Modul GLB");
-  await page.getByRole("menuitem", { name: "Restore" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Restore" }));
   await views.getByRole("button", { name: "Files" }).click();
   await expect(page.getByRole("button", { name: "Modul GLB" })).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
   await openMenu(page, "Modul GLB");
-  await page.getByRole("menuitem", { name: "Move to trash" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Move to trash" }));
   await views.getByRole("button", { name: "Trash" }).click();
   await openMenu(page, "Modul GLB");
-  await page.getByRole("menuitem", { name: "Delete forever" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Delete forever" }));
   await dialog.getByRole("button", { name: "Delete forever" }).click();
   await expect(page.getByText("The trash is empty")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,

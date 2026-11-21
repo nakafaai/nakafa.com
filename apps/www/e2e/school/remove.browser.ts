@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -88,7 +89,7 @@ test("every answer type removes a part with one control, centered on its row, at
   let shown = "Multiple choice";
   for (const type of TYPES) {
     await page.getByRole("button", { name: `Question type: ${shown}` }).click();
-    await page.getByRole("menuitemradio", { name: type }).click();
+    await pressInPopup(page.getByRole("menuitemradio", { name: type }));
     await expect(
       page.getByRole("button", { name: `Question type: ${type}` })
     ).toBeVisible();

@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   grantStudent,
@@ -49,7 +50,9 @@ test("a subject teacher enters a student's grade as a draft in the gradebook, th
     .click();
   const placeDialog = settings.getByRole("dialog");
   await placeDialog.getByRole("combobox", { name: "Student" }).click();
-  await settings.getByRole("option", { name: "Acceptance Learner" }).click();
+  await pressInPopup(
+    settings.getByRole("option", { name: "Acceptance Learner" })
+  );
   await placeDialog.getByRole("button", { name: "Add student" }).click();
   await expect(
     settings.getByRole("row").filter({ hasText: "Acceptance Learner" })
@@ -114,7 +117,7 @@ test("a subject teacher enters a student's grade as a draft in the gradebook, th
 
   // Released, the grade shows to its student and no entry changes it.
   await row.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Release" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Release" }));
   await expect(row).toContainText("Released");
   await expect(row.getByRole("textbox")).toBeDisabled();
   // The student's page shows the released grade live, with its period and its KKTP status.

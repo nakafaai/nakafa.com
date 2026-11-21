@@ -5,6 +5,7 @@ import {
   readRecordedLayoutShifts,
   recordLayoutShifts,
 } from "@/e2e/support/layout";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -195,7 +196,7 @@ for (const viewport of SCREENS) {
     });
     await page.addInitScript(recordLayoutShifts, {
       key: SHIFTS_KEY,
-      overlay: "[data-sonner-toaster]",
+      overlay: "[data-slot=toast-region]",
     });
     await page.addInitScript(recordBlankThreads, BLANK_KEY);
     const shot = (state: string) =>
@@ -226,7 +227,7 @@ for (const viewport of SCREENS) {
       page.getByRole("menuitem", { name: "Copy text" })
     ).toBeVisible();
     await shot("menu");
-    await page.getByRole("menuitem", { name: "Hide" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Hide" }));
     const hide = page.getByRole("dialog", { name: "Hide this message" });
     await expect(hide.getByText("Pesan 6")).toBeVisible();
     await shot("hide");

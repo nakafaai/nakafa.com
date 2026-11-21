@@ -7,6 +7,7 @@ import {
   recordScripts,
   rendererChunks,
 } from "@/e2e/support/chunks";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
@@ -74,7 +75,7 @@ const pickVisual = async (page: Page, query: string, name: string) => {
     .getByRole("button", { name: "Chart" })
     .click();
   await page.getByRole("combobox", { name: "Search visuals" }).fill(query);
-  await page.getByRole("option", { exact: true, name }).click();
+  await pressInPopup(page.getByRole("option", { exact: true, name }));
 };
 
 /** Adds one object or a slider from the graph builder's add menu. */
@@ -83,7 +84,7 @@ const add = async (page: Page, name: string) => {
     .getByRole("dialog", { exact: true, name: "Figure" })
     .getByRole("button", { exact: true, name: "Add" })
     .click();
-  await page.getByRole("menuitem", { exact: true, name }).click();
+  await pressInPopup(page.getByRole("menuitem", { exact: true, name }));
 };
 
 test("a teacher places a lab of the lesson catalog in a question, edits it, and the student reads it", async ({

@@ -46,13 +46,16 @@ const TryoutSectionPartSchema = Schema.Struct({
 /** One section of a set, as the player's pane offers it. */
 export type TryoutSectionPart = typeof TryoutSectionPartSchema.Type;
 
+/** A section of a set as the set's page reads it, with the page of its own it may have. */
+const TryoutSetSectionSchema = Schema.Struct({
+  publicPath: Schema.optional(Schema.String),
+  sectionKey: Schema.String,
+  title: Schema.String,
+});
+
 /** The set's sections that have a page of their own, as the player's pane picks between them. */
 export function tryoutSectionPartsOf(
-  sections: readonly {
-    readonly publicPath?: string | undefined;
-    readonly sectionKey: string;
-    readonly title: string;
-  }[]
+  sections: readonly (typeof TryoutSetSectionSchema.Type)[]
 ): readonly TryoutSectionPart[] {
   return Arr.getSomes(
     Arr.map(sections, (section) =>

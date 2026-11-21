@@ -2,7 +2,7 @@ import { Copy01Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
-  createDropdownMenuHandle,
+  createDropdownMenuController,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -16,8 +16,8 @@ import { useTranslations } from "use-intl";
 
 /** A row's menu, as `RowMenu` shares it with what its cell holds. */
 const RowMenuContext = createContext<{
-  /** The handle that joins the row's three-dot button to its items. */
-  readonly handle: ReturnType<typeof createDropdownMenuHandle>;
+  /** The controller that joins the row's three-dot button to its items. */
+  readonly controller: ReturnType<typeof createDropdownMenuController>;
   /** Presses the row, as pressing its first column does. */
   readonly press: () => void;
 } | null>(null);
@@ -31,7 +31,7 @@ function useRowMenu() {
  * The one action of a table's row: the ghost three-dot button, which `DataTable` draws around the menu column's cell, so
  * no table draws a button of its own. The cell gives what the menu holds through `RowItems`. Its dialogs stand beside the
  * menu and never inside it, because a menu opened from a dialog must not take the row's menu for its parent, so the
- * button and the menu meet through a handle.
+ * button and the menu meet through a controller.
  */
 export function RowMenu({
   children,
@@ -42,16 +42,19 @@ export function RowMenu({
   inert?: boolean | undefined;
 }) {
   const common = useTranslations("Common");
-  const [handle] = useState(() => createDropdownMenuHandle());
+  const [controller] = useState(() => createDropdownMenuController());
   const trigger = useRef<HTMLButtonElement>(null);
 
   return (
     <RowMenuContext
-      value={{ handle, press: () => trigger.current?.closest("tr")?.click() }}
+      value={{
+        controller,
+        press: () => trigger.current?.closest("tr")?.click(),
+      }}
     >
       <div className="flex justify-end">
         <DropdownMenuTrigger
-          handle={handle}
+          controller={controller}
           ref={trigger}
           render={
             <Button
@@ -80,10 +83,13 @@ export function RowItems({
   onOpenChange?: ComponentProps<typeof DropdownMenu>["onOpenChange"];
 }) {
   const common = useTranslations("Common");
-  const { handle } = useRowMenu();
+  const { controller } = useRowMenu();
 
   return (
-    <DropdownMenu handle={handle} onOpenChange={onOpenChange}>
+    <DropdownMenu
+      controller={controller}
+      {...(onOpenChange === undefined ? {} : { onOpenChange })}
+    >
       <DropdownMenuContent
         align="end"
         className="min-w-48"
@@ -106,7 +112,7 @@ export function RowOpen({
   const { press } = useRowMenu();
 
   return (
-    <DropdownMenuItem icon={icon} onClick={press}>
+    <DropdownMenuItem icon={icon} onSelect={press}>
       {label}
     </DropdownMenuItem>
   );
@@ -119,7 +125,10 @@ export function RowCopy({ value }: { value: string }) {
 
   return (
     <RowItems>
-      <DropdownMenuItem icon={Copy01Icon} onClick={() => clipboard.copy(value)}>
+      <DropdownMenuItem
+        icon={Copy01Icon}
+        onSelect={() => clipboard.copy(value)}
+      >
         {common("copy")}
       </DropdownMenuItem>
     </RowItems>

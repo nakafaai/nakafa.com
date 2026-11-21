@@ -198,7 +198,7 @@ test("every column of the School's tables filters from its head, and the row's m
   await expect(page.getByRole("button", { name: "Oldest" })).toBeVisible();
   await expect(
     page.locator(
-      '[data-slot="popover-content"][data-open] [data-slot="dropdown-menu-label"]'
+      '[data-slot="popover-content"][data-open] [data-slot="menu-group-label"]'
     )
   ).toHaveCount(0);
   await context.close();

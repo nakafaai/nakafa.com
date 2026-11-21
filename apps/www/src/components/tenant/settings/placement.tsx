@@ -178,13 +178,13 @@ export function SchoolPlacementMove({
       <RowItems>
         <DropdownMenuItem
           icon={Move01Icon}
-          onClick={() => dialogs.show("move")}
+          onSelect={() => dialogs.show("move")}
         >
           {common("move")}
         </DropdownMenuItem>
         <DropdownMenuItem
           icon={IdCardIcon}
-          onClick={() => dialogs.show("entry")}
+          onSelect={() => dialogs.show("entry")}
         >
           {common("nisn")}
         </DropdownMenuItem>

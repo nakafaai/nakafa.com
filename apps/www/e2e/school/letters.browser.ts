@@ -59,10 +59,11 @@ test("an Arabic option set is lettered in abjad order on the teacher's paper", a
     );
   }
 
-  // The letter stands in the option's circle, and the first circle on the side an Arabic set reads from.
+  // The letter stands in the option's circle, and the first circle on the side an Arabic set reads from. The paper
+  // draws each circle as a mark, since the teacher's paper chooses nothing.
   const circles = page
     .getByRole("region", { name: FIRST_QUESTION })
-    .locator('[data-slot="radio"]');
+    .locator('[data-slot="radio-mark"]');
   await expect(circles.first()).toHaveText(ABJAD[0]);
   await expect(options.first()).toHaveCSS("text-align", "right");
   const [first, second] = await Promise.all([

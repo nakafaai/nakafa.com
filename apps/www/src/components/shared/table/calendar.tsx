@@ -1,9 +1,5 @@
 import { Calendar } from "@repo/design-system/components/ui/calendar";
-import {
-  getCalendarDayKey,
-  parseCalendarDayKey,
-} from "@repo/design-system/lib/calendar/day";
-import { DateTime, Option } from "effect";
+import { Array as Arr, DateTime, Option } from "effect";
 import { useTimeZone } from "use-intl";
 import { chosenDays, dayRangeOf } from "@/components/shared/table/days";
 import { useTableFilters } from "@/components/shared/table/toolbar";
@@ -26,33 +22,36 @@ export function HeadDays({ column }: { column: string }) {
   const all = useTableFilters((state) => state.chosen);
   const choose = useTableFilters((state) => state.choose);
   const days = chosenDays(all, column);
-  const from = Option.flatMap(days, ([first]) => parseCalendarDayKey(first));
-  const to = Option.flatMap(days, ([, last]) => parseCalendarDayKey(last));
+  const range = Option.map(days, ([first, last]): [string, string] => [
+    first,
+    last,
+  ]);
 
   return (
     <Calendar
-      className="p-0 [--cell-size:--spacing(9)]"
-      classNames={{ root: "w-full" }}
-      {...Option.match(from, {
+      className="w-full p-0 [--cell-size:--spacing(9)]"
+      {...Option.match(range, {
         onNone: () => ({}),
-        onSome: (defaultMonth) => ({ defaultMonth }),
+        onSome: ([first]) => ({ defaultMonth: first.slice(0, 7) }),
       })}
       mode="range"
-      onSelect={(range) =>
+      // The first press filters its one day at once, as a filter answers every press; a second press stretches it to
+      // the range between the two.
+      onAnchorChange={(anchor) => {
+        if (anchor !== null) {
+          choose(column, dayRangeOf(anchor, anchor));
+        }
+      }}
+      onValueChange={(chosen) => {
+        const [first, last] = Arr.isArray(chosen) ? chosen : [];
         choose(
           column,
-          range?.from === undefined
+          first === undefined || last === undefined
             ? []
-            : dayRangeOf(
-                getCalendarDayKey(range.from),
-                getCalendarDayKey(range.to ?? range.from)
-              )
-        )
-      }
-      selected={{
-        from: Option.getOrUndefined(from),
-        to: Option.getOrUndefined(to),
+            : dayRangeOf(first, last)
+        );
       }}
+      value={Option.getOrNull(range)}
     />
   );
 }

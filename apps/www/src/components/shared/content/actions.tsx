@@ -143,7 +143,7 @@ export function OpenContent({
         <DropdownMenuItem
           disabled={isCopying || !(content || copySourceUrl)}
           icon={Copy01Icon}
-          onClick={handleCopy}
+          onSelect={handleCopy}
         >
           {t("copy-content")}
         </DropdownMenuItem>

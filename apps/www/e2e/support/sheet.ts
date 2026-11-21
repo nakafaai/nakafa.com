@@ -4,6 +4,7 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { Effect } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
+import { pressInPopup } from "@/e2e/support/popup";
 import { BUBBLE, SHEET_POPUP } from "@/e2e/support/selector";
 
 /** What the pages tell the learner when a prompt could not be confirmed. */
@@ -37,12 +38,15 @@ export const openSheet = Effect.fn("NakafaE2E.openSheet")(function* (
   });
 });
 
-/** Opens a chat of the learner in the sheet, from its history of recent chats. */
+/**
+ * Opens a chat of the learner in the sheet, from its history of recent chats. Each chat is a radio item, and the
+ * chat the sheet shows is the checked one.
+ */
 export const openFromHistory = Effect.fn("NakafaE2E.openFromHistory")(
   function* (page: Page, title: string) {
     yield* Effect.promise(async () => {
       await page.getByRole("button", { name: "Chat history" }).click();
-      await page.getByRole("menuitem", { name: title }).click();
+      await pressInPopup(page.getByRole("menuitemradio", { name: title }));
     });
   }
 );

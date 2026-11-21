@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { Effect, Schema, String as Str } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import { noticeWith } from "@/e2e/support/selector";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The device authorization the school answers the Nakafa CLI. */
@@ -59,7 +61,7 @@ test("the Nakafa CLI asks for a device code, the Owner connects it to a client, 
 
   const row = page.getByRole("row").filter({ hasText: "Nakafa CLI" });
   await row.getByRole("button", { name: "More actions" }).click();
-  await page.getByRole("menuitem", { name: "Connect a device" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Connect a device" }));
   const connect = page.getByRole("dialog", { name: "Connect a device" });
   await connect.getByLabel("Device code").fill("NOPE-NOPE");
   await connect.getByRole("button", { name: "Connect" }).click();
@@ -68,7 +70,7 @@ test("the Nakafa CLI asks for a device code, the Owner connects it to a client, 
     .getByLabel("Device code")
     .fill(Str.toLowerCase(device.user_code));
   await connect.getByRole("button", { name: "Connect" }).click();
-  await expect(page.getByText("The device is connected.")).toBeVisible();
+  await expect(noticeWith(page, "The device is connected.")).toBeVisible();
 
   // The device polls again once the interval the school named has passed since its last poll (RFC 8628,
   // section 3.5), and that poll is its client's token, which reads the roster.

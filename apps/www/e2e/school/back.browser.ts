@@ -24,7 +24,7 @@ test("the school settings sidebar leads back to the school page the viewer came 
   const page = await context.newPage();
   await page.goto(address("/exams"));
 
-  const sidebar = page.locator('[data-slot="sidebar-content"]');
+  const sidebar = page.locator('[data-sidebar="content"]');
   const settings = sidebar.getByRole("link", { exact: true, name: "Settings" });
   await waitUntilTakenOver(settings);
   await settings.click();
@@ -73,7 +73,7 @@ test("a press on another page while offline keeps the page and says why", async 
   const page = await context.newPage();
   await page.goto(address("/settings/profile"));
   const link = await settingsLink(
-    page.locator('[data-slot="sidebar-content"]'),
+    page.locator('[data-sidebar="content"]'),
     "webhooks"
   );
   await waitUntilTakenOver(link);

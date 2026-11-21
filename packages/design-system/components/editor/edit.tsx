@@ -10,6 +10,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
+  createPopoverController,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -19,14 +20,9 @@ import { useRequired } from "@repo/design-system/hooks/required";
 import { fieldBoxVariants } from "@repo/design-system/lib/input";
 import { NEW_FORMULA } from "@repo/editor/math";
 import { cn } from "cn";
-import { Effect, Fiber, Option, Schema } from "effect";
+import { Array as Arr, Effect, Fiber, Option, Schema } from "effect";
 import type * as MathLive from "mathlive";
-import type {
-  ComponentProps,
-  KeyboardEvent,
-  ReactNode,
-  RefObject,
-} from "react";
+import type { ComponentProps, ReactNode, RefObject } from "react";
 import { createContext, useEffect, useMemo, useRef, useState } from "react";
 
 /** MathLive, which an editor needs only when its popover opens, so no page's first JavaScript holds it. */
@@ -84,9 +80,15 @@ function MathField({
   useEffect(() => {
     const element = new mathlive.MathfieldElement();
     element.mathVirtualKeyboardPolicy = "manual";
-    // The menu takes its items once the field has mounted; an empty menu leaves no context menu of MathLive's own.
+    // The menu and the keys take their settings once the field has mounted; an empty menu leaves no context menu of
+    // MathLive's own. Escape leaves the formula's editor, so MathLive's own Escape, which switches the field to typed
+    // LaTeX, gives way to the popover: the LaTeX segment is where LaTeX is typed.
     const mounted = () => {
       element.menuItems = [];
+      element.keybindings = Arr.filter(
+        element.keybindings,
+        (binding) => binding.key !== "[Escape]"
+      );
       element.focus();
       if (element.value === NEW_FORMULA) {
         element.executeCommand("selectAll");
@@ -248,15 +250,31 @@ export function FormulaEdit({
   onRemove: () => void;
   onSave: (latex: string) => void;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
+  const [open, setOpen] = useState(false);
+  const [controller] = useState(createPopoverController);
   const [draft, setDraft] = useState(latex);
   const [view, setView] = useState<typeof FormulaView.Type>("formula");
   const [mathlive, setMathlive] = useState<Option.Option<typeof MathLive>>(
     Option.none
   );
-  const discarded = useRef(false);
+  // Whether the formula was just inserted, latched as the editor mounts: the node view redraws with a new node as the
+  // document changes, which turns `defaultOpen` false while this first editor is still open. Its first close clears it.
+  const inserted = useRef(defaultOpen);
   const field = useRef<MathLive.MathfieldElement | null>(null);
   const problem = useMemo(() => Effect.runSync(formulaProblem(draft)), [draft]);
+
+  // The formula just inserted opens its editor from code a frame after it draws, so the editor takes
+  // the focus. A toolbar's press gives the caret back to the text in the next frame (tiptap's
+  // `focus`), and a popover closes when the focus leaves it, so the editor opens once the caret landed.
+  useEffect(() => {
+    if (!defaultOpen) {
+      return;
+    }
+    const frame = requestAnimationFrame(() => controller.setOpen(true));
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, [controller, defaultOpen]);
 
   // MathLive loads the first time the popover shows, which may be as the formula first draws.
   useEffect(() => {
@@ -274,18 +292,22 @@ export function FormulaEdit({
     };
   }, [mathlive, open]);
 
-  /** Opens the editor on the saved formula, or closes it, saving the draft unless Escape kept the formula as it was. */
+  /**
+   * Opens the editor on the saved formula, or closes it, saving the draft unless Escape kept the formula as it was.
+   * Escape is read from the popover's own close reason, since the focus may still be in the text when it is pressed.
+   */
   function openEditor(next: boolean, escaped: boolean) {
     if (next) {
-      discarded.current = false;
       setDraft(latex);
       setOpen(true);
       return;
     }
     setOpen(false);
-    if (!discarded.current && draft.trim() !== "") {
+    const fresh = inserted.current;
+    inserted.current = false;
+    if (!escaped && draft.trim() !== "") {
       onSave(draft.trim());
-    } else if (defaultOpen) {
+    } else if (fresh) {
       onRemove();
       return;
     }
@@ -294,15 +316,9 @@ export function FormulaEdit({
     }
   }
 
-  /** Escape keeps the formula as it was saved, so the popover closes without a save. */
-  function discardOnEscape(event: KeyboardEvent) {
-    if (event.key === "Escape") {
-      discarded.current = true;
-    }
-  }
-
   return (
     <Popover
+      controller={controller}
       onOpenChange={(next, details) =>
         openEditor(next, details.reason === "escape-key")
       }
@@ -326,8 +342,7 @@ export function FormulaEdit({
       <PopoverContent
         align="center"
         className="w-80 gap-3 p-3"
-        finalFocus={false}
-        onKeyDown={discardOnEscape}
+        finalFocus="none"
       >
         <ButtonGroup className="w-full">
           <Button
@@ -366,7 +381,7 @@ export function FormulaEdit({
           <Textarea
             aria-label={labels.latex}
             className="font-mono"
-            onChange={(event) => setDraft(event.target.value)}
+            onValueChange={setDraft}
             // An example of LaTeX, the same in every language.
             placeholder={String.raw`\frac{a}{b}`}
             value={draft}

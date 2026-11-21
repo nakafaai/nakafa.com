@@ -18,10 +18,10 @@ import { DropdownMenuCheckboxItem } from "@repo/design-system/components/ui/drop
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
-  SheetContent,
   SheetDescription,
   SheetFooter,
   SheetHeader,
+  SheetPopup,
   SheetTitle,
   SheetTrigger,
 } from "@repo/design-system/components/ui/sheet";
@@ -58,7 +58,7 @@ export function NoticePreferences({ children }: { children: ReactNode }) {
           </Button>
         }
       />
-      <SheetContent className="w-full max-w-none" keepMounted size="md">
+      <SheetPopup className="w-full max-w-none" keepMounted size="md">
         <SheetHeader>
           <SheetTitle>{t("preferences")}</SheetTitle>
           <SheetDescription>{t("preferences-description")}</SheetDescription>
@@ -67,7 +67,7 @@ export function NoticePreferences({ children }: { children: ReactNode }) {
         <SheetFooter className="flex-row items-center justify-between gap-4">
           <PushOffer />
         </SheetFooter>
-      </SheetContent>
+      </SheetPopup>
     </Sheet>
   );
 }
@@ -176,7 +176,6 @@ function ChannelItem({
   return (
     <DropdownMenuCheckboxItem
       checked={shown}
-      closeOnClick={false}
       disabled={save === null}
       icon={channelIcons[channel]}
       onCheckedChange={(next) =>
@@ -185,6 +184,7 @@ function ChannelItem({
           await save?.(channel, kind, next);
         })
       }
+      value={channel}
     >
       {t(`channel.${channel}`)}
     </DropdownMenuCheckboxItem>

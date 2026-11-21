@@ -4,6 +4,7 @@ import { Effect } from "effect";
 import { activate } from "@/e2e/support/input";
 import { confirmFinish, waitForRunningSection } from "@/e2e/support/player";
 import { appRoutes } from "@/e2e/support/route";
+import { topDialog } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
@@ -32,9 +33,7 @@ export const startEntryAttempt = Effect.fn("NakafaE2E.startEntryAttempt")(
     yield* Effect.promise(() => waitUntilTakenOver(start));
     yield* activate(start, false);
     yield* activate(
-      page
-        .getByRole("dialog")
-        .getByRole("button", { exact: true, name: primary }),
+      topDialog(page).getByRole("button", { exact: true, name: primary }),
       false
     );
     yield* waitForRunningSection(page);
@@ -51,7 +50,7 @@ export const finishEntryAttempt = Effect.fn("NakafaE2E.finishEntryAttempt")(
     yield* Effect.promise(() =>
       expect(
         page.getByRole("button", { exact: true, name: "Finish" })
-      ).toBeHidden({ timeout: readinessTimeoutMilliseconds })
+      ).toHaveCount(0, { timeout: readinessTimeoutMilliseconds })
     );
   }
 );

@@ -4,10 +4,10 @@ import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
-  SheetContent,
   SheetDescription,
   SheetFooter,
   SheetHeader,
+  SheetPopup,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { lazy } from "@repo/design-system/lib/lazy";
@@ -60,7 +60,7 @@ export function UserSettingsPayments() {
         </CardSectionActions>
       </CardSectionFooter>
       <Sheet onOpenChange={setIsOpen} open={isOpen}>
-        <SheetContent className="w-full max-w-none" size="lg">
+        <SheetPopup className="w-full max-w-none" size="lg">
           <SheetHeader>
             <SheetTitle>{t("payments")}</SheetTitle>
             <SheetDescription>{t("payments-description")}</SheetDescription>
@@ -77,7 +77,7 @@ export function UserSettingsPayments() {
               {t("payments-sheet-footer", { email: COMPANY_IDENTITY.email })}
             </p>
           </SheetFooter>
-        </SheetContent>
+        </SheetPopup>
       </Sheet>
     </CardSection>
   );

@@ -13,7 +13,7 @@ import {
   openChatPage,
   runOnPage,
 } from "@/e2e/support/chat";
-import { PROFILE_PAGE } from "@/e2e/support/selector";
+import { noticeWith, PROFILE_PAGE } from "@/e2e/support/selector";
 import { ACCESS_TITLE } from "@/e2e/support/share";
 import { inTheSheet, promptWith } from "@/e2e/support/sheet";
 import { shownTexts, watchTexts } from "@/e2e/support/shown";
@@ -297,7 +297,7 @@ const leavesWhenDeletedElsewhere = Effect.fn(
         timeout: readinessTimeoutMilliseconds,
       }
     );
-    await expect(page.getByText(DELETED_ELSEWHERE)).toBeVisible();
+    await expect(noticeWith(page, DELETED_ELSEWHERE)).toBeVisible();
     await expect(rowOf(page, oldest.chatId)).toHaveCount(0);
     expect(await shownTexts(page)).toEqual([]);
     await other.close();
@@ -330,7 +330,7 @@ const sheetLetsGoWhenDeletedElsewhere = Effect.fn(
     });
     await waitUntilTakenOver(history);
     await history.click();
-    await page.getByRole("menuitem", { name: "Going chat" }).click();
+    await page.getByRole("menuitemradio", { name: "Going chat" }).click();
     await expect(
       promptWith(inTheSheet(page), "The chat that goes")
     ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
@@ -338,7 +338,7 @@ const sheetLetsGoWhenDeletedElsewhere = Effect.fn(
   });
   const other = yield* deleteInAnotherTab(page, learner.username, gone.chatId);
   yield* Effect.promise(async () => {
-    await expect(page.getByText(DELETED_ELSEWHERE)).toBeVisible({
+    await expect(noticeWith(page, DELETED_ELSEWHERE)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
     await expect(

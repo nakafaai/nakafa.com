@@ -1,7 +1,8 @@
-import { useRender } from "@base-ui/react/use-render";
 import { Tick01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import type { RenderableProps } from "@repo/design-system/lib/render";
+import { renderElement } from "@ui-sdk/react/primitive";
 import { cn } from "cn";
 import { Schema } from "effect";
 import { createContext, use, useCallback, useMemo, useState } from "react";
@@ -170,15 +171,14 @@ function StepperTrigger({
   render,
   type,
   ...props
-}: useRender.ComponentProps<"button">) {
+}: RenderableProps<"button">) {
   const setActiveStep = useStepper((stepper) => stepper.setActiveStep);
   const step = useStepItem((item) => item.step);
   const isDisabled = useStepItem((item) => item.isDisabled);
 
-  return useRender({
-    defaultTagName: "button",
-    render,
-    props: {
+  return renderElement(
+    "button",
+    {
       children,
       className: cn(
         "pressable focus-visible:border-ring focus-visible:ring-ring/50 inline-flex items-center gap-3 rounded-full transition-[scale] outline-none focus-visible:z-10 focus-visible:ring-3 disabled:pointer-events-none disabled:opacity-50",
@@ -196,7 +196,8 @@ function StepperTrigger({
       type: type ?? "button",
       ...props,
     },
-  });
+    render
+  );
 }
 
 /** Renders the numbered, completed, or loading indicator content. */
@@ -228,13 +229,12 @@ function StepperIndicator({
   children,
   render,
   ...props
-}: useRender.ComponentProps<"span">) {
+}: RenderableProps<"span">) {
   const state = useStepItem((item) => item.state);
 
-  return useRender({
-    defaultTagName: "span",
-    render,
-    props: {
+  return renderElement(
+    "span",
+    {
       children: children ?? <StepperDefaultIndicator />,
       className: cn(
         "bg-muted text-muted-foreground data-[step-state=active]:bg-primary data-[step-state=completed]:bg-primary data-[step-state=active]:text-primary-foreground data-[step-state=completed]:text-primary-foreground relative flex size-6 shrink-0 items-center justify-center rounded-full text-xs",
@@ -244,7 +244,8 @@ function StepperIndicator({
       "data-step-state": state,
       ...props,
     },
-  });
+    render
+  );
 }
 
 function StepperTitle({

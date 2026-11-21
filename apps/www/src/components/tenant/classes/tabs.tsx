@@ -53,7 +53,6 @@ export function ClassTabs({
     <Tabs value={tabOfView(tab)}>
       <TabsList aria-label={tCommon("class")} className={pageRowVariants()}>
         <TabsTab
-          nativeButton={false}
           render={
             <Link
               activeOptions={EXACT_ACTIVE_OPTIONS}
@@ -67,7 +66,6 @@ export function ClassTabs({
           value="home"
         />
         <TabsTab
-          nativeButton={false}
           render={
             <Link
               activeOptions={EXACT_ACTIVE_OPTIONS}
@@ -81,7 +79,6 @@ export function ClassTabs({
           value="forum"
         />
         <TabsTab
-          nativeButton={false}
           render={
             <Link
               activeOptions={EXACT_ACTIVE_OPTIONS}
@@ -95,7 +92,6 @@ export function ClassTabs({
           value="library"
         />
         <TabsTab
-          nativeButton={false}
           render={
             <Link
               activeOptions={EXACT_ACTIVE_OPTIONS}
@@ -109,7 +105,6 @@ export function ClassTabs({
           value="tasks"
         />
         <TabsTab
-          nativeButton={false}
           render={
             <Link
               activeOptions={EXACT_ACTIVE_OPTIONS}
@@ -124,7 +119,6 @@ export function ClassTabs({
         />
         {canGrade ? (
           <TabsTab
-            nativeButton={false}
             render={
               <Link
                 activeOptions={EXACT_ACTIVE_OPTIONS}

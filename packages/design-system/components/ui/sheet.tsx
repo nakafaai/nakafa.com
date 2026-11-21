@@ -1,5 +1,5 @@
-import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
+import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResizeEdge } from "@repo/design-system/components/ui/resizable";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
@@ -8,36 +8,44 @@ import {
   useWindowRoom,
 } from "@repo/design-system/hooks/resizable";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
+import { PopupContainer } from "@repo/design-system/lib/popup";
+import type { NodeChildren } from "@repo/design-system/lib/render";
+import {
+  DialogBackdrop,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  Dialog as DialogPrimitive,
+  DialogTitle,
+  DialogTrigger,
+} from "@ui-sdk/react/dialog";
 import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
+import type { ComponentProps } from "react";
 import { Activity, createContext, use } from "react";
 import { useTranslations } from "use-intl";
 
-const SheetContext = createContext<SheetPrimitive.Root.Props["modal"]>(true);
+const SheetContext =
+  createContext<ComponentProps<typeof DialogPrimitive>["modal"]>(true);
 
 /**
  * A panel that slides in from an edge, for details or editing beside the page. It reads as header, body and
  * footer, closes from one X in its header's top right corner, and its footer holds its sentence and its one action.
  */
-function Sheet({ modal = true, ...props }: SheetPrimitive.Root.Props) {
+function Sheet({
+  modal = true,
+  ...props
+}: ComponentProps<typeof DialogPrimitive>) {
   return (
     <SheetContext value={modal}>
-      <SheetPrimitive.Root data-slot="sheet" modal={modal} {...props} />
+      <DialogPrimitive
+        container={use(PopupContainer)}
+        modal={modal}
+        {...props}
+      />
     </SheetContext>
   );
-}
-
-function SheetTrigger(props: SheetPrimitive.Trigger.Props) {
-  return <SheetPrimitive.Trigger data-slot="sheet-trigger" {...props} />;
-}
-
-function SheetPortal(props: SheetPrimitive.Portal.Props) {
-  return <SheetPrimitive.Portal {...props} />;
-}
-
-function SheetClose(props: SheetPrimitive.Close.Props) {
-  return <SheetPrimitive.Close data-slot="sheet-close" {...props} />;
 }
 
 const sheetPopupVariants = cva(
@@ -73,14 +81,16 @@ const SHEET_MAX_WIDTH = 1024;
 /** What a window keeps beside a side sheet, in pixels, so the page behind it still shows. */
 const SHEET_PAGE_ROOM = 64;
 
-function SheetBackdrop({ className, ...props }: SheetPrimitive.Backdrop.Props) {
+function SheetBackdrop({
+  className,
+  ...props
+}: ComponentProps<typeof DialogBackdrop>) {
   return (
-    <SheetPrimitive.Backdrop
+    <DialogBackdrop
       className={cn(
         "duration-surface bg-ink/32 fixed inset-0 z-50 backdrop-blur-sm transition-opacity data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none",
         className
       )}
-      data-slot="sheet-backdrop"
       {...props}
     />
   );
@@ -105,7 +115,7 @@ function SheetPopup({
   widthKey,
   style,
   ...props
-}: SheetPrimitive.Popup.Props & {
+}: NodeChildren<ComponentProps<typeof DialogContent>> & {
   keepMounted?: boolean;
   showCloseButton?: boolean;
   /** How wide the sheet starts on a wide screen: `xs` for a menu, `sm` for a list or a form, up to `xl` for a table. */
@@ -129,51 +139,56 @@ function SheetPopup({
 
   return (
     <ButtonGroupVariant value={undefined}>
-      <SheetPortal keepMounted={keepMounted}>
-        <Activity mode={modal ? "visible" : "hidden"}>
-          <SheetBackdrop />
-        </Activity>
-        <SheetPrimitive.Popup
-          className={cn(
-            sheetPopupVariants({ inset, side }),
-            className,
-            sideways && "sm:w-(--sheet-width) sm:max-w-none",
-            isResizing && "transition-none"
-          )}
-          data-slot="sheet-popup"
-          style={(state) => ({
-            ...(typeof style === "function" ? style(state) : style),
-            "--sheet-width": `${width}px`,
-          })}
-          {...props}
+      <Activity mode={modal ? "visible" : "hidden"}>
+        <SheetBackdrop />
+      </Activity>
+      <DialogContent
+        className={cn(
+          sheetPopupVariants({ inset, side }),
+          className,
+          sideways && "sm:w-(--sheet-width) sm:max-w-none",
+          isResizing && "transition-none"
+        )}
+        data-surface="sheet"
+        keepMounted={keepMounted}
+        style={(state) => ({
+          ...(typeof style === "function" ? style(state) : style),
+          "--sheet-width": `${width}px`,
+        })}
+        {...props}
+      >
+        {/* The sheet scrolls within its frame, so its edge's grip stands across its border, outside the scroll. */}
+        <div
+          className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-[inherit]"
+          data-slot="sheet-frame"
         >
-          {/* The sheet scrolls within its frame, so its edge's grip stands across its border, outside the scroll. */}
-          <div
-            className="flex min-h-0 flex-1 flex-col overflow-y-auto rounded-[inherit]"
-            data-slot="sheet-frame"
+          {children}
+        </div>
+        {sideways ? (
+          <ResizeEdge
+            anchor={anchor}
+            className="max-sm:hidden"
+            resizer={resizerProps}
+          />
+        ) : null}
+        {!!showCloseButton && (
+          <DialogClose
+            className="absolute inset-e-2 top-2"
+            render={
+              <Button size="icon-sm" tooltip={t("close")} variant="ghost" />
+            }
           >
-            {children}
-          </div>
-          {sideways ? (
-            <ResizeEdge
-              anchor={anchor}
-              className="max-sm:hidden"
-              resizer={resizerProps}
-            />
-          ) : null}
-          {!!showCloseButton && (
-            <SheetPrimitive.Close
-              className="pressable focus-visible:ring-ring focus-visible:ring-offset-background absolute inset-e-2 top-2 inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-transparent opacity-80 transition-[scale,color,background-color,box-shadow,opacity] outline-none hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:transition-none pointer-coarse:after:absolute pointer-coarse:after:size-full pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
-              data-slot="sheet-close"
-            >
-              <HugeIcons icon={Cancel01Icon} />
-              <span className="sr-only">{t("close")}</span>
-            </SheetPrimitive.Close>
-          )}
-        </SheetPrimitive.Popup>
-      </SheetPortal>
+            <HugeIcons icon={Cancel01Icon} />
+          </DialogClose>
+        )}
+      </DialogContent>
     </ButtonGroupVariant>
   );
+}
+
+/** The control that opens its sheet. */
+function SheetTrigger(props: ComponentProps<typeof DialogTrigger>) {
+  return <DialogTrigger {...props} />;
 }
 
 /** The top of a sheet: its title and description, set off from the body by a line. */
@@ -224,24 +239,20 @@ function SheetPanel({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function SheetTitle({ className, ...props }: SheetPrimitive.Title.Props) {
-  return (
-    <SheetPrimitive.Title
-      className={cn("font-semibold", className)}
-      data-slot="sheet-title"
-      {...props}
-    />
-  );
+function SheetTitle({
+  className,
+  ...props
+}: ComponentProps<typeof DialogTitle>) {
+  return <DialogTitle className={cn("font-semibold", className)} {...props} />;
 }
 
 function SheetDescription({
   className,
   ...props
-}: SheetPrimitive.Description.Props) {
+}: ComponentProps<typeof DialogDescription>) {
   return (
-    <SheetPrimitive.Description
+    <DialogDescription
       className={cn("text-muted-foreground text-sm", className)}
-      data-slot="sheet-description"
       {...props}
     />
   );
@@ -249,16 +260,11 @@ function SheetDescription({
 
 export {
   Sheet,
-  SheetBackdrop,
-  SheetBackdrop as SheetOverlay,
-  SheetClose,
   SheetDescription,
   SheetFooter,
   SheetHeader,
   SheetPanel,
   SheetPopup,
-  SheetPopup as SheetContent,
-  SheetPortal,
   SheetTitle,
   SheetTrigger,
 };

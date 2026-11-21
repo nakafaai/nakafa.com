@@ -18,7 +18,7 @@ export function readFrameProblems(page: Page) {
         .filter(
           (animation) =>
             animation.effect instanceof KeyframeEffect &&
-            animation.effect.target?.matches('[data-slot="tab-indicator"]')
+            animation.effect.target?.matches('[data-slot="tabs-indicator"]')
         )
         .map((animation) => animation.finished)
     );
@@ -63,7 +63,7 @@ export function readFrameProblems(page: Page) {
     const standsApart = (element: Element) =>
       element.closest("aside") !== null ||
       element.closest(
-        '[data-slot="sidebar"],[data-slot="page-header"],[role="dialog"],[data-slot$="popup"],[data-slot="toaster"],[data-canvas]'
+        '[data-slot="sidebar"],[data-slot="page-header"],[role="dialog"],[data-slot$="-content"][data-open],[data-slot="toast-region"],[data-canvas]'
       ) !== null;
 
     const firstLetter = (root: Element) => {
@@ -108,7 +108,7 @@ export function readFrameProblems(page: Page) {
         (list) =>
           isDrawn(list) &&
           !standsApart(list) &&
-          list.closest("aside,[data-panel]") === null
+          list.closest('aside,[data-slot="resizable-panel"]') === null
       );
       const first = tabs?.querySelector('[data-slot="tabs-tab"]') ?? null;
       if (tabs === undefined || first === null) {
@@ -118,7 +118,7 @@ export function readFrameProblems(page: Page) {
       const letter = path === null ? null : firstLetter(path);
       const line = innerWidth >= desktop && letter !== null ? letter : start;
       const off = (x: number) => Math.abs(x - line) > tolerance;
-      const indicator = tabs.querySelector('[data-slot="tab-indicator"]');
+      const indicator = tabs.querySelector('[data-slot="tabs-indicator"]');
       // A row wider than a phone scrolls, and the line it starts on is where it stands unscrolled.
       const left = first.getBoundingClientRect().left + tabs.scrollLeft;
       const underline =

@@ -1,7 +1,7 @@
-import { mergeProps } from "@base-ui/react/merge-props";
-import { useRender } from "@base-ui/react/use-render";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { lineMark, lineWords } from "@repo/design-system/lib/mark";
+import type { RenderableProps } from "@repo/design-system/lib/render";
+import { renderElement } from "@ui-sdk/react/primitive";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
@@ -52,29 +52,28 @@ export function MarkedLine({
   tone = "idle",
   written = false,
   ...props
-}: useRender.ComponentProps<"div"> & {
+}: RenderableProps<"div"> & {
   readonly tone?: "bare" | keyof typeof SURFACES;
   readonly written?: boolean;
 }) {
-  return useRender({
-    defaultTagName: "div",
-    props: mergeProps<"div">(
-      {
-        className: cn(
-          tone === "bare" ? "" : buttonVariants({ variant: SURFACES[tone] }),
-          markedLine({
-            dashed: tone === "key",
-            framed: tone !== "bare",
-            written,
-          }),
-          className
-        ),
-      },
-      props
-    ),
-    render,
-    state: { slot: "marked-line", tone },
-  });
+  return renderElement(
+    "div",
+    {
+      "data-slot": "marked-line",
+      "data-tone": tone,
+      ...props,
+      className: cn(
+        tone === "bare" ? "" : buttonVariants({ variant: SURFACES[tone] }),
+        markedLine({
+          dashed: tone === "key",
+          framed: tone !== "bare",
+          written,
+        }),
+        className
+      ),
+    },
+    render
+  );
 }
 
 /**

@@ -116,7 +116,7 @@ function PointsField({ editable, points, questionId }: PointsFieldProps) {
         max={QUESTION_POINTS_MAX}
         min={1}
         onValueChange={(next) => setDraft(Option.some(next))}
-        onValueCommitted={commit}
+        onValueCommit={commit}
         step={1}
         value={Option.getOrElse(draft, () => points)}
       >

@@ -8,7 +8,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import {
   Command,
-  CommandCollection,
   CommandDialog,
   CommandDialogPopup,
   CommandEmpty,
@@ -74,8 +73,7 @@ export function TenantPalette({
     <CommandDialog onOpenChange={onOpenChange} open={open}>
       <CommandDialogPopup
         description={t("search-description")}
-        initialFocus
-        portalProps={{ keepMounted: true }}
+        keepMounted
         title={tCommon("search")}
       >
         <TenantPaletteCommand onOpened={() => onOpenChange(false)} />
@@ -100,42 +98,30 @@ function TenantPaletteCommand({ onOpened }: { onOpened: () => void }) {
   }
 
   return (
-    <Command
-      items={groups}
-      itemToStringValue={(item: PaletteItem) =>
-        item.place === undefined ? item.label : `${item.label} ${item.place}`
-      }
-      loopFocus
-    >
+    <Command>
       <CommandInput
         clearLabel={tCommon("clear-search")}
         placeholder={t("search-placeholder")}
       />
       <CommandPanel>
-        <CommandEmpty className="text-muted-foreground text-center text-sm">
-          {t("search-empty")}
-        </CommandEmpty>
+        <CommandEmpty>{t("search-empty")}</CommandEmpty>
         <CommandList>
-          {(group: PaletteGroup, index: number) => (
+          {Arr.map(groups, (group, index) => (
             <Fragment key={group.value}>
-              <CommandGroup items={group.items}>
+              <CommandGroup>
                 <CommandGroupLabel>{group.value}</CommandGroupLabel>
-                <CommandCollection>
-                  {(item: PaletteItem) => (
-                    <TenantPaletteRow
-                      disabled={isPending}
-                      item={item}
-                      key={item.key}
-                      onOpen={() => openItem(item)}
-                    />
-                  )}
-                </CommandCollection>
+                {Arr.map(group.items, (item) => (
+                  <TenantPaletteRow
+                    disabled={isPending}
+                    item={item}
+                    key={item.key}
+                    onOpen={() => openItem(item)}
+                  />
+                ))}
               </CommandGroup>
-              {index === groups.length - 1 ? null : (
-                <CommandSeparator className="my-2" />
-              )}
+              {index === groups.length - 1 ? null : <CommandSeparator />}
             </Fragment>
-          )}
+          ))}
         </CommandList>
       </CommandPanel>
       <CommandKeys />
@@ -154,7 +140,14 @@ function TenantPaletteRow({
   onOpen: () => void;
 }) {
   return (
-    <CommandItem disabled={disabled} onClick={onOpen} value={item}>
+    <CommandItem
+      disabled={disabled}
+      label={
+        item.place === undefined ? item.label : `${item.label} ${item.place}`
+      }
+      onSelect={onOpen}
+      value={item.key}
+    >
       {"mascot" in item.icon ? (
         <PersonAvatar className="size-4" mascot={item.icon.mascot} />
       ) : (

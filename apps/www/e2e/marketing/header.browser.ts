@@ -10,6 +10,7 @@ import {
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { waitForScrollRest } from "@/e2e/support/quiet";
 import { openRoute } from "@/e2e/support/route";
+import { HEADER_SECTION } from "@/e2e/support/selector";
 import {
   desktopViewport,
   targetViewports,
@@ -203,7 +204,7 @@ test.describe("the header's sections at desktop", () => {
         Effect.gen(function* () {
           yield* loadMarketingPage(page, "/en");
           const header = page.locator("header");
-          const popup = page.locator('[data-slot="navigation-menu-popup"]');
+          const popup = page.locator(HEADER_SECTION);
           yield* Effect.promise(() =>
             header.getByRole("button", { name: "School" }).hover()
           );

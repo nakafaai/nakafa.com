@@ -6,8 +6,8 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Label } from "@repo/design-system/components/ui/label";
 import {
+  Radio,
   RadioGroup,
-  RadioGroupItem,
 } from "@repo/design-system/components/ui/radio-group";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -83,7 +83,7 @@ export function CommentReport() {
       >
         {Arr.map(ReportReason.literals, (option) => (
           <div className="flex items-center gap-3" key={option}>
-            <RadioGroupItem id={`${id}-${option}`} value={option} />
+            <Radio id={`${id}-${option}`} value={option} />
             <Label htmlFor={`${id}-${option}`}>{t(`reason-${option}`)}</Label>
           </div>
         ))}

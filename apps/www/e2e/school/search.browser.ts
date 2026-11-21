@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -80,9 +81,9 @@ test("a class teacher's search lists the teacher's class and no settings", async
   ).toBeVisible();
   await expect(palette.getByText("Settings", { exact: true })).toHaveCount(0);
 
-  await palette
-    .getByRole("option", { name: "Fisika X-1", exact: true })
-    .click();
+  await pressInPopup(
+    palette.getByRole("option", { name: "Fisika X-1", exact: true })
+  );
   await expect(page).toHaveURL(address("/classes/fisika-x-1"));
   await context.close();
 });

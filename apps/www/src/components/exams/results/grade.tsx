@@ -145,9 +145,10 @@ export function GradeField({
           if (event.key === "Enter") {
             event.currentTarget.blur();
           }
-          // Escape takes a typed number back and stops there, so the sheet of answers stays open.
+          // Escape takes a typed number back and stops there, so the sheet of answers stays open: a popup leaves
+          // an Escape that a field has already taken (its default prevented) alone.
           if (event.key === "Escape" && draft !== null) {
-            event.stopPropagation();
+            event.preventDefault();
             setDraft(null);
           }
         }}

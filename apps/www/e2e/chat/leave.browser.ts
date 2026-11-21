@@ -15,6 +15,7 @@ import {
   viewerKnown,
 } from "@/e2e/support/chat";
 import { sidebarRows } from "@/e2e/support/rows";
+import { noticeWith } from "@/e2e/support/selector";
 import {
   inTheSheet,
   openSheet,
@@ -101,12 +102,12 @@ test.describe("A new chat admitted after the learner left, at 1440px", () => {
         changes.release();
 
         yield* Effect.promise(async () => {
-          await expect(page.getByText(NOTICE)).toBeVisible({
+          await expect(noticeWith(page, NOTICE)).toBeVisible({
             timeout: readinessTimeoutMilliseconds,
           });
           await expect(page.getByRole("button", { name: OPEN })).toBeVisible();
           expect(page.url()).toBe(left);
-          await expect(page.getByText(NOTICE)).toHaveCount(1);
+          await expect(noticeWith(page, NOTICE)).toHaveCount(1);
         });
 
         yield* Effect.promise(async () => {
@@ -190,7 +191,7 @@ test.describe("A new chat admitted after the learner left, at 1440px", () => {
         changes.release();
 
         yield* Effect.promise(async () => {
-          await expect(page.getByText(NOTICE)).toBeVisible({
+          await expect(noticeWith(page, NOTICE)).toBeVisible({
             timeout: readinessTimeoutMilliseconds,
           });
           await page.getByRole("button", { name: OPEN }).click();
@@ -238,7 +239,7 @@ test.describe("A new chat admitted after the learner left, at 1440px", () => {
         changes.release();
 
         yield* Effect.promise(async () => {
-          await expect(page.getByText(NOTICE)).toBeVisible({
+          await expect(noticeWith(page, NOTICE)).toBeVisible({
             timeout: readinessTimeoutMilliseconds,
           });
           await expect(sheet).toBeHidden({

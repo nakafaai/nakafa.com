@@ -59,7 +59,7 @@ test("the proctor shows the room's QR code and token, and a changed token comes 
   // Change token asks first, then the same view shows the new token.
   await room.getByRole("button", { name: "Change token" }).click();
   await proctor
-    .getByRole("dialog")
+    .getByRole("dialog", { name: "Change the sitting token?" })
     .getByRole("button", { name: "Change token", exact: true })
     .click();
   const changed = proctor.getByRole("dialog", { name: "Join this room" });

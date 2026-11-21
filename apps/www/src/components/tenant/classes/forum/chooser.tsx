@@ -86,11 +86,8 @@ export function EmojiPopover({
       <PopoverContent
         align="end"
         className="w-80 max-w-[calc(100vw-1rem)] gap-0 p-0"
-        initialFocus={(type) =>
-          type === "touch"
-            ? false
-            : (popup.current?.querySelector("input") ?? true)
-        }
+        // A touch opens it on itself, so no on-screen keyboard covers the emoji.
+        initialFocus={() => popup.current?.querySelector("input")}
         ref={popup}
         side={side}
       >

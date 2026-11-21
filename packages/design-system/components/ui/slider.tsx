@@ -1,94 +1,54 @@
-import { Slider as SliderPrimitive } from "@base-ui/react/slider";
+import {
+  SliderControl,
+  SliderIndicator,
+  Slider as SliderPrimitive,
+  SliderThumb,
+  SliderTrack,
+} from "@ui-sdk/react/slider";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
+import type * as React from "react";
 
 /**
- * Renders a Base UI slider using the active shadcn base registry anatomy.
- *
- * Base UI keeps pointer, keyboard, form, and multi-thumb behavior in the
- * primitive. The wrapper only owns Nakafa's visual treatment and cursor affordance.
- *
- * @see https://ui.shadcn.com/docs/components/base/slider
- * @see https://base-ui.com/react/components/slider
+ * A number, or a range of two, set by dragging its thumbs or with the arrow keys. The track stands in by half a
+ * thumb on each side, so a thumb at either end stays inside the slider's box.
  */
-function Slider<Value extends number | readonly number[]>({
+function Slider<Value extends number | number[]>({
   "aria-label": ariaLabel,
   className,
-  defaultValue,
-  value,
-  min = 0,
-  max = 100,
   ...props
-}: SliderPrimitive.Root.Props<Value>) {
-  let thumbCount = 1;
+}: React.ComponentProps<typeof SliderPrimitive<Value>>) {
+  const current = props.value ?? props.defaultValue;
+  const thumbs = Arr.isArray(current) ? current.length : 1;
 
-  if (Arr.isArray(defaultValue)) {
-    thumbCount = defaultValue.length;
-  }
-
-  if (Arr.isArray(value)) {
-    thumbCount = value.length;
-  }
-
-  const thumbKeys = createThumbKeys(thumbCount);
-
-  // The root is a plain `w-full`, so a caller's width wins the merge. A data variant would outrank that width
-  // in the cascade, and in a row that sizes to its content the track would measure nothing and only the thumb show.
   return (
-    <SliderPrimitive.Root
+    <SliderPrimitive
       className={cn(
         "w-full data-vertical:h-full data-vertical:w-auto",
         className
       )}
-      data-slot="slider"
-      defaultValue={defaultValue}
-      max={max}
-      min={min}
-      thumbAlignment="edge"
-      value={value}
       {...props}
     >
-      <SliderPrimitive.Control
-        className={cn(
-          "relative flex w-full cursor-pointer touch-none items-center select-none data-disabled:cursor-not-allowed data-disabled:opacity-50 data-vertical:h-full data-vertical:min-h-44 data-vertical:w-auto data-vertical:flex-col"
-        )}
-      >
-        <SliderPrimitive.Track
-          className={cn(
-            "border-input bg-background relative grow cursor-pointer overflow-hidden rounded-full border select-none data-disabled:cursor-not-allowed data-horizontal:h-1.5 data-horizontal:w-full data-vertical:h-full data-vertical:w-1.5"
-          )}
-          data-slot="slider-track"
-        >
-          <SliderPrimitive.Indicator
-            className={cn(
-              "bg-primary select-none data-horizontal:h-full data-vertical:w-full"
-            )}
-            data-slot="slider-range"
-          />
-        </SliderPrimitive.Track>
-        {Arr.map(thumbKeys, (thumbKey, thumbIndex) => (
-          <SliderPrimitive.Thumb
-            aria-label={ariaLabel}
-            className="border-primary bg-background ring-ring/50 block size-4 shrink-0 cursor-grab rounded-full border shadow-sm transition-[color,box-shadow] select-none hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:opacity-50 data-dragging:cursor-grabbing"
-            data-slot="slider-thumb"
-            index={thumbIndex}
-            key={thumbKey}
-          />
-        ))}
-      </SliderPrimitive.Control>
-    </SliderPrimitive.Root>
+      <SliderControl className="relative flex w-full cursor-pointer items-center py-1.5 select-none data-disabled:cursor-not-allowed data-disabled:opacity-50 data-vertical:h-full data-vertical:min-h-44 data-vertical:w-auto data-vertical:flex-col data-vertical:px-1.5 data-vertical:py-0">
+        <SliderTrack className="border-input bg-background mx-2 grow rounded-full border data-horizontal:h-1.5 data-vertical:mx-0 data-vertical:my-2 data-vertical:w-1.5">
+          <SliderIndicator className="bg-primary rounded-full" />
+          {Arr.map(thumbKeys(thumbs), (key, index) => (
+            <SliderThumb
+              aria-label={ariaLabel}
+              className="border-primary bg-background ring-ring/50 block size-4 shrink-0 cursor-grab rounded-full border shadow-sm transition-[color,box-shadow] select-none hover:ring-4 has-focus-visible:ring-4 data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-dragging:cursor-grabbing"
+              index={index}
+              key={key}
+            />
+          ))}
+        </SliderTrack>
+      </SliderControl>
+    </SliderPrimitive>
   );
 }
 
-/**
- * Creates stable thumb keys by slot so controlled value updates do not remount
- * the active thumb during pointer interaction.
- */
-function createThumbKeys(thumbCount: number) {
-  return Array.from(
-    { length: thumbCount },
-    (_, thumbSlot) => `thumb-slot-${thumbSlot}`
-  );
+/** One key per thumb slot, so a controlled value that moves never remounts the thumb being dragged. */
+function thumbKeys(thumbs: number) {
+  return Arr.makeBy(thumbs, (slot) => `thumb-${slot}`);
 }
 
 export { Slider };

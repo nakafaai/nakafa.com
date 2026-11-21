@@ -6,9 +6,9 @@ import { PopupHold } from "@repo/design-system/components/ui/hold";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
-  SheetContent,
   SheetFooter,
   SheetHeader,
+  SheetPopup,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import { Array as Arr, Result } from "effect";
@@ -149,7 +149,7 @@ export function IntegritySheet({
 
   return (
     <Sheet onOpenChange={onOpenChange} open={open}>
-      <SheetContent size="xl">
+      <SheetPopup size="xl">
         <SheetHeader className="flex-row items-center gap-3 pe-12">
           <HugeIcons icon={SecurityCheckIcon} />
           <SheetTitle>{t("integrity-title")}</SheetTitle>
@@ -167,7 +167,7 @@ export function IntegritySheet({
             {t("integrity-description")}
           </p>
         </SheetFooter>
-      </SheetContent>
+      </SheetPopup>
     </Sheet>
   );
 }

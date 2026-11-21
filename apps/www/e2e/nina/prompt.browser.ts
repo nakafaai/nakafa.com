@@ -23,8 +23,17 @@ const LONG_LINK = `https://example.com/${"a".repeat(300)}`;
 
 /** Whether the composer and its two buttons lie inside the page, read in the page. */
 const readComposerFit = (form: HTMLElement) => {
-  const attach = form.querySelector('button[aria-label="Attach files"]');
-  const send = form.querySelector('button[aria-label="Send message"]');
+  const buttonNamed = (name: string) =>
+    Array.from(form.querySelectorAll("button")).find((button) => {
+      const labelledBy = button.getAttribute("aria-labelledby");
+      const label =
+        (labelledBy
+          ? document.querySelector(`#${CSS.escape(labelledBy)}`)?.textContent
+          : null) ?? button.getAttribute("aria-label");
+      return label?.trim() === name;
+    });
+  const attach = buttonNamed("Attach files");
+  const send = buttonNamed("Send message");
   if (!(attach && send)) {
     return null;
   }
@@ -96,10 +105,19 @@ for (const width of [320, 1440]) {
  * element at its middle is the button itself.
  */
 const readSendRow = () => {
-  const popup = document.querySelector('[data-slot="sheet-popup"][data-open]');
+  const popup = document.querySelector('[data-surface="sheet"][data-open]');
   const form = popup?.querySelector("form");
-  const send = form?.querySelector('button[aria-label="Send message"]');
-  const attach = form?.querySelector('button[aria-label="Attach files"]');
+  const buttonNamed = (name: string) =>
+    Array.from(form?.querySelectorAll("button") ?? []).find((button) => {
+      const labelledBy = button.getAttribute("aria-labelledby");
+      const label =
+        (labelledBy
+          ? document.querySelector(`#${CSS.escape(labelledBy)}`)?.textContent
+          : null) ?? button.getAttribute("aria-label");
+      return label?.trim() === name;
+    });
+  const send = buttonNamed("Send message");
+  const attach = buttonNamed("Attach files");
   const text = form?.querySelector("textarea");
   if (!(popup && form && send && attach && text)) {
     return null;

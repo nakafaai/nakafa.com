@@ -186,7 +186,6 @@ type PromptInputTextareaProps = ComponentProps<typeof InputGroupTextarea> & {
 
 /** Renders prompt text with submit-on-enter and pasted-file support. */
 export function PromptInputTextarea({
-  onChange,
   className,
   placeholder,
   ...props
@@ -222,7 +221,6 @@ export function PromptInputTextarea({
       onPaste={handlePaste}
       placeholder={placeholder}
       {...props}
-      onChange={onChange}
     />
   );
 }

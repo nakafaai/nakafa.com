@@ -11,8 +11,14 @@ const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 /** The exam toolbar, in the row under the editor's header. */
 export const TOOLBAR = '[data-slot="editor-toolbar"]';
 
-/** The popover of the toolbar's More control, which holds the controls the row has no room for. */
-const POPOVER = '[data-slot="popover-content"]';
+/**
+ * The row of the exam toolbar's controls. The More control's popover renders inside the toolbar, beside its button,
+ * and holds the same controls, so a control of the row is found in the row.
+ */
+const TOOLBAR_ROW = '[data-slot="editor-toolbar-row"]';
+
+/** The open popover of the toolbar's More control, which holds the controls the row has no room for. */
+const POPOVER = '[data-slot="popover-content"][data-open]';
 
 /**
  * A warning the editor's sync logs when it drops a step of its own, which a reader sees as an edit that
@@ -41,10 +47,13 @@ export async function openNewExam(page: Page, address: string, title: string) {
 /**
  * Presses a control of the exam toolbar by its name. A control the row has no room for, as on a phone,
  * stands in the row out of sight, so it is pressed in the popover of the More control, as a teacher does.
+ * The exam toolbar is the page's first: an essay's answer box on the paper below draws one of its own.
  */
 export async function pressTool(page: Page, name: string) {
-  const toolbar = page.locator(TOOLBAR);
-  const inRow = toolbar.getByRole("button", { exact: true, name });
+  const toolbar = page.locator(TOOLBAR).first();
+  const inRow = toolbar
+    .locator(TOOLBAR_ROW)
+    .getByRole("button", { exact: true, name });
   if (await inRow.isVisible()) {
     await inRow.click();
     return;

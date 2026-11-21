@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 
 /** The address of the Exams page, where a member lands. */
@@ -46,8 +47,8 @@ test("the account menu saves the language of the school host and renders the sch
   await page.evaluate(() => Reflect.set(window, "nakafaSameDocument", true));
 
   await page.getByRole("button", { name: "Acceptance Owner" }).click();
-  await page.getByRole("menuitem", { name: "Language" }).click();
-  await page.getByRole("menuitem", { name: "Bahasa Indonesia" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Language" }));
+  await pressInPopup(page.getByRole("menuitem", { name: "Bahasa Indonesia" }));
 
   await expect(page.locator("html")).toHaveAttribute("lang", "id");
   await expect(page.getByRole("button", { name: "Buat ujian" })).toBeVisible();

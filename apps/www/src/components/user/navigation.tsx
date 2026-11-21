@@ -30,7 +30,6 @@ export function SharedTabs({ tabs, value }: Props) {
             <TabsTab
               className="flex-1 justify-center"
               key={tab.key}
-              nativeButton={false}
               render={
                 <Link data-warm="" {...tab.target}>
                   {tab.label}

@@ -1,6 +1,7 @@
 import type { Locator } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect, MutableList } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
@@ -79,7 +80,9 @@ test("in every kind of question, each text of the question takes the toolbar's m
 
   for (const kind of KINDS) {
     await page.getByRole("button", { name: QUESTION_TYPE }).first().click();
-    await page.getByRole("menuitemradio", { exact: true, name: kind }).click();
+    await pressInPopup(
+      page.getByRole("menuitemradio", { exact: true, name: kind })
+    );
     await expect(
       page.getByRole("button", { name: `Question type: ${kind}` })
     ).toBeVisible({ timeout: readinessTimeoutMilliseconds });

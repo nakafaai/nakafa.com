@@ -1,9 +1,13 @@
-import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
 import { ArrowDown02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ScrollBar } from "@repo/design-system/components/ui/scroll-area";
 import { MessageScroller as Primitive } from "@shadcn/react/message-scroller";
+import {
+  ScrollArea,
+  ScrollAreaContent,
+  ScrollAreaViewport,
+} from "@ui-sdk/react/scroll-area";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 
@@ -11,7 +15,9 @@ import type { ComponentProps } from "react";
 // Consumers compose the package's Provider directly; this file owns styling.
 /**
  * The scrolling list of a conversation: it keeps the reader's place as messages arrive and shows a button back to
- * the latest message.
+ * the latest message. The scroll surface is UI SDK's scroll area, as every other scroller's is. The package keeps
+ * what a conversation needs beyond it, which UI SDK's `stickToEnd` does not cover: a question held at the top while
+ * its answer streams, the place kept as older messages load above, a jump to one message, and the messages in view.
  */
 export function MessageScroller({
   className,
@@ -31,40 +37,49 @@ export function MessageScroller({
 
 /**
  * The scrolling part of a message list. The package's viewport, which keeps the list at its end, is the viewport
- * of a scroll area, so its bar overlays the messages and takes no room, as every other scroller's does.
+ * of a scroll area, so its bar overlays the messages and takes no room, as every other scroller's does. The parts
+ * keep their message scroller slots, which the place a reader left and the browser tests find them by.
  */
 export function MessageScrollerViewport({
+  children,
   className,
   ...props
 }: ComponentProps<typeof Primitive.Viewport>) {
   return (
-    <ScrollAreaPrimitive.Root
-      className="relative size-full min-h-0 min-w-0"
-      data-slot="message-scroller-area"
-    >
-      <ScrollAreaPrimitive.Viewport
+    <ScrollArea className="relative size-full min-h-0 min-w-0">
+      <ScrollAreaViewport
         className={cn(
           "size-full min-h-0 min-w-0 overscroll-contain contain-content outline-none data-pending-scroll:invisible",
           className
         )}
-        data-slot="message-scroller-viewport"
-        render={<Primitive.Viewport {...props} />}
-      />
+        render={
+          <Primitive.Viewport
+            data-slot="message-scroller-viewport"
+            {...props}
+          />
+        }
+      >
+        {children}
+      </ScrollAreaViewport>
       <ScrollBar />
-    </ScrollAreaPrimitive.Root>
+    </ScrollArea>
   );
 }
 
 export function MessageScrollerContent({
+  children,
   className,
   ...props
 }: ComponentProps<typeof Primitive.Content>) {
   return (
-    <Primitive.Content
+    <ScrollAreaContent
       className={cn("flex h-max min-h-full flex-col gap-6", className)}
-      data-slot="message-scroller-content"
-      {...props}
-    />
+      render={
+        <Primitive.Content data-slot="message-scroller-content" {...props} />
+      }
+    >
+      {children}
+    </ScrollAreaContent>
   );
 }
 

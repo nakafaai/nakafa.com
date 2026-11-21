@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { signInGuardian } from "@/e2e/support/guardian";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -47,7 +48,7 @@ test("an admin links a parent and corrects the mistyped email, the parent signs 
   await add.click();
   const dialog = settings.getByRole("dialog");
   await dialog.getByRole("combobox", { name: "Student" }).click();
-  await settings.getByRole("option", { name: "Siswa Uji" }).click();
+  await pressInPopup(settings.getByRole("option", { name: "Siswa Uji" }));
   await dialog.getByLabel("Parent's name").fill("Ibu Uji");
   await dialog.getByLabel("Parent email").fill(mistyped);
   await dialog.getByRole("button", { name: "Link a parent" }).click();
@@ -57,7 +58,7 @@ test("an admin links a parent and corrects the mistyped email, the parent signs 
 
   // The mistyped email is corrected in place, from a dialog filled in with it, and the link stays pending.
   await row.getByRole("button", { name: "More actions" }).click();
-  await settings.getByRole("menuitem", { name: "Change email" }).click();
+  await pressInPopup(settings.getByRole("menuitem", { name: "Change email" }));
   const correction = settings.getByRole("dialog");
   const corrected = correction.getByLabel("Parent email");
   await expect(corrected).toHaveValue(mistyped);
@@ -80,7 +81,7 @@ test("an admin links a parent and corrects the mistyped email, the parent signs 
 
   // The parent's name is corrected the same way, and the row shows it at once.
   await row.getByRole("button", { name: "More actions" }).click();
-  await settings.getByRole("menuitem", { name: "Rename parent" }).click();
+  await pressInPopup(settings.getByRole("menuitem", { name: "Rename parent" }));
   const naming = settings.getByRole("dialog");
   await naming.getByRole("textbox", { name: "Name" }).fill("Ibu Uji Baru");
   const renamedBefore = changes.sent;

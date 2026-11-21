@@ -119,14 +119,14 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
         {username === undefined ? null : (
           <DropdownMenuItem
             icon={UserIcon}
-            onClick={() => navigate(profileTarget(username))}
+            onSelect={() => navigate(profileTarget(username))}
           >
             {t("profile")}
           </DropdownMenuItem>
         )}
         <DropdownMenuItem
           icon={Notification01Icon}
-          onClick={() =>
+          onSelect={() =>
             navigate({ from: LOCALE_ROUTE, to: "/$locale/notifications" })
           }
         >
@@ -134,7 +134,7 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
         </DropdownMenuItem>
         <DropdownMenuItem
           icon={Settings01Icon}
-          onClick={() =>
+          onSelect={() =>
             navigate({ from: LOCALE_ROUTE, to: "/$locale/user/settings" })
           }
         >

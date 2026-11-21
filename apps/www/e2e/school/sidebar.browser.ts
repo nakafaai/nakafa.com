@@ -53,7 +53,7 @@ test("a teacher of a class in the active period sees the class under Classes, an
   const page = await context.newPage();
   await page.goto(schoolHome);
 
-  const sidebar = page.locator('[data-slot="sidebar-content"]');
+  const sidebar = page.locator('[data-sidebar="content"]');
   await expect(sidebar.getByText("Classes", { exact: true })).toBeVisible();
   await sidebar.getByRole("link", { name: "Fisika X-1", exact: true }).click();
 
@@ -77,7 +77,7 @@ test("a member with no class sees no Classes group in the sidebar", async ({
   const page = await context.newPage();
   await page.goto(schoolHome);
 
-  const sidebar = page.locator('[data-slot="sidebar-content"]');
+  const sidebar = page.locator('[data-sidebar="content"]');
   await expect(sidebar.getByRole("link", { name: "Exams" })).toBeVisible();
   await page.waitForLoadState("networkidle");
   await expect(sidebar.getByText("Classes", { exact: true })).toHaveCount(0);
@@ -96,7 +96,7 @@ test("the settings sidebar stands the profile and billing alone with their icons
   const page = await context.newPage();
   await page.goto(address("/settings/profile"));
 
-  const sidebar = page.locator('[data-slot="sidebar-content"]');
+  const sidebar = page.locator('[data-sidebar="content"]');
   for (const alone of ["Profile", "Billing"]) {
     const link = sidebar.getByRole("link", { exact: true, name: alone });
     await expect(link).toBeVisible();
@@ -148,7 +148,7 @@ test("no two entries of the settings sidebar draw the same icon", async ({
   const page = await context.newPage();
   await page.goto(address("/settings/profile"));
 
-  const sidebar = page.locator('[data-slot="sidebar-content"]');
+  const sidebar = page.locator('[data-sidebar="content"]');
   // The school's own groups stay mounted, hidden, behind the settings, so that coming back draws them at once.
   const entries = sidebar
     .locator('[data-sidebar="menu-button"]')

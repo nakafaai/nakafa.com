@@ -1,4 +1,3 @@
-import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
 import { cn } from "cn";
 import type * as React from "react";
 
@@ -10,11 +9,11 @@ function Avatar({
   className,
   size = "default",
   ...props
-}: AvatarPrimitive.Root.Props & {
+}: React.ComponentProps<"span"> & {
   size?: "default" | "sm" | "lg";
 }) {
   return (
-    <AvatarPrimitive.Root
+    <span
       className={cn(
         "group/avatar after:border-border relative flex size-8 shrink-0 rounded-full select-none after:absolute after:inset-0 after:rounded-full after:border after:mix-blend-darken data-[size=lg]:size-10 data-[size=sm]:size-6 dark:after:mix-blend-lighten",
         className
@@ -47,12 +46,9 @@ function AvatarImage({ className, ...props }: React.ComponentProps<"img">) {
   );
 }
 
-function AvatarFallback({
-  className,
-  ...props
-}: AvatarPrimitive.Fallback.Props) {
+function AvatarFallback({ className, ...props }: React.ComponentProps<"span">) {
   return (
-    <AvatarPrimitive.Fallback
+    <span
       className={cn(
         "bg-muted text-muted-foreground flex size-full items-center justify-center overflow-hidden rounded-full text-sm group-data-[size=sm]/avatar:text-xs",
         className

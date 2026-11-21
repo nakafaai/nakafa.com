@@ -4,6 +4,7 @@ import { Array as Arr, Effect, Option } from "effect";
 import { loadMathFonts } from "@/e2e/support/fonts";
 import { activate } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
+import { pressInPopup } from "@/e2e/support/popup";
 import { waitForQuiet } from "@/e2e/support/quiet";
 import { observeShell } from "@/e2e/support/shell";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -251,9 +252,11 @@ export const chooseView = Effect.fn("NakafaE2E.chooseView")(function* (
   const menu = viewOf(page, hasTouch).getByRole("button");
   yield* Effect.promise(() => waitUntilTakenOver(menu));
   yield* activate(menu, hasTouch);
-  yield* activate(
-    page.getByRole("menuitemradio", { exact: true, name: view }),
-    hasTouch
+  yield* Effect.promise(() =>
+    pressInPopup(
+      page.getByRole("menuitemradio", { exact: true, name: view }),
+      hasTouch
+    )
   );
   if (hasTouch) {
     yield* Effect.promise(() => page.keyboard.press("Escape"));

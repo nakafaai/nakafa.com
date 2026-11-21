@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import { closeSitting } from "@/e2e/support/proctor";
 import {
   createSchool,
@@ -81,9 +82,9 @@ test("a student writes an essay, the teacher grades it with part of its points, 
   await teacher.getByRole("link", { name: "Results", exact: true }).click();
   // The integrity report, from the header's Analysis menu, says what it is, and names the signal the student showed.
   await teacher.getByRole("button", { name: "Analysis", exact: true }).click();
-  await teacher
-    .getByRole("menuitem", { name: "Integrity", exact: true })
-    .click();
+  await pressInPopup(
+    teacher.getByRole("menuitem", { name: "Integrity", exact: true })
+  );
   const integrity = teacher.getByRole("dialog", { name: "Integrity report" });
   await expect(
     integrity.getByText(
@@ -99,14 +100,14 @@ test("a student writes an essay, the teacher grades it with part of its points, 
   await expect(integrity).toBeHidden();
   // The results list each question's answers in the Questions sheet of the header's Analysis menu, whose select picks the question.
   await teacher.getByRole("button", { name: "Analysis", exact: true }).click();
-  await teacher
-    .getByRole("menuitem", { name: "Questions", exact: true })
-    .click();
+  await pressInPopup(
+    teacher.getByRole("menuitem", { name: "Questions", exact: true })
+  );
   const questions = teacher.getByRole("dialog", { name: "Questions" });
   await questions.getByRole("combobox").click();
-  await teacher
-    .getByRole("option", { name: "Question 3", exact: true })
-    .click();
+  await pressInPopup(
+    teacher.getByRole("option", { name: "Question 3", exact: true })
+  );
   const answers = teacher.getByRole("table").filter({
     has: teacher.getByRole("columnheader", { name: "Points", exact: true }),
   });

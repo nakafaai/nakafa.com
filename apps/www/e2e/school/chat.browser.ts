@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -68,7 +69,7 @@ for (const viewport of [
     });
     const choosePhoto = page.waitForEvent("filechooser");
     await add.click();
-    await page.getByRole("menuitem", { name: "Photo" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Photo" }));
     const photoChooser = await choosePhoto;
     await photoChooser.setFiles({
       buffer: PIXEL,
@@ -92,7 +93,7 @@ for (const viewport of [
     // A document goes out alone, and shows as a row that opens it.
     const chooseDocument = page.waitForEvent("filechooser");
     await add.click();
-    await page.getByRole("menuitem", { name: "Document" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Document" }));
     const documentChooser = await chooseDocument;
     await documentChooser.setFiles({
       buffer: PAPER,
@@ -107,7 +108,7 @@ for (const viewport of [
 
     // A poll shows at once, and a vote counts at once.
     await add.click();
-    await page.getByRole("menuitem", { name: "Poll" }).click();
+    await pressInPopup(page.getByRole("menuitem", { name: "Poll" }));
     const dialog = page.getByRole("dialog", { name: "New poll" });
     await dialog.getByLabel("Question").fill("Ulangan hari apa?");
     await dialog.getByRole("textbox", { name: "Choice 1" }).fill("Senin");
@@ -190,7 +191,7 @@ test("a teacher archives a chat, which keeps its messages and takes no new one, 
     timeout: readinessTimeoutMilliseconds,
   });
   await menu().click();
-  await page.getByRole("menuitem", { name: "Archive chat" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Archive chat" }));
   await expect(chat).toBeHidden();
   await expect(
     page.getByText("This chat is archived, so it takes no new messages.")
@@ -203,7 +204,7 @@ test("a teacher archives a chat, which keeps its messages and takes no new one, 
 
   // Restored, it is back in the list, and the filter that showed it leaves.
   await menu().click();
-  await page.getByRole("menuitem", { name: "Restore chat" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Restore chat" }));
   await expect(page.getByRole("button", { name: "Archived" })).toHaveCount(0);
   await expect(chat).toBeVisible();
   await expect(
@@ -213,7 +214,7 @@ test("a teacher archives a chat, which keeps its messages and takes no new one, 
   });
 
   await menu().click();
-  await page.getByRole("menuitem", { name: "Delete chat" }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: "Delete chat" }));
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Delete chat" })

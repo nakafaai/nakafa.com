@@ -103,7 +103,7 @@ export function SchoolDeviceDialog({
             >
               <DropdownMenuItem
                 icon={UnavailableIcon}
-                onClick={() =>
+                onSelect={() =>
                   startTransition(() =>
                     runSchoolWrite(
                       schoolCall(() => deny({ slug, userCode: code })),

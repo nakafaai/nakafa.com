@@ -47,7 +47,6 @@ export function entryModule(
           `import * as ${binding(index)} from "${root}/catalog/cards/${card}";`
       ),
       `export { Root } from "${root}/catalog/page";`,
-      `export { toast } from "sonner";`,
       `export const showcase = catalog([${Arr.join(
         Arr.map(cards, (_, index) => binding(index)),
         ", "

@@ -4,7 +4,7 @@ import { operationalErrorName } from "@repo/analytics/posthog/exception";
 import { CodeBlockText } from "@repo/design-system/components/code/text";
 import {
   Collapsible,
-  CollapsibleContent,
+  CollapsiblePanel,
   CollapsibleTrigger,
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -152,16 +152,16 @@ export function Mermaid({
             {t("show-code")}
             <HugeIcons
               aria-hidden="true"
-              className="transition-transform group-data-panel-open/failure:rotate-180 motion-reduce:transition-none"
+              className="transition-transform group-data-open/failure:rotate-180 motion-reduce:transition-none"
               icon={ArrowDown01Icon}
             />
           </CollapsibleTrigger>
-          <CollapsibleContent className="flex flex-col gap-2 motion-reduce:transition-none">
+          <CollapsiblePanel className="flex flex-col gap-2 motion-reduce:transition-none">
             {renderState.detail ? (
               <FailureText>{renderState.detail}</FailureText>
             ) : null}
             <FailureText>{chart}</FailureText>
-          </CollapsibleContent>
+          </CollapsiblePanel>
         </Collapsible>
       </div>
     );

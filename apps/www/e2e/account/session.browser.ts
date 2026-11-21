@@ -116,7 +116,7 @@ test("a change made the moment a page loads is sent signed in", async ({
         const form = nameForm(page);
         yield* Effect.promise(() => expect(form.save).toBeDisabled());
         yield* Effect.promise(() =>
-          expect(page.locator("[data-sonner-toast]")).toHaveCount(0)
+          expect(page.locator("[data-slot=toast]")).toHaveCount(0)
         );
 
         // The server kept the name. The held answer goes through, and so

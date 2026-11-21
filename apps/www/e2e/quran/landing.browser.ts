@@ -57,8 +57,8 @@ function readHeaderOverflow() {
 /** The outline of the surah page on the right, whether it is the panel or the sheet of a phone. */
 function outlineLinks(page: Page, sheet: boolean) {
   return sheet
-    ? page.getByRole("dialog").locator('[data-slot="sidebar-content"]')
-    : page.locator('[data-side="right"] [data-slot="sidebar-content"]');
+    ? page.getByRole("dialog").locator('[data-sidebar="content"]')
+    : page.locator('[data-side="right"] [data-sidebar="content"]');
 }
 
 /** Opens a surah from its own address and waits until the page has hydrated. */

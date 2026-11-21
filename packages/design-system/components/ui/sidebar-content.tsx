@@ -1,9 +1,10 @@
 "use client";
 
-import { useRender } from "@base-ui/react/use-render";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { Separator } from "@repo/design-system/components/ui/separator";
+import type { RenderableProps } from "@repo/design-system/lib/render";
+import { renderElement } from "@ui-sdk/react/primitive";
 import { cn } from "cn";
 import type { ComponentProps, ReactElement } from "react";
 
@@ -58,7 +59,6 @@ export function SidebarSeparator({
     <Separator
       className={cn("bg-sidebar-border", className)}
       data-sidebar="separator"
-      data-slot="sidebar-separator"
       {...props}
     />
   );
@@ -76,7 +76,6 @@ export function SidebarContent({ className, ...props }: ComponentProps<"div">) {
       axis="vertical"
       className="flex-1"
       data-sidebar="content"
-      data-slot="sidebar-content"
       viewportClassName="group-data-[collapsible=icon]:overflow-hidden!"
     >
       <div className={cn("flex flex-col gap-2", className)} {...props} />
@@ -104,11 +103,10 @@ export function SidebarGroupLabel({
   className,
   render,
   ...props
-}: useRender.ComponentProps<"div">): ReactElement {
-  return useRender({
-    defaultTagName: "div",
-    render,
-    props: {
+}: RenderableProps<"div">): ReactElement {
+  return renderElement(
+    "div",
+    {
       className: cn(
         "text-sidebar-foreground ring-sidebar-ring duration-surface flex h-8 min-w-0 shrink-0 items-center overflow-hidden rounded-md px-2 text-xs font-medium whitespace-nowrap outline-hidden transition-[margin,opacity] focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
         "group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0",
@@ -118,7 +116,8 @@ export function SidebarGroupLabel({
       "data-slot": "sidebar-group-label",
       ...props,
     },
-  });
+    render
+  );
 }
 
 /** Renders an optional action aligned with a SidebarGroupLabel. */
@@ -126,11 +125,10 @@ export function SidebarGroupAction({
   className,
   render,
   ...props
-}: useRender.ComponentProps<"button">): ReactElement {
-  return useRender({
-    defaultTagName: "button",
-    render,
-    props: {
+}: RenderableProps<"button">): ReactElement {
+  return renderElement(
+    "button",
+    {
       className: cn(
         "pressable text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-md p-0 outline-hidden transition-transform focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
         "after:absolute after:-inset-2 md:after:hidden",
@@ -141,7 +139,8 @@ export function SidebarGroupAction({
       "data-slot": "sidebar-group-action",
       ...props,
     },
-  });
+    render
+  );
 }
 
 /** Wraps the menu or controls owned by a SidebarGroup. */

@@ -24,9 +24,8 @@ export function ExamLockMark() {
   const frozen = isFrozen(exam);
 
   return (
-    <Popover>
+    <Popover openOnHover>
       <PopoverTrigger
-        openOnHover
         render={<Button aria-label={t("locked")} variant="outline" />}
       >
         <HugeIcons aria-hidden="true" icon={SquareLock01Icon} />

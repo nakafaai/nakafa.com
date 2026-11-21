@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { chooseDay } from "@/e2e/support/date";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   grantStudent,
@@ -28,7 +29,7 @@ async function chooseFromRow(page: Page, item: string) {
     .getByRole("button", { name: "More actions" });
   await waitUntilTakenOver(menu);
   await menu.click();
-  await page.getByRole("menuitem", { name: item }).click();
+  await pressInPopup(page.getByRole("menuitem", { name: item }));
 }
 
 test("the school's Owner posts an announcement, publishes a task, enters and releases a grade, writes and approves a report card, and reads Insight, in a class they neither teach nor homeroom", async ({
@@ -71,7 +72,7 @@ test("the school's Owner posts an announcement, publishes a task, enters and rel
     .click();
   const placing = page.getByRole("dialog", { name: "Add student" });
   await placing.getByRole("combobox", { name: "Student" }).click();
-  await page.getByRole("option", { name: LEARNER }).click();
+  await pressInPopup(page.getByRole("option", { name: LEARNER }));
   await placing.getByRole("button", { name: "Add student" }).click();
   await expect(placing).toBeHidden();
 
@@ -102,7 +103,7 @@ test("the school's Owner posts an announcement, publishes a task, enters and rel
     .fill("Kerjakan soal 1 sampai 10.");
   await chooseDay(page, task.getByLabel("Deadline"), "2027-10-30");
   await task.getByRole("combobox", { name: "Time" }).click();
-  await page.getByRole("option", { name: LATE_EVENING }).click();
+  await pressInPopup(page.getByRole("option", { name: LATE_EVENING }));
   await task.getByRole("button", { name: "Publish" }).click();
   await expect(task).toBeHidden();
   await expect(

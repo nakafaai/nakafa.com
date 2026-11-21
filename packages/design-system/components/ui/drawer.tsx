@@ -1,191 +1,66 @@
-import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { StagedPopup } from "@repo/design-system/components/ui/staged";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
+import { PopupContainer } from "@repo/design-system/lib/popup";
+import type { NodeChildren } from "@repo/design-system/lib/render";
+import { releaseSheetExit } from "@repo/design-system/lib/sheet";
+import {
+  DrawerBackdrop,
+  DrawerContent as DrawerContentPrimitive,
+  DrawerDescription as DrawerDescriptionPrimitive,
+  DrawerHandle,
+  Drawer as DrawerPrimitive,
+  DrawerTitle as DrawerTitlePrimitive,
+} from "@ui-sdk/react/drawer";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
-import { createContext, use } from "react";
-
-const DrawerContext = createContext<{
-  hasSnapPoints: boolean;
-  modal: DrawerPrimitive.Root.Props["modal"];
-  swipeDirection: NonNullable<DrawerPrimitive.Root.Props["swipeDirection"]>;
-} | null>(null);
-
-/** Reads the root of the surrounding drawer. */
-function useDrawer() {
-  const context = use(DrawerContext);
-
-  if (context === null) {
-    throw new Error("useDrawer must be used within a Drawer.");
-  }
-
-  return context;
-}
+import { use } from "react";
 
 /**
- * shadcn's Base UI drawer in its floating style: a card that stands off every edge of the
- * screen, rounded on every corner, with the swipe handle at its edge, as an iPhone sheet looks.
- * A drawer closes as that sheet does, by its handle, a swipe or a press outside, so every drawer
- * draws the handle and none draws a close button.
- * https://ui.shadcn.com/docs/components/base/drawer
+ * A sheet that rises from an edge of the screen in the floating style of an iPhone sheet: a card that stands off every
+ * edge, rounded on every corner, with its handle at the edge it leaves by. It closes as that sheet does, by its
+ * handle, a swipe or a press outside, so every drawer draws the handle and none draws a close button. It follows the
+ * finger with the platform's spring, and the page behind it scales back as it opens (`DrawerStage`).
  */
 function Drawer({
-  modal = true,
-  snapPoints,
-  swipeDirection = "down",
+  side = "bottom",
   ...props
-}: DrawerPrimitive.Root.Props) {
+}: ComponentProps<typeof DrawerPrimitive>) {
   return (
-    <DrawerContext
-      value={{
-        hasSnapPoints: (snapPoints?.length ?? 0) > 0,
-        modal,
-        swipeDirection,
-      }}
-    >
-      <DrawerPrimitive.Root
-        data-slot="drawer"
-        modal={modal}
-        snapPoints={snapPoints}
-        swipeDirection={swipeDirection}
-        {...props}
-      />
-    </DrawerContext>
+    <DrawerPrimitive container={use(PopupContainer)} side={side} {...props} />
   );
-}
-
-function DrawerTrigger(props: DrawerPrimitive.Trigger.Props) {
-  return <DrawerPrimitive.Trigger data-slot="drawer-trigger" {...props} />;
-}
-
-function DrawerPortal(props: DrawerPrimitive.Portal.Props) {
-  return <DrawerPrimitive.Portal data-slot="drawer-portal" {...props} />;
 }
 
 /**
  * The dim over the page while a drawer is open. It draws no backdrop blur: the page under it scales back as the
- * drawer opens (`DrawerStage`), and a blur over a page that moves is computed again every frame, which held a slow
- * phone's frames while the drawer slid in.
- */
-function DrawerOverlay({
-  className,
-  ...props
-}: DrawerPrimitive.Backdrop.Props) {
-  return (
-    <DrawerPrimitive.Backdrop
-      className={cn(
-        "bg-ink/30 fixed inset-0 z-50 min-h-dvh opacity-[max(var(--drawer-overlay-min-opacity,0),calc(1-var(--drawer-swipe-progress)))] transition-opacity duration-450 ease-[cubic-bezier(0.32,0.72,0,1)] select-none data-ending-style:pointer-events-none data-ending-style:opacity-0 data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-snap-points:[--drawer-overlay-min-opacity:0.5] data-starting-style:opacity-0 data-swiping:duration-0 supports-[-webkit-touch-callout:none]:absolute",
-        className
-      )}
-      data-slot="drawer-overlay"
-      {...props}
-    />
-  );
-}
-
-function DrawerSwipeHandle({ className, ...props }: ComponentProps<"div">) {
-  return (
-    <div
-      aria-hidden="true"
-      className={cn(
-        "after:bg-muted relative z-10 flex shrink-0 cursor-grab transition-opacity duration-200 group-data-nested-drawer-open/drawer-popup:opacity-0 group-data-nested-drawer-swiping/drawer-popup:opacity-100 group-data-[swipe-axis=x]/drawer-popup:h-full group-data-[swipe-axis=x]/drawer-popup:w-3 group-data-[swipe-axis=x]/drawer-popup:items-center group-data-[swipe-axis=y]/drawer-popup:h-3 group-data-[swipe-axis=y]/drawer-popup:w-full group-data-[swipe-axis=y]/drawer-popup:justify-center group-data-[swipe-direction=down]/drawer-popup:items-end group-data-[swipe-direction=left]/drawer-popup:order-last group-data-[swipe-direction=left]/drawer-popup:justify-start group-data-[swipe-direction=right]/drawer-popup:justify-end group-data-[swipe-direction=up]/drawer-popup:order-last group-data-[swipe-direction=up]/drawer-popup:items-start after:block after:shrink-0 after:rounded-full group-data-[swipe-axis=x]/drawer-popup:after:h-25 group-data-[swipe-axis=x]/drawer-popup:after:w-1.5 group-data-[swipe-axis=y]/drawer-popup:after:h-1.5 group-data-[swipe-axis=y]/drawer-popup:after:w-25 active:cursor-grabbing",
-        className
-      )}
-      data-slot="drawer-swipe-handle"
-      {...props}
-    />
-  );
-}
-
-/**
- * Records where the page was scrolled as a drawer opens, so the page behind it scales back from the top of
- * the visible screen (`DrawerStage`). The scroll lock then moves the scroll from the root to the body, so the
- * larger of the two is the page's. The value stays after the drawer closes, while the page scales back up.
- */
-function recordStageScroll(node: HTMLDivElement | null) {
-  if (node === null) {
-    return;
-  }
-  const root = document.documentElement;
-  root.style.setProperty(
-    "--drawer-stage-scroll",
-    `${Math.max(root.scrollTop, document.body.scrollTop)}px`
-  );
-}
-
-/**
- * The floating card, over the overlay. It stands above an iPhone's home indicator, and the page behind it
- * scales back as it opens (`DrawerStage`).
+ * drawer opens (`DrawerStage`), and a blur over a page that moves is computed again every frame.
  */
 function DrawerContent({
   children,
   className,
   ...props
-}: Omit<DrawerPrimitive.Popup.Props, "ref">) {
-  const { hasSnapPoints, modal, swipeDirection } = useDrawer();
-  const swipeAxis =
-    swipeDirection === "down" || swipeDirection === "up" ? "y" : "x";
-
+}: NodeChildren<ComponentProps<typeof DrawerContentPrimitive>>) {
   return (
     <ButtonGroupVariant value={undefined}>
-      <DrawerPortal>
-        {modal === true && (
-          <DrawerOverlay data-snap-points={hasSnapPoints ? "" : undefined} />
+      <DrawerBackdrop className="bg-ink/30 fixed inset-0 z-50" />
+      <DrawerContentPrimitive
+        className={cn(
+          "group/drawer bg-popover text-popover-foreground dark:border-border border-popover z-50 m-2 mb-[max(--spacing(2),env(safe-area-inset-bottom))] flex min-h-0 flex-col overflow-hidden rounded-3xl border text-sm shadow-xl outline-none",
+          "data-[side=bottom]:max-h-[calc(100dvh-6rem)] data-[side=top]:max-h-[calc(100dvh-6rem)]",
+          "data-[side=left]:w-3/4 data-[side=left]:flex-row-reverse data-[side=right]:w-3/4 data-[side=right]:flex-row sm:data-[side=left]:w-96 sm:data-[side=right]:w-96",
+          className
         )}
-        <DrawerPrimitive.Viewport
-          className="pointer-events-none fixed inset-0 z-50 select-none data-[modal=true]:pointer-events-auto"
-          data-modal={modal}
-          data-slot="drawer-viewport"
-        >
-          <DrawerPrimitive.Popup
-            className={cn(
-              // Base.
-              "group/drawer-popup border-popover bg-popover text-popover-foreground dark:border-border pointer-events-auto fixed z-50 m-(--drawer-inset,0px) flex h-(--drawer-content-height) max-h-(--drawer-content-max-height,none) min-h-0 w-(--drawer-content-width,auto) transform-[translate3d(var(--translate-x,0px),var(--translate-y,0px),0)_scale(var(--stack-scale))] flex-col rounded-3xl border text-sm shadow-xl transition-[transform,height,opacity,filter] duration-450 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform outline-none select-none [--drawer-bleed-background:transparent] [--drawer-inset:--spacing(2)] [--drawer-stacked-shadow:0_-20px_25px_-5px_rgb(0_0_0/0.1),0_-8px_10px_-6px_rgb(0_0_0/0.1)] [interpolate-size:allow-keywords] has-[[data-popup-hold]]:pointer-events-none has-[[data-popup-hold]]:opacity-0 data-[swipe-direction=down]:data-nested-drawer-open:shadow-(--drawer-stacked-shadow)",
-              // Nested.
-              "data-nested-drawer-open:overflow-hidden data-nested-drawer-open:brightness-95",
-              // Bleed: shown only while a swipe drags the drawer, so the gap a pull past open leaves is filled, and at rest
-              // the drawer stands its inset off every edge with its whole rounded border in view.
-              "after:pointer-events-none after:absolute after:bg-(--drawer-bleed-background,var(--color-popover)) after:opacity-0 data-swiping:after:opacity-100 data-[swipe-axis=x]:after:inset-y-0 data-[swipe-axis=x]:after:w-(--bleed) data-[swipe-axis=y]:after:inset-x-0 data-[swipe-axis=y]:after:h-(--bleed) data-[swipe-direction=down]:after:top-full data-[swipe-direction=left]:after:right-full data-[swipe-direction=right]:after:left-full data-[swipe-direction=up]:after:bottom-full",
-              // Sizing.
-              "[--drawer-content-height:var(--drawer-height,auto)] data-[swipe-axis=x]:[--drawer-content-width:75%] data-[swipe-axis=y]:[--drawer-content-max-height:calc(100dvh-6rem)] data-[swipe-axis=y]:data-snap-points:[--drawer-content-height:100dvh] data-[swipe-axis=x]:sm:[--drawer-content-width:24rem]",
-              // Stack.
-              "[--bleed:3rem] [--peek:1rem] [--stack-height:var(--drawer-frontmost-height,var(--drawer-height,0px))] [--stack-peek-offset:max(0px,calc((var(--nested-drawers)-var(--stack-progress))*var(--peek)))] [--stack-progress:clamp(0,var(--drawer-swipe-progress),1)] [--stack-scale-base:max(0,calc(1-(var(--nested-drawers)*var(--stack-step))))] [--stack-scale:clamp(0,calc(var(--stack-scale-base)+(var(--stack-step)*var(--stack-progress))),1)] [--stack-shrink:calc(1-var(--stack-scale))] [--stack-step:0.05]",
-              // Transitions.
-              "data-ending-style:transform-(--closed-transform) data-ending-style:opacity-[0.9999] data-ending-style:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-nested-drawer-swiping:duration-0 data-ending-style:data-nested-drawer-swiping:duration-[calc(var(--drawer-swipe-strength)*400ms)] data-starting-style:transform-(--closed-transform) data-swiping:duration-0 data-ending-style:data-swiping:duration-[calc(var(--drawer-swipe-strength)*400ms)]",
-              // Axis: y.
-              "data-[swipe-axis=y]:inset-x-0 data-[swipe-axis=y]:data-nested-drawer-open:h-(--stack-height)",
-              // Axis: x.
-              "data-[swipe-axis=x]:inset-y-0 data-[swipe-axis=x]:flex-row",
-              // Direction: down.
-              "data-[swipe-direction=down]:bottom-[env(safe-area-inset-bottom,0px)] data-[swipe-direction=down]:origin-bottom data-[swipe-direction=down]:[--closed-transform:translate3d(0,calc(100%+var(--drawer-inset,0px)+env(safe-area-inset-bottom,0px)+2px),0)] data-[swipe-direction=down]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)-var(--stack-peek-offset)-(var(--stack-shrink)*var(--stack-height)))]",
-              // Direction: up.
-              "data-[swipe-direction=up]:top-0 data-[swipe-direction=up]:origin-top data-[swipe-direction=up]:[--closed-transform:translate3d(0,calc(-100%-var(--drawer-inset,0px)-2px),0)] data-[swipe-direction=up]:[--translate-y:calc(var(--drawer-snap-point-offset,0px)+var(--drawer-swipe-movement-y)+var(--stack-peek-offset)+(var(--stack-shrink)*var(--stack-height)))]",
-              // Direction: left.
-              "data-[swipe-direction=left]:left-0 data-[swipe-direction=left]:origin-left data-[swipe-direction=left]:[--closed-transform:translate3d(calc(-100%-var(--drawer-inset,0px)-2px),0,0)] data-[swipe-direction=left]:[--translate-x:calc(var(--drawer-swipe-movement-x)+var(--stack-peek-offset)+(var(--stack-shrink)*100%))]",
-              // Direction: right.
-              "data-[swipe-direction=right]:right-0 data-[swipe-direction=right]:origin-right data-[swipe-direction=right]:[--closed-transform:translate3d(calc(100%+var(--drawer-inset,0px)+2px),0,0)] data-[swipe-direction=right]:[--translate-x:calc(var(--drawer-swipe-movement-x)-var(--stack-peek-offset)-(var(--stack-shrink)*100%))]",
-              className
-            )}
-            data-slot="drawer-popup"
-            data-snap-points={hasSnapPoints ? "" : undefined}
-            data-swipe-axis={swipeAxis}
-            render={(popupProps, state) => (
-              <StagedPopup {...popupProps} open={state.open} />
-            )}
-            {...props}
-            ref={recordStageScroll}
-          >
-            <DrawerSwipeHandle />
-            <DrawerPrimitive.Content
-              className="flex min-h-0 flex-1 flex-col overflow-hidden overscroll-contain rounded-[inherit] transition-opacity duration-300 ease-[cubic-bezier(0.45,1.005,0,1.005)] select-text group-data-nested-drawer-open/drawer-popup:opacity-0 group-data-nested-drawer-swiping/drawer-popup:opacity-100 group-data-swiping/drawer-popup:select-none"
-              data-slot="drawer-content"
-            >
-              {children}
-            </DrawerPrimitive.Content>
-          </DrawerPrimitive.Popup>
-        </DrawerPrimitive.Viewport>
-      </DrawerPortal>
+        render={(contentProps, state) => (
+          <StagedPopup {...contentProps} open={state.open} />
+        )}
+        {...props}
+      >
+        <DrawerHandle
+          className="after:bg-muted focus-visible:after:bg-ring flex shrink-0 cursor-grab touch-none items-center justify-center outline-none group-data-[side=bottom]/drawer:h-5 group-data-[side=left]/drawer:w-4 group-data-[side=right]/drawer:w-4 group-data-[side=top]/drawer:order-last group-data-[side=top]/drawer:h-5 after:rounded-full group-data-[side=bottom]/drawer:after:h-1.5 group-data-[side=bottom]/drawer:after:w-25 group-data-[side=left]/drawer:after:h-25 group-data-[side=left]/drawer:after:w-1.5 group-data-[side=right]/drawer:after:h-25 group-data-[side=right]/drawer:after:w-1.5 group-data-[side=top]/drawer:after:h-1.5 group-data-[side=top]/drawer:after:w-25 active:cursor-grabbing"
+          ref={releaseSheetExit}
+        />
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
+      </DrawerContentPrimitive>
     </ButtonGroupVariant>
   );
 }
@@ -195,7 +70,7 @@ function DrawerHeader({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "flex shrink-0 flex-col gap-0.5 border-b p-4 group-data-[swipe-axis=y]/drawer-popup:text-center last:border-b-0 has-[+[data-slot=drawer-footer]]:border-b-0 md:gap-1.5 md:text-left",
+        "flex shrink-0 flex-col gap-0.5 border-b p-4 group-data-[side=bottom]/drawer:pt-0 group-data-[side=bottom]/drawer:text-center last:border-b-0 has-[+[data-slot=drawer-footer]]:border-b-0 md:gap-1.5",
         className
       )}
       data-slot="drawer-header"
@@ -204,11 +79,6 @@ function DrawerHeader({ className, ...props }: ComponentProps<"div">) {
   );
 }
 
-/**
- * The body between the header and the footer, which scrolls on its own and fades at its edges. Its height
- * comes from what it holds, up to what the drawer leaves for it. The scroller is the flex item itself, because a
- * drawer only caps its height: a percentage inside a wrapper resolves to nothing, and the form then runs under the footer.
- */
 /**
  * The body of a drawer. What it holds keeps its edges and stands apart, as a form's fields do. A `fill` body
  * does not scroll: what it holds shrinks to the height the drawer leaves and scrolls on its own, so the drawer
@@ -232,11 +102,7 @@ function DrawerPanel({
     );
   }
   return (
-    <ScrollArea
-      axis="vertical"
-      className="min-h-0 flex-1 touch-auto"
-      scrollFade
-    >
+    <ScrollArea axis="vertical" className="min-h-0 flex-1" scrollFade>
       <div
         className={cn("flex min-w-0 flex-col gap-4 p-4", className)}
         data-slot="drawer-panel"
@@ -264,11 +130,13 @@ function DrawerFooter({ className, ...props }: ComponentProps<"div">) {
   );
 }
 
-function DrawerTitle({ className, ...props }: DrawerPrimitive.Title.Props) {
+function DrawerTitle({
+  className,
+  ...props
+}: ComponentProps<typeof DrawerTitlePrimitive>) {
   return (
-    <DrawerPrimitive.Title
+    <DrawerTitlePrimitive
       className={cn("text-foreground text-base font-medium", className)}
-      data-slot="drawer-title"
       {...props}
     />
   );
@@ -277,11 +145,10 @@ function DrawerTitle({ className, ...props }: DrawerPrimitive.Title.Props) {
 function DrawerDescription({
   className,
   ...props
-}: DrawerPrimitive.Description.Props) {
+}: ComponentProps<typeof DrawerDescriptionPrimitive>) {
   return (
-    <DrawerPrimitive.Description
+    <DrawerDescriptionPrimitive
       className={cn("text-muted-foreground text-sm text-balance", className)}
-      data-slot="drawer-description"
       {...props}
     />
   );
@@ -293,10 +160,6 @@ export {
   DrawerDescription,
   DrawerFooter,
   DrawerHeader,
-  DrawerOverlay,
   DrawerPanel,
-  DrawerPortal,
-  DrawerSwipeHandle,
   DrawerTitle,
-  DrawerTrigger,
 };

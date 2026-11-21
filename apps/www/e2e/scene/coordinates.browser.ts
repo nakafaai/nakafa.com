@@ -161,9 +161,7 @@ const expectSliderReadouts = Effect.fn("NakafaE2E.expectSliderReadouts")(
         expect(await isHydrated(slider)).toBe(true);
       }).toPass({ timeout: revealTimeoutMilliseconds })
     );
-    const start = Number(
-      yield* Effect.promise(() => slider.getAttribute("aria-valuenow"))
-    );
+    const start = Number(yield* Effect.promise(() => slider.inputValue()));
     const before = yield* Effect.promise(() => facts.textContent());
     yield* Effect.promise(() => slider.focus());
     yield* Effect.promise(() =>
@@ -173,10 +171,7 @@ const expectSliderReadouts = Effect.fn("NakafaE2E.expectSliderReadouts")(
       yield* Effect.promise(() => page.keyboard.press("ArrowRight"));
     }
     yield* Effect.promise(() =>
-      expect(slider).toHaveAttribute(
-        "aria-valuenow",
-        String(start + ANGLE_STEPS)
-      )
+      expect(slider).toHaveValue(String(start + ANGLE_STEPS))
     );
     yield* Effect.promise(() => expect(facts).not.toHaveText(before ?? ""));
   }

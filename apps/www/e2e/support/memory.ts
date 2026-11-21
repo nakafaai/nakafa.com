@@ -34,12 +34,11 @@ export const memoryRow = (page: Page, text: string) =>
 
 /**
  * The question asked before one memory is deleted: a dialog on desktop and a
- * drawer on a phone, where the editor is a dialog too, so it is found by its title.
+ * sheet on a phone. It renders inside the editor, a dialog too, so it is found
+ * by its own name.
  */
 export const deleteQuestion = (page: Page) =>
-  page.getByRole("dialog").filter({
-    has: page.getByRole("heading", { exact: true, name: DELETE_TITLE }),
-  });
+  page.getByRole("dialog", { exact: true, name: DELETE_TITLE });
 
 /** Confirms the delete that the question asks about. */
 export const confirmDelete = (page: Page) =>

@@ -225,7 +225,7 @@ export function FolderRowMenu({
         />
         <DropdownMenuItem
           icon={PencilEdit02Icon}
-          onClick={() => dialogs.show("rename")}
+          onSelect={() => dialogs.show("rename")}
         >
           {tCommon("rename")}
         </DropdownMenuItem>

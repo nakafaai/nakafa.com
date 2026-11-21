@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -67,7 +68,7 @@ test("a guardian link's state shows as a badge with the state's own icon", async
   await add.click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("combobox", { name: "Student" }).click();
-  await page.getByRole("option", { name: "Siswa Uji" }).click();
+  await pressInPopup(page.getByRole("option", { name: "Siswa Uji" }));
   await dialog.getByLabel("Parent's name").fill("Ibu Uji");
   await dialog
     .getByLabel("Parent email")

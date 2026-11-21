@@ -9,7 +9,11 @@ import { waitForSlide } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { APP_SCRIPT_PATTERN } from "@/e2e/support/requests";
-import { paginationNavigation, SUBJECT_LINK } from "@/e2e/support/selector";
+import {
+  paginationNavigation,
+  SUBJECT_LINK,
+  TOOLTIP,
+} from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const NINA_DIALOG_NAME = /^Nina/u;
@@ -145,9 +149,9 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
         page.getByRole("button", { name: "Copy Content", exact: true })
       ).toHaveCount(0)
     );
-    // Base UI 1.8 keeps tooltips visual and labels their triggers with aria-label.
-    // https://base-ui.com/react/components/tooltip#usage-guidelines
-    const tooltip = page.locator('[data-slot="tooltip-content"]');
+    // A UI SDK tooltip describes a trigger that names itself with aria-label
+    // (`@ui-sdk/react/docs/components/tooltip.md`).
+    const tooltip = page.locator(TOOLTIP);
     const showsTooltip = Effect.fn("NakafaE2E.showsReadingTooltip")(function* (
       trigger: Locator,
       label: string
@@ -195,7 +199,7 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
       });
       // The outline's own links, which the rail hides while its area keeps the panel's height.
       const outline = sidebar
-        .locator('[data-slot="sidebar-content"]')
+        .locator('[data-sidebar="content"]')
         .getByRole("link")
         .first();
       yield* Effect.promise(() =>

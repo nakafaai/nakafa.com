@@ -64,7 +64,7 @@ export function TenantOutsiderActions({
           >
             <DropdownMenuItem
               icon={Refresh01Icon}
-              onClick={() => startChecking(() => router.invalidate())}
+              onSelect={() => startChecking(() => router.invalidate())}
             >
               {t("outsider-check-again")}
             </DropdownMenuItem>

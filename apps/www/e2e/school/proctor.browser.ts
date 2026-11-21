@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { trackChanges } from "@/e2e/support/changes";
+import { pressInPopup } from "@/e2e/support/popup";
 import { closeSitting } from "@/e2e/support/proctor";
 import { giveRole } from "@/e2e/support/roles";
 import {
@@ -130,7 +131,7 @@ test("a person whose only role is Proctor runs a room end to end, and is refused
   const room = proctor.getByRole("dialog", { name: "Join this room" });
   await room.getByRole("button", { name: "Change token" }).click();
   await proctor
-    .getByRole("dialog")
+    .getByRole("dialog", { name: "Change the sitting token?" })
     .getByRole("button", { exact: true, name: "Change token" })
     .click();
   await expect(
@@ -155,7 +156,7 @@ test("a person whose only role is Proctor runs a room end to end, and is refused
   const dialog = proctor.getByRole("dialog");
   await proctor.getByRole("button", { exact: true, name: "Lock" }).click();
   await dialog.getByRole("combobox").click();
-  await proctor.getByRole("option", { name: "Rule broken" }).click();
+  await pressInPopup(proctor.getByRole("option", { name: "Rule broken" }));
   await dialog.getByRole("button", { name: "Lock session" }).click();
   await expect(
     student.getByText(
@@ -164,7 +165,7 @@ test("a person whose only role is Proctor runs a room end to end, and is refused
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await proctor.getByRole("button", { exact: true, name: "Unlock" }).click();
   await dialog.getByRole("combobox").click();
-  await proctor.getByRole("option", { name: "Power outage" }).click();
+  await pressInPopup(proctor.getByRole("option", { name: "Power outage" }));
   await dialog.getByRole("button", { name: "Unlock session" }).click();
   await expect(
     student.getByRole("heading", { name: "Question 1" })

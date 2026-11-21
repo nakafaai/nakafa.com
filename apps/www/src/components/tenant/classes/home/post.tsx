@@ -154,7 +154,7 @@ function PostActions({
         >
           <DropdownMenuItem
             icon={post.pinned ? PinOffIcon : PinIcon}
-            onClick={() =>
+            onSelect={() =>
               runSchoolWrite(
                 schoolCall(() =>
                   pin.withOptimisticUpdate(pinPostUpdate(post))({
@@ -172,7 +172,7 @@ function PostActions({
           {post.mine ? (
             <>
               {post.poll === null ? (
-                <DropdownMenuItem icon={PencilEdit02Icon} onClick={onEdit}>
+                <DropdownMenuItem icon={PencilEdit02Icon} onSelect={onEdit}>
                   {t("message-edit")}
                 </DropdownMenuItem>
               ) : null}
@@ -180,7 +180,7 @@ function PostActions({
               {post.archived ? (
                 <DropdownMenuItem
                   icon={ArrowTurnBackwardIcon}
-                  onClick={() =>
+                  onSelect={() =>
                     runSchoolWrite(
                       schoolCall(() =>
                         restore.withOptimisticUpdate(restorePostUpdate)({
@@ -197,7 +197,7 @@ function PostActions({
               ) : (
                 <DropdownMenuItem
                   icon={Archive02Icon}
-                  onClick={() =>
+                  onSelect={() =>
                     runSchoolWrite(
                       schoolCall(() =>
                         archive.withOptimisticUpdate(archivePostUpdate)({
@@ -214,7 +214,7 @@ function PostActions({
               )}
               <DropdownMenuItem
                 icon={Delete02Icon}
-                onClick={() => setRemoving(true)}
+                onSelect={() => setRemoving(true)}
                 variant="destructive"
               >
                 {common("remove")}

@@ -4,18 +4,17 @@ import { isStringLiteralLikeNode } from "tsrs/ast";
 import { TEST_PATTERN } from "#scripts/check/kinds";
 import { descendants, namesModule } from "#scripts/check/source";
 
-/** The toast library, which only the Toaster and the toast helper import. */
-const TOAST_LIBRARY = "sonner";
-/** The Toaster and the helper that shows every toast: the only modules that import the library. */
+/** The toast parts of UI SDK, which only the Toaster imports. */
+const TOAST_LIBRARY = "@ui-sdk/react/toast";
+/** The Toaster, which holds the toast queues the helper shows every toast through: the one module that imports the parts. */
 const TOAST_MODULES = HashSet.make(
-  "packages/design-system/components/ui/sonner.tsx",
-  "packages/design-system/lib/toast/notify.ts"
+  "packages/design-system/components/ui/toast.tsx"
 );
-const SONNER_RULE = `import { toast } from @repo/design-system/lib/toast/notify instead of ${TOAST_LIBRARY}, which only the Toaster and that helper import`;
+const TOAST_RULE = `import { toast } from @repo/design-system/lib/toast/notify instead of ${TOAST_LIBRARY}, which only the Toaster imports`;
 
 /**
  * Reports the toast rule that the types cannot state: an import of the toast
- * library outside the Toaster and the helper. The copy itself is typed, since
+ * parts outside the Toaster, which would show a toast past the helper. The copy itself is typed, since
  * every title and description is a key of the `Toast` namespace. Test modules
  * and the `test.*.ts` helpers that set them up are not judged, because they
  * never ship and may test the library and the helper.
@@ -29,7 +28,7 @@ export function inspectToastSource(file: string, sourceFile: SourceFile) {
       isStringLiteralLikeNode(node) &&
       node.text === TOAST_LIBRARY &&
       namesModule(node)
-        ? [SONNER_RULE]
+        ? [TOAST_RULE]
         : []
     ),
     (rule) => `${file}: ${rule}.`

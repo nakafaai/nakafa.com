@@ -98,7 +98,7 @@ function OpenSelectField<const Value extends string>({
     <Field>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
       <Select
-        items={items}
+        items={[...items]}
         onValueChange={(next) =>
           Option.map(
             Arr.findFirst(items, (item) => item.value === next),
