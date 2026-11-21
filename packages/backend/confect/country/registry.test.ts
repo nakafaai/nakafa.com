@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { billingOfferPrice } from "@repo/backend/confect/billing/catalog";
 import { schoolTiers } from "@repo/backend/confect/billing/tiers";
+import { CountryProfile } from "@repo/backend/confect/country/profile";
 import {
-  CountryProfile,
   countryOfCurrency,
   countryProfiles,
   currencyOfCountry,

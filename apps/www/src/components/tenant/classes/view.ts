@@ -1,6 +1,8 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import { DiscussionNumber } from "@repo/backend/confect/classroom/forum/message";
-import { TaskAddress } from "@repo/backend/confect/classroom/tasks/schema";
+import {
+  DiscussionNumber,
+  TaskAddress,
+} from "@repo/backend/confect/classroom/address";
 import { Schema } from "effect";
 
 /**

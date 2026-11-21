@@ -2,12 +2,12 @@ import { FunctionImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { Class } from "@repo/backend/confect/classroom/access";
+import type { DiscussionNumber } from "@repo/backend/confect/classroom/address";
 import { archiveMark } from "@repo/backend/confect/classroom/archive";
 import {
   classThread,
   missing,
 } from "@repo/backend/confect/classroom/forum/lookup";
-import type { DiscussionNumber } from "@repo/backend/confect/classroom/forum/message";
 import { managesForum } from "@repo/backend/confect/classroom/forum/policy";
 import spec from "@repo/backend/confect/classroom/forum/threads.spec";
 import { Member } from "@repo/backend/confect/middleware/member.spec";

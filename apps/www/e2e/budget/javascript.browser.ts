@@ -16,11 +16,19 @@ import { appRoutes } from "@/e2e/support/route";
 // The Quran and Memory decoded limits were measured again on 13 November 2026,
 // when the build began copying small shared chunks into their users (ADR 0039
 // D9 holds both measurements and the trade).
+// Since 21 November 2026 a route's loader loads with its route, not in the boot
+// chunk, so the boot chunk is the first load's own budget (`BOOT_CHUNK_BYTES` in
+// src/lib/static/boot.ts) and a warmed route fetches its loader as a file of its
+// own: a graph spends less at first paint and a few more files on its warmed
+// links. The homepage, Quran and Memory limits were measured again that day (ADR
+// 0039 D16 holds the trade); main already measured the homepage at 942,077 /
+// 2,847,224 and the Quran at 898,278 / 2,701,173 on the same Mac.
 
 // 897,759 encoded / 2,532,335 decoded: 758,203 at first paint, and the warmed
-// links on screen.
+// links on screen. With the loaders out of the boot chunk: 935,098 encoded /
+// 2,796,830 decoded, 65 scripts.
 const HOMEPAGE_MAX_ENCODED_BYTES = 952_000;
-const HOMEPAGE_MAX_DECODED_BYTES = 2_685_000;
+const HOMEPAGE_MAX_DECODED_BYTES = 2_965_000;
 
 // 684,477 encoded / 1,922,081 decoded, its toys loaded once React takes the page
 // over: 659,526 at first paint.
@@ -29,9 +37,10 @@ const PRICING_MAX_DECODED_BYTES = 2_038_000;
 
 // 833,187 encoded / 2,306,088 decoded: 730,190 at first paint, the always-on
 // analytics baseline included. With the copied chunks: 822,414 encoded /
-// 2,456,884 decoded.
-const QURAN_MAX_ENCODED_BYTES = 884_000;
-const QURAN_MAX_DECODED_BYTES = 2_605_000;
+// 2,456,884 decoded. With the loaders out of the boot chunk: 899,483 encoded /
+// 2,670,267 decoded, 71 scripts.
+const QURAN_MAX_ENCODED_BYTES = 954_000;
+const QURAN_MAX_DECODED_BYTES = 2_831_000;
 
 // 567,013 encoded / 1,619,294 decoded, all at first paint with the animal pool
 // a wide screen loads; it warms nothing. Since the Start migration every first
@@ -42,8 +51,9 @@ const AUTH_MAX_DECODED_BYTES = 1_717_000;
 
 // The Memory page, signed in, warms its settings tabs: 1,049,988 encoded /
 // 2,944,185 decoded, measured on the Start build of 8 November 2026. With the
-// copied chunks: 1,049,197 encoded / 3,156,362 decoded.
-const MEMORY_MAX_ENCODED_BYTES = 1_113_000;
+// copied chunks: 1,049,197 encoded / 3,156,362 decoded. With the loaders out of
+// the boot chunk: 1,113,233 encoded / 3,315,612 decoded, 89 scripts.
+const MEMORY_MAX_ENCODED_BYTES = 1_181_000;
 const MEMORY_MAX_DECODED_BYTES = 3_346_000;
 
 // A lesson, whose first visual card is near enough to the first screen to load

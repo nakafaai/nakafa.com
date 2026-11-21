@@ -4,16 +4,13 @@
  * in, the zones they keep time in, the month their school year starts, and the
  * rail that takes their money. Consumer billing, School billing and the opening
  * of a school all read it, so no country is described twice. Browser code
- * imports this module, so it reads no secret and no server setting.
+ * imports this module, every page through its price currency, so it reads no
+ * secret and no server setting, and it imports no schema of a school: the
+ * schema each profile keeps to lives in `country/profile.ts`.
  */
-import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
-import {
-  BillingCurrency,
-  BillingOfferRailSchema,
-  billingEuroTerritoryCodes,
-} from "@repo/backend/confect/billing/catalog";
-import { NewTimeZone } from "@repo/backend/confect/tenancy/locale";
-import { UnitLevel } from "@repo/backend/confect/tenancy/schema";
+import type { BillingCurrency } from "@repo/backend/confect/billing/catalog";
+import { billingEuroTerritoryCodes } from "@repo/backend/confect/billing/catalog";
+import type { CountryProfile } from "@repo/backend/confect/country/profile";
 import { Array as Arr, HashSet, Option, Schema } from "effect";
 
 /** The countries Nakafa is open in. Any other country pays in euros or dollars through Polar. */
@@ -27,12 +24,6 @@ export const OpenCountry = Schema.Literals([
 ]);
 export type OpenCountry = typeof OpenCountry.Type;
 
-/**
- * The levels of school that a country names by their own names, such as SMA in
- * Indonesia or SMK in Malaysia, or the stages every other country shares.
- */
-const LevelNames = Schema.Literals(["national", "stage"]);
-
 /** The stages a school outside a country with its own levels chooses from, each kept as the level it stands for. */
 const SHARED_STAGES = [
   "paud",
@@ -43,23 +34,6 @@ const SHARED_STAGES = [
   "slb",
   "other",
 ] as const;
-
-/**
- * What one open country decides. `xendit` names the Indonesian rail, which its
- * own switch can move to Polar. `levels` are the levels a new school there
- * chooses from, and `levelNames` how they are named.
- */
-export const CountryProfile = Schema.Struct({
-  currency: BillingCurrency,
-  levelNames: LevelNames,
-  levels: Schema.NonEmptyArray(UnitLevel),
-  /** The language a new school's pages start in, one Nakafa serves, so Malaysia starts in English until Malay is served. */
-  locale: ActiveAppLocaleCodeSchema,
-  rail: BillingOfferRailSchema,
-  yearStart: Schema.Int.check(Schema.isBetween({ maximum: 12, minimum: 1 })),
-  zones: Schema.NonEmptyArray(NewTimeZone),
-});
-type CountryProfile = typeof CountryProfile.Type;
 
 /**
  * Every open country's profile, tested once for its rules. Singapore and the

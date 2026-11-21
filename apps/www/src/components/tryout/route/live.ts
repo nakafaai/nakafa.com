@@ -16,7 +16,7 @@ import {
 } from "@/components/player/mode";
 import { useLiveSession } from "@/components/providers/live";
 import { releasePrepaintLock } from "@/components/sidebar/prepaint";
-import { readAddressIntent } from "@/components/tryout/route/intent";
+import { attemptOf, readAddressIntent } from "@/components/tryout/route/intent";
 import {
   decodeAttemptBodies,
   projectSectionAttempt,
@@ -59,16 +59,6 @@ export function useKeptLearnerRead<Value>(read: LearnerRead<Value>) {
     setKept(read);
   }
   return read.kind === "pending" && kept !== null ? kept : read;
-}
-
-/** The attempt a URL names, if it names one. */
-export function attemptOf(search: TryoutAttemptSearch) {
-  return Option.getOrUndefined(
-    Option.flatMapNullishOr(
-      readAddressIntent(Struct.pick(search, ["attemptId", "view"])),
-      (value) => value.attemptId
-    )
-  );
 }
 
 /** The player view a URL names, if it names a valid one. */

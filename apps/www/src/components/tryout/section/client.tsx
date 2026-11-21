@@ -21,9 +21,9 @@ import {
   TryoutFinishedPlace,
   TryoutReviewFrame,
 } from "@/components/tryout/review/frame";
+import { attemptOf } from "@/components/tryout/route/intent";
 import { useTryoutLeave } from "@/components/tryout/route/leave";
 import { TryoutPageLink } from "@/components/tryout/route/link";
-import { attemptOf } from "@/components/tryout/route/live";
 import type { TryoutPageAddress } from "@/components/tryout/route/path";
 import {
   getTryoutPageTarget,

@@ -1,7 +1,8 @@
-import { Option } from "effect";
+import { Option, Struct } from "effect";
 import { readPlayerModeParam } from "@/components/player/mode";
 import type { TryoutRouteSearchParams } from "@/components/tryout/route/path";
 import { readTryoutRouteAttemptCapability } from "@/components/tryout/route/path";
+import type { TryoutAttemptSearch } from "@/components/tryout/route/search";
 
 /**
  * Reads the attempt capability and the player view of one address. Either one
@@ -17,4 +18,14 @@ export function readAddressIntent(search: TryoutRouteSearchParams) {
     attemptId: capability.kind === "valid" ? capability.attemptId : undefined,
     view,
   });
+}
+
+/** The attempt a URL names, if it names one. */
+export function attemptOf(search: TryoutAttemptSearch) {
+  return Option.getOrUndefined(
+    Option.flatMapNullishOr(
+      readAddressIntent(Struct.pick(search, ["attemptId", "view"])),
+      (value) => value.attemptId
+    )
+  );
 }

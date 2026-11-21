@@ -1,5 +1,5 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import { DiscussionNumber } from "@repo/backend/confect/classroom/forum/message";
+import { DiscussionNumber } from "@repo/backend/confect/classroom/address";
 import type { ReadPlace } from "@repo/backend/confect/classroom/forum/read";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { useRequired } from "@repo/design-system/hooks/required";

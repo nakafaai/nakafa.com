@@ -1,8 +1,6 @@
 import { Id } from "@repo/backend/confect/_generated/id";
-import {
-  DiscussionNumber,
-  MessageView,
-} from "@repo/backend/confect/classroom/forum/message";
+import { DiscussionNumber } from "@repo/backend/confect/classroom/address";
+import { MessageView } from "@repo/backend/confect/classroom/forum/message";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Option, Schema } from "effect";
 import { createContext, use } from "react";

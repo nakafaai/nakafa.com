@@ -1,8 +1,8 @@
 import { Id } from "@repo/backend/confect/_generated/id";
+import { DiscussionNumber } from "@repo/backend/confect/classroom/address";
 import { Repliers } from "@repo/backend/confect/classroom/forum/face";
 import {
   ClientKey,
-  DiscussionNumber,
   DiscussionView,
   MessageView,
 } from "@repo/backend/confect/classroom/forum/message";

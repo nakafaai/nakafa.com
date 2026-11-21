@@ -13,7 +13,7 @@ import { Result } from "effect";
 import type { Plugin, PluginOption } from "vite";
 import { defineConfig } from "vite";
 import { workerPlugins } from "#www/environment.config";
-import { ENVIRONMENT_OUTPUTS } from "#www/output.config";
+import { ENVIRONMENT_OUTPUTS, verifyBootChunk } from "#www/output.config";
 import {
   deferStaticPageScripts,
   standalonePages,
@@ -326,6 +326,19 @@ export default defineConfig(async ({ command, isPreview }) => {
         // client" islands ship JavaScript. An island's heavy module loads on
         // intent, never in the first load of the route.
         rsc: { enabled: true },
+        // A route loader loads with its route, on a navigation or a preload, never in
+        // the boot chunk: hydration reads the data the server rendered and runs no
+        // loader, so a loader and what it imports stay out of every first load.
+        router: {
+          codeSplittingOptions: {
+            defaultBehavior: [
+              ["loader"],
+              ["component"],
+              ["errorComponent"],
+              ["notFoundComponent"],
+            ],
+          },
+        },
         // Only the given pages prerender: discovery would add the root route,
         // whose 307 answer depends on the request. A failed page does not fail
         // the build by itself; verifyPrerenderedPages does.
@@ -357,6 +370,7 @@ export default defineConfig(async ({ command, isPreview }) => {
       writeStaticArtifacts,
       bindPrerenderHost,
       publicPages.answers,
+      verifyBootChunk,
       deferStaticPageScripts(prerenderedPages),
       writeStandalonePages(prerenderedPages),
       verifyPrerenderedPages(prerenderedPages),

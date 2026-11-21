@@ -1,4 +1,5 @@
 import { Id } from "@repo/backend/confect/_generated/id";
+import { DiscussionNumber } from "@repo/backend/confect/classroom/address";
 import {
   ATTACHMENT_LIMIT,
   AttachmentView,
@@ -44,11 +45,6 @@ export const MessageUploads = Schema.Array(Id("classroomUploads")).check(
  */
 export const ClientKey = Schema.String.check(
   Schema.isPattern(/^[A-Za-z0-9-]{8,64}$/u)
-);
-
-/** The number of a discussion in its class, from 1, like the number of an issue. */
-export const DiscussionNumber = Schema.Int.check(
-  Schema.isGreaterThanOrEqualTo(1)
 );
 
 /**
