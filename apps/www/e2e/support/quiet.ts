@@ -88,6 +88,19 @@ export const waitForQuiet = (page: Page) =>
  * started has begun; an endless one, such as a spinner, never finishes and is
  * left out.
  */
+/**
+ * Waits until the page has gone quiet (`waitForQuiet`) and no request is in flight, before a test leaves the page.
+ * WebKit fails a page's import of a module that the page before it was still loading when it left: a press spec that
+ * reloaded the track while a row's hover preload ran failed the next page's import 7 times in 8, and never once the
+ * loads had finished. The stale-chunk script answers that failure with a reload, which replaces the page under the
+ * test. The quiet comes first, since a load that starts after the call, such as a preload on intent, would leave the
+ * network idle at that moment.
+ */
+export async function waitForLoadsSettled(page: Page) {
+  await waitForQuiet(page);
+  await page.waitForLoadState("networkidle");
+}
+
 export const waitForAnimations = (locator: Locator) =>
   locator.evaluate(
     (element) =>
