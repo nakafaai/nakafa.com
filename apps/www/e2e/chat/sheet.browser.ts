@@ -79,7 +79,7 @@ test.describe("Nina sheet at 1440px", () => {
           // React has not run, so the page keeps the press on the button.
           expect(MutableList.toArray(held).length).toBeGreaterThan(0);
           expect(await isTakenOver(ask)).toBe(false);
-          await expect(ask).toHaveAttribute("data-pressed", "");
+          await expect(ask).toHaveAttribute("data-early-press", "");
 
           MutableRef.set(released, true);
           for (const route of MutableList.toArray(held)) {
@@ -90,7 +90,7 @@ test.describe("Nina sheet at 1440px", () => {
           ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
           // The open sheet makes the entry inert, and the press it held was replayed, so
           // no control keeps a pressed mark. Other controls keep early presses too.
-          await expect(page.locator("[data-pressed]")).toHaveCount(0);
+          await expect(page.locator("[data-early-press]")).toHaveCount(0);
         })
       )
     );

@@ -124,6 +124,12 @@ Measured on the acceptance runtime on this Mac, Lighthouse mobile at 12x CPU, me
 
 What blocks now is the boot task itself, about 330 ms on `/id`, about 140 ms of it Effect's own module initialization.
 
+D18. The boot chunk starts in phases, one task each (21 November 2026). After D17 the largest task of a first load was the evaluation of the boot chunk: every module's top level ran in one task, about 330 ms on `/id` at 12x, and production measured it at 406 ms. `apps/www/src/client.tsx` replaces TanStack Start's default browser entry. It imports only React, then starts the boot chunk's modules through dynamic imports, ending the task between them: Effect's schema tree (`effect/SchemaAST`), the locale schemas, the address rewrites, the localized states with the design system's parts, the root route, the rest of the route tree, and Start's client with React's DOM renderer, which then hydrates. A dynamic import of a module the chunk holds fetches nothing: Rolldown compiles it to a call of the module's lazy initializer (D9's `strictExecutionOrder`). The boot group now captures the entry's phase modules by name (`BOOT_MODULES` in `apps/www/output.config.ts`) with everything they import, because the entry no longer reaches them statically. `verifyBootChunk` fails a build whose phase lies outside the boot chunk: a first cut that started `lib/settle` made it a chunk of its own, one more script to fetch before hydration, and took a try-out page to 61 boot scripts, over `BOOT_SCRIPT_LIMIT`. Importing `effect/SchemaAST` keeps every export of that module, about 8.6 KB more in the boot chunk.
+
+The early-press mark is now `data-early-press`. UI SDK draws `data-pressed` on a toggle that starts pressed, so `holdsEarlyPress` read the home page's lesson section, whose toggles start pressed, as pressed before hydration, and loaded its code at once (78 ms) despite D17.
+
+Measured on the acceptance runtime on this Mac, 12x CPU, the largest boot task on `/id` went from 330 ms to about 110 ms, the phases taking 31 to 81 ms each. Lighthouse mobile at 12x, median of 5, lists no task of the app's scripts as blocking on `/id` or `/en/school` (blocking time 0 ms in both, from 378 and 256).
+
 ## Consequences
 
 Positive: every page loses those recalculations, the home page's first JavaScript no longer holds the sections under its first screen, and decoration leaves the thread to the reader.

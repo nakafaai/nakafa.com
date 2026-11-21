@@ -105,7 +105,8 @@ kept, so no first press is a dead click.
   (`apps/www/src/lib/press/prepaint.ts`), which the root document runs from its
   head beside the theme, currency, and signed-in hint scripts, listens in the
   capture phase and marks the nearest pressed `[data-press]` control with
-  `data-pressed`. The control shows the pressed look at once
+  `data-early-press` (not `data-pressed`, which UI SDK draws on a toggle that
+  starts pressed; ADR 0039 D18). The control shows the pressed look at once
   (`apps/www/src/styles/globals.css`). When React mounts it, the hook clears the
   mark and runs the press, and after that the control's own `onClick` runs it
   and clears the mark the script set.

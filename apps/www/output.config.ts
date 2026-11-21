@@ -32,6 +32,15 @@ const STYLESHEET =
   /\.(?:css|scss|sass|less|styl|stylus|pcss|postcss|sss)(?:\?|$)/u;
 
 /**
+ * The modules the browser entry starts, in its phases: the entry itself, the
+ * route tree's root, locale and whole tree, and the Start client with React's
+ * DOM renderer. The boot group holds them and every module they import
+ * statically, so the entry's phases read the boot chunk it already has.
+ */
+const BOOT_MODULES =
+  /(?:\/apps\/www\/src\/(?:client\.tsx|routeTree\.gen\.ts|routes\/__root\.tsx|routes\/\$locale\.tsx)|\/@tanstack\/react-start\/dist\/esm\/client\.js|\/react-dom\/client\.js)$/u;
+
+/**
  * The code splitting of the browser's JavaScript.
  *
  * The boot chunk holds the modules that the browser entry imports statically.
@@ -55,7 +64,7 @@ const BROWSER_CODE_SPLITTING = {
     exclude: STYLESHEET,
     maxSize: INLINE_CHUNK_BYTES,
   },
-  groups: [{ name: "boot", priority: 1, tags: ["$initial"] }],
+  groups: [{ name: "boot", priority: 1, test: BOOT_MODULES }],
 } satisfies Rolldown.CodeSplittingOptions;
 
 /** The client loaders of the lesson renderer, which load each visual of the catalog lazily. */
@@ -158,19 +167,20 @@ export const ENVIRONMENT_OUTPUTS = {
   },
 } satisfies UserConfig["environments"];
 
-/** The browser entry, which the boot chunk holds. */
-const BROWSER_ENTRY = /\/plugin\/default-entry\/client\.tsx$/u;
+/** The browser entry (`src/client.tsx`), which the boot chunk holds. */
+const BROWSER_ENTRY = /\/apps\/www\/src\/client\.tsx$/u;
 
 /**
  * Fails a client build whose boot chunk breaks the first-load contract of
- * `readBootProblems`: too many bytes, or a module only an island runs. Every
- * route's options sit in the boot chunk with the router, so one import from a
- * route's search schema, guard or head reaches every page (ADR 0039 D16).
+ * `readBootProblems`: too many bytes, a module only an island runs, or a phase
+ * of the browser entry that it does not hold. Every route's options sit in the
+ * boot chunk with the router, so one import from a route's search schema, guard
+ * or head reaches every page (ADR 0039 D16 and D18).
  */
 export const verifyBootChunk: Plugin = {
   apply: "build",
   applyToEnvironment: (environment) => environment.name === "client",
-  generateBundle: (_, bundle) => {
+  generateBundle(_, bundle) {
     // The entry's own chunk only imports the boot group, which holds the entry module itself.
     const boot = Object.values(bundle).find(
       (output): output is Rolldown.OutputChunk =>
@@ -180,7 +190,12 @@ export const verifyBootChunk: Plugin = {
     if (boot === undefined) {
       throw new Error("The client build wrote no boot chunk.");
     }
-    const problems = readBootProblems(boot);
+    const entry = boot.moduleIds.find((id) => BROWSER_ENTRY.test(id));
+    const phases =
+      entry === undefined
+        ? []
+        : (this.getModuleInfo(entry)?.dynamicallyImportedIds ?? []);
+    const problems = readBootProblems(boot, phases);
     if (problems.length > 0) {
       throw new Error(problems.join("\n"));
     }
