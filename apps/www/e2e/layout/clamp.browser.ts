@@ -15,11 +15,14 @@ const LONG_TITLE = "Expected Value of a Normal Distribution";
 const LONG_DESCRIPTION =
   "The expected value of a normal distribution is its mean. Prove it with symmetry and an integral, then use it for scaling, sums, and variance.";
 
-/** Measures the text box and the row separately. An ancestor can clip a row without ellipsizing its text. */
+/**
+ * Measures the text box and the row separately. An ancestor can clip a row without ellipsizing its text. A row is a
+ * link, or the button of a try-out part that opens its dialog before its clock starts.
+ */
 const verifyEllipsis = async (line: Locator) => {
   await expect(line).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   const geometry = await line.evaluate((element) => {
-    const row = element.closest("a");
+    const row = element.closest("a, button");
     const card = row?.closest('[data-slot="card"],section');
     if (!(row && card)) {
       return null;

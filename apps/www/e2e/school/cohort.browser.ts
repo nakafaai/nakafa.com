@@ -267,7 +267,7 @@ test("an admin places a student in a cohort, moves the student to another, sets 
     .getByRole("button", { name: "Add student" })
     .click();
   const placeDialog = page.getByRole("dialog");
-  await placeDialog.getByRole("combobox", { name: "Student" }).click();
+  await pressInPopup(placeDialog.getByRole("combobox", { name: "Student" }));
   await pressInPopup(page.getByRole("option", { name: "Acceptance Learner" }));
   await placeDialog.getByRole("button", { name: "Add student" }).click();
   await expect(page.getByRole("button", { name: "More actions" })).toHaveCount(
@@ -277,7 +277,7 @@ test("an admin places a student in a cohort, moves the student to another, sets 
   await page.getByRole("button", { name: "More actions" }).click();
   await pressInPopup(page.getByRole("menuitem", { name: "Move" }));
   const moveDialog = page.getByRole("dialog");
-  await moveDialog.getByRole("combobox", { name: "Move to" }).click();
+  await pressInPopup(moveDialog.getByRole("combobox", { name: "Move to" }));
   await pressInPopup(page.getByRole("option", { exact: true, name: "7B" }));
   const movedBefore = changes.sent;
   await moveDialog.getByRole("button", { exact: true, name: "Move" }).click();
@@ -334,7 +334,7 @@ test("an admin places a student in a cohort, moves the student to another, sets 
   await leaving.click();
   await pressInPopup(page.getByRole("menuitem", { name: "Move" }));
   const outDialog = page.getByRole("dialog");
-  await outDialog.getByRole("combobox", { name: "Move to" }).click();
+  await pressInPopup(outDialog.getByRole("combobox", { name: "Move to" }));
   await pressInPopup(page.getByRole("option", { exact: true, name: "7A" }));
   const leftBefore = changes.sent;
   await outDialog.getByRole("button", { exact: true, name: "Move" }).click();
@@ -392,7 +392,7 @@ test("a student added with a card joins a cohort and takes a parent at once, and
   await page.goto(cohort);
   await waitUntilTakenOver(place);
   await place.click();
-  await placing.getByRole("combobox", { name: "Student" }).click();
+  await pressInPopup(placing.getByRole("combobox", { name: "Student" }));
   await pressInPopup(page.getByRole("option", { name: "Ayu Lestari" }));
   await placing.getByRole("button", { name: "Add student" }).click();
   await expect(placing).toBeHidden();
