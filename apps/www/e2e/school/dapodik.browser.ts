@@ -100,7 +100,11 @@ test("an admin previews a Dapodik file, imports its students into the active per
     .locator("header")
     .getByRole("button", { name: "Import students" })
     .click();
-  await expect(page.getByText("The students are in the roster.")).toBeVisible();
+  await expect(
+    page
+      .locator("[data-slot=toast]")
+      .getByText("The students are in the roster.")
+  ).toBeVisible();
   await expect(page.getByText("Import the students.")).toBeVisible();
 
   const download = page.waitForEvent("download");

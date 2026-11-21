@@ -346,7 +346,9 @@ for (const width of [390, 1440]) {
     await revokeRole(admin, ADMIN_GRANT);
 
     await expect(admin).toHaveURL(address("/sittings"));
-    await expect(admin.getByText("Your role has ended.")).toBeVisible();
+    await expect(
+      admin.locator("[data-slot=toast]").getByText("Your role has ended.")
+    ).toBeVisible();
     await expect(admin.getByText("We can't find this page")).toHaveCount(0);
     await learnerContext.close();
   });
