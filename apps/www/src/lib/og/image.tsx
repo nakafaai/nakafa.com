@@ -91,7 +91,7 @@ const ogAccentLineStyle = {
 
 const ogCopyrightStyle = {
   fontSize: 22,
-  fontWeight: 700,
+  fontWeight: 600,
   textTransform: "uppercase",
   letterSpacing: 0,
   opacity: 0.8,

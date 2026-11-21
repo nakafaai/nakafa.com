@@ -1,10 +1,8 @@
 import { NodeServices } from "@effect/platform-node";
-import interRanges from "@fontsource-variable/inter/unicode.json" with {
-  type: "json",
-};
 import arabicRanges from "@fontsource-variable/noto-naskh-arabic/unicode.json" with {
   type: "json",
 };
+import { ALLO_FACES } from "@repo/backend/confect/pdf/allo";
 import type { PdfFrame } from "@repo/backend/confect/pdf/frame";
 import {
   PAGE_SIDE,
@@ -25,6 +23,7 @@ import {
   Schema,
   String as Str,
 } from "effect";
+import { Base64 } from "effect/encoding";
 import type { ReactElement } from "react";
 import { createElement } from "react";
 import { render } from "takumi-pdf";
@@ -66,29 +65,9 @@ const PDF_STYLES = pipe(
   Arr.join("")
 );
 
-/**
- * The subsets a document can draw: every Latin name, Vietnamese, and Arabic.
- * The renderer refuses a character no subset covers, so a learner's name must
- * never fall outside them.
- */
-const FACES = [
-  {
-    file: "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2",
-    ranges: interRanges.latin,
-  },
-  {
-    file: "@fontsource-variable/inter/files/inter-latin-ext-wght-normal.woff2",
-    ranges: interRanges["latin-ext"],
-  },
-  {
-    file: "@fontsource-variable/inter/files/inter-vietnamese-wght-normal.woff2",
-    ranges: interRanges.vietnamese,
-  },
-  {
-    file: "@fontsource-variable/noto-naskh-arabic/files/noto-naskh-arabic-arabic-wght-normal.woff2",
-    ranges: arabicRanges.arabic,
-  },
-];
+/** The Arabic subset of Noto Naskh Arabic, the face Arabic text draws in. */
+const ARABIC_FACE =
+  "@fontsource-variable/noto-naskh-arabic/files/noto-naskh-arabic-arabic-wght-normal.woff2";
 
 /** Reads one `U+0041` or `U+0041-005A` entry of a CSS unicode range as its first and last code point. */
 const codePoints = (entry: string): [number, number] => {
@@ -103,19 +82,32 @@ const codePoints = (entry: string): [number, number] => {
   return [first, Option.getOrElse(Arr.get(bounds, 1), () => first)];
 };
 
-/** Reads one subset's file and the code points it serves. */
-const readFace = Effect.fn("pdf.font")(function* (
-  face: (typeof FACES)[number]
-) {
+/** One subset's bytes under the family every document names, with the code points it serves. */
+const face = (data: Uint8Array, ranges: string) => ({
+  data,
+  name: PDF_FONT,
+  unicodeRange: pipe(ranges, Str.split(","), Arr.map(codePoints)),
+});
+
+/**
+ * The subsets a document can draw, under its one family: every Latin name and
+ * Vietnamese in Allo, which the documents carry, and Arabic in Noto Naskh
+ * Arabic, which ships with the action. The renderer refuses a character no
+ * subset covers, so a learner's name must never fall outside them.
+ */
+const readFaces = Effect.fn("pdf.fonts")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const file = yield* path.fromFileUrl(new URL(import.meta.resolve(face.file)));
-  const data = yield* fs.readFile(file);
-  return {
-    data,
-    name: PDF_FONT,
-    unicodeRange: pipe(face.ranges, Str.split(","), Arr.map(codePoints)),
-  };
+  const allo = yield* Effect.forEach(ALLO_FACES, (subset) =>
+    Effect.map(Effect.fromResult(Base64.decode(subset.data)), (data) =>
+      face(data, subset.ranges)
+    )
+  );
+  const file = yield* path.fromFileUrl(
+    new URL(import.meta.resolve(ARABIC_FACE))
+  );
+  const arabic = face(yield* fs.readFile(file), arabicRanges.arabic);
+  return [...allo, arabic];
 });
 
 /**
@@ -127,8 +119,8 @@ export const renderPdf = Effect.fn("pdf.render")(function* (
   body: ReactElement,
   frame: typeof PdfFrame.Type
 ) {
-  // The fonts ship with the renderer, so a font that cannot be read is a broken deployment.
-  const fonts = yield* Effect.forEach(FACES, readFace).pipe(
+  // The fonts ship with the action, so a font that cannot be read is a broken deployment.
+  const fonts = yield* readFaces().pipe(
     Effect.orDie,
     Effect.provide(NodeServices.layer)
   );

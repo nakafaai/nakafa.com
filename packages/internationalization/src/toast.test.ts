@@ -142,8 +142,8 @@ describe("toast copy at 320px", () => {
   });
 
   it("wraps a title by its words, so two words that do not fit one line are two lines", () => {
-    const fits = `${"x".repeat(18)} ${"x".repeat(17)}`;
-    const wraps = `${"x".repeat(20)} ${"x".repeat(16)}`;
+    const fits = `${"x".repeat(18)} ${"x".repeat(18)}`;
+    const wraps = `${"x".repeat(20)} ${"x".repeat(17)}`;
 
     expect(fits.length).toBe(TOAST_TITLE_LINE_CHARACTERS);
     expect(overlongToastParts({ title: fits })).toEqual([]);

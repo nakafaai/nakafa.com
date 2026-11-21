@@ -22,7 +22,7 @@ export function caption(
     return;
   }
   drawing.save();
-  drawing.font = `500 ${style.size}px Inter, system-ui, sans-serif`;
+  drawing.font = `500 ${style.size}px Allo, system-ui, sans-serif`;
   drawing.fillStyle = style.color;
   drawing.textAlign = style.align;
   drawing.textBaseline = style.baseline;

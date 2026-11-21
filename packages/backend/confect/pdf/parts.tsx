@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import type {} from "takumi-pdf/primitives";
 import { renderSVG } from "uqr";
 
-/** The body of a document: Inter at the size documents read at, one column of sections. */
+/** The body of a document: Allo at the size documents read at, one column of sections. */
 export function Sheet({ children }: { children: ReactNode }) {
   return (
     <main

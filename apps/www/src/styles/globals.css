@@ -48,10 +48,10 @@
 
 /*
  * Noto Naskh Arabic, the face of every other Arabic text: a lesson, a question, a
- * note or a reply. An Arabic character falls through Inter to it (`--font-sans`),
+ * note or a reply. An Arabic character falls through Allo to it (`--font-sans`),
  * so Arabic reads at the size of the words around it, in a heading as in a line of
  * small print, with the weights of a variable face and no faked bold. The size is
- * measured against Inter: Noto Naskh's alef stands 0.671em tall and Inter's capital
+ * measured against Allo: Noto Naskh's alef stands 0.671em tall and Allo's capital
  * 0.728em, so `size-adjust` scales the face by 108.5% and an alef stands as tall as
  * a capital. At that size a fully vowelled line's ink, from a shadda over a fatha
  * to a kasra under a tail, spans 1.47em (1.354em unscaled), inside the 1.625 line

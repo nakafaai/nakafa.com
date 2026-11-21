@@ -20,15 +20,18 @@ function logoDataUrl(logoSvg: string) {
 }
 
 /**
- * Renders one social image as PNG bytes with the native takumi of Node. The
- * element is the one the image route rendered, so the bytes match its answer.
+ * Renders one social image as PNG bytes with the native takumi of Node, in
+ * Allo's Latin face, the face the pages draw in. The element is the one the
+ * image route rendered, so the bytes match its answer.
  */
 export async function renderSocialImage({
   description,
+  face,
   logoSvg,
   title,
 }: {
   readonly description: string;
+  readonly face: Uint8Array;
   readonly logoSvg: string;
   readonly title: string;
 }): Promise<Uint8Array> {
@@ -45,7 +48,11 @@ export async function renderSocialImage({
       }
       title={title}
     />,
-    { height: SOCIAL_IMAGE_HEIGHT, width: SOCIAL_IMAGE_WIDTH }
+    {
+      fonts: [{ data: face, name: "Allo" }],
+      height: SOCIAL_IMAGE_HEIGHT,
+      width: SOCIAL_IMAGE_WIDTH,
+    }
   );
   return new Uint8Array(await response.arrayBuffer());
 }

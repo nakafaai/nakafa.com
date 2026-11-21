@@ -40,7 +40,7 @@ The light and dark pair are this system's own themes. Every named theme a learne
 
 ## Type
 
-- Inter sets everything; Geist Mono sets code, timers, scores and status codes.
+- Allo, rounded, sets everything at weights 400, 500 and 600; Geist Mono sets code, timers, scores and status codes.
 - `text-sm` is the interface default, `text-xs` badges, tooltips and metadata, `text-base` card titles. Headings are medium weight, tight leading and tight tracking. Nina's answers and lesson prose use `text-chat`.
 - Headlines balance their lines, paragraphs avoid orphans, and numbers that change or align are tabular.
 

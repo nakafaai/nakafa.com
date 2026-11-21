@@ -17,7 +17,7 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const NINA_DIALOG_NAME = /^Nina/u;
-const INTER_FONT = /Inter/u;
+const ALLO_FONT = /^"?Allo"?,/u;
 
 const routes = [pinnedRoutes.material.en, pinnedRoutes.article.en];
 // The lesson's pagination, breadcrumb and outline header, as the server sends them.
@@ -62,23 +62,22 @@ const verifyReadingHeader = Effect.fn("NakafaE2E.verifyReadingHeader")(
     yield* Effect.promise(() => expect(title).toHaveCSS("font-size", "36px"));
     yield* Effect.promise(() => expect(title).toHaveCSS("text-align", "start"));
     yield* Effect.promise(() =>
-      expect(title).toHaveCSS("font-family", INTER_FONT)
+      expect(title).toHaveCSS("font-family", ALLO_FONT)
     );
     yield* Effect.promise(() =>
       expect(title).toHaveCSS("text-wrap-style", "balance")
     );
-    const interLoaded = yield* Effect.promise(() =>
+    const alloLoaded = yield* Effect.promise(() =>
       page.evaluate(async () => {
         await document.fonts.ready;
         return [...document.fonts].some(
           (font) =>
-            font.family.includes("Inter") &&
-            !font.family.includes("Fallback") &&
+            font.family.replaceAll('"', "") === "Allo" &&
             font.status === "loaded"
         );
       })
     );
-    yield* Effect.sync(() => expect(interLoaded).toBe(true));
+    yield* Effect.sync(() => expect(alloLoaded).toBe(true));
     // A reading page's title stands alone over its byline: no summary paragraph follows it.
     const summary = page
       .locator("header")

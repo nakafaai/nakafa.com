@@ -45,7 +45,7 @@ function PriceCoin({ symbol }: { symbol: string }) {
   return (
     <span
       aria-hidden="true"
-      className="bg-pop-yellow text-nina-ink inline-flex size-11 items-center justify-center rounded-full text-base font-bold"
+      className="bg-pop-yellow text-nina-ink inline-flex size-11 items-center justify-center rounded-full text-base font-semibold"
     >
       {symbol}
     </span>

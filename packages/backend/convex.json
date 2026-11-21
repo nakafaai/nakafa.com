@@ -9,10 +9,6 @@
   },
   "node": {
     "nodeVersion": "24",
-    "externalPackages": [
-      "takumi-pdf",
-      "@fontsource-variable/inter",
-      "@fontsource-variable/noto-naskh-arabic"
-    ]
+    "externalPackages": ["takumi-pdf", "@fontsource-variable/noto-naskh-arabic"]
   }
 }

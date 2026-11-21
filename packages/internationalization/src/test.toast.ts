@@ -10,19 +10,21 @@ import { Array as Arr, Schema, String as Str } from "effect";
  * leaves 254px. The icon takes 16px with a -3px start and a 4px end margin,
  * and a 6px gap follows it: 254px less 17px less 6px leaves 231px of text.
  *
- * The toast sets 13px text in Inter (`font-sans`). Inter's metrics as the
- * framework's font metrics file records them (`xWidthAvg` over 2048 units):
- * 988 at weight 500, the title, and 978 at weight 400, the description. A
- * character is 13 × 988 / 2048 ≈ 6.27px in a title and 13 × 978 / 2048 ≈ 6.21px
- * in a description. A title line holds 231 / 6.27 ≈ 36.8 characters, so 36
- * whole characters, and a description line holds 231 / 6.21 ≈ 37.2, so 37.
+ * The toast sets 13px text in Allo (`font-sans`). Allo's average character
+ * width, measured as Capsize measures `xWidthAvg` (each advance of the Latin
+ * alphabet and the space, weighted by its frequency in English, over 2048
+ * units) on the instance the design system serves: 968 at weight 500, the
+ * title, and 958 at weight 400, the description. A character is
+ * 13 × 968 / 2048 ≈ 6.14px in a title and 13 × 958 / 2048 ≈ 6.08px in a
+ * description. A title line holds 231 / 6.14 ≈ 37.6 characters and a
+ * description line 231 / 6.081 ≈ 37.99, so 37 whole characters each.
  *
  * These are averages over the font, not a measured width, so a line of one
  * text may break a little earlier than its count says. The copy test measures
  * each message by whole words on these lines, which keeps that margin in the
  * measure rather than in the copy.
  */
-export const TOAST_TITLE_LINE_CHARACTERS = 36;
+export const TOAST_TITLE_LINE_CHARACTERS = 37;
 /** How many characters one line of a toast description holds at 320px. See `TOAST_TITLE_LINE_CHARACTERS`. */
 export const TOAST_DESCRIPTION_LINE_CHARACTERS = 37;
 /** How many lines a toast title takes at most: one. */
