@@ -3,7 +3,7 @@ import {
   makePracticeTestNode,
 } from "@repo/seo/jsonld/node";
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, useHydrated } from "@tanstack/react-router";
 import { Array as Arr, Effect, Number as Num, Schema } from "effect";
 import { ClockProvider } from "@/components/player/now";
 import { ConvexIsland } from "@/components/providers/island";
@@ -157,6 +157,7 @@ function TryoutSetView({
   const route = Route.useLoaderData();
   const search = Route.useSearch();
   const practicing = useTryoutPracticing();
+  const hydrated = useHydrated();
   // A read that answered decides the shell's lock, so the first frame's lock can go.
   usePrepaintRelease(
     learner.kind === "attempt" ||
@@ -203,10 +204,13 @@ function TryoutSetView({
           page: route.page,
           restartTarget: route.restartTarget,
         };
-  const paper = opensSetPaper(
-    search,
-    route.page.entrySection?.visibility === "internal-entry"
-  );
+  // The page hydrates as the bare address the build prerendered, and opens the paper its address names once it has.
+  const paper =
+    hydrated &&
+    opensSetPaper(
+      search,
+      route.page.entrySection?.visibility === "internal-entry"
+    );
   return (
     // The clock starts again with the attempt, so its first render reads the browser's time.
     <ClockProvider

@@ -1,6 +1,6 @@
 import { TRACK_SET_PAGE_LIMIT } from "@repo/backend/confect/tryouts/sets/query";
 import { LocaleSchema } from "@repo/internationalization/src/locale";
-import { Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { CatalogQuery } from "@/components/tryout/catalog/table/query";
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
 import { PRACTICE_SEARCH } from "@/components/tryout/route/path";
@@ -78,5 +78,34 @@ export function opensSetPaper(
   return (
     search.mode === PRACTICE_SEARCH.mode ||
     (entered && search.attemptId !== undefined)
+  );
+}
+
+/**
+ * The mark the script below sets on itself, before the first paint, when a set's address opens one of its papers. The
+ * server never writes it, so a page the client renders, or an address that opens no paper, carries none.
+ */
+export const SET_PAPER_ATTRIBUTE = "data-set-paper";
+
+/**
+ * The inline script that decides, before the first paint, whether a set's address opens one of its papers, as
+ * `opensSetPaper` decides it for the page. The build prerenders the set's bare address, its pane beside its track's
+ * table, and every address of the set serves that page, so the page hydrates as the bare address and draws the paper
+ * once it has. The script marks itself while the browser reads the markup, and the track hides the table it stands
+ * beside until then, so a paper's address never paints the table first.
+ */
+export function setPaperScript(entered: boolean) {
+  return Arr.join(
+    [
+      "(function () {",
+      "  var search = new URLSearchParams(location.search);",
+      "  var mode = search.getAll('mode');",
+      `  var practice = mode.length === 1 && mode[0] === '${PRACTICE_SEARCH.mode}';`,
+      `  if (practice || (${String(entered)} && search.has('attemptId'))) {`,
+      `    document.currentScript.setAttribute('${SET_PAPER_ATTRIBUTE}', '');`,
+      "  }",
+      "})();",
+    ],
+    "\n"
   );
 }

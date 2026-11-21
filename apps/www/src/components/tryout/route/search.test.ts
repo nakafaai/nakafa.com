@@ -2,6 +2,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { Schema } from "effect";
 import {
   opensSetPaper,
+  SET_PAPER_ATTRIBUTE,
+  setPaperScript,
   TryoutAttemptSearch,
 } from "@/components/tryout/route/search";
 
@@ -75,5 +77,38 @@ describe("opensSetPaper", () => {
     expect(opensSetPaper({ attemptId: "a" }, true)).toBe(true);
     expect(opensSetPaper({}, true)).toBe(false);
     expect(opensSetPaper({ attemptId: "a" }, false)).toBe(false);
+  });
+});
+
+/** Whether the prepaint script marks itself for an address, run as the browser runs it while it reads the markup. */
+function marksPaper(entered: boolean, search: string) {
+  const marks = new Set<string>();
+  const script = { setAttribute: (name: string) => marks.add(name) };
+  new Function("location", "document", setPaperScript(entered))(
+    { search },
+    { currentScript: script }
+  );
+  return marks.has(SET_PAPER_ATTRIBUTE);
+}
+
+describe("setPaperScript", () => {
+  it("decides before the first paint as the page decides once hydrated", () => {
+    const cases = [
+      { entered: false, search: "", value: {} },
+      { entered: false, search: "?mode=practice", value: { mode: "practice" } },
+      { entered: true, search: "?mode=practice", value: { mode: "practice" } },
+      { entered: false, search: "?attemptId=a", value: { attemptId: "a" } },
+      { entered: true, search: "?attemptId=a", value: { attemptId: "a" } },
+      {
+        entered: true,
+        search: "?attemptId=a&question=3",
+        value: { attemptId: "a" },
+      },
+      { entered: true, search: "?view=list", value: {} },
+      { entered: true, search: "?mode=review", value: { mode: "review" } },
+    ] as const;
+    for (const { entered, search, value } of cases) {
+      expect(marksPaper(entered, search)).toBe(opensSetPaper(value, entered));
+    }
   });
 });

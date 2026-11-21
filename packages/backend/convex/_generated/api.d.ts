@@ -15783,6 +15783,15 @@ export declare const api: {
                     status: "in-progress" | "completed" | "expired";
                     totalQuestions: number;
                   } | null;
+                  sectionScores: Array<{
+                    completedAt: number | null;
+                    publishedScore: number;
+                    scoreStatus: "provisional" | "official";
+                    sectionKey: string;
+                    startedAt: number;
+                    totalCorrect: number;
+                    totalQuestions: number;
+                  }>;
                   startedAt: number;
                   status: "in-progress" | "completed" | "expired";
                 };
@@ -15965,6 +15974,15 @@ export declare const api: {
                     status: "in-progress" | "completed" | "expired";
                     totalQuestions: number;
                   } | null;
+                  sectionScores: Array<{
+                    completedAt: number | null;
+                    publishedScore: number;
+                    scoreStatus: "provisional" | "official";
+                    sectionKey: string;
+                    startedAt: number;
+                    totalCorrect: number;
+                    totalQuestions: number;
+                  }>;
                   startedAt: number;
                   status: "in-progress" | "completed" | "expired";
                 };
@@ -16143,6 +16161,15 @@ export declare const api: {
                     status: "in-progress" | "completed" | "expired";
                     totalQuestions: number;
                   } | null;
+                  sectionScores: Array<{
+                    completedAt: number | null;
+                    publishedScore: number;
+                    scoreStatus: "provisional" | "official";
+                    sectionKey: string;
+                    startedAt: number;
+                    totalCorrect: number;
+                    totalQuestions: number;
+                  }>;
                   startedAt: number;
                   status: "in-progress" | "completed" | "expired";
                 };
@@ -16630,10 +16657,10 @@ export declare const api: {
           "query",
           "public",
           {
+            attemptId?: string;
             countryKey: string;
             examKey: string;
             locale: "en" | "id" | "de" | "ms";
-            score?: number;
             setKey: string;
             trackKey: string;
           },
@@ -16709,6 +16736,15 @@ export declare const api: {
                 status: "in-progress" | "completed" | "expired";
                 totalQuestions: number;
               } | null;
+              sectionScores: Array<{
+                completedAt: number | null;
+                publishedScore: number;
+                scoreStatus: "provisional" | "official";
+                sectionKey: string;
+                startedAt: number;
+                totalCorrect: number;
+                totalQuestions: number;
+              }>;
               startedAt: number;
               status: "in-progress" | "completed" | "expired";
             };
@@ -16806,6 +16842,15 @@ export declare const api: {
                 status: "in-progress" | "completed" | "expired";
                 totalQuestions: number;
               } | null;
+              sectionScores: Array<{
+                completedAt: number | null;
+                publishedScore: number;
+                scoreStatus: "provisional" | "official";
+                sectionKey: string;
+                startedAt: number;
+                totalCorrect: number;
+                totalQuestions: number;
+              }>;
               startedAt: number;
               status: "in-progress" | "completed" | "expired";
             };

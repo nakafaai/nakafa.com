@@ -1,12 +1,13 @@
 import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
-import { Array as Arr, Clock, Effect, Option } from "effect";
+import { Clock, Effect, Option } from "effect";
 import {
   readTryoutSectionPage,
   readTryoutSetPage,
 } from "@/components/tryout/catalog/source.server";
 import { readTryoutRouteHead } from "@/components/tryout/route/metadata.server";
 import { getTryoutPublicPath } from "@/components/tryout/route/path";
+import { tryoutSectionPartsOf } from "@/components/tryout/section/model";
 import { serverHandler } from "@/lib/server/fn";
 import { getTryoutSectionArtwork } from "@/lib/tryout/artwork";
 
@@ -87,19 +88,7 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
       kind: "catalog" as const,
       now: yield* Clock.currentTimeMillis,
       page,
-      // The set's sections that have a page of their own, as the player's pane picks between them.
-      parts: Arr.getSomes(
-        Arr.map(setPage?.sections ?? [], (section) =>
-          Option.map(
-            Option.fromUndefinedOr(section.publicPath),
-            (publicPath) => ({
-              key: section.sectionKey,
-              label: section.title,
-              publicPath,
-            })
-          )
-        )
-      ),
+      parts: tryoutSectionPartsOf(setPage?.sections ?? []),
       route,
       sectionPath,
       setPath,

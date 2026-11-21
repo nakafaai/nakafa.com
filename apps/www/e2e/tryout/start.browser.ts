@@ -148,7 +148,8 @@ const verifyOnePress = Effect.fn("NakafaE2E.verifyOnePressStart")(function* (
   yield* Effect.promise(() =>
     page.goto(target.setHref, { waitUntil: "commit" })
   );
-  const start = page.locator("main").getByRole("button", {
+  // The set's pane holds Start in its footer: beside the table on a desktop, in a drawer on a phone.
+  const start = page.locator("footer").getByRole("button", {
     exact: true,
     name: target.messages.Tryouts.action["start-cta"],
   });

@@ -42,6 +42,26 @@ export function useTryoutSetPath(
 }
 
 /**
+ * The player's path to a section that a press opens from its set: the set's path, the set, then the section, as the
+ * section's own page shows it once it reads the attempt.
+ */
+export function useTryoutSetPartPath(
+  where: Omit<ComponentProps<typeof TryoutSetPageHeader>, "children">,
+  title: string
+): readonly BreadcrumbHeaderItem[] {
+  return useTryoutPath([
+    ...setCrumbs(where),
+    {
+      label: where.page.set.title,
+      target: Option.getOrUndefined(
+        getTryoutCrumbTarget(where.page.set.publicPath)
+      ),
+    },
+    { label: title },
+  ]);
+}
+
+/**
  * The items between the try-out root and a set: its exam and group, and its track. The group links only while the
  * page shows the current catalog version of the set.
  */

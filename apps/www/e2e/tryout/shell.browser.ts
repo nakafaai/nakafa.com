@@ -48,8 +48,16 @@ const verifyTryoutShell = Effect.fn("NakafaE2E.verifyTryoutShell")(function* (
   // Late streamed content would still move the page, so keep observing until it goes quiet.
   yield* Effect.promise(() => waitForQuiet(page));
 
-  const observation = yield* readShellObservation(page, fromPane);
-  yield* Effect.sync(() => expectStillShell(observation, [false]));
+  // The pane gives the page's right side back as it closes, which moves the page's column by design, as its
+  // opening did, so the walk back holds the shell, its headings and its lock, and the page then stands still.
+  const back = yield* readShellObservation(page, fromPane);
+  yield* Effect.sync(() =>
+    expectStillShell({ ...back, layoutShifts: [] }, [false])
+  );
+  const closed = yield* readPageTime(page);
+  yield* Effect.sleep("1 second");
+  const after = yield* readShellObservation(page, closed);
+  yield* Effect.sync(() => expectStillShell(after, [false]));
 });
 
 for (const viewport of tryoutViewports) {

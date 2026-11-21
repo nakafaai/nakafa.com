@@ -1,49 +1,99 @@
 import { useRequired } from "@repo/design-system/hooks/required";
-import { Schema } from "effect";
+import { useLocation, useRouter } from "@tanstack/react-router";
+import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
-import { createContext, useEffect, useEffectEvent, useState } from "react";
+import {
+  createContext,
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useState,
+} from "react";
 import type { StoreApi } from "zustand";
 import { createStore, useStore } from "zustand";
+import type { LinkTarget } from "@/lib/routing/link";
 
 /**
- * Where the start of one try-out page stands: idle; starting an attempt that opens no section, while
- * its button waits for the page it leads to; or opening a section, while the page draws the player that
+ * Where a try-out start stands: idle; starting an attempt that opens no section, while its button waits
+ * for the page it leads to; or opening a section, while the pages it moves between draw the player that
  * the section runs in.
  */
 const TryoutStartPhaseSchema = Schema.Literals(["idle", "starting", "opening"]);
 
 type TryoutStartPhase = typeof TryoutStartPhaseSchema.Type;
 
-const TryoutStartContext = createContext<StoreApi<TryoutStartPhase> | null>(
-  null
-);
+/** A start and the pages it belongs to: the page it was pressed on, then the page it leads to. */
+interface TryoutStart {
+  readonly pages: readonly string[];
+  readonly phase: TryoutStartPhase;
+}
+
+const IDLE: TryoutStart = { pages: [], phase: "idle" };
+
+const TryoutStartContext = createContext<StoreApi<TryoutStart> | null>(null);
 
 /**
- * Holds the start of one try-out page, which its start actions write as the learner presses and the
- * page reads to draw the player at once. The phase is plain state rather than a transition: the router
- * loads a navigation inside `startTransition`, so a transition that held the start would hold the
- * confirmation and the page with it until the server answered (ADR 0017). The page's client is keyed
- * by its attempt, so the phase starts idle again once the page shows the attempt that the start opened.
+ * Holds the learner's try-out start, which start actions write as the learner presses and the pages read
+ * to draw the player at once. It stands above every try-out page, so a start pressed in a set's pane keeps
+ * drawing the player while the router moves to the section it opens and that page reads the attempt. A
+ * start belongs to the pages it moves between, and any other page reads it as idle, so a learner who
+ * leaves mid-start finds no player waiting elsewhere. The phase is plain state rather than a transition:
+ * the router loads a navigation inside `startTransition`, so a transition that held the start would hold
+ * the confirmation and the page with it until the server answered (ADR 0017).
  */
 export function TryoutStartProvider({ children }: { children: ReactNode }) {
-  const [store] = useState(() => createStore<TryoutStartPhase>()(() => "idle"));
+  const [store] = useState(() => createStore<TryoutStart>()(() => IDLE));
   return <TryoutStartContext value={store}>{children}</TryoutStartContext>;
 }
 
-/** Reads the start store of the surrounding page. */
+/** Reads the learner's start store. */
 function useTryoutStartStore() {
   return useRequired(TryoutStartContext, "useTryoutStartStore");
 }
 
-/** Where the page's start stands. */
+/** Where the start stands on this page: idle on a page the start does not belong to. */
 export function useTryoutStartPhase() {
-  return useStore(useTryoutStartStore());
+  const pathname = useLocation({ select: (location) => location.pathname });
+  return useStore(useTryoutStartStore(), (start) =>
+    Arr.contains(start.pages, pathname) ? start.phase : "idle"
+  );
 }
 
-/** Moves the page's start: a start action sets its phase as it presses and sets it idle when the start fails. */
-export function useSetTryoutStartPhase() {
+/**
+ * Moves the learner's start: a start action begins it on the page it is pressed on, leads it to the page
+ * it navigates to once the server answers, and ends it when the start fails.
+ */
+export function useTryoutStart() {
   const store = useTryoutStartStore();
-  return (phase: TryoutStartPhase) => store.setState(phase, true);
+  const router = useRouter();
+  return {
+    begin: (phase: Exclude<TryoutStartPhase, "idle">) =>
+      store.setState({ pages: [router.state.location.pathname], phase }, true),
+    end: () => store.setState(IDLE, true),
+    lead: (target: LinkTarget) =>
+      store.setState(
+        (start) =>
+          start.phase === "idle"
+            ? start
+            : {
+                pages: [...start.pages, router.buildLocation(target).pathname],
+                phase: start.phase,
+              },
+        true
+      ),
+  };
+}
+
+/**
+ * Ends the start once the page shows the attempt it opened, before the browser paints, so the page that
+ * reads the attempt draws it from then on and its later states, such as the review, are never held as the
+ * player opening.
+ */
+export function useEndTryoutStart() {
+  const store = useTryoutStartStore();
+  useLayoutEffect(() => {
+    store.setState(IDLE, true);
+  }, [store]);
 }
 
 const TryoutPressContext = createContext<StoreApi<boolean> | null>(null);

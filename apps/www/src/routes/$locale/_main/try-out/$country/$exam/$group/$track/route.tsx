@@ -5,6 +5,7 @@ import {
   notFound,
   Outlet,
   stripSearchParams,
+  useHydrated,
   useMatch,
 } from "@tanstack/react-router";
 import { createIsomorphicFn } from "@tanstack/react-start";
@@ -18,7 +19,11 @@ import {
 import { TryoutSetTable } from "@/components/tryout/catalog/table/sets";
 import { TryoutTrailHeader } from "@/components/tryout/catalog/trail";
 import { readTryoutTrackFn } from "@/components/tryout/route/catalog.functions";
-import { opensSetPaper } from "@/components/tryout/route/search";
+import {
+  opensSetPaper,
+  setPaperScript,
+} from "@/components/tryout/route/search";
+import { useTryoutStartPhase } from "@/components/tryout/runtime/start";
 import { hasSignedInHint } from "@/lib/auth/hint";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { MessagesProvider } from "@/lib/i18n/provider";
@@ -102,20 +107,34 @@ function TryoutTrackLayout() {
   );
 }
 
-/** The track's table, with the open set's pane beside it, or the set's paper on the whole page. */
+/** Whether a set's match is entered by its one section, whose paper its attempt's address opens. */
+const isEnteredSet = (match: {
+  loaderData?: { page: { entrySection: { visibility: string } | null } };
+}) => match.loaderData?.page.entrySection?.visibility === "internal-entry";
+
+/**
+ * The track's table, with the open set's pane beside it, or the set's paper on the whole page: the paper its address
+ * opens, or the player of the section a press opens from its pane. The build prerenders a set's bare address, which
+ * every address of the set serves, so the page hydrates as that address and opens the paper its address names once
+ * it has; until then a script hides the table, so a paper's address never paints it first (`setPaperScript`).
+ */
 function TryoutTrackFrame() {
   const { locale } = Route.useParams();
   const route = Route.useLoaderData();
-  const paper = useMatch({
-    from: "/$locale/_main/try-out/$country/$exam/$group/$track/$set/",
-    select: (match) =>
-      opensSetPaper(
-        match.search,
-        match.loaderData?.page.entrySection?.visibility === "internal-entry"
-      ),
+  const hydrated = useHydrated();
+  const opening = useTryoutStartPhase() === "opening";
+  const set = "/$locale/_main/try-out/$country/$exam/$group/$track/$set/";
+  const entered = useMatch({
+    from: set,
+    select: isEnteredSet,
     shouldThrow: false,
   });
-  if (paper) {
+  const paper = useMatch({
+    from: set,
+    select: (match) => opensSetPaper(match.search, isEnteredSet(match)),
+    shouldThrow: false,
+  });
+  if ((hydrated && paper === true) || opening) {
     return <Outlet />;
   }
   return (
@@ -125,12 +144,23 @@ function TryoutTrackFrame() {
         title={route.page.track.title}
         trail={route.trail}
       />
-      <TryoutSetTable
-        bootstrap={route.list}
-        key={`${locale}:${route.page.track.publicPath}`}
-      >
-        <Outlet />
-      </TryoutSetTable>
+      <div className="contents has-[>script[data-set-paper]]:invisible">
+        {entered === undefined ? null : (
+          // The browser runs this script while it reads the server's markup, and React keeps the element without
+          // running it, so only a page load can mark it.
+          <script
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
+            dangerouslySetInnerHTML={{ __html: setPaperScript(entered) }}
+            suppressHydrationWarning
+          />
+        )}
+        <TryoutSetTable
+          bootstrap={route.list}
+          key={`${locale}:${route.page.track.publicPath}`}
+        >
+          <Outlet />
+        </TryoutSetTable>
+      </div>
     </Page>
   );
 }

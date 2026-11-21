@@ -5,11 +5,10 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { useTranslations } from "use-intl";
 import type { PlayerMode } from "@/components/player/mode";
-import { PlayerTimer, PlayerTimerCard } from "@/components/player/timer";
 import type { TryoutSetPaneProps } from "@/components/tryout/pane/set";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
 import {
-  TryoutPlayerOpening,
+  TryoutPartOpening,
   TryoutRunningPlayer,
 } from "@/components/tryout/player/opening";
 import { TryoutPaperProvider } from "@/components/tryout/player/paper";
@@ -92,14 +91,7 @@ function TryoutSetEntryBody({ children, value }: TryoutSetEntryProps) {
   if (opening) {
     return (
       <TryoutPage>
-        <TryoutPlayerOpening
-          card={
-            <PlayerTimerCard seconds={value.entrySection.timeLimitSeconds} />
-          }
-          questionCount={value.entrySection.questionCount}
-        >
-          <PlayerTimer seconds={value.entrySection.timeLimitSeconds} />
-        </TryoutPlayerOpening>
+        <TryoutPartOpening part={value.entrySection} />
       </TryoutPage>
     );
   }

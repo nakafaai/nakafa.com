@@ -1,10 +1,9 @@
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { use } from "react";
-import { PlayerTimer, PlayerTimerCard } from "@/components/player/timer";
 import { ShellLock } from "@/components/sidebar/lock";
 import { TryoutContentContext } from "@/components/tryout/content/context";
-import { TryoutPlayerOpening } from "@/components/tryout/player/opening";
+import { TryoutPartOpening } from "@/components/tryout/player/opening";
 import { TryoutPaperProvider } from "@/components/tryout/player/paper";
 import {
   getTryoutAttemptLock,
@@ -27,14 +26,7 @@ export function TryoutSectionBodies({ children }: { children: ReactNode }) {
 /** The player's frame, while a section the learner's press opens gets ready. */
 export function TryoutSectionOpening() {
   const { page } = useTryoutSectionPage();
-  return (
-    <TryoutPlayerOpening
-      card={<PlayerTimerCard seconds={page.section.timeLimitSeconds} />}
-      questionCount={page.section.questionCount}
-    >
-      <PlayerTimer seconds={page.section.timeLimitSeconds} />
-    </TryoutPlayerOpening>
-  );
+  return <TryoutPartOpening part={page.section} />;
 }
 
 /**

@@ -1,7 +1,7 @@
 import type { Ref } from "@confect/core";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 type PublicSectionPage = NonNullable<
   Ref.Returns<typeof tryouts.queries.catalog.getSectionPage>
@@ -45,3 +45,22 @@ const TryoutSectionPartSchema = Schema.Struct({
 
 /** One section of a set, as the player's pane offers it. */
 export type TryoutSectionPart = typeof TryoutSectionPartSchema.Type;
+
+/** The set's sections that have a page of their own, as the player's pane picks between them. */
+export function tryoutSectionPartsOf(
+  sections: readonly {
+    readonly publicPath?: string | undefined;
+    readonly sectionKey: string;
+    readonly title: string;
+  }[]
+): readonly TryoutSectionPart[] {
+  return Arr.getSomes(
+    Arr.map(sections, (section) =>
+      Option.map(Option.fromUndefinedOr(section.publicPath), (publicPath) => ({
+        key: section.sectionKey,
+        label: section.title,
+        publicPath,
+      }))
+    )
+  );
+}

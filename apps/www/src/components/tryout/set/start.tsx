@@ -30,8 +30,8 @@ import {
 import {
   useAnswerPress,
   useSetTryoutPressed,
-  useSetTryoutStartPhase,
   useTryoutPressed,
+  useTryoutStart,
   useTryoutStartPhase,
 } from "@/components/tryout/runtime/start";
 import { START_ERROR } from "@/components/tryout/set/copy";
@@ -264,7 +264,7 @@ function resolveStartState({
 function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const navigate = useNavigate();
   const phase = useTryoutStartPhase();
-  const setPhase = useSetTryoutStartPhase();
+  const start = useTryoutStart();
   const pressed = useTryoutPressed();
   const setPressed = useSetTryoutPressed();
   /** Navigates to one try-out page. A page that names no route leaves the page on screen, and its start idle. */
@@ -273,9 +273,11 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     options: { readonly replace?: boolean } = {}
   ) {
     Option.match(getTryoutPageTarget(address), {
-      onNone: () => setPhase("idle"),
-      onSome: (target) =>
-        navigate({ ...target, replace: options.replace ?? false }),
+      onNone: start.end,
+      onSome: (target) => {
+        start.lead(target);
+        navigate({ ...target, replace: options.replace ?? false });
+      },
     });
   }
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
@@ -356,12 +358,12 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       return;
     }
     dialog.close();
-    setPhase(entrySectionKey === undefined ? "starting" : "opening");
+    start.begin(entrySectionKey === undefined ? "starting" : "opening");
     const program = startAttemptProgram({
       args: startArgsOf(request),
       failureMessage: START_ERROR,
       mutation: startAttempt,
-      onFailure: Effect.sync(() => setPhase("idle")),
+      onFailure: Effect.sync(start.end),
       onSuccess: (result) =>
         // The attempt runs from here on, whichever page the learner next loads the set from.
         keepActionName(address, "continue-cta").pipe(
@@ -386,7 +388,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
         Effect.catchTag("ConvexOfflineError", () =>
           Effect.sync(() => {
             toast.error(START_ERROR, { position: "bottom-center" });
-            setPhase("idle");
+            start.end();
           })
         )
       )
