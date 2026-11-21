@@ -25,6 +25,7 @@ import { cn } from "cn";
 import { Option, Schema } from "effect";
 import type { ReactNode } from "react";
 import { DeferredPreviewRefresh } from "@/components/dev/deferred";
+import { LOADED_JUMP_SCRIPT } from "@/components/marketing/shared/jump";
 import { Announcer } from "@/components/navigation/announcer";
 import { AgentBridge } from "@/components/shared/agent";
 import { ContentPageAnchorProvider } from "@/components/shared/content/anchor";
@@ -211,6 +212,10 @@ function RootDocument({ children }: { children: ReactNode }) {
           </DrawerStage>
           <PageScrollbar />
         </ThemeProvider>
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
+          dangerouslySetInnerHTML={{ __html: LOADED_JUMP_SCRIPT }}
+        />
         <Scripts />
       </body>
     </html>

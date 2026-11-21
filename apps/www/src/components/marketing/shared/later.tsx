@@ -36,8 +36,8 @@ function LaterBody<Props extends object>({
  * part of the page that the reader has not reached. The browser also skips the
  * layout of a section far from the screen, and holds the height of one screen,
  * bounded as every part is (`--marketing-screen`), for it until then
- * (`later-section`, which also lays out every box down to a jump's target before
- * the scroll). This box is the only one that skips: inside a second skipped box
+ * (`later-section`; `layOutDownTo` lays out every box down to a jump's target
+ * before the scroll). This box is the only one that skips: inside a second skipped box
  * WebKit's `scrollIntoView` does not scroll to an element of the section, and
  * Firefox and WebKit lose the section's scroll margin. That skipping also clips
  * the box at its padding edge, so the box
