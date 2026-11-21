@@ -21,7 +21,6 @@ import { TryoutTrailHeader } from "@/components/tryout/catalog/trail";
 import { readTryoutTrackFn } from "@/components/tryout/route/catalog.functions";
 import {
   opensSetPaper,
-  SET_PAPER_ATTRIBUTE,
   setPaperScript,
 } from "@/components/tryout/route/search";
 import { useTryoutStartPhase } from "@/components/tryout/runtime/start";
@@ -150,7 +149,6 @@ function TryoutTrackFrame() {
           // The browser runs this script while it reads the server's markup, and React keeps the element without
           // running it, so only a page load can mark it.
           <script
-            {...{ [SET_PAPER_ATTRIBUTE]: "" }}
             // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
             dangerouslySetInnerHTML={{ __html: setPaperScript(entered) }}
             suppressHydrationWarning

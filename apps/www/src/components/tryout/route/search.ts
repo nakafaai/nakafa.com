@@ -81,7 +81,10 @@ export function opensSetPaper(
   );
 }
 
-/** Marks the script that tells, before the first paint, that a set's address opens one of its papers. */
+/**
+ * The mark the script below sets on itself, before the first paint, when a set's address opens one of its papers. The
+ * server never writes it, so a page the client renders, or an address that opens no paper, carries none.
+ */
 export const SET_PAPER_ATTRIBUTE = "data-set-paper";
 
 /**
