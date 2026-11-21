@@ -62,7 +62,11 @@ const chooseLongest = Effect.fn("NakafaE2E.chooseLongestOption")(function* (
 ) {
   yield* Effect.promise(() => waitUntilTakenOver(trigger));
   yield* Effect.promise(() => trigger.click());
-  const options = page.getByRole("option");
+  // The options of the list this trigger opens: the list of the select before may still be leaving.
+  const list = yield* Effect.promise(() =>
+    trigger.getAttribute("aria-controls")
+  );
+  const options = page.locator(`[id="${list}"]`).getByRole("option");
   yield* Effect.promise(() =>
     expect(options.first()).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
