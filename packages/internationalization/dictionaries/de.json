@@ -1890,7 +1890,7 @@
     "description": "Lerne auf Nakafa Mathe, Naturwissenschaften, Informatik, KI und für Prüfungen. Kostenlos von der Grundschule bis zur Uni, mit Übungen und Erklärungen.",
     "short-description": "Kostenlose Lerninhalte von der Grundschule bis zur Universität.",
     "very-short-description": "Kostenlose Lernmaterialien.",
-    "keywords": "kostenlose Lerninhalte, Mathematik lernen, Physik lernen, Chemie lernen, Biologie lernen, Informatik lernen, KI lernen, Data Science lernen, Übungsaufgaben, ausführliche Lösungen, Prüfungsvorbereitung, Online-Probetest, Schulmaterialien, Hochschulmaterialien, offene Bildung, Nakafa",
+    "keywords": "kostenlose Lerninhalte, Mathematik lernen, Physik lernen, Chemie lernen, Biologie lernen, Informatik lernen, KI lernen, Data Science lernen, Übungsaufgaben, ausführliche Lösungen, Prüfungsvorbereitung, Online-Probetest, Schulmaterialien, Hochschulmaterialien, Nakafa",
     "knows-about": "Mathematik, Physik, Chemie, Biologie, Informatik, Künstliche Intelligenz, Data Science, Prüfungsvorbereitung, Schulbildung, Hochschulbildung",
     "classification": "Bildung"
   },
@@ -4060,7 +4060,7 @@
     "q4": "Welche Fächer und Klassenstufen deckt ihr ab?",
     "a4": "Wir bieten Inhalte von der Grundschule bis zur Universität: Mathematik, Physik, Chemie, Biologie, Informatik und mehr. Das Spektrum reicht von Grundlagen bis zu fortgeschrittenen Hochschulkursen.",
     "q7": "Wie stellt Nakafa die inhaltliche Richtigkeit sicher?",
-    "a7": "Alle Inhalte werden von qualifizierten Mitwirkenden erstellt und von der Community geprüft. Durch unseren quelloffenen Ansatz kann jeder die Materialien einsehen und Verbesserungen vorschlagen. Übungsaufgaben enthalten Erklärungen, damit du aus Fehlern lernst und nicht nur eine Punktzahl erhältst."
+    "a7": "Jede Lektion folgt einem schriftlichen Redaktionsstandard: Fakten brauchen eine Primärquelle oder eine offizielle Quelle, und jede Formel und jedes Beispiel wird vor der Veröffentlichung nachgerechnet. Der Quellcode ist einsehbar, also kann jede Person die Materialien prüfen und Verbesserungen vorschlagen. Übungsaufgaben enthalten Erklärungen, damit du aus Fehlern lernst und nicht nur eine Punktzahl erhältst."
   },
   "Landing": {
     "hero-title": "Lerne, bis es <mark>wirklich klickt.</mark>",
@@ -4187,11 +4187,11 @@
       },
       "accuracy": {
         "question": "Wie sorgt Nakafa für richtige Inhalte?",
-        "answer": "Qualifizierte Autorinnen und Autoren schreiben alle Inhalte, und weil der Quellcode einsehbar ist, kann jede Person eine Korrektur vorschlagen."
+        "answer": "Jede Lektion folgt einem schriftlichen Redaktionsstandard, der für jede Tatsache eine Primärquelle oder offizielle Quelle verlangt und jede Formel und jedes Beispiel vor der Veröffentlichung nachrechnet, und weil der Quellcode einsehbar ist, kann jede Person eine Korrektur vorschlagen."
       },
       "languages": {
         "question": "In welchen Sprachen gibt es Nakafa?",
-        "answer": "Auf Deutsch, Englisch und Indonesisch."
+        "answer": "Auf Deutsch, Englisch, Indonesisch und Malaiisch."
       },
       "nina": {
         "question": "Hat Nina immer recht?",

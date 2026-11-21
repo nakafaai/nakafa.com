@@ -1890,7 +1890,7 @@
     "description": "Study math, science, computer science, AI, and exam prep on Nakafa. Free lessons from K-12 to university with practice questions and explanations.",
     "short-description": "Free lessons for K-12 through university.",
     "very-short-description": "Free learning materials.",
-    "keywords": "free lessons, math lessons, physics lessons, chemistry lessons, biology lessons, computer science lessons, AI lessons, data science lessons, practice questions, worked solutions, exam prep, online try out, K-12 materials, university materials, open education, Nakafa",
+    "keywords": "free lessons, math lessons, physics lessons, chemistry lessons, biology lessons, computer science lessons, AI lessons, data science lessons, practice questions, worked solutions, exam prep, online try out, K-12 materials, university materials, Nakafa",
     "knows-about": "Mathematics, Physics, Chemistry, Biology, Computer Science, Artificial Intelligence, Data Science, Exam Preparation, K-12 Education, Higher Education",
     "classification": "Education"
   },
@@ -4060,7 +4060,7 @@
     "q4": "What subjects and grades do you cover?",
     "a4": "We cover K-12 through university. Mathematics, Physics, Chemistry, Biology, Computer Science, and more. From elementary basics to advanced university courses.",
     "q7": "How does Nakafa ensure content accuracy?",
-    "a7": "All content is created by qualified contributors and reviewed by the community. Our source-available approach means anyone can inspect materials and propose improvements. Practice exercises include explanations so you learn from mistakes, not just scores."
+    "a7": "Every lesson follows a written editorial standard: facts need a primary or official source, and every formula and example is worked out again before it goes live. The source is public, so anyone can inspect the materials and propose improvements. Practice exercises include explanations so you learn from mistakes, not just scores."
   },
   "Landing": {
     "hero-title": "Learn until <mark>it clicks.</mark>",
@@ -4187,11 +4187,11 @@
       },
       "accuracy": {
         "question": "How does Nakafa keep its content accurate?",
-        "answer": "Qualified contributors write every lesson, and because the source is public, anyone can suggest a fix."
+        "answer": "Every lesson follows a written editorial standard that asks for a primary or official source behind each fact and works out every formula and example again before it goes live, and because the source is public, anyone can suggest a fix."
       },
       "languages": {
         "question": "Which languages is Nakafa in?",
-        "answer": "English, Indonesian and German."
+        "answer": "English, Indonesian, German and Malay."
       },
       "nina": {
         "question": "Is Nina always right?",

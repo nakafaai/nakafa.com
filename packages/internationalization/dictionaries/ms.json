@@ -1890,7 +1890,7 @@
     "description": "Belajar matematik, sains, sains komputer, AI dan persediaan peperiksaan di Nakafa. Bahan pembelajaran percuma dari sekolah hingga universiti, dengan soalan latihan dan penyelesaian.",
     "short-description": "Bahan pembelajaran percuma dari sekolah hingga universiti.",
     "very-short-description": "Bahan pembelajaran percuma.",
-    "keywords": "bahan pembelajaran percuma, nota matematik, nota fizik, nota kimia, nota biologi, nota sains komputer, nota AI, nota sains data, soalan latihan, penyelesaian lengkap, persediaan peperiksaan, percubaan dalam talian, SPM, KSSM, bahan sekolah, bahan universiti, pendidikan terbuka, Nakafa",
+    "keywords": "bahan pembelajaran percuma, nota matematik, nota fizik, nota kimia, nota biologi, nota sains komputer, nota AI, nota sains data, soalan latihan, penyelesaian lengkap, persediaan peperiksaan, percubaan dalam talian, SPM, KSSM, bahan sekolah, bahan universiti, Nakafa",
     "knows-about": "Matematik, Fizik, Kimia, Biologi, Sains Komputer, Kecerdasan Buatan, Sains Data, Persediaan Peperiksaan, Pendidikan Sekolah, Pengajian Tinggi",
     "classification": "Pendidikan"
   },
@@ -4060,7 +4060,7 @@
     "q4": "Apa mata pelajaran dan peringkat yang diliputi?",
     "a4": "Kami meliputi sekolah hingga universiti. Matematik, Fizik, Kimia, Biologi, Sains Komputer dan banyak lagi. Daripada asas sekolah rendah hingga kursus universiti lanjutan.",
     "q7": "Bagaimana Nakafa memastikan ketepatan kandungan?",
-    "a7": "Semua kandungan dihasilkan oleh penyumbang yang berkelayakan dan disemak oleh komuniti. Pendekatan sumber terbuka untuk semakan kami bermaksud sesiapa sahaja boleh memeriksa bahan dan mencadangkan penambahbaikan. Latihan disertakan dengan penjelasan supaya kamu belajar daripada kesilapan, bukan sekadar skor."
+    "a7": "Setiap bahan mengikut standard editorial bertulis: fakta perlu ada sumber primer atau rasmi, dan setiap rumus serta contoh dikira semula sebelum diterbitkan. Sumbernya boleh dibaca oleh sesiapa sahaja, jadi sesiapa pun boleh memeriksa bahan dan mencadangkan penambahbaikan. Latihan disertakan dengan penjelasan supaya kamu belajar daripada kesilapan, bukan sekadar skor."
   },
   "Landing": {
     "hero-title": "Belajar sampai <mark>faham.</mark>",
@@ -4187,7 +4187,7 @@
       },
       "accuracy": {
         "question": "Bagaimana Nakafa memastikan kandungannya tepat?",
-        "answer": "Penyumbang yang berkelayakan menulis setiap bahan, dan kerana sumbernya terbuka kepada umum, sesiapa sahaja boleh mencadangkan pembetulan."
+        "answer": "Setiap bahan mengikut standard editorial bertulis yang memerlukan sumber primer atau rasmi bagi setiap fakta dan mengira semula setiap rumus dan contoh sebelum diterbitkan, dan kerana sumbernya boleh dibaca oleh sesiapa sahaja, sesiapa pun boleh mencadangkan pembetulan."
       },
       "languages": {
         "question": "Dalam bahasa apa Nakafa tersedia?",
