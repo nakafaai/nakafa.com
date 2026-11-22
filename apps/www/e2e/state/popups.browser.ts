@@ -26,6 +26,9 @@ const SHEET = '[data-surface="sheet"][data-open]';
 const PALETTE = '[data-surface="palette"]';
 /** The popup of a desktop dialog, which the chat share dialog is. */
 const DIALOG = '[data-slot="dialog-content"]:not([data-surface])';
+
+/** How wide a dialog of the default size stands on a wide screen, in CSS pixels: 28rem. */
+const DIALOG_WIDTH = 448;
 /** The account footer of a signed-in learner that is on screen. */
 const ACCOUNT_FOOTER = '[data-account="member"]:visible';
 /** The title of the chat that the share dialog shares. */
@@ -267,6 +270,13 @@ test("the chat share dialog shows its options in its first frame", async ({
         await expect(page.getByRole("dialog")).toBeVisible();
         await untilRecorded(page);
         await expectFinalFirstFrame(page);
+        // A dialog keeps to its reading width in the middle of a wide screen, whatever its presentation's frame says.
+        const frame = await page.locator(DIALOG).boundingBox();
+        const screen = page.viewportSize();
+        expect(frame?.width).toBe(DIALOG_WIDTH);
+        expect(
+          Math.abs((frame?.x ?? 0) * 2 + DIALOG_WIDTH - (screen?.width ?? 0))
+        ).toBeLessThanOrEqual(1);
       });
     })
   );
