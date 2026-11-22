@@ -80,7 +80,7 @@ const HOLDS: Record<
     layer: ["back", "back"],
     look: [4, 2],
     room: true,
-    thing: [220, 262, 0, 1.3],
+    thing: [216, 262, 0, 1.3],
     tilt: -1.5,
   }),
   chest: (pose, t, swing) => ({
@@ -121,11 +121,11 @@ const HOLDS: Record<
   }),
   out: (pose, t, swing) => ({
     armL: sway(pose.armL, t, 0.3, 1),
-    armR: reach(212 + swing * 3, 138),
+    armR: [124, 146, 166, 148, 186, 154, 198 + swing * 3, 138],
     layer: ["back", "back"],
     look: [4, 1],
     room: false,
-    thing: [212 + swing * 3, 138, swing * 7, 1.3],
+    thing: [198 + swing * 3, 138, swing * 7, 1.3],
     tilt: -1,
   }),
   over: (_, __, swing) => ({
@@ -134,7 +134,7 @@ const HOLDS: Record<
     layer: ["back", "back"],
     look: [0, -3],
     room: true,
-    thing: [102, -2 + swing * 2, swing * 5, 1.25],
+    thing: [102, 4 + swing * 2, swing * 5, 0.9],
     tilt: 0,
   }),
   throw: (pose, t, swing) => ({
@@ -148,11 +148,11 @@ const HOLDS: Record<
   }),
   up: (pose, t, swing) => ({
     armL: sway(pose.armL, t, 0.3, 1),
-    armR: [124, 146, 196, 166, 238, 110, 208 + swing * 3, 46],
+    armR: [124, 146, 196, 166, 234, 116, 205 + swing * 3, 56],
     layer: ["back", "back"],
     look: [3, -3],
     room: false,
-    thing: [208 + swing * 3, 46, swing * 9, 1.3],
+    thing: [205 + swing * 3, 56, swing * 9, 1.3],
     tilt: -2,
   }),
 };

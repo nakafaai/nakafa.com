@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { HEAD, LEANS } from "@repo/mascot/nina/body";
-import { outlineOf } from "@repo/mascot/nina/test.hit";
+import { outlineOf } from "@repo/mascot/nina/test.path";
 import { Array as Arr } from "effect";
 
 /** The head ends at her chin, above this line. */

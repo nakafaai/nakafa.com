@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { hitter, outlineOf } from "@repo/mascot/nina/test.hit";
+import { extentOf, hitter } from "@repo/mascot/nina/test.hit";
 import type { Shape } from "@repo/mascot/shape";
 import {
   circle,
@@ -16,21 +16,38 @@ function topAt(shapes: readonly Shape[], x: number, y: number) {
   return Option.getOrUndefined(hitter(shapes)(x, y));
 }
 
-describe("the places along a path", () => {
-  it("are the places it draws, in order: its moves and lines, then twelve along each curve, and the start again where it closes", () => {
-    expect(outlineOf("M0,0 L10,0 H20 V5 Z")).toEqual([
-      [0, 0],
-      [10, 0],
-      [20, 0],
-      [20, 5],
-      [0, 0],
-    ]);
-    const curve = outlineOf("M0,0 Q10,0 10,10");
-    expect(curve).toHaveLength(13);
-    expect(curve[0]).toEqual([0, 0]);
-    expect(curve[12]).toEqual([10, 10]);
-    expect(curve[6][0]).toBeCloseTo(7.5, 9);
-    expect(curve[6][1]).toBeCloseTo(2.5, 9);
+describe("the box that a picture paints in", () => {
+  it("holds its strokes, its round shapes and its groups' transforms", () => {
+    const line = path({
+      d: "M0,0 L20,0",
+      fill: "none",
+      stroke: "black",
+      strokeWidth: 4,
+    });
+    const disc = circle({ cx: 50, cy: 0, fill: "red", r: 5 });
+    const moved = group([rect({ fill: "red", height: 10, width: 10 })], {
+      transform: "translate(0 30) rotate(90 0 0)",
+    });
+    const [left, top, right, bottom] = extentOf([line, disc, moved]);
+    expect(left).toBeCloseTo(-10, 9);
+    expect(top).toBeCloseTo(-5, 9);
+    expect(right).toBeCloseTo(55, 9);
+    expect(bottom).toBeCloseTo(40, 9);
+  });
+
+  it("leaves out what a fade has made clear, a shape or a whole group", () => {
+    const shown = rect({ fill: "red", height: 10, width: 10 });
+    const faded = rect({
+      fill: "red",
+      height: 10,
+      opacity: 0,
+      width: 10,
+      y: -50,
+    });
+    const gone = group([rect({ fill: "red", height: 10, width: 10, x: 90 })], {
+      opacity: 0,
+    });
+    expect(extentOf([shown, faded, gone])).toEqual([0, 0, 10, 10]);
   });
 });
 

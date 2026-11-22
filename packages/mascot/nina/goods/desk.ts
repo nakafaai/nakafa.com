@@ -135,7 +135,7 @@ export function bell(swing: number): Parts {
     flat("M-18,-6 C-18,-32 18,-32 18,-6 Z", POP.yellow),
     dot(0, -32 + Math.max(0, swing) * 3, 4.6, BASE),
     bar(
-      `M26,-22 L${32 + swing * 2},-26 M28,-12 L${36 + swing * 2},-12`,
+      `M24,-23 L${29 + swing * 2},-27 M25,-12 L${32 + swing * 2},-12`,
       POP.orange,
       3
     ),
@@ -200,12 +200,12 @@ export function keycard(swing: number): Parts {
         box(-18, -8, 14, 11, POP.yellow, 2),
         bar("M2,-4 L16,-4 M2,5 L12,5", PAGE, 3),
       ],
-      8,
+      3,
       -20,
       -14
     ),
     bar(
-      `M38,-34 C44,-40 44,-46 ${40 + swing * 2},-50 M46,-30 C54,-38 54,-48 ${48 + swing * 2},-56`,
+      `M15,-42 C21,-48 21,-54 ${17 + swing * 2},-58 M23,-40 C31,-48 31,-58 ${25 + swing * 2},-64`,
       POP.green,
       3
     ),
@@ -263,7 +263,7 @@ export function sheaf(swing: number): Parts {
         box(-12, -17, 24, 34, PAPER, 3),
         bar("M-6,-8 L6,-8 M-6,0 L2,0", BASE, 2.5),
       ],
-      12 + swing * 6,
+      2 + swing * 6,
       -58 - swing * 4,
       20
     ),

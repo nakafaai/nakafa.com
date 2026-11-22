@@ -1,100 +1,9 @@
-import { cubic } from "@repo/mascot/nina/limb";
 import type { Place } from "@repo/mascot/nina/point";
+import { numbersOf, piecesOf, placesOf } from "@repo/mascot/nina/test.path";
 import type { Shape } from "@repo/mascot/shape";
-import { Array as Arr, Match, Number as Num, Option, Schema } from "effect";
+import { Array as Arr, Match, Number as Num, Option } from "effect";
 
-/** How many straight pieces stand in for a curve. */
-const PIECES = 12;
-const COMMAND = /(?<command>[MLHVCQZ])(?<values>[^MLHVCQZ]*)/gu;
-const NUMBER = /-?\d+(?:\.\d+)?/gu;
 const CALL = /(?<name>translate|rotate|scale)\((?<values>[^)]*)\)/gu;
-
-const PlaceSchema = Schema.Tuple([Schema.Finite, Schema.Finite]);
-
-/**
- * A pen while it draws a path: where it is, where the piece in hand began, the
- * pieces done, and the piece in hand as the runs of places it was drawn in.
- */
-const PenSchema = Schema.Struct({
-  at: PlaceSchema,
-  begin: PlaceSchema,
-  done: Schema.Array(Schema.Array(PlaceSchema)),
-  piece: Schema.Array(Schema.Array(PlaceSchema)),
-});
-
-type Pen = typeof PenSchema.Type;
-
-/** Reads the numbers of a text, in order. */
-function numbersOf(text: string) {
-  return Arr.map(Arr.fromIterable(text.matchAll(NUMBER)), ([found]) =>
-    Number(found)
-  );
-}
-
-/** The numbers of a list, two by two, as places. */
-function placesOf(numbers: readonly number[]): readonly Place[] {
-  return Arr.map(Arr.chunksOf(numbers, 2), ([x, y]): Place => [x, y]);
-}
-
-/** One coordinate of a quadratic curve with these three control values, at `t`. */
-function quadratic(a: number, b: number, c: number, t: number) {
-  const m = 1 - t;
-  return m * m * a + 2 * m * t * b + t * t * c;
-}
-
-/** The places along a curve from `from` through its control places, the last of which it reaches: two for a quadratic curve, three for a cubic. */
-function curveFrom(from: Place, controls: readonly Place[]): readonly Place[] {
-  return Arr.makeBy(PIECES, (i): Place => {
-    const t = (i + 1) / PIECES;
-    const [b, c, d] = controls;
-    return d === undefined
-      ? [quadratic(from[0], b[0], c[0], t), quadratic(from[1], b[1], c[1], t)]
-      : [
-          cubic(from[0], b[0], c[0], d[0], t),
-          cubic(from[1], b[1], c[1], d[1], t),
-        ];
-  });
-}
-
-/** Moves a pen by one command of a path. */
-function draw(pen: Pen, [, command, text]: RegExpExecArray): Pen {
-  const numbers = numbersOf(text);
-  const places = placesOf(numbers);
-  const more = (added: readonly Place[]): Pen => ({
-    ...pen,
-    at: Arr.reduce(added, pen.at, (_, place) => place),
-    piece: [...pen.piece, added],
-  });
-  return Match.value(command).pipe(
-    Match.when("M", () => ({
-      ...more(places),
-      begin: places[0],
-      done: [...pen.done, Arr.flatten(pen.piece)],
-      piece: [places],
-    })),
-    Match.when("H", () => more([[numbers[0], pen.at[1]]])),
-    Match.when("V", () => more([[pen.at[0], numbers[0]]])),
-    Match.when("L", () => more(places)),
-    Match.when("Z", () => more([pen.begin])),
-    // The commands left are the curves, quadratic or cubic by their places.
-    Match.orElse(() => more(curveFrom(pen.at, places)))
-  );
-}
-
-/** The pieces that a path draws, each as the places along it. */
-function piecesOf(d: string): readonly (readonly Place[])[] {
-  const blank: Pen = { at: [0, 0], begin: [0, 0], done: [], piece: [[[0, 0]]] };
-  const last = Arr.reduce(Arr.fromIterable(d.matchAll(COMMAND)), blank, draw);
-  return Arr.filter(
-    [...last.done, Arr.flatten(last.piece)],
-    (piece) => piece.length > 1
-  );
-}
-
-/** The places along a path, in the order it draws them. The one reader of path text in her tests. */
-export function outlineOf(d: string): readonly Place[] {
-  return Arr.flatten(piecesOf(d));
-}
 
 /** Whether a place is inside an outline, counting how often a ray from it crosses the outline. */
 function inside(outline: readonly Place[], [x, y]: Place) {
@@ -168,9 +77,28 @@ function undo(at: Place, [name, a, b, c]: Call): Place {
   );
 }
 
+/** Does one transform function, so that a place inside a group becomes a place outside it: the reverse of `undo`. */
+function apply(at: Place, [name, a, b, c]: Call): Place {
+  return Match.value(name).pipe(
+    Match.when("translate", (): Place => [at[0] + a, at[1] + b]),
+    Match.when("scale", (): Place => [at[0] * a, at[1] * b]),
+    Match.orElse((): Place => {
+      const turn = (a * Math.PI) / 180;
+      const dx = at[0] - b;
+      const dy = at[1] - c;
+      return [
+        b + dx * Math.cos(turn) - dy * Math.sin(turn),
+        c + dx * Math.sin(turn) + dy * Math.cos(turn),
+      ];
+    })
+  );
+}
+
 /** A shape and the test of whether it lies over a place. */
 interface Layer<Mark> {
   readonly covers: (at: Place) => boolean;
+  /** The places on its painted edge, in the picture's own room, with its groups' transforms done. */
+  readonly rim: readonly Place[];
   readonly shape: Shape<Mark>;
 }
 
@@ -178,6 +106,26 @@ interface Layer<Mark> {
 interface Cover {
   readonly bound: readonly Place[];
   readonly covers: (at: Place) => boolean;
+  /** The places on its painted edge before a stroke widens it: the bound of a straight-sided shape, or places round a round one. */
+  readonly rim: readonly Place[];
+}
+
+/** How many places stand round a circle or an ellipse. */
+const ROUND = 32;
+
+/** The places round an ellipse. */
+function roundOf(cx: number, cy: number, rx: number, ry: number) {
+  return Arr.makeBy(ROUND, (i): Place => {
+    const turn = (i / ROUND) * 2 * Math.PI;
+    return [cx + rx * Math.cos(turn), cy + ry * Math.sin(turn)];
+  });
+}
+
+/** The places a stroke of half width `grow` reaches round each place, so a turned stroke keeps its reach. */
+function widened(places: readonly Place[], grow: number): readonly Place[] {
+  return grow === 0
+    ? places
+    : Arr.flatMap(places, ([x, y]) => roundOf(x, y, grow, grow));
 }
 
 /** The two opposite corners of a box, as the places that bound a shape. */
@@ -217,6 +165,7 @@ function layersOf<Mark>(
           covers: (at: Place) =>
             (filled && Arr.some(pieces, (piece) => inside(piece, at))) ||
             (stroked && Arr.some(pieces, (piece) => touches(piece, at, width))),
+          rim: Arr.flatten(pieces),
         };
       }),
       Match.tag("polygon", ({ points }) => {
@@ -226,6 +175,7 @@ function layersOf<Mark>(
           covers: (at: Place) =>
             (filled && inside(outline, at)) ||
             (stroked && touches([...outline, outline[0]], at, width)),
+          rim: outline,
         };
       }),
       // A rectangle and an ellipse count by their fill: she strokes neither.
@@ -239,6 +189,10 @@ function layersOf<Mark>(
             at[1] -
               Num.clamp(at[1], { maximum: y + height - rx, minimum: y + rx })
           ) <= rx,
+        rim: [
+          ...corners(x, y, x + across, y + height),
+          ...corners(x + across, y, x, y + height),
+        ],
       })),
       Match.tag("circle", ({ cx, cy, r }) => ({
         bound: corners(cx - r, cy - r, cx + r, cy + r),
@@ -249,11 +203,13 @@ function layersOf<Mark>(
             (stroked && Math.abs(gap - r) <= width / 2)
           );
         },
+        rim: roundOf(cx, cy, r, r),
       })),
       Match.tag("ellipse", ({ cx, cy, rx, ry }) => ({
         bound: corners(cx - rx, cy - ry, cx + rx, cy + ry),
         covers: (at: Place) =>
           filled && ((at[0] - cx) / rx) ** 2 + ((at[1] - cy) / ry) ** 2 <= 1,
+        rim: roundOf(cx, cy, rx, ry),
       })),
       Match.exhaustive
     );
@@ -276,10 +232,45 @@ function layersOf<Mark>(
             cover.covers([x, y])
           );
         },
+        rim: Arr.map(widened(cover.rim, grow), (at) =>
+          Arr.reduceRight(calls, at, apply)
+        ),
         shape,
       },
     ];
   });
+}
+
+/** The shapes that leave ink, without one, or a group, that a fade has made clear. */
+function inked<Mark>(shapes: readonly Shape<Mark>[]): readonly Shape<Mark>[] {
+  return Arr.flatMap(shapes, (shape): readonly Shape<Mark>[] => {
+    if (shape.opacity === 0) {
+      return [];
+    }
+    return shape._tag === "g"
+      ? [{ ...shape, children: inked(shape.children) }]
+      : [shape];
+  });
+}
+
+/** A box as its left, top, right and bottom edges. */
+export type Extent = readonly [
+  left: number,
+  top: number,
+  right: number,
+  bottom: number,
+];
+
+/**
+ * The box that everything a picture paints lies in, strokes included, through
+ * its groups and their transforms: what a window on the picture must hold for
+ * nothing of it to be cut. A shape faded out to nothing paints nothing.
+ */
+export function extentOf<Mark>(shapes: readonly Shape<Mark>[]): Extent {
+  const rim = Arr.flatMap(layersOf(inked(shapes), []), (layer) => layer.rim);
+  const xs = Arr.map(rim, ([x]) => x);
+  const ys = Arr.map(rim, ([, y]) => y);
+  return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
 }
 
 /**

@@ -257,9 +257,9 @@ function pointing(t: number): Pose {
   return {
     ...p,
     above: [
-      free(`M${at(232 + reach, 124)} L${at(240 + reach, 116)}`),
-      free(`M${at(236 + reach, 138)} L${at(246 + reach, 138)}`),
-      free(`M${at(232 + reach, 152)} L${at(240 + reach, 160)}`),
+      free(`M${at(229 + reach, 124)} L${at(236 + reach, 117)}`),
+      free(`M${at(232 + reach, 138)} L${at(241 + reach, 138)}`),
+      free(`M${at(229 + reach, 152)} L${at(236 + reach, 159)}`),
     ],
     armL: sway(p.armL, t, 0.3, 1),
     armR: [124, 146, 176, 148, 198 + reach, 154, 220 + reach, 138],

@@ -39,7 +39,7 @@ export function chalkboard(written: number) {
   });
   return [
     path({
-      d: "M210,120 L200,276 M240,120 L250,276",
+      d: "M210,120 L200,276 M240,120 L248,276",
       stroke: BOARD,
       strokeLinecap: "round",
       strokeWidth: 6,
