@@ -4,6 +4,7 @@ import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import contents from "@repo/backend/confect/_generated/refs/contents";
 import island from "@repo/backend/confect/_generated/refs/island";
+import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
@@ -66,6 +67,27 @@ const account = {
   appUser: { _id: "users-1", name: "Nabil", username: "nabil" },
 };
 
+/** The try-out hub: every country that holds try-outs. */
+const HUB = {
+  countries: [
+    {
+      countryCode: "ID",
+      countryKey: "indonesia",
+      examCount: 2,
+      publicPath: "try-out/indonesia",
+      title: "Indonesia",
+    },
+    {
+      countryCode: "DE",
+      countryKey: "germany",
+      examCount: 1,
+      publicPath: "try-out/germany",
+      title: "Germany",
+    },
+  ],
+  sourceRevision: null,
+};
+
 /** Answers each Confect query with its value and fails any other query. */
 function answerQueries(answers: ReadonlyArray<readonly [unknown, unknown]>) {
   mocks.preloadConfectQuery.mockImplementation((ref) =>
@@ -118,6 +140,8 @@ describe("homeScreenHandler", () => {
       [island.queries.week, null],
       [island.queries.leaders, []],
       [tryouts.queries.history.recent, []],
+      [learningPreferences.queries.getCurrentTryout, null],
+      [tryouts.queries.catalog.getHubPage, HUB],
     ]);
     const cause = await failureOf(
       homeScreenHandler({ data: { locale: "en" } })
@@ -138,6 +162,8 @@ describe("homeScreenHandler", () => {
       [island.queries.week, null],
       [island.queries.leaders, []],
       [tryouts.queries.history.recent, []],
+      [learningPreferences.queries.getCurrentTryout, null],
+      [tryouts.queries.catalog.getHubPage, HUB],
     ]);
     const cause = await failureOf(
       homeScreenHandler({ data: { locale: "en" } })
@@ -149,11 +175,20 @@ describe("homeScreenHandler", () => {
     sessionWith(Option.some("token"));
     const week = { days: [], streak: 2, today: "2026-11-09" };
     const attempt = {
+      answered: 4,
       attemptId: "attempt-1",
+      correct: 0,
+      countryCode: "ID",
+      examKey: "snbt",
+      expiresAt: 2000,
+      part: { key: "quantitative-knowledge", title: "Quantitative knowledge" },
       publicPath: "try-out/indonesia/snbt/2027/set-1",
+      questions: 160,
       score: null,
+      startedAt: 1000,
       status: "in-progress",
       title: "Set 1",
+      track: "UTBK",
     };
     answerQueries([
       [
@@ -178,6 +213,7 @@ describe("homeScreenHandler", () => {
       [island.queries.week, week],
       [island.queries.leaders, []],
       [tryouts.queries.history.recent, [attempt]],
+      [learningPreferences.queries.getCurrentTryout, null],
     ]);
     const screen = await homeScreenHandler({ data: { locale: "en" } });
     expect(screen.name).toBe("Nabil");
@@ -192,6 +228,13 @@ describe("homeScreenHandler", () => {
     });
     expect(screen.week).toEqual(week);
     expect(screen.attempts).toEqual([attempt]);
+    // A learner who has sat a try-out is shown it, so nothing is read for where to begin.
+    expect(screen.start).toBeNull();
+    expect(mocks.preloadConfectQuery).not.toHaveBeenCalledWith(
+      tryouts.queries.catalog.getHubPage,
+      expect.anything(),
+      expect.anything()
+    );
     expect(screen.username).toBe(account.appUser.username);
     expect(mocks.preloadConfectQuery).toHaveBeenCalledWith(
       contents.queries.recent.getRecentlyViewed,
@@ -262,6 +305,8 @@ describe("homeScreenHandler", () => {
       [island.queries.week, null],
       [island.queries.leaders, []],
       [tryouts.queries.history.recent, []],
+      [learningPreferences.queries.getCurrentTryout, null],
+      [tryouts.queries.catalog.getHubPage, HUB],
     ]);
     const screen = await homeScreenHandler({ data: { locale: "en" } });
     expect(screen.name).toBeUndefined();

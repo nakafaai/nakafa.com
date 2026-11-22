@@ -26,16 +26,29 @@ const historyRowValidator = Schema.Struct({
 });
 
 /**
- * One try-out the learner sat, as the home lists it: its set by the title and
- * route of the active release, how its newest attempt stands, and that
- * attempt's published score once it has one.
+ * One try-out the learner sat, as the home shows it: its set by the titles of its track and itself, its
+ * country's flag code and its exam's key for its picture, the part to go on with while it runs, how its
+ * newest attempt stands, its time, its answered and right questions out of all of them, and its
+ * published score once it has one.
  */
 const recentRowValidator = Schema.Struct({
+  answered: Schema.Finite,
   attemptId: IdSchema("tryoutAttempts"),
+  correct: Schema.Finite,
+  countryCode: Schema.String,
+  examKey: Schema.String,
+  expiresAt: Schema.Finite,
+  part: Schema.Union([
+    Schema.Struct({ key: Schema.String, title: Schema.String }),
+    Schema.Null,
+  ]),
   publicPath: Schema.String,
+  questions: Schema.Finite,
   score: Schema.Union([Schema.Finite, Schema.Null]),
+  startedAt: Schema.Finite,
   status: tryoutStatusValidator,
   title: Schema.String,
+  track: Schema.String,
 });
 
 /** The learner's own try-out history: one set's attempts by page, and the sets sat last. */

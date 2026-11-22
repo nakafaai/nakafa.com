@@ -37,10 +37,12 @@ for (const viewport of [desktopViewport, touchViewport]) {
           await page.waitForLoadState("networkidle");
           // The signed-in home lives at its own path; /en is the landing every visitor sees.
           await page.goto("/en/home");
-          // The body of a new learner: the greeting's one sentence, the streak with no run yet, and a way into each section.
+          // The body of a new learner: the greeting's one sentence, the streak with no run yet, and a way into each section; with no country picked yet, the try-outs ask for one.
           await expect(page.getByText(en.Home["hero-start"])).toBeVisible();
           await expect(page.getByText("No streak yet")).toBeVisible();
-          await expect(page.getByText(en.Home["tryouts-first"])).toBeVisible();
+          await expect(
+            page.getByText(en.Home["tryout-pick-country"])
+          ).toBeVisible();
           await expect(page.getByText(en.Home["subjects-first"])).toBeVisible();
           await expect(page.getByText("Trending")).toHaveCount(0);
           // The header's one button is the page's primary action: a new learner starts learning.

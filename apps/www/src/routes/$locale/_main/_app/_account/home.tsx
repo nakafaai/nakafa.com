@@ -8,6 +8,7 @@ import { useTranslations } from "use-intl";
 import { HomeContinue } from "@/components/home/continue";
 import { HomeStreak } from "@/components/home/streak";
 import { HomeTryouts } from "@/components/home/tryouts";
+import { ClockProvider } from "@/components/player/now";
 import { ProgressContext, progressOf } from "@/components/progress/context";
 import { WorldPane } from "@/components/progress/pane";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
@@ -51,8 +52,10 @@ function HomePage() {
     island,
     leaders,
     name,
+    now,
     recent,
     recentLooks,
+    start,
     username,
     week,
   } = Route.useLoaderData();
@@ -77,7 +80,9 @@ function HomePage() {
                 )}
               >
                 <HomeStreak name={Option.fromUndefinedOr(name)} />
-                <HomeTryouts attempts={attempts} />
+                <ClockProvider renderedAt={now}>
+                  <HomeTryouts attempts={attempts} start={start} />
+                </ClockProvider>
                 <HomeContinue looks={recentLooks} recent={recent} />
               </div>
             </PanesList>

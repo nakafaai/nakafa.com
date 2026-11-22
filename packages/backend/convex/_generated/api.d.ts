@@ -17802,11 +17802,20 @@ export declare const api: {
           "public",
           {},
           Array<{
+            answered: number;
             attemptId: Id<"tryoutAttempts">;
+            correct: number;
+            countryCode: string;
+            examKey: string;
+            expiresAt: number;
+            part: { key: string; title: string } | null;
             publicPath: string;
+            questions: number;
             score: number | null;
+            startedAt: number;
             status: "in-progress" | "completed" | "expired";
             title: string;
+            track: string;
           }>
         >;
       };
