@@ -1,3 +1,4 @@
+import type * as Ref from "@confect/core/Ref";
 import type { OptimisticUpdate } from "@confect/react";
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Unlink03Icon } from "@hugeicons/core-free-icons";
@@ -7,14 +8,19 @@ import { CardContent } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Option, Result } from "effect";
+import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import {
   CardSection,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { endedUnderPage } from "@/lib/auth/session";
 
 const { list, revoke } = auth.grant;
+
+/** The agents the list showed last. */
+type Agents = Ref.Returns<typeof list>;
 
 /** Takes a revoked agent off the list at once; the list comes back if the server refuses. */
 const revokeUpdate: OptimisticUpdate<typeof revoke> = (localStore, args) => {
@@ -40,22 +46,28 @@ export function UserSettingsAgents() {
   const isAuthenticated = useConvexAuth((state) => state.isAuthenticated);
   const agents = useQuery(list, isAuthenticated ? {} : "skip");
   const end = useMutation(revoke).withOptimisticUpdate(revokeUpdate);
-
-  if (QueryResult.isFailure(agents)) {
+  // A deletion ends the account's session while its page is still on screen: the
+  // card then keeps the agents it showed until the page leaves.
+  const [shown, setShown] = useState<Agents | null>(null);
+  if (QueryResult.isSuccess(agents) && agents.value !== shown) {
+    setShown(agents.value);
+  }
+  if (QueryResult.isFailure(agents) && !endedUnderPage(agents.error)) {
     throw agents.error;
   }
-  if (!QueryResult.isSuccess(agents)) {
+  const listed = QueryResult.isSuccess(agents) ? agents.value : shown;
+  if (listed === null) {
     return null;
   }
 
   return (
     <CardSection description={t("agents-description")} title={t("agents")}>
       <CardContent>
-        {agents.value.length === 0 ? (
+        {listed.length === 0 ? (
           <p className="text-muted-foreground text-sm">{t("agents-empty")}</p>
         ) : (
           <ul className="flex flex-col gap-2">
-            {Arr.map(agents.value, (agent) => (
+            {Arr.map(listed, (agent) => (
               <li
                 className="flex items-center justify-between gap-2"
                 key={agent.grantId}

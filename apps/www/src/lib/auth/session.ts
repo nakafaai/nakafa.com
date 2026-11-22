@@ -84,6 +84,19 @@ export const releaseSession = Effect.fn("www.auth.releaseSession")(
 );
 
 /**
+ * Whether a read failed only because the account's session ended under the page: a prepared deletion made the
+ * account unavailable, or the page signs its account out (`holdSession`) and the server no longer knows the session
+ * it ended. A reader then keeps what it showed, because the page leaves by loading another document; any other
+ * failure is the reader's to throw.
+ */
+export function endedUnderPage(error: { readonly _tag: string }) {
+  return (
+    error._tag === "AccountUnavailable" ||
+    (error._tag === "SessionRequired" && MutableRef.get(signingOut))
+  );
+}
+
+/**
  * Follows the client's session from the session readers already see. While the
  * page signs its account out, readers keep the session they see
  * (`holdSession`). A read that failed keeps the session they see too, marked

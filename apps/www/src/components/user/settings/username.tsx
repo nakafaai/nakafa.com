@@ -31,6 +31,7 @@ import {
 import { useUpdateUsernameMutation } from "@/components/user/mutation";
 import { SettingsSave } from "@/components/user/settings/save";
 import { reportClientException } from "@/lib/analytics/client";
+import { endedUnderPage } from "@/lib/auth/session";
 import type { CurrentUser } from "@/lib/identity/client";
 import { profileHref } from "@/lib/profile/href";
 import { usernameReply } from "@/lib/profile/username";
@@ -51,12 +52,9 @@ function useUsernameAnswer(typed: string, current: string | undefined) {
     users.queries.checkUsername,
     isAuthenticated ? { username: asked } : "skip"
   );
-  // A prepared deletion makes the account unavailable while its page is still on
-  // screen: the card then asks nothing more and keeps what it showed.
-  if (
-    QueryResult.isFailure(check) &&
-    check.error._tag !== "AccountUnavailable"
-  ) {
+  // A deletion ends the account's session while its page is still on screen: the
+  // card then keeps what it showed until the page leaves.
+  if (QueryResult.isFailure(check) && !endedUnderPage(check.error)) {
     throw check.error;
   }
   const reply = usernameReply({

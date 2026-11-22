@@ -21,6 +21,7 @@ import { reportClientException } from "@/lib/analytics/client";
 import { signOutSession } from "@/lib/auth/client";
 import { clearDeletedAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
+import { holdSession, releaseSession } from "@/lib/auth/session";
 import { requireConvexOnline } from "@/lib/convex/online";
 import { useCurrentLocale } from "@/lib/routing/link";
 
@@ -60,8 +61,12 @@ export function UserSettingsDeleteAccount() {
     startTransition(async () => {
       const result = await Effect.runPromise(
         requireConvexOnline(convex).pipe(
+          // The deletion ends every session of the account, so the page's readers keep the session they see
+          // until the page leaves (`holdSession`), and follow it again when the deletion fails.
+          Effect.andThen(holdSession()),
           Effect.andThen(Effect.tryPromise(() => deleteAccount())),
           Effect.flatMap(Effect.fromResult),
+          Effect.tapError(() => releaseSession()),
           Effect.andThen(
             signOutSession(convex).pipe(
               Effect.catchTag("SignOutFailed", (error) =>
