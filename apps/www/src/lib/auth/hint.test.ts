@@ -29,9 +29,9 @@ describe("sign-in hint cookie", () => {
     );
   });
 
-  it("shares the domain of the session cookie with every school host", () => {
-    expect(signedInHintCookie({ domain: "localhost", secure: false })).toBe(
-      "nakafa-signed-in=1; Domain=localhost; Path=/; SameSite=Lax; Max-Age=604800"
+  it("keeps to its host where the session cookie names no domain", () => {
+    expect(signedInHintCookie({ domain: undefined, secure: false })).toBe(
+      "nakafa-signed-in=1; Path=/; SameSite=Lax; Max-Age=604800"
     );
   });
 
@@ -55,10 +55,10 @@ describe("sign-in hint cookie", () => {
 });
 
 describe("sign-in hint scope", () => {
-  it("names the site's host, and https only for a secure site", () => {
+  it("names the session cookie's domain, and https only for a secure site", () => {
     expect(hintScopeFor(new URL("https://nakafa.com"))).toStrictEqual(secure);
     expect(hintScopeFor(new URL("http://localhost:3000"))).toStrictEqual({
-      domain: "localhost",
+      domain: undefined,
       secure: false,
     });
   });

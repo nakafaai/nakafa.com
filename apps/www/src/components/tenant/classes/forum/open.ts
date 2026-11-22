@@ -99,3 +99,22 @@ export const OpenRootContext = createContext<Option.Option<string>>(
 export function useIsOpenRoot(clientKey: string) {
   return Option.contains(use(OpenRootContext), clientKey);
 }
+
+/**
+ * The chat the forum shows and the thread that stands open beside it. The list of chats marks both as open from
+ * here, never from the address, since a thread's address names no chat and a jump to a message adds to the chat's.
+ */
+export const OpenPlaceContext = createContext<{
+  readonly chat: Option.Option<Id<"classroomChannels">>;
+  readonly thread: Option.Option<number>;
+}>({ chat: Option.none(), thread: Option.none() });
+
+/** Whether the chat with `channelId` is the one the forum shows. */
+export function useIsOpenChat(channelId: Id<"classroomChannels">) {
+  return Option.contains(use(OpenPlaceContext).chat, channelId);
+}
+
+/** Whether the thread numbered `number` stands open beside its chat. */
+export function useIsOpenThread(number: number) {
+  return Option.contains(use(OpenPlaceContext).thread, number);
+}

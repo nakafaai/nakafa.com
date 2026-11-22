@@ -2,6 +2,7 @@ import type { AuthCookieOptions } from "@convex-dev/auth/ssr";
 import { AUTH_JWT_COOKIE, AUTH_REFRESH_COOKIE } from "@convex-dev/auth/ssr";
 import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Array as Arr, Result, String as Str } from "effect";
+import { sharedCookieDomain } from "@/lib/auth/domain";
 
 /**
  * The prefix of the auth cookies of a site that production's cookies reach and
@@ -17,11 +18,12 @@ const AUTH_COOKIES = [AUTH_JWT_COOKIE, AUTH_REFRESH_COOKIE];
 
 /** How one site scopes and names its auth cookies. */
 export function siteAuthCookies(site: URL) {
-  const production = site.hostname === MAIN_DOMAIN;
-  const shadowed = !production && site.hostname.endsWith(`.${MAIN_DOMAIN}`);
+  const domain = sharedCookieDomain(site);
+  const shadowed =
+    domain === undefined && site.hostname.endsWith(`.${MAIN_DOMAIN}`);
   const options: AuthCookieOptions = {
     secure: site.protocol === "https:",
-    ...(production ? { domain: MAIN_DOMAIN } : {}),
+    ...(domain === undefined ? {} : { domain }),
   };
   return { options, prefix: shadowed ? SHADOWED_PREFIX : "" };
 }

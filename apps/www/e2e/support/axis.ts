@@ -18,6 +18,9 @@ export function readRowAxis({
     '[role="radio"], [role="checkbox"], [role="switch"], input[type="radio"], input[type="checkbox"], [data-slot="radio"], [data-slot="radio-mark"], [data-slot="checkbox"], [data-slot="switch"]';
   const UNCOUNTED =
     'kbd, [data-slot="kbd"], [data-slot="avatar"], [role="presentation"], [aria-hidden="true"], [data-slot$="separator"]';
+  /** A line that sets one group of a row's controls off from the next, and draws nothing a reader presses. */
+  const DIVIDER =
+    '[role="separator"], [data-slot$="separator"], span[aria-hidden="true"]:empty';
   const problems = new Set<string>();
 
   const round = (value: number) => Math.round(value * 10) / 10;
@@ -85,7 +88,29 @@ export function readRowAxis({
       child
     ).getBoundingClientRect();
 
-  /** Holds three or more siblings of a row of controls equal gaps apart. */
+  /** The space between two siblings that stand level in a row, or nothing when one stands above the other. */
+  const gapBetween = (
+    before: Element,
+    after: Element,
+    style: CSSStyleDeclaration
+  ) => {
+    const one = before.getBoundingClientRect();
+    const other = after.getBoundingClientRect();
+    if (!(other.top < one.bottom && one.top < other.bottom)) {
+      return [];
+    }
+    return [
+      style.direction === "rtl"
+        ? one.left - other.right
+        : other.left - one.right,
+    ];
+  };
+
+  /**
+   * Holds three or more siblings of a row of controls equal gaps apart. A divider, such as the line between two
+   * groups of a toolbar, splits the row into runs: each run keeps its own equal gaps, and the divider stands as far
+   * from the run before it as from the run after it.
+   */
   const checkGaps = (
     row: Element,
     style: CSSStyleDeclaration,
@@ -102,26 +127,50 @@ export function readRowAxis({
     if (loose || children.length < 3) {
       return;
     }
-    const gaps = children.slice(1).flatMap((child, index) => {
-      const before = children[index]?.getBoundingClientRect();
-      const after = child.getBoundingClientRect();
-      const level =
-        before !== undefined &&
-        after.top < before.bottom &&
-        before.top < after.bottom;
-      if (!level) {
-        return [];
+    // The gaps a reader sees run in the order the row draws its children, which `order` may change from the
+    // order they are written in, as a number field draws its decrease button before its input.
+    const start = (child: Element) => {
+      const box = child.getBoundingClientRect();
+      return style.direction === "rtl" ? -box.right : box.left;
+    };
+    const drawn = [...children].sort((one, other) => start(one) - start(other));
+    const runs: Element[][] = [[]];
+    const lopsided: number[][] = [];
+    drawn.forEach((child, index) => {
+      if (!child.matches(DIVIDER)) {
+        runs.at(-1)?.push(child);
+        return;
       }
-      return [
-        style.direction === "rtl"
-          ? before.left - after.right
-          : after.left - before.right,
-      ];
+      runs.push([]);
+      const before = drawn[index - 1];
+      const after = drawn[index + 1];
+      const sides =
+        before === undefined || after === undefined
+          ? []
+          : [
+              ...gapBetween(before, child, style),
+              ...gapBetween(child, after, style),
+            ];
+      if (sides.length === 2 && spread(sides) > TOLERANCE) {
+        lopsided.push(sides);
+      }
     });
-    if (gaps.length >= 2 && spread(gaps) > TOLERANCE) {
+    for (const sides of lopsided) {
       problems.add(
-        `the controls of "${nameOf(row)}" stand ${gaps.map(round).join(", ")} px apart`
+        `a divider of "${nameOf(row)}" stands ${sides.map(round).join(" and ")} px from its neighbours`
       );
+    }
+    for (const run of runs) {
+      const gaps = run
+        .slice(1)
+        .flatMap((child, index) =>
+          gapBetween(run[index] ?? child, child, style)
+        );
+      if (gaps.length >= 2 && spread(gaps) > TOLERANCE) {
+        problems.add(
+          `the controls of "${nameOf(row)}" stand ${gaps.map(round).join(", ")} px apart`
+        );
+      }
     }
   };
 
