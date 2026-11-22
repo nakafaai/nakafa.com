@@ -100,6 +100,11 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
         path: PREPARED_PATHS,
       },
       { key: PLAYWRIGHT_ALL_BROWSERS, path: PLAYWRIGHT_PATH },
+      {
+        key: `urls-prod-${expression("github.run_id")}-${expression("github.run_attempt")}`,
+        path: ".cache/urls",
+        "restore-keys": "urls-prod-\n",
+      },
     ],
     approvedSha: "55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
     expectedInputs: {
@@ -108,9 +113,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
       "restore-keys": `${RELEASE_READS}\n${STAGE_READS}\n`,
     },
     expectedTag: "v6.1.0",
-    expectedUsages: 5,
+    expectedUsages: 6,
     reason:
-      "The proof workflow restores the prepared acceptance runtime only by its exact key, the hash of everything that state depends on, so a changed input never reuses it, and the browsers of the Playwright release and engines a machine runs, which never change within a release. The warming of main looks the prepared runtime up without downloading it, and prepares only when main's scope lacks it. The deploy job restores the newest Convex reads that a deploy of the same stage kept, the same release first: every store entry is keyed by what its answer depends on, so the cache key names the stage and the release alone, never the code or the dependencies, which would read the whole release again (docs/convex/cost.md, Deploy reads).",
+      "The proof workflow restores the prepared acceptance runtime only by its exact key, the hash of everything that state depends on, so a changed input never reuses it, and the browsers of the Playwright release and engines a machine runs, which never change within a release. The warming of main looks the prepared runtime up without downloading it, and prepares only when main's scope lacks it. The deploy job restores the newest Convex reads that a deploy of the same stage kept, the same release first: every store entry is keyed by what its answer depends on, so the cache key names the stage and the release alone, never the code or the dependencies, which would read the whole release again (docs/convex/cost.md, Deploy reads). A production deploy also restores the newest ledger of published addresses, the addresses Nakafa ever published that must all keep answering (apps/www/scripts/urls.ts).",
   },
   {
     action: "actions/cache/save",
@@ -121,6 +126,10 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
       },
       { key: PLAYWRIGHT_BROWSERS, path: PLAYWRIGHT_PATH },
       { key: PLAYWRIGHT_ALL_BROWSERS, path: PLAYWRIGHT_PATH },
+      {
+        key: expression("steps.urls.outputs.cache-primary-key"),
+        path: ".cache/urls",
+      },
     ],
     approvedSha: "55cc8345863c7cc4c66a329aec7e433d2d1c52a9",
     expectedInputs: {
@@ -128,9 +137,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
       path: ".cache/reads",
     },
     expectedTag: "v6.1.0",
-    expectedUsages: 5,
+    expectedUsages: 6,
     reason:
-      "The proof workflow saves a prepared acceptance runtime it had to prepare, under its exact key, and the browsers it had to download, as the warming of main does in main's scope, which merge groups read. The deploy job saves the Convex reads it added under its own run's key, so the next deploy of the release restores them (docs/convex/cost.md, Deploy reads).",
+      "The proof workflow saves a prepared acceptance runtime it had to prepare, under its exact key, and the browsers it had to download, as the warming of main does in main's scope, which merge groups read. The deploy job saves the Convex reads it added under its own run's key, so the next deploy of the release restores them (docs/convex/cost.md, Deploy reads). A production deploy also keeps the ledger of published addresses it recorded, under its own run's key, for the next one (apps/www/scripts/urls.ts).",
   },
   {
     action: "actions/upload-artifact",
