@@ -27,6 +27,8 @@ export function readFooterActions(actions: Locator) {
           (element.getAttribute("aria-label") ??
             (element.getAttribute("aria-labelledby") ?? "")
               .split(" ")
+              // An action that shows words has no tooltip to point at, and `#` alone is no selector.
+              .filter((id) => id !== "")
               .map(
                 (id) =>
                   document.querySelector(`#${CSS.escape(id)}`)?.textContent ??

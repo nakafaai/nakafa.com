@@ -3,6 +3,7 @@ import { Array as Arr, Effect, Schema } from "effect";
 import { Base64Url } from "effect/encoding";
 import {
   AuthSession,
+  endedUnderPage,
   followAuthSession,
   holdSession,
   previewAuthSession,
@@ -109,6 +110,25 @@ describe("followAuthSession", () => {
         expect(followAuthSession(signedIn, previewAuthSession)).toBe(
           previewAuthSession
         );
+      })
+  );
+});
+
+describe("endedUnderPage", () => {
+  it.effect(
+    "lets a reader keep what it showed when the account's session ends under the page, and throw anything else",
+    () =>
+      Effect.gen(function* () {
+        expect(endedUnderPage({ _tag: "AccountUnavailable" })).toBe(true);
+        expect(endedUnderPage({ _tag: "SessionRequired" })).toBe(false);
+        expect(endedUnderPage({ _tag: "QueryFailed" })).toBe(false);
+
+        yield* holdSession();
+        expect(endedUnderPage({ _tag: "SessionRequired" })).toBe(true);
+        expect(endedUnderPage({ _tag: "QueryFailed" })).toBe(false);
+
+        yield* releaseSession();
+        expect(endedUnderPage({ _tag: "SessionRequired" })).toBe(false);
       })
   );
 });
