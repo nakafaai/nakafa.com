@@ -105,7 +105,7 @@ function OperatorSchools() {
     return (
       <EmptyState
         description={t("refused-description")}
-        scene={<EmptyNina act="switching" />}
+        scene={<EmptyNina act="directing" />}
         title={t("refused")}
       />
     );

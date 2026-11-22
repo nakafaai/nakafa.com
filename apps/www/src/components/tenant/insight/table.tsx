@@ -299,7 +299,7 @@ function ClassStudents({
               ) : undefined
             }
             description={t("students-empty-description")}
-            scene={<EmptyNina act="timing" />}
+            scene={<EmptyNina act="picturing" />}
             title={t("students-empty")}
           />
         }

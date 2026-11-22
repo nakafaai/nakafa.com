@@ -67,7 +67,7 @@ function attributeActs(sourceFile: SourceFile, value: Node) {
   );
 }
 
-/** Every act a module draws Nina with, once each, at the first line that names it. */
+/** Every act a module draws Nina with, at each place that writes it; a literal that two readings reach counts once. */
 function drawnActs(file: string, sourceFile: SourceFile) {
   const nodes = nodesBelow(sourceFile);
   const attributes = Arr.flatMap(nodes, (node) =>
@@ -92,21 +92,20 @@ function drawnActs(file: string, sourceFile: SourceFile) {
   );
   return pipe(
     Arr.appendAll(attributes, scenes),
-    Arr.dedupeWith((one, other) => one.text === other.text),
+    Arr.dedupeWith((one, other) => one.node === other.node),
     Arr.map(({ node, text }) => ({
       act: text,
-      file,
       place: place(file, sourceFile, node),
     }))
   );
 }
 
 /**
- * Reports an act that Nina does in two places. Every place that shows her whole gives her the one thing that fits
- * what she does there, so a reader who meets her twice never sees the same picture: an act belongs to one module, which
- * may draw it for several states of its own place. The rule reads the `act` of `Nina` and of every component
- * named for her, a table of acts the attribute reads, and the `act` of a table of scenes. A toy that stands in
- * for a section's own Nina (`NinaToy`) is that same Nina, so it names no second place.
+ * Reports an act that Nina does in two places. Every place that shows her gives her the one thing that fits what she
+ * does there, so a reader who meets her twice never sees the same picture: two states of one page, such as a refusal
+ * and an empty list, are two places, and each gets its own act. The rule reads the `act` of `Nina` and of every
+ * component named for her, on both sides of a choice, a table of acts the attribute reads, and the `act` of a table of
+ * scenes. A toy that stands in for a section's own Nina (`NinaToy`) is that same Nina, so it names no second place.
  */
 export function inspectPoses(
   modules: readonly {
@@ -120,8 +119,8 @@ export function inspectPoses(
   return Arr.flatMap(drawn, (one) => {
     const others = Arr.sort(
       Arr.filterMap(drawn, (other) =>
-        other.act === one.act && other.file !== one.file
-          ? Result.succeed(other.file)
+        other.act === one.act && other.place !== one.place
+          ? Result.succeed(other.place)
           : Result.failVoid
       ),
       Order.String

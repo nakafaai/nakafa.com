@@ -83,7 +83,7 @@ export function SharedPractice({
         empty={
           <EmptyState
             description={t("practice-class-note")}
-            scene={<EmptyNina act="watering" />}
+            scene={<EmptyNina act="toggling" />}
             title={t("practice-empty")}
           />
         }

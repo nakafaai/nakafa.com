@@ -35,7 +35,7 @@ function AgentRefusal() {
   const t = useTranslations("Auth");
   return (
     <div className="flex max-w-sm flex-col items-center gap-5 text-center">
-      <Nina act="introducing" label="" size={88} whole />
+      <Nina act="unplugging" label="" size={88} whole />
       <div className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold text-balance">
           {t("agent-refused-title")}

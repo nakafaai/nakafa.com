@@ -268,7 +268,9 @@ function RosterImportEmpty({
       description={t(
         problem === undefined ? "empty-description" : `file-${problem}`
       )}
-      scene={<EmptyNina act={problem === undefined ? "feeding" : "tagging"} />}
+      scene={
+        <EmptyNina act={problem === undefined ? "feeding" : "returning"} />
+      }
       title={t(problem === undefined ? "empty" : "file-refused")}
     />
   );

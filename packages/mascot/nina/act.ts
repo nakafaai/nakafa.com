@@ -19,6 +19,7 @@ import { fanning } from "@repo/mascot/nina/hearth";
 import { free } from "@repo/mascot/nina/ink";
 import type { Curve } from "@repo/mascot/nina/limb";
 import { flip } from "@repo/mascot/nina/limb";
+import { OFFICE } from "@repo/mascot/nina/office";
 import { at } from "@repo/mascot/nina/point";
 import type { Pose } from "@repo/mascot/nina/pose";
 import { armLeft, armRight, breathe, REST, sway } from "@repo/mascot/nina/pose";
@@ -163,6 +164,20 @@ export const ActSchema = Schema.Literals([
   "hosting",
   "ranking",
   "stretching",
+  "coiling",
+  "directing",
+  "flagging",
+  "jingling",
+  "latching",
+  "orienting",
+  "picturing",
+  "puzzling",
+  "quilling",
+  "returning",
+  "sifting",
+  "toggling",
+  "trading",
+  "unplugging",
 ]);
 
 /** Doing nothing in particular. */
@@ -336,6 +351,7 @@ export const ACTS = {
   ...PAPERS,
   ...REPAIRS,
   ...ROOMS,
+  ...OFFICE,
   carrying: { pose: carrying, still: 0.4 },
   charting: { pose: charting, still: 3.4 },
   chatting: { pose: chatting, still: 2.4 },

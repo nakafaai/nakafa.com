@@ -325,7 +325,7 @@ function AnswerList({
       {exhausted && results.length === 0 ? (
         <EmptyState
           description={t("filter-empty")}
-          scene={<EmptyNina act="marking" />}
+          scene={<EmptyNina act="sifting" />}
           title={t("results-no-match")}
         />
       ) : null}

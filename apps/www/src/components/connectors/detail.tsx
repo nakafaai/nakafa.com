@@ -43,9 +43,9 @@ const STATE_LOOKS = {
 const STATE_ACTS = {
   connected: "glowing",
   failed: "splicing",
-  locked: "queueing",
+  locked: "latching",
   open: "offering",
-  reconnect: "splicing",
+  reconnect: "coiling",
   refused: "halting",
   soon: "queueing",
 } as const satisfies Record<keyof typeof STATE_LOOKS, typeof ActSchema.Type>;

@@ -238,7 +238,7 @@ function NoExamEmpty() {
     return (
       <EmptyState
         description={t("rooms-list-description")}
-        scene={<EmptyNina act="sharpening" />}
+        scene={<EmptyNina act="jingling" />}
         title={t("empty")}
       />
     );
@@ -268,7 +268,7 @@ function NoExamEmpty() {
       description={
         tenant.canManage ? t("no-unit-description") : t("no-unit-member")
       }
-      scene={<EmptyNina act="sharpening" />}
+      scene={<EmptyNina act="puzzling" />}
       title={t("empty")}
     />
   );
