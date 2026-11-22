@@ -119,7 +119,7 @@ export function TryoutStartDialog(props: TryoutStartDialogProps) {
       {selectable ? (
         <RadioGroup
           aria-label={t("start-mode-label")}
-          className="grid grid-cols-2 gap-3"
+          className="grid gap-3"
           onValueChange={(next) => {
             if (Schema.is(StartMode)(next)) {
               setMode(next);

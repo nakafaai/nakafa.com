@@ -15,6 +15,8 @@ import {
   Dialog as DialogPrimitive,
   DialogTitle as DialogTitlePrimitive,
 } from "@ui-sdk/react/dialog";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 import { use } from "react";
@@ -38,6 +40,23 @@ function Dialog({
   );
 }
 
+/**
+ * How big a dialog stands in the middle of the screen: `default` keeps to a reading width and the height of what it
+ * holds, and `wide`, for a canvas such as a diagram, takes most of a wide screen. Each size is one width under the
+ * screen's less a margin, `min()` in one declaration, and scoped to the dialog's presentation as the rest of its
+ * frame is, so no breakpoint utility competes with it: an attribute variant outranks a breakpoint, and a dialog
+ * capped only at `sm:` stood the screen's whole width.
+ */
+const dialogSize = cva("", {
+  variants: {
+    size: {
+      default:
+        "data-[presentation=dialog]:h-fit data-[presentation=dialog]:max-w-[min(28rem,calc(100%-2rem))]",
+      wide: "data-[presentation=dialog]:h-[min(90dvh,900px)] data-[presentation=dialog]:max-w-[min(80rem,calc(100%-2rem))]",
+    },
+  },
+});
+
 function DialogContent({
   className,
   children,
@@ -45,7 +64,7 @@ function DialogContent({
   size = "default",
   ...props
 }: NodeChildren<ComponentProps<typeof DialogContentPrimitive>> & {
-  size?: "default" | "wide";
+  size?: NonNullable<VariantProps<typeof dialogSize>["size"]>;
 }) {
   const t = useTranslations("Common");
 
@@ -55,11 +74,9 @@ function DialogContent({
       <DialogContentPrimitive
         className={cn(
           "group/dialog bg-popover text-popover-foreground z-50 flex min-h-0 w-full flex-col overflow-clip border text-sm shadow-lg/5 outline-none has-[[data-popup-hold]]:pointer-events-none has-[[data-popup-hold]]:opacity-0",
-          "data-[presentation=dialog]:duration-surface data-[presentation=dialog]:fixed data-[presentation=dialog]:inset-0 data-[presentation=dialog]:m-auto data-[presentation=dialog]:h-fit data-[presentation=dialog]:max-h-[min(90dvh,900px)] data-[presentation=dialog]:max-w-[calc(100%-2rem)] data-[presentation=dialog]:rounded-xl data-[presentation=dialog]:transition-[opacity,scale] data-[presentation=dialog]:ease-out data-[presentation=dialog]:data-ending-style:opacity-0 data-[presentation=dialog]:data-starting-style:opacity-0 data-[presentation=dialog]:motion-safe:data-ending-style:scale-98 data-[presentation=dialog]:motion-safe:data-starting-style:scale-98",
+          "data-[presentation=dialog]:duration-surface data-[presentation=dialog]:fixed data-[presentation=dialog]:inset-0 data-[presentation=dialog]:m-auto data-[presentation=dialog]:max-h-[min(90dvh,900px)] data-[presentation=dialog]:rounded-xl data-[presentation=dialog]:transition-[opacity,scale] data-[presentation=dialog]:ease-out data-[presentation=dialog]:data-ending-style:opacity-0 data-[presentation=dialog]:data-starting-style:opacity-0 data-[presentation=dialog]:motion-safe:data-ending-style:scale-98 data-[presentation=dialog]:motion-safe:data-starting-style:scale-98",
           sheetSurface(),
-          size === "default" && "sm:max-w-md",
-          size === "wide" &&
-            "data-[presentation=dialog]:h-[min(90dvh,900px)] sm:max-w-7xl",
+          dialogSize({ size }),
           className
         )}
         onKeyDown={(event) => {
