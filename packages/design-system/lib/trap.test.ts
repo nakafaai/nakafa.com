@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { keepTabInside } from "@repo/design-system/lib/trap";
-import type { KeyboardEvent } from "react";
 
 afterEach(() => {
   document.body.replaceChildren();
@@ -17,77 +16,64 @@ function popupWithField() {
   return { field, outside, popup };
 }
 
-/** The key event React hands the popup's handler, for a key pressed in the popup. */
+/** The parts of the key event React hands the popup's handler, for a key pressed in the popup. */
 function keyOn(popup: HTMLElement, key: string, defaultPrevented = false) {
-  return {
-    currentTarget: popup,
-    defaultPrevented,
-    key,
-  } as unknown as KeyboardEvent<HTMLElement>;
+  return { currentTarget: popup, defaultPrevented, key };
 }
 
-/** Lets the microtask that checks the focus run. */
-const settled = () => Promise.resolve();
-
 describe("keepTabInside", () => {
-  it("takes the focus back when a Tab drops it on the body, as Safari's order does past its last field", async () => {
+  it("takes the focus back when a Tab drops it on the body, as Safari's order does past its last field", () => {
     const { field, popup } = popupWithField();
     field.focus();
 
     keepTabInside(keyOn(popup, "Tab"));
     field.blur();
-    await settled();
 
     expect(document.activeElement).toBe(popup);
   });
 
-  it("leaves a focus that a Tab moved within the popup or out to the page", async () => {
+  it("leaves a focus that a Tab moved within the popup or out to the page", () => {
     const { field, outside, popup } = popupWithField();
     popup.focus();
 
     keepTabInside(keyOn(popup, "Tab"));
     field.focus();
-    await settled();
     expect(document.activeElement).toBe(field);
 
     keepTabInside(keyOn(popup, "Tab"));
     outside.focus();
-    await settled();
     expect(document.activeElement).toBe(outside);
   });
 
-  it("leaves a popup that left the page as the Tab closed it", async () => {
+  it("leaves a popup that left the page as the Tab closed it", () => {
     const { field, popup } = popupWithField();
     field.focus();
 
     keepTabInside(keyOn(popup, "Tab"));
     popup.remove();
-    await settled();
+    popup.dispatchEvent(new FocusEvent("focusout", { relatedTarget: null }));
 
-    expect(document.activeElement).toBe(document.body);
+    expect(document.activeElement).not.toBe(popup);
   });
 
-  it("watches only the focus move of its own Tab", async () => {
+  it("watches only the focus move of its own Tab", () => {
     const { field, popup } = popupWithField();
     popup.focus();
 
     keepTabInside(keyOn(popup, "Tab"));
     field.focus();
-    await settled();
     field.blur();
-    await settled();
 
     expect(document.activeElement).toBe(document.body);
   });
 
-  it("ignores other keys and a Tab the trap already handled", async () => {
+  it("ignores other keys and a Tab the trap already handled", () => {
     const { field, popup } = popupWithField();
     field.focus();
 
     keepTabInside(keyOn(popup, "Enter"));
     keepTabInside(keyOn(popup, "Tab", true));
     field.blur();
-    await settled();
 
     expect(document.activeElement).toBe(document.body);
   });

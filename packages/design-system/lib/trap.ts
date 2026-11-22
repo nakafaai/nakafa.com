@@ -8,19 +8,21 @@ import type { KeyboardEvent } from "react";
  * (https://github.com/vercel-labs/ui/issues/1018). When a Tab drops the focus on the body, the popup takes it back
  * itself, as it holds it when it opens: the next Tab enters it at its first stop, and Shift+Tab wraps to its last.
  */
-export function keepTabInside(event: KeyboardEvent<HTMLElement>) {
+export function keepTabInside(
+  event: Pick<
+    KeyboardEvent<HTMLElement>,
+    "currentTarget" | "defaultPrevented" | "key"
+  >
+) {
   if (event.key !== "Tab" || event.defaultPrevented) {
     return;
   }
   const popup = event.currentTarget;
-  const doc = popup.ownerDocument;
-  const left = () => {
-    queueMicrotask(() => {
-      const active = doc.activeElement;
-      if (popup.isConnected && (active === null || active === doc.body)) {
-        popup.focus({ preventScroll: true });
-      }
-    });
+  // A focus that moves on to an element names it; one that falls on the body names none.
+  const left = (out: FocusEvent) => {
+    if (out.relatedTarget === null && popup.isConnected) {
+      popup.focus({ preventScroll: true });
+    }
   };
   // The browser moves the focus as the key's default action, right after this handler: the watch ends with that move.
   popup.addEventListener("focusout", left, { once: true });
