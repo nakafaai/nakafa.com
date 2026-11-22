@@ -16,16 +16,13 @@ describe("readMovedRedirect", () => {
     });
   });
 
-  it("answers the retired about page of a locale with the locale root", () => {
-    expect(Option.getOrThrow(readAt("/id/about"))).toEqual({
-      location: "/id",
-      status: 308,
-    });
+  it("leaves a locale's about page to the router, which serves the signed page", () => {
+    expect(Option.isNone(readAt("/en/about"))).toBe(true);
   });
 
   it("answers a bare retired address with its successor", () => {
     expect(Option.getOrThrow(readAt("/about"))).toEqual({
-      location: "/",
+      location: "/en/about",
       status: 308,
     });
     expect(Option.getOrThrow(readAt("/sitemap.txt"))).toEqual({

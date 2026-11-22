@@ -31,6 +31,7 @@ function makeGermanPage({
   title,
 }: {
   pageKey:
+    | "about"
     | "data-processing-agreement"
     | "developers"
     | "imprint"
@@ -58,6 +59,11 @@ function makeGermanPage({
 }
 
 const germanPages = [
+  makeGermanPage({
+    pageKey: "about",
+    publicPath: "ueber-uns",
+    title: "Über Nakafa",
+  }),
   makeGermanPage({
     pageKey: "data-processing-agreement",
     publicPath: "data-processing-agreement",
@@ -116,6 +122,11 @@ describe("signed Page navigation", () => {
         const navigation = yield* readPageNavigation("de");
 
         expect(navigation).toEqual({
+          aboutItem: {
+            publicPath: "ueber-uns",
+            pageKey: "about",
+            title: "Über Nakafa",
+          },
           dataProcessingPath: "data-processing-agreement",
           developerItem: {
             publicPath: "developers",

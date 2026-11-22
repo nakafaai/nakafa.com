@@ -20,7 +20,7 @@ type MovedRedirect = typeof MovedRedirectSchema.Type;
 
 /** The addresses that moved without a locale, as the reference site answered them. */
 const BARE_ADDRESSES: readonly MovedAddress[] = [
-  { destination: "/", permanent: true, source: "/about" },
+  { destination: "/en/about", permanent: true, source: "/about" },
   { destination: "/sitemap.xml", permanent: true, source: "/sitemap.txt" },
   {
     destination: "/.well-known/agent-skills/index.json",
@@ -60,7 +60,6 @@ const SHOWN_ADDRESSES: readonly MovedAddress[] = [
 
 /** The addresses that moved under a locale. Only these paths redirect: an open `/:locale/settings` would also catch a valid `/user/settings`. */
 const LOCALIZED_ADDRESSES: readonly MovedAddress[] = [
-  { destination: "/:locale", permanent: true, source: "/about" },
   {
     destination: "/:locale/user/settings",
     permanent: true,
