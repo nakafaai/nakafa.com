@@ -204,6 +204,31 @@ describe("readMigrationResponse", () => {
       })
   );
 
+  it.effect(
+    "moves an .mdx address of the earlier site to the successor's .md twin",
+    () =>
+      Effect.gen(function* () {
+        migration.read.mockReturnValue(
+          Effect.succeed({
+            destination: "/id/materi/matematika/asimtot",
+            status: 308,
+          })
+        );
+
+        const found = Option.getOrThrow(
+          yield* readMigrationResponse(
+            new Request(
+              "https://nakafa.com/id/subject/high-school/11/mathematics/function-modeling/asymptote.mdx"
+            )
+          )
+        );
+
+        expect(found.headers.get("location")).toBe(
+          "/id/materi/matematika/asimtot.md"
+        );
+      })
+  );
+
   it.effect("answers none when no retired address matches", () =>
     Effect.gen(function* () {
       migration.read.mockReturnValue(Effect.succeed(null));
