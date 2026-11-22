@@ -9,36 +9,52 @@
  * beside.
  */
 export function readFloats() {
+  /** Whether a row lays its icon out beside its words, in one flex line. */
+  const besideWords = (row: HTMLElement | null, box: DOMRect) =>
+    row !== null &&
+    box.height > 0 &&
+    box.height <= 16 &&
+    getComputedStyle(row).display.includes("flex") &&
+    !getComputedStyle(row).flexDirection.startsWith("column");
+
+  /** The line boxes of the words in a row, top first: each text node answers one box per line it takes. */
+  const linesOf = (row: HTMLElement) => {
+    const words = document.createTreeWalker(row, NodeFilter.SHOW_TEXT);
+    const lines: DOMRect[] = [];
+    for (let node = words.nextNode(); node !== null; node = words.nextNode()) {
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      lines.push(
+        ...Array.from(range.getClientRects()).filter(
+          (line) => line.width > 0 && line.height > 0
+        )
+      );
+    }
+    return lines.sort((one, other) => one.top - other.top);
+  };
+
+  /** Whether the icon stands in the middle of the picture its control leads with, as the account button's mark does. */
+  const withPicture = (row: HTMLElement, box: DOMRect) => {
+    const picture = row
+      .closest("button, a, [role=button]")
+      ?.querySelector('[data-slot="avatar"]');
+    if (!picture) {
+      return false;
+    }
+    const face = picture.getBoundingClientRect();
+    return (
+      Math.abs((box.top + box.bottom) / 2 - (face.top + face.bottom) / 2) <= 1
+    );
+  };
+
   return Array.from(document.querySelectorAll<SVGSVGElement>("svg")).flatMap(
     (icon) => {
       const row = icon.parentElement;
       const box = icon.getBoundingClientRect();
-      if (
-        row === null ||
-        box.height === 0 ||
-        box.height > 16 ||
-        !getComputedStyle(row).display.includes("flex") ||
-        getComputedStyle(row).flexDirection.startsWith("column")
-      ) {
+      if (row === null || !besideWords(row, box) || withPicture(row, box)) {
         return [];
       }
-      // The line boxes of the words beside the icon: each text node of the row answers one box per line it takes.
-      const words = document.createTreeWalker(row, NodeFilter.SHOW_TEXT);
-      const lines: DOMRect[] = [];
-      for (
-        let node = words.nextNode();
-        node !== null;
-        node = words.nextNode()
-      ) {
-        const range = document.createRange();
-        range.selectNodeContents(node);
-        for (const line of Array.from(range.getClientRects())) {
-          if (line.width > 0 && line.height > 0) {
-            lines.push(line);
-          }
-        }
-      }
-      lines.sort((one, other) => one.top - other.top);
+      const lines = linesOf(row);
       const first = lines[0];
       const last = lines.at(-1);
       // One line of words: its last line box starts above the first one's foot.
@@ -48,16 +64,6 @@ export function readFloats() {
         last.top < first.bottom
       ) {
         return [];
-      }
-      const picture = row
-        .closest("button, a, [role=button]")
-        ?.querySelector('[data-slot="avatar"]');
-      if (picture) {
-        const face = picture.getBoundingClientRect();
-        const middle = (face.top + face.bottom) / 2;
-        if (Math.abs((box.top + box.bottom) / 2 - middle) <= 1) {
-          return [];
-        }
       }
       // Half a pixel either way, for a line box that ends between two pixels.
       const within =
