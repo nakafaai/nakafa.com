@@ -1,5 +1,6 @@
 import { captureException } from "@repo/analytics/posthog/capture";
 import type { toasters as ToasterQueues } from "@repo/design-system/components/ui/toast";
+import { PHONE_SHEET } from "@repo/design-system/lib/sheet";
 import {
   ToastAction,
   ToastMessage,
@@ -52,7 +53,7 @@ export type ToastCopy = PlainCopy | ValuedCopy;
  * label of the action is one word of the `Common` namespace, such as `undo`,
  * which owns the app's verbs, so no toast's own copy repeats it. A toast stands
  * at the bottom end of the screen, unless its page keeps its own controls
- * there and asks for the bottom or the top center.
+ * there and asks for the bottom or the top center (`placeOf`).
  */
 interface ToastOptions {
   readonly action?: {
@@ -160,10 +161,22 @@ const loadToasters = Effect.tryPromise({
 /** The kinds of toast the app shows, each a status the Toaster colors. */
 type ToastKind = "error" | "info" | "success";
 
-/** Shows one toast of a kind, in the queue of the place it asks for. */
+/**
+ * Where a toast stands. On a phone the bottom of the screen holds the work in hand: a sheet's footer with its main
+ * action, a composer, a player's controls, the keyboard. So there, where every popup rises from the bottom as a sheet
+ * (`PHONE_SHEET`), every toast stands at the top center, and elsewhere where it asks to.
+ */
+function placeOf(position: keyof Toasters | undefined): keyof Toasters {
+  if (matchMedia(PHONE_SHEET).matches) {
+    return "top-center";
+  }
+  return position ?? "bottom-end";
+}
+
+/** Shows one toast of a kind, in the queue of the place it stands (`placeOf`). */
 function show(kind: ToastKind, copy: ToastCopy, options: ToastOptions = {}) {
   requestToast((toasters) => {
-    toasters[options.position ?? "bottom-end"][kind](toastOf(copy, options));
+    toasters[placeOf(options.position)][kind](toastOf(copy, options));
   });
 }
 

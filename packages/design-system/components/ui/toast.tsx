@@ -25,7 +25,8 @@ import { useTranslations } from "use-intl";
 /**
  * The places a toast stands, each its own queue: the bottom end of the screen, where a toast stays clear of the
  * page's work; the bottom center, for a page whose end holds its own controls, such as a player; and the top
- * center, for a notice about a composer at the bottom, which a toast there would cover on a phone.
+ * center, for a notice about a composer at the bottom, and for every toast on a phone (`placeOf` in
+ * `lib/toast/notify`).
  */
 export const toasters = {
   "bottom-center": createToaster(),
@@ -137,12 +138,13 @@ function ToastStack({ place }: { place: keyof typeof toasters }) {
             <ToastDescription className="text-muted-foreground line-clamp-2 leading-[1.4] text-pretty" />
           </div>
           <ToastAction className={buttonVariants({ size: "sm" })} />
-          {/* The close stands on the toast's corner, off the line of its words, so a title keeps its whole line. */}
+          {/* The close stands on the toast's corner, off the line of its words, so a title keeps its whole line. A finger
+              reaches it in a 44px square around it, the touch target Apple and WCAG ask for, while it draws at 24px. */}
           <ToastClose
             aria-label={t("close-notification")}
             className={cn(
               buttonVariants({ size: "icon-sm", variant: "outline" }),
-              "absolute start-0 top-0 size-6 -translate-x-[35%] -translate-y-[35%] rounded-full rtl:translate-x-[35%]"
+              "absolute start-0 top-0 size-6 -translate-x-[35%] -translate-y-[35%] rounded-full rtl:translate-x-[35%] pointer-coarse:after:absolute pointer-coarse:after:-inset-2.5"
             )}
           >
             <HugeIcons icon={Cancel01Icon} size="xs" />

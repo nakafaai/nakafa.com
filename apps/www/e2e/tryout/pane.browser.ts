@@ -189,6 +189,50 @@ test.describe("The set pane beside a track's table", () => {
 test.describe("The set sheet on a phone", () => {
   test.use({ hasTouch: true, viewport: viewportSize(touchViewport) });
 
+  /**
+   * The phone audit (22 Nov 2026): the toast that says the set's link was copied stood at the bottom, over the sheet's
+   * footer and its Start. On a phone every toast stands at the top, clear of the footer.
+   */
+  test("says the link was copied at the top, clear of the footer's Start", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      hasTouch: true,
+      isMobile: true,
+      viewport: viewportSize(touchViewport),
+    });
+    const page = await context.newPage();
+    await page.goto(SET_PATH, { waitUntil: "load" });
+    const footer = page.locator(
+      '[data-slot="drawer-content"] [data-slot="drawer-footer"]'
+    );
+    const share = footer.getByRole("button", { name: en.Common.share });
+    await waitUntilTakenOver(share);
+    await share.tap();
+
+    const toast = page.getByRole("listitem").filter({
+      hasText: en.Toast["link-copied"].title,
+    });
+    await expect(toast).toBeVisible();
+    const start = footer.getByRole("button", {
+      exact: true,
+      name: en.Tryouts.action["start-cta"],
+    });
+    const [toastBox, startBox] = await Promise.all([
+      toast.boundingBox(),
+      start.boundingBox(),
+    ]);
+    expect(toastBox).not.toBeNull();
+    expect(startBox).not.toBeNull();
+    expect((toastBox?.y ?? 0) + (toastBox?.height ?? 0)).toBeLessThan(
+      startBox?.y ?? 0
+    );
+    expect(toastBox?.y ?? Number.POSITIVE_INFINITY).toBeLessThan(
+      touchViewport.height / 4
+    );
+    await context.close();
+  });
+
   test("names its grabber, which resizes the sheet", async ({ page }) => {
     await page.goto(SET_PATH, { waitUntil: "load" });
 
@@ -199,4 +243,35 @@ test.describe("The set sheet on a phone", () => {
       })
     ).toBeAttached({ timeout: readinessTimeoutMilliseconds });
   });
+});
+
+/**
+ * The phone audit (22 Nov 2026): on a tablet held sideways the set's pane leaves its table a phone's width, and the
+ * table cut its Level column, since its columns took their widths from the screen. They take them from the table's own
+ * width now, so a table that narrow lays out as a phone's: its first two columns stand whole and the rest scroll.
+ */
+test("a tablet held sideways keeps a row's name and level whole beside its menu and the set's pane", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 768, width: 1024 });
+  await page.goto(SET_PATH, { waitUntil: "load" });
+  const table = page.getByRole("table");
+  await expect(table.getByRole("row").nth(1)).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await expect(
+    page.getByRole("complementary", { name: en.Tryouts["set-pane"] })
+  ).toBeVisible();
+
+  // The name and the level stand whole beside the row's menu, which stays at the table's end while the rest scroll.
+  const heads = table.getByRole("columnheader");
+  const [level, menu] = await Promise.all([
+    heads.filter({ hasText: en.Tryouts["set-column-level"] }).boundingBox(),
+    heads.last().boundingBox(),
+  ]);
+  expect(level).not.toBeNull();
+  expect(menu).not.toBeNull();
+  expect((level?.x ?? 0) + (level?.width ?? 0)).toBeLessThanOrEqual(
+    (menu?.x ?? 0) + 1
+  );
 });

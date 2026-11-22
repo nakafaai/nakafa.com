@@ -77,7 +77,9 @@ export function PlayerNote({
   const t = useTranslations("Player");
 
   return (
-    <Popover defaultOpen={defaultOpen} openOnHover>
+    // The words point at their control and may show as the paper opens, so they float there on a phone too, never a
+    // sheet that takes the page before the learner has touched it.
+    <Popover defaultOpen={defaultOpen} openOnHover presentation="popover">
       <PopoverTrigger
         render={
           <Button

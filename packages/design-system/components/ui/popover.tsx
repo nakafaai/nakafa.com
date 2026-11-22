@@ -20,11 +20,22 @@ import { use } from "react";
 
 /**
  * A small floating panel under its trigger, for a short form or details. Its header, body and footer keep one
- * padding, and a padded child never adds its own. A popover that passes `presentation="auto"` rises from the bottom
- * as a sheet on a phone, with the sheet's grip, and floats under its trigger elsewhere.
+ * padding, and a padded child never adds its own. On a phone it rises from the bottom as a sheet, with the sheet's
+ * grip, as every menu and dialog does, and floats under its trigger elsewhere. A popover that types into a field
+ * outside it, as a keypad or a list of mentions does, passes `presentation="popover"`, so the field stays in view and
+ * keeps the caret, and so does a note that opens on its own beside its control.
  */
-function Popover(props: React.ComponentProps<typeof PopoverPrimitive>) {
-  return <PopoverPrimitive container={use(PopupContainer)} {...props} />;
+function Popover({
+  presentation = "auto",
+  ...props
+}: React.ComponentProps<typeof PopoverPrimitive>) {
+  return (
+    <PopoverPrimitive
+      container={use(PopupContainer)}
+      presentation={presentation}
+      {...props}
+    />
+  );
 }
 
 /**

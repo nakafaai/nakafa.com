@@ -91,12 +91,7 @@ function Picker({
 
   return (
     <PickerContext value={{ search, setOpen: change }}>
-      <Popover
-        controller={controller}
-        onOpenChange={change}
-        open={open}
-        presentation="auto"
-      >
+      <Popover controller={controller} onOpenChange={change} open={open}>
         {children}
       </Popover>
     </PickerContext>
@@ -115,8 +110,9 @@ function PickerTrigger(props: ComponentProps<typeof PopoverTrigger>) {
  * The list a picker opens: the search field at the top, then the label and the options under it. The options are the
  * caller's rows, one `PickerItem` each. The popover is as wide as its trigger, and never narrower than a row of
  * options needs; the sheet stands at one height whatever the list holds, so the search field never moves while the
- * list filters. A list with no option says so in one sentence, in the middle of the list, and while the first page of
- * a server's list is read it shows a spinner instead. A list read a page at a time loads its next page as its end
+ * list filters. A list with no option says so in one sentence under the search field in place of the label, where the
+ * keyboard never covers it, as the palette does, and while the first page of a server's list is read it shows a
+ * spinner there instead. A list read a page at a time loads its next page as its end
  * comes into view or into the keys' reach.
  */
 function PickerContent<Item>({
@@ -177,13 +173,13 @@ function PickerContent<Item>({
             maxLength={maxLength}
             placeholder={placeholder}
           />
-          <PopoverTitle className="text-muted-foreground border-t px-3 pt-2.5 pb-0.5 text-xs font-normal">
+          <PopoverTitle className="text-muted-foreground border-t px-3 pt-2.5 pb-0.5 text-xs font-normal has-[+[data-empty]]:sr-only">
             {label}
           </PopoverTitle>
+          <CommandEmpty>{waiting ? <Spinner /> : empty}</CommandEmpty>
           <CommandList className="p-1 [[data-presentation=sheet]_&]:p-2">
             {Arr.map(items, children)}
           </CommandList>
-          <CommandEmpty>{waiting ? <Spinner /> : empty}</CommandEmpty>
         </Command>
       </PickerLabelsContext>
     </PopoverContent>

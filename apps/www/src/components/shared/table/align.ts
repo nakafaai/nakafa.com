@@ -43,12 +43,12 @@ export const columnAlign = cva("in-[thead]:bg-muted", {
   defaultVariants: { align: "center" },
   variants: {
     align: {
-      center: "px-2 text-center tabular-nums sm:px-4",
-      end: "in-[tr[data-pressable]:hover]:bg-muted in-[tr[data-state=selected]]:bg-muted before:bg-border sticky end-0 bg-[var(--table-row-fill,var(--card))] ps-2 pe-4 text-end tabular-nums before:absolute before:inset-y-0 before:start-0 before:w-px sm:ps-4",
+      center: "px-2 text-center tabular-nums @xl/table:px-4",
+      end: "in-[tr[data-pressable]:hover]:bg-muted in-[tr[data-state=selected]]:bg-muted before:bg-border sticky end-0 bg-[var(--table-row-fill,var(--card))] ps-2 pe-4 text-end tabular-nums before:absolute before:inset-y-0 before:start-0 before:w-px @xl/table:ps-4",
       figure:
-        "in-[tr[data-pressable]:hover]:bg-muted in-[tr[data-state=selected]]:bg-muted sticky end-12 bg-[var(--table-row-fill,var(--card))] px-2 text-end tabular-nums sm:px-4",
+        "in-[tr[data-pressable]:hover]:bg-muted in-[tr[data-state=selected]]:bg-muted sticky end-12 bg-[var(--table-row-fill,var(--card))] px-2 text-end tabular-nums @xl/table:px-4",
       menu: "in-[tr[data-pressable]:hover]:bg-muted in-[tr[data-state=selected]]:bg-muted before:bg-border sticky end-0 w-px bg-[var(--table-row-fill,var(--card))] px-2 py-0 text-end whitespace-nowrap before:absolute before:inset-y-0 before:start-0 before:w-px",
-      start: "ps-4 pe-2 sm:pe-4",
+      start: "ps-4 pe-2 @xl/table:pe-4",
     },
   },
 });
@@ -61,8 +61,10 @@ export const columnAlign = cva("in-[thead]:bg-muted", {
  * name. Every other column holds its width as its floor too, so the heads also stand still in a table wider than its
  * screen. Every cell keeps one line and cuts what passes its column's width (`TableText`, `TableValue`), so no value
  * widens a column. A column of known values holds the longest status badge whole, or a first value with its `+N`.
- * A phone gives the row's name and a column of known values less, so a table's first two columns stand whole beside
- * the row's menu from 375 px, and the rest scroll under it; from the small breakpoint they take their full widths.
+ * A narrow table gives the row's name and a column of known values less, so its first two columns stand whole beside
+ * the row's menu in a table as narrow as a phone's or a tablet's side pane, and the rest scroll under it. The table's
+ * own width decides it, never the screen's (`tableBoxVariants`): a table in a narrow pane of a wide screen is as narrow
+ * as a phone's. From 36rem (`@xl/table`) the columns take their full widths.
  */
 export const headWidth = cva("", {
   variants: {
@@ -72,8 +74,8 @@ export const headWidth = cva("", {
       menu: "min-w-12",
       number: "w-28 min-w-28",
       shortText: "min-w-16",
-      text: "min-w-36 not-first:w-72 sm:min-w-50 sm:not-first:min-w-64",
-      values: "w-36 min-w-36 sm:w-48 sm:min-w-48",
+      text: "min-w-32 not-first:w-72 @xl/table:min-w-50 @xl/table:not-first:min-w-64",
+      values: "w-36 min-w-36 @xl/table:w-48 @xl/table:min-w-48",
       wide: "w-60 min-w-60",
     },
   },
