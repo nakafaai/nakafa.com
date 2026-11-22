@@ -14,9 +14,10 @@ class BrokenAddressError extends Schema.TaggedError<
 >()("BrokenAddressError", { report: Schema.String }) {}
 
 /**
- * The ledger committed beside this module: every address published before the
- * deploys kept one, from the sitemap and Search Console's reports of 21
- * November 2026.
+ * The ledger committed beside this module, as the site answered on 21 November
+ * 2026: every page of the sitemap, and every older address in Search Console's
+ * reports that redirects to a page. An address that already answered 410 Gone
+ * is not in it, since `gone.ts` owns those, and neither is a page's Markdown twin.
  */
 const seedLedger = Effect.gen(function* () {
   const path = yield* Path.Path;
