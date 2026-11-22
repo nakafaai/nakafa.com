@@ -73,7 +73,7 @@ function TryoutTile({ attempt }: { attempt: Attempt }) {
       >
         <TileIcon icon={iconOf(attempt)} />
       </Tile>
-      <span className="ring-card absolute -end-1 -bottom-1 flex size-4 overflow-hidden rounded-full ring-2">
+      <span className="ring-card after:ring-foreground/10 absolute -end-1 -bottom-1 flex size-4 overflow-hidden rounded-full ring-2 after:absolute after:inset-0 after:rounded-full after:ring-1 after:ring-inset">
         <CountryFlagIcon
           className="h-4 w-6 max-w-none shrink-0 -translate-x-1"
           countryCode={attempt.countryCode}
