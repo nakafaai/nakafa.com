@@ -149,13 +149,14 @@ const drawerFooterVariants = cva(
   }
 );
 
+/** The drawer's footer, a `footer` element as a page's or a pane's is, so its actions read as the drawer's own end. */
 function DrawerFooter({
   className,
   layout,
   ...props
-}: ComponentProps<"div"> & VariantProps<typeof drawerFooterVariants>) {
+}: ComponentProps<"footer"> & VariantProps<typeof drawerFooterVariants>) {
   return (
-    <div
+    <footer
       className={cn(drawerFooterVariants({ layout }), className)}
       data-slot="drawer-footer"
       {...props}
