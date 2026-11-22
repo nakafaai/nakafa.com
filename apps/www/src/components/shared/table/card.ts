@@ -14,10 +14,11 @@ export const tableCardVariants = cva(
  * table wider than its card scrolls sideways inside it, never the page. It fills the card, except over a list's empty
  * state, which fills the card under the column heads instead. Only rows close a table, so a table with none draws no
  * line: left in place it would move from the card's bottom edge as the rows read, to the heads for an empty list and
- * past the screen for a long one.
+ * past the screen for a long one. The box is the `table` container whose width sizes the columns (`headWidth`), so a
+ * table in a narrow pane of a tablet lays out as a phone's does.
  */
 export const tableBoxVariants = cva(
-  "[&_[data-slot=table-cell]]:whitespace-nowrap",
+  "@container/table [&_[data-slot=table-cell]]:whitespace-nowrap",
   {
     variants: {
       closes: { false: "after:hidden", true: "" },

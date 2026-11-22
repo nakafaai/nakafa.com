@@ -48,6 +48,7 @@ export function EditorArabicKeyboard({ label }: { label: string }) {
         }
       }}
       open={open}
+      presentation="popover"
     >
       <PopoverTrigger
         render={

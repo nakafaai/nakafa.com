@@ -55,6 +55,7 @@ export function SittingKeypad({
         }
       }}
       open={open}
+      presentation="popover"
     >
       <PopoverTrigger
         render={

@@ -17,6 +17,7 @@ import {
   sheetSurface,
 } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
+import { PHONE_SHEET } from "@repo/design-system/lib/sheet";
 import type { MenuController } from "@ui-sdk/react/menu";
 import {
   createMenuController,
@@ -81,12 +82,6 @@ const RootMenu = createContext<{
   controller: MenuController;
   presentation: React.ComponentProps<typeof MenuPrimitive>["presentation"];
 } | null>(null);
-
-/**
- * When UI SDK presents a menu of `presentation="auto"` as a sheet: on a phone, a narrow screen with a coarse pointer, as
- * `createPresentation` in `@ui-sdk/core` resolves it as the menu opens.
- */
-const PHONE_SHEET = "(max-width: 640px) and (pointer: coarse)";
 
 function subscribePhoneSheet(change: () => void) {
   const query = matchMedia(PHONE_SHEET);

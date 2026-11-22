@@ -37,6 +37,7 @@ export function MentionPopup({
         }
       }}
       open={open}
+      presentation="popover"
     >
       <PopoverContent
         align="start"

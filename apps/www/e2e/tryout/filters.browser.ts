@@ -87,3 +87,33 @@ test("every head of a try-out table filters its column, and no menu shows a raw 
     )
   );
 });
+
+/**
+ * The phone audit (22 Nov 2026): on a phone the Name head's panel floated under the head while the Level head's menu
+ * rose as a sheet. Every popover rises as a sheet on a phone now, as every menu does, so each head opens the same way.
+ */
+test("on a phone every head of a try-out table opens what filters its column as a sheet", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    hasTouch: true,
+    isMobile: true,
+    viewport: { height: 844, width: 390 },
+  });
+  const page = await context.newPage();
+  await page.goto(TRACK_PATH, { waitUntil: "load" });
+  const table = page.getByRole("table");
+  const name = table.getByRole("button", { exact: true, name: HEADS.name });
+  await waitUntilTakenOver(name);
+
+  for (const head of [
+    name,
+    table.getByRole("button", { name: new RegExp(HEADS.level, "u") }),
+  ]) {
+    await head.tap();
+    await expect(page.locator('[data-presentation="sheet"]')).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.locator('[data-presentation="sheet"]')).toHaveCount(0);
+  }
+  await context.close();
+});

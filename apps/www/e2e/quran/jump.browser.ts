@@ -111,3 +111,46 @@ test("a phone finds another surah from the search button of a surah page's heade
     )
   );
 });
+
+/**
+ * The phone audit (22 Nov 2026): a search nothing held kept the list's label over an empty list and said so at the
+ * sheet's foot, under the keyboard. It says so right under the field now, in the label's place.
+ */
+test("a phone's search says that nothing holds its words right under the field", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    hasTouch: true,
+    isMobile: true,
+    viewport: { height: 844, width: 390 },
+  });
+  const page = await context.newPage();
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        yield* openSurah(page, FATIHAH);
+        yield* Effect.promise(async () => {
+          await searchButton(page).tap();
+          const sheet = page.locator('[data-presentation="sheet"]');
+          await expect(sheet).toBeVisible();
+          const field = searchField(page);
+          await field.fill("999");
+          const empty = sheet.getByText(app.Holy["surah-empty"]);
+          await expect(empty).toBeVisible();
+          await expect(
+            sheet.getByText(app.Holy["menu-surah"], { exact: true })
+          ).toHaveCSS("position", "absolute");
+          const [fieldBox, emptyBox] = await Promise.all([
+            field.boundingBox(),
+            empty.boundingBox(),
+          ]);
+          expect(
+            (emptyBox?.y ?? 0) - ((fieldBox?.y ?? 0) + (fieldBox?.height ?? 0))
+          ).toBeLessThan(64);
+        });
+      })
+    )
+  );
+  await context.close();
+});

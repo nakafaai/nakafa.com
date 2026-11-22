@@ -13,13 +13,13 @@ import { HeadAlignContext } from "@/components/shared/table/align";
  * a centred column. An active head, one that sorts or filters the rows, takes the accent fill over the muted head row.
  */
 const headButton = cva(
-  "max-w-[calc(100%+1rem)] min-w-0 overflow-hidden sm:max-w-[calc(100%+1.75rem)]",
+  "max-w-[calc(100%+1rem)] min-w-0 overflow-hidden @xl/table:max-w-[calc(100%+1.75rem)]",
   {
     defaultVariants: { active: false, align: "center" },
     variants: {
       active: { false: "", true: "bg-accent text-accent-foreground" },
       align: {
-        center: "-mx-2 sm:-mx-3",
+        center: "-mx-2 @xl/table:-mx-3",
         end: "-mr-2.5",
         start: "-ml-2.5",
       },

@@ -6,6 +6,7 @@ import {
   expectTypeOf,
   it,
 } from "@effect/vitest";
+import { PHONE_SHEET } from "@repo/design-system/lib/sheet";
 import {
   ToastAction,
   ToastMessage,
@@ -45,7 +46,18 @@ vi.mock("@repo/analytics/posthog/capture", () => ({
 
 vi.mock("@repo/design-system/components/ui/toast", () => toastModule);
 
-afterEach(() => vi.clearAllMocks());
+/** Whether the browser is a phone, where every popup rises as a sheet, by the query `matchMedia` answers. */
+let phone = false;
+
+vi.stubGlobal("matchMedia", (query: string) => ({
+  matches: phone && query === PHONE_SHEET,
+  media: query,
+}));
+
+afterEach(() => {
+  phone = false;
+  vi.clearAllMocks();
+});
 
 describe("toast", () => {
   // The first toast starts loading the Toaster, and the calls made before it run once
@@ -91,6 +103,21 @@ describe("toast", () => {
       title: createElement(ToastMessage, { message: "action-error.title" }),
     });
     expect(queue.error).not.toHaveBeenCalled();
+  });
+
+  it("shows every toast at the top center on a phone, clear of the sheet's footer and the keyboard at the bottom", () => {
+    phone = true;
+    toast.success({ title: "copy-success.title" });
+    toast.error({ title: "action-error.title" }, { position: "bottom-center" });
+
+    expect(top.success).toHaveBeenCalledExactlyOnceWith({
+      title: createElement(ToastMessage, { message: "copy-success.title" }),
+    });
+    expect(top.error).toHaveBeenCalledExactlyOnceWith({
+      title: createElement(ToastMessage, { message: "action-error.title" }),
+    });
+    expect(queue.success).not.toHaveBeenCalled();
+    expect(centered.error).not.toHaveBeenCalled();
   });
 
   it("hands the values of the copy to the title and the description, so the placeholders fill", () => {
