@@ -4,8 +4,8 @@ import {
   HugeIcons,
   OptionIcon,
 } from "@repo/design-system/components/ui/huge-icons";
+import { PopupPlace } from "@repo/design-system/components/ui/popup-place";
 import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
-import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import {
   optionRowVariants,
   optionTickVariants,
@@ -142,7 +142,7 @@ function DropdownMenuContent({
   label: string;
 }) {
   return (
-    <ButtonGroupVariant value={undefined}>
+    <PopupPlace>
       <MenuContent
         className={cn(
           popupMotion(),
@@ -159,7 +159,7 @@ function DropdownMenuContent({
         </MenuGroup>
         <DropdownMenuNothing />
       </MenuContent>
-    </ButtonGroupVariant>
+    </PopupPlace>
   );
 }
 

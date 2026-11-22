@@ -4,8 +4,8 @@ import {
   HugeIcons,
   OptionIcon,
 } from "@repo/design-system/components/ui/huge-icons";
+import { PopupPlace } from "@repo/design-system/components/ui/popup-place";
 import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
-import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import {
   optionRowVariants,
   optionTickVariants,
@@ -176,7 +176,7 @@ function SelectContent({
   label: string;
 }) {
   return (
-    <ButtonGroupVariant value={undefined}>
+    <PopupPlace>
       <SelectContentPrimitive
         alignItemWithTrigger={alignItemWithTrigger}
         className={cn(
@@ -196,7 +196,7 @@ function SelectContent({
         </SelectGroup>
         <SelectNothing />
       </SelectContentPrimitive>
-    </ButtonGroupVariant>
+    </PopupPlace>
   );
 }
 

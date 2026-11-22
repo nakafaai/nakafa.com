@@ -1,5 +1,5 @@
+import { PopupPlace } from "@repo/design-system/components/ui/popup-place";
 import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
-import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import {
   PopupContainer,
   popupMotion,
@@ -59,7 +59,7 @@ function PopoverContent({
   ...props
 }: NodeChildren<React.ComponentProps<typeof PopoverContentPrimitive>>) {
   return (
-    <ButtonGroupVariant value={undefined}>
+    <PopupPlace>
       <PopoverContentPrimitive
         className={cn(
           popupMotion(),
@@ -73,7 +73,7 @@ function PopoverContent({
         <SheetGrip />
         {children}
       </PopoverContentPrimitive>
-    </ButtonGroupVariant>
+    </PopupPlace>
   );
 }
 

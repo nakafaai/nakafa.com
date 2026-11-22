@@ -26,6 +26,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
+import { POPUP_PLACE } from "@repo/design-system/components/ui/popup-place";
 import { EditorContext, useCurrentEditor } from "@tiptap/react";
 import { cn } from "cn";
 import { Array as Arr, Option, Schema } from "effect";
@@ -44,15 +45,12 @@ const WrappedGroup = Schema.Struct({
   shown: Schema.Finite,
 });
 
-/** A popup that renders in place beside its trigger (ADR 0049), such as a control's tooltip, open or waiting hidden. */
-const POPUP = '[popover], [data-slot$="-content"]';
-
 /** The parts of a group that take a place in the row: its line and its controls, never a popup beside a control. */
 function partsOf(group: Element) {
   return Arr.filter(
     Arr.fromIterable(group.children),
     (part): part is HTMLElement =>
-      part instanceof HTMLElement && !part.matches(POPUP)
+      part instanceof HTMLElement && !part.matches(POPUP_PLACE)
   );
 }
 

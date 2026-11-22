@@ -203,6 +203,20 @@ function readPopup(popups: string) {
     nestedForm:
       popup.querySelector("form") !== null &&
       popup.parentElement?.closest("form") !== null,
+    // Beside its trigger, a popup stands in a place that takes no room (`PopupPlace`), so its trigger's row lays out as
+    // if it were not there; a popup of an editor's node view renders at the end of the body instead (ADR 0049).
+    placed: (() => {
+      const place = popup.closest<HTMLElement>("[data-popup-place]");
+      if (place === null) {
+        return popup.parentElement === document.body;
+      }
+      const room = place.getBoundingClientRect();
+      return (
+        room.width === 0 &&
+        room.height === 0 &&
+        getComputedStyle(place).position === "absolute"
+      );
+    })(),
     inside:
       box.left >= -1 &&
       box.top >= -1 &&
@@ -266,6 +280,9 @@ const expectWhole = (
   expect
     .soft(popup.nestedForm, `${label}: holds no form inside another`)
     .toBe(false);
+  expect
+    .soft(popup.placed, `${label}: stands in a place that takes no room`)
+    .toBe(true);
   if (popup.slot === "sheet") {
     expect.soft(popup.footer, `${label}: has a footer`).toBe(true);
   }

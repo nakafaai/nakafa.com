@@ -1,13 +1,13 @@
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { PopupPlace } from "@repo/design-system/components/ui/popup-place";
 import { ResizeEdge } from "@repo/design-system/components/ui/resizable";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import {
   useResizable,
   useWindowRoom,
 } from "@repo/design-system/hooks/resizable";
-import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PopupContainer } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
 import { keepTabInside } from "@repo/design-system/lib/trap";
@@ -140,7 +140,7 @@ function SheetPopup({
   const sideways = side === "left" || side === "right";
 
   return (
-    <ButtonGroupVariant value={undefined}>
+    <PopupPlace>
       <Activity mode={modal ? "visible" : "hidden"}>
         <SheetBackdrop />
       </Activity>
@@ -192,7 +192,7 @@ function SheetPopup({
           </DialogClose>
         )}
       </DialogContent>
-    </ButtonGroupVariant>
+    </PopupPlace>
   );
 }
 
