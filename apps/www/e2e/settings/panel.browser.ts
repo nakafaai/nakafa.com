@@ -304,17 +304,18 @@ const verifyNarrowCards = Effect.fn("NakafaE2E.verifyNarrowCards")(function* (
     expect(list).not.toBeNull();
     expect(edgesOf(field).right).toBeLessThanOrEqual(edgesOf(add).left);
     expect(edgesOf(add).right).toBeLessThanOrEqual(edgesOf(list).right);
-    // The button is inside its card, on the same row as the text and to its right.
+    // The button is inside its card. Beside it the German sentence would keep less than its floor of 10rem, so
+    // the button stands on its own row under the sentence, at the card's end, and the sentence keeps the row's
+    // whole width rather than folding into a column of single words.
     expect(card).not.toBeNull();
     expect(button).not.toBeNull();
     expect(explanation).not.toBeNull();
     expect(edgesOf(button).right).toBeLessThanOrEqual(edgesOf(card).right);
     expect(explanation?.height ?? 0).toBeLessThanOrEqual(LINES * LINE_HEIGHT);
-    expect(edgesOf(explanation).right).toBeLessThanOrEqual(
-      edgesOf(button).left
+    expect(edgesOf(button).top).toBeGreaterThanOrEqual(
+      edgesOf(explanation).bottom
     );
-    expect(edgesOf(button).top).toBeLessThan(edgesOf(explanation).bottom);
-    expect(edgesOf(explanation).top).toBeLessThan(edgesOf(button).bottom);
+    expect(edgesOf(explanation).right).toBeGreaterThan(edgesOf(button).left);
   });
 
   // The first letter brings the design system's clear button, and pressing it

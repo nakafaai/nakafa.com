@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 import { Effect, MutableList, Schema } from "effect";
 import type { Changes } from "@/e2e/support/changes";
 import { live, saved } from "@/e2e/support/changes";
+import { isPageComplaint } from "@/e2e/support/console";
 import {
   EMPTY,
   editorOf,
@@ -177,7 +178,7 @@ export const namesAsDrawn = Effect.fn("NakafaE2E.namesAsDrawn")(function* (
   return yield* Effect.promise(async () => {
     const said = MutableList.make<string>();
     const listen = (message: { text: () => string; type: () => string }) => {
-      if (message.type() === "error" || message.type() === "warning") {
+      if (isPageComplaint(message)) {
         MutableList.append(said, `${message.type()}: ${message.text()}`);
       }
     };
