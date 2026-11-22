@@ -6,6 +6,7 @@ import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PopupContainer, sheetSurface } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
+import { keepTabInside } from "@repo/design-system/lib/trap";
 import {
   DialogBackdrop,
   DialogClose,
@@ -40,6 +41,7 @@ function Dialog({
 function DialogContent({
   className,
   children,
+  onKeyDown,
   size = "default",
   ...props
 }: NodeChildren<ComponentProps<typeof DialogContentPrimitive>> & {
@@ -60,6 +62,10 @@ function DialogContent({
             "data-[presentation=dialog]:h-[min(90dvh,900px)] sm:max-w-7xl",
           className
         )}
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+          keepTabInside(event);
+        }}
         {...props}
       >
         <SheetGrip />

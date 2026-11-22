@@ -180,19 +180,23 @@ const verifyFirstFrame = Effect.fn("NakafaE2E.verifyFirstFrame")(function* (
     };
   });
 
-  yield* Effect.promise(async () => {
+  // The next page opens in a new tab of the same browser, which keeps the session and the row. WebKit answers a
+  // script a tab already loaded from that tab's memory cache, which no route sees, so the same tab would run the
+  // page's scripts before the check.
+  const next = yield* Effect.promise(async () => {
+    const tab = await page.context().newPage();
     const held = MutableList.make<Route>();
-    await page.route(SCRIPTS, (route) => {
+    await tab.route(SCRIPTS, (route) => {
       MutableList.append(held, route);
     });
-    await page.goto("/en/search", { waitUntil: "domcontentloaded" });
+    await tab.goto("/en/search", { waitUntil: "domcontentloaded" });
     // The scripts were asked for and never answered: React has not run.
     await expect.poll(() => held.length).toBeGreaterThan(0);
-    await expect(memberFooter(page)).toBeVisible();
-    expect(await heightOf(page, '[data-account="member"]')).toBe(live.height);
+    await expect(memberFooter(tab)).toBeVisible();
+    expect(await heightOf(tab, '[data-account="member"]')).toBe(live.height);
     // The plan's two words sit under a `.truncate` too, so the name is the
     // span that is not a plan part.
-    const keptName = await page
+    const keptName = await tab
       .locator(
         '[data-kept-account] [data-sidebar="menu-button"] .truncate > span:not([data-kept-plan-part])'
       )
@@ -202,14 +206,15 @@ const verifyFirstFrame = Effect.fn("NakafaE2E.verifyFirstFrame")(function* (
     for (const route of MutableList.toArray(held)) {
       await route.continue();
     }
-    await page.unroute(SCRIPTS);
-    await expect(liveAccountButton(page)).toBeVisible({
+    await tab.unroute(SCRIPTS);
+    await expect(liveAccountButton(tab)).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
-    await page.waitForLoadState("networkidle");
-    expect(await heightOf(page, '[data-account="member"]')).toBe(live.height);
+    await tab.waitForLoadState("networkidle");
+    expect(await heightOf(tab, '[data-account="member"]')).toBe(live.height);
+    return tab;
   });
-  expect(yield* readCumulativeLayoutShift(page)).toBe(0);
+  expect(yield* readCumulativeLayoutShift(next)).toBe(0);
 });
 
 /** The key under which the browser keeps the schools the account menu showed. */

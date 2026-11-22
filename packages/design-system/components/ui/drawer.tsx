@@ -2,6 +2,7 @@ import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PopupContainer } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
+import { keepTabInside } from "@repo/design-system/lib/trap";
 import {
   DrawerBackdrop,
   DrawerContent as DrawerContentPrimitive,
@@ -52,6 +53,7 @@ function Drawer({
 function DrawerContent({
   children,
   className,
+  onKeyDown,
   ...props
 }: NodeChildren<ComponentProps<typeof DrawerContentPrimitive>>) {
   const t = useTranslations("Common");
@@ -68,6 +70,10 @@ function DrawerContent({
           className
         )}
         initialFocus="content"
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+          keepTabInside(event);
+        }}
         {...props}
       >
         <DrawerHandle

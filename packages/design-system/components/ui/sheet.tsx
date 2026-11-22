@@ -10,6 +10,7 @@ import {
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PopupContainer } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
+import { keepTabInside } from "@repo/design-system/lib/trap";
 import {
   DialogBackdrop,
   DialogClose,
@@ -108,6 +109,7 @@ function SheetPopup({
   className,
   children,
   keepMounted = false,
+  onKeyDown,
   showCloseButton = true,
   side = "right",
   inset = false,
@@ -150,6 +152,13 @@ function SheetPopup({
         )}
         data-surface="sheet"
         keepMounted={keepMounted}
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+          // A sheet beside the page lets a Tab move on into the page.
+          if (modal) {
+            keepTabInside(event);
+          }
+        }}
         style={(state) => ({
           ...(typeof style === "function" ? style(state) : style),
           "--sheet-width": `${width}px`,
