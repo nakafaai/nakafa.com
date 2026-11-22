@@ -258,7 +258,7 @@ const StackedSubmenu = createContext<{
 /**
  * A submenu. Beside its menu, its trigger takes Escape while the submenu stands open over it, as it does once a pointer
  * opened it and left the focus on the trigger, and closes only the submenu, as every open layer leaves to the one above
- * it. UI SDK 0.1.0-beta.13 closes the whole menu there (https://github.com/vercel-labs/ui/issues/1006).
+ * it. UI SDK 0.1.0-beta.14 closes the whole menu there (https://github.com/vercel-labs/ui/issues/1006).
  *
  * On a phone the submenu rises as a sheet of its own over its menu's sheet, which stays still behind it; a swipe down
  * returns to the menu. UI SDK would draw it inside the menu's sheet with the menu's other rows hidden, so there it
