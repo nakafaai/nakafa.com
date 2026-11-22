@@ -2,7 +2,9 @@
  * Every bare icon that floats between two lines of the words beside it. An icon no taller than 16 pixels, one step of
  * the icon scale, in a row whose words take two lines or more must stand within the first line's box: in the middle
  * of two lines it reads as belonging to neither. A mark in a tile is not read, since a tile as tall as the lines
- * stands in their middle by design, and neither is an icon set inside running words. The page serializes this
+ * stands in their middle by design, and neither is an icon set inside running words. Nor is the mark of a control
+ * that leads with a picture, such as the account button, when it stands in the picture's middle: the mark belongs
+ * to the whole row, as the picture does (#2859). The page serializes this
  * function, so it holds every part it reads, and it answers one sentence per icon, with the words the icon stands
  * beside.
  */
@@ -46,6 +48,16 @@ export function readFloats() {
         last.top < first.bottom
       ) {
         return [];
+      }
+      const picture = row
+        .closest("button, a, [role=button]")
+        ?.querySelector('[data-slot="avatar"]');
+      if (picture) {
+        const face = picture.getBoundingClientRect();
+        const middle = (face.top + face.bottom) / 2;
+        if (Math.abs((box.top + box.bottom) / 2 - middle) <= 1) {
+          return [];
+        }
       }
       // Half a pixel either way, for a line box that ends between two pixels.
       const within =
