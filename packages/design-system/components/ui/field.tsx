@@ -56,21 +56,23 @@ function FieldGroup({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 // The field is a fieldset, which keeps the browser's min-content floor; min-w-0 lets it narrow with its container. A
-// popup renders in place beside its trigger (ADR 0049), so the widths a field gives its children leave a popup alone:
-// it sizes itself from its anchor and its content.
+// popup renders in place beside its trigger (ADR 0049), in a place that takes no room (`PopupPlace`), so the widths a
+// field gives its children leave that place alone: the popup sizes itself from its anchor and its content.
 const fieldVariants = cva(
   "group/field data-[invalid=true]:text-destructive flex w-full min-w-0 gap-2 has-data-[orientation=horizontal]:[--field-description-wrap:balance]",
   {
     variants: {
       orientation: {
-        vertical: ["flex-col *:not-[[popover]]:w-full [&>.sr-only]:w-auto"],
+        vertical: [
+          "flex-col *:not-[[data-popup-place]]:w-full [&>.sr-only]:w-auto",
+        ],
         horizontal: [
           "flex-row items-center",
           "*:not-data-[slot=field-label]:not-data-[slot=field-content]:shrink-0 *:data-[slot=field-label]:min-w-0 *:data-[slot=field-label]:flex-auto",
           "has-[>[data-slot=field-content]]:items-start [&>:is([role=checkbox],[role=radio]):has(~[data-slot=field-content])]:mt-px [&>[data-slot=field-content]~:is([role=checkbox],[role=radio])]:mt-px",
         ],
         responsive: [
-          "flex-col *:not-[[popover]]:w-full @md/field-group:flex-row @md/field-group:items-center @md/field-group:*:not-[[popover]]:w-auto [&>.sr-only]:w-auto",
+          "flex-col *:not-[[data-popup-place]]:w-full @md/field-group:flex-row @md/field-group:items-center @md/field-group:*:not-[[data-popup-place]]:w-auto [&>.sr-only]:w-auto",
           "@md/field-group:*:data-[slot=field-label]:flex-auto",
           "@md/field-group:has-[>[data-slot=field-content]]:items-start @md/field-group:[&>:is([role=checkbox],[role=radio]):has(~[data-slot=field-content])]:mt-px @md/field-group:[&>[data-slot=field-content]~:is([role=checkbox],[role=radio])]:mt-px",
         ],

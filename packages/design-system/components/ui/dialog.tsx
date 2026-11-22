@@ -1,9 +1,9 @@
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { PopupPlace } from "@repo/design-system/components/ui/popup-place";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
-import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PopupContainer, sheetSurface } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
 import { keepTabInside } from "@repo/design-system/lib/trap";
@@ -69,7 +69,7 @@ function DialogContent({
   const t = useTranslations("Common");
 
   return (
-    <ButtonGroupVariant value={undefined}>
+    <PopupPlace>
       <DialogBackdrop className="bg-ink/20 duration-surface fixed inset-0 z-50 transition-opacity ease-out data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none pointer-fine:backdrop-blur-sm" />
       <DialogContentPrimitive
         className={cn(
@@ -96,7 +96,7 @@ function DialogContent({
           <HugeIcons icon={Cancel01Icon} />
         </DialogClose>
       </DialogContentPrimitive>
-    </ButtonGroupVariant>
+    </PopupPlace>
   );
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { ButtonGroupVariant } from "@repo/design-system/lib/group";
+import { PopupPlace } from "@repo/design-system/components/ui/popup-place";
 import { PopupContainer, popupMotion } from "@repo/design-system/lib/popup";
 import {
   TooltipContent as TooltipContentPrimitive,
@@ -40,7 +40,7 @@ function TooltipContent({
   ...props
 }: React.ComponentProps<typeof TooltipContentPrimitive>) {
   return (
-    <ButtonGroupVariant value={undefined}>
+    <PopupPlace>
       <TooltipContentPrimitive
         className={cn(
           popupMotion(),
@@ -49,7 +49,7 @@ function TooltipContent({
         )}
         {...props}
       />
-    </ButtonGroupVariant>
+    </PopupPlace>
   );
 }
 

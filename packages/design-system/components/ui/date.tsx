@@ -3,6 +3,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { CalendarBody } from "@repo/design-system/components/ui/calendar";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { PopupPlace } from "@repo/design-system/components/ui/popup-place";
 import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
 import { TimeSelect } from "@repo/design-system/components/ui/time";
 import type { LocalTimeParts } from "@repo/design-system/lib/calendar/time";
@@ -125,17 +126,19 @@ function DatePicker({
         >
           <HugeIcons className="text-muted-foreground" icon={Calendar03Icon} />
         </DatePickerTrigger>
-        <DatePickerContent
-          align="start"
-          className={cn(
-            popupMotion(),
-            sheetSurface(),
-            "bg-popover text-popover-foreground z-50 rounded-md border p-3 shadow-md outline-none [--cell-size:--spacing(8)] data-[presentation=sheet]:[--cell-size:--spacing(11)]"
-          )}
-        >
-          <SheetGrip />
-          <CalendarBody bounds={{ max, min }} turner={controller} />
-        </DatePickerContent>
+        <PopupPlace>
+          <DatePickerContent
+            align="start"
+            className={cn(
+              popupMotion(),
+              sheetSurface(),
+              "bg-popover text-popover-foreground z-50 rounded-md border p-3 shadow-md outline-none [--cell-size:--spacing(8)] data-[presentation=sheet]:[--cell-size:--spacing(11)]"
+            )}
+          >
+            <SheetGrip />
+            <CalendarBody bounds={{ max, min }} turner={controller} />
+          </DatePickerContent>
+        </PopupPlace>
       </ButtonGroupVariant>
     </DatePickerPrimitive>
   );

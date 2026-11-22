@@ -1,5 +1,5 @@
+import { PopupPlace } from "@repo/design-system/components/ui/popup-place";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
-import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PopupContainer } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
 import { keepTabInside } from "@repo/design-system/lib/trap";
@@ -59,7 +59,7 @@ function DrawerContent({
   const t = useTranslations("Common");
 
   return (
-    <ButtonGroupVariant value={undefined}>
+    <PopupPlace>
       <DrawerBackdrop className="bg-ink/30 fixed inset-0 z-50" />
       <DrawerContentPrimitive
         className={cn(
@@ -82,7 +82,7 @@ function DrawerContent({
         />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
       </DrawerContentPrimitive>
-    </ButtonGroupVariant>
+    </PopupPlace>
   );
 }
 

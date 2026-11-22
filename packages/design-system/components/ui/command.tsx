@@ -2,9 +2,9 @@ import { Cancel01Icon, Search02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Dialog } from "@repo/design-system/components/ui/dialog";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { PopupPlace } from "@repo/design-system/components/ui/popup-place";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
-import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { optionRowVariants } from "@repo/design-system/lib/option";
 import { sheetSurface } from "@repo/design-system/lib/popup";
 import type {
@@ -77,7 +77,7 @@ function CommandDialogPopup({
   title: string;
 }) {
   return (
-    <ButtonGroupVariant value={undefined}>
+    <PopupPlace>
       <DialogBackdrop className="bg-ink/32 fixed inset-0 z-50 pointer-fine:backdrop-blur-sm" />
       <DialogContent
         className={cn(
@@ -96,7 +96,7 @@ function CommandDialogPopup({
         <DialogDescription className="sr-only">{description}</DialogDescription>
         {children}
       </DialogContent>
-    </ButtonGroupVariant>
+    </PopupPlace>
   );
 }
 

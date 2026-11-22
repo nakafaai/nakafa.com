@@ -1,4 +1,4 @@
-import { ButtonGroupVariant } from "@repo/design-system/lib/group";
+import { PopupPlace } from "@repo/design-system/components/ui/popup-place";
 import { PopupContainer, popupMotion } from "@repo/design-system/lib/popup";
 import {
   HoverCardContent as HoverCardContentPrimitive,
@@ -40,7 +40,7 @@ function HoverCardContent({
   ...props
 }: React.ComponentProps<typeof HoverCardContentPrimitive>) {
   return (
-    <ButtonGroupVariant value={undefined}>
+    <PopupPlace>
       <HoverCardContentPrimitive
         className={cn(
           popupMotion(),
@@ -50,7 +50,7 @@ function HoverCardContent({
         side={side}
         {...props}
       />
-    </ButtonGroupVariant>
+    </PopupPlace>
   );
 }
 
