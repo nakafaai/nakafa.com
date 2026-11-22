@@ -1,5 +1,5 @@
 import { HttpMediaTypeSchema } from "@repo/utilities/http/accept";
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 /** The media type of every Markdown answer of the site, which the static twins and the llms route share. */
 export const LLMS_MARKDOWN_MEDIA_TYPE = HttpMediaTypeSchema.make(
@@ -15,35 +15,30 @@ export const LLMS_REPRESENTATION_VARY_FIELDS = Object.freeze([
   "Accept-Encoding",
 ]);
 
-/** The Markdown suffix of a route, and the route without it. */
+/**
+ * The Markdown twin a route names, and the route without its suffix. The site
+ * writes one twin per page, at `.md`; an `.mdx` address, the raw source the
+ * earlier site served, names the same twin, so a successor always ends in `.md`.
+ */
 const MarkdownPathname = Schema.Struct({
-  markdownExtension: Schema.Literals(["", ".md", ".mdx"]),
+  markdownExtension: Schema.Literals(["", ".md"]),
   pathname: Schema.String,
 });
 type MarkdownPathname = typeof MarkdownPathname.Type;
 
-/** Reads one supported Markdown suffix without widening its value contract. */
-function readLlmsMarkdownExtension(
-  pathname: string
-): MarkdownPathname["markdownExtension"] {
-  if (pathname.endsWith(".mdx")) {
-    return ".mdx";
-  }
+/** The Markdown suffixes an address may end in, the longer first. */
+const MARKDOWN_SUFFIXES = [".mdx", ".md"] as const;
 
-  if (pathname.endsWith(".md")) {
-    return ".md";
-  }
-
-  return "";
-}
-
-/** Removes one explicit Markdown suffix while preserving its exact spelling. */
+/** Removes one Markdown suffix and names the `.md` twin it stands for. */
 export function readLlmsMarkdownPathname(pathname: string): MarkdownPathname {
-  const markdownExtension = readLlmsMarkdownExtension(pathname);
-  return {
-    markdownExtension,
-    pathname: markdownExtension
-      ? pathname.slice(0, -markdownExtension.length)
-      : pathname,
-  };
+  const suffix = Arr.findFirst(MARKDOWN_SUFFIXES, (candidate) =>
+    pathname.endsWith(candidate)
+  );
+  return Option.match(suffix, {
+    onNone: () => ({ markdownExtension: "", pathname }),
+    onSome: (found) => ({
+      markdownExtension: ".md",
+      pathname: pathname.slice(0, -found.length),
+    }),
+  });
 }
