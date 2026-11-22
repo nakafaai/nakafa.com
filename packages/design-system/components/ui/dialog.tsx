@@ -52,7 +52,7 @@ function DialogContent({
       <DialogBackdrop className="bg-ink/20 duration-surface fixed inset-0 z-50 transition-opacity ease-out data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none pointer-fine:backdrop-blur-sm" />
       <DialogContentPrimitive
         className={cn(
-          "group/dialog bg-popover text-popover-foreground z-50 flex min-h-0 w-full flex-col overflow-hidden border text-sm shadow-lg/5 outline-none has-[[data-popup-hold]]:pointer-events-none has-[[data-popup-hold]]:opacity-0",
+          "group/dialog bg-popover text-popover-foreground z-50 flex min-h-0 w-full flex-col overflow-clip border text-sm shadow-lg/5 outline-none has-[[data-popup-hold]]:pointer-events-none has-[[data-popup-hold]]:opacity-0",
           "data-[presentation=dialog]:duration-surface data-[presentation=dialog]:fixed data-[presentation=dialog]:inset-0 data-[presentation=dialog]:m-auto data-[presentation=dialog]:h-fit data-[presentation=dialog]:max-h-[min(90dvh,900px)] data-[presentation=dialog]:max-w-[calc(100%-2rem)] data-[presentation=dialog]:rounded-xl data-[presentation=dialog]:transition-[opacity,scale] data-[presentation=dialog]:ease-out data-[presentation=dialog]:data-ending-style:opacity-0 data-[presentation=dialog]:data-starting-style:opacity-0 data-[presentation=dialog]:motion-safe:data-ending-style:scale-98 data-[presentation=dialog]:motion-safe:data-starting-style:scale-98",
           sheetSurface(),
           size === "default" && "sm:max-w-md",
