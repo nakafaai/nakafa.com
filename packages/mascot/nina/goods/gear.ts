@@ -125,12 +125,13 @@ export function megaphone(swing: number): Parts {
         box(28, -24, 7, 48, PAGE, 3),
         bar("M-10,8 L-6,24", BASE, 5),
       ],
-      4,
-      -18,
-      -24
+      -6,
+      -16,
+      -44,
+      0.78
     ),
     bar(
-      `M48,-52 L${58 + swing * 3},-62 M54,-36 L${68 + swing * 3},-40 M40,-64 L${44 + swing * 2},-78`,
+      `M14,-58 L${19 + swing * 2},-68 M22,-48 L${29 + swing * 2},-54 M4,-62 L${4 + swing * 2},-74`,
       POP.orange,
       3
     ),
@@ -179,7 +180,7 @@ export function stop(swing: number): Parts {
       POP.red
     ),
     box(-13, -35, 26, 6, PAGE, 3),
-    sparkle(24, -50 + swing * 2, 3, POP.red),
+    sparkle(26, -44 + swing * 2, 3, POP.red),
   ];
 }
 

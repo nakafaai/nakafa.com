@@ -178,17 +178,17 @@ export function lens(x: number, y: number) {
 /** A thought: two small circles rising from her head to a cloud, and in the cloud three dots lit one after another. */
 export function dots(t: number) {
   return [
-    circle({ cx: 170, cy: 40, fill: NINA.body, r: 5 }),
-    circle({ cx: 184, cy: 24, fill: NINA.body, r: 7 }),
+    circle({ cx: 170, cy: 44, fill: NINA.body, r: 5 }),
+    circle({ cx: 184, cy: 28, fill: NINA.body, r: 7 }),
     path({
-      d: "M176,-2 C170,-14 186,-22 196,-15 C204,-25 224,-22 226,-10 C240,-10 242,6 230,10 C226,18 210,18 204,12 C194,18 174,12 176,-2 Z",
+      d: "M176,2 C170,-10 186,-18 196,-11 C204,-21 224,-18 226,-6 C240,-6 242,10 230,14 C226,22 210,22 204,16 C194,22 174,16 176,2 Z",
       fill: NINA.body,
     }),
     ...Arr.map(Arr.range(0, 2), (i) => {
       const lit = Math.max(0, Math.sin((t * 1.5 - i * 0.22) * Math.PI * 2));
       return circle({
         cx: 192 + i * 13,
-        cy: tenth(-3 - lit * 3),
+        cy: tenth(1 - lit * 3),
         fill: NINA.face,
         r: tenth(3.4 + lit * 1.2),
       });
@@ -202,7 +202,7 @@ export function confetti(t: number) {
   return Arr.map(Arr.range(0, 13), (i) => {
     const life = (t / 2.4 + i * 0.173) % 1;
     const x = -30 + ((i * 53) % 264) + Math.sin(life * 7 + i) * 12;
-    const y = -24 + life * 250;
+    const y = -12 + life * 240;
     const fill = colors[i % 5];
     const opacity = tenth(life < 0.8 ? 1 : (1 - life) / 0.2);
     return i % 3 === 0
@@ -226,7 +226,7 @@ export function sleep(t: number) {
     const life = (t / 3 + i / 3) % 1;
     const size = 7 + life * 9;
     const x = 190 + life * 34;
-    const y = 46 - life * 62;
+    const y = 50 - life * 52;
     return path({
       d: `M${at(x - size, y - size)} H${tenth(x + size)} L${at(x - size, y + size)} H${tenth(x + size)}`,
       fill: "none",

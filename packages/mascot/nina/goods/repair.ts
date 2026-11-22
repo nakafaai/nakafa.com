@@ -144,7 +144,7 @@ export function dustpan(swing: number): Parts {
 export function cans(swing: number): Parts {
   return [
     bar(
-      `M12,0 C30,${14 + swing * 5} 40,${40 - swing * 5} 30,70 C24,96 4,108 -20,112`,
+      `M12,0 C30,${14 + swing * 5} 38,${36 - swing * 5} 28,58 C22,78 4,86 -20,90`,
       NINA.ink,
       2.5
     ),
@@ -153,7 +153,7 @@ export function cans(swing: number): Parts {
     turned(
       [box(-11, -13, 22, 26, LID, 4), box(-11, 7, 22, 6, BASE, 3)],
       -30,
-      114,
+      92,
       70
     ),
   ];

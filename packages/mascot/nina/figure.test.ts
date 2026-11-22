@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { NINA, POP, TEXT } from "@repo/mascot/color";
 import { ACTS, ActSchema } from "@repo/mascot/nina/act";
+import { WHOLE_BOX } from "@repo/mascot/nina/box";
 import { compose, place, scene } from "@repo/mascot/nina/figure";
 import type { Mark } from "@repo/mascot/nina/mark";
 import type { Options } from "@repo/mascot/nina/options";
@@ -8,7 +9,9 @@ import type { Place } from "@repo/mascot/nina/point";
 import type { Pose } from "@repo/mascot/nina/pose";
 import { armLeft, REST } from "@repo/mascot/nina/pose";
 import { CASES, digestOf, pinOf } from "@repo/mascot/nina/test.fixture";
-import { hitter, outlineOf } from "@repo/mascot/nina/test.hit";
+import type { Extent } from "@repo/mascot/nina/test.hit";
+import { extentOf, hitter } from "@repo/mascot/nina/test.hit";
+import { outlineOf } from "@repo/mascot/nina/test.path";
 import { DIGESTS } from "@repo/mascot/nina/test.pin";
 import type { Shape } from "@repo/mascot/shape";
 import { rect } from "@repo/mascot/shape";
@@ -264,5 +267,45 @@ describe("her joints", () => {
     expect(joints(pose, shapes)).toEqual([
       "the cut of overL does not lie on her own color",
     ]);
+  });
+});
+
+/** How far past each edge of a window a picture paints, rounded up to a tenth: all zeros when it fits. */
+function overflowOf([left, top, right, bottom]: Extent) {
+  const [x, y, width, height] = WHOLE_BOX;
+  const past = (by: number) => Math.ceil(Math.max(0, by) * 10) / 10;
+  return [
+    past(x - left),
+    past(y - top),
+    past(right - (x + width)),
+    past(bottom - (y + height)),
+  ];
+}
+
+describe("her whole window", () => {
+  it(
+    "holds all she paints, the things she holds and the marks over her included, in any act at any moment",
+    () => {
+      // Facing left mirrors her about the middle of the window, which the window shares, so one side proves both.
+      const cut = Arr.flatMap(Rec.toEntries(ACTS), ([act]) =>
+        Arr.flatMap(MOMENTS, (t) => {
+          const past = overflowOf(
+            extentOf(scene({ act, t, whole: true }).shapes)
+          );
+          return Arr.some(past, (by) => by > 0)
+            ? [
+                `${act} at ${t.toFixed(2)} paints past [left, top, right, bottom] by ${Arr.join(Arr.map(past, String), ", ")}`,
+              ]
+            : [];
+        })
+      );
+      expect(cut).toEqual([]);
+    },
+    JOINTS_TIMEOUT
+  );
+
+  it("notices a mark that leaves the window", () => {
+    const shapes = [rect({ height: 10, width: 10, x: 0, y: -30 })];
+    expect(overflowOf(extentOf(shapes))).toEqual([0, 10, 0, 0]);
   });
 });

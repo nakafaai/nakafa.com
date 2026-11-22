@@ -120,7 +120,7 @@ export function rod(x: number, y: number, bob: number) {
       strokeWidth: 1.5,
     }),
     path({
-      d: "M196,250 Q210,244 224,250 T252,250",
+      d: "M192,250 Q206,244 220,250 T248,250",
       fill: "none",
       stroke: POP.blue,
       strokeLinecap: "round",
@@ -136,7 +136,7 @@ export function rod(x: number, y: number, bob: number) {
 
 /** A broom held at x, y, its bristles on the floor, swept by `swing`, and the dust it lifts. */
 export function broom(x: number, y: number, swing: number) {
-  const foot: Place = [x + 26 + swing * 10, 266];
+  const foot: Place = [x + 14 + swing * 8, 262];
   const puffs = Math.abs(swing) > 0.6 ? 1 : 0;
   return [
     path({
@@ -151,7 +151,7 @@ export function broom(x: number, y: number, swing: number) {
     }),
     ...Arr.map(Arr.range(0, 2 * puffs), (i) =>
       circle({
-        cx: tenth(foot[0] + (swing > 0 ? 24 : -24) + i * 6),
+        cx: tenth(foot[0] + Math.sign(swing) * (14 + i * 5)),
         cy: tenth(276 - i * 7),
         fill: LID,
         r: 4 - i,
@@ -333,7 +333,7 @@ export function easel(painted: number) {
   ] as const;
   return [
     path({
-      d: "M210,120 L200,276 M240,120 L250,276 M225,124 L225,268",
+      d: "M210,120 L200,276 M240,120 L248,276 M225,124 L225,268",
       stroke: BOARD,
       strokeLinecap: "round",
       strokeWidth: 6,
@@ -445,6 +445,6 @@ export function plug(x: number, y: number, home: number) {
       ],
       { transform: `translate(${tenth(x)} ${tenth(y)})` }
     ),
-    ...(home > 0.5 ? [sparkle(244, 104, 6, POP.yellow)] : []),
+    ...(home > 0.5 ? [sparkle(242, 104, 6, POP.yellow)] : []),
   ];
 }
