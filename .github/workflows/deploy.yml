@@ -63,6 +63,29 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/install
 
+      # The URL contract (apps/www/scripts/urls.ts). Before this deploy replaces the site, the
+      # ledger of published addresses takes every page the live sitemap lists, on top of the
+      # ledger the last production deploy kept and the seed committed beside the script, so an
+      # address published once stays in it. Production alone keeps a ledger: it names the
+      # addresses of nakafa.com. Each run saves under its own key and restores the newest.
+      - name: Restore the ledger of published addresses
+        id: urls
+        if: env.NAKAFA_DEPLOY_STAGE == 'prod'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/urls
+          key: urls-prod-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            urls-prod-
+
+      - name: Record the published addresses
+        id: record
+        if: env.NAKAFA_DEPLOY_STAGE == 'prod'
+        working-directory: apps/www
+        env:
+          NAKAFA_URL_LEDGER: ${{ github.workspace }}/.cache/urls/published.txt
+        run: bun scripts/urls.ts record
+
       # Every step that prepares the Cloudflare stack runs before Convex deploys. From
       # the Convex deploy until the new Worker is live, the old Worker serves against
       # the new functions, so nothing else may run in between.
@@ -144,6 +167,16 @@ jobs:
           VITE_AD_SCRIPT_URL: https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js
         run: bunx --no-install alchemy deploy --stage "$NAKAFA_DEPLOY_STAGE" --yes
 
+      # Every recorded address must still reach a page (200, after redirects on the site) or
+      # answer 410 Gone on the site this deploy put live. The step names each address that
+      # broke: a page that moved needs its redirect, and a page removed for good its 410.
+      - name: Check that every published address still answers
+        if: steps.record.outcome == 'success'
+        working-directory: apps/www
+        env:
+          NAKAFA_URL_LEDGER: ${{ github.workspace }}/.cache/urls/published.txt
+        run: bun scripts/urls.ts check
+
       # A build that finished drops the entries it did not use, such as the answers of an
       # earlier release, so the store holds one build's reads. A failed or cancelled deploy
       # drops nothing and keeps what it added: each entry is one answer of Convex, so the
@@ -164,3 +197,10 @@ jobs:
         with:
           path: .cache/reads
           key: ${{ steps.reads.outputs.cache-primary-key }}
+
+      - name: Keep the ledger for the next deploy
+        if: always() && steps.record.outcome == 'success'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/urls
+          key: ${{ steps.urls.outputs.cache-primary-key }}
