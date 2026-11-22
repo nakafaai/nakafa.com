@@ -1578,7 +1578,6 @@
     "view-active": "Aktiv",
     "task-exam-none": "Eine schriftliche Antwort",
     "task-exam-description": "Wähle eine Prüfung aus dem Prüfungseditor, und die Klasse bearbeitet sie im Prüfungsplayer.",
-    "task-start": "Starten",
     "posts-archived-empty": "Keine archivierte Ankündigung",
     "posts-archived-empty-description": "Archivierte Ankündigungen warten hier, und Wiederherstellen holt sie zurück.",
     "tasks-archived-empty": "Keine archivierte Aufgabe",
@@ -2231,7 +2230,8 @@
     "zelda": "Zelda",
     "count-of": "{count, number} von {total, number}",
     "less": "Weniger",
-    "date": "Datum"
+    "date": "Datum",
+    "start": "Starten"
   },
   "LearningPrograms": {
     "metadata-title": "Mit Nakafa lernen",
@@ -2626,10 +2626,11 @@
     "day-stars": "{day}: {stars} Sterne",
     "more": "Alle ansehen",
     "subjects-first": "Such dir ein Fach aus und lies deine erste Lektion.",
-    "tryouts-first": "Mach dein erstes Try-out.",
-    "tryout-running": "Läuft noch",
-    "tryout-score": "Punktzahl {score}",
-    "tryout-expired": "Zeit abgelaufen"
+    "tryout-again": "Wiederholen",
+    "tryout-pick-country": "Land wählen",
+    "tryout-set": "{track} {set}",
+    "tryout-answered-label": "Beantwortete Fragen",
+    "tryout-others": "{count, plural, one {# weiteres Try-out} other {# weitere Try-outs}}"
   },
   "Marketing": {
     "try-nakafa": "Nakafa ausprobieren",

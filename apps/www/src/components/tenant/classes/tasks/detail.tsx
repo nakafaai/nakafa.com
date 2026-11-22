@@ -398,7 +398,7 @@ function ExamTask() {
             to="/school/$slug/sittings/$sitting"
           >
             <HugeIcons aria-hidden="true" icon={PlayIcon} />
-            {t("task-start")}
+            {tCommon("start")}
           </Link>
         ) : null}
       </PaneFooter>

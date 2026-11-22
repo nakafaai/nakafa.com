@@ -1578,7 +1578,6 @@
     "view-active": "Active",
     "task-exam-none": "A written answer",
     "task-exam-description": "Choose an exam built in the exam editor, and the class does it in the exam player.",
-    "task-start": "Start",
     "posts-archived-empty": "No archived announcement",
     "posts-archived-empty-description": "Announcements you archive wait here, and Restore brings them back.",
     "tasks-archived-empty": "No archived task",
@@ -2231,7 +2230,8 @@
     "zelda": "Zelda",
     "count-of": "{count, number} of {total, number}",
     "less": "Show less",
-    "date": "Date"
+    "date": "Date",
+    "start": "Start"
   },
   "LearningPrograms": {
     "metadata-title": "Start learning with Nakafa",
@@ -2626,10 +2626,11 @@
     "day-stars": "{day}: {stars} Stars",
     "more": "See all",
     "subjects-first": "Pick a subject and read your first lesson.",
-    "tryouts-first": "Sit your first try-out.",
-    "tryout-running": "In progress",
-    "tryout-score": "Score {score}",
-    "tryout-expired": "Time ran out"
+    "tryout-again": "Retake",
+    "tryout-pick-country": "Pick a country",
+    "tryout-set": "{track} {set}",
+    "tryout-answered-label": "Questions answered",
+    "tryout-others": "{count, plural, one {# more try-out} other {# more try-outs}}"
   },
   "Marketing": {
     "try-nakafa": "Try Nakafa",

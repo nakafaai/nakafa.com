@@ -1,6 +1,8 @@
 import { Ref } from "@confect/core";
 import { assert, describe, expect, it } from "@effect/vitest";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import { homeOrder } from "@repo/backend/confect/tryouts/queries/history";
 import {
   FIXTURE_TRACK,
   fixtureSetPath,
@@ -53,6 +55,26 @@ const seedHistory = (world: TryoutWorld, count: number) =>
       })
     );
   });
+
+describe("homeOrder", () => {
+  const attempt = (
+    status: Docs["tryoutAttempts"]["status"],
+    expiresAt: number
+  ) => ({ expiresAt, status });
+
+  it("puts every running set first, the one whose time ends soonest on top, then the rest as they came", () => {
+    const done = attempt("completed", 1);
+    const late = attempt("in-progress", 900);
+    const gone = attempt("expired", 2);
+    const soon = attempt("in-progress", 300);
+    expect(homeOrder([done, late, gone, soon])).toEqual([
+      soon,
+      late,
+      done,
+      gone,
+    ]);
+  });
+});
 
 describe("tryouts/queries/history", () => {
   it.effect(
@@ -136,6 +158,35 @@ describe("tryouts/queries/history", () => {
         const [, last] = yield* seedHistory(world, 2);
         vi.setSystemTime(TRYOUT_NOW + 60_000);
         const running = yield* world.start({ setKey: "set-2" });
+        // The learner is three answers into the set's first part.
+        yield* Effect.promise(() =>
+          world.t.mutation(async (ctx) => {
+            const attempt = await ctx.db.get(
+              "tryoutAttempts",
+              running.attemptId
+            );
+            assert.ok(attempt, "Expected the running attempt.");
+            const [first] = attempt.sections;
+            assert.ok(first, "Expected the set's first part.");
+            const [language] = first.languages;
+            assert.ok(language, "Expected the part's first language.");
+            await ctx.db.insert("tryoutSectionAttempts", {
+              answeredCount: 3,
+              completedAt: null,
+              correctAnswers: 0,
+              endReason: null,
+              expiresAt: attempt.expiresAt,
+              lastActivityAt: TRYOUT_NOW + 60_000,
+              questionLanguage: language,
+              sectionKey: first.sectionKey,
+              sectionOrder: first.sectionOrder,
+              startedAt: TRYOUT_NOW + 60_000,
+              status: "in-progress",
+              totalQuestions: first.questionCount,
+              tryoutAttemptId: running.attemptId,
+            });
+          })
+        );
         yield* world.release({ renamed: true, sets: 2 });
         const recent = yield* world.learner.query(
           tryouts.queries.history.recent,
@@ -143,19 +194,28 @@ describe("tryouts/queries/history", () => {
         );
         expect(recent).toEqual([
           {
+            answered: 3,
             attemptId: running.attemptId,
+            correct: 0,
+            countryCode: expect.any(String),
+            examKey: FIXTURE_TRACK.examKey,
+            expiresAt: expect.any(Number),
+            part: { key: expect.any(String), title: expect.any(String) },
             publicPath: fixtureSetPath("set-2", "id", true),
+            questions: expect.any(Number),
             score: null,
+            startedAt: TRYOUT_NOW + 60_000,
             status: "in-progress",
             title: expect.any(String),
+            track: expect.any(String),
           },
-          {
+          expect.objectContaining({
             attemptId: last,
+            part: null,
             publicPath: fixtureSetPath("set-1", "id", true),
             score: 2,
             status: "completed",
-            title: expect.any(String),
-          },
+          }),
         ]);
       })
   );

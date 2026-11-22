@@ -1578,7 +1578,6 @@
     "view-active": "Aktif",
     "task-exam-none": "Jawaban tertulis",
     "task-exam-description": "Pilih ujian yang dibuat di editor ujian, lalu kelas mengerjakannya di pemutar ujian.",
-    "task-start": "Mulai",
     "posts-archived-empty": "Belum ada pengumuman yang diarsipkan",
     "posts-archived-empty-description": "Pengumuman yang kamu arsipkan menunggu di sini, dan Pulihkan mengembalikannya.",
     "tasks-archived-empty": "Belum ada tugas yang diarsipkan",
@@ -2231,7 +2230,8 @@
     "zelda": "Zelda",
     "count-of": "{count, number} dari {total, number}",
     "less": "Lebih sedikit",
-    "date": "Tanggal"
+    "date": "Tanggal",
+    "start": "Mulai"
   },
   "LearningPrograms": {
     "metadata-title": "Mulai belajar di Nakafa",
@@ -2626,10 +2626,11 @@
     "day-stars": "{day}: {stars} Bintang",
     "more": "Lihat semua",
     "subjects-first": "Pilih mata pelajaran, lalu baca materi pertamamu.",
-    "tryouts-first": "Kerjain try-out pertamamu.",
-    "tryout-running": "Lagi dikerjain",
-    "tryout-score": "Skor {score}",
-    "tryout-expired": "Waktunya habis"
+    "tryout-again": "Ulang",
+    "tryout-pick-country": "Pilih negara",
+    "tryout-set": "{track} {set}",
+    "tryout-answered-label": "Soal dijawab",
+    "tryout-others": "{count} try-out lainnya"
   },
   "Marketing": {
     "try-nakafa": "Coba Nakafa",

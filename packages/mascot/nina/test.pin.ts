@@ -244,6 +244,8 @@ export const DIGESTS: Readonly<Record<string, string>> = {
   "whole.stacking.right": "73df010105d9",
   "whole.stamping.left": "1c67ed33f7f7",
   "whole.stamping.right": "d05e20453c13",
+  "whole.stretching.left": "806bba26dbe0",
+  "whole.stretching.right": "7368f2edd2c1",
   "whole.storing.left": "079870244026",
   "whole.storing.right": "fead4587a656",
   "whole.strolling.left": "a83d3bb295fc",

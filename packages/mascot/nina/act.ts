@@ -162,6 +162,7 @@ export const ActSchema = Schema.Literals([
   "pitching",
   "hosting",
   "ranking",
+  "stretching",
 ]);
 
 /** Doing nothing in particular. */
@@ -233,6 +234,25 @@ function cheering(t: number): Pose {
       REST.lift -
       Math.abs(Math.sin(t * 4.6)) * 13 * Math.max(0.25, 1 - (t % 2.4) / 2.4),
     mood: "laughing",
+  };
+}
+
+/**
+ * Warming up before the start: both arms up over her head, tips together, as she bends from side to side. The
+ * first try-out, which waits for her to begin.
+ */
+function stretching(t: number): Pose {
+  const bend = Math.sin(t * 2.2);
+  return {
+    ...REST,
+    // One arm reaches up and over her head; the other bends with its tip at her side.
+    armL: armLeft(22, 90, 70 + bend * 4, -22, 204 + bend * 5, 36),
+    armR: armRight(30, 136, -6, 178, 36, 200),
+    layer: ["back", "back"],
+    legs: Arr.map(REST.legs, (leg, i) => sway(leg, t, i * 1.5, 0.6)),
+    lift: REST.lift - 2 + Math.sin(t * 4.4) * 1.5,
+    mood: "happy",
+    tilt: REST.tilt - 9 + bend * 4,
   };
 }
 
@@ -345,6 +365,7 @@ export const ACTS = {
   searching: { pose: searching, still: 0.7 },
   sleeping: { pose: sleeping, still: 1.2 },
   stamping: { pose: stamping, still: 1.6 },
+  stretching: { pose: stretching, still: 0.7 },
   teaching: { pose: teaching, still: 2.2 },
   thinking: { pose: thinking, still: 0.5 },
   typing: { pose: typing, still: 0.2 },

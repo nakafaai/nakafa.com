@@ -5,6 +5,7 @@ import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import contents from "@repo/backend/confect/_generated/refs/contents";
 import island from "@repo/backend/confect/_generated/refs/island";
+import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
@@ -21,6 +22,7 @@ import {
 } from "@/lib/account/access.server";
 import type { ScreenSeo } from "@/lib/account/head";
 import type { ChatInput, LocaleInput } from "@/lib/account/input";
+import { readTryoutStart } from "@/lib/account/start.server";
 import { readOptional, readRequired } from "@/lib/data/read.server";
 import { entryOf } from "@/lib/island/entry";
 
@@ -43,6 +45,8 @@ export const homeScreenHandler = accountHandler(
         week,
         leaders,
         attempts,
+        preference,
+        now,
       ] = yield* Effect.all(
         [
           readRequired(onboarding.queries.getStatus, {}, token),
@@ -57,6 +61,12 @@ export const homeScreenHandler = accountHandler(
           readOptional(island.queries.week, {}, token),
           readOptional(island.queries.leaders, {}, token),
           readOptional(tryouts.queries.history.recent, {}, token),
+          readOptional(
+            learningPreferences.queries.getCurrentTryout,
+            { locale },
+            token
+          ),
+          Clock.currentTimeMillis,
         ],
         { concurrency: "unbounded" }
       );
@@ -85,8 +95,14 @@ export const homeScreenHandler = accountHandler(
         title: t("title"),
       };
       const recent = recentRows ?? [];
+      const sat = attempts ?? [];
       return {
-        attempts: attempts ?? [],
+        attempts: sat,
+        now,
+        start:
+          sat.length === 0
+            ? yield* readTryoutStart(locale, preference, token)
+            : null,
         island: entryOf(own, account?.appUser._id),
         leaders: leaders ?? [],
         name: Option.getOrUndefined(
