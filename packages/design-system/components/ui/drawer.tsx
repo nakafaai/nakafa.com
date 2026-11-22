@@ -2,7 +2,6 @@ import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { ButtonGroupVariant } from "@repo/design-system/lib/group";
 import { PopupContainer } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
-import { releaseSheetExit } from "@repo/design-system/lib/sheet";
 import {
   DrawerBackdrop,
   DrawerContent as DrawerContentPrimitive,
@@ -74,7 +73,6 @@ function DrawerContent({
         <DrawerHandle
           aria-label={t("resize-drawer")}
           className="after:bg-muted focus-visible:after:bg-ring flex shrink-0 cursor-grab touch-none items-center justify-center outline-none group-data-[driver=scroll-snap]/drawer:touch-pan-y! group-data-[side=bottom]/drawer:h-5 group-data-[side=left]/drawer:w-4 group-data-[side=right]/drawer:w-4 group-data-[side=top]/drawer:order-last group-data-[side=top]/drawer:h-5 after:rounded-full group-data-[side=bottom]/drawer:after:h-1.5 group-data-[side=bottom]/drawer:after:w-25 group-data-[side=left]/drawer:after:h-25 group-data-[side=left]/drawer:after:w-1.5 group-data-[side=right]/drawer:after:h-25 group-data-[side=right]/drawer:after:w-1.5 group-data-[side=top]/drawer:after:h-1.5 group-data-[side=top]/drawer:after:w-25 active:cursor-grabbing"
-          ref={releaseSheetExit}
         />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
       </DrawerContentPrimitive>

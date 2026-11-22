@@ -143,7 +143,7 @@ const CONFECT_COHORT_VERSION = "10.6.0";
  * together on one exact release: a beta may change a part between releases, and the two share one copy of the core,
  * which two versions would split.
  */
-const UI_SDK_COHORT_VERSION = "0.1.0-beta.13";
+const UI_SDK_COHORT_VERSION = "0.1.0-beta.14";
 /** The UI SDK packages the design system pins, the only workspace that imports them. */
 const UI_SDK_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
   ["packages/design-system/package.json", ["@ui-sdk/core", "@ui-sdk/react"]],
