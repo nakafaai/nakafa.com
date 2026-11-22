@@ -24,6 +24,7 @@ import {
 } from "@/e2e/support/memory";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { toastSaying } from "@/e2e/support/toast";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 import { titleOf, widthOf, wordsShown, writeWorst } from "@/e2e/support/worst";
 
@@ -105,7 +106,7 @@ const verifyEmptied = Effect.fn("NakafaE2E.verifyEmptied")(function* (
     await saved(changes, once);
     await page.clock.runFor(1500);
     expect(changes.sent - once).toBe(1);
-    await expect(page.getByText(MISSING)).toHaveCount(0);
+    await expect(toastSaying(page, MISSING)).toHaveCount(0);
   });
 });
 
@@ -222,7 +223,7 @@ const verifyDeletedElsewhere = Effect.fn("NakafaE2E.verifyDeletedElsewhere")(
 
       await editorOf(page).press("End");
       await page.keyboard.type(WRITTEN_ON);
-      await expect(page.getByText(MISSING)).toBeVisible({
+      await expect(toastSaying(page, MISSING)).toBeVisible({
         timeout: ANSWER_MILLISECONDS,
       });
       await expect(editorOf(page)).toHaveText(`${WORDS}${WRITTEN_ON}`);

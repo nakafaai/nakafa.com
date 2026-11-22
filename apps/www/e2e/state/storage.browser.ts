@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Array as Arr, MutableList } from "effect";
+import { isPageComplaint } from "@/e2e/support/console";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The pages a visitor most often lands on from another site: the home page and the School landing. */
@@ -38,7 +39,7 @@ for (const path of LANDINGS) {
   }) => {
     const warnings = MutableList.make<string>();
     page.on("console", (message) => {
-      if (message.type() === "warning" || message.type() === "error") {
+      if (isPageComplaint(message)) {
         MutableList.append(warnings, message.text());
       }
     });

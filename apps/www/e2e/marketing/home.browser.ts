@@ -12,6 +12,7 @@ import {
   Schema,
 } from "effect";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
+import { isPageComplaint } from "@/e2e/support/console";
 import { withBrowserContext } from "@/e2e/support/context";
 import {
   readRecordedLayoutShifts,
@@ -96,13 +97,8 @@ const OPTION_LETTER = /^[A-Z]$/u;
 function observeConsole(page: Page) {
   const issues = MutableList.make<string>();
   page.on("console", (message) => {
-    const type = message.type();
-    const text = message.text();
-    if (
-      (type === "error" || type === "warning") &&
-      !isKnownSceneDiagnostic(text)
-    ) {
-      MutableList.append(issues, `${type}: ${text}`);
+    if (isPageComplaint(message) && !isKnownSceneDiagnostic(message.text())) {
+      MutableList.append(issues, `${message.type()}: ${message.text()}`);
     }
   });
   return issues;

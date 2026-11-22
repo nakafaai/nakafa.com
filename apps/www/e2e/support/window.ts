@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { Array as Arr, Effect, MutableList, Option } from "effect";
+import { isPageComplaint } from "@/e2e/support/console";
 import { LAST_SERVER, NEWEST } from "@/e2e/support/list";
 import { MEMORY_PATH, memoryRow } from "@/e2e/support/memory";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -27,9 +28,6 @@ const placeOf = (page: Page, text: string) =>
       width: box.width,
     };
   }, text);
-
-/** How Firefox opens a note of its own in the page's console. */
-const FIREFOX_NOTE = "[JavaScript Warning:";
 
 /** How many rows of the page hold more than the height they are given. */
 const overflowingRows = (page: Page) =>
@@ -97,12 +95,7 @@ export const drawsInPlace = Effect.fn("NakafaE2E.drawsInPlace")(function* (
   yield* Effect.promise(async () => {
     const said = MutableList.make<string>();
     const listen = (message: { text: () => string; type: () => string }) => {
-      // Firefox adds its own notes on the page's performance, such as a scroll
-      // that moves an element, as warnings that no code of the page wrote.
-      if (message.text().startsWith(FIREFOX_NOTE)) {
-        return;
-      }
-      if (message.type() === "error" || message.type() === "warning") {
+      if (isPageComplaint(message)) {
         MutableList.append(said, `${message.type()}: ${message.text()}`);
       }
     };
