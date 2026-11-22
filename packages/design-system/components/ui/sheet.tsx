@@ -49,7 +49,7 @@ function Sheet({
 }
 
 const sheetPopupVariants = cva(
-  "bg-popover text-popover-foreground duration-surface fixed z-50 flex flex-col shadow-lg transition-[opacity,translate,width] will-change-transform [--sheet-inset:0px] has-[[data-popup-hold]]:pointer-events-none has-[[data-popup-hold]]:opacity-0 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none",
+  "bg-popover text-popover-foreground duration-surface fixed z-50 flex flex-col shadow-lg transition-[opacity,translate] will-change-transform [--sheet-inset:0px] has-[[data-popup-hold]]:pointer-events-none has-[[data-popup-hold]]:opacity-0 data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none",
   {
     defaultVariants: {
       inset: false,
@@ -88,7 +88,7 @@ function SheetBackdrop({
   return (
     <DialogBackdrop
       className={cn(
-        "duration-surface bg-ink/32 fixed inset-0 z-50 backdrop-blur-sm transition-opacity data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none",
+        "duration-surface bg-ink/32 fixed inset-0 z-50 transition-opacity data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none pointer-fine:backdrop-blur-sm",
         className
       )}
       {...props}
@@ -127,7 +127,7 @@ function SheetPopup({
   const t = useTranslations("Common");
   const room = useWindowRoom(SHEET_PAGE_ROOM);
   const anchor = side === "left" ? "start" : "end";
-  const { isResizing, resizerProps, width } = useResizable({
+  const { resizerProps, width } = useResizable({
     anchor,
     initialWidth: SHEET_WIDTHS[size],
     // Never narrower than the smallest sheet, whatever the room says.
@@ -146,8 +146,7 @@ function SheetPopup({
         className={cn(
           sheetPopupVariants({ inset, side }),
           className,
-          sideways && "sm:w-(--sheet-width) sm:max-w-none",
-          isResizing && "transition-none"
+          sideways && "sm:w-(--sheet-width) sm:max-w-none"
         )}
         data-surface="sheet"
         keepMounted={keepMounted}

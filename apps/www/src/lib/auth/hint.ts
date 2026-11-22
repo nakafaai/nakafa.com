@@ -104,14 +104,18 @@ export function signedInHintScript(): string {
 /**
  * Sets the sign-in attribute of the root element from the hint cookie, as the
  * inline script does before the first paint. Every answer about the session
- * corrects the cookie, so a page reads it again after each answer.
+ * corrects the cookie, so a page reads it again after each answer. It writes
+ * only a value that changed: the account slots are styled from the root's
+ * attribute, so each write restyles the whole page, and the session store
+ * answers many times while the reader opens a drawer or a menu.
  */
 export function followSignedInHint(
-  root: Pick<Element, "setAttribute">,
+  root: Pick<Element, "getAttribute" | "setAttribute">,
   cookie: string
 ) {
-  root.setAttribute(
-    SIGNED_IN_ATTRIBUTE,
-    hasSignedInHint(cookie) ? "yes" : "no"
-  );
+  const value = hasSignedInHint(cookie) ? "yes" : "no";
+  if (root.getAttribute(SIGNED_IN_ATTRIBUTE) === value) {
+    return;
+  }
+  root.setAttribute(SIGNED_IN_ATTRIBUTE, value);
 }
