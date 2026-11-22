@@ -129,17 +129,23 @@ describe("hasSignedInHint", () => {
 });
 
 describe("followSignedInHint", () => {
+  /** A stub root that counts its writes. */
+  const stubRoot = (attributes: Record<string, string> = {}) => {
+    const root = {
+      getAttribute: (name: string) => attributes[name] ?? null,
+      setAttribute: (name: string, value: string) => {
+        root.writes += 1;
+        attributes[name] = value;
+      },
+      writes: 0,
+    };
+    return { attributes, root };
+  };
+
   /** Follows the cookie onto a stub root and returns the attribute that it sets. */
   const follow = (cookie: string) => {
-    const attributes: Record<string, string> = {};
-    followSignedInHint(
-      {
-        setAttribute: (name: string, value: string) => {
-          attributes[name] = value;
-        },
-      },
-      cookie
-    );
+    const { attributes, root } = stubRoot();
+    followSignedInHint(root, cookie);
     return attributes[SIGNED_IN_ATTRIBUTE];
   };
 
@@ -149,5 +155,13 @@ describe("followSignedInHint", () => {
 
   it("clears the mark once an answer has cleared the hint cookie", () => {
     expect(follow("theme=dark")).toBe("no");
+  });
+
+  it("leaves a root that already carries the value untouched, so the page is not restyled", () => {
+    const { root } = stubRoot({ [SIGNED_IN_ATTRIBUTE]: "no" });
+    followSignedInHint(root, "theme=dark");
+    expect(root.writes).toBe(0);
+    followSignedInHint(root, "nakafa-signed-in=1");
+    expect(root.writes).toBe(1);
   });
 });

@@ -4,9 +4,11 @@ import { Deferred, Effect, MutableList, Schema } from "effect";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { waitForStill } from "@/e2e/support/quiet";
 import { createSchool, inviteLearner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 const SESSION_READ = "**/api/auth/refresh*";
 
@@ -419,6 +421,72 @@ test.describe("the signed-in sidebar footer", () => {
         Effect.fromNullishOr(baseURL).pipe(
           Effect.flatMap((origin) => verifyNoKeptRow(page, origin))
         )
+      )
+    );
+  });
+});
+
+/** The class of the root while the dark theme applies. */
+const DARK_THEME_CLASS = /(?:^|\s)dark(?:\s|$)/u;
+
+test.describe("the account menu on a phone", () => {
+  test.use({
+    hasTouch: true,
+    isMobile: true,
+    viewport: { height: touchViewport.height, width: touchViewport.width },
+  });
+
+  test("raises the theme submenu as a sheet that shows its themes from the top over a menu and a sidebar that stay still, and applies the one chosen", async ({
+    baseURL,
+    page,
+  }) => {
+    await Effect.runPromise(
+      withObservedPageErrors(
+        page,
+        Effect.gen(function* () {
+          yield* signInLearner(page.context(), baseURL ?? "");
+          yield* Effect.promise(async () => {
+            await page.goto("/en/quran/4");
+            const toggle = page
+              .getByRole("button", { name: "Toggle sidebar" })
+              .first();
+            await waitUntilTakenOver(toggle);
+            await toggle.tap();
+            const sidebar = page.locator('[data-slot="drawer-content"]');
+            await waitForStill(sidebar);
+            await sidebar
+              .locator('[data-account="member"]')
+              .locator(
+                'button[data-sidebar="menu-button"][aria-haspopup="menu"]'
+              )
+              .tap();
+            const menu = page.getByRole("menu").filter({ hasText: "Logout" });
+            await waitForStill(menu);
+            await menu
+              .getByRole("menuitem", { exact: true, name: "Theme" })
+              .tap();
+            const themes = page.getByRole("menu", {
+              exact: true,
+              name: "Theme",
+            });
+            // The sheet shows its themes from its top, in view, as it rises.
+            await expect(
+              themes.getByRole("menuitem", { exact: true, name: "Light" })
+            ).toBeInViewport();
+            await waitForStill(themes);
+            // The sheets behind it never move or shrink.
+            for (const behind of [sidebar, menu]) {
+              await expect(behind).toHaveCSS("transform", "none");
+            }
+            // A theme chosen on the sheet applies, and closes the sheet and the menu under it.
+            await themes
+              .getByRole("menuitem", { exact: true, name: "Dark" })
+              .tap();
+            await expect(page.locator("html")).toHaveClass(DARK_THEME_CLASS);
+            await expect(themes).toBeHidden();
+            await expect(menu).toBeHidden();
+          });
+        })
       )
     );
   });

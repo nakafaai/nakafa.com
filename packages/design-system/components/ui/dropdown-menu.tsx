@@ -260,8 +260,8 @@ const StackedSubmenu = createContext<{
  * opened it and left the focus on the trigger, and closes only the submenu, as every open layer leaves to the one above
  * it. UI SDK 0.1.0-beta.13 closes the whole menu there (https://github.com/vercel-labs/ui/issues/1006).
  *
- * On a phone the submenu rises as a sheet of its own over its menu's sheet, which steps back in view behind it; a swipe
- * down returns to the menu. UI SDK would draw it inside the menu's sheet with the menu's other rows hidden, so there it
+ * On a phone the submenu rises as a sheet of its own over its menu's sheet, which stays still behind it; a swipe down
+ * returns to the menu. UI SDK would draw it inside the menu's sheet with the menu's other rows hidden, so there it
  * is a menu of its own, opened by its trigger row through a controller. The row stays in the menu's sheet, so the new
  * sheet stacks on the menu's layer. A choice that closes the submenu closes the menu too, as it does beside the menu.
  */
@@ -374,7 +374,10 @@ function DropdownMenuSubTrigger({
 
 /**
  * A submenu's popup, beside its trigger, or on a phone a sheet of its own over its menu's sheet. Both are a menu's popup,
- * with its own label.
+ * with its own label. The sheet of its own is drawn at the end of the page, never inside its menu's sheet: where the
+ * browser has a top layer UI SDK draws a popup where it is written, and a sheet reveals a control focused inside it by
+ * scrolling the nearest scroll around that control, so the menu's sheet took the submenu, focused as it opens, for a
+ * field and scrolled its list to the end (https://github.com/vercel-labs/ui/issues/1016).
  */
 function DropdownMenuSubContent({
   className,
@@ -390,6 +393,7 @@ function DropdownMenuSubContent({
   return (
     <DropdownMenu
       {...stacked.options}
+      container={document.body}
       controller={stacked.controller}
       onOpenChange={(open, details) => {
         stacked.options.onOpenChange?.(open, details);
