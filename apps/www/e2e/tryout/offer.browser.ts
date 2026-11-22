@@ -141,6 +141,13 @@ const finishOtherSections = Effect.fn("NakafaE2E.finishOtherTryoutSections")(
         timeout: readinessTimeoutMilliseconds,
       })
     );
+    // Continue keeps its name from the last load while the learner's read is pending, and the path under it stands
+    // hidden then with every part still to do, so the parts are counted once the read marks the next one.
+    yield* Effect.promise(() =>
+      expect(
+        paneOf(page).locator('ol button[data-part-step="next"]')
+      ).toBeVisible({ timeout: readinessTimeoutMilliseconds })
+    );
     const left = yield* Effect.promise(() =>
       paneOf(page)
         .locator(

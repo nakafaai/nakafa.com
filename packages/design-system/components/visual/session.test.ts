@@ -197,6 +197,31 @@ describe("opening a stay across the screen", () => {
       yield* closeSession(session);
     })
   );
+
+  it.effect(
+    "keeps a menu the card opened in the page's body, and the submenu it opens, as the card's",
+    () =>
+      Effect.gen(function* () {
+        const { onExit, session } = yield* openTestSession();
+        element("inside").setAttribute("aria-controls", "menu");
+        // Safari before 17 has no popovers, so the menu stands in `body`, outside the card.
+        document.body.insertAdjacentHTML(
+          "beforeend",
+          `<div id="menu"><button aria-controls="submenu">More</button></div>
+         <div id="submenu"><span><button id="deep">Deep</button></span></div>
+         <div><button id="stray" aria-controls="nothing">Stray</button></div>`
+        );
+
+        element("menu").querySelector("button")?.focus();
+        element("deep").focus();
+        expect(onExit).not.toHaveBeenCalled();
+
+        // A popup no part of the card opened is another element, as a dialog is.
+        element("stray").focus();
+        expect(onExit).toHaveBeenCalledOnce();
+        yield* closeSession(session);
+      })
+  );
 });
 
 describe("a stay across the screen", () => {

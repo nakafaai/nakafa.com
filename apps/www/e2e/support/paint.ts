@@ -59,14 +59,22 @@ export const recordPaints = (
         const matches = [
           ...document.querySelectorAll<HTMLElement>(query),
         ].filter((candidate) => (candidate.textContent ?? "").includes(needle));
-        // A shown match is the one a reader sees, so a hidden twin never stands in for it.
+        // A popup that stands inside another, as a submenu stands inside its menu, makes the outer one hold its text
+        // too, so only a match that holds no other match is the popup the text belongs to. Of those, a shown one is the
+        // one a reader sees, so a hidden twin never stands in for it.
+        const inner = matches.filter(
+          (candidate) =>
+            !matches.some(
+              (other) => other !== candidate && candidate.contains(other)
+            )
+        );
         const element =
-          matches.find((candidate) =>
+          inner.find((candidate) =>
             candidate.checkVisibility({
               checkOpacity: true,
               checkVisibilityCSS: true,
             })
-          ) ?? matches[0];
+          ) ?? inner[0];
         samples.push({
           at: now - start,
           controls: element?.querySelectorAll(controlQuery).length ?? 0,
