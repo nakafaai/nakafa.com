@@ -35,9 +35,28 @@ export function hideFullscreenApi() {
   });
 }
 
-/** Removes popovers the way Safari before version 17 lacks them. */
+/**
+ * Removes popovers the way Safari before version 17 lacks them: no popover methods, and no meaning for the `popover`
+ * attribute. UI SDK still writes `popover="manual"` on a popup's host and tries `showPopover`, which such a Safari
+ * ignores, so the host stays in the page where its z-index lays it over the rest. This engine's own style sheet would
+ * hide every host whose popover is closed, so the attribute is taken off as soon as it is written, as that Safari
+ * never reads it.
+ */
 export function hidePopoverApi() {
-  Reflect.deleteProperty(HTMLElement.prototype, "showPopover");
+  for (const method of ["showPopover", "hidePopover", "togglePopover"]) {
+    Reflect.deleteProperty(HTMLElement.prototype, method);
+  }
+  new MutationObserver((changes) => {
+    for (const change of changes) {
+      if (change.target instanceof Element) {
+        change.target.removeAttribute("popover");
+      }
+    }
+  }).observe(document, {
+    attributeFilter: ["popover"],
+    attributes: true,
+    subtree: true,
+  });
 }
 
 /**
@@ -180,13 +199,16 @@ export const revealMenuItem = Effect.fn("NakafaE2E.revealVisualMenuItem")(
 );
 
 /**
- * Reads where the card's slot and the lesson around it sit in the page, and
- * the viewport they are laid out in.
+ * Reads where the card's slot sits in the page, and the viewport it is laid out
+ * in. Anything above the slot that moved, or a slot that lost the card's
+ * height, moves the slot's box or the page's scroll. What stands below it is
+ * left out: a visual card further down that the reader has not neared yet
+ * stands in at its fallback height (`content-auto-card`) until it is first
+ * drawn, and drawing it then changes nothing above.
  */
 export function readPlacement(card: Locator) {
   return card.evaluate(
     (element, visualCard) => ({
-      article: element.closest("article")?.getBoundingClientRect().height,
       scrollY: window.scrollY,
       slot: element.closest(visualCard)?.getBoundingClientRect().toJSON(),
       viewport: { height: window.innerHeight, width: window.innerWidth },

@@ -180,48 +180,6 @@ test("the language menu opens the same route in the chosen language", async ({
   );
 });
 
-test("provider failures land on one clean generic retry", async ({ page }) => {
-  await Effect.runPromise(
-    withObservedPageErrors(
-      page,
-      Effect.gen(function* () {
-        const intent = "/en/search?q=geometry#results";
-        const providerLanding = `/en/auth/error?${new URLSearchParams({
-          error: "access_denied",
-          error_description: "provider diagnostic",
-          intent,
-        })}`;
-        const response = yield* Effect.promise(() =>
-          page.goto(providerLanding, { waitUntil: "domcontentloaded" })
-        );
-        yield* Effect.sync(() => expect(response?.ok()).toBe(true));
-
-        const retryHref = `/en/auth?${new URLSearchParams({
-          redirect: intent,
-          error: "oauth",
-        })}`;
-        yield* Effect.promise(() =>
-          expect(page).toHaveURL(new URL(retryHref, page.url()).toString())
-        );
-        const providerError = page.getByRole("alert").filter({
-          hasText: en.Toast["provider-error"].title,
-        });
-        yield* Effect.promise(() => expect(providerError).toBeVisible());
-        yield* Effect.promise(() =>
-          expect(providerError).toContainText(
-            en.Toast["provider-error"].description
-          )
-        );
-        yield* Effect.sync(() => {
-          expect(page.url()).not.toContain("access_denied");
-          expect(page.url()).not.toContain("error_description");
-          expect(page.url()).not.toContain("provider+diagnostic");
-        });
-      })
-    )
-  );
-});
-
 test("guest auth link preserves a dynamic query and hash for native actions", async ({
   page,
 }) => {

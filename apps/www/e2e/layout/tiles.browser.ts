@@ -10,10 +10,13 @@ const TILE_WIDTHS = [320, 390, 768, 1024, 1440];
 const QURAN_WIDTHS = [390, 768, 1440];
 /** The most two sizes or two centers may differ, in pixels. */
 const TOLERANCE = 1;
-/** The square of each home tile, above its name. */
-const TILE = "main a:has(> h2) > div:first-child";
+/** Each tile of the home: the square that marks a section's door and each row of its sections. */
+const TILE = 'main [data-slot="tile"]';
 
-/** The owner saw the four home tiles wide on a phone, so each one is measured square. */
+/**
+ * The owner saw the home's tiles wide on a phone, so each one is measured square. The home stands in three sections
+ * since #2519, and a new learner's holds a tile on each section's door.
+ */
 test("every home tile stays square at every width", async ({
   baseURL,
   browser,
@@ -25,7 +28,7 @@ test("every home tile stays square at every width", async ({
   for (const width of TILE_WIDTHS) {
     await page.setViewportSize({ height: 900, width });
     await page.goto(HOME);
-    await expect(page.locator(TILE)).toHaveCount(4, {
+    await expect(page.locator(TILE).first()).toBeVisible({
       timeout: readinessTimeoutMilliseconds,
     });
     const sizes = await page

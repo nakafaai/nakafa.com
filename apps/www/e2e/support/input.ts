@@ -19,13 +19,21 @@ const PressOptionsSchema = Schema.Struct({
 
 type PressOptions = typeof PressOptionsSchema.Type;
 
-/** Clicks or taps a control with the given options. */
-export function press(
+/**
+ * Clicks or taps a control with the given options. A tap waits until the control holds still first: on a touch
+ * screen a sheet rises by its host's scroll, and a tap that scrolled a control of a rising sheet into view would move
+ * that scroll, so the sheet, and the control would never hold still for Playwright's own check.
+ */
+export async function press(
   control: Locator,
   hasTouch: boolean,
   options: PressOptions = {}
 ) {
-  return hasTouch ? control.tap(options) : control.click(options);
+  if (!hasTouch) {
+    return control.click(options);
+  }
+  await waitForStill(control);
+  return control.tap(options);
 }
 
 /**

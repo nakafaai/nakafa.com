@@ -5,13 +5,46 @@ import {
 import { Effect, Exit, Predicate, Scope } from "effect";
 
 /**
+ * Whether an element belongs to the card: inside it, or inside a popup that a
+ * part of the card opened, as the menu of its actions band is. A browser with
+ * popovers draws that popup in place, inside the card, but one without them,
+ * such as Safari before 17, draws it in the page's body, so the popup is found
+ * by the trigger that names it (`aria-controls`), and a popup that one opened
+ * by its own trigger in turn.
+ */
+function belongsToCard(card: HTMLElement, element: Element): boolean {
+  if (card.contains(element)) {
+    return true;
+  }
+  for (
+    let node: Element | null = element;
+    node !== null;
+    node = node.parentElement
+  ) {
+    const opener =
+      node.id === ""
+        ? null
+        : document.querySelector(`[aria-controls="${CSS.escape(node.id)}"]`);
+    if (opener !== null) {
+      return belongsToCard(card, opener);
+    }
+  }
+  return false;
+}
+
+/**
  * Whether focus left the card for another element, such as a dialog. A press
  * on the card's own content, such as its canvas, moves focus to the nearest
- * focusable element around it, which still holds the card.
+ * focusable element around it, which still holds the card, and a popup the
+ * card opened holds it too.
  */
 function hasFocusLeft(card: HTMLElement) {
   const active = document.activeElement;
-  return !(active === null || card.contains(active) || active.contains(card));
+  return !(
+    active === null ||
+    active.contains(card) ||
+    belongsToCard(card, active)
+  );
 }
 
 /** Listens to the document until the scope closes. */
