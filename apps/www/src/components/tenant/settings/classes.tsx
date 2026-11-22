@@ -206,7 +206,7 @@ function SchoolClassesOfPeriod() {
       <SettingsTablePage actions={<ClassesActions />}>
         <EmptyState
           description={t("classes-unavailable-description")}
-          scene={<EmptyNina act="labeling" />}
+          scene={<EmptyNina act="orienting" />}
           title={t("classes-unavailable")}
         />
       </SettingsTablePage>
@@ -231,7 +231,7 @@ function SchoolClassesOfPeriod() {
             </Link>
           }
           description={t("classes-no-period")}
-          scene={<EmptyNina act="labeling" />}
+          scene={<EmptyNina act="flagging" />}
           title={t("cohorts-no-period-title")}
         />
       </SettingsTablePage>

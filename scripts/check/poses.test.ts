@@ -37,8 +37,8 @@ export function Rooms() {
 }`,
         }),
         [
-          `apps/www/src/components/exams.tsx:3: Nina is "pointing" here and in 1 other place (apps/www/src/components/rooms.tsx). ${FIX}`,
-          `apps/www/src/components/rooms.tsx:3: Nina is "pointing" here and in 1 other place (apps/www/src/components/exams.tsx). ${FIX}`,
+          `apps/www/src/components/exams.tsx:3: Nina is "pointing" here and in 1 other place (apps/www/src/components/rooms.tsx:3). ${FIX}`,
+          `apps/www/src/components/rooms.tsx:3: Nina is "pointing" here and in 1 other place (apps/www/src/components/exams.tsx:3). ${FIX}`,
         ]
       );
     })
@@ -74,14 +74,36 @@ export function E() {
 }`,
         });
         assert.deepStrictEqual(Arr.take(findings, 1), [
-          `apps/www/src/components/a.tsx:3: Nina is "searching" here and in 4 other places (apps/www/src/components/b.tsx, apps/www/src/components/c.tsx, apps/www/src/components/d.tsx, and 1 more). ${FIX}`,
+          `apps/www/src/components/a.tsx:3: Nina is "searching" here and in 4 other places (apps/www/src/components/b.tsx:2, apps/www/src/components/c.tsx:2, apps/www/src/components/d.tsx:3, and 1 more). ${FIX}`,
         ]);
         assert.strictEqual(findings.length, 5);
       })
   );
 
   it.effect(
-    "accepts one act in several states of one module, a wrapper that hands its act on, a toy, and what is no act of hers",
+    "rejects one act in two states of one module, such as a refusal and an empty list",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspect({
+            "apps/www/src/components/classes.tsx": `
+export function Classes({ denied }) {
+  if (denied) {
+    return <EmptyState scene={<EmptyNina act="teaching" />} title={t("denied")} />;
+  }
+  return <EmptyState scene={<EmptyNina act="teaching" />} title={t("empty")} />;
+}`,
+          }),
+          [
+            `apps/www/src/components/classes.tsx:4: Nina is "teaching" here and in 1 other place (apps/www/src/components/classes.tsx:6). ${FIX}`,
+            `apps/www/src/components/classes.tsx:6: Nina is "teaching" here and in 1 other place (apps/www/src/components/classes.tsx:4). ${FIX}`,
+          ]
+        );
+      })
+  );
+
+  it.effect(
+    "accepts an act read from a table of scenes once, a wrapper that hands its act on, a toy, and what is no act of hers",
     () =>
       Effect.gen(function* () {
         assert.deepStrictEqual(
@@ -90,11 +112,12 @@ export function E() {
 let unset;
 const { held } = table;
 function helper() {}
+const SCENES = { missing: { act: "searching" } };
 export function Classes() {
   return (
     <>
-      <EmptyState scene={<EmptyNina act="teaching" />} title={t("denied")} />
       <EmptyState scene={<EmptyNina act="teaching" />} title={t("empty")} />
+      <Nina act={SCENES.missing.act} whole />
       <Nina label="" size={32} />
       <this.Nina act="teaching" />
       <Button act="teaching" />

@@ -74,7 +74,7 @@ export function ReportLineDetail({ lines }: { lines: readonly ReportLine[] }) {
       {found.report === null ? (
         <PaneBody>
           <EmptyState
-            scene={<EmptyNina act="tallying" />}
+            scene={<EmptyNina act="quilling" />}
             title={t("report-empty")}
           />
         </PaneBody>
