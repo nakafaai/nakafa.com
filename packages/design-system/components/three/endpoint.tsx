@@ -112,9 +112,16 @@ export function EndpointRing({
   const ring = useRef<Mesh>(null);
   const transform = useMemo(
     () => ({
+      lastParent: new Matrix4().multiplyScalar(0),
+      lastRotation: new Quaternion(
+        Number.NaN,
+        Number.NaN,
+        Number.NaN,
+        Number.NaN
+      ),
       position: new Vector3(),
-      scale: new Vector3(),
       rotation: new Quaternion(),
+      scale: new Vector3(),
       world: new Matrix4(),
     }),
     []
@@ -128,9 +135,17 @@ export function EndpointRing({
     }
     mesh.parent.updateWorldMatrix(true, false);
     const parent = mesh.parent.matrixWorld;
+    camera.getWorldQuaternion(transform.rotation);
+    if (
+      transform.lastParent.equals(parent) &&
+      transform.lastRotation.equals(transform.rotation)
+    ) {
+      return;
+    }
+    transform.lastParent.copy(parent);
+    transform.lastRotation.copy(transform.rotation);
     transform.position.copy(position).applyMatrix4(parent);
     transform.scale.setFromMatrixScale(parent);
-    camera.getWorldQuaternion(transform.rotation);
     transform.world.compose(
       transform.position,
       transform.rotation,

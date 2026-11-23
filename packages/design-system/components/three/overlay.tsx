@@ -180,6 +180,10 @@ interface SceneHtmlProps {
   style?: CSSProperties | undefined;
 }
 
+/** Reusable scratch vectors for raycasting without per-frame allocations. */
+const RAYCAST_SCREEN = new Vector3();
+const RAYCAST_NDC = new Vector2();
+
 /**
  * Whether the camera ray through a point reaches the point before any object of
  * the scene does. The ray runs from the camera through the point's screen
@@ -191,13 +195,48 @@ function isUnobstructed(
   raycaster: Raycaster,
   scene: Scene
 ): boolean {
-  const screen = new Vector3().copy(point).project(camera);
-  raycaster.setFromCamera(new Vector2(screen.x, screen.y), camera);
+  RAYCAST_SCREEN.copy(point).project(camera);
+  RAYCAST_NDC.set(RAYCAST_SCREEN.x, RAYCAST_SCREEN.y);
+  raycaster.setFromCamera(RAYCAST_NDC, camera);
   const nearest = Arr.head(raycaster.intersectObjects([scene], true));
   return isNearerThanHit(
     point.distanceTo(raycaster.ray.origin),
     Option.getOrUndefined(Option.map(nearest, (hit) => hit.distance))
   );
+}
+
+function writeOverlayPlacement(
+  element: HTMLElement,
+  last: {
+    visible: boolean;
+    x: number;
+    y: number;
+    zIndex: number;
+    zoom: number;
+  },
+  next: {
+    scale: number;
+    visible: boolean;
+    x: number;
+    y: number;
+    zIndex: number | undefined;
+    zoom: number;
+  }
+) {
+  if (next.visible !== last.visible) {
+    element.style.display = next.visible ? "block" : "none";
+  }
+  if (next.zIndex !== undefined && next.zIndex !== last.zIndex) {
+    element.style.zIndex = `${next.zIndex}`;
+  }
+  element.style.transform = `translate3d(${next.x}px, ${next.y}px, 0) scale(${next.scale})`;
+  return {
+    visible: next.visible,
+    x: next.x,
+    y: next.y,
+    zIndex: next.zIndex ?? last.zIndex,
+    zoom: next.zoom,
+  };
 }
 
 /**
@@ -219,7 +258,13 @@ export function SceneHtml({
   const invalidate = useThree((state) => state.invalidate);
   const anchor = useRef<Group>(null);
   // The placement the frame loop last wrote. drei caches the same four values.
-  const placement = useRef({ visible: true, x: 0, y: 0, zoom: 0 });
+  const placement = useRef({
+    visible: true,
+    x: 0,
+    y: 0,
+    zIndex: Number.NaN,
+    zoom: 0,
+  });
   const point = useMemo(() => new Vector3(), []);
 
   // Unmounting removes the label. Updates below replace it in place, so a
@@ -280,19 +325,19 @@ export function SceneHtml({
     const visible =
       !isBehindCamera(point, camera) &&
       (!occlude || isUnobstructed(point, camera, raycaster, scene));
-    if (visible !== last.visible) {
-      element.style.display = visible ? "block" : "none";
-    }
     const zIndex = objectZIndex(point, camera, LABEL_Z_INDEX_RANGE);
-    if (zIndex !== undefined) {
-      element.style.zIndex = `${zIndex}`;
-    }
     const scale =
       distanceFactor === undefined
         ? 1
         : objectScale(point, camera) * distanceFactor;
-    element.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
-    placement.current = { visible, x, y, zoom: camera.zoom };
+    placement.current = writeOverlayPlacement(element, last, {
+      scale,
+      visible,
+      x,
+      y,
+      zIndex,
+      zoom: camera.zoom,
+    });
     MutableHashSet.add(store.getState().placed, group.id);
   });
 

@@ -163,6 +163,18 @@ export function CoordinateGrid({
     () => new Vector3(origin.x, origin.y, origin.z),
     [origin]
   );
+  const lastFrame = useMemo<{
+    perspective: boolean | null;
+    span: number;
+    target: Vector3;
+  }>(
+    () => ({
+      perspective: null,
+      span: Number.NaN,
+      target: new Vector3(Number.NaN, Number.NaN, Number.NaN),
+    }),
+    []
+  );
 
   useEffect(
     () => () => {
@@ -176,6 +188,7 @@ export function CoordinateGrid({
   // Each plane stands at the world's center within itself, so its mesh stays
   // small wherever the origin lies, and its shader reads values from the origin.
   useEffect(() => {
+    lastFrame.span = Number.NaN;
     Arr.forEach(PLANES, ({ axes: [first, second] }, index) => {
       const uniforms = materials[index]?.uniforms;
       uniforms?.cellColor?.value.set(cellColor);
@@ -183,9 +196,9 @@ export function CoordinateGrid({
       uniforms?.origin?.value.set(origin[first], origin[second]);
       uniforms?.scale?.value.set(scale[first], scale[second]);
     });
-  }, [cellColor, materials, origin, scale, sectionColor]);
+  }, [cellColor, lastFrame, materials, origin, scale, sectionColor]);
 
-  // Camera presentation: rewrite the steps only when the zoom changes them.
+  // Camera presentation: rewrite the steps only when the camera span or target changes.
   useFrame(({ camera }) => {
     const target =
       controls && "target" in controls && controls.target instanceof Vector3
@@ -193,6 +206,16 @@ export function CoordinateGrid({
         : fallback;
     const span = visibleSpan(camera, target);
     const perspective = !(camera instanceof OrthographicCamera);
+    if (
+      lastFrame.span === span &&
+      lastFrame.perspective === perspective &&
+      lastFrame.target.equals(target)
+    ) {
+      return;
+    }
+    lastFrame.span = span;
+    lastFrame.perspective = perspective;
+    lastFrame.target.copy(target);
     Arr.forEach(PLANES, ({ axes: [first, second], id }, index) => {
       const uniforms = materials[index]?.uniforms;
       if (!uniforms) {

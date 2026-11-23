@@ -26,6 +26,10 @@ const CHARACTER = 7;
 type Axis = "x" | "y" | "z";
 
 const AXES: readonly Axis[] = ["x", "y", "z"];
+const FRONTAL_AXES = [
+  [0, "x"],
+  [1, "y"],
+] as const;
 
 /** A number's element, once React attaches it; the check never runs on the server. */
 const SpanSchema = Schema.declare(
@@ -70,6 +74,103 @@ function hideFrom(slots: readonly Slot[], from: number) {
       slot.visible = false;
     }
   }
+}
+
+function writeTarget(slot: Slot | undefined, text: string, transform: string) {
+  if (slot) {
+    write(slot, text, transform);
+  }
+}
+
+function formatFrontalTransform(
+  axis: "x" | "y",
+  along: number,
+  across: number,
+  textLength: number,
+  size: { height: number; width: number }
+): string {
+  if (axis === "x") {
+    const y = Math.min(size.height - GAP - LINE, Math.max(GAP, across + GAP));
+    return `translate(calc(${along}px - 50%), ${y}px)`;
+  }
+  const wide = textLength * CHARACTER;
+  const x = Math.min(size.width - GAP, Math.max(GAP + wide, across - GAP));
+  return `translate(calc(${x}px - 100%), ${along - LINE / 2}px)`;
+}
+
+function renderFrontalTicks(
+  ortho: OrthographicCamera,
+  size: { height: number; width: number },
+  origin: Point3,
+  scale: Point3,
+  pools: readonly (readonly Slot[])[],
+  formatNumber: (value: number, digits: number) => string
+) {
+  const width = (ortho.right - ortho.left) / ortho.zoom;
+  const height = (ortho.top - ortho.bottom) / ortho.zoom;
+  const left = ortho.position.x + ortho.left / ortho.zoom;
+  const top = ortho.position.y + ortho.top / ortho.zoom;
+  const short = Math.min(width, height);
+  const toX = (world: number) => ((world - left) / width) * size.width;
+  const toY = (world: number) => ((top - world) / height) * size.height;
+  for (const [index, axis] of FRONTAL_AXES) {
+    const slots = pools[index] ?? [];
+    const steps = gridSteps(short / scale[axis]);
+    const low =
+      axis === "x"
+        ? (left - origin.x) / scale.x
+        : (top - height - origin.y) / scale.y;
+    const high = low + (axis === "x" ? width / scale.x : height / scale.y);
+    const values = stepValues({ max: high, min: low }, steps.major, POOL);
+    const across = axis === "x" ? toY(origin.y) : toX(origin.x);
+    Arr.forEach(values, (value, slot) => {
+      const text = formatNumber(value, steps.digits);
+      const along =
+        axis === "x"
+          ? toX(origin.x + value * scale.x)
+          : toY(origin.y + value * scale.y);
+      writeTarget(
+        slots[slot],
+        text,
+        formatFrontalTransform(axis, along, across, text.length, size)
+      );
+    });
+    hideFrom(slots, values.length);
+  }
+  hideFrom(pools[2] ?? [], 0);
+}
+
+function updateTickCameraCache(
+  scratch: {
+    height: number;
+    lastProjection: Matrix4;
+    lastShowZAxis: boolean;
+    lastWorld: Matrix4;
+    lastZoom: number;
+    width: number;
+  },
+  camera: Camera,
+  size: { height: number; width: number },
+  showZAxis: boolean
+): boolean {
+  const zoom = camera instanceof OrthographicCamera ? camera.zoom : 1;
+  if (
+    scratch.lastWorld.equals(camera.matrixWorld) &&
+    scratch.lastProjection.equals(camera.projectionMatrix) &&
+    scratch.lastZoom === zoom &&
+    scratch.width === size.width &&
+    scratch.height === size.height &&
+    scratch.lastShowZAxis === showZAxis
+  ) {
+    return false;
+  }
+  scratch.lastWorld.copy(camera.matrixWorld);
+  scratch.lastProjection.copy(camera.projectionMatrix);
+  scratch.lastZoom = zoom;
+  scratch.width = size.width;
+  scratch.height = size.height;
+  scratch.lastShowZAxis = showZAxis;
+  return true;
 }
 
 /** Whether the camera looks straight down the z axis, as a flat scene's first view does. */
@@ -144,84 +245,46 @@ export function AxisTicks({
   const scratch = useRef({
     direction: new Vector3(),
     frustum: new Frustum(),
+    height: 0,
+    lastProjection: new Matrix4().multiplyScalar(0),
+    lastShowZAxis: showZAxis,
+    lastWorld: new Matrix4().multiplyScalar(0),
+    lastZoom: Number.NaN,
     point: new Vector3(),
     projection: new Matrix4(),
+    width: 0,
   }).current;
   const attach = useCallback(
     (axis: number, index: number) => (element: HTMLSpanElement | null) => {
       const slot = pools[axis]?.[index];
       if (slot) {
-        // A new element's state is unknown: the next frame writes or hides it.
+        // Each span starts with inline visibility: "hidden"; keep slot.visible
+        // aligned so the first drawn frame always reveals active ticks.
         slot.element = element;
-        slot.visible = element !== null;
+        slot.visible = false;
         slot.text = "";
         slot.transform = "";
       }
       if (element) {
+        scratch.width = 0;
         invalidate();
       }
     },
-    [invalidate, pools]
+    [invalidate, pools, scratch]
   );
 
   // OrbitControls runs at -1 and the overlay places its root at 0: write the
   // numbers between them, from the camera of the frame being drawn.
   useFrame(({ camera, size }) => {
     camera.updateMatrixWorld();
+    if (!updateTickCameraCache(scratch, camera, size, showZAxis)) {
+      return;
+    }
+
     if (isFrontal(camera, scratch.direction)) {
-      const ortho = camera;
-      const width = (ortho.right - ortho.left) / ortho.zoom;
-      const height = (ortho.top - ortho.bottom) / ortho.zoom;
-      const left = camera.position.x + ortho.left / ortho.zoom;
-      const top = camera.position.y + ortho.top / ortho.zoom;
-      const short = Math.min(width, height);
-      const toX = (world: number) => ((world - left) / width) * size.width;
-      const toY = (world: number) => ((top - world) / height) * size.height;
-      for (const [index, axis] of [
-        [0, "x"],
-        [1, "y"],
-      ] as const) {
-        const slots = pools[index] ?? [];
-        const steps = gridSteps(short / scale[axis]);
-        const low =
-          axis === "x"
-            ? (left - origin.x) / scale.x
-            : (top - height - origin.y) / scale.y;
-        const high = low + (axis === "x" ? width / scale.x : height / scale.y);
-        const values = stepValues({ max: high, min: low }, steps.major, POOL);
-        // The other axis's line, where the numbers stand unless it has left the view.
-        const across = axis === "x" ? toY(origin.y) : toX(origin.x);
-        Arr.forEach(values, (value, slot) => {
-          const text = format.number(value, "axis", {
-            maximumFractionDigits: steps.digits,
-          });
-          const along =
-            axis === "x"
-              ? toX(origin.x + value * scale.x)
-              : toY(origin.y + value * scale.y);
-          let transform: string;
-          if (axis === "x") {
-            const y = Math.min(
-              size.height - GAP - LINE,
-              Math.max(GAP, across + GAP)
-            );
-            transform = `translate(calc(${along}px - 50%), ${y}px)`;
-          } else {
-            const wide = text.length * CHARACTER;
-            const x = Math.min(
-              size.width - GAP,
-              Math.max(GAP + wide, across - GAP)
-            );
-            transform = `translate(calc(${x}px - 100%), ${along - LINE / 2}px)`;
-          }
-          const target = slots[slot];
-          if (target) {
-            write(target, text, transform);
-          }
-        });
-        hideFrom(slots, values.length);
-      }
-      hideFrom(pools[2] ?? [], 0);
+      renderFrontalTicks(camera, size, origin, scale, pools, (value, digits) =>
+        format.number(value, "axis", { maximumFractionDigits: digits })
+      );
       return;
     }
     // Seen at an angle: each axis carries its numbers along its visible part.
@@ -274,16 +337,13 @@ export function AxisTicks({
         scratch.point.project(camera);
         const x = ((scratch.point.x + 1) / 2) * size.width;
         const y = ((1 - scratch.point.y) / 2) * size.height;
-        const target = slots[slot];
-        if (target) {
-          write(
-            target,
-            format.number(value, "axis", {
-              maximumFractionDigits: steps.digits,
-            }),
-            `translate(calc(${x}px - 50%), ${y + GAP}px)`
-          );
-        }
+        writeTarget(
+          slots[slot],
+          format.number(value, "axis", {
+            maximumFractionDigits: steps.digits,
+          }),
+          `translate(calc(${x}px - 50%), ${y + GAP}px)`
+        );
       });
       hideFrom(slots, values.length);
     });
