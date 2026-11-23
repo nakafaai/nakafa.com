@@ -38,8 +38,8 @@ export const headingVariants = cva(
         h2: "text-2xl",
         h3: "text-xl",
         h4: "text-lg",
-        h5: "text-lg",
-        h6: "text-lg",
+        h5: "text-base",
+        h6: "text-base",
       },
     },
   }
@@ -90,7 +90,7 @@ export const scriptVariants = cva("text-sm");
 
 /** A quotation, on the muted callout surface. */
 export const quoteVariants = cva(
-  "border-foreground bg-muted my-4 rounded-r-xl border-l-2 p-4 italic"
+  "border-foreground bg-muted my-4 rounded-r-xl border-l-2 p-4"
 );
 
 /** A link in a text: in the link colour, underlined, at the weight of the words around it. */
@@ -130,7 +130,7 @@ export const tableHeadCellVariants = cva(
 
 /** A data cell of a table, with a rule between it and the next column. */
 export const tableCellVariants = cva(
-  "border-r px-4 py-2 align-middle wrap-anywhere last:border-r-0"
+  "border-r px-4 py-2 align-middle wrap-break-word last:border-r-0"
 );
 
 /**

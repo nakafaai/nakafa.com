@@ -132,6 +132,7 @@ export const loadSectionState = Effect.fn("tryouts.runtime.loadSectionState")(
       content: yield* readSectionBodies({
         access: graph.access,
         appLocale,
+        attemptSnapshotId: attempt.assessmentSnapshotId,
         placements: graph.placements,
       }),
       runtime: graph.runtime,

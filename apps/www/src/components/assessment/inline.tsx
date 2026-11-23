@@ -16,56 +16,60 @@ import { Array as Arr, Match } from "effect";
 import type { ReactNode } from "react";
 import { AssessmentInteraction } from "@/components/assessment/interaction";
 import { placeNodes } from "@/components/assessment/place";
+import type { InlineLeaf, InlineRun } from "@/components/assessment/runs";
+import { groupInlineNodes } from "@/components/assessment/runs";
 
 /**
  * The inline content of one block, or the rich text of a figure's title, label, or caption: text with
- * its marks, inline math, and line breaks. The place of an inline interaction draws its field inside the
- * line when the question draws its fields at their places (`AssessmentInteraction`), and nothing otherwise.
+ * its marks, inline math, and line breaks. Contiguous nodes sharing canonical marks render inside one
+ * continuous wrapper so text and inline formulas share one unbroken highlight pill. The place of an
+ * inline interaction draws its field inside the line when the question draws its fields at their places
+ * (`AssessmentInteraction`), and nothing otherwise.
  */
 export function InlineContent({
   nodes,
 }: {
   readonly nodes: readonly InlineNode[] | undefined;
 }) {
-  return Arr.map(placeNodes(nodes ?? []), ({ key, node }) => (
-    <InlinePiece key={key} node={node} />
+  return <InlineRuns runs={groupInlineNodes(nodes)} />;
+}
+
+/** A sequence of grouped inline runs in reading order. */
+function InlineRuns({ runs }: { readonly runs: readonly InlineRun[] }) {
+  return Arr.map(placeNodes(runs), ({ key, node }) => (
+    <InlineRunNode key={key} run={node} />
   ));
 }
 
-/** One inline node of a document. */
-function InlinePiece({ node }: { readonly node: InlineNode }) {
-  return Match.value(node).pipe(
-    Match.discriminatorsExhaustive("type")({
-      hardBreak: () => <br />,
-      inlineInteraction: ({ attrs }) => (
-        <AssessmentInteraction inline interaction={attrs.interaction} />
+/** One grouped inline run: either a leaf node or a shared mark around its child runs. */
+function InlineRunNode({ run }: { readonly run: InlineRun }) {
+  return Match.value(run).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      leaf: ({ node }) => <InlinePiece node={node} />,
+      mark: ({ children, mark }) => (
+        <TextMark mark={mark}>
+          <InlineRuns runs={children} />
+        </TextMark>
       ),
-      mathInline: ({ attrs }) => <InlineMath math={attrs.latex} />,
-      text: ({ marks, text }) => <MarkedText marks={marks ?? []} text={text} />,
     })
   );
 }
 
-/** A run of text inside its marks, the first mark outermost, as the document lists them. */
-function MarkedText({
-  marks,
-  text,
-}: {
-  readonly marks: readonly Mark[];
-  readonly text: string;
-}): ReactNode {
-  const [mark, ...inner] = marks;
-  if (mark === undefined) {
-    return text;
-  }
-  return (
-    <TextMark mark={mark}>
-      <MarkedText marks={inner} text={text} />
-    </TextMark>
+/** One leaf inline node of a document. */
+function InlinePiece({ node }: { readonly node: InlineLeaf }) {
+  return Match.value(node).pipe(
+    Match.discriminatorsExhaustive("type")({
+      hardBreak: () => <br />,
+      inlineInteraction: ({ interaction }) => (
+        <AssessmentInteraction inline interaction={interaction} />
+      ),
+      mathInline: ({ latex }) => <InlineMath math={latex} />,
+      text: ({ text }) => text,
+    })
   );
 }
 
-/** One mark around the text it holds. */
+/** One mark around the inline runs it holds. */
 function TextMark({
   children,
   mark,

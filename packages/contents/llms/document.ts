@@ -42,7 +42,8 @@ function inlineText(nodes: readonly InlineNode[] | undefined) {
         Match.discriminatorsExhaustive("type")({
           hardBreak: () => "\n",
           inlineInteraction: () => INLINE_ANSWER,
-          mathInline: ({ attrs }) => `$${attrs.latex}$`,
+          mathInline: ({ attrs, marks }) =>
+            Arr.reduce(marks ?? [], `$${attrs.latex}$`, markText),
           text: ({ marks, text }) => Arr.reduce(marks ?? [], text, markText),
         })
       )

@@ -181,9 +181,12 @@ export function TryoutPracticeChecked({
         />
       </PlayerQuestionAnswer>
       {QueryResult.isSuccess(explained) ? (
-        <section className="space-y-6 pb-8">
+        <section
+          aria-label={t("explanation")}
+          className="scroll-mt-44 space-y-6 pb-8"
+          id={readQuestionIds(question.questionOrder).explanation}
+        >
           <Separator />
-          <h3 className="text-lg font-medium">{t("explanation")}</h3>
           {reading === null ? (
             <TryoutExplanationOffer />
           ) : (

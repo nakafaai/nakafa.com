@@ -10,12 +10,13 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
-import { HashSet } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { readQuestionIds } from "@/components/player/ids";
 import { PlayerQuestion } from "@/components/player/question";
+import { isExplanationOpen } from "@/components/tryout/review/context";
 import { useTryoutExplained } from "@/components/tryout/review/result";
+import { scrollExplanationIntoView } from "@/components/tryout/review/scroll";
 
 interface TryoutQuestionShellProps {
   readonly children: ReactNode;
@@ -38,7 +39,7 @@ export function TryoutReviewQuestionShell({
 }) {
   const ids = readQuestionIds(questionOrder);
   const open = useTryoutExplained((state) =>
-    HashSet.has(state.open, questionKey)
+    isExplanationOpen(state, questionKey)
   );
   const toggle = useTryoutExplained((state) => state.toggle);
 
@@ -48,7 +49,14 @@ export function TryoutReviewQuestionShell({
       labelledBy={ids.title}
       questionKey={questionKey}
     >
-      <Collapsible onOpenChange={() => toggle(questionKey)} open={open}>
+      <Collapsible
+        onOpenChange={() => {
+          if (toggle(questionKey)) {
+            scrollExplanationIntoView(ids.explanation);
+          }
+        }}
+        open={open}
+      >
         {children}
       </Collapsible>
     </PlayerQuestion>
@@ -82,15 +90,16 @@ export function TryoutReviewQuestionExplanation({
   questionOrder,
 }: TryoutQuestionShellProps) {
   const tTryouts = useTranslations("Tryouts");
-  const explanationId = `question-${questionOrder}-explanation`;
+  const ids = readQuestionIds(questionOrder);
 
   return (
     <CollapsiblePanel>
-      <section aria-labelledby={explanationId} className="space-y-6 pb-8">
+      <section
+        aria-label={tTryouts("explanation")}
+        className="scroll-mt-44 space-y-6 pb-8"
+        id={ids.explanation}
+      >
         <Separator />
-        <h3 className="scroll-mt-44 text-lg font-medium" id={explanationId}>
-          {tTryouts("explanation")}
-        </h3>
         {children}
       </section>
     </CollapsiblePanel>
