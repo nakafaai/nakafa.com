@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Deferred, Effect } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
 import { createSchool, hostAddress } from "@/e2e/support/school";
+import { toastSaying } from "@/e2e/support/toast";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The entry address that holds the school username form alone. */
@@ -19,7 +20,7 @@ test("a signed-in learner who is not a member gets the card form at once, while 
   await Effect.runPromise(signInLearner(context, schoolHome));
   const page = await context.newPage();
   const released = Deferred.makeUnsafe<void>();
-  await page.route("**/api/auth/sign-out", (route) =>
+  await page.route("**/api/auth/signout", (route) =>
     Effect.runPromise(
       Deferred.await(released).pipe(
         Effect.andThen(() => Effect.promise(() => route.continue()))
@@ -35,7 +36,7 @@ test("a signed-in learner who is not a member gets the card form at once, while 
   await expect(page).toHaveURL(USERNAME_ADDRESS);
 
   // The home reads signed out only once the sign-out has answered, so the reload waits for it.
-  const signedOut = page.waitForResponse("**/api/auth/sign-out");
+  const signedOut = page.waitForResponse("**/api/auth/signout");
   Effect.runSync(Deferred.succeed(released, undefined));
   await signedOut;
   await expect(page.getByLabel("School username")).toBeVisible();
@@ -55,7 +56,7 @@ test("a sign-out that fails returns the outsider to the not-member page with its
   const context = await browser.newContext();
   await Effect.runPromise(signInLearner(context, schoolHome));
   const page = await context.newPage();
-  await page.route("**/api/auth/sign-out", (route) =>
+  await page.route("**/api/auth/signout", (route) =>
     route.fulfill({ status: 500 })
   );
   await page.goto(schoolHome);
@@ -64,7 +65,7 @@ test("a sign-out that fails returns the outsider to the not-member page with its
 
   await switchAccount.click();
 
-  await expect(page.getByText("We could not sign you out.")).toBeVisible();
+  await expect(toastSaying(page, "We could not sign you out.")).toBeVisible();
   await expect(
     page.getByRole("heading", { name: `Not a member of ${school.name}` })
   ).toBeVisible();

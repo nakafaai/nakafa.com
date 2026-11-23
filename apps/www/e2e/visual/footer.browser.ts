@@ -52,7 +52,7 @@ const TEXT_BLOCKS =
  * status that only assistive technology hears.
  */
 const UNDRAWN =
-  '[popover], [role="tooltip"], [data-slot$="-content"], .sr-only[role="status"]';
+  '[popover], [role="tooltip"], [data-slot$="-content"], [data-popup-place], .sr-only[role="status"]';
 
 /**
  * Reads what the toolbar and actions bands of every visual card on the page
