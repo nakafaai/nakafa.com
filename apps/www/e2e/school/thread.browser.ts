@@ -5,6 +5,7 @@ import {
   readRecordedLayoutShifts,
   recordLayoutShifts,
 } from "@/e2e/support/layout";
+import { reachMessage } from "@/e2e/support/message";
 import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
@@ -149,6 +150,8 @@ const closeThread = async (page: Page, width: number) => {
     page.getByRole("dialog").getByRole("button", { exact: true, name: "Close" })
   ).toHaveCount(0);
   await page.keyboard.press("Escape");
+  // A press while the sheet slides away is lost (vercel-labs/ui#928), so the reader presses once it is gone.
+  await expect(page.locator("[data-slot=discussion]")).toHaveCount(0);
 };
 
 /** The layout shift that no press or key caused, since the page loaded. */
@@ -220,7 +223,7 @@ for (const viewport of SCREENS) {
 
     // A message's toolbar, its menu, the hide dialog and the emoji chooser, each drawn as it opens.
     const sixth = messageRow(page, "Pesan 6");
-    await sixth.hover();
+    await reachMessage(sixth);
     await shot("toolbar");
     await sixth.getByRole("button", { name: "More actions" }).click();
     await expect(
@@ -233,7 +236,7 @@ for (const viewport of SCREENS) {
     await shot("hide");
     await page.keyboard.press("Escape");
     await expect(hide).toBeHidden();
-    await sixth.hover();
+    await reachMessage(sixth);
     await sixth.getByRole("button", { name: "React" }).click();
     const chooser = page.locator("[data-slot=emoji-panel]");
     await expect(
@@ -246,7 +249,7 @@ for (const viewport of SCREENS) {
 
     // Reply in thread opens the pane at once, drawn from the message, and the chat stays as it was.
     const fifth = messageRow(page, "Pesan 5");
-    await fifth.hover();
+    await reachMessage(fifth);
     await fifth.getByRole("button", { name: "Reply in thread" }).click();
     await page.waitForURL(threadPath(1));
     const pane = page.locator("[data-slot=discussion]");
@@ -257,7 +260,7 @@ for (const viewport of SCREENS) {
     if (viewport.width >= BESIDE_FROM) {
       // The message whose thread stands open keeps its selected look, and its chat stays the open one in the list.
       await expect(fifth).toHaveAttribute("data-selected", "");
-      await expect(page.locator('li[data-open="true"]')).toHaveCount(1);
+      await expect(page.locator("li[data-open]")).toHaveCount(1);
     }
     expect(await removedMessages(page)).toBe(0);
     await shot("open");
@@ -284,12 +287,12 @@ for (const viewport of SCREENS) {
 
     // Another message starts its own thread; from the laptop width it changes in the pane beside the chat.
     const third = messageRow(page, "Pesan 3");
-    await third.hover();
+    await reachMessage(third);
     await third.getByRole("button", { name: "Reply in thread" }).click();
     await page.waitForURL(threadPath(2));
     await expect(pane.getByText("Pesan 3")).toBeVisible();
     if (viewport.width >= BESIDE_FROM) {
-      await fifth.hover();
+      await reachMessage(fifth);
       await summary.click();
       await page.waitForURL(threadPath(1));
       await expect(pane.getByText("Balasan pertama di thread.")).toBeVisible();

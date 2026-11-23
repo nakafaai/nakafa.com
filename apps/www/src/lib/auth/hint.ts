@@ -1,4 +1,5 @@
 import { Array as Arr, Option, Schema } from "effect";
+import { sharedCookieDomain } from "@/lib/auth/domain";
 import type { ClientSession } from "@/lib/auth/visitor";
 
 /**
@@ -17,10 +18,11 @@ const HINT_MAX_AGE = 60 * 60 * 24 * 7;
 
 /**
  * Where the hint cookie lives: the domain of the session cookie, so every school
- * host under it reads the hint, and whether the site is served over https.
+ * host under it reads the hint, or no domain where the session cookie keeps to
+ * its host, and whether the site is served over https.
  */
 const HintScope = Schema.Struct({
-  domain: Schema.String,
+  domain: Schema.UndefinedOr(Schema.String),
   secure: Schema.Boolean,
 });
 
@@ -28,7 +30,8 @@ type HintScope = typeof HintScope.Type;
 
 /** The attributes that every hint cookie shares. */
 function hintAttributes(scope: HintScope) {
-  return `Domain=${scope.domain}; Path=/; SameSite=Lax${scope.secure ? "; Secure" : ""}`;
+  const domain = scope.domain === undefined ? "" : `Domain=${scope.domain}; `;
+  return `${domain}Path=/; SameSite=Lax${scope.secure ? "; Secure" : ""}`;
 }
 
 /** The cookie that a response sets when the visitor has a session. */
@@ -48,10 +51,10 @@ export function hintCookieFor(session: ClientSession, scope: HintScope) {
     : expiredHintCookie(scope);
 }
 
-/** The scope of the hint cookie that the site's own URL names: its host, and https when the site has it. */
+/** The scope of the hint cookie that the site's own URL names: its session cookie's domain, and https when the site has it. */
 export function hintScopeFor(site: URL): HintScope {
   return HintScope.make({
-    domain: site.hostname,
+    domain: sharedCookieDomain(site),
     secure: site.protocol === "https:",
   });
 }

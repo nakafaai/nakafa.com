@@ -45,6 +45,7 @@ import { EmptyState } from "@/components/state/empty";
 import { LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
 import { ChannelUnread } from "@/components/tenant/classes/channels";
+import { useIsOpenThread } from "@/components/tenant/classes/forum/open";
 import {
   archiveThreadUpdate,
   restoreThreadUpdate,
@@ -196,10 +197,12 @@ function ThreadItem({ row }: { row: typeof ThreadRow.Type }) {
   const tCommon = useTranslations("Common");
   const { can, classSlug, slug } = useClassScope();
   const { discussion } = row;
+  const open = useIsOpenThread(discussion.number);
 
   return (
     <Item
-      className="hover:bg-muted has-[a[data-status=active]]:bg-accent relative"
+      className="hover:bg-muted data-open:bg-accent relative"
+      data-open={open ? "" : undefined}
       render={<li />}
       size="sm"
     >
@@ -209,6 +212,7 @@ function ThreadItem({ row }: { row: typeof ThreadRow.Type }) {
       <ItemContent className="min-w-0">
         <ItemTitle className="w-full">
           <TargetLink
+            aria-current={open ? "page" : undefined}
             className="flex min-w-0 items-center gap-2 font-medium after:absolute after:inset-0"
             dir="auto"
             target={schoolClassDiscussionTarget(

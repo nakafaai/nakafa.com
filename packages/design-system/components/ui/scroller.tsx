@@ -38,7 +38,10 @@ export function MessageScroller({
 /**
  * The scrolling part of a message list. The package's viewport, which keeps the list at its end, is the viewport
  * of a scroll area, so its bar overlays the messages and takes no room, as every other scroller's does. The parts
- * keep their message scroller slots, which the place a reader left and the browser tests find them by.
+ * keep their message scroller slots, which the place a reader left and the browser tests find them by. The height
+ * comes down as flex, as `ScrollArea`'s does, never as a percentage of a percentage: WebKit reads the viewport's
+ * `height: 100%` of a scroll area whose own height is a share of a flex item as its content's height, so a list in a
+ * sheet grew past the sheet and never scrolled.
  */
 export function MessageScrollerViewport({
   children,
@@ -46,10 +49,10 @@ export function MessageScrollerViewport({
   ...props
 }: ComponentProps<typeof Primitive.Viewport>) {
   return (
-    <ScrollArea className="relative size-full min-h-0 min-w-0">
+    <ScrollArea className="relative flex min-h-0 min-w-0 flex-1 flex-col">
       <ScrollAreaViewport
         className={cn(
-          "size-full min-h-0 min-w-0 overscroll-contain contain-content outline-none data-pending-scroll:invisible",
+          "min-h-0 w-full min-w-0 flex-1 overscroll-contain contain-content outline-none data-pending-scroll:invisible",
           className
         )}
         render={

@@ -19,7 +19,10 @@ import { EmptyState } from "@/components/state/empty";
 import { DataFailure, LoadFailure } from "@/components/state/failure";
 import { EmptyNina } from "@/components/state/nina";
 import { ChannelMenu } from "@/components/tenant/classes/forum/menu";
-import { useOpening } from "@/components/tenant/classes/forum/open";
+import {
+  useIsOpenChat,
+  useOpening,
+} from "@/components/tenant/classes/forum/open";
 import { channelLabel } from "@/components/tenant/classes/label";
 import { useClassScope } from "@/components/tenant/classes/scope";
 import { TargetLink } from "@/lib/routing/link";
@@ -130,10 +133,12 @@ function ChannelItem({ channel }: { channel: typeof ChannelView.Type }) {
   const { classSlug, slug } = useClassScope();
   const reachChannel = useOpening((state) => state.reachChannel);
   const reach = () => reachChannel(channel.id);
+  const open = useIsOpenChat(channel.id);
 
   return (
     <Item
-      className="group/chat hover:bg-muted has-[a[data-status=active]]:bg-accent relative"
+      className="group/chat hover:bg-muted data-open:bg-accent relative"
+      data-open={open ? "" : undefined}
       render={<li />}
       size="sm"
     >
@@ -143,6 +148,7 @@ function ChannelItem({ channel }: { channel: typeof ChannelView.Type }) {
       <ItemContent className="min-w-0">
         <ItemTitle className="w-full">
           <TargetLink
+            aria-current={open ? "page" : undefined}
             className="flex min-w-0 flex-1 items-center gap-2 font-medium after:absolute after:inset-0"
             dir="auto"
             onFocus={reach}

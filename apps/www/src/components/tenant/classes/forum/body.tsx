@@ -12,6 +12,7 @@ import { ForumChannel } from "@/components/tenant/classes/forum/channel";
 import { ForumFrame, ForumPick } from "@/components/tenant/classes/forum/frame";
 import type { OpenedThread } from "@/components/tenant/classes/forum/open";
 import {
+  OpenPlaceContext,
   OpenRootContext,
   useOpening,
 } from "@/components/tenant/classes/forum/open";
@@ -125,49 +126,56 @@ export function ForumBody({
     <OpenRootContext
       value={Option.map(thread, (shown) => shown.opening.clientKey)}
     >
-      <PanesProvider>
-        <ClassHeader>
-          {opens && Option.isSome(channelId) ? (
-            <StartDiscussion channelId={channelId.value} />
-          ) : null}
-        </ClassHeader>
-        <Panes fill="parent" id="thread">
-          <PanesList wide>
-            <ForumFrame shown={view._tag === "forum" ? "rail" : "chat"}>
-              <div className="relative flex min-h-0 flex-1 flex-col">
-                {view._tag === "forum" ? <ForumPick /> : null}
-                {/* A discussion the server has not answered for yet keeps the chat's place empty. */}
-                {view._tag !== "forum" && Option.isNone(channelId) ? (
-                  <div className="flex-1" />
-                ) : null}
-                {Arr.map(chats, (id) => (
-                  <ForumChannel
-                    canManage={canManage}
-                    canPost={canPost}
-                    channelId={id}
-                    everyone={everyone}
-                    jump={
-                      view._tag === "channel" && view.channelId === id
-                        ? view.jump
-                        : Option.none()
-                    }
-                    key={id}
-                    shown={Option.contains(channelId, id)}
-                  />
-                ))}
-              </div>
-            </ForumFrame>
-          </PanesList>
-          <ThreadPane
-            asked={view._tag === "discussion"}
-            canManage={canManage}
-            canPost={canPost}
-            everyone={everyone}
-            jump={view._tag === "discussion" ? view.jump : Option.none()}
-            thread={thread}
-          />
-        </Panes>
-      </PanesProvider>
+      <OpenPlaceContext
+        value={{
+          chat: channelId,
+          thread: Option.map(thread, (shown) => shown.number),
+        }}
+      >
+        <PanesProvider>
+          <ClassHeader>
+            {opens && Option.isSome(channelId) ? (
+              <StartDiscussion channelId={channelId.value} />
+            ) : null}
+          </ClassHeader>
+          <Panes fill="parent" id="thread">
+            <PanesList wide>
+              <ForumFrame shown={view._tag === "forum" ? "rail" : "chat"}>
+                <div className="relative flex min-h-0 flex-1 flex-col">
+                  {view._tag === "forum" ? <ForumPick /> : null}
+                  {/* A discussion the server has not answered for yet keeps the chat's place empty. */}
+                  {view._tag !== "forum" && Option.isNone(channelId) ? (
+                    <div className="flex-1" />
+                  ) : null}
+                  {Arr.map(chats, (id) => (
+                    <ForumChannel
+                      canManage={canManage}
+                      canPost={canPost}
+                      channelId={id}
+                      everyone={everyone}
+                      jump={
+                        view._tag === "channel" && view.channelId === id
+                          ? view.jump
+                          : Option.none()
+                      }
+                      key={id}
+                      shown={Option.contains(channelId, id)}
+                    />
+                  ))}
+                </div>
+              </ForumFrame>
+            </PanesList>
+            <ThreadPane
+              asked={view._tag === "discussion"}
+              canManage={canManage}
+              canPost={canPost}
+              everyone={everyone}
+              jump={view._tag === "discussion" ? view.jump : Option.none()}
+              thread={thread}
+            />
+          </Panes>
+        </PanesProvider>
+      </OpenPlaceContext>
     </OpenRootContext>
   );
 }

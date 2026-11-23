@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { reachMessage } from "@/e2e/support/message";
 import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
@@ -159,6 +160,8 @@ for (const viewport of SCREENS) {
       .getByRole("textbox", { name: "Chat name" })
       .fill("Tugas");
     await page.getByRole("dialog").getByRole("button", { name: "Add" }).click();
+    // A press while the dialog leaves is lost (vercel-labs/ui#928), so the reader presses once it is gone.
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     const tasks = rail.getByRole("link", { exact: true, name: "Tugas" });
     const general = rail.getByRole("link", { exact: true, name: "General" });
     await expect(tasks).toBeVisible({ timeout: readinessTimeoutMilliseconds });
@@ -233,7 +236,7 @@ for (const viewport of SCREENS) {
     await expect(second).toBeVisible({ timeout: readinessTimeoutMilliseconds });
 
     // Thirty replies, more than any screen holds.
-    await second.hover();
+    await reachMessage(second);
     await second.getByRole("button", { name: "Reply in thread" }).click();
     const pane = page.locator("[data-slot=discussion]");
     const field = pane.getByRole("textbox", { name: "Write a reply" });
@@ -303,7 +306,7 @@ for (const viewport of SCREENS) {
       await expect(message).toBeVisible({
         timeout: readinessTimeoutMilliseconds,
       });
-      await message.hover();
+      await reachMessage(message);
       await message.getByRole("button", { name: "Reply in thread" }).click();
       const field = page
         .locator("[data-slot=discussion]")
