@@ -2,9 +2,10 @@ import type { Browser } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { strToU8, zipSync } from "fflate";
-import { pressInPopup } from "@/e2e/support/popup";
+import { pressInPopup, waitForPopupsGone } from "@/e2e/support/popup";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { toastSaying } from "@/e2e/support/toast";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The address of an exam's editor on the school host. */
@@ -90,10 +91,10 @@ test("a file that is no Word or PDF document is refused in the browser, and the 
   await dialog.getByRole("button", { name: "Create exam" }).click();
 
   await page.waitForURL(EDITOR_PATH);
-  await expect(page.getByText("This file cannot be imported.")).toBeVisible({
+  await expect(toastSaying(page, "This file cannot be imported.")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
-  await expect(page.getByText("Choose a Word or PDF file.")).toBeVisible();
+  await expect(toastSaying(page, "Choose a Word or PDF file.")).toBeVisible();
   await expect(
     page.getByRole("textbox", { name: "Question 1 text" })
   ).toBeVisible();
@@ -138,7 +139,7 @@ test("the editor imports a Word file into the open exam from its header menu, as
   // dialog opens again.
   await openImport();
   await chooseFile();
-  await importDialog.getByRole("button", { name: "Remove file" }).click();
+  await pressInPopup(importDialog.getByRole("button", { name: "Remove file" }));
   await expect(importDialog.getByText("Bab 2.docx")).toHaveCount(0);
   await expect(
     importDialog.getByRole("button", { name: "Import" })
@@ -146,19 +147,21 @@ test("the editor imports a Word file into the open exam from its header menu, as
   await chooseFile();
   await expect(importDialog.getByText("Bab 2.docx")).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(importDialog).toBeHidden();
+  await waitForPopupsGone(page);
   await openImport();
   await expect(
     importDialog.getByRole("button", { name: "Import" })
   ).toBeDisabled();
 
   await chooseFile();
-  await importDialog.getByRole("button", { name: "Import" }).click();
+  await pressInPopup(importDialog.getByRole("button", { name: "Import" }));
 
   // The dialog closes at once, and the local backend's missing gateway ends the read in its toast.
   await expect(importDialog).toBeHidden();
-  await expect(page.getByText("Nina could not read this file.")).toBeVisible({
-    timeout: readinessTimeoutMilliseconds,
-  });
+  await expect(toastSaying(page, "Nina could not read this file.")).toBeVisible(
+    {
+      timeout: readinessTimeoutMilliseconds,
+    }
+  );
   await context.close();
 });

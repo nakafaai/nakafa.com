@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { pressInPopup } from "@/e2e/support/popup";
+import { pressInPopup, waitForPopupsGone } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -43,6 +43,7 @@ const addLink = async (page: Page, title: string) => {
     .fill(`https://example.com/${title.length}`);
   await dialog.getByRole("textbox", { name: "Title" }).fill(title);
   await dialog.getByRole("button", { name: "Add", exact: true }).click();
+  await waitForPopupsGone(page);
   await expect(page.getByRole("button", { name: title })).toBeVisible();
 };
 
@@ -54,6 +55,7 @@ const addFolder = async (page: Page, name: string) => {
   await create.click();
   await dialog.getByRole("textbox", { name: "Name" }).fill(name);
   await dialog.getByRole("button", { name: "Create" }).click();
+  await waitForPopupsGone(page);
   await expect(page.getByRole("link", { exact: true, name })).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
@@ -66,6 +68,7 @@ for (const viewport of [
   test(`a subject teacher is told to connect Drive first, uploads a PDF straight to R2 with its progress, opens it at a signed address, sees a refused file leave, and trashes a link, at ${viewport.width} px`, async ({
     browser,
     baseURL,
+    hasTouch,
   }) => {
     const school = await Effect.runPromise(createSchool());
     const address = (path: string) =>
@@ -86,8 +89,11 @@ for (const viewport of [
 
     await add.click();
     // The teacher has no Drive yet: the dialog says so and links to the account's connections.
-    await dialog.getByRole("tab", { name: "Drive" }).click();
-    await dialog.getByRole("button", { name: "Choose from Drive" }).click();
+    await pressInPopup(dialog.getByRole("tab", { name: "Drive" }), hasTouch);
+    await pressInPopup(
+      dialog.getByRole("button", { name: "Choose from Drive" }),
+      hasTouch
+    );
     await expect(dialog.getByText("Connect Google Drive first.")).toBeVisible();
     await expect(
       dialog.getByRole("link", { name: "Open connections" })
@@ -131,9 +137,10 @@ for (const viewport of [
     const download = page.waitForEvent("download");
     await pressInPopup(page.getByRole("menuitem", { name: "Download" }));
     expect((await download).suggestedFilename()).toBe("Modul gerak lurus.pdf");
+    await waitForPopupsGone(page);
 
     await add.click();
-    await dialog.getByLabel("File").setInputFiles({
+    await dialog.locator('input[type="file"]').setInputFiles({
       buffer: Buffer.from("not a document"),
       mimeType: "application/pdf",
       name: "Catatan.pdf",

@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { seedConnection } from "@repo/backend/scripts/content/acceptance/connection";
 import { Effect } from "effect";
 import { runFixture } from "@/e2e/support/acceptance";
-import { pressInPopup } from "@/e2e/support/popup";
+import { pressInPopup, waitForPopupsGone } from "@/e2e/support/popup";
 import { waitForStill } from "@/e2e/support/quiet";
 import {
   createSchool,
@@ -57,7 +57,15 @@ async function picture(page: Page, state: string) {
     });
   }
   await page.setViewportSize({ height: 900, width: 1440 });
+  // A pane that stood as a sheet at a narrow width leaves it as the page widens, and a press waits until it is gone.
+  await waitForPopupsGone(page);
 }
+
+/** The open connector's detail: the pane beside the cards on a wide page, or the sheet named after it on a phone. */
+const detailOf = (page: Page, connector: string) =>
+  page
+    .getByRole("complementary", { name: "Connector detail" })
+    .or(page.getByRole("dialog", { name: connector }));
 
 /** Opens a new school, signed in as `signIn` signs in, at its connectors page. */
 async function openDirectory(
@@ -115,7 +123,7 @@ test("the Owner finds every service in a library, searches and filters it, and o
   await expect(cards(page)).toHaveCount(4);
 
   await openOf(page, "Google Forms").click();
-  const detail = page.getByRole("complementary", { name: "Connector detail" });
+  const detail = detailOf(page, "Google Forms");
   await expect(detail.getByText("Not connected yet")).toBeVisible();
   await expect(detail.getByText("Your account")).toBeVisible();
   await picture(page, "detail");
@@ -186,7 +194,7 @@ test("a connected school sees the check, finds its courses in the detail, and di
   await picture(page, "connected");
 
   await openOf(page, "Google Classroom").click();
-  const detail = page.getByRole("complementary", { name: "Connector detail" });
+  const detail = detailOf(page, "Google Classroom");
   await expect(detail.getByText("Connected", { exact: true })).toBeVisible();
   await expect(detail.getByText("This school")).toHaveCount(0);
   await picture(page, "import");
@@ -228,9 +236,9 @@ test("a connect that just finished opens its service, where the next step waits"
     `${page.url().split("?")[0]}?connect=connected&connector=classroom`
   );
   await expect(
-    page
-      .getByRole("complementary", { name: "Connector detail" })
-      .getByText("Connected", { exact: true })
+    detailOf(page, "Google Classroom").getByText("Connected", {
+      exact: true,
+    })
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await context.close();
 });
