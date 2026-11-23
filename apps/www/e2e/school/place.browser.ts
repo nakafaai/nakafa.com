@@ -2,7 +2,7 @@ import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { reachMessage } from "@/e2e/support/message";
-import { pressInPopup } from "@/e2e/support/popup";
+import { pressInPopup, waitForPopupsGone } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -160,8 +160,7 @@ for (const viewport of SCREENS) {
       .getByRole("textbox", { name: "Chat name" })
       .fill("Tugas");
     await page.getByRole("dialog").getByRole("button", { name: "Add" }).click();
-    // A press while the dialog leaves is lost (vercel-labs/ui#928), so the reader presses once it is gone.
-    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await waitForPopupsGone(page);
     const tasks = rail.getByRole("link", { exact: true, name: "Tugas" });
     const general = rail.getByRole("link", { exact: true, name: "General" });
     await expect(tasks).toBeVisible({ timeout: readinessTimeoutMilliseconds });

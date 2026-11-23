@@ -15,6 +15,7 @@ import {
   signInOwner,
 } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { closeToasts } from "@/e2e/support/toast";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The cohort that the class teacher's seed opens in the school's active period. */
@@ -228,23 +229,6 @@ test("an admin opens a period, then creates a cohort of it in a grade its SMA un
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await context.close();
 });
-
-/**
- * Closes the toasts an action raised, as a reader does: they stand over the bottom of the screen, where a phone raises
- * the next menu as a sheet, so a press there would land on a toast. A touch holds a toast while it rests on it.
- */
-async function closeToasts(page: Page) {
-  const toasts = page.locator('[data-slot="toast"]');
-  await expect(async () => {
-    if ((await toasts.count()) > 0) {
-      await page
-        .getByRole("button", { name: "Close notification" })
-        .first()
-        .click({ timeout: 1000 });
-    }
-    await expect(toasts).toHaveCount(0, { timeout: 1000 });
-  }).toPass({ timeout: readinessTimeoutMilliseconds });
-}
 
 test("an admin places a student in a cohort, moves the student to another, sets their NISN and age flag, and moves them out once that cohort is archived", async ({
   browser,

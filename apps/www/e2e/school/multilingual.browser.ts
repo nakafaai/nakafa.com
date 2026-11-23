@@ -149,11 +149,16 @@ async function expectMixedQuestionAt(
   );
   await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
+  // A phone shows one question at a time, so the learner moves on to the second question, as the list does too.
   await expect(
-    student.getByRole("heading", { name: "Question 2" })
+    student.getByRole("heading", { name: "Question 1" })
   ).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
+  await student.getByRole("button", { name: "Next question" }).click();
+  await expect(
+    student.getByRole("heading", { name: "Question 2" })
+  ).toBeVisible();
   const studentPrompt = student
     .getByRole("article", { exact: true, name: "Question 2" })
     .locator('[data-slot="sitting-document"]')
