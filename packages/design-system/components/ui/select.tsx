@@ -54,9 +54,13 @@ function Select<Value = string, Multiple extends boolean | undefined = false>(
 
 /**
  * The chosen item in the trigger, on one line: a label longer than the trigger ends in an ellipsis, so it never
- * pushes the text or the chevron past the trigger's border.
+ * pushes the text or the chevron past the trigger's border. The value is a block, where the ellipsis draws, and
+ * an icon before the label stays inline beside it: a direct SVG child would otherwise take its own line, which
+ * the trigger's fixed height cuts.
  */
-const selectValueVariants = cva("min-w-0 flex-1 truncate text-start");
+const selectValueVariants = cva(
+  "min-w-0 flex-1 truncate text-start [&>svg]:me-2 [&>svg]:inline-block [&>svg]:align-[-0.1875em]"
+);
 
 function SelectValue({
   className,
