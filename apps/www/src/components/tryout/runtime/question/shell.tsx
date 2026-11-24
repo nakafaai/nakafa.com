@@ -89,19 +89,14 @@ export function TryoutReviewQuestionExplanation({
   children,
   questionOrder,
 }: TryoutQuestionShellProps) {
-  const tTryouts = useTranslations("Tryouts");
   const ids = readQuestionIds(questionOrder);
 
   return (
     <CollapsiblePanel>
-      <section
-        aria-label={tTryouts("explanation")}
-        className="scroll-mt-44 space-y-6 pb-8"
-        id={ids.explanation}
-      >
+      <div className="scroll-mt-44 space-y-6 pb-8" id={ids.explanation}>
         <Separator />
         {children}
-      </section>
+      </div>
     </CollapsiblePanel>
   );
 }

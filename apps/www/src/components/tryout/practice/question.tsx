@@ -154,7 +154,6 @@ export function TryoutPracticeChecked({
   locale: AppLocaleCode;
   question: PracticeQuestion;
 }) {
-  const t = useTranslations("Tryouts");
   const explained = useQuery(practice.sessions.explain, {
     locale,
     questionId: question.questionId,
@@ -181,8 +180,7 @@ export function TryoutPracticeChecked({
         />
       </PlayerQuestionAnswer>
       {QueryResult.isSuccess(explained) ? (
-        <section
-          aria-label={t("explanation")}
+        <div
           className="scroll-mt-44 space-y-6 pb-8"
           id={readQuestionIds(question.questionOrder).explanation}
         >
@@ -192,7 +190,7 @@ export function TryoutPracticeChecked({
           ) : (
             <TryoutExplanationBody body={reading} />
           )}
-        </section>
+        </div>
       ) : null}
     </>
   );
