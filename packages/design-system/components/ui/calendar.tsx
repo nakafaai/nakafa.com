@@ -225,7 +225,7 @@ function Calendar({
   return (
     <CalendarPrimitive
       className={cn(
-        "bg-background w-fit p-3 [--cell-size:--spacing(8)]",
+        "bg-background [--cell-size:--spacing(8)] w-fit p-3",
         className
       )}
       controller={turner}

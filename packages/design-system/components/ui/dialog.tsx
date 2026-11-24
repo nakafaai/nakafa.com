@@ -6,7 +6,6 @@ import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { SheetGrip } from "@repo/design-system/components/ui/sheet-grip";
 import { PopupContainer, sheetSurface } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
-import { keepTabInside } from "@repo/design-system/lib/trap";
 import {
   DialogBackdrop,
   DialogClose,
@@ -60,7 +59,6 @@ const dialogSize = cva("", {
 function DialogContent({
   className,
   children,
-  onKeyDown,
   size = "default",
   ...props
 }: NodeChildren<ComponentProps<typeof DialogContentPrimitive>> & {
@@ -79,10 +77,6 @@ function DialogContent({
           dialogSize({ size }),
           className
         )}
-        onKeyDown={(event) => {
-          onKeyDown?.(event);
-          keepTabInside(event);
-        }}
         {...props}
       >
         <SheetGrip />

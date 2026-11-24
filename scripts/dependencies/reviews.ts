@@ -53,8 +53,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@effect/tsgo@latest",
-    "0.73.2",
-    "Compiler patching moves with tsrs and Effect, and every rule is decided in packages/typescript-config/base.json, which Aksara's rule block matches (docs/adr/0021-rules.md). 0.73.2 is the latest release and the adopted one: it patches tsrs 7.1.0-beta.tsrs2 and 7.1.0-beta.tsrs3 (the version table of its README) and no longer patches 0.25.0-ts7.1.0-beta, so tsrs moves with it, and prepare runs the same effect-tsgo patch --tsrs --no-typescript. 0.70 to 0.73 add five rules, which base.json decides (docs/adr/0021-rules.md): flatMapMapToZipWith and flatMapProvideServiceToProvideServiceEffect, which upstream ships as suggestions that fail the typecheck until decided, and forLoopPushToForEach, promiseAllInEffect and promiseRaceInEffect, which upstream ships off. 0.72, 0.73.1 and 0.73.2 change only the Vite+ integration and release builds. Checked 20 November 2026.",
+    "0.73.4",
+    "Compiler patching moves with tsrs and Effect, and every rule is decided in packages/typescript-config/base.json, which Aksara's rule block matches (docs/adr/0021-rules.md). 0.73.2 is the adopted release: it patches tsrs 7.1.0-beta.tsrs2 and 7.1.0-beta.tsrs3. 0.73.4 is the latest release, and it widens missedPipeableOpportunity across 683 sites here (and 171 in Aksara) on two-call expressions such as Schema.optionalKey(Schema.Array(...)); hold on 0.73.2 until that rule sweep lands in its own change. Checked 24 November 2026.",
   ],
   [
     "vitest@latest",
@@ -78,13 +78,13 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "tsrs@latest",
-    "7.1.0-beta.tsrs4",
-    "tsrs is the Rust port of the TypeScript 7.1 checker, pinned exactly to 7.1.0-beta.tsrs3, one of the two that @effect/tsgo 0.73.2, the latest, patches. 7.1.0-beta.tsrs4 is the latest release, and it waits for an @effect/tsgo release that patches it, because every typecheck runs the patched compiler. From tsrs2 a version names the TypeScript release it targets and a tsrs revision, so 0.25.0-ts7.1.0-beta was the last of the old scheme. tsrs3 checks against TypeScript 7.1.0-beta at the same source commit, fixes compiler and lint edge cases, and leaves the tsrs/sync, tsrs/ast and tsrs/fs modules and the tsdk folder that the source check and the editors load unchanged byte for byte. Every typecheck, the language server, and the source check's compiler API run on it. Checked 21 November 2026.",
+    "7.1.0-beta.tsrs5",
+    "tsrs is the Rust port of the TypeScript 7.1 checker, pinned exactly to 7.1.0-beta.tsrs3, one of the two that @effect/tsgo 0.73.2 patches. 7.1.0-beta.tsrs5 is the latest release, and it waits for the @effect/tsgo upgrade, because every typecheck runs the patched compiler. Every typecheck, the language server, and the source check's compiler API run on it. Checked 24 November 2026.",
   ],
   [
     "ai@latest",
-    "7.0.179",
-    "AI SDK packages move as one reviewed cohort. 7.0.179 is the latest release and the adopted one. 7.0.178 creates the messages array of each step for that step, so the array that prepareStep returns is copied (confect/nina/generation.ts already returns a new array for each step, so the copy changes nothing here), forwards the preliminary flag of provider-executed tool results, and stops signing the approval request of a tool call that the approval policy denied, which no Nina tool requests; 7.0.179 adds Live models over WebSocket to the gateway client, which nothing here imports. It moves @ai-sdk/provider-utils to 5.0.83 and keeps @ai-sdk/provider at 4.0.39. @convex-dev/agent 0.7.11 peers ai ^7.0.129, the gateway provider 0.3.0 peers ^7.0.105, and the gateway module (confect/gateway) typechecks against it. From 7.0.171 a failed tool's error text reaches the client as the model received it, and the agent offers no redactToolErrors, so a Nina capability that breaks on a defect settles as a failure whose text names no cause (confect/nina/capability/progress.ts). Checked 21 November 2026.",
+    "7.0.181",
+    "AI SDK packages move as one reviewed cohort. 7.0.181 is the latest release and the adopted one. 7.0.180 updates @ai-sdk/gateway to 4.0.153; 7.0.181 adds per-call onWarning, stoppedBy on generateText/streamText, steering delivery reporting, and strips provider options from text and file parts in extraction. @convex-dev/agent 0.7.11 peers ai ^7.0.129, the gateway provider 0.3.0 peers ^7.0.105, and the gateway module (confect/gateway) typechecks against it. Checked 24 November 2026.",
   ],
   [
     "@convex-dev/ai-sdk-provider@latest",
@@ -108,8 +108,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@polar-sh/sdk@latest",
-    "1.3.2",
-    "The backend stays on 1.0.2. 1.3.1 moved the Outpost and its OpenTelemetry, ioredis and @vercel/oidc imports to the @polar-sh/sdk/outpost subpath, which nothing here imports, so the cause of the 1.1.0 hold is gone. But @polar-sh/sdk/2026-10, whose createPolarCore, errors and webhooks the billing client and the Polar webhook route import (confect/billing/polar, confect/routes/polar.ts), statically imports the metering client chunk, which imports node:timers/promises; in 1.3.2 that chunk is dist/client-BG5NBqal.mjs (sdk/typescript/src/metering/buffered.ts). Convex bundles the default runtime for the browser platform, so the HTTP router cannot resolve it and the deploy fails; 1.1.0 carried the same import in dist/client-Bz9G1UDp.mjs. Move when a release keeps node: built-ins out of the 2026-10 entry. Checked 21 November 2026.",
+    "1.3.3",
+    "1.3.3 is the latest release and the adopted one. 1.3.3 keeps node:timers/promises solely in the @polar-sh/sdk/outpost subpath, which nothing here imports, so @polar-sh/sdk/2026-10 bundles cleanly in Convex's default runtime. Checked 24 November 2026.",
   ],
   [
     "@convex-dev/workpool@latest",

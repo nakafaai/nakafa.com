@@ -13,7 +13,7 @@ import { publicPathTarget } from "@/lib/routing/target";
  * list opens the card and on its last row. A linked row also lights up on hover.
  */
 const cardRow = cva(
-  "group flex w-full items-center gap-2 px-6 pt-[var(--card-row-top,--spacing(3))] pb-[var(--card-row-bottom,--spacing(3))]",
+  "group pt-[var(--card-row-top,--spacing(3))] pb-[var(--card-row-bottom,--spacing(3))] flex w-full items-center gap-2 px-6",
   {
     variants: {
       linked: {

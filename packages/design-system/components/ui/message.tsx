@@ -24,7 +24,7 @@ export function Message({
   return (
     <div
       className={cn(
-        "group/message text-chat relative flex w-full min-w-0 gap-2 has-data-[slot=message-footer]:[--message-avatar-y:--spacing(-8)] has-data-[variant=ghost]:[--message-header-x:0rem] data-[align=end]:flex-row-reverse",
+        "group/message text-chat has-data-[slot=message-footer]:[--message-avatar-y:--spacing(-8)] relative flex w-full min-w-0 gap-2 has-data-[variant=ghost]:[--message-header-x:0rem] data-[align=end]:flex-row-reverse",
         className
       )}
       data-align={align}
@@ -64,7 +64,7 @@ export function MessageHeader({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "text-muted-foreground flex max-w-full min-w-0 items-center px-[var(--message-header-x,--spacing(3))] text-xs font-medium",
+        "text-muted-foreground px-[var(--message-header-x,--spacing(3))] flex max-w-full min-w-0 items-center text-xs font-medium",
         className
       )}
       data-slot="message-header"

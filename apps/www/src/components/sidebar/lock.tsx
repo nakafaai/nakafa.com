@@ -73,7 +73,7 @@ export function LockableShell({
     <ShellLocksContext value={setLocks}>
       <ShellTitlesContext value={setTitles}>
         <SidebarProvider
-          className="[--app-header-top:4rem] has-[[data-shell-lock]]:[--app-header-top:0rem] has-[[data-shell-lock]]:[--app-shell-locked-inset:0rem] has-[[data-shell-lock]]:[--app-shell-locked:none] has-[[data-shell-title]]:[--app-header-top:0rem] has-[[data-shell-title]]:[--app-shell-titled:none] has-[[data-side=left][data-collapsible=icon]]:[--app-sidebar-open:--spacing(12)] has-[[data-side=left][data-sidebar-state=expanded]]:[--app-sidebar-open:--spacing(64)] data-locked:[--app-header-top:0rem] data-locked:[--app-shell-locked-inset:0rem] data-locked:[--app-shell-locked:none] data-titled:[--app-header-top:0rem] data-titled:[--app-shell-titled:none]"
+          className="has-[[data-side=left][data-collapsible=icon]]:[--app-sidebar-open:--spacing(12)] has-[[data-side=left][data-sidebar-state=expanded]]:[--app-sidebar-open:--spacing(64)] [--app-header-top:4rem] has-[[data-shell-lock]]:[--app-header-top:0rem] has-[[data-shell-lock]]:[--app-shell-locked-inset:0rem] has-[[data-shell-lock]]:[--app-shell-locked:none] has-[[data-shell-title]]:[--app-header-top:0rem] has-[[data-shell-title]]:[--app-shell-titled:none] data-locked:[--app-header-top:0rem] data-locked:[--app-shell-locked-inset:0rem] data-locked:[--app-shell-locked:none] data-titled:[--app-header-top:0rem] data-titled:[--app-shell-titled:none]"
           data-locked={locked ? "" : undefined}
           data-titled={titles > 0 ? "" : undefined}
           locked={locked}

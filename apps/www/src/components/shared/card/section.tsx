@@ -28,7 +28,7 @@ const cardSectionFooterVariants = cva(
     variants: {
       bottomSheet: {
         false: "",
-        true: "max-md:rounded-none max-md:pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(3))]",
+        true: "max-md:pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(3))] max-md:rounded-none",
       },
     },
   }

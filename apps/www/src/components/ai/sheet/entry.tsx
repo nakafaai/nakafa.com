@@ -63,7 +63,7 @@ export function SheetEntry({ contextTitle = "" }: { contextTitle?: string }) {
   // press: a control beside it, such as a comment's Post, stays pressable.
   return (
     <aside
-      className="group/entry max-sm:bg-background sticky right-0 bottom-0 left-0 z-50 transition-[opacity,translate] duration-300 ease-out data-open:translate-y-50 data-open:opacity-0 motion-reduce:transition-none max-sm:border-t max-sm:px-4 max-sm:pt-3 max-sm:pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(3))] sm:pointer-events-none sm:px-6 sm:pb-6"
+      className="group/entry max-sm:bg-background max-sm:pb-[calc(env(safe-area-inset-bottom,0px)+--spacing(3))] sticky right-0 bottom-0 left-0 z-50 transition-[opacity,translate] duration-300 ease-out data-open:translate-y-50 data-open:opacity-0 motion-reduce:transition-none max-sm:border-t max-sm:px-4 max-sm:pt-3 sm:pointer-events-none sm:px-6 sm:pb-6"
       data-open={open ? "" : undefined}
       inert={open}
     >

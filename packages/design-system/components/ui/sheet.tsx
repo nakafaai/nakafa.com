@@ -10,7 +10,6 @@ import {
 } from "@repo/design-system/hooks/resizable";
 import { PopupContainer } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
-import { keepTabInside } from "@repo/design-system/lib/trap";
 import {
   DialogBackdrop,
   DialogClose,
@@ -63,9 +62,9 @@ const sheetPopupVariants = cva(
       side: {
         bottom:
           "inset-x-(--sheet-inset) bottom-(--sheet-inset) h-auto max-h-[calc(100dvh-var(--sheet-inset)*2)] border-t data-ending-style:translate-y-12 data-starting-style:translate-y-12",
-        left: "inset-y-(--sheet-inset) left-(--sheet-inset) h-dvh w-[calc(100%-(--spacing(12)))] max-w-sm border-r data-ending-style:-translate-x-12 data-starting-style:-translate-x-12 sm:h-[calc(100dvh-var(--sheet-inset)*2)]",
+        left: "w-[calc(100%-(--spacing(12)))] inset-y-(--sheet-inset) left-(--sheet-inset) h-dvh max-w-sm border-r data-ending-style:-translate-x-12 data-starting-style:-translate-x-12 sm:h-[calc(100dvh-var(--sheet-inset)*2)]",
         right:
-          "inset-y-(--sheet-inset) right-(--sheet-inset) h-dvh w-[calc(100%-(--spacing(12)))] max-w-sm border-l data-ending-style:translate-x-12 data-starting-style:translate-x-12 sm:h-[calc(100dvh-var(--sheet-inset)*2)]",
+          "w-[calc(100%-(--spacing(12)))] inset-y-(--sheet-inset) right-(--sheet-inset) h-dvh max-w-sm border-l data-ending-style:translate-x-12 data-starting-style:translate-x-12 sm:h-[calc(100dvh-var(--sheet-inset)*2)]",
         top: "inset-x-(--sheet-inset) top-(--sheet-inset) h-auto max-h-[calc(100dvh-var(--sheet-inset)*2)] border-b data-ending-style:-translate-y-12 data-starting-style:-translate-y-12",
       },
     },
@@ -109,7 +108,6 @@ function SheetPopup({
   className,
   children,
   keepMounted = false,
-  onKeyDown,
   showCloseButton = true,
   side = "right",
   inset = false,
@@ -152,13 +150,6 @@ function SheetPopup({
         )}
         data-surface="sheet"
         keepMounted={keepMounted}
-        onKeyDown={(event) => {
-          onKeyDown?.(event);
-          // A sheet beside the page lets a Tab move on into the page.
-          if (modal) {
-            keepTabInside(event);
-          }
-        }}
         style={(state) => ({
           ...(typeof style === "function" ? style(state) : style),
           "--sheet-width": `${width}px`,

@@ -57,7 +57,7 @@ export function CatalogCard({ action, children, title }: CatalogCardProps) {
   const actionLabel = useRequired(CatalogActionLabelContext, "CatalogCard");
   return (
     <Card
-      className="relative mx-auto h-full w-full max-w-sm pt-0 pb-0 [--card-spacing:--spacing(4)]"
+      className="[--card-spacing:--spacing(4)] relative mx-auto h-full w-full max-w-sm pt-0 pb-0"
       lines="one"
     >
       {children}

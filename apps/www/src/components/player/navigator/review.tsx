@@ -21,7 +21,7 @@ export function PlayerReviewGrid({
   questions: readonly PlayerReviewCellModel[];
 }) {
   return (
-    <ol className="grid grid-cols-[repeat(auto-fill,minmax(--spacing(10),1fr))] gap-2">
+    <ol className="grid-cols-[repeat(auto-fill,minmax(--spacing(10),1fr))] grid gap-2">
       {Arr.map(questions, (question, index) => (
         <li key={question.key}>
           <PlayerReviewCell number={index + 1} question={question} />

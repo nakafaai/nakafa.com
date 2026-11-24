@@ -11,7 +11,6 @@ import {
   optionTickVariants,
 } from "@repo/design-system/lib/option";
 import {
-  keepClickOnTrigger,
   PopupContainer,
   popupMotion,
   sheetSurface,
@@ -124,12 +123,11 @@ const selectTriggerVariants = cva(
   }
 );
 
-/** The select's button. A click keeps its release on the button, so the list it opened stays open (`keepClickOnTrigger`). */
+/** The select's button. */
 function SelectTrigger({
   className,
   size = "default",
   children,
-  onPointerDown,
   ...props
 }: Omit<
   React.ComponentProps<typeof SelectTriggerPrimitive>,
@@ -143,10 +141,6 @@ function SelectTrigger({
     <SelectTriggerPrimitive
       className={cn(selectTriggerVariants(), className)}
       data-size={size}
-      onPointerDown={(event) => {
-        keepClickOnTrigger(event);
-        onPointerDown?.(event);
-      }}
       {...props}
     >
       {children}
@@ -186,7 +180,7 @@ function SelectContent({
         className={cn(
           popupMotion(),
           sheetSurface(),
-          "bg-popover text-popover-foreground z-50 max-h-(--available-height) w-max max-w-(--available-width) min-w-(--anchor-width) scroll-py-1 overflow-x-hidden overflow-y-auto overscroll-contain rounded-md border p-1 text-start whitespace-normal shadow-md inset-shadow-[0_-1px_--theme(--color-black/4%)] outline-none not-dark:bg-clip-padding data-[presentation=sheet]:px-2 dark:inset-shadow-[0_1px_--theme(--color-white/6%)] [&:not(:has([data-slot=select-item]))]:[--select-nothing:block]",
+          "bg-popover text-popover-foreground inset-shadow-[0_-1px_--theme(--color-black/4%)] dark:inset-shadow-[0_1px_--theme(--color-white/6%)] z-50 max-h-(--available-height) w-max max-w-(--available-width) min-w-(--anchor-width) scroll-py-1 overflow-x-hidden overflow-y-auto overscroll-contain rounded-md border p-1 text-start whitespace-normal shadow-md outline-none not-dark:bg-clip-padding data-[presentation=sheet]:px-2 [&:not(:has([data-slot=select-item]))]:[--select-nothing:block]",
           className
         )}
         {...props}

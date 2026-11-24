@@ -53,9 +53,9 @@ describe("openPageToAgents", () => {
     withdraw = openPageToAgents();
 
     expect(Arr.map(registered, (registration) => registration.name)).toEqual([
-      "snapshot",
       "act",
       "query",
+      "snapshot",
     ]);
   });
 

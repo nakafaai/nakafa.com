@@ -32,7 +32,7 @@ function HeadDays({ column }: { column: string }) {
 
   return (
     <Calendar
-      className="w-full p-0 [--cell-size:--spacing(9)]"
+      className="[--cell-size:--spacing(9)] w-full p-0"
       {...Option.match(range, {
         onNone: () => ({}),
         onSome: ([first]) => ({ defaultMonth: first.slice(0, 7) }),
