@@ -4,12 +4,14 @@ import {
   measureBackdrop,
 } from "@repo/design-system/components/visual/backdrop";
 import { elementById } from "@repo/design-system/lib/element";
-import { Effect } from "effect";
+import { Effect, MutableList } from "effect";
 
 /** The width the test viewport reports, scrollbars included. */
 const VIEWPORT_WIDTH = 390;
 /** The padding of a page whose scrollbars overlay its content. */
 const NO_PADDING = { paddingLeft: "0px", paddingRight: "0px" };
+/** A page sitting at its top edge. */
+const NO_SCROLL = { x: 0, y: 0 };
 
 /** Builds a page where the card sits two levels below `body`. */
 function renderPage() {
@@ -143,7 +145,7 @@ describe("holding the page behind a visual card", () => {
 
         yield* Effect.scoped(
           Effect.gen(function* () {
-            yield* holdBackdrop(card, NO_PADDING);
+            yield* holdBackdrop(card, NO_PADDING, NO_SCROLL);
 
             expect(inertIds()).toEqual(["header", "before", "aside", "footer"]);
           })
@@ -163,10 +165,14 @@ describe("holding the page behind a visual card", () => {
 
         yield* Effect.scoped(
           Effect.gen(function* () {
-            yield* holdBackdrop(card, {
-              paddingLeft: "14px",
-              paddingRight: "10px",
-            });
+            yield* holdBackdrop(
+              card,
+              {
+                paddingLeft: "14px",
+                paddingRight: "10px",
+              },
+              NO_SCROLL
+            );
 
             expect(readRoot()).toEqual({
               overflow: "hidden",
@@ -181,6 +187,82 @@ describe("holding the page behind a visual card", () => {
           paddingLeft: "4px",
           paddingRight: "",
         });
+      })
+  );
+
+  it.effect(
+    "restores the page's scroll offset when leaving full screen shifted it",
+    () =>
+      Effect.gen(function* () {
+        const card = renderPage();
+        let x = 12;
+        let y = 7044;
+        const frames = MutableList.make<FrameRequestCallback>();
+        const flushFrame = (time: number) => {
+          const frame = MutableList.take(frames);
+          if (typeof frame === "function") {
+            frame(time);
+          }
+        };
+        vi.spyOn(window, "scrollX", "get").mockImplementation(() => x);
+        vi.spyOn(window, "scrollY", "get").mockImplementation(() => y);
+        vi.spyOn(window, "requestAnimationFrame").mockImplementation(
+          (callback) => {
+            MutableList.append(frames, callback);
+            return 1;
+          }
+        );
+        const scrollTo = vi
+          .spyOn(window, "scrollTo")
+          .mockImplementation(() => undefined);
+
+        const { padding, scroll } = yield* measureBackdrop(card);
+
+        yield* Effect.scoped(
+          Effect.gen(function* () {
+            yield* holdBackdrop(card, padding, scroll);
+            // A wider full-screen viewport clamped the shorter document's scroll.
+            x = 0;
+            y = 6647;
+          })
+        );
+
+        expect(scrollTo).toHaveBeenCalledTimes(1);
+        expect(scrollTo).toHaveBeenLastCalledWith({
+          behavior: "instant",
+          left: 12,
+          top: 7044,
+        });
+
+        // Two frames later, responsive reflow settles and scroll anchoring shifted `y`.
+        y = 7003;
+        flushFrame(16);
+        flushFrame(32);
+
+        expect(scrollTo).toHaveBeenCalledTimes(2);
+        expect(scrollTo).toHaveBeenLastCalledWith({
+          behavior: "instant",
+          left: 12,
+          top: 7044,
+        });
+
+        // If the offset was already back in place after reflow, frame two leaves it alone.
+        scrollTo.mockClear();
+        y = 6647;
+        yield* Effect.scoped(holdBackdrop(card, padding, scroll));
+        expect(scrollTo).toHaveBeenCalledTimes(1);
+        x = 12;
+        y = 7044;
+        flushFrame(48);
+        flushFrame(64);
+        expect(scrollTo).toHaveBeenCalledTimes(1);
+
+        // A release where the offset never shifted does not scroll, immediately or after reflow.
+        scrollTo.mockClear();
+        yield* Effect.scoped(holdBackdrop(card, padding, scroll));
+        flushFrame(80);
+        flushFrame(96);
+        expect(scrollTo).not.toHaveBeenCalled();
       })
   );
 });
