@@ -73,8 +73,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "8.13.0",
-    "nakafa.com declares 8.13.0, which peers effect 4.1.5 exactly, the adopted cohort. 8.13.0 adds 3 chemistry equilibrium labs (DynamicEquilibriumLab, EquilibriumQuotientLab, LeChatelierLab) and 6 biology plant-tissue, growth, and leaf/chloroplast labs (PlantTissueAnatomyLab, RootShootGrowthZoneLab, PlantGrowthCurveLab, LeafLaminaCrossSectionLab, StomatalGuardCellLab, ChloroplastStageLab), bringing the visual catalog to 295 visuals in total. Every catalog figure renders in lessons and try-outs through one renderer, whose registry equals the catalog. Checked 24 November 2026.",
+    "8.14.0",
+    "nakafa.com declares 8.14.0, which peers effect 4.1.5 exactly, the adopted cohort. 8.14.0 adds 14 science 3D labs across physics (RectifierDiodeLab, KeplerOrbitPeriodLab, NuclearBindingCurveLab, DeBroglieMatterWaveLab, PlanckBlackbodyLab, SpecificHeatCalorimeterLab, GasLawThermalLab), biology (ReflexArcLab, ThermoregulationSkinLab, BloodGlucoseFeedbackLab, ActiveTransportPumpLab, PlasmolysisCellLab), and chemistry (CollisionTheoryEnergyLab, CatalystPathwayLab), bringing the visual catalog to 309 visuals in total, plus mathContainer and contentGrid assessment document nodes. Every catalog figure renders in lessons and try-outs through one renderer, whose registry equals the catalog. Checked 24 November 2026.",
   ],
   [
     "tsrs@latest",

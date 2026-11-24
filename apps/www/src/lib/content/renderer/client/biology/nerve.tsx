@@ -11,6 +11,14 @@ export const NeuronImpulseLab = withHydrationBoundary(
   )
 );
 
+export const ReflexArcLab = withHydrationBoundary(
+  lazy(() =>
+    import("@repo/design-system/components/contents/biology/reflex/lab").then(
+      (module) => ({ default: module.ReflexArcLab })
+    )
+  )
+);
+
 export const SynapseLab = withHydrationBoundary(
   lazy(() =>
     import("@repo/design-system/components/contents/biology/synapse/lab").then(

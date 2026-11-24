@@ -11,6 +11,14 @@ export const LogicGateLab = withHydrationBoundary(
   )
 );
 
+export const RectifierDiodeLab = withHydrationBoundary(
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/physics/rectifier/lab"
+    ).then((module) => ({ default: module.RectifierDiodeLab }))
+  )
+);
+
 export const TransistorBiasLab = withHydrationBoundary(
   lazy(() =>
     import(

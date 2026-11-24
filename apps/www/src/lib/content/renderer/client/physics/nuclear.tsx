@@ -19,6 +19,14 @@ export const HalfLifeCounterLab = withHydrationBoundary(
   )
 );
 
+export const NuclearBindingCurveLab = withHydrationBoundary(
+  lazy(() =>
+    import("@repo/design-system/components/contents/physics/binding/lab").then(
+      (module) => ({ default: module.NuclearBindingCurveLab })
+    )
+  )
+);
+
 export const PhotoelectricLab = withHydrationBoundary(
   lazy(() =>
     import(
