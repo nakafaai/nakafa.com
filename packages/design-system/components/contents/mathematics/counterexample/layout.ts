@@ -10,13 +10,13 @@ import { Array as Arr, Schema } from "effect";
  */
 
 /** A spot on the board. */
-const PlaceSchema = Schema.Struct({ x: Schema.Number, z: Schema.Number });
+const PlaceSchema = Schema.Struct({ x: Schema.Finite, z: Schema.Finite });
 export type Place = typeof PlaceSchema.Type;
 
 /** The width (along x) and depth (along z) of a board or a cell. */
 const SizeSchema = Schema.Struct({
-  depth: Schema.Number,
-  width: Schema.Number,
+  depth: Schema.Finite,
+  width: Schema.Finite,
 });
 export type Size = typeof SizeSchema.Type;
 

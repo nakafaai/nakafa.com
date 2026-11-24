@@ -40,13 +40,10 @@ import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
-interface SliderRange {
-  readonly max: number;
-  readonly min: number;
-  readonly value: number;
-}
-
-function clampToRange(value: number, range: SliderRange) {
+function clampToRange(
+  value: number,
+  range: { readonly max: number; readonly min: number }
+) {
   return Math.min(range.max, Math.max(range.min, value));
 }
 
@@ -100,8 +97,16 @@ export function DenatureLab({
     readonly time: string;
     readonly view: string;
   };
-  readonly ph?: SliderRange;
-  readonly temperature?: SliderRange;
+  readonly ph?: {
+    readonly max: number;
+    readonly min: number;
+    readonly value: number;
+  };
+  readonly temperature?: {
+    readonly max: number;
+    readonly min: number;
+    readonly value: number;
+  };
   readonly title: NonNullable<ReactNode>;
 }) {
   const defaultTemp = tempRange?.value ?? OPTIMUM_TEMPERATURE;

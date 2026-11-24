@@ -9,12 +9,12 @@ import { Array as Arr, Schema } from "effect";
  * how strongly the spot under it shows.
  */
 const PoseSchema = Schema.Struct({
-  dim: Schema.Number,
-  lift: Schema.Number,
-  spot: Schema.Number,
-  tilt: Schema.Number,
-  x: Schema.Number,
-  z: Schema.Number,
+  dim: Schema.Finite,
+  lift: Schema.Finite,
+  spot: Schema.Finite,
+  tilt: Schema.Finite,
+  x: Schema.Finite,
+  z: Schema.Finite,
 });
 type Pose = typeof PoseSchema.Type;
 

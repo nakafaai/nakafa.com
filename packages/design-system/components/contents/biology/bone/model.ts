@@ -1,6 +1,6 @@
 import { Match, Schema } from "effect";
 
-export const BoneConditionSchema = Schema.Literals([
+const BoneConditionSchema = Schema.Literals([
   "osteoporosis",
   "osteomalacia",
   "rickets",
@@ -9,10 +9,10 @@ export const BoneConditionSchema = Schema.Literals([
 ]);
 export type BoneCondition = typeof BoneConditionSchema.Type;
 
-export const HealthStateSchema = Schema.Literals(["healthy", "affected"]);
+const HealthStateSchema = Schema.Literals(["healthy", "affected"]);
 export type HealthState = typeof HealthStateSchema.Type;
 
-export const BonePartSchema = Schema.Literals([
+const BonePartSchema = Schema.Literals([
   "spongy",
   "mineral",
   "cartilage",
@@ -27,7 +27,7 @@ const LensFocusSchema = Schema.Struct({
   secondary: BonePartSchema,
   y: Schema.Finite,
 });
-export type LensFocus = typeof LensFocusSchema.Type;
+type LensFocus = typeof LensFocusSchema.Type;
 
 /**
  * Maps each skeletal disorder to its anatomical focus height on the skeleton

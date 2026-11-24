@@ -181,30 +181,6 @@ function PlantFoliage({ plant }: { readonly plant: GardenPlant }) {
   );
 }
 
-function FormattedBinomial({
-  epithet,
-  genus,
-  style,
-}: {
-  readonly epithet: string;
-  readonly genus: string;
-  readonly style: NameStyle;
-}) {
-  if (style === "handwritten") {
-    return (
-      <span>
-        <span className="underline underline-offset-2">{genus}</span>{" "}
-        <span className="underline underline-offset-2">{epithet}</span>
-      </span>
-    );
-  }
-  return (
-    <em>
-      {genus} {epithet}
-    </em>
-  );
-}
-
 function GardenCamera() {
   const narrow = isNarrowThreeScene(
     useThree((state) => state.size),
@@ -310,11 +286,20 @@ export function GardenNameScene({
                   {plantNames[plant] ?? plant}
                 </span>
                 <span className="font-medium">
-                  <FormattedBinomial
-                    epithet={spec.epithet}
-                    genus={spec.genus}
-                    style={style}
-                  />
+                  {style === "handwritten" ? (
+                    <span>
+                      <span className="underline underline-offset-2">
+                        {spec.genus}
+                      </span>{" "}
+                      <span className="underline underline-offset-2">
+                        {spec.epithet}
+                      </span>
+                    </span>
+                  ) : (
+                    <em>
+                      {spec.genus} {spec.epithet}
+                    </em>
+                  )}
                 </span>
               </span>
             </ThreeLabel>

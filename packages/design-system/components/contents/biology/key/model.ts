@@ -1,6 +1,6 @@
 import { Array as Arr, Match, Option, Schema } from "effect";
 
-export const KeyAnimalSchema = Schema.Literals([
+const KeyAnimalSchema = Schema.Literals([
   "ant",
   "dragonfly",
   "spider",
@@ -10,7 +10,7 @@ export const KeyAnimalSchema = Schema.Literals([
 ]);
 export type KeyAnimal = typeof KeyAnimalSchema.Type;
 
-export const CoupletIdSchema = Schema.Literals([
+const CoupletIdSchema = Schema.Literals([
   "legs",
   "pairs",
   "wings",
@@ -55,10 +55,12 @@ export function testCouplet(
   couplet: CoupletId
 ): BranchOutcome {
   return Match.value(couplet).pipe(
-    Match.when("legs", () =>
-      animal === "earthworm" || animal === "snail" ? "b" : "a"
+    Match.when(
+      "legs",
+      (): BranchOutcome =>
+        animal === "earthworm" || animal === "snail" ? "b" : "a"
     ),
-    Match.when("pairs", () => {
+    Match.when("pairs", (): BranchOutcome => {
       if (animal === "ant" || animal === "dragonfly") {
         return "a";
       }
@@ -67,8 +69,11 @@ export function testCouplet(
       }
       return "neither";
     }),
-    Match.when("wings", () => (animal === "dragonfly" ? "a" : "b")),
-    Match.when("segments", () => {
+    Match.when(
+      "wings",
+      (): BranchOutcome => (animal === "dragonfly" ? "a" : "b")
+    ),
+    Match.when("segments", (): BranchOutcome => {
       if (animal === "spider") {
         return "a";
       }
@@ -77,10 +82,10 @@ export function testCouplet(
       }
       return "neither";
     }),
-    Match.when("shell", () => (animal === "snail" ? "a" : "b")),
-    Match.when("size", () => "both"),
-    Match.when("colour", () => "both"),
-    Match.when("overlap", () => {
+    Match.when("shell", (): BranchOutcome => (animal === "snail" ? "a" : "b")),
+    Match.when("size", (): BranchOutcome => "both"),
+    Match.when("colour", (): BranchOutcome => "both"),
+    Match.when("overlap", (): BranchOutcome => {
       if (animal === "dragonfly") {
         return "both";
       }
@@ -107,21 +112,26 @@ export function initialSteps(
   );
 }
 
+const BranchSettlementSchema = Schema.Struct({
+  next: Schema.Array(PendingGroupSchema),
+  settled: Schema.Array(AnimalResultSchema),
+});
+
 function settleBranch(
   members: readonly KeyAnimal[],
   path: readonly ("a" | "b")[],
   step: number
-): {
-  readonly next: readonly PendingGroup[];
-  readonly settled: readonly AnimalResult[];
-} {
+): typeof BranchSettlementSchema.Type {
   if (members.length === 1) {
     return {
       next: [],
       settled: [{ animal: members[0], path, status: "reached", step }],
     };
   }
-  return { next: [{ members, path }], settled: [] };
+  return {
+    next: [{ members, path }],
+    settled: [],
+  };
 }
 
 /**

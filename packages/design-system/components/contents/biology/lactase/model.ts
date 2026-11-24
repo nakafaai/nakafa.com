@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-export const LactaseMethodSchema = Schema.Literals(["immobilised", "free"]);
+const LactaseMethodSchema = Schema.Literals(["immobilised", "free"]);
 export type LactaseMethod = typeof LactaseMethodSchema.Type;
 
 const ColumnOutcomeSchema = Schema.Struct({
@@ -9,7 +9,7 @@ const ColumnOutcomeSchema = Schema.Struct({
   glucosePositive: Schema.Boolean,
   lactoseRemaining: Schema.Finite,
 });
-export type ColumnOutcome = typeof ColumnOutcomeSchema.Type;
+type ColumnOutcome = typeof ColumnOutcomeSchema.Type;
 
 /**
  * Evaluates lactose hydrolysis, glucose strip response, enzyme contamination

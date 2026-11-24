@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-export const VertebraRegionSchema = Schema.Literals([
+const VertebraRegionSchema = Schema.Literals([
   "cervical",
   "atlas",
   "axis",
@@ -11,7 +11,7 @@ export const VertebraRegionSchema = Schema.Literals([
 ]);
 export type VertebraRegion = typeof VertebraRegionSchema.Type;
 
-export const VertebraPartSchema = Schema.Literals([
+const VertebraPartSchema = Schema.Literals([
   "body",
   "canal",
   "spinous",
@@ -34,7 +34,7 @@ const RegionSpecSchema = Schema.Struct({
   hasForamen: Schema.Boolean,
   spinousLength: Schema.Finite,
 });
-export type RegionSpec = typeof RegionSpecSchema.Type;
+type RegionSpec = typeof RegionSpecSchema.Type;
 
 /**
  * Cited human vertebral column data matching textbook anatomy:

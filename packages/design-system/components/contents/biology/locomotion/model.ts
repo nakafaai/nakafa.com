@@ -1,6 +1,6 @@
 import { Match, Schema } from "effect";
 
-export const LocomotionAnimalSchema = Schema.Literals([
+const LocomotionAnimalSchema = Schema.Literals([
   "earthworm",
   "fish",
   "grasshopper",
@@ -8,7 +8,7 @@ export const LocomotionAnimalSchema = Schema.Literals([
 ]);
 export type LocomotionAnimal = typeof LocomotionAnimalSchema.Type;
 
-export const LocomotionMuscleSchema = Schema.Literals([
+const LocomotionMuscleSchema = Schema.Literals([
   "circular",
   "longitudinal",
   "left",
@@ -20,7 +20,7 @@ export const LocomotionMuscleSchema = Schema.Literals([
 ]);
 export type LocomotionMuscle = typeof LocomotionMuscleSchema.Type;
 
-export const LocomotionPartSchema = Schema.Literals([
+const LocomotionPartSchema = Schema.Literals([
   "chaetae",
   "fluid",
   "myotome",

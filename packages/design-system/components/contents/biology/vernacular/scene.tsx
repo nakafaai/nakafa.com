@@ -257,7 +257,6 @@ function SeaCreature({
   animal,
   commonName,
   index,
-  onSelect,
   position,
   scientific,
   selected,
@@ -265,7 +264,6 @@ function SeaCreature({
   readonly animal: SeaAnimal;
   readonly commonName: string;
   readonly index: number;
-  readonly onSelect: (animal: SeaAnimal) => void;
   readonly position: readonly [number, number, number];
   readonly scientific: string;
   readonly selected: boolean;
@@ -290,15 +288,7 @@ function SeaCreature({
   });
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: R3F group receives pointer selection while toolbar controls provide keyboard access.
-    <group
-      onClick={(event) => {
-        event.stopPropagation();
-        onSelect(animal);
-      }}
-      position={[position[0], position[1], position[2]]}
-      ref={ref}
-    >
+    <group position={[position[0], position[1], position[2]]} ref={ref}>
       <AnimalModel animal={animal} />
       {selected ? (
         <mesh
@@ -385,16 +375,23 @@ export function SeaNameScene({
         />
       </mesh>
       {Arr.map(animals, (animal, index) => (
-        <SeaCreature
-          animal={animal}
-          commonName={seaCommonName(names, animal, language)}
-          index={index}
+        // biome-ignore lint/a11y/noStaticElementInteractions: R3F group receives pointer selection while toolbar controls provide keyboard access.
+        <group
           key={animal}
-          onSelect={onSelect}
-          position={seaSlotPosition(animals, animal)}
-          scientific={seaSpeciesOf(animal).scientific}
-          selected={animal === selected}
-        />
+          onClick={(event) => {
+            event.stopPropagation();
+            onSelect(animal);
+          }}
+        >
+          <SeaCreature
+            animal={animal}
+            commonName={seaCommonName(names, animal, language)}
+            index={index}
+            position={seaSlotPosition(animals, animal)}
+            scientific={seaSpeciesOf(animal).scientific}
+            selected={animal === selected}
+          />
+        </group>
       ))}
     </group>
   );

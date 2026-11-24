@@ -157,7 +157,7 @@ export function GardenNameLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} ground="earth" reach={3.2} setting="field">
+        <ScienceStage floor={0} ground="soil" reach={3.2} setting="field">
           <Suspense fallback={null}>
             <GardenNameScene
               matched={matched}

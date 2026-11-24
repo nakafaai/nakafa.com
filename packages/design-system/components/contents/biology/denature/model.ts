@@ -1,6 +1,6 @@
 import { Option, Schema } from "effect";
 
-export const DenatureEnzymeSchema = Schema.Literals(["amylase", "pepsin"]);
+const DenatureEnzymeSchema = Schema.Literals(["amylase", "pepsin"]);
 export type DenatureEnzyme = typeof DenatureEnzymeSchema.Type;
 
 const DenatureMetricsSchema = Schema.Struct({
@@ -9,7 +9,7 @@ const DenatureMetricsSchema = Schema.Struct({
   intactShare: Schema.Finite,
   relativeRate: Schema.Finite,
 });
-export type DenatureMetrics = typeof DenatureMetricsSchema.Type;
+type DenatureMetrics = typeof DenatureMetricsSchema.Type;
 
 export const OPTIMUM_TEMPERATURE = 37;
 export const OPTIMUM_PH = 2;

@@ -28,12 +28,6 @@ import { ENZYME_COLORS } from "@repo/design-system/lib/material/enzyme";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
-interface CountSlider {
-  readonly max: number;
-  readonly min: number;
-  readonly value: number;
-}
-
 export function EnzymeSaturationLab({
   description,
   enzymes: enzymeRange,
@@ -43,7 +37,11 @@ export function EnzymeSaturationLab({
   turnover,
 }: {
   readonly description: NonNullable<ReactNode>;
-  readonly enzymes: CountSlider;
+  readonly enzymes: {
+    readonly max: number;
+    readonly min: number;
+    readonly value: number;
+  };
   readonly labels: {
     readonly busy: ReactNode;
     readonly curve: ReactNode;
@@ -58,7 +56,11 @@ export function EnzymeSaturationLab({
     readonly time: string;
     readonly view: string;
   };
-  readonly substrates: CountSlider;
+  readonly substrates: {
+    readonly max: number;
+    readonly min: number;
+    readonly value: number;
+  };
   readonly title: NonNullable<ReactNode>;
   readonly turnover: number;
 }) {

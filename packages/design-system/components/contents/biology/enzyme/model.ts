@@ -1,23 +1,15 @@
 import { Match, Schema } from "effect";
 
-export const DisaccharidaseSchema = Schema.Literals([
-  "lactase",
-  "sucrase",
-  "maltase",
-]);
+const DisaccharidaseSchema = Schema.Literals(["lactase", "sucrase", "maltase"]);
 export type Disaccharidase = typeof DisaccharidaseSchema.Type;
 
-export const DisaccharideSchema = Schema.Literals([
-  "lactose",
-  "sucrose",
-  "maltose",
-]);
+const DisaccharideSchema = Schema.Literals(["lactose", "sucrose", "maltose"]);
 export type Disaccharide = typeof DisaccharideSchema.Type;
 
-export const BindingModelSchema = Schema.Literals(["lockKey", "inducedFit"]);
+const BindingModelSchema = Schema.Literals(["lockKey", "inducedFit"]);
 export type BindingModel = typeof BindingModelSchema.Type;
 
-export const MonosaccharideSchema = Schema.Literals([
+const MonosaccharideSchema = Schema.Literals([
   "glucose",
   "galactose",
   "fructose",
@@ -28,7 +20,7 @@ const ReactionMatchSchema = Schema.Struct({
   fits: Schema.Boolean,
   products: Schema.Array(MonosaccharideSchema),
 });
-export type ReactionMatch = typeof ReactionMatchSchema.Type;
+type ReactionMatch = typeof ReactionMatchSchema.Type;
 
 /**
  * Checks enzyme-substrate specificity for the three disaccharidases and gives

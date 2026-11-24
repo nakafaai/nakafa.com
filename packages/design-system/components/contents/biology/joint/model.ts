@@ -1,6 +1,6 @@
 import { Match, Schema } from "effect";
 
-export const JointKindSchema = Schema.Literals([
+const JointKindSchema = Schema.Literals([
   "suture",
   "disc",
   "hinge",
@@ -8,7 +8,7 @@ export const JointKindSchema = Schema.Literals([
 ]);
 export type JointKind = typeof JointKindSchema.Type;
 
-export const JointPartSchema = Schema.Literals([
+const JointPartSchema = Schema.Literals([
   "bone",
   "cartilage",
   "membrane",
@@ -24,7 +24,7 @@ const JointMotionSchema = Schema.Struct({
   rollRad: Schema.Finite,
   yawRad: Schema.Finite,
 });
-export type JointMotion = typeof JointMotionSchema.Type;
+type JointMotion = typeof JointMotionSchema.Type;
 
 /**
  * Computes physically constrained rotation angles (radians) for a joint given

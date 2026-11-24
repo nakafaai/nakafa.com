@@ -1,9 +1,9 @@
 import { Match, Schema } from "effect";
 
-export const LimbKindSchema = Schema.Literals(["arm", "leg"]);
+const LimbKindSchema = Schema.Literals(["arm", "leg"]);
 export type LimbKind = typeof LimbKindSchema.Type;
 
-export const LegMovementSchema = Schema.Literals([
+const LegMovementSchema = Schema.Literals([
   "heel",
   "toes",
   "bend",
@@ -11,7 +11,7 @@ export const LegMovementSchema = Schema.Literals([
 ]);
 export type LegMovement = typeof LegMovementSchema.Type;
 
-export const MuscleIdSchema = Schema.Literals([
+const MuscleIdSchema = Schema.Literals([
   "biceps",
   "triceps",
   "quadriceps",
@@ -21,7 +21,7 @@ export const MuscleIdSchema = Schema.Literals([
 ]);
 export type MuscleId = typeof MuscleIdSchema.Type;
 
-export const LimbPartSchema = Schema.Literals([
+const LimbPartSchema = Schema.Literals([
   "humerus",
   "radius",
   "ulna",
@@ -35,7 +35,7 @@ const AntagonisticPairSchema = Schema.Struct({
   contracting: MuscleIdSchema,
   relaxing: MuscleIdSchema,
 });
-export type AntagonisticPair = typeof AntagonisticPairSchema.Type;
+type AntagonisticPair = typeof AntagonisticPairSchema.Type;
 
 export const ARM_ANGLE_MIN = 35;
 export const ARM_ANGLE_MAX = 170;

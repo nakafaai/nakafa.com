@@ -15,10 +15,30 @@ import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { SKELETON_COLORS } from "@repo/design-system/lib/material/skeleton";
 import { Array as Arr, Match } from "effect";
-import { useRef } from "react";
+import { createContext, use, useRef } from "react";
 import type { Group } from "three";
 
 const WORM_SEGMENTS = [-0.6, -0.36, -0.12, 0.12, 0.36, 0.6] as const;
+
+const PartsContext = createContext<Readonly<
+  Record<LocomotionPart, string>
+> | null>(null);
+
+function useLocomotionParts(): Readonly<Record<LocomotionPart, string>> {
+  const value = use(PartsContext);
+  if (value === null) {
+    return {
+      chaetae: "",
+      femur: "",
+      fin: "",
+      fluid: "",
+      keel: "",
+      myotome: "",
+      tibia: "",
+    };
+  }
+  return value;
+}
 
 function LocomotionCamera() {
   const narrow = isNarrowThreeScene(
@@ -38,11 +58,10 @@ function LocomotionCamera() {
 
 function EarthwormView({
   activeMuscle,
-  parts,
 }: {
   readonly activeMuscle: LocomotionMuscle;
-  readonly parts: Readonly<Record<LocomotionPart, string>>;
 }) {
+  const parts = useLocomotionParts();
   const elongated = activeMuscle === "circular";
   return (
     <group>
@@ -105,11 +124,10 @@ function EarthwormView({
 
 function FishView({
   activeMuscle,
-  parts,
 }: {
   readonly activeMuscle: LocomotionMuscle;
-  readonly parts: Readonly<Record<LocomotionPart, string>>;
 }) {
+  const parts = useLocomotionParts();
   const bend = activeMuscle === "left" ? 0.22 : -0.22;
   return (
     <group>
@@ -188,11 +206,10 @@ function FishView({
 
 function GrasshopperView({
   activeMuscle,
-  parts,
 }: {
   readonly activeMuscle: LocomotionMuscle;
-  readonly parts: Readonly<Record<LocomotionPart, string>>;
 }) {
+  const parts = useLocomotionParts();
   const kicking = activeMuscle === "extensor";
   return (
     <group>
@@ -268,11 +285,10 @@ function GrasshopperView({
 
 function BirdView({
   activeMuscle,
-  parts,
 }: {
   readonly activeMuscle: LocomotionMuscle;
-  readonly parts: Readonly<Record<LocomotionPart, string>>;
 }) {
+  const parts = useLocomotionParts();
   const downstroke = activeMuscle === "pectoralis";
   const wingAngle = downstroke ? -0.45 : 0.52;
   return (
@@ -361,24 +377,22 @@ export function LocomotionScene({
   });
 
   return (
-    <group ref={groupRef}>
-      <SimulationTicker running={playing} />
-      <LocomotionCamera />
-      {Match.value(animal).pipe(
-        Match.when("earthworm", () => (
-          <EarthwormView activeMuscle={activeMuscle} parts={parts} />
-        )),
-        Match.when("fish", () => (
-          <FishView activeMuscle={activeMuscle} parts={parts} />
-        )),
-        Match.when("grasshopper", () => (
-          <GrasshopperView activeMuscle={activeMuscle} parts={parts} />
-        )),
-        Match.when("bird", () => (
-          <BirdView activeMuscle={activeMuscle} parts={parts} />
-        )),
-        Match.exhaustive
-      )}
-    </group>
+    <PartsContext value={parts}>
+      <group ref={groupRef}>
+        <SimulationTicker running={playing} />
+        <LocomotionCamera />
+        {Match.value(animal).pipe(
+          Match.when("earthworm", () => (
+            <EarthwormView activeMuscle={activeMuscle} />
+          )),
+          Match.when("fish", () => <FishView activeMuscle={activeMuscle} />),
+          Match.when("grasshopper", () => (
+            <GrasshopperView activeMuscle={activeMuscle} />
+          )),
+          Match.when("bird", () => <BirdView activeMuscle={activeMuscle} />),
+          Match.exhaustive
+        )}
+      </group>
+    </PartsContext>
   );
 }

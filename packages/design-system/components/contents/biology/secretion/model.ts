@@ -1,12 +1,12 @@
 import { Schema } from "effect";
 
-export const SecretionRouteSchema = Schema.Literals([
+const SecretionRouteSchema = Schema.Literals([
   "intracellular",
   "extracellular",
 ]);
 export type SecretionRoute = typeof SecretionRouteSchema.Type;
 
-export const SecretionStepSchema = Schema.Literals([
+const SecretionStepSchema = Schema.Literals([
   "nucleus",
   "freeRibosome",
   "cytoplasm",
@@ -24,7 +24,7 @@ const WaypointSchema = Schema.Tuple([
   Schema.Finite,
   Schema.Finite,
 ]);
-export type Waypoint = typeof WaypointSchema.Type;
+type Waypoint = typeof WaypointSchema.Type;
 
 const ROUTE_STEPS: Readonly<Record<SecretionRoute, readonly SecretionStep[]>> =
   {

@@ -1,6 +1,6 @@
 import { Array as Arr, Option, Schema } from "effect";
 
-export const TaxonOrganismSchema = Schema.Literals([
+const TaxonOrganismSchema = Schema.Literals([
   "tiger",
   "leopard",
   "leopardCat",
@@ -12,7 +12,7 @@ export const TaxonOrganismSchema = Schema.Literals([
 ]);
 export type TaxonOrganism = typeof TaxonOrganismSchema.Type;
 
-export const TaxonRankSchema = Schema.Literals([
+const TaxonRankSchema = Schema.Literals([
   "kingdom",
   "phylum",
   "class",
@@ -26,7 +26,7 @@ export type TaxonRank = typeof TaxonRankSchema.Type;
 export const TAXON_RANKS: readonly TaxonRank[] = TaxonRankSchema.literals;
 
 const LineageSchema = Schema.Record(TaxonRankSchema, Schema.String);
-export type Lineage = typeof LineageSchema.Type;
+type Lineage = typeof LineageSchema.Type;
 
 /**
  * Full seven-rank taxonomic lineages for the eight organisms, from kingdom

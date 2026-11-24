@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-export const SpecimenIdSchema = Schema.Literals([
+const SpecimenIdSchema = Schema.Literals([
   "sulfolobus",
   "thermus",
   "paramecium",
@@ -14,7 +14,7 @@ export const SpecimenIdSchema = Schema.Literals([
 ]);
 export type SpecimenId = typeof SpecimenIdSchema.Type;
 
-export const KingdomIdSchema = Schema.Literals([
+const KingdomIdSchema = Schema.Literals([
   "archaebacteria",
   "eubacteria",
   "protista",
@@ -26,7 +26,7 @@ export type KingdomId = typeof KingdomIdSchema.Type;
 
 export const KINGDOMS: readonly KingdomId[] = KingdomIdSchema.literals;
 
-export const FeatureCheckSchema = Schema.Literals([
+const FeatureCheckSchema = Schema.Literals([
   "nucleus",
   "cells",
   "wall",
@@ -34,7 +34,7 @@ export const FeatureCheckSchema = Schema.Literals([
 ]);
 export type FeatureCheck = typeof FeatureCheckSchema.Type;
 
-export const FeatureValueSchema = Schema.Literals([
+const FeatureValueSchema = Schema.Literals([
   "yes",
   "no",
   "one",
@@ -60,7 +60,7 @@ const SpecimenProfileSchema = Schema.Struct({
   nucleus: FeatureValueSchema,
   wall: FeatureValueSchema,
 });
-export type SpecimenProfile = typeof SpecimenProfileSchema.Type;
+type SpecimenProfile = typeof SpecimenProfileSchema.Type;
 
 /**
  * Diagnostic four-feature profiles for all ten specimens across the six

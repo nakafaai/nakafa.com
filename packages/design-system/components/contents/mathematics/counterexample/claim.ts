@@ -37,8 +37,8 @@ const TestSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("square-number") }),
   Schema.Struct({ kind: Schema.Literal("multiple"), of: Schema.Int }),
   Schema.Struct({ kind: Schema.Literal("factor"), of: Schema.Int }),
-  Schema.Struct({ kind: Schema.Literal("above"), than: Schema.Number }),
-  Schema.Struct({ kind: Schema.Literal("below"), than: Schema.Number }),
+  Schema.Struct({ kind: Schema.Literal("above"), than: Schema.Finite }),
+  Schema.Struct({ kind: Schema.Literal("below"), than: Schema.Finite }),
   Schema.Struct({ kind: Schema.Literal("shape"), shape: ShapeSchema }),
   Schema.Struct({ kind: Schema.Literal("color"), color: ColorSchema }),
 ]);

@@ -135,9 +135,12 @@ export function ArgumentChainLab({
     ownCard(premises[1]),
     ownCard(conclusion),
   ] as const;
-  const [seats, setSeats] = useState(() =>
-    startSeats(Arr.map(fixed, Option.isNone))
-  );
+  const [seats, setSeats] = useState<
+    readonly (
+      | { readonly kind: "fixed" }
+      | { readonly kind: "open"; readonly card: Option.Option<number> }
+    )[]
+  >(() => startSeats(Arr.map(fixed, Option.isNone)));
   const reading = readChain(slotsOf(fixed, hand, seats));
   const shown = showVerdict
     ? reading

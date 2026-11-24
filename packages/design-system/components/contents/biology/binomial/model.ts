@@ -1,6 +1,6 @@
 import { Array as Arr, Schema } from "effect";
 
-export const GardenPlantSchema = Schema.Literals([
+const GardenPlantSchema = Schema.Literals([
   "kangkung",
   "sweetPotato",
   "mango",
@@ -10,10 +10,10 @@ export const GardenPlantSchema = Schema.Literals([
 ]);
 export type GardenPlant = typeof GardenPlantSchema.Type;
 
-export const NameStyleSchema = Schema.Literals(["printed", "handwritten"]);
+const NameStyleSchema = Schema.Literals(["printed", "handwritten"]);
 export type NameStyle = typeof NameStyleSchema.Type;
 
-export const MatchModeSchema = Schema.Literals(["genus", "epithet"]);
+const MatchModeSchema = Schema.Literals(["genus", "epithet"]);
 export type MatchMode = typeof MatchModeSchema.Type;
 
 const BotanicalSpecSchema = Schema.Struct({
@@ -22,7 +22,7 @@ const BotanicalSpecSchema = Schema.Struct({
   genus: Schema.String,
   id: GardenPlantSchema,
 });
-export type BotanicalSpec = typeof BotanicalSpecSchema.Type;
+type BotanicalSpec = typeof BotanicalSpecSchema.Type;
 
 /**
  * Cited binomial names for the six school-garden plants: water spinach and

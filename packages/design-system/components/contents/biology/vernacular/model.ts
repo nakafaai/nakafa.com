@@ -1,6 +1,6 @@
 import { Array as Arr, Option, Schema } from "effect";
 
-export const SeaAnimalSchema = Schema.Literals([
+const SeaAnimalSchema = Schema.Literals([
   "dugong",
   "whale",
   "jellyfish",
@@ -9,7 +9,7 @@ export const SeaAnimalSchema = Schema.Literals([
 ]);
 export type SeaAnimal = typeof SeaAnimalSchema.Type;
 
-export const SeaLanguageSchema = Schema.Literals([
+const SeaLanguageSchema = Schema.Literals([
   "malay",
   "english",
   "indonesian",
@@ -26,7 +26,7 @@ const SeaSpeciesSchema = Schema.Struct({
   z: Schema.Finite,
 });
 
-export type SeaSpecies = typeof SeaSpeciesSchema.Type;
+type SeaSpecies = typeof SeaSpeciesSchema.Type;
 
 /**
  * Cited marine species of Malaysian waters whose everyday names often mislead:

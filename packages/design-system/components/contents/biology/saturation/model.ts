@@ -1,6 +1,6 @@
 import { Array as Arr, Schema } from "effect";
 
-export const LimitingFactorSchema = Schema.Literals(["substrate", "enzyme"]);
+const LimitingFactorSchema = Schema.Literals(["substrate", "enzyme"]);
 export type LimitingFactor = typeof LimitingFactorSchema.Type;
 
 const SaturationStateSchema = Schema.Struct({
@@ -9,7 +9,7 @@ const SaturationStateSchema = Schema.Struct({
   occupancy: Schema.Finite,
   rate: Schema.Finite,
 });
-export type SaturationState = typeof SaturationStateSchema.Type;
+type SaturationState = typeof SaturationStateSchema.Type;
 
 const CurvePointSchema = Schema.Struct({
   rate: Schema.Finite,
