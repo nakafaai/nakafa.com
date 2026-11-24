@@ -132,7 +132,7 @@ function DatePicker({
             className={cn(
               popupMotion(),
               sheetSurface(),
-              "bg-popover text-popover-foreground z-50 rounded-md border p-3 shadow-md outline-none [--cell-size:--spacing(8)] data-[presentation=sheet]:[--cell-size:--spacing(11)]"
+              "bg-popover text-popover-foreground [--cell-size:--spacing(8)] data-[presentation=sheet]:[--cell-size:--spacing(11)] z-50 rounded-md border p-3 shadow-md outline-none"
             )}
           >
             <SheetGrip />

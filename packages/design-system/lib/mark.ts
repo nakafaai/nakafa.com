@@ -36,5 +36,5 @@ export const lineMark = cva("flex shrink-0 items-center", {
  * last line as far from the row's edge, so a row of one line is exactly one band high.
  */
 export const lineWords = cva(
-  "min-w-0 flex-1 py-[max(0px,calc((--spacing(8)-1lh)/2))]"
+  "py-[max(0px,calc((--spacing(8)-1lh)/2))] min-w-0 flex-1"
 );

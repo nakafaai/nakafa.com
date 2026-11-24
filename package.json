@@ -33,7 +33,7 @@
       "@types/react-dom": "19.3.0",
       "@vitest/coverage-istanbul": "5.1.1",
       "@vitest/ui": "5.1.1",
-      "ai": "7.0.179",
+      "ai": "7.0.181",
       "alchemy": "2.0.0-beta.87",
       "class-variance-authority": "^0.7.1",
       "cn": "0.5.2",
@@ -108,7 +108,7 @@
     "seroval-plugins": "1.8.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.8",
+    "@biomejs/biome": "2.6.9",
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "^3.0.3",
     "@effect/platform-node": "catalog:",

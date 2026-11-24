@@ -115,7 +115,7 @@ export function Sidebar({
               ? "left-0 group-data-[collapsible=offcanvas]:-left-64"
               : "right-0 group-data-[collapsible=offcanvas]:-right-64",
             variant === "floating" || variant === "inset"
-              ? "p-2 group-data-[collapsible=icon]:w-[calc(3rem+(--spacing(4))+2px)]"
+              ? "group-data-[collapsible=icon]:w-[calc(3rem+(--spacing(4))+2px)] p-2"
               : "border-sidebar-border group-data-[collapsible=icon]:w-12 group-data-[side=left]:border-r group-data-[side=right]:border-l",
             className
           )}

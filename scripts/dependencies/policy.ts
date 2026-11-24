@@ -53,7 +53,7 @@ export const VITEST_COHORT_VERSION = "5.1.1";
  */
 export const AI_SDK_COHORT = {
   "@convex-dev/ai-sdk-provider": "0.3.0",
-  ai: "7.0.179",
+  ai: "7.0.181",
 } as const;
 /**
  * Alchemy's packages move as one exact cohort. Alchemy 2 is a beta whose releases
@@ -143,7 +143,7 @@ const CONFECT_COHORT_VERSION = "10.6.0";
  * together on one exact release: a beta may change a part between releases, and the two share one copy of the core,
  * which two versions would split.
  */
-const UI_SDK_COHORT_VERSION = "0.1.0-beta.14";
+const UI_SDK_COHORT_VERSION = "0.1.0-beta.17";
 /** The UI SDK packages the design system pins, the only workspace that imports them. */
 const UI_SDK_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
   ["packages/design-system/package.json", ["@ui-sdk/core", "@ui-sdk/react"]],
@@ -242,7 +242,7 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   },
   { approved: "catalog:", dependency: "@vitest/ui", minimumDeclarations: 1 },
   {
-    approved: "1.0.2",
+    approved: "1.3.3",
     dependency: "@polar-sh/sdk",
     minimumDeclarations: 1,
   },

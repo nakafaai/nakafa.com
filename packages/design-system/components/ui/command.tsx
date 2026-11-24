@@ -84,7 +84,7 @@ function CommandDialogPopup({
           sheetSurface(),
           // The window is tinted, so the card of rows (`CommandPanel`) stands out of it in the popup's own colour.
           "text-popover-foreground z-50 flex min-h-0 w-full flex-col overflow-clip border bg-[color-mix(in_oklab,var(--muted)_72%,var(--popover))] outline-none not-dark:bg-clip-padding",
-          "data-[presentation=dialog]:fixed data-[presentation=dialog]:inset-x-0 data-[presentation=dialog]:top-[max(--spacing(4),4vh)] data-[presentation=dialog]:mx-auto data-[presentation=dialog]:h-[min(40rem,calc(100dvh-2rem))] data-[presentation=dialog]:max-w-[min(36rem,calc(100%-2rem))] data-[presentation=dialog]:rounded-2xl data-[presentation=dialog]:shadow-lg/5 sm:data-[presentation=dialog]:top-[10vh] sm:data-[presentation=dialog]:h-[min(40rem,80dvh)]",
+          "data-[presentation=dialog]:top-[max(--spacing(4),4vh)] data-[presentation=dialog]:fixed data-[presentation=dialog]:inset-x-0 data-[presentation=dialog]:mx-auto data-[presentation=dialog]:h-[min(40rem,calc(100dvh-2rem))] data-[presentation=dialog]:max-w-[min(36rem,calc(100%-2rem))] data-[presentation=dialog]:rounded-2xl data-[presentation=dialog]:shadow-lg/5 sm:data-[presentation=dialog]:top-[10vh] sm:data-[presentation=dialog]:h-[min(40rem,80dvh)]",
           "data-[presentation=sheet]:h-[calc(var(--visual-viewport-height,100dvh)-3rem)]",
           className
         )}

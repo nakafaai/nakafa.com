@@ -57,9 +57,9 @@ const inputGroupAddonVariants = cva(
         "inline-end":
           "order-last pr-3 has-[>button]:mr-[-0.45rem] has-[>kbd]:mr-[-0.35rem]",
         "block-start":
-          "order-first w-full justify-start px-3 pt-[var(--input-group-addon-space,--spacing(3))] [.border-b]:pb-3",
+          "pt-[var(--input-group-addon-space,--spacing(3))] order-first w-full justify-start px-3 [.border-b]:pb-3",
         "block-end":
-          "order-last w-full justify-start px-3 pb-[var(--input-group-addon-space,--spacing(3))] [.border-t]:pt-3",
+          "pb-[var(--input-group-addon-space,--spacing(3))] order-last w-full justify-start px-3 [.border-t]:pt-3",
       },
     },
     defaultVariants: {

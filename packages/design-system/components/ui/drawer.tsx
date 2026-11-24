@@ -2,7 +2,6 @@ import { PopupPlace } from "@repo/design-system/components/ui/popup-place";
 import { ScrollArea } from "@repo/design-system/components/ui/scroll-area";
 import { PopupContainer } from "@repo/design-system/lib/popup";
 import type { NodeChildren } from "@repo/design-system/lib/render";
-import { keepTabInside } from "@repo/design-system/lib/trap";
 import {
   DrawerBackdrop,
   DrawerContent as DrawerContentPrimitive,
@@ -43,17 +42,15 @@ function Drawer({
  * footer that ends the drawer (`DrawerFooter`) takes the bottom one onto its tinted band instead.
  *
  * On a touch screen UI SDK moves the drawer by its host's scroll (`data-driver="scroll-snap"`), so a swipe that closes it
- * has to reach the host, and three things would stop it. The surface clips its corners with `overflow: clip`, never
+ * has to reach the host, and two things would stop it. The surface clips its corners with `overflow: clip`, never
  * hidden: hidden makes it a scroll container, and with the `overscroll-behavior: contain` UI SDK writes on it, every
  * swipe ended there. A body that scrolls (`ScrollArea`) hands a swipe on past its top to the host, as an iPhone sheet's
- * does. And the handle pans the host: UI SDK gives it `touch-action: none` for the pointer driver, which leaves no
- * swipe to start on it. A sheet that rises over it leaves it still, as every sheet does (`sheetSurface`). It opens with
- * the focus on itself, so a screen reader names the drawer first, never its handle, and a phone raises no keyboard.
+ * does. A sheet that rises over it leaves it still, as every sheet does (`sheetSurface`). It opens with the focus on
+ * itself, so a screen reader names the drawer first, never its handle, and a phone raises no keyboard.
  */
 function DrawerContent({
   children,
   className,
-  onKeyDown,
   ...props
 }: NodeChildren<ComponentProps<typeof DrawerContentPrimitive>>) {
   const t = useTranslations("Common");
@@ -70,15 +67,11 @@ function DrawerContent({
           className
         )}
         initialFocus="content"
-        onKeyDown={(event) => {
-          onKeyDown?.(event);
-          keepTabInside(event);
-        }}
         {...props}
       >
         <DrawerHandle
           aria-label={t("resize-drawer")}
-          className="after:bg-muted focus-visible:after:bg-ring flex shrink-0 cursor-grab touch-none items-center justify-center outline-none group-data-[driver=scroll-snap]/drawer:touch-pan-y! group-data-[side=bottom]/drawer:h-5 group-data-[side=left]/drawer:w-4 group-data-[side=right]/drawer:w-4 group-data-[side=top]/drawer:order-last group-data-[side=top]/drawer:h-5 after:rounded-full group-data-[side=bottom]/drawer:after:h-1.5 group-data-[side=bottom]/drawer:after:w-25 group-data-[side=left]/drawer:after:h-25 group-data-[side=left]/drawer:after:w-1.5 group-data-[side=right]/drawer:after:h-25 group-data-[side=right]/drawer:after:w-1.5 group-data-[side=top]/drawer:after:h-1.5 group-data-[side=top]/drawer:after:w-25 active:cursor-grabbing"
+          className="after:bg-muted focus-visible:after:bg-ring flex shrink-0 cursor-grab items-center justify-center outline-none group-data-[side=bottom]/drawer:h-5 group-data-[side=left]/drawer:w-4 group-data-[side=right]/drawer:w-4 group-data-[side=top]/drawer:order-last group-data-[side=top]/drawer:h-5 after:rounded-full group-data-[side=bottom]/drawer:after:h-1.5 group-data-[side=bottom]/drawer:after:w-25 group-data-[side=left]/drawer:after:h-25 group-data-[side=left]/drawer:after:w-1.5 group-data-[side=right]/drawer:after:h-25 group-data-[side=right]/drawer:after:w-1.5 group-data-[side=top]/drawer:after:h-1.5 group-data-[side=top]/drawer:after:w-25 active:cursor-grabbing"
         />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
       </DrawerContentPrimitive>
@@ -140,7 +133,7 @@ function DrawerPanel({
  * shadcn's own. In a row, the actions keep their own widths and stand at the end, as a pane's footer holds them.
  */
 const drawerFooterVariants = cva(
-  "bg-muted/70 mt-auto flex shrink-0 gap-2 border-t p-4 pb-[max(--spacing(4),env(safe-area-inset-bottom))]",
+  "bg-muted/70 pb-[max(--spacing(4),env(safe-area-inset-bottom))] mt-auto flex shrink-0 gap-2 border-t p-4",
   {
     defaultVariants: { layout: "stack" },
     variants: {
