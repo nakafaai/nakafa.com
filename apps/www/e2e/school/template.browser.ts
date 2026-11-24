@@ -19,6 +19,9 @@ const EDIT_SUFFIX = /\/edit$/u;
 /** The page of the first question, whose name starts with its number. */
 const FIRST_QUESTION = /^Question 1\b/u;
 
+/** A desktop window wide enough to show the For teachers panel beside the paper. */
+const DESKTOP = { height: 900, width: 1440 };
+
 /** The four options of the question, each with its letter and its text. B and D are correct. */
 const OPTIONS = [
   { letter: "A", text: "2" },
@@ -33,7 +36,7 @@ test("a teacher turns a question into complex multiple choice, marks two answers
 }) => {
   const school = await Effect.runPromise(createSchool());
   const host = `${school.slug}.localhost`;
-  const context = await browser.newContext();
+  const context = await browser.newContext({ viewport: DESKTOP });
   await Effect.runPromise(
     signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
   );
@@ -143,7 +146,7 @@ test("a teacher turns a question into true or false and then cause and effect, w
 }) => {
   const school = await Effect.runPromise(createSchool());
   const host = `${school.slug}.localhost`;
-  const context = await browser.newContext();
+  const context = await browser.newContext({ viewport: DESKTOP });
   await Effect.runPromise(
     signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
   );
@@ -221,7 +224,7 @@ test("a teacher turns a question into a short answer with accepted answers, and 
 }) => {
   const school = await Effect.runPromise(createSchool());
   const host = `${school.slug}.localhost`;
-  const context = await browser.newContext();
+  const context = await browser.newContext({ viewport: DESKTOP });
   await Effect.runPromise(
     signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
   );
@@ -303,7 +306,7 @@ test("a teacher turns a question into matching, joins every statement to its ans
 }) => {
   const school = await Effect.runPromise(createSchool());
   const host = `${school.slug}.localhost`;
-  const context = await browser.newContext();
+  const context = await browser.newContext({ viewport: DESKTOP });
   await Effect.runPromise(
     signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
   );
@@ -386,7 +389,7 @@ test("a teacher turns a question into a true or false table, marks the key in th
 }) => {
   const school = await Effect.runPromise(createSchool());
   const host = `${school.slug}.localhost`;
-  const context = await browser.newContext();
+  const context = await browser.newContext({ viewport: DESKTOP });
   await Effect.runPromise(
     signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
   );

@@ -38,7 +38,7 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
 }) => {
   const school = await Effect.runPromise(createSchool());
   const host = `${school.slug}.localhost`;
-  const context = await browser.newContext();
+  const context = await browser.newContext({ viewport: SCREEN });
   await Effect.runPromise(
     signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
   );
