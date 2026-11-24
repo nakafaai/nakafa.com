@@ -30,6 +30,7 @@ describe("tryouts/runtime/readSectionBodies", () => {
                   readSectionBodies({
                     access: { answers: true, preview: false },
                     appLocale: "en",
+                    attemptSnapshotId: world.snapshotId,
                     placements,
                   })
                 )

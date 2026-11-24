@@ -11,9 +11,9 @@ import {
   ContentBlock,
   ContentStack,
   MdxBlockquote,
+  MdxHeading3,
   MdxHeading4,
   MdxHeading5,
-  MdxHeading6,
   MdxListItem,
   MdxOrderedList,
   MdxTable,
@@ -130,19 +130,19 @@ function Block({
       heading: ({ attrs, content }) =>
         Match.value(attrs.level).pipe(
           Match.when(1, () => (
-            <MdxHeading4>
+            <MdxHeading3 enableLink={false}>
+              <InlineContent nodes={content} />
+            </MdxHeading3>
+          )),
+          Match.when(2, () => (
+            <MdxHeading4 enableLink={false}>
               <InlineContent nodes={content} />
             </MdxHeading4>
           )),
-          Match.when(2, () => (
-            <MdxHeading5>
+          Match.when(3, () => (
+            <MdxHeading5 enableLink={false}>
               <InlineContent nodes={content} />
             </MdxHeading5>
-          )),
-          Match.when(3, () => (
-            <MdxHeading6>
-              <InlineContent nodes={content} />
-            </MdxHeading6>
           )),
           Match.exhaustive
         ),

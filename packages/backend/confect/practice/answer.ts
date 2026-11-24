@@ -19,7 +19,10 @@ import {
 import type { PracticeTarget } from "@repo/backend/confect/practice/sessions.spec";
 import { PracticeError } from "@repo/backend/confect/practice/sessions.spec";
 import { gradeAnswer } from "@repo/backend/confect/tryouts/response/answer";
-import { readExplanation } from "@repo/backend/confect/tryouts/rows";
+import {
+  findActiveExplanationSnapshotId,
+  readExplanation,
+} from "@repo/backend/confect/tryouts/rows";
 import { readQuestionBody } from "@repo/backend/confect/tryouts/runtime/bodies";
 import { isTryoutReviewPreviewQuestion } from "@repo/backend/confect/tryouts/runtime/content";
 import { readPlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
@@ -166,6 +169,7 @@ export const readPracticeContent = Effect.fn("practice.answer.content")(
           readSessionVersion(question, session.questionLanguage),
         ]);
         const body = yield* readQuestionBody({
+          activeSnapshotId: Option.none(),
           appLocale,
           question: placed,
           reviewed: false,
@@ -204,11 +208,17 @@ export const readPracticeExplanation = Effect.fn("practice.answer.explain")(
     ) {
       return null;
     }
-    const [placed, version] = yield* Effect.all([
+    const [placed, version, activeSnapshotId] = yield* Effect.all([
       readPlacedQuestion(question),
       readSessionVersion(question, session.questionLanguage),
+      findActiveExplanationSnapshotId(),
     ]);
-    const explanation = yield* readExplanation(version.hash, appLocale);
+    const explanation = yield* readExplanation({
+      activeSnapshotId,
+      fallbackSnapshotId: session.assessmentSnapshotId,
+      language: appLocale,
+      versionHash: version.hash,
+    });
     return {
       ...(Option.isSome(explanation) ? { explanation: explanation.value } : {}),
       keys: Arr.map(placed.interactions, ({ key }) => key),

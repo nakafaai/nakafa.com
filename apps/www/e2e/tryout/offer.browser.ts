@@ -53,9 +53,7 @@ const holdCheckoutAction = (page: Page) =>
 
 /** The Pro offer that a locked question's explanation shows in its place. */
 const offerOf = (page: Page) =>
-  page.locator(
-    `section[aria-labelledby="question-${LOCKED_QUESTION}-explanation"]`
-  );
+  page.locator(`section#question-${LOCKED_QUESTION}-explanation`);
 
 /**
  * Whether the offer's checkout stands inside the offer, and whether its label is cut. The script runs in the

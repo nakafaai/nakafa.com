@@ -4,6 +4,10 @@ import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import {
+  loadRelease,
+  loadState,
+} from "@repo/backend/confect/contentRelease/model";
 import { Effect, Option, Schema } from "effect";
 
 /** The rows of a snapshot by kind, so each kind decodes with its own schema. */
@@ -87,26 +91,79 @@ export const readStimulus = Effect.fn("tryouts.rows.readStimulus")(function* (
 });
 
 /**
- * Reads the explanation of an item version in one app locale, none when the version has no
- * explanation in it, as the contract allows. A stored row that is broken fails.
+ * Reads the active release's assessment snapshot id once per query (one state row and one release row),
+ * or none before any release activates an assessment snapshot.
+ */
+export const findActiveExplanationSnapshotId = Effect.fn(
+  "tryouts.rows.findActiveExplanationSnapshotId"
+)(function* () {
+  const releaseId = (yield* loadState())?.activeReleaseId;
+  if (releaseId === undefined) {
+    return Option.none<string>();
+  }
+  const release = yield* loadRelease(releaseId);
+  return Option.fromNullOr(
+    release.snapshotTransitions.assessment.resultSnapshotId
+  );
+});
+
+/** Reads one explanation row from one exact snapshot through its point-lookup identity index. */
+const findExplanationInSnapshot = Effect.fn(
+  "tryouts.rows.findExplanationInSnapshot"
+)(function* (snapshotId: string, versionHash: string, language: AppLocaleCode) {
+  const stored = yield* (yield* DatabaseReader)
+    .table("assessmentRows")
+    .index("by_snapshotId_and_kind_and_identity", (index) =>
+      index
+        .eq("snapshotId", snapshotId)
+        .eq("kind", "explanation")
+        .eq("identity", `${versionHash}\0${language}`)
+    )
+    .first()
+    .pipe(Effect.catchTag("DocumentDecodeError", Effect.die));
+  if (Option.isNone(stored)) {
+    return Option.none();
+  }
+  const { explanation } = yield* decodeAs("explanation", stored);
+  return Option.some(explanation.document);
+});
+
+/**
+ * Reads the explanation of an item version in one app locale from the active assessment snapshot through
+ * an exact O(1) point lookup, so updated explanations take effect immediately and candidate or aborted
+ * snapshots never leak. When the version no longer exists in the active snapshot (or no snapshot is active),
+ * falls back to one point lookup in the historical snapshot the attempt or session froze. A stored row that
+ * is broken fails.
  */
 export const readExplanation = Effect.fn("tryouts.rows.readExplanation")(
-  function* (versionHash: string, language: AppLocaleCode) {
-    const stored = yield* (yield* DatabaseReader)
-      .table("assessmentRows")
-      .index("by_kind_and_versionHash_and_language", (index) =>
-        index
-          .eq("kind", "explanation")
-          .eq("versionHash", versionHash)
-          .eq("language", language)
-      )
-      .first()
-      .pipe(Effect.catchTag("DocumentDecodeError", Effect.die));
-    if (Option.isNone(stored)) {
-      return Option.none();
+  function* (input: {
+    readonly activeSnapshotId: Option.Option<string>;
+    readonly fallbackSnapshotId?: string | undefined;
+    readonly language: AppLocaleCode;
+    readonly versionHash: string;
+  }) {
+    if (Option.isSome(input.activeSnapshotId)) {
+      const current = yield* findExplanationInSnapshot(
+        input.activeSnapshotId.value,
+        input.versionHash,
+        input.language
+      );
+      if (Option.isSome(current)) {
+        return current;
+      }
     }
-    const { explanation } = yield* decodeAs("explanation", stored);
-    return Option.some(explanation.document);
+    if (
+      input.fallbackSnapshotId !== undefined &&
+      (!Option.isSome(input.activeSnapshotId) ||
+        input.activeSnapshotId.value !== input.fallbackSnapshotId)
+    ) {
+      return yield* findExplanationInSnapshot(
+        input.fallbackSnapshotId,
+        input.versionHash,
+        input.language
+      );
+    }
+    return Option.none();
   }
 );
 

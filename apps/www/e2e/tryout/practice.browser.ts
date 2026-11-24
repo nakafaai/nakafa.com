@@ -107,7 +107,7 @@ test.describe("Practice beside the try-out", () => {
             first.getByRole("checkbox", { name: CORRECT })
           ).not.toHaveCount(0);
           await expect(
-            first.getByRole("heading", { name: "Explanation" })
+            first.getByRole("region", { name: "Explanation" })
           ).toBeVisible();
           await expect(
             pane.getByRole("button", { name: FIRST_CHECKED })

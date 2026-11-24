@@ -8,7 +8,10 @@ import type {
 import { formatFocusAnswers } from "@repo/backend/confect/nina/prompt/focus";
 import { NinaTurnError } from "@repo/backend/confect/nina/turns.spec";
 import { isCorrectGrade } from "@repo/backend/confect/tryouts/response/answer";
-import { readExplanation } from "@repo/backend/confect/tryouts/rows";
+import {
+  findActiveExplanationSnapshotId,
+  readExplanation,
+} from "@repo/backend/confect/tryouts/rows";
 import { readTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/content";
 import { toTryoutRuntimeError } from "@repo/backend/confect/tryouts/runtime/error";
 import { readOwnedAttemptById } from "@repo/backend/confect/tryouts/runtime/lookup";
@@ -80,11 +83,11 @@ export const readQuestionFocus = Effect.fn("nina.focus.read")(function* (
   if (Option.isNone(entitled)) {
     return null;
   }
-  const { placement, section } = entitled.value;
+  const { attempt, placement, section } = entitled.value;
   const version = yield* placeVersion(placement, section.questionLanguage);
-  const [question, explanation, response] = yield* Effect.all([
+  const [question, activeSnapshotId, response] = yield* Effect.all([
     readPlacedQuestion(placement),
-    readExplanation(version.hash, locale),
+    findActiveExplanationSnapshotId(),
     (yield* DatabaseReader)
       .table("tryoutResponses")
       .get("by_placementId", placement._id)
@@ -93,6 +96,12 @@ export const readQuestionFocus = Effect.fn("nina.focus.read")(function* (
         Effect.mapError(toTryoutRuntimeError)
       ),
   ]);
+  const explanation = yield* readExplanation({
+    activeSnapshotId,
+    fallbackSnapshotId: attempt.assessmentSnapshotId,
+    language: locale,
+    versionHash: version.hash,
+  });
   return {
     // The answer section quotes the options in the language the question is read in, beside the place's keys,
     // which every language of a place holds in the same order.
