@@ -37,7 +37,8 @@ const openToaster = async (page: Page, toasterPosition: "fixed" | "static") => {
      <style>
        body { margin: 0; }
        .page { background: #eee; height: 200px; }
-       ol { bottom: 0; left: 0; list-style: none; margin: 0; padding: 0; position: ${toasterPosition}; width: 300px; }
+       .toaster { bottom: 0; left: 0; position: ${toasterPosition}; width: 300px; }
+       ol { list-style: none; margin: 0; padding: 0; }
        li { background: #ccc; height: 100px; }
      </style>
      <div class="page">page</div>

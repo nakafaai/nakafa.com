@@ -40,10 +40,14 @@ export function TenantOutsiderActions({
 
   return (
     <div className="flex flex-wrap justify-center gap-2">
+      <Button onClick={() => onLeave("card")}>
+        <HugeIcons aria-hidden="true" icon={IdentityCardIcon} />
+        {t("outsider-card")}
+      </Button>
       <ButtonGroup>
-        <Button onClick={() => onLeave("card")}>
-          <HugeIcons aria-hidden="true" icon={IdentityCardIcon} />
-          {t("outsider-card")}
+        <Button onClick={() => onLeave("switch")}>
+          <HugeIcons aria-hidden="true" icon={UserSwitchIcon} />
+          {t("outsider-switch")}
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -71,10 +75,6 @@ export function TenantOutsiderActions({
           </DropdownMenuContent>
         </DropdownMenu>
       </ButtonGroup>
-      <Button onClick={() => onLeave("switch")} variant="outline">
-        <HugeIcons aria-hidden="true" icon={UserSwitchIcon} />
-        {t("outsider-switch")}
-      </Button>
     </div>
   );
 }

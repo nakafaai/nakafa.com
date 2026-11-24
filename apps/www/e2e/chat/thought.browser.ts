@@ -4,6 +4,7 @@ import { CHAT_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
 import { answerMessage, learnerMessage } from "@/e2e/support/prose";
 import { openServedChat } from "@/e2e/support/serve";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The words of the page for a thought, by language: while it runs, after a second, after two, and a saved one. */
 const LANGUAGES = [
@@ -115,6 +116,7 @@ test.describe("The dots before an answer", () => {
           const composer = page.getByRole("textbox", {
             name: "Frag Nina etwas...",
           });
+          await waitUntilTakenOver(composer);
 
           await composer.fill("Was ist eine Ableitung?");
           await expect(

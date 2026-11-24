@@ -134,6 +134,7 @@ export const CHROMIUM_TESTS = [
   "**/quran/typeface.browser.ts",
   "**/school/edges.browser.ts",
   "**/settings/panel.browser.ts",
+  "**/support/layout.browser.ts",
 ];
 
 // The School pages of the timing specs, which the browser timing suite runs in
