@@ -7,8 +7,8 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** Nina's place, where a lesson whose comments are empty shows her, at the bottom of the lesson. */
 const PLACE = 'footer:has(#comments) [data-slot="empty-icon"]';
-/** Her picture in that place: the still one a server drew, then the one her life draws in its stead. */
-const NINA = `${PLACE} svg`;
+/** Her picture in that place: the still SVG a server drew, then the live canvas her life paints on. */
+const NINA = `${PLACE} :is(svg, canvas)`;
 
 /** How long the reader does nothing while the page is measured. */
 const IDLE = Duration.seconds(3);
@@ -22,24 +22,27 @@ const IDLE = Duration.seconds(3);
 const IDLE_SHARE = 0.5;
 
 /**
- * Counts each change of Nina's picture from now, under `nakafaNinaMoves`. It watches her place, not the picture in it:
- * her still picture stays until the page has its reader and her life has loaded, and her life then draws a picture of
- * its own in the same place, so a watch on the first picture would count nothing once it is gone. Only a change inside
- * a picture counts, so the handover itself is no move.
+ * Counts each live frame Nina paints in her place, under `nakafaNinaMoves`.
+ * Her still SVG stays until the page has its reader and her life has loaded,
+ * and her life then draws onto a 2D canvas in the same place, so wrapping
+ * `clearRect` on `CanvasRenderingContext2D` counts every painted frame without
+ * mutating the DOM.
  */
 function watchNina(selector: string) {
   const moves = { count: 0 };
   Reflect.set(window, "nakafaNinaMoves", moves);
-  const place = document.querySelector(selector);
-  if (place !== null) {
-    new MutationObserver((records) => {
-      for (const record of records) {
-        if (record.target instanceof SVGElement) {
-          moves.count += 1;
-        }
-      }
-    }).observe(place, { attributes: true, subtree: true });
-  }
+  const originalClear = CanvasRenderingContext2D.prototype.clearRect;
+  CanvasRenderingContext2D.prototype.clearRect = function clearRect(
+    x: number,
+    y: number,
+    w: number,
+    h: number
+  ) {
+    if (this.canvas.closest(selector) !== null) {
+      moves.count += 1;
+    }
+    return originalClear.call(this, x, y, w, h);
+  };
 }
 
 /** How many changes Nina's picture made since `watchNina`. */

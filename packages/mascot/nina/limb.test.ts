@@ -1,7 +1,15 @@
 import { describe, expect, it } from "@effect/vitest";
 import { ARM } from "@repo/mascot/nina/body";
 import type { Curve } from "@repo/mascot/nina/limb";
-import { cubic, exit, flip, limb, onBody, wide } from "@repo/mascot/nina/limb";
+import {
+  cubic,
+  edges,
+  exit,
+  flip,
+  limb,
+  onBody,
+  wide,
+} from "@repo/mascot/nina/limb";
 import { tenth } from "@repo/mascot/round";
 import { String as Str } from "effect";
 
@@ -70,7 +78,21 @@ describe("a limb", () => {
     expect(onBody(102, 170)).toBe(true);
     expect(onBody(80, 146)).toBe(true);
     expect(onBody(10, 170)).toBe(false);
+    expect(onBody(200, 170)).toBe(false);
+    expect(onBody(102, 50)).toBe(false);
     expect(onBody(102, 230)).toBe(false);
+    // Inside the torso bounding box, outside the rounded shoulder curve.
+    expect(onBody(44, 118)).toBe(false);
+  });
+
+  it("exposes the same edge points along a limb that the outline is built from", () => {
+    const built = edges(STRAIGHT, ARM);
+    expect(built.left).toHaveLength(17);
+    expect(built.right).toHaveLength(17);
+    expect(built.left[0]).toEqual([0, wide(0, ARM)]);
+    expect(built.right[0]).toEqual([0, -wide(0, ARM)]);
+    expect(built.root[0]).toBeLessThan(0);
+    expect(built.tip[0]).toBeGreaterThan(60);
   });
 
   it("starts its top part in the open, where the middle of the arm has left her body", () => {

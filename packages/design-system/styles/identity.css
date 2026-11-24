@@ -186,10 +186,9 @@
   }
 }
 
-/* Eyes that follow the pointer. Watch (lib/watch.ts) sets --look-x and --look-y
- * on a face, in the units of its picture, and each eye of that face carries
- * this utility. */
+/* Eyes that follow the pointer. Watch (lib/watch.ts) writes `translate` directly
+ * onto each `.look` eye group, avoiding inherited custom-property style
+ * recalculations across the rest of an animal's SVG shapes. */
 @utility look {
-  translate: calc(var(--look-x, 0) * 1px) calc(var(--look-y, 0) * 1px);
   transition: translate var(--transition-duration-press) var(--ease-out);
 }

@@ -5,6 +5,7 @@ import { Array as Arr, Option } from "effect";
 export const LOOK_ATTRIBUTE = "data-look";
 
 const LOOK_SELECTOR = `[${LOOK_ATTRIBUTE}]`;
+const EYE_SELECTOR = ".look";
 /** How far, in units of a face's picture, an eye may turn toward the pointer. */
 const REACH = 3.2;
 /** A pointer this far from a face, in pixels, or further, pulls the eyes all the way. */
@@ -35,9 +36,10 @@ export function gaze(
 /**
  * Turns the eyes of every face inside `element` toward the pointer, with one
  * listener and one frame for the whole group. A face is an `svg` marked with
- * `data-look`; the pull is written to it as `--look-x` and `--look-y`, which
- * the eyes of the face read with the `look` utility. Every face is measured
- * before any is written, so the page lays out once.
+ * `data-look`, and its eyes carry `.look`. Discovered faces and their bounding
+ * rects are cached until the DOM, scroll position, or viewport size changes,
+ * and `translate` is written straight onto each eye group so static shapes in
+ * the SVG pay zero style invalidation.
  *
  * Nothing listens while the element is far from the screen, because no one
  * can see the eyes. For a person who asks for less motion the eyes hold where
@@ -46,28 +48,62 @@ export function gaze(
  *
  * Returns what stops it.
  */
+/** Discovers every `[data-look]` SVG face inside `element` along with its bounding box and `.look` eyes. */
+function scanFaces(element: HTMLElement) {
+  const found = Arr.filter(
+    Arr.fromIterable(element.querySelectorAll(LOOK_SELECTOR)),
+    (node) => node instanceof SVGElement
+  );
+  const boxes = Arr.map(found, (face) => face.getBoundingClientRect());
+  return Arr.map(Arr.zip(found, boxes), ([face, box]) => ({
+    box,
+    eyes: Arr.filter(
+      Arr.fromIterable(face.querySelectorAll(EYE_SELECTOR)),
+      (eye) => eye instanceof SVGElement
+    ),
+    face,
+  }));
+}
+
 export function watch(element: HTMLElement) {
-  // The last place the pointer was seen: a frame is only asked for after it moved.
   const pointer = { x: 0, y: 0 };
   let following = Option.none<AbortController>();
   let frame = 0;
+  let facesDirty = true;
+  let boxesDirty = true;
+  let cached: ReturnType<typeof scanFaces> = [];
+
+  function refreshFaces() {
+    cached = scanFaces(element);
+    facesDirty = false;
+    boxesDirty = false;
+  }
+
+  function refreshBoxes() {
+    const boxes = Arr.map(cached, ({ face }) => face.getBoundingClientRect());
+    cached = Arr.map(Arr.zip(cached, boxes), ([entry, box]) => ({
+      ...entry,
+      box,
+    }));
+    boxesDirty = false;
+  }
 
   function aim() {
     frame = 0;
-    // A face is looked up when the pointer moves, as faces come and go.
-    const faces = Arr.filter(
-      Arr.fromIterable(element.querySelectorAll(LOOK_SELECTOR)),
-      (face) => face instanceof SVGElement
-    );
-    const boxes = Arr.map(faces, (face) => face.getBoundingClientRect());
-    Arr.forEach(Arr.zip(faces, boxes), ([face, box]) => {
-      // A face that is not drawn, because it is hidden, has nothing to turn.
+    if (facesDirty) {
+      refreshFaces();
+    } else if (boxesDirty) {
+      refreshBoxes();
+    }
+    Arr.forEach(cached, ({ box, eyes }) => {
       if (box.width === 0) {
         return;
       }
       const pull = gaze(pointer, box);
-      face.style.setProperty("--look-x", pull.x.toFixed(2));
-      face.style.setProperty("--look-y", pull.y.toFixed(2));
+      const value = `${pull.x.toFixed(2)}px ${pull.y.toFixed(2)}px`;
+      Arr.forEach(eyes, (eye) => {
+        eye.style.translate = value;
+      });
     });
   }
 
@@ -75,6 +111,8 @@ export function watch(element: HTMLElement) {
     if (Option.isSome(following)) {
       return;
     }
+    facesDirty = true;
+    boxesDirty = true;
     const listening = new AbortController();
     following = Option.some(listening);
     window.addEventListener(
@@ -88,6 +126,20 @@ export function watch(element: HTMLElement) {
       },
       { passive: true, signal: listening.signal }
     );
+    window.addEventListener(
+      "scroll",
+      () => {
+        boxesDirty = true;
+      },
+      { capture: true, passive: true, signal: listening.signal }
+    );
+    window.addEventListener(
+      "resize",
+      () => {
+        boxesDirty = true;
+      },
+      { passive: true, signal: listening.signal }
+    );
   }
 
   function unfollow() {
@@ -98,6 +150,12 @@ export function watch(element: HTMLElement) {
     cancelAnimationFrame(frame);
     frame = 0;
   }
+
+  const mutations = new MutationObserver(() => {
+    facesDirty = true;
+    boxesDirty = true;
+  });
+  mutations.observe(element, { childList: true, subtree: true });
 
   const near = new IntersectionObserver(
     (entries) => {
@@ -114,6 +172,7 @@ export function watch(element: HTMLElement) {
   near.observe(element);
 
   return () => {
+    mutations.disconnect();
     near.disconnect();
     unfollow();
   };

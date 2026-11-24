@@ -16,7 +16,7 @@ export function Frame({ children, mode, ...props }: FrameProps) {
   return (
     <span
       className={cn(
-        "block w-fit",
+        "block w-fit [contain:layout_style_paint]",
         mode === "peek" && "overflow-hidden",
         mode === "tile" && "overflow-hidden rounded-full"
       )}

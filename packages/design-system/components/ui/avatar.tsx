@@ -15,7 +15,7 @@ function Avatar({
   return (
     <span
       className={cn(
-        "group/avatar after:border-border relative flex size-8 shrink-0 rounded-full select-none after:absolute after:inset-0 after:rounded-full after:border after:mix-blend-darken data-[size=lg]:size-10 data-[size=sm]:size-6 dark:after:mix-blend-lighten",
+        "group/avatar after:border-border relative flex size-8 shrink-0 rounded-full select-none after:absolute after:inset-0 after:rounded-full after:border data-[size=lg]:size-10 data-[size=sm]:size-6",
         className
       )}
       data-size={size}
@@ -38,7 +38,7 @@ function AvatarImage({ className, ...props }: React.ComponentProps<"img">) {
         className
       )}
       data-slot="avatar-image"
-      decoding="sync"
+      decoding="async"
       height={96}
       width={96}
       {...props}

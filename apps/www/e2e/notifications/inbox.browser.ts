@@ -141,7 +141,9 @@ test("an empty inbox shows Nina asleep beside its sentence, and Mark all read st
         const empty = page.getByText("You have no notifications yet.");
         await expect(empty).toBeVisible({ timeout: 30_000 });
         await expect(
-          page.locator('[data-slot="empty"] [data-slot="empty-icon"] svg')
+          page.locator(
+            '[data-slot="empty"] [data-slot="empty-icon"] :is(svg, canvas)'
+          )
         ).toBeVisible();
         await expect(
           page.getByRole("button", { name: "Mark all read" })

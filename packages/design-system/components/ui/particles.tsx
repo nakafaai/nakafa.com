@@ -401,13 +401,12 @@ export function Particles({
   }, [animate]);
 
   const stopAnimation = useCallback(() => {
-    if (animationFrameRef.current === null) {
-      return;
+    if (animationFrameRef.current !== null) {
+      window.cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
-
-    window.cancelAnimationFrame(animationFrameRef.current);
-    animationFrameRef.current = null;
-  }, []);
+    pace.stop();
+  }, [pace]);
 
   useEffect(() => {
     if (canvasRef.current) {

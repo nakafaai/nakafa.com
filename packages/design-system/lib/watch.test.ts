@@ -64,7 +64,6 @@ describe("where eyes look", () => {
   const face = { height: 40, left: 80, top: 180, width: 40 };
 
   it("turns toward a pointer by at most three units and a fifth", () => {
-    // The middle of the face is at (100, 200).
     expect(gaze({ x: 1000, y: 200 }, face)).toEqual({ x: 3.2, y: 0 });
     expect(gaze({ x: -900, y: 200 }, face)).toEqual({ x: -3.2, y: 0 });
   });
@@ -91,23 +90,30 @@ describe("where eyes look", () => {
   });
 });
 
-/** An element that holds faces: each has a box and writes down when it is measured and written. */
+/** An element that holds faces with `.look` eyes, recording reads and eye writes. */
 function faces(log: ReturnType<typeof MutableList.make<string>>) {
   const root = document.createElement("div");
   const face = (name: string, width: number, left: number) => {
     const svg = document.createElementNS(SVG, "svg");
     svg.setAttribute(LOOK_ATTRIBUTE, "");
+    const eye = document.createElementNS(SVG, "g");
+    eye.setAttribute("class", "look");
+    svg.append(eye);
     svg.getBoundingClientRect = () => {
       MutableList.append(log, `read ${name}`);
       return new DOMRect(left, 0, width, 100);
     };
-    const set = svg.style.setProperty.bind(svg.style);
-    svg.style.setProperty = (property, value) => {
-      MutableList.append(log, `write ${name}`);
-      set(property, value);
-    };
+    let stored = "";
+    Object.defineProperty(eye.style, "translate", {
+      configurable: true,
+      get: () => stored,
+      set: (value: string) => {
+        MutableList.append(log, `write ${name}`);
+        stored = value;
+      },
+    });
     root.append(svg);
-    return svg;
+    return { eye, svg };
   };
   return {
     first: face("first", 100, 0),
@@ -118,10 +124,9 @@ function faces(log: ReturnType<typeof MutableList.make<string>>) {
 }
 
 describe("eyes that follow the pointer", () => {
-  it("turn the faces together, measuring all of them before turning any, in one frame", () => {
+  it("measures all faces before writing any eye, and reuses cached boxes until scroll or resize", () => {
     const log = MutableList.make<string>();
     const { first, hidden, root, second } = faces(log);
-    // A marked element that is not a picture has no eyes to turn.
     const other = document.createElement("div");
     other.setAttribute(LOOK_ATTRIBUTE, "");
     root.append(other);
@@ -136,19 +141,44 @@ describe("eyes that follow the pointer", () => {
       "read hidden",
       "read second",
       "write first",
-      "write first",
-      "write second",
       "write second",
     ]);
-    // Only the last place of the pointer counts.
-    expect(first.style.getPropertyValue("--look-x")).toBe("3.20");
-    expect(first.style.getPropertyValue("--look-y")).toBe("0.00");
-    expect(second.style.getPropertyValue("--look-x")).toBe("3.20");
-    expect(hidden.style.getPropertyValue("--look-x")).toBe("");
-    expect(other.style.getPropertyValue("--look-x")).toBe("");
+    expect(first.eye.style.translate).toBe("3.20px 0.00px");
+    expect(second.eye.style.translate).toBe("3.20px 0.00px");
+    expect(hidden.eye.style.translate).toBe("");
+
+    // Subsequent pointer moves reuse cached boxes with zero getBoundingClientRect reads.
+    move(-900, 50);
+    vi.advanceTimersByTime(16);
+    expect(MutableList.takeAll(log)).toEqual(["write first", "write second"]);
+    expect(first.eye.style.translate).toBe("-3.20px 0.00px");
+
+    // Scroll invalidates cached boxes and triggers a single batched re-read.
+    window.dispatchEvent(new Event("scroll"));
+    move(1000, 50);
+    vi.advanceTimersByTime(16);
+    expect(MutableList.takeAll(log)).toEqual([
+      "read first",
+      "read hidden",
+      "read second",
+      "write first",
+      "write second",
+    ]);
+
+    // Resize also invalidates cached boxes.
+    window.dispatchEvent(new Event("resize"));
+    move(-900, 50);
+    vi.advanceTimersByTime(16);
+    expect(MutableList.takeAll(log)).toEqual([
+      "read first",
+      "read hidden",
+      "read second",
+      "write first",
+      "write second",
+    ]);
   });
 
-  it("ask for one frame however many times the pointer moves", () => {
+  it("asks for one frame however many times the pointer moves", () => {
     const { root } = faces(MutableList.make<string>());
     begin(root);
     come(true);
@@ -156,17 +186,18 @@ describe("eyes that follow the pointer", () => {
     expect(vi.getTimerCount()).toBe(1);
   });
 
-  it("look at the faces that are there when the pointer moves", () => {
+  it("refreshes discovered faces when one is removed from the DOM", async () => {
     const { first, root } = faces(MutableList.make<string>());
     begin(root);
     come(true);
     move(1000, 50);
-    first.remove();
+    first.svg.remove();
+    await Promise.resolve();
     vi.advanceTimersByTime(16);
-    expect(first.style.getPropertyValue("--look-x")).toBe("");
+    expect(first.eye.style.translate).toBe("");
   });
 
-  it("do not follow a person who asks for less motion, and ask for no frame", () => {
+  it("does not follow a person who asks for less motion, and asks for no frame", () => {
     world.calm = true;
     const { first, root } = faces(MutableList.make<string>());
     begin(root);
@@ -174,28 +205,28 @@ describe("eyes that follow the pointer", () => {
     move(1000, 50);
     expect(vi.getTimerCount()).toBe(0);
     vi.advanceTimersByTime(16);
-    expect(first.style.getPropertyValue("--look-x")).toBe("");
+    expect(first.eye.style.translate).toBe("");
   });
 
-  it("hold where they are once a person asks for less motion with the page open, and follow again when the person no longer asks", () => {
+  it("holds where they are once a person asks for less motion with the page open, and follows again when the person no longer asks", () => {
     const { first, root } = faces(MutableList.make<string>());
     begin(root);
     come(true);
     move(1000, 50);
     vi.advanceTimersByTime(16);
-    expect(first.style.getPropertyValue("--look-x")).toBe("3.20");
+    expect(first.eye.style.translate).toBe("3.20px 0.00px");
     world.calm = true;
     move(-900, 50);
     expect(vi.getTimerCount()).toBe(0);
     vi.advanceTimersByTime(16);
-    expect(first.style.getPropertyValue("--look-x")).toBe("3.20");
+    expect(first.eye.style.translate).toBe("3.20px 0.00px");
     world.calm = false;
     move(-900, 50);
     vi.advanceTimersByTime(16);
-    expect(first.style.getPropertyValue("--look-x")).toBe("-3.20");
+    expect(first.eye.style.translate).toBe("-3.20px 0.00px");
   });
 
-  it("stop when they are stopped, and drop the frame they asked for", () => {
+  it("stops when stopped, and drops the frame it asked for", () => {
     const { first, root } = faces(MutableList.make<string>());
     const stop = begin(root);
     come(true);
@@ -205,7 +236,7 @@ describe("eyes that follow the pointer", () => {
       true
     );
     vi.advanceTimersByTime(16);
-    expect(first.style.getPropertyValue("--look-x")).toBe("");
+    expect(first.eye.style.translate).toBe("");
     move(1000, 50);
     expect(vi.getTimerCount()).toBe(0);
   });
@@ -219,12 +250,12 @@ describe("the listener of the eyes", () => {
     move(1000, 50);
     vi.advanceTimersByTime(16);
     expect(listening).not.toHaveBeenCalled();
-    expect(first.style.getPropertyValue("--look-x")).toBe("");
+    expect(first.eye.style.translate).toBe("");
     come(true);
-    expect(listening).toHaveBeenCalledTimes(1);
+    expect(listening).toHaveBeenCalledTimes(3);
     move(1000, 50);
     vi.advanceTimersByTime(16);
-    expect(first.style.getPropertyValue("--look-x")).toBe("3.20");
+    expect(first.eye.style.translate).toBe("3.20px 0.00px");
   });
 
   it("listens once however often the faces come near, goes when they leave with the frame it asked for, and comes back with them", () => {
@@ -233,16 +264,16 @@ describe("the listener of the eyes", () => {
     begin(root);
     come(true);
     come(true);
-    expect(listening).toHaveBeenCalledTimes(1);
+    expect(listening).toHaveBeenCalledTimes(3);
     move(1000, 50);
     come(false);
     expect(vi.getTimerCount()).toBe(0);
     vi.advanceTimersByTime(16);
-    expect(first.style.getPropertyValue("--look-x")).toBe("");
+    expect(first.eye.style.translate).toBe("");
     move(1000, 50);
     expect(vi.getTimerCount()).toBe(0);
     come(false);
     come(true);
-    expect(listening).toHaveBeenCalledTimes(2);
+    expect(listening).toHaveBeenCalledTimes(6);
   });
 });
