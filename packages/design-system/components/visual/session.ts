@@ -76,7 +76,7 @@ export const openSession = Effect.fn("designSystem.visual.openSession")(
     onFullscreenChange: () => void
   ) {
     const scope = yield* Scope.make();
-    const { padding, place } = yield* measureBackdrop(card);
+    const { padding, place, scroll } = yield* measureBackdrop(card);
     yield* Effect.all(
       [
         listen("fullscreenchange", onFullscreenChange),
@@ -107,7 +107,7 @@ export const openSession = Effect.fn("designSystem.visual.openSession")(
       // A listener the browser refuses leaves none of the others behind.
       Effect.onError(() => Scope.close(scope, Exit.void))
     );
-    return { card, padding, place, scope, trigger };
+    return { card, padding, place, scope, scroll, trigger };
   }
 );
 
@@ -119,8 +119,8 @@ export type Session = Effect.Success<ReturnType<typeof openSession>>;
  * session closes.
  */
 export const holdSession = Effect.fn("designSystem.visual.holdSession")(
-  ({ card, padding, scope }: Session) =>
-    holdBackdrop(card, padding).pipe(Scope.provide(scope))
+  ({ card, padding, scope, scroll }: Session) =>
+    holdBackdrop(card, padding, scroll).pipe(Scope.provide(scope))
 );
 
 /**

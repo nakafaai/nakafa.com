@@ -15,7 +15,7 @@ const LESSONS = [
     simulations: 5,
   },
   {
-    route: "/en/subjects/chemistry/basic-chemistry-laws/mass-conservation-law",
+    route: "/en/subjects/chemistry/structure-matter/atom-shell",
     simulations: 5,
   },
   { route: "/en/subjects/biology/biodiversity/bacteria", simulations: 5 },
