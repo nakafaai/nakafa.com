@@ -6,10 +6,24 @@ import {
   DnaHelixLab,
 } from "@/lib/content/renderer/client/biology/cells";
 import {
+  ChromosomePackingLab,
+  GlycosidicBondLab,
+  LipidLab,
+  ProteinFoldLab,
+  WaterBondLab,
+} from "@/lib/content/renderer/client/biology/chemistry";
+import {
   BloodTypingLab,
   CapillaryBedLab,
   HeartCycleLab,
 } from "@/lib/content/renderer/client/biology/circulation";
+import {
+  GardenNameLab,
+  KeyBuilderLab,
+  KingdomSortLab,
+  SeaNameLab,
+  TaxonRankLab,
+} from "@/lib/content/renderer/client/biology/classification";
 import {
   CarbonBudgetLab,
   ClimateObservationLab,
@@ -19,9 +33,23 @@ import {
 } from "@/lib/content/renderer/client/biology/climate";
 import { PredatorPreyLab } from "@/lib/content/renderer/client/biology/ecology";
 import {
+  ActiveSiteLab,
+  DenatureLab,
+  EnzymeSaturationLab,
+  EnzymeSecretionLab,
+  LactaseColumnLab,
+} from "@/lib/content/renderer/client/biology/enzymes";
+import {
   FungiMyceliumLab,
   HyphaeDecayLab,
 } from "@/lib/content/renderer/client/biology/fungi";
+import {
+  BodyPlanesLab,
+  LabEquipmentLab,
+  SpecimenDrawingLab,
+  SpillResponseLab,
+  WasteSortLab,
+} from "@/lib/content/renderer/client/biology/laboratory";
 import {
   BinaryFissionLab,
   ChemotaxisLab,
@@ -45,11 +73,26 @@ import {
   TropismLab,
 } from "@/lib/content/renderer/client/biology/plants";
 import {
+  GametogenesisLab,
+  ImplantationLab,
+  MenstrualCycleLab,
+  MetamorphosisLab,
+  PlacentaLab,
+  TwinsLab,
+} from "@/lib/content/renderer/client/biology/reproduction";
+import {
   MitochondrionLab,
   OxygenDebtLab,
   PaddyRootLab,
   YeastFermentationLab,
 } from "@/lib/content/renderer/client/biology/respiration";
+import {
+  AnimalLocomotionLab,
+  BoneHealthLab,
+  JointMovementLab,
+  MusclePairLab,
+  VertebraLab,
+} from "@/lib/content/renderer/client/biology/support";
 import { SarsCov2VirionLab } from "@/lib/content/renderer/client/biology/virion";
 import {
   AntibodyNeutralizeLab,
@@ -222,5 +265,129 @@ export const biologyRenderers = [
   {
     name: biologyComponentNames.yeastFermentationLab,
     component: YeastFermentationLab,
+  },
+  {
+    name: biologyComponentNames.activeSiteLab,
+    component: ActiveSiteLab,
+  },
+  {
+    name: biologyComponentNames.animalLocomotionLab,
+    component: AnimalLocomotionLab,
+  },
+  {
+    name: biologyComponentNames.bodyPlanesLab,
+    component: BodyPlanesLab,
+  },
+  {
+    name: biologyComponentNames.boneHealthLab,
+    component: BoneHealthLab,
+  },
+  {
+    name: biologyComponentNames.chromosomePackingLab,
+    component: ChromosomePackingLab,
+  },
+  {
+    name: biologyComponentNames.denatureLab,
+    component: DenatureLab,
+  },
+  {
+    name: biologyComponentNames.enzymeSaturationLab,
+    component: EnzymeSaturationLab,
+  },
+  {
+    name: biologyComponentNames.enzymeSecretionLab,
+    component: EnzymeSecretionLab,
+  },
+  {
+    name: biologyComponentNames.gametogenesisLab,
+    component: GametogenesisLab,
+  },
+  {
+    name: biologyComponentNames.gardenNameLab,
+    component: GardenNameLab,
+  },
+  {
+    name: biologyComponentNames.glycosidicBondLab,
+    component: GlycosidicBondLab,
+  },
+  {
+    name: biologyComponentNames.implantationLab,
+    component: ImplantationLab,
+  },
+  {
+    name: biologyComponentNames.jointMovementLab,
+    component: JointMovementLab,
+  },
+  {
+    name: biologyComponentNames.keyBuilderLab,
+    component: KeyBuilderLab,
+  },
+  {
+    name: biologyComponentNames.kingdomSortLab,
+    component: KingdomSortLab,
+  },
+  {
+    name: biologyComponentNames.labEquipmentLab,
+    component: LabEquipmentLab,
+  },
+  {
+    name: biologyComponentNames.lactaseColumnLab,
+    component: LactaseColumnLab,
+  },
+  {
+    name: biologyComponentNames.lipidLab,
+    component: LipidLab,
+  },
+  {
+    name: biologyComponentNames.menstrualCycleLab,
+    component: MenstrualCycleLab,
+  },
+  {
+    name: biologyComponentNames.metamorphosisLab,
+    component: MetamorphosisLab,
+  },
+  {
+    name: biologyComponentNames.musclePairLab,
+    component: MusclePairLab,
+  },
+  {
+    name: biologyComponentNames.placentaLab,
+    component: PlacentaLab,
+  },
+  {
+    name: biologyComponentNames.proteinFoldLab,
+    component: ProteinFoldLab,
+  },
+  {
+    name: biologyComponentNames.seaNameLab,
+    component: SeaNameLab,
+  },
+  {
+    name: biologyComponentNames.specimenDrawingLab,
+    component: SpecimenDrawingLab,
+  },
+  {
+    name: biologyComponentNames.spillResponseLab,
+    component: SpillResponseLab,
+  },
+  {
+    name: biologyComponentNames.taxonRankLab,
+    component: TaxonRankLab,
+  },
+  {
+    name: biologyComponentNames.twinsLab,
+    component: TwinsLab,
+  },
+  {
+    name: biologyComponentNames.vertebraLab,
+    component: VertebraLab,
+  },
+  {
+    name: biologyComponentNames.wasteSortLab,
+    component: WasteSortLab,
+  },
+  {
+    name: biologyComponentNames.waterBondLab,
+    component: WaterBondLab,
   },
 ] satisfies readonly RendererImplementation[];
