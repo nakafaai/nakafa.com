@@ -63,6 +63,7 @@ export function ScienceStage({
   return (
     <ThreeCanvas frameloop={frameloop} toneMapping={NeutralToneMapping}>
       <StageProvider
+        animated={frameloop === "always"}
         floor={floor}
         ground={ground}
         reach={reach}

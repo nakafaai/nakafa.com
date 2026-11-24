@@ -8,6 +8,7 @@ import {
   sheetFile,
 } from "@/e2e/support/roster";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import { closeToasts } from "@/e2e/support/toast";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /**
@@ -106,6 +107,7 @@ test("an admin previews a Dapodik file, imports its students into the active per
       .getByText("The students are in the roster.")
   ).toBeVisible();
   await expect(page.getByText("Import the students.")).toBeVisible();
+  await closeToasts(page);
 
   const download = page.waitForEvent("download");
   await page

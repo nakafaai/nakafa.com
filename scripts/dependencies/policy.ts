@@ -26,7 +26,7 @@ export const PACKAGE_MANAGER = "bun@1.4.5";
  * release and the workflow checks compare it with this value.
  */
 export const NODE_RUNTIME_VERSION = "26.13.1";
-const CONTRACT_PACKAGE_VERSION = "8.10.0";
+const CONTRACT_PACKAGE_VERSION = "8.12.0";
 /** Effect and its platform and test packages move as one exact cohort. */
 export const EFFECT_COHORT_VERSION = "4.1.5";
 /**

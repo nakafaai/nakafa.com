@@ -140,6 +140,7 @@ export function ThreeLabel({
   const framing = useCameraFraming();
   const group = useRef<Group>(null);
   const content = useRef<HTMLSpanElement>(null);
+  const lastScale = useRef(Number.NaN);
   const labelPosition = useMemo(() => new Vector3(), []);
   const cameraPosition = useMemo(() => new Vector3(), []);
   const camera = useThree((state) => state.camera);
@@ -163,7 +164,10 @@ export function ThreeLabel({
       return;
     }
     if (worldFontSize <= 0) {
-      element.style.scale = "1";
+      if (lastScale.current !== 1) {
+        element.style.scale = "1";
+        lastScale.current = 1;
+      }
       return;
     }
     object.getWorldPosition(labelPosition);
@@ -176,10 +180,16 @@ export function ThreeLabel({
             Math.tan(MathUtils.degToRad(activeCamera.fov) / 2) *
             labelPosition.distanceTo(cameraPosition));
     const naturalSize = worldFontSize * pixelsPerUnit;
-    element.style.scale = `${
+    const nextScale =
       MathUtils.clamp(naturalSize, minimumFontSize, maximumFontSize) /
-      naturalSize
-    }`;
+      naturalSize;
+    if (
+      !Number.isFinite(lastScale.current) ||
+      Math.abs(nextScale - lastScale.current) > 1e-4
+    ) {
+      element.style.scale = `${nextScale}`;
+      lastScale.current = nextScale;
+    }
   });
 
   // Position changes must also update the camera's label bounds.

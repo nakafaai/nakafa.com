@@ -12,13 +12,16 @@ const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 /** The address of an exam's try as a student on the school host. */
 const TRY_PATH = /\/exams\/[^/]+\/try$/u;
 
+/** A desktop window wide enough to show the For teachers panel beside the paper. */
+const DESKTOP = { height: 900, width: 1440 };
+
 test("a teacher writes an answer and its reason, marks both keys one at a time, and the student answers both in one question", async ({
   baseURL,
   browser,
 }) => {
   const school = await Effect.runPromise(createSchool());
   const host = `${school.slug}.localhost`;
-  const context = await browser.newContext();
+  const context = await browser.newContext({ viewport: DESKTOP });
   await Effect.runPromise(
     signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
   );

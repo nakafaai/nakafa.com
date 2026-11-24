@@ -1,4 +1,5 @@
-import type { Locator } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { waitForStill } from "@/e2e/support/quiet";
 
 /**
@@ -44,9 +45,21 @@ const reachable = (control: Locator) =>
  * outside the viewport and scrolls it into view, which scrolls the sheet's host and swipes the sheet away. Elsewhere
  * the popup has nothing to wait for. A touch screen taps the control.
  */
-export async function pressInPopup(control: Locator, hasTouch = false) {
+export async function pressInPopup(control: Locator, hasTouch?: boolean) {
   const live = reachable(control);
   await live.waitFor();
   await waitForSettled(live);
-  await (hasTouch ? live.tap() : live.click());
+  const touch =
+    hasTouch ??
+    (await live.page().evaluate(() => matchMedia("(pointer: coarse)").matches));
+  await (touch ? live.tap() : live.click());
+}
+
+/**
+ * Waits until no popup is still leaving: a dialog, a sheet or a menu that closed keeps `data-ending-style` while it
+ * fades or slides away, and UI SDK drops a press on the page in that time (vercel-labs/ui#928). A reader presses once
+ * it is gone, so a spec that closes a popup, or narrows and widens the page under a pane's sheet, waits here first.
+ */
+export async function waitForPopupsGone(page: Page) {
+  await expect(page.locator("[data-ending-style]")).toHaveCount(0);
 }

@@ -15,6 +15,63 @@ import { Frustum, Matrix4, Vector2, Vector3 } from "three";
 
 const LABEL_EDGE_SPACE = 4;
 const LABEL_GAP = 12;
+const LABEL_SIDES = [1, -1] as const;
+
+function showAxisLabel(
+  element: HTMLDivElement,
+  scratch: { lastTransform: string; lastVisible: boolean },
+  offsetX: number,
+  offsetY: number
+) {
+  if (!scratch.lastVisible) {
+    element.style.visibility = "visible";
+    scratch.lastVisible = true;
+  }
+  const nextTransform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+  if (scratch.lastTransform !== nextTransform) {
+    element.style.transform = nextTransform;
+    scratch.lastTransform = nextTransform;
+  }
+}
+
+function hideAxisLabel(
+  element: HTMLDivElement,
+  scratch: { lastVisible: boolean }
+) {
+  if (scratch.lastVisible) {
+    element.style.visibility = "hidden";
+    scratch.lastVisible = false;
+  }
+}
+
+function updateAxisCameraCache(
+  scratch: {
+    height: number;
+    lastProjection: Matrix4;
+    lastWorld: Matrix4;
+    lastZoom: number;
+    width: number;
+  },
+  camera: { matrixWorld: Matrix4; projectionMatrix: Matrix4; zoom?: number },
+  size: { height: number; width: number }
+): boolean {
+  const zoom = camera.zoom ?? 1;
+  if (
+    scratch.lastWorld.equals(camera.matrixWorld) &&
+    scratch.lastProjection.equals(camera.projectionMatrix) &&
+    scratch.lastZoom === zoom &&
+    scratch.width === size.width &&
+    scratch.height === size.height
+  ) {
+    return false;
+  }
+  scratch.lastWorld.copy(camera.matrixWorld);
+  scratch.lastProjection.copy(camera.projectionMatrix);
+  scratch.lastZoom = zoom;
+  scratch.width = size.width;
+  scratch.height = size.height;
+  return true;
+}
 
 /** Intersects an axis segment with the six planes of the camera frustum. */
 export function clipAxis(frustum: Frustum, from: Vector3, to: Vector3) {
@@ -51,25 +108,44 @@ function AxisLabel({
   const group = useRef<Group>(null);
   const label = useRef<HTMLDivElement>(null);
   const invalidate = useThree((state) => state.invalidate);
+  const scratch = useMemo(
+    () => ({
+      end: new Vector3(),
+      frustum: new Frustum(),
+      height: 0,
+      labelHeight: 0,
+      labelWidth: 0,
+      lastProjection: new Matrix4().multiplyScalar(0),
+      lastTransform: "",
+      lastVisible: false,
+      lastWorld: new Matrix4().multiplyScalar(0),
+      lastZoom: Number.NaN,
+      offset: new Matrix4(),
+      projection: new Matrix4(),
+      screen: new Vector2(),
+      start: new Vector3(),
+      width: 0,
+    }),
+    []
+  );
   const attachLabel = useCallback(
     (element: HTMLDivElement | null) => {
       label.current = element;
-      if (element) {
-        invalidate();
+      if (!element) {
+        return;
       }
+      const measure = () => {
+        scratch.labelWidth = element.offsetWidth;
+        scratch.labelHeight = element.offsetHeight;
+        scratch.width = 0;
+        invalidate();
+      };
+      const observer = new ResizeObserver(measure);
+      observer.observe(element);
+      measure();
+      return () => observer.disconnect();
     },
-    [invalidate]
-  );
-  const scratch = useMemo(
-    () => ({
-      frustum: new Frustum(),
-      projection: new Matrix4(),
-      offset: new Matrix4(),
-      screen: new Vector2(),
-      start: new Vector3(),
-      end: new Vector3(),
-    }),
-    []
+    [invalidate, scratch]
   );
 
   // This is camera presentation state: update Three.js and DOM at the native
@@ -83,8 +159,12 @@ function AxisLabel({
       return;
     }
     camera.updateMatrixWorld();
-    const marginX = element.offsetWidth / 2 + LABEL_EDGE_SPACE;
-    const marginY = element.offsetHeight / 2 + LABEL_EDGE_SPACE;
+    if (!updateAxisCameraCache(scratch, camera, size)) {
+      return;
+    }
+
+    const marginX = scratch.labelWidth / 2 + LABEL_EDGE_SPACE;
+    const marginY = scratch.labelHeight / 2 + LABEL_EDGE_SPACE;
     scratch.projection.multiplyMatrices(
       camera.projectionMatrix,
       camera.matrixWorldInverse
@@ -92,7 +172,7 @@ function AxisLabel({
     scratch.frustum.setFromProjectionMatrix(scratch.projection);
     const interval = clipAxis(scratch.frustum, from, to);
     if (!interval) {
-      element.style.visibility = "hidden";
+      hideAxisLabel(element, scratch);
       return;
     }
     const { minimum, maximum } = interval;
@@ -104,7 +184,7 @@ function AxisLabel({
     if (length <= 1) {
       // An end-on axis has no visible direction. Its label returns as soon as
       // orbiting reveals the axis instead of obscuring the plane's origin.
-      element.style.visibility = "hidden";
+      hideAxisLabel(element, scratch);
       return;
     }
     let normalX = (-dy / length) * LABEL_GAP;
@@ -114,7 +194,7 @@ function AxisLabel({
     let endpoint = maximum;
     // Reserve space only on the chosen side of the axis. A symmetric inset
     // can reject a visible axis even when its other side has ample room.
-    for (const side of [1, -1]) {
+    for (const side of LABEL_SIDES) {
       scratch.offset.makeTranslation(
         (2 * normalX * side) / size.width,
         (-2 * normalY * side) / size.height,
@@ -144,7 +224,7 @@ function AxisLabel({
     const centerX = ((scratch.end.x + 1) * size.width) / 2;
     const centerY = ((1 - scratch.end.y) * size.height) / 2;
     if (!(Number.isFinite(centerX) && Number.isFinite(centerY))) {
-      element.style.visibility = "hidden";
+      hideAxisLabel(element, scratch);
       return;
     }
     scratch.screen.set(centerX, centerY);
@@ -154,8 +234,7 @@ function AxisLabel({
     const offsetY =
       Math.min(size.height - marginY, Math.max(marginY, centerY + normalY)) -
       centerY;
-    element.style.visibility = "visible";
-    element.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+    showAxisLabel(element, scratch, offsetX, offsetY);
   }, -0.5);
 
   return (

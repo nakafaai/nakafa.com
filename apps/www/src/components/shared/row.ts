@@ -32,8 +32,14 @@ export function useRowPress(open: (row: HTMLTableRowElement) => void) {
 
   return {
     onClick: (event: MouseEvent<HTMLTableRowElement>) => {
-      const fromRow = began.current ?? true;
-      began.current = undefined;
+      // A menu item such as `RowOpen` triggers `tr.click()` directly on the row while the pointer press that chose
+      // the item began inside the row's popover (`began.current === false`), so a direct click on the row itself
+      // opens it without clearing `began` for the item's own click that follows.
+      const direct = event.target === event.currentTarget;
+      const fromRow = direct || (began.current ?? true);
+      if (!direct) {
+        began.current = undefined;
+      }
       if (fromRow && pressesRow(event)) {
         open(event.currentTarget);
       }

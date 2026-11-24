@@ -17,6 +17,12 @@ const VisualPaddingSchema = Schema.Struct({
   paddingRight: Schema.String,
 });
 
+/** The page's scroll offset before the card fills the screen, restored when it returns. */
+const VisualScrollSchema = Schema.Struct({
+  x: Schema.Finite,
+  y: Schema.Finite,
+});
+
 /**
  * Measures the card's place in the page. A margin of the card collapses with
  * its neighbours through the slot, and the slot's own margin collapses the
@@ -67,7 +73,11 @@ export const measureBackdrop = Effect.fn("designSystem.visual.measureBackdrop")(
   function* (card: HTMLElement) {
     const padding = yield* measurePadding(document.documentElement);
     const place = yield* measurePlace(card);
-    return { padding, place };
+    const scroll = yield* Effect.sync((): typeof VisualScrollSchema.Type => ({
+      x: window.scrollX,
+      y: window.scrollY,
+    }));
+    return { padding, place, scroll };
   }
 );
 
@@ -108,14 +118,32 @@ const holdInert = Effect.fn("designSystem.visual.holdInert")(
     )
 );
 
+/** Restores the page's scroll offset when leaving full screen shifted it. */
+function restoreScroll(scroll: typeof VisualScrollSchema.Type) {
+  if (window.scrollX !== scroll.x || window.scrollY !== scroll.y) {
+    window.scrollTo({
+      behavior: "instant",
+      left: scroll.x,
+      top: scroll.y,
+    });
+  }
+}
+
 /**
  * Stops the page from scrolling until the scope closes. The browser's full
  * screen and the immersive card fill the viewport, so the root takes the room
  * measured at its sides as padding, and the page keeps its layout behind the
- * card.
+ * card. A narrow window that widens for the Fullscreen API reflows the page
+ * shorter behind the card and clamps `scrollY`; restoring the measured offset
+ * immediately and again after the responsive layout settles returns the reader
+ * to the card's exact place when the window shrinks back.
  */
 const holdScroll = Effect.fn("designSystem.visual.holdScroll")(
-  (root: HTMLElement, padding: typeof VisualPaddingSchema.Type) =>
+  (
+    root: HTMLElement,
+    padding: typeof VisualPaddingSchema.Type,
+    scroll: typeof VisualScrollSchema.Type
+  ) =>
     Effect.acquireRelease(
       Effect.sync(() => {
         const { style } = root;
@@ -130,6 +158,12 @@ const holdScroll = Effect.fn("designSystem.visual.holdScroll")(
       (saved) =>
         Effect.sync(() => {
           Object.assign(root.style, saved);
+          restoreScroll(scroll);
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              restoreScroll(scroll);
+            });
+          });
         })
     )
 );
@@ -142,8 +176,12 @@ const holdScroll = Effect.fn("designSystem.visual.holdScroll")(
  * the moment the browser shows the card lays nothing out early.
  */
 export const holdBackdrop = Effect.fn("designSystem.visual.holdBackdrop")(
-  function* (card: HTMLElement, padding: typeof VisualPaddingSchema.Type) {
+  function* (
+    card: HTMLElement,
+    padding: typeof VisualPaddingSchema.Type,
+    scroll: typeof VisualScrollSchema.Type
+  ) {
     yield* holdInert(card);
-    yield* holdScroll(document.documentElement, padding);
+    yield* holdScroll(document.documentElement, padding, scroll);
   }
 );

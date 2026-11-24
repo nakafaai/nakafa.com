@@ -26,6 +26,13 @@ test("Nina joins a class's mention list once the school turns her on, and a ment
   await waitUntilTakenOver(nina);
   await nina.click();
   await expect(nina).toBeChecked();
+  // The switch flips at once and saves after, so a second look at the page, which reads what the school saved, waits
+  // for the save before the owner leaves; closing the browser first could drop it.
+  const saved = await owner.newPage();
+  await saved.goto(address("/settings/policies"));
+  await expect(
+    saved.getByRole("switch", { name: "Nina for students" })
+  ).toBeChecked({ timeout: readinessTimeoutMilliseconds });
   await owner.close();
 
   const context = await browser.newContext();

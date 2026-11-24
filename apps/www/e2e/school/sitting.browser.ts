@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
-import { pressInPopup } from "@/e2e/support/popup";
+import { pressInPopup, waitForPopupsGone } from "@/e2e/support/popup";
 import { closeSitting } from "@/e2e/support/proctor";
 import {
   createSchool,
@@ -120,6 +120,7 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   await dialog.getByRole("combobox").click();
   await pressInPopup(proctor.getByRole("option", { name: "Rule broken" }));
   await dialog.getByRole("button", { name: "Lock session" }).click();
+  await waitForPopupsGone(proctor);
   await expect(seat).toHaveAttribute("data-frame", "locked");
   await expect(
     student.getByText(

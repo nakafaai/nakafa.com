@@ -4,15 +4,7 @@ import {
   useReducedMotion,
 } from "@mantine/hooks";
 import type { CanvasProps } from "@react-three/fiber";
-import {
-  addAfterEffect,
-  addEffect,
-  Canvas,
-  useFrame,
-  useStore,
-  useThree,
-} from "@react-three/fiber";
-import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
+import { Canvas } from "@react-three/fiber";
 import { CameraFraming } from "@repo/design-system/components/three/camera/framing";
 import { THREE_RENDER_MARGIN } from "@repo/design-system/components/three/data/constants";
 import {
@@ -20,191 +12,75 @@ import {
   SceneFailure,
 } from "@repo/design-system/components/three/failure";
 import {
+  CanvasQualityProvider,
+  PerformanceGuard,
+  SceneTime,
+} from "@repo/design-system/components/three/guard";
+import {
+  disposeWebGLRenderer,
+  readDocumentHidden,
+  readServerDocumentHidden,
+  resolveFrameloop,
+  resolveVisibleStage,
+  subscribeToDocumentVisibility,
+  subscribeToInert,
+  watchContextLoss,
+} from "@repo/design-system/components/three/host";
+import {
   SceneOverlay,
   SceneOverlayProvider,
 } from "@repo/design-system/components/three/overlay";
 import {
   SceneSpinner,
   useNotifySceneDrawn,
+  useNotifySceneFailed,
+  useNotifySceneLoading,
 } from "@repo/design-system/components/three/placeholder";
+import { getSharedContextPool } from "@repo/design-system/components/three/pool";
+import { waitRetryDelay } from "@repo/design-system/components/three/retry";
 import { SceneDrawn } from "@repo/design-system/components/three/reveal";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   useHasVisualCard,
   useStartVisualScene,
-  useVisualReset,
   useVisualScene,
 } from "@repo/design-system/components/visual/card";
 import {
   getCanvasDpr,
   getPowerPreference,
+  isWebGLAvailable,
+  shouldEnableAntialias,
 } from "@repo/design-system/lib/device";
-import { createFramePace } from "@repo/design-system/lib/pace";
 import { ClientOnly } from "@tanstack/react-router";
 import { cn } from "cn";
+import { Effect, Fiber } from "effect";
 import type { ComponentProps, ReactNode } from "react";
 import {
   Suspense,
   useEffect,
   useEffectEvent,
-  useLayoutEffect,
+  useId,
   useRef,
   useState,
   useSyncExternalStore,
 } from "react";
 import type { ToneMapping, WebGLRenderer } from "three";
-
-/**
- * Keeps scene time continuous while a canvas pauses.
- *
- * Fiber restarts `clock.elapsedTime` at zero whenever the frameloop changes,
- * and scenes animate from that time, some from start times read from it, so a
- * resumed canvas restores the last rendered time. Fiber would also still draw
- * frames invalidated just before a pause on manual-advance time, where a
- * millisecond timestamp becomes the frame delta and throws every delta-driven
- * animation forward, so pausing drops those frames.
- *
- * @see https://r3f.docs.pmnd.rs/api/canvas
- */
-function SceneTime({ controlled }: { readonly controlled: boolean }) {
-  const store = useStore();
-  const playing = useVisualScene((state) => state.playing, false);
-  const active = controlled ? playing : true;
-  const elapsed = useRef(0);
-
-  useVisualReset(() => {
-    elapsed.current = 0;
-    const state = store.getState();
-    state.clock.elapsedTime = 0;
-    state.invalidate();
-  });
-
-  // Negative priority runs before every scene's default-priority useFrame
-  // without taking over R3F rendering, keeping clock.elapsedTime frozen while
-  // paused while still passing live delta to OrbitControls damping.
-  useFrame(({ clock }, delta) => {
-    if (active) {
-      elapsed.current += simulationStep(delta);
-    }
-    clock.elapsedTime = elapsed.current;
-  }, -10);
-
-  useLayoutEffect(
-    () =>
-      store.subscribe((state, previous) => {
-        if (state.frameloop === previous.frameloop) {
-          return;
-        }
-        if (state.frameloop === "never") {
-          state.internal.frames = 0;
-          return;
-        }
-        state.clock.elapsedTime = elapsed.current;
-        state.invalidate();
-      }),
-    [store]
-  );
-
-  return null;
-}
-
-/**
- * Draws a scene that animates by its own clock at the pace `createFramePace` keeps, an eighth of the main thread at
- * most (ADR 0039 D5). Fiber's own loop draws every frame of the display, so a lab near the first screen held a slow
- * phone's main thread for as long as the page loaded: on the relative movement lesson, three.js ran 1.6 to 1.8 seconds
- * of script in a 12x Lighthouse run. The canvas renders on demand instead, and this asks for the next frame only
- * once the pace says it is due: a fast device still draws every frame, and a slow phone draws a few each second.
- * Fiber's global effects bracket each frame it renders, so the rest counts the frame's whole cost, its paint
- * included.
- */
-function PacedFrames() {
-  const invalidate = useThree((state) => state.invalidate);
-
-  useEffect(() => {
-    const pace = createFramePace();
-    let startedAt = 0;
-    let request = 0;
-    const stopBefore = addEffect(() => {
-      startedAt = performance.now();
-    });
-    const stopAfter = addAfterEffect(() => pace.rest(startedAt));
-    const tick = (now: number) => {
-      if (pace.isDue(now)) {
-        invalidate();
-      }
-      request = requestAnimationFrame(tick);
-    };
-    invalidate();
-    request = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(request);
-      stopBefore();
-      stopAfter();
-    };
-  }, [invalidate]);
-
-  return null;
-}
-
-/**
- * Calls back whenever an element of the page turns inert or interactive
- * again, such as the page behind a visual card shown full screen.
- */
-function subscribeToInert(onChange: () => void) {
-  const observer = new MutationObserver(onChange);
-  observer.observe(document.body, {
-    attributeFilter: ["inert"],
-    subtree: true,
-  });
-  return () => observer.disconnect();
-}
-
-/**
- * Starts the scene again on a new canvas when the browser takes its WebGL
- * context away and does not give it back, as WebKit does to the oldest context
- * once a page holds sixteen. three keeps a lost context waiting for its
- * restore, which never comes then, so the scene would stay blank.
- */
-function watchContextLoss(gl: WebGLRenderer, onLost: () => void) {
-  gl.domElement.addEventListener("webglcontextlost", onLost, { once: true });
-}
+import { useStore as useZustandStore } from "zustand";
 
 /**
  * Shared Three.js canvas: one scene in a frame that keeps its size from the
  * first paint to the scene's first frame, with its loading state in the middle.
  *
- * The canvas element is created only once its frame nears the viewport, in
- * the same commit that asks it for WebGL: Mobile Safari refused WebGL to a
- * lab canvas that had waited in the page for twelve seconds without a context,
- * and showed the reader an error, while a new canvas beside it got WebGL 2 at
- * once. A canvas whose start fails anyway starts again on a new element
- * (`SceneFailure`), and one whose context the browser takes away starts again
- * the next time its frame nears the viewport.
+ * A shared LRU WebGL context pool bounds live GPU contexts to 2 on mobile and
+ * low-end hardware and 4 on desktop. Off-screen canvases release their context
+ * cleanly with `forceContextLoss()` when another scene needs a slot (or on
+ * mobile while scrolling past), then automatically re-acquire and redraw when
+ * scrolled back into view with zero layout shift.
  *
- * Until the scene is drawn whole (`SceneDrawn`), the frame shows its loading
- * state: the scene's still when it has one, and a spinner in the middle. The
- * canvas and its labels stay transparent and take no presses behind it, and
- * the frame swaps them in one commit, so a reader never sees an empty canvas, a
- * half-built scene or a camera that jumps.
- *
- * A canvas farther than `THREE_RENDER_MARGIN` from the viewport stops
- * rendering and resumes when it returns, so animated scenes cost nothing while
- * nobody can see them. A canvas in an inert part of the page, such as the page
- * behind a visual card shown full screen, stops the same way. Scene labels draw
- * in a DOM overlay over the same frame, so they need no React root of their own.
- *
- * With reduced motion every canvas renders on demand, whatever loop it asks
- * for: a scene is drawn once, and again only when the reader moves the camera.
- * A scene that animates by its own clock keeps its still pose in that case.
- * Otherwise such a scene draws at the pace of `PacedFrames`, never on every
- * frame of the display.
- *
- * @param children - React Three.js children to render
- * @param frameloop - Frame update strategy ("always" | "demand")
- * @param toneMapping - How the canvas maps light to screen colors, ACES unless
- * a stage names another
- * @param props - Additional CanvasProps passed to @react-three/fiber Canvas
+ * Active animated scenes run at the display's native refresh rate (60Hz, 90Hz,
+ * 120Hz+) via `frameloop="always"`, while paused, static, and reduced-motion
+ * scenes render on `"demand"`, and off-screen, hidden-tab, or inert-background
+ * scenes stop completely with `frameloop="never"`.
  */
 function ThreeCanvasComponent({
   children,
@@ -218,9 +94,14 @@ function ThreeCanvasComponent({
   frameloop?: "always" | "demand";
   toneMapping?: ToneMapping;
 } & Omit<CanvasProps, "camera" | "fallback" | "gl" | "orthographic">) {
+  const canvasId = useId();
+  const pool = getSharedContextPool();
   const powerPreference = getPowerPreference();
-  const dpr = getCanvasDpr();
+  const baseDpr = getCanvasDpr();
+  const antialias = shouldEnableAntialias();
   const notifyDrawn = useNotifySceneDrawn();
+  const notifyLoading = useNotifySceneLoading();
+  const notifyFailed = useNotifySceneFailed();
   const hasCard = useHasVisualCard();
   const playing = useVisualScene((state) => state.playing, false);
   const start = useStartVisualScene();
@@ -232,24 +113,164 @@ function ThreeCanvasComponent({
   const [frame, setFrame] = useState<HTMLDivElement | null>(null);
   const frameRef = useMergedRef(ref, setFrame);
   const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
-  // The frame is placed once it nears the viewport, and its canvas starts then.
-  const [placed, setPlaced] = useState(false);
-  // Each start of the scene draws on a new canvas element.
-  const [startCount, setStartCount] = useState(1);
+  const [mountKey, setMountKey] = useState(1);
+  const [attempt, setAttempt] = useState(1);
+  const [retrying, setRetrying] = useState(false);
   const [stage, setStage] = useState<"drawn" | "failed" | "loading">("loading");
-  const drawn = stage === "drawn";
-  const nearViewport = entry?.isIntersecting ?? true;
-  const paced = hasCard ? playing : !calm && frameloop === "always";
+  const [postprocessingDegraded, setPostprocessingDegraded] = useState(false);
+  const [dprReduced, setDprReduced] = useState(false);
+
+  const rendererRef = useRef<WebGLRenderer | null>(null);
+  const invalidateRef = useRef<(() => void) | null>(null);
+  const cleanupLossRef = useRef<(() => void) | null>(null);
+  const intentionalLossRef = useRef(false);
+  const retryFiberRef = useRef<Fiber.Fiber<void, never> | null>(null);
+  const mountedRef = useRef(true);
+
+  const hasSlot = useZustandStore(
+    pool.store,
+    (state) => state.entries[canvasId]?.active ?? false
+  );
+
   const behindInert = useSyncExternalStore(
     subscribeToInert,
     () => Boolean(frame?.closest("[inert]")),
     () => false
   );
-  const running = nearViewport && !behindInert;
+  const documentHidden = useSyncExternalStore(
+    subscribeToDocumentVisibility,
+    readDocumentHidden,
+    readServerDocumentHidden
+  );
+
+  const observedNear = entry?.isIntersecting ?? false;
+  const nearViewport = entry?.isIntersecting ?? true;
+  const running = nearViewport && !behindInert && !documentHidden;
+  const paced = hasCard ? playing : !calm && frameloop === "always";
+  const drawn = stage === "drawn" && hasSlot && !retrying;
+  const visibleStage = resolveVisibleStage(stage, drawn);
+  const dpr: [number, number] = dprReduced ? [1, 1] : baseDpr;
+  const activeFrameloop = resolveFrameloop(running, paced);
+
+  const cancelRetry = useEffectEvent(() => {
+    const fiber = retryFiberRef.current;
+    if (fiber !== null) {
+      retryFiberRef.current = null;
+      Effect.runFork(Fiber.interrupt(fiber));
+    }
+  });
+
+  const disposeRenderer = useEffectEvent(() => {
+    cleanupLossRef.current?.();
+    cleanupLossRef.current = null;
+    invalidateRef.current = null;
+    const gl = rendererRef.current;
+    if (gl === null) {
+      return;
+    }
+    rendererRef.current = null;
+    intentionalLossRef.current = true;
+    disposeWebGLRenderer(gl);
+  });
+
+  const handleEvicted = useEffectEvent(() => {
+    cancelRetry();
+    disposeRenderer();
+    if (mountedRef.current) {
+      // Incrementing mountKey guarantees a fresh Canvas and SceneDrawn even if
+      // the pool re-promotes this entry within the same React commit batch.
+      setMountKey((key) => key + 1);
+      setStage("loading");
+      notifyLoading?.();
+    }
+  });
+
+  const markFailed = useEffectEvent(() => {
+    setRetrying(false);
+    setStage("failed");
+    notifyFailed?.();
+  });
+
+  const scheduleRecovery = useEffectEvent(
+    (failedAttempt: number, immediateCheckWebGL: boolean) => {
+      cancelRetry();
+      disposeRenderer();
+      pool.releaseOffscreen(canvasId);
+
+      if (
+        immediateCheckWebGL &&
+        pool.activeCount() <= 1 &&
+        !isWebGLAvailable()
+      ) {
+        pool.release(canvasId);
+        markFailed();
+        return;
+      }
+
+      setRetrying(true);
+      setStage("loading");
+      notifyLoading?.();
+
+      const fiber = Effect.runFork(
+        waitRetryDelay(failedAttempt).pipe(
+          Effect.andThen((shouldRetry) =>
+            Effect.sync(() => {
+              retryFiberRef.current = null;
+              if (!mountedRef.current) {
+                return;
+              }
+              if (!shouldRetry) {
+                markFailed();
+                return;
+              }
+              setRetrying(false);
+              setAttempt((count) => count + 1);
+              setMountKey((key) => key + 1);
+            })
+          )
+        )
+      );
+      retryFiberRef.current = fiber;
+    }
+  );
+
+  // Sync viewport visibility with the shared LRU WebGL context pool.
+  useEffect(() => {
+    if (stage === "failed" || retrying) {
+      return;
+    }
+    if (observedNear && !behindInert && !documentHidden) {
+      pool.acquire(canvasId, handleEvicted);
+      return;
+    }
+    if (entry !== null && !entry.isIntersecting) {
+      pool.markOffscreen(canvasId);
+    }
+  }, [
+    behindInert,
+    canvasId,
+    documentHidden,
+    entry,
+    observedNear,
+    pool,
+    retrying,
+    stage,
+  ]);
+
+  // Clean up GPU resources, listeners, fibers, and pool slot on unmount.
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      cancelRetry();
+      disposeRenderer();
+      pool.release(canvasId);
+    };
+  }, [canvasId, pool]);
 
   // Continuous-motion labs (`frameloop="always"`) start playing once on their
   // first drawn frame unless reduced motion is set, just like P5Sketch, so the
-  // card's Pause button accurately reflects state and halts frame pacing.
+  // card's Pause button accurately reflects state and halts animation.
   useEffect(() => {
     if (
       frameloop === "always" &&
@@ -263,92 +284,155 @@ function ThreeCanvasComponent({
     }
   }, [calm, drawn, frameloop, hasCard]);
 
-  /** Starts the scene again on a new canvas, now. */
-  const restart = () => {
+  /** Manually restarts the scene on a fresh canvas after a failure. */
+  const manualRestart = () => {
+    cancelRetry();
+    disposeRenderer();
+    pool.releaseOffscreen(canvasId);
+    setRetrying(false);
     setStage("loading");
-    setStartCount((count) => count + 1);
+    setAttempt(1);
+    setMountKey((key) => key + 1);
+    notifyLoading?.();
+    if (observedNear && !behindInert && !documentHidden) {
+      pool.acquire(canvasId, handleEvicted);
+    }
   };
 
-  /** Starts the scene again on a new canvas, once its frame nears the viewport. */
-  const replace = () => {
-    setPlaced(false);
-    restart();
+  const handleContextLost = useEffectEvent(() => {
+    pool.releaseOffscreen(canvasId);
+    if (!observedNear) {
+      disposeRenderer();
+      pool.release(canvasId);
+      setMountKey((key) => key + 1);
+      setStage("loading");
+      notifyLoading?.();
+      return;
+    }
+    // Give the browser a backoff window to fire webglcontextrestored before remounting.
+    cancelRetry();
+    setStage("loading");
+    notifyLoading?.();
+    const fiber = Effect.runFork(
+      waitRetryDelay(attempt).pipe(
+        Effect.andThen((shouldRetry) =>
+          Effect.sync(() => {
+            retryFiberRef.current = null;
+            if (!mountedRef.current) {
+              return;
+            }
+            disposeRenderer();
+            if (!shouldRetry) {
+              pool.release(canvasId);
+              markFailed();
+              return;
+            }
+            setAttempt((count) => count + 1);
+            setMountKey((key) => key + 1);
+          })
+        )
+      )
+    );
+    retryFiberRef.current = fiber;
+  });
+
+  const handleContextRestored = useEffectEvent(() => {
+    cancelRetry();
+    setRetrying(false);
+    setStage("drawn");
+    notifyDrawn?.();
+    invalidateRef.current?.();
+  });
+
+  const handleBoundaryError = () => {
+    if (attempt >= SCENE_STARTS) {
+      disposeRenderer();
+      pool.releaseOffscreen(canvasId);
+      pool.release(canvasId);
+      markFailed();
+      return;
+    }
+    scheduleRecovery(attempt, true);
   };
+
+  const shouldMountCanvas = hasSlot && !retrying && stage !== "failed";
 
   return (
     // The loading state, the canvas and the overlay fill this frame.
     <div
-      aria-busy={!drawn}
+      aria-busy={visibleStage === "loading"}
       className="relative size-full min-w-0 overflow-hidden rounded-[inherit]"
-      data-scene-state={stage}
+      data-scene-state={visibleStage}
       ref={frameRef}
     >
-      {placed ? (
+      {shouldMountCanvas ? (
         <div
           className={cn("size-full", !drawn && "pointer-events-none opacity-0")}
         >
-          <SceneOverlayProvider>
-            <ErrorBoundary
-              fallbackRender={() => null}
-              key={startCount}
-              onError={() => {
-                if (startCount < SCENE_STARTS) {
-                  restart();
-                  return;
-                }
-                setStage("failed");
-              }}
-            >
-              <Canvas
-                className={cn(
-                  "size-full overflow-hidden rounded-[inherit] [&_canvas]:size-full [&_canvas]:rounded-[inherit] [&>div]:rounded-[inherit]",
-                  className
-                )}
-                dpr={dpr}
-                frameloop={running ? "demand" : "never"}
-                gl={{
-                  antialias: true,
-                  powerPreference,
-                  alpha: true,
-                  toneMapping,
-                }}
-                onCreated={(state) => {
-                  watchContextLoss(state.gl, replace);
-                  onCreated?.(state);
-                }}
-                shadows="percentage"
-                {...props}
+          <CanvasQualityProvider degraded={postprocessingDegraded}>
+            <SceneOverlayProvider>
+              <ErrorBoundary
+                fallbackRender={() => null}
+                key={mountKey}
+                onError={handleBoundaryError}
               >
-                <SceneTime controlled={hasCard} />
-                {paced && running ? <PacedFrames /> : null}
-                <CameraFraming>
-                  <Suspense fallback={null}>
-                    {children}
-                    <SceneDrawn
-                      onDrawn={() => {
-                        setStage("drawn");
-                        notifyDrawn?.();
-                      }}
-                    />
-                  </Suspense>
-                </CameraFraming>
-              </Canvas>
-            </ErrorBoundary>
-            <SceneOverlay />
-          </SceneOverlayProvider>
+                <Canvas
+                  className={cn(
+                    "size-full overflow-hidden rounded-[inherit] [&_canvas]:size-full [&_canvas]:rounded-[inherit] [&>div]:rounded-[inherit]",
+                    className
+                  )}
+                  dpr={dpr}
+                  frameloop={activeFrameloop}
+                  gl={{
+                    alpha: true,
+                    antialias,
+                    failIfMajorPerformanceCaveat: false,
+                    powerPreference,
+                    toneMapping,
+                  }}
+                  onCreated={(state) => {
+                    intentionalLossRef.current = false;
+                    rendererRef.current = state.gl;
+                    invalidateRef.current = state.invalidate;
+                    cleanupLossRef.current?.();
+                    cleanupLossRef.current = watchContextLoss(state.gl, {
+                      isIntentional: () => intentionalLossRef.current,
+                      onLost: handleContextLost,
+                      onRestored: handleContextRestored,
+                    });
+                    onCreated?.(state);
+                  }}
+                  shadows="percentage"
+                  {...props}
+                >
+                  <SceneTime controlled={hasCard} />
+                  <PerformanceGuard
+                    active={activeFrameloop === "always"}
+                    onDropPostprocessing={() => setPostprocessingDegraded(true)}
+                    onReduceDpr={() => setDprReduced(true)}
+                  />
+                  <CameraFraming>
+                    <Suspense fallback={null}>
+                      {children}
+                      <SceneDrawn
+                        onDrawn={() => {
+                          setStage("drawn");
+                          notifyDrawn?.();
+                        }}
+                      />
+                    </Suspense>
+                  </CameraFraming>
+                </Canvas>
+              </ErrorBoundary>
+              <SceneOverlay />
+            </SceneOverlayProvider>
+          </CanvasQualityProvider>
         </div>
-      ) : (
-        <Intersection
-          aria-hidden="true"
-          className="absolute inset-0"
-          key={startCount}
-          once
-          onIntersect={() => setPlaced(true)}
-          rootMargin={`${THREE_RENDER_MARGIN}px`}
-        />
-      )}
-      {stage === "loading" ? <SceneSpinner /> : null}
-      {stage === "failed" ? <SceneFailure onRestart={restart} /> : null}
+      ) : null}
+      {visibleStage === "loading" ? <SceneSpinner /> : null}
+      {visibleStage === "failed" && notifyFailed === null ? (
+        <SceneFailure onRestart={manualRestart} />
+      ) : null}
     </div>
   );
 }

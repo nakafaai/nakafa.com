@@ -1,7 +1,7 @@
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import type { ReactNode } from "react";
-import { createContext, use } from "react";
+import { createContext, use, useMemo } from "react";
 
 /**
  * The picture a scene stands on until its first frame is drawn, such as the
@@ -10,31 +10,59 @@ import { createContext, use } from "react";
  */
 const SceneStillContext = createContext<ReactNode>(null);
 
-/** Callback invoked when the first scene inside `SceneStill` draws its first whole frame. */
-const SceneDrawnContext = createContext<(() => void) | null>(null);
+interface SceneStillCallbacks {
+  readonly onDrawn: (() => void) | undefined;
+  readonly onFailed: (() => void) | undefined;
+  readonly onLoading: (() => void) | undefined;
+}
+
+/** Callbacks notified as a scene inside `SceneStill` draws, reloads, or falls back. */
+const SceneStillCallbacksContext = createContext<SceneStillCallbacks | null>(
+  null
+);
 
 /** Reads the surrounding `SceneStill`'s drawn callback, when one was supplied. */
 export function useNotifySceneDrawn() {
-  return use(SceneDrawnContext);
+  return use(SceneStillCallbacksContext)?.onDrawn ?? null;
+}
+
+/** Reads the surrounding `SceneStill`'s loading callback, when one was supplied. */
+export function useNotifySceneLoading() {
+  return use(SceneStillCallbacksContext)?.onLoading ?? null;
+}
+
+/** Reads the surrounding `SceneStill`'s fallback callback, when one was supplied. */
+export function useNotifySceneFailed() {
+  return use(SceneStillCallbacksContext)?.onFailed ?? null;
 }
 
 /**
  * Gives the scenes inside it the still they show while they load, so the card
- * keeps the same picture from the server's HTML to the scene's first frame.
+ * keeps the same picture from the server's HTML to the scene's first frame,
+ * and falls back to the still without an error overlay when WebGL is blocked.
  */
 export function SceneStill({
   children,
   onDrawn,
+  onFailed,
+  onLoading,
   still,
 }: {
   children: ReactNode;
   onDrawn?: () => void;
+  onFailed?: () => void;
+  onLoading?: () => void;
   still: ReactNode;
 }) {
+  const callbacks = useMemo<SceneStillCallbacks>(
+    () => ({ onDrawn, onFailed, onLoading }),
+    [onDrawn, onFailed, onLoading]
+  );
+
   return (
-    <SceneDrawnContext value={onDrawn ?? null}>
+    <SceneStillCallbacksContext value={callbacks}>
       <SceneStillContext value={still}>{children}</SceneStillContext>
-    </SceneDrawnContext>
+    </SceneStillCallbacksContext>
   );
 }
 

@@ -11,6 +11,9 @@ import {
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
+/** A desktop window wide enough to show the For teachers panel beside the paper. */
+const DESKTOP = { height: 900, width: 1440 };
+
 /** The address of an exam's editor on the school host. */
 const EDITOR_PATH = /\/exams\/[^/]+\/edit$/u;
 
@@ -76,8 +79,8 @@ test("two teachers write two options of one question while one marks the key, an
 }) => {
   const school = await Effect.runPromise(createSchool());
   const host = `${school.slug}.localhost`;
-  const ownerContext = await browser.newContext();
-  const teacherContext = await browser.newContext();
+  const ownerContext = await browser.newContext({ viewport: DESKTOP });
+  const teacherContext = await browser.newContext({ viewport: DESKTOP });
   await Effect.runPromise(
     signInOwner(ownerContext, school.slug, hostAddress(baseURL, host, "/"))
   );
@@ -124,8 +127,8 @@ test("two teachers type fast into one prompt at once, one at each end, and both 
 }) => {
   const school = await Effect.runPromise(createSchool());
   const host = `${school.slug}.localhost`;
-  const ownerContext = await browser.newContext();
-  const teacherContext = await browser.newContext();
+  const ownerContext = await browser.newContext({ viewport: DESKTOP });
+  const teacherContext = await browser.newContext({ viewport: DESKTOP });
   await Effect.runPromise(
     signInOwner(ownerContext, school.slug, hostAddress(baseURL, host, "/"))
   );

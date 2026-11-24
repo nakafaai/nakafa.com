@@ -1,5 +1,7 @@
+import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
+import { pressInPopup } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -9,9 +11,29 @@ import {
 import { expectNoSidewaysSidebar } from "@/e2e/support/sidebar";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
+/** Opens the mobile sidebar sheet on viewports narrower than 1024 px, and returns the visible sidebar root. */
+async function openSidebar(page: Page) {
+  const width = page.viewportSize()?.width ?? 1280;
+  if (width < 1024) {
+    const mobile = page.locator('[data-mobile="true"][data-slot="sidebar"]');
+    if (!(await mobile.isVisible())) {
+      const trigger = page
+        .locator('[data-sidebar="trigger"]')
+        .filter({ visible: true })
+        .first();
+      await waitUntilTakenOver(trigger);
+      await trigger.click();
+      await expect(mobile).toBeVisible();
+    }
+    return mobile;
+  }
+  return page.locator('[data-slot="sidebar-container"]').first();
+}
+
 test("a school without a logo shows its animal beside its name, and its account menu lists its items", async ({
   browser,
   baseURL,
+  hasTouch,
 }) => {
   const school = await Effect.runPromise(createSchool());
   const schoolHome = hostAddress(baseURL, `${school.slug}.localhost`, "/");
@@ -20,15 +42,16 @@ test("a school without a logo shows its animal beside its name, and its account 
   const page = await context.newPage();
   await page.goto(schoolHome);
 
-  const header = page.locator('[data-slot="sidebar-header"]');
-  await expect(header.getByText(school.name, { exact: true })).toBeVisible();
-  await expect(header.locator('[data-slot="avatar-fallback"]')).toBeVisible();
-  await expect(header.locator("img")).toHaveCount(0);
+  const root = await openSidebar(page);
+  const header = root.locator('[data-slot="sidebar-header"]');
+  const switcher = header.getByRole("button", { name: school.name });
+  await expect(switcher.getByText(school.name, { exact: true })).toBeVisible();
+  await expect(switcher.locator('[data-slot="avatar-fallback"]')).toBeVisible();
+  await expect(switcher.locator("img")).toHaveCount(0);
 
-  await waitUntilTakenOver(
-    page.getByRole("button", { name: "Acceptance Owner" })
-  );
-  await page.getByRole("button", { name: "Acceptance Owner" }).click();
+  const account = root.getByRole("button", { name: "Acceptance Owner" });
+  await waitUntilTakenOver(account);
+  await pressInPopup(account, hasTouch);
 
   for (const item of [
     "Account settings",
@@ -53,15 +76,19 @@ test("a teacher of a class in the active period sees the class under Classes, an
   const page = await context.newPage();
   await page.goto(schoolHome);
 
-  const sidebar = page.locator('[data-sidebar="content"]');
+  const root = await openSidebar(page);
+  const sidebar = root.locator('[data-sidebar="content"]');
   await expect(sidebar.getByText("Classes", { exact: true })).toBeVisible();
   await sidebar.getByRole("link", { name: "Fisika X-1", exact: true }).click();
 
   await expect(page).toHaveURL(
     hostAddress(baseURL, `${school.slug}.localhost`, "/classes/fisika-x-1")
   );
+  const afterRoot = await openSidebar(page);
   await expect(
-    sidebar.getByRole("link", { name: "Fisika X-1", exact: true })
+    afterRoot
+      .locator('[data-sidebar="content"]')
+      .getByRole("link", { name: "Fisika X-1", exact: true })
   ).toHaveAttribute("data-active", "true");
   await context.close();
 });
@@ -77,7 +104,8 @@ test("a member with no class sees no Classes group in the sidebar", async ({
   const page = await context.newPage();
   await page.goto(schoolHome);
 
-  const sidebar = page.locator('[data-sidebar="content"]');
+  const root = await openSidebar(page);
+  const sidebar = root.locator('[data-sidebar="content"]');
   await expect(sidebar.getByRole("link", { name: "Exams" })).toBeVisible();
   await page.waitForLoadState("networkidle");
   await expect(sidebar.getByText("Classes", { exact: true })).toHaveCount(0);
@@ -96,7 +124,8 @@ test("the settings sidebar stands the profile and billing alone with their icons
   const page = await context.newPage();
   await page.goto(address("/settings/profile"));
 
-  const sidebar = page.locator('[data-sidebar="content"]');
+  const root = await openSidebar(page);
+  const sidebar = root.locator('[data-sidebar="content"]');
   for (const alone of ["Profile", "Billing"]) {
     const link = sidebar.getByRole("link", { exact: true, name: alone });
     await expect(link).toBeVisible();
@@ -121,17 +150,36 @@ test("the settings sidebar stands the profile and billing alone with their icons
   await members.click();
 
   await expect(page).toHaveURL(address("/settings/members"));
-  await expect(members).toHaveAttribute("data-active", "true");
+  const afterRoot = await openSidebar(page);
+  const afterSidebar = afterRoot.locator('[data-sidebar="content"]');
+  const afterPeople = afterSidebar.getByRole("button", {
+    exact: true,
+    name: "People",
+  });
+  const afterMembers = afterSidebar.getByRole("link", {
+    exact: true,
+    name: "Members",
+  });
+  await expect(afterMembers).toHaveAttribute("data-active", "true");
   // The open group stays open, so Members keeps its place under the pointer.
-  await expect(people).toHaveAttribute("aria-expanded", "true");
-  expect((await members.boundingBox())?.y).toBe(before?.y);
+  await expect(afterPeople).toHaveAttribute("aria-expanded", "true");
+  if ((page.viewportSize()?.width ?? 1280) >= 1024) {
+    expect((await afterMembers.boundingBox())?.y).toBe(before?.y);
+  }
 
   // A hard load opens the group that holds the page, and only that one.
-  await page.reload();
-  await expect(people).toHaveAttribute("aria-expanded", "true");
-  await expect(members).toHaveAttribute("data-active", "true");
+  const reloaded = await context.newPage();
+  await reloaded.goto(address("/settings/members"));
+  const reloadedRoot = await openSidebar(reloaded);
+  const reloadedSidebar = reloadedRoot.locator('[data-sidebar="content"]');
   await expect(
-    sidebar.getByRole("button", { exact: true, name: "Academics" })
+    reloadedSidebar.getByRole("button", { exact: true, name: "People" })
+  ).toHaveAttribute("aria-expanded", "true");
+  await expect(
+    reloadedSidebar.getByRole("link", { exact: true, name: "Members" })
+  ).toHaveAttribute("data-active", "true");
+  await expect(
+    reloadedSidebar.getByRole("button", { exact: true, name: "Academics" })
   ).toHaveAttribute("aria-expanded", "false");
   await context.close();
 });
@@ -148,7 +196,8 @@ test("no two entries of the settings sidebar draw the same icon", async ({
   const page = await context.newPage();
   await page.goto(address("/settings/profile"));
 
-  const sidebar = page.locator('[data-sidebar="content"]');
+  const root = await openSidebar(page);
+  const sidebar = root.locator('[data-sidebar="content"]');
   // The school's own groups stay mounted, hidden, behind the settings, so that coming back draws them at once.
   const entries = sidebar
     .locator('[data-sidebar="menu-button"]')

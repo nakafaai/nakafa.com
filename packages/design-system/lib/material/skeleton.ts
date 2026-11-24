@@ -1,0 +1,42 @@
+/**
+ * Support and movement bench colors: cortical and spongy bone, cartilage,
+ * synovial fluid, ligaments, tendons, contracting vs relaxing skeletal muscles,
+ * vertebral regions, and animal locomotion models.
+ */
+export const SKELETON_COLORS = {
+  bone: "#ede6d6",
+  boneSoft: "#d9caa6",
+  spongyHealthy: "#e3d4b4",
+  spongyPorous: "#b8a484",
+  mineralDense: "#f5f1e4",
+  mineralLow: "#c9b898",
+  cartilage: "#8fc6db",
+  cartilageWorn: "#c49c8c",
+  synovialFluid: "#58b0d4",
+  membraneHealthy: "#e39ca0",
+  membraneInflamed: "#d93b3b",
+  ligament: "#d4c39c",
+  tendon: "#e8e3d5",
+  muscleContract: "#c93838",
+  muscleRelax: "#b87878",
+  lensRim: "#3e4652",
+  disc: "#7ab5cc",
+  canal: "#454c57",
+  regionActive: "#d9882b",
+  regionNeutral: "#dfd7c6",
+
+  // Animal locomotion models and media.
+  soil: "#73533b",
+  wormBody: "#bd6d5e",
+  wormChaetae: "#3d2a22",
+  waterMedium: "#3a94b5",
+  fishBody: "#6892ab",
+  fishFin: "#8fb6cc",
+  groundMeadow: "#6c8c4a",
+  grasshopperBody: "#5c9942",
+  grasshopperExoskeleton: "#43732f",
+  birdBody: "#546e87",
+  birdWing: "#7e99b3",
+  keelBone: "#ede6d6",
+  labelInk: "#22252a",
+} as const;

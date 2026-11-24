@@ -333,7 +333,7 @@ export const expectReturned = Effect.fn("NakafaE2E.expectVisualReturned")(
           position: "static",
           scrollLocked: false,
         });
-      expect(await readPlacement(card)).toEqual(placement);
+      await expect.poll(() => readPlacement(card)).toEqual(placement);
     });
   }
 );

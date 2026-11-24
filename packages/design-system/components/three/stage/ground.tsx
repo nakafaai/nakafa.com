@@ -10,16 +10,12 @@ const GROUND_SPAN = 20;
 /** How dark the key light's shadow falls on the ground, over the backdrop. */
 const SHADOW_OPACITY = 0.3;
 
-/** Frame callbacks run in rising priority, so -1 runs before the contact shadows draw. */
+/** Frame callbacks run in rising priority, so -1 runs before contact shadows bake. */
 const BEFORE_SHADOWS = -1;
 
 /**
- * Lets the renderer clear before the contact shadows draw. The finish's effect
- * composer holds `autoClear` off while it is mounted, and `ContactShadows`
- * renders its depth pass into its own target expecting the renderer to clear
- * it; without the clear every earlier position of a moving object stays in the
- * shadow as a ghost. The composer switches `autoClear` on for its own pass
- * anyway, and a negative priority leaves the render loop with three.
+ * Lets the renderer clear before baked contact shadows draw on the first frame
+ * when EffectComposer holds `autoClear` off.
  */
 function ShadowClear() {
   useFrame(({ gl }) => {
@@ -51,33 +47,41 @@ function Catcher() {
 /**
  * The floor a lab stands on, when it names one. A lab that names what its
  * ground is made of stands on that ground, drawn as far as the haze. A lab
- * that names only the height, as an apparatus on a studio backdrop does,
- * gets an unseen floor that shows the key light's shadows, as a photographer
- * sets a subject onto a background plate. Either way soft contact shadows
- * darken the floor where things touch it, and the camera leaves the floor out
- * when it frames the lab.
+ * that names only the height gets an unseen shadow catcher.
+ *
+ * Static desktop labs bake soft contact shadows once (`frames={1}`) so they
+ * add zero per-frame render passes. Mobile, low-end, software-rendered, and
+ * animated labs rely on the directional key light's real-time shadow map alone,
+ * avoiding 3 full-scene shadow and blur passes per frame.
  */
 export function Ground() {
-  const { floor, ground, reach } = useStage();
+  const { animated, floor, ground, reach, tier } = useStage();
 
   if (floor === undefined) {
     return null;
   }
 
+  const bakeContactShadows = tier === "full" && !animated;
+
   return (
     <>
       {ground === undefined ? <Catcher /> : <Terrain kind={ground} />}
-      <ShadowClear />
-      <CameraBounds exclude>
-        <ContactShadows
-          blur={2.4}
-          far={reach / 2}
-          opacity={0.38}
-          position={[0, floor + 0.012, 0]}
-          resolution={512}
-          scale={2 * reach}
-        />
-      </CameraBounds>
+      {bakeContactShadows ? (
+        <>
+          <ShadowClear />
+          <CameraBounds exclude>
+            <ContactShadows
+              blur={2.4}
+              far={reach / 2}
+              frames={1}
+              opacity={0.38}
+              position={[0, floor + 0.012, 0]}
+              resolution={256}
+              scale={2 * reach}
+            />
+          </CameraBounds>
+        </>
+      ) : null}
     </>
   );
 }

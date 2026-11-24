@@ -2,6 +2,12 @@ import type { Size } from "@react-three/fiber";
 import type { Camera } from "three";
 import { OrthographicCamera, PerspectiveCamera, Vector3 } from "three";
 
+/** Reusable scratch vectors to keep per-frame overlay projections allocation-free. */
+const SCRATCH_NDC = new Vector3();
+const SCRATCH_CAMERA_POS = new Vector3();
+const SCRATCH_CAMERA_DIR = new Vector3();
+const SCRATCH_OFFSET = new Vector3();
+
 /**
  * Projects a world point to CSS pixels with the origin at the top left of the
  * canvas. Points behind a perspective camera project to mirrored positions,
@@ -12,16 +18,21 @@ export function projectToOverlay(
   camera: Camera,
   size: Size
 ): [number, number] {
-  const ndc = point.clone().project(camera);
+  SCRATCH_NDC.copy(point).project(camera);
   const widthHalf = size.width / 2;
   const heightHalf = size.height / 2;
-  return [ndc.x * widthHalf + widthHalf, -(ndc.y * heightHalf) + heightHalf];
+  return [
+    SCRATCH_NDC.x * widthHalf + widthHalf,
+    -(SCRATCH_NDC.y * heightHalf) + heightHalf,
+  ];
 }
 
 /** Whether a point lies more than a right angle away from the camera's view direction. */
 export function isBehindCamera(point: Vector3, camera: Camera): boolean {
-  const offset = point.clone().sub(camera.getWorldPosition(new Vector3()));
-  return offset.angleTo(camera.getWorldDirection(new Vector3())) > Math.PI / 2;
+  camera.getWorldPosition(SCRATCH_CAMERA_POS);
+  camera.getWorldDirection(SCRATCH_CAMERA_DIR);
+  SCRATCH_OFFSET.copy(point).sub(SCRATCH_CAMERA_POS);
+  return SCRATCH_OFFSET.angleTo(SCRATCH_CAMERA_DIR) > Math.PI / 2;
 }
 
 /**
@@ -35,7 +46,9 @@ export function objectScale(point: Vector3, camera: Camera): number {
   }
   if (camera instanceof PerspectiveCamera) {
     const verticalFov = (camera.fov * Math.PI) / 180;
-    const distance = point.distanceTo(camera.getWorldPosition(new Vector3()));
+    const distance = point.distanceTo(
+      camera.getWorldPosition(SCRATCH_CAMERA_POS)
+    );
     return 1 / (2 * Math.tan(verticalFov / 2) * distance);
   }
   return 1;
@@ -59,7 +72,9 @@ export function objectZIndex(
   ) {
     return undefined;
   }
-  const distance = point.distanceTo(camera.getWorldPosition(new Vector3()));
+  const distance = point.distanceTo(
+    camera.getWorldPosition(SCRATCH_CAMERA_POS)
+  );
   const slope = (range[1] - range[0]) / (camera.far - camera.near);
   const intercept = range[1] - slope * camera.far;
   return Math.round(slope * distance + intercept);

@@ -6,7 +6,7 @@ import {
   recordLayoutShifts,
 } from "@/e2e/support/layout";
 import { reachMessage } from "@/e2e/support/message";
-import { pressInPopup } from "@/e2e/support/popup";
+import { pressInPopup, waitForPopupsGone } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -150,8 +150,7 @@ const closeThread = async (page: Page, width: number) => {
     page.getByRole("dialog").getByRole("button", { exact: true, name: "Close" })
   ).toHaveCount(0);
   await page.keyboard.press("Escape");
-  // A press while the sheet slides away is lost (vercel-labs/ui#928), so the reader presses once it is gone.
-  await expect(page.locator("[data-slot=discussion]")).toHaveCount(0);
+  await waitForPopupsGone(page);
 };
 
 /** The layout shift that no press or key caused, since the page loaded. */

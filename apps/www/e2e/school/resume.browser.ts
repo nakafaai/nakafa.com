@@ -35,6 +35,20 @@ async function watchEntry(page: Page) {
   );
 }
 
+/** Moves to Question 3 when a phone shows one question at a time, and returns its essay field. */
+async function openEssay(page: Page) {
+  const question = page.getByRole("article", { name: "Question 3" });
+  const essay = question.getByRole("textbox", { name: "Question 3" });
+  await expect(
+    page.getByRole("heading", { name: "Question 1" }).or(essay).first()
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  for (let step = 0; step < 2 && !(await essay.isVisible()); step += 1) {
+    await page.getByRole("button", { name: "Next question" }).click();
+  }
+  await expect(essay).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  return essay;
+}
+
 test("a student who reloads a running paper meets the paper and never the token field, with the words typed before the reload, and no editor draws it", async ({
   baseURL,
   browser,
@@ -68,22 +82,23 @@ test("a student who reloads a running paper meets the paper and never the token 
   );
   await student.getByPlaceholder("Enter the token").fill(sitting.token);
   await student.getByRole("button", { name: "Enter sitting" }).click();
-  const question = student.getByRole("article", { name: "Question 3" });
-  const essay = question.getByRole("textbox", { name: "Question 3" });
-  await expect(essay).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-
   // A paper is drawn, not edited: its prompt and its options hold no editor, and an option is named by its words.
-  await expect(student.getByText("Soal pertama.")).toBeVisible();
-  await expect(student.locator(".ProseMirror")).toHaveCount(0);
+  await expect(student.getByText("Soal pertama.")).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await expect(
+    student.locator('[data-slot="sitting-document"] .ProseMirror')
+  ).toHaveCount(0);
+  const essay = await openEssay(student);
 
   // The words go into the field and the page reloads before their pause ends, so only the browser holds them.
+  await essay.click();
   await essay.pressSequentially(ESSAY);
   await student.reload();
-  await expect(
-    student
-      .getByRole("article", { name: "Question 3" })
-      .getByRole("textbox", { name: "Question 3" })
-  ).toHaveValue(ESSAY, { timeout: readinessTimeoutMilliseconds });
+  const reloadedEssay = await openEssay(student);
+  await expect(reloadedEssay).toHaveText(ESSAY, {
+    timeout: readinessTimeoutMilliseconds,
+  });
 
   // The reloaded document never showed the token field: the page entered by itself behind the paper's frame.
   await expect(student.locator("html")).not.toHaveAttribute(ENTRY_SEEN, "");
@@ -143,11 +158,9 @@ test("a second tab says the exam is open elsewhere, and takes the paper over wit
     page
       .getByRole("article", { name: "Question 3" })
       .getByRole("textbox", { name: "Question 3" });
-  await expect(essayOf(student)).toBeVisible({
-    timeout: readinessTimeoutMilliseconds,
-  });
-  await essayOf(student).fill(ESSAY);
-  await essayOf(student).blur();
+  const firstEssay = await openEssay(student);
+  await firstEssay.fill(ESSAY);
+  await firstEssay.blur();
 
   const second = await studentContext.newPage();
   await second.goto(student.url());
@@ -157,7 +170,8 @@ test("a second tab says the exam is open elsewhere, and takes the paper over wit
   await expect(essayOf(second)).toHaveCount(0);
 
   await student.close();
-  await expect(essayOf(second)).toHaveValue(ESSAY, {
+  const secondEssay = await openEssay(second);
+  await expect(secondEssay).toHaveText(ESSAY, {
     timeout: readinessTimeoutMilliseconds,
   });
   await studentContext.close();
