@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { signInGuardian } from "@/e2e/support/guardian";
-import { pressInPopup } from "@/e2e/support/popup";
+import { pressInPopup, waitForPopupsGone } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -47,11 +47,13 @@ test("an admin links a parent and corrects the mistyped email, the parent signs 
   await waitUntilTakenOver(add);
   await add.click();
   const dialog = settings.getByRole("dialog");
-  await dialog.getByRole("combobox", { name: "Student" }).click();
+  await pressInPopup(dialog.getByRole("combobox", { name: "Student" }));
   await pressInPopup(settings.getByRole("option", { name: "Siswa Uji" }));
+  await waitForPopupsGone(settings);
   await dialog.getByLabel("Parent's name").fill("Ibu Uji");
   await dialog.getByLabel("Parent email").fill(mistyped);
-  await dialog.getByRole("button", { name: "Link a parent" }).click();
+  await pressInPopup(dialog.getByRole("button", { name: "Link a parent" }));
+  await waitForPopupsGone(settings);
   const row = settings.getByRole("row").filter({ hasText: "Siswa Uji" });
   await expect(row).toContainText("Ibu Uji");
   await expect(row).toContainText("Pending");

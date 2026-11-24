@@ -45,11 +45,14 @@ const reachable = (control: Locator) =>
  * outside the viewport and scrolls it into view, which scrolls the sheet's host and swipes the sheet away. Elsewhere
  * the popup has nothing to wait for. A touch screen taps the control.
  */
-export async function pressInPopup(control: Locator, hasTouch = false) {
+export async function pressInPopup(control: Locator, hasTouch?: boolean) {
   const live = reachable(control);
   await live.waitFor();
   await waitForSettled(live);
-  await (hasTouch ? live.tap() : live.click());
+  const touch =
+    hasTouch ??
+    (await live.page().evaluate(() => matchMedia("(pointer: coarse)").matches));
+  await (touch ? live.tap() : live.click());
 }
 
 /**
