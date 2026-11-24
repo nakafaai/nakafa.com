@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { expectNoOverflow } from "@/e2e/support/layout";
+import { pressInPopup, waitForPopupsGone } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -60,23 +61,29 @@ for (const width of WIDTHS) {
     // The navigator opens from the footer, and a number in it closes the drawer.
     await student.getByRole("button", { name: OPEN_NAVIGATOR }).click();
     const drawer = student.getByRole("dialog", { name: "Questions" });
-    await drawer
-      .getByRole("button", { exact: true, name: "Question 2, unanswered" })
-      .click();
-    await expect(drawer).toBeHidden();
+    await pressInPopup(
+      drawer.getByRole("button", {
+        exact: true,
+        name: "Question 2, unanswered",
+      }),
+      true
+    );
+    await waitForPopupsGone(student);
 
     const flag = student.getByRole("button", {
       exact: true,
-      name: "Flag question 2",
+      name: "Flag",
     });
     await flag.click();
     await expect(flag).toHaveAttribute("aria-pressed", "true");
 
     await student.getByRole("button", { exact: true, name: "Finish" }).click();
-    await student
-      .getByRole("dialog")
-      .getByRole("button", { exact: true, name: "Finish" })
-      .click();
+    await pressInPopup(
+      student
+        .getByRole("dialog")
+        .getByRole("button", { exact: true, name: "Finish" }),
+      true
+    );
     await expect(student.getByText("You finished this exam.")).toBeVisible();
     await Effect.runPromise(expectNoOverflow(student, "the end"));
 
