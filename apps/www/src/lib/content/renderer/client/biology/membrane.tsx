@@ -11,6 +11,14 @@ export const ActiveTransportPumpLab = withHydrationBoundary(
   )
 );
 
+export const FluidMosaicMembraneLab = withHydrationBoundary(
+  lazy(() =>
+    import("@repo/design-system/components/contents/biology/mosaic/lab").then(
+      (module) => ({ default: module.FluidMosaicMembraneLab })
+    )
+  )
+);
+
 export const PlasmolysisCellLab = withHydrationBoundary(
   lazy(() =>
     import(
