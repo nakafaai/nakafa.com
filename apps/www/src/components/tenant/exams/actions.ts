@@ -90,6 +90,7 @@ const placeholderDraft = (
 export function useQuestionActions() {
   const { exam, slug } = useExam();
   const selection = useExamSelectionStore();
+  const pin = useExamSelection((state) => state.pin);
   const select = useExamSelection((state) => state.select);
   const replace = useExamSelection((state) => state.replace);
   const startPending = useExamSelection((state) => state.startPending);
@@ -176,7 +177,8 @@ export function useQuestionActions() {
 
   /**
    * Removes a question, once the teacher confirmed it. A teacher on that question moves to its neighbour at
-   * once (`afterRemoval`), and back to it when the server refuses the removal, unless the teacher chose another.
+   * once (`afterRemoval`) and holds it pinned across the layout shrink, and moves back to it when the server
+   * refuses the removal, unless the teacher chose another.
    */
   const removeQuestion = (questionId: QuestionId) => {
     const next = afterRemoval(
@@ -185,7 +187,7 @@ export function useQuestionActions() {
       questionId
     );
     if (Option.isSome(next)) {
-      select(next.value);
+      pin(next.value);
     }
     act(
       schoolCall(() => remove({ examId: exam.id, questionId, slug })).pipe(

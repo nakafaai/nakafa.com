@@ -223,9 +223,8 @@ const pressTrigger = async (
       (popups) =>
         Array.from(document.querySelectorAll<HTMLElement>(popups)).every(
           (one) =>
-            one.offsetHeight === 0 ||
-            !one.hasAttribute("data-open") ||
-            one.hasAttribute("data-ending-style")
+            !one.hasAttribute("data-ending-style") &&
+            (one.offsetHeight === 0 || !one.hasAttribute("data-open"))
         ),
       POPUPS,
       { timeout: PRESS_TIMEOUT_MILLISECONDS }
