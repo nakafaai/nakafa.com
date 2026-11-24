@@ -168,4 +168,20 @@ describe("useRowPress", () => {
 
     expect(opened).toEqual([table.querySelector("tr")]);
   });
+
+  it("opens the row when a menu item clicks the row directly while its pointer press began on a control", () => {
+    const table = drawRow();
+    const row = Option.getOrThrow(
+      Option.fromNullishOr(table.querySelector("tr"))
+    );
+    const button = Option.getOrThrow(
+      Option.fromNullishOr(table.querySelector("button"))
+    );
+
+    pressDown(button);
+    click(row);
+    click(button);
+
+    expect(opened).toEqual([row]);
+  });
 });
