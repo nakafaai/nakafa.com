@@ -2,11 +2,13 @@ import type { Option } from "effect";
 import { Array as Arr } from "effect";
 import { baseRenderers } from "@/lib/content/renderer/registry/base";
 import { biologyRenderers } from "@/lib/content/renderer/registry/biology";
+import { botanyRenderers } from "@/lib/content/renderer/registry/botany";
 import { chemistryRenderers } from "@/lib/content/renderer/registry/chemistry";
 import { circuitRenderers } from "@/lib/content/renderer/registry/circuit";
 import { electronicsRenderers } from "@/lib/content/renderer/registry/electronics";
 import { fieldRenderers } from "@/lib/content/renderer/registry/field";
 import { fluidRenderers } from "@/lib/content/renderer/registry/fluid";
+import { geneticsRenderers } from "@/lib/content/renderer/registry/genetics";
 import { gravityRenderers } from "@/lib/content/renderer/registry/gravity";
 import { heatRenderers } from "@/lib/content/renderer/registry/heat";
 import { mathematicsRenderers } from "@/lib/content/renderer/registry/mathematics";
@@ -28,6 +30,8 @@ import type { RendererImplementation } from "@/lib/content/renderer/selection";
 export const catalogRenderers = [
   ...baseRenderers,
   ...biologyRenderers,
+  ...botanyRenderers,
+  ...geneticsRenderers,
   ...chemistryRenderers,
   ...mathematicsRenderers,
   ...physicsRenderers,

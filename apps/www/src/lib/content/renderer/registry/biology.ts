@@ -61,6 +61,7 @@ import {
 } from "@/lib/content/renderer/client/biology/laboratory";
 import {
   ActiveTransportPumpLab,
+  FluidMosaicMembraneLab,
   PlasmolysisCellLab,
 } from "@/lib/content/renderer/client/biology/membrane";
 import {
@@ -452,5 +453,9 @@ export const biologyRenderers = [
   {
     name: biologyComponentNames.thermoregulationSkinLab,
     component: ThermoregulationSkinLab,
+  },
+  {
+    name: biologyComponentNames.fluidMosaicMembraneLab,
+    component: FluidMosaicMembraneLab,
   },
 ] satisfies readonly RendererImplementation[];
