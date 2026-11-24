@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { chooseDay } from "@/e2e/support/date";
-import { pressInPopup } from "@/e2e/support/popup";
+import { pressInPopup, waitForPopupsGone } from "@/e2e/support/popup";
 import {
   createSchool,
   grantStudent,
@@ -178,11 +178,13 @@ test("a student's work stays in the field after a hand-in, and Hand in keeps its
     .getByRole("button", { name: "Add student" })
     .click();
   const placeDialog = settings.getByRole("dialog");
-  await placeDialog.getByRole("combobox", { name: "Student" }).click();
+  await pressInPopup(placeDialog.getByRole("combobox", { name: "Student" }));
   await pressInPopup(
     settings.getByRole("option", { name: "Acceptance Learner" })
   );
-  await placeDialog.getByRole("button", { name: "Add student" }).click();
+  await waitForPopupsGone(settings);
+  await pressInPopup(placeDialog.getByRole("button", { name: "Add student" }));
+  await waitForPopupsGone(settings);
   await expect(
     settings.getByRole("row").filter({ hasText: "Acceptance Learner" })
   ).toBeVisible();

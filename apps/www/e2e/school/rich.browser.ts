@@ -19,7 +19,9 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
 }) => {
   const school = await Effect.runPromise(createSchool());
   const host = `${school.slug}.localhost`;
-  const context = await browser.newContext();
+  const context = await browser.newContext({
+    viewport: { height: 900, width: 1440 },
+  });
   await Effect.runPromise(
     signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
   );

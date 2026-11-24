@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect, String as Str } from "effect";
 import { expectNoOverflow } from "@/e2e/support/layout";
+import { pressInPopup, waitForPopupsGone } from "@/e2e/support/popup";
 import {
   chooseFile,
   openPeriodWithCohort,
@@ -48,8 +49,9 @@ async function payForSchool(page: Page, address: (path: string) => string) {
   await waitUntilTakenOver(choose);
   await choose.click();
   const dialog = page.getByRole("dialog");
-  await dialog.getByText("Max", { exact: true }).click();
-  await dialog.getByRole("button", { name: "Issue invoice" }).click();
+  await pressInPopup(dialog.getByText("Max", { exact: true }));
+  await pressInPopup(dialog.getByRole("button", { name: "Issue invoice" }));
+  await waitForPopupsGone(page);
   await page.getByRole("button", { name: "View invoices" }).click();
   const sheet = page.getByRole("dialog");
   const invoice = sheet.getByRole("cell", { name: INVOICE_NUMBER });
@@ -60,6 +62,7 @@ async function payForSchool(page: Page, address: (path: string) => string) {
     timeout: readinessTimeoutMilliseconds,
   });
   await page.keyboard.press("Escape");
+  await waitForPopupsGone(page);
 }
 
 for (const viewport of [
