@@ -15,6 +15,7 @@ import {
 } from "@repo/design-system/components/contents/mathematics/argument/layout";
 import { ChainLink } from "@repo/design-system/components/contents/mathematics/argument/link";
 import {
+  Lamp,
   Rail,
   Tray,
 } from "@repo/design-system/components/contents/mathematics/argument/rail";
@@ -57,7 +58,9 @@ export function ArgumentScene({
   return (
     <group>
       <ArgumentCamera />
-      <Rail lit={lit} names={names} />
+      <Rail names={names}>
+        <Lamp lit={lit} />
+      </Rail>
       <Tray />
       {Arr.map(joints, (joint, index) => (
         <ChainLink

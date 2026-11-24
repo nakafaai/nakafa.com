@@ -28,6 +28,7 @@ import { poseOf } from "@repo/design-system/components/contents/mathematics/coun
 import {
   activeAt,
   checkedAt,
+  STAMP,
   stampAt,
   sweepEnd,
 } from "@repo/design-system/components/contents/mathematics/counterexample/sweep";
@@ -120,7 +121,7 @@ export function CounterexampleScene({
   const board = sorting ? sort.board : grid.board;
   const decider = deciderOf(claim, tiles);
   const truth = holds(claim, tiles);
-  const { advance, playing } = useTimeline(0, sweepEnd(tiles.length));
+  const { advance, playing } = useTimeline(0, sweepEnd(tiles.length) + STAMP);
   const holders = useRef<(Group | null)[]>([]);
   const spots = useRef<(Mesh | null)[]>([]);
   const stamper = useRef<Group>(null);

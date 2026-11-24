@@ -13,7 +13,7 @@ function measure(text: string) {
 
 describe("setting the claim in lines", () => {
   it("breaks between words, never inside one", () => {
-    expect(wrapLines("All odd numbers here are prime", 8, measure)).toEqual([
+    expect(wrapLines("All odd numbers here are prime", 4, measure)).toEqual([
       "All odd",
       "numbers",
       "here are",

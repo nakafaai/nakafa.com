@@ -33,7 +33,7 @@ const claim = (statement: string, negated = false): Statement => ({
 });
 const card = (statement: Statement, truth = true): ArgumentCard => ({
   statement,
-  text: JSON.stringify(statement),
+  text: statement.kind,
   truth,
 });
 

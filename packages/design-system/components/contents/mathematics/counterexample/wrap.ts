@@ -10,15 +10,15 @@ import { Array as Arr, Option, Schema, String as Str } from "effect";
 /** The claim set in lines at one font size. */
 const SettingSchema = Schema.Struct({
   lines: Schema.Array(Schema.String),
-  size: Schema.Number,
+  size: Schema.Finite,
 });
 type Setting = typeof SettingSchema.Type;
 
 /** The box the text must fit, and how tall a line is for each unit of font size. */
 const BoxSchema = Schema.Struct({
-  height: Schema.Number,
-  leading: Schema.Number,
-  width: Schema.Number,
+  height: Schema.Finite,
+  leading: Schema.Finite,
+  width: Schema.Finite,
 });
 
 /** The space between two words, of any length. */

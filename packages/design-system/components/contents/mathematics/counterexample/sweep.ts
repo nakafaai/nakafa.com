@@ -13,9 +13,9 @@ import { Option, Schema } from "effect";
 
 /** A point above the board, in metres. */
 const PointSchema = Schema.Struct({
-  x: Schema.Number,
-  y: Schema.Number,
-  z: Schema.Number,
+  x: Schema.Finite,
+  y: Schema.Finite,
+  z: Schema.Finite,
 });
 
 /** Seconds before the first tile is checked. */
@@ -28,7 +28,10 @@ const STEP = 0.5;
 const CHECK = 0.42;
 
 /** Seconds the stamp takes to come down. */
-const STAMP = 0.24;
+export const STAMP = 0.24;
+
+/** Floating-point guard so exact step boundaries resolve to the starting tile. */
+const EPSILON = 1e-9;
 
 /** How high a carried tile rises at the middle of its path, in metres. */
 const ARC = 0.05;
@@ -56,7 +59,7 @@ export function checkedAt(time: number, index: number) {
 
 /** The tile being checked at `time`, while one is. */
 export function activeAt(time: number, count: number) {
-  const index = Math.floor((time - LEAD) / STEP);
+  const index = Math.floor((time - LEAD + EPSILON) / STEP);
   return index >= 0 && index < count && time - startOf(index) < CHECK
     ? Option.some(index)
     : Option.none();

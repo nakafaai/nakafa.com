@@ -16,6 +16,7 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { ARGUMENT_COLORS } from "@repo/design-system/lib/material/argument";
 import { Array as Arr } from "effect";
+import type { ReactNode } from "react";
 
 /** The print size of a slot's name on its brass plate, in metres. */
 const NAME_SIZE = 0.0105;
@@ -33,10 +34,10 @@ const LAMP_BAR = 0.0024;
  * conclusion follows.
  */
 export function Rail({
-  lit,
+  children,
   names,
 }: {
-  readonly lit: boolean;
+  readonly children?: ReactNode;
   readonly names: readonly [string, string, string];
 }) {
   const length = EXTENT.depth;
@@ -103,7 +104,7 @@ export function Rail({
           </ThreeLabel>
         </group>
       ))}
-      <Lamp lit={lit} />
+      {children}
     </group>
   );
 }
@@ -113,7 +114,7 @@ export function Rail({
  * dark until the conclusion follows, then lit warm, with a soft light over
  * the card it frames.
  */
-function Lamp({ lit }: { readonly lit: boolean }) {
+export function Lamp({ lit }: { readonly lit: boolean }) {
   const z = ROWS[2];
   const across = CARD.width / 2 + POCKET_MARGIN + LAMP_BAR / 2;
   const down = CARD.depth / 2 + POCKET_MARGIN + LAMP_BAR / 2;

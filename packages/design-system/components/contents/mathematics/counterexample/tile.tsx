@@ -60,7 +60,7 @@ function NumberFace({ value }: { readonly value: number }) {
     >
       <planeGeometry args={[TILE.side * FACE_SHARE, TILE.side * FACE_SHARE]} />
       <meshStandardMaterial
-        color="#ffffff"
+        color={COUNTEREXAMPLE_COLORS.face}
         map={texture}
         polygonOffset
         polygonOffsetFactor={-1}

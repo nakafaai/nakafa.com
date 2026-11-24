@@ -21,6 +21,7 @@ export const COUNTEREXAMPLE_COLORS = {
   green: "#2f8a49",
   // The claim card's stock and the ink it is printed in.
   card: "#f7f5ef",
+  face: "#ffffff",
   print: "#24272c",
   // One color for each verdict: a tile that breaks the claim, one that fits
   // it or proves it, one that misses it, and one outside it or safe; and the

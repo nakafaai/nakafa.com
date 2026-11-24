@@ -5,6 +5,7 @@ import {
   activeAt,
   carryAt,
   checkedAt,
+  STAMP,
   stampAt,
   sweepEnd,
 } from "@repo/design-system/components/contents/mathematics/counterexample/sweep";
@@ -32,10 +33,10 @@ describe("the check of every case", () => {
 
   it("brings the stamp down once the claim is settled", () => {
     const early = Option.some(1);
-    expect(stampAt(sweepEnd(2), early, 6)).toBe(1);
+    expect(stampAt(sweepEnd(2) + STAMP, early, 6)).toBe(1);
     expect(stampAt(sweepEnd(2) - 0.01, early, 6)).toBe(0);
     expect(stampAt(sweepEnd(5), Option.none(), 6)).toBe(0);
-    expect(stampAt(sweepEnd(6) + 1, Option.none(), 6)).toBe(1);
+    expect(stampAt(sweepEnd(6) + STAMP, Option.none(), 6)).toBe(1);
   });
 
   it("carries a tile in an arc from one spot to another", () => {

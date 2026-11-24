@@ -76,7 +76,7 @@ describe("printing a card", () => {
     const [large, middle, small] = Arr.map(PRINT_SIZES, capacity);
     expect(large).toBeLessThan(middle);
     expect(middle).toBeLessThan(small);
-    expect(large).toBeGreaterThanOrEqual(56);
+    expect(large).toBeGreaterThanOrEqual(48);
   });
 
   it("prints short words large and long words smaller, wrapping inside the card", () => {

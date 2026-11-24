@@ -49,6 +49,10 @@ const holding = (card: number): Seat => ({
   card: Option.some(card),
 });
 
+function replaceAt(seats: readonly Seat[], target: number, next: Seat) {
+  return Arr.map(seats, (seat, index) => (index === target ? next : seat));
+}
+
 /**
  * Moves one hand card: out of the chain if it is in, otherwise into the
  * first empty open slot, or, once every open slot is full, into the last
@@ -67,10 +71,10 @@ export function toggle(seats: readonly Seat[], card: number) {
       );
       return Option.match(target, {
         onNone: () => [...seats],
-        onSome: (index) => Arr.replace(seats, index, holding(card)),
+        onSome: (index) => replaceAt(seats, index, holding(card)),
       });
     },
-    onSome: (index) => Arr.replace(seats, index, empty),
+    onSome: (index) => replaceAt(seats, index, empty),
   });
 }
 
