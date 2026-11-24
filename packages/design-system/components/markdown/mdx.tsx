@@ -11,7 +11,10 @@ import {
 import { filterWhitespaceNodes } from "@repo/design-system/lib/markdown/children";
 import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
 import {
+  blockGapVariants,
   codeVariants,
+  contentGridVariants,
+  contentStackVariants,
   listItemVariants,
   listVariants,
   quoteVariants,
@@ -58,7 +61,7 @@ export function ContentBlock({
   ...props
 }: ContentLayoutProps) {
   return (
-    <div className={cn("mt-4", className)} {...props}>
+    <div className={cn(blockGapVariants(), className)} {...props}>
       {children}
     </div>
   );
@@ -71,7 +74,7 @@ export function ContentStack({
   ...props
 }: ContentLayoutProps) {
   return (
-    <div className={cn("flex flex-col gap-4", className)} {...props}>
+    <div className={cn(contentStackVariants(), className)} {...props}>
       {children}
     </div>
   );
@@ -84,7 +87,7 @@ export function ContentGrid({
   ...props
 }: ContentLayoutProps) {
   return (
-    <div className={cn("grid grid-cols-1 gap-4", className)} {...props}>
+    <div className={cn(contentGridVariants(), className)} {...props}>
       {children}
     </div>
   );

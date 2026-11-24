@@ -6,7 +6,9 @@ import { MathFontPreload } from "@repo/design-system/components/markdown/fonts";
 import { drawMath } from "@repo/design-system/lib/markdown/draw";
 import { readMathFonts } from "@repo/design-system/lib/markdown/fonts";
 import {
+  blockGapVariants,
   mathBlockVariants,
+  mathContainerVariants,
   mathScrollVariants,
 } from "@repo/design-system/lib/prose";
 import { cn } from "cn";
@@ -58,10 +60,8 @@ export function MathContainer({
 }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn(
-        "my-4 space-y-0 last:mb-0 *:data-math-block:rounded-none *:data-math-block:border-b-0 [&>[data-math-block]:first-child]:rounded-t-xl [&>[data-math-block]:last-child]:rounded-b-xl [&>[data-math-block]:last-child]:border-b",
-        className
-      )}
+      className={cn(mathContainerVariants(), className)}
+      data-slot="math-container"
       {...props}
     >
       {children}
@@ -97,7 +97,7 @@ export function MathBlockFrame({
   // Empty string keeps this as a presence marker instead of data-math-block="true".
   return (
     <div
-      className={cn(mathBlockVariants(), className)}
+      className={cn(blockGapVariants(), mathBlockVariants(), className)}
       data-markdown-ignore=""
       data-math-block=""
     >

@@ -99,6 +99,8 @@ function blockText(block: BlockNode): string {
         )}\n\`\`\``,
       contentBlock: ({ content }) =>
         Arr.join(Arr.map(content, blockText), "\n\n"),
+      contentGrid: ({ content }) =>
+        Arr.join(Arr.map(content, blockText), "\n\n"),
       contentStack: ({ content }) =>
         Arr.join(Arr.map(content, blockText), "\n\n"),
       figure: ({ attrs }) => `[Figure: ${attrs.alt}]`,
@@ -107,6 +109,8 @@ function blockText(block: BlockNode): string {
       image: ({ attrs }) => `[Image: ${attrs.alt}]`,
       interaction: () => BLOCK_ANSWER,
       mathBlock: ({ attrs }) => `$$\n${attrs.latex}\n$$`,
+      mathContainer: ({ content }) =>
+        Arr.join(Arr.map(content, blockText), "\n\n"),
       orderedList: ({ attrs, content }) =>
         Arr.join(
           Arr.map(content, (item, index) =>

@@ -139,12 +139,38 @@ export const tableCellVariants = cva(
  */
 export const blockGapVariants = cva("my-4 first:mt-0 last:mb-0");
 
+/**
+ * A vertical stack of related blocks (such as a formula and its visual). Its own outer rhythm comes
+ * from `blockGapVariants`, while direct children collapse their vertical margins so flex `gap-4`
+ * never doubles spacing.
+ */
+export const contentStackVariants = cva(
+  "my-4 flex flex-col gap-4 *:my-0 first:mt-0 last:mb-0"
+);
+
+/**
+ * A single-column grid of related blocks. Its own outer rhythm comes from `blockGapVariants`, while
+ * direct children collapse their vertical margins so grid `gap-4` never doubles spacing.
+ */
+export const contentGridVariants = cva(
+  "my-4 grid grid-cols-1 gap-4 *:my-0 first:mt-0 last:mb-0"
+);
+
 /** A picture's surface, in a lesson, a response and a question alike: its corners, its border and the ground under it. */
 export const pictureVariants = cva("bg-muted rounded-xl border");
 
 /** A formula on its own line: the card that holds it. */
 export const mathBlockVariants = cva(
   "bg-card text-card-foreground overflow-hidden rounded-xl border"
+);
+
+/**
+ * A vertical stack of consecutive block formulas sharing one outer radius and seamless internal
+ * borders, working both for direct `[data-math-block]` children (MDX and AssessmentDocument) and
+ * wrapped `[data-type="math-block"]` editor nodes.
+ */
+export const mathContainerVariants = cva(
+  "my-4 space-y-0 *:my-0 first:mt-0 last:mb-0 [&_[data-math-block]]:my-0 [&_[data-math-block]]:rounded-none [&_[data-math-block]]:border-b-0 [&>:first-child_[data-math-block]]:rounded-t-xl [&>:first-child[data-math-block]]:rounded-t-xl [&>:last-child_[data-math-block]]:rounded-b-xl [&>:last-child_[data-math-block]]:border-b [&>:last-child[data-math-block]]:rounded-b-xl [&>:last-child[data-math-block]]:border-b"
 );
 
 /** The row of a formula card, which scrolls sideways when the formula is wider than the card. */

@@ -216,11 +216,24 @@ describe("contents/llms/document", () => {
                 content: [paragraph(text("Grafik"))],
                 type: "contentBlock",
               },
+              {
+                content: [paragraph(text("Kisi"))],
+                type: "contentGrid",
+              },
+              {
+                content: [
+                  { attrs: { latex: "a = 1" }, type: "mathBlock" },
+                  { attrs: { latex: "b = 2" }, type: "mathBlock" },
+                ],
+                type: "mathContainer",
+              },
             ],
             type: "contentStack",
           },
         ])
       )
-    ).toBe("**jarak sama** dengan **$x^2$** dan **_$y$_**\n\nRumus\n\nGrafik");
+    ).toBe(
+      "**jarak sama** dengan **$x^2$** dan **_$y$_**\n\nRumus\n\nGrafik\n\nKisi\n\n$$\na = 1\n$$\n\n$$\nb = 2\n$$"
+    );
   });
 });

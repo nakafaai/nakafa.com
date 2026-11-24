@@ -25,6 +25,10 @@ import {
   LeChatelierLab,
 } from "@/lib/content/renderer/client/chemistry/equilibrium";
 import {
+  CatalystPathwayLab,
+  CollisionTheoryEnergyLab,
+} from "@/lib/content/renderer/client/chemistry/kinetics";
+import {
   CombiningVolumesLab,
   ConstantCompositionLab,
   MassConservationLab,
@@ -248,5 +252,13 @@ export const chemistryRenderers = [
   {
     name: chemistryComponentNames.leChatelierLab,
     component: LeChatelierLab,
+  },
+  {
+    name: chemistryComponentNames.catalystPathwayLab,
+    component: CatalystPathwayLab,
+  },
+  {
+    name: chemistryComponentNames.collisionTheoryEnergyLab,
+    component: CollisionTheoryEnergyLab,
   },
 ] satisfies readonly RendererImplementation[];

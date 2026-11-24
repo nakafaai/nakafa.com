@@ -11,12 +11,15 @@ import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
 import {
   blockGapVariants,
   codeVariants,
+  contentGridVariants,
+  contentStackVariants,
   headingTextVariants,
   headingVariants,
   linkVariants,
   listItemVariants,
   listVariants,
   mathBlockVariants,
+  mathContainerVariants,
   mathInlineVariants,
   mathScrollVariants,
   paragraphVariants,
@@ -225,8 +228,51 @@ describe("drawArticleProse", () => {
     expect(block?.className).toBe(blockGapVariants());
     const card = block?.firstElementChild;
     expect(card?.className).toBe(mathBlockVariants());
+    expect(card?.getAttribute("data-math-block")).toBe("");
     expect(card?.firstElementChild?.className).toBe(mathScrollVariants());
     expect(card?.querySelector(".katex-display")).not.toBeNull();
+  });
+
+  it("styles contentStack, contentGrid, contentBlock, and mathContainer identically in editor and drawn DOM", () => {
+    const editor = openEditor(true);
+    editor.commands.setContent(
+      '<div data-type="contentStack"><p>a</p></div><div data-type="contentGrid"><p>b</p></div><div data-type="contentBlock"><p>c</p></div><div data-type="mathContainer"><div data-type="math-block" data-latex="x=1"></div><div data-type="math-block" data-latex="y=2"></div></div>'
+    );
+    const root = editor.view.dom;
+
+    expect(classesOf(root, '[data-type="contentStack"]')).toEqual([
+      ["DIV", contentStackVariants()],
+    ]);
+    expect(classesOf(root, '[data-type="contentGrid"]')).toEqual([
+      ["DIV", contentGridVariants()],
+    ]);
+    expect(classesOf(root, '[data-type="contentBlock"]')).toEqual([
+      ["DIV", blockGapVariants()],
+    ]);
+    expect(classesOf(root, '[data-type="mathContainer"]')).toEqual([
+      ["DIV", mathContainerVariants()],
+    ]);
+
+    const drawnRoot = document.createElement("div");
+    drawDocument(drawnRoot, editor.state.doc, true);
+    expect(classesOf(drawnRoot, '[data-type="contentStack"]')).toEqual([
+      ["DIV", contentStackVariants()],
+    ]);
+    expect(classesOf(drawnRoot, '[data-type="contentGrid"]')).toEqual([
+      ["DIV", contentGridVariants()],
+    ]);
+    expect(classesOf(drawnRoot, '[data-type="contentBlock"]')).toEqual([
+      ["DIV", blockGapVariants()],
+    ]);
+    expect(classesOf(drawnRoot, '[data-type="mathContainer"]')).toEqual([
+      ["DIV", mathContainerVariants()],
+    ]);
+    expect(
+      drawnRoot.querySelectorAll(
+        '[data-type="mathContainer"] [data-math-block]'
+      ).length
+    ).toBe(2);
+    editor.destroy();
   });
 });
 

@@ -3,14 +3,16 @@ import { Node } from "@tiptap/core";
 import { Array as Arr } from "effect";
 
 /**
- * A group of blocks, the contract's `contentStack` or `contentBlock` (ADR 0031): a stack of
- * related blocks, such as a formula and the graph it draws, or one block set apart. It holds one
- * block or more, as the contract requires.
+ * A group of blocks, the contract's `contentStack`, `contentGrid`, or `contentBlock` (ADR 0031):
+ * a vertical stack, grid, or single block set apart, holding one block or more.
  */
-function groupNode(name: "contentBlock" | "contentStack") {
+function groupNode(
+  name: "contentBlock" | "contentGrid" | "contentStack" | "mathContainer",
+  content: "block+" | "mathBlock+"
+) {
   return Node.create({
     name,
-    content: "block+",
+    content,
     defining: true,
     group: "block",
     parseHTML() {
@@ -22,7 +24,12 @@ function groupNode(name: "contentBlock" | "contentStack") {
   });
 }
 
-/** The two groups of blocks a document may hold. */
+/** The container groups a document may hold: content stacks, grids, blocks, and stacked math. */
 export function groupExtensions(): AnyExtension[] {
-  return Arr.make(groupNode("contentStack"), groupNode("contentBlock"));
+  return Arr.make(
+    groupNode("contentStack", "block+"),
+    groupNode("contentGrid", "block+"),
+    groupNode("contentBlock", "block+"),
+    groupNode("mathContainer", "mathBlock+")
+  );
 }

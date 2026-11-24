@@ -4,12 +4,15 @@ import { emphasisVariants } from "@repo/design-system/lib/markdown/emphasis";
 import {
   blockGapVariants,
   codeVariants,
+  contentGridVariants,
+  contentStackVariants,
   headingTextVariants,
   headingVariants,
   linkVariants,
   listItemVariants,
   listVariants,
   mathBlockVariants,
+  mathContainerVariants,
   mathInlineVariants,
   mathScrollVariants,
   paragraphVariants,
@@ -54,11 +57,15 @@ const BLOCK_CLASSES: Record<string, (node: Node) => Option.Option<string>> = {
   blockquote: () => Option.some(quoteVariants()),
   bulletList: () => Option.some(listVariants({ kind: "bullet" })),
   codeBlock: () => Option.some(blockGapVariants()),
+  contentBlock: () => Option.some(blockGapVariants()),
+  contentGrid: () => Option.some(contentGridVariants()),
+  contentStack: () => Option.some(contentStackVariants()),
   heading: (node) =>
     Option.map(Rec.get(HEADING_TAGS, String(node.attrs.level)), headingClasses),
   image: () => Option.some(blockGapVariants()),
   listItem: () => Option.some(listItemVariants()),
   mathBlock: () => Option.some(blockGapVariants()),
+  mathContainer: () => Option.some(mathContainerVariants()),
   orderedList: () => Option.some(listVariants({ kind: "ordered" })),
   table: () => Option.some(tableFrameVariants()),
   tableCell: () => Option.some(tableCellVariants()),
@@ -164,7 +171,13 @@ const ELEMENT_CLASSES = [
   ["tr", tableRowVariants()],
   ["th", tableHeadCellVariants()],
   ["td", tableCellVariants()],
-  ['pre, [data-type="image"], [data-type="math-block"]', blockGapVariants()],
+  [
+    'pre, [data-type="image"], [data-type="math-block"], [data-type="contentBlock"]',
+    blockGapVariants(),
+  ],
+  ['[data-type="contentStack"]', contentStackVariants()],
+  ['[data-type="contentGrid"]', contentGridVariants()],
+  ['[data-type="mathContainer"]', mathContainerVariants()],
 ] as const;
 
 /**
@@ -206,6 +219,7 @@ function drawFormulas(root: HTMLElement) {
     (element) => {
       const card = document.createElement("div");
       card.className = mathBlockVariants();
+      card.dataset.mathBlock = "";
       const row = document.createElement("div");
       row.className = mathScrollVariants();
       row.innerHTML = drawFormula(element.dataset.latex ?? "", true);

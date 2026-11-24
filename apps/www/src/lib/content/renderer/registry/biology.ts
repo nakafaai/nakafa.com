@@ -49,12 +49,20 @@ import {
   HyphaeDecayLab,
 } from "@/lib/content/renderer/client/biology/fungi";
 import {
+  BloodGlucoseFeedbackLab,
+  ThermoregulationSkinLab,
+} from "@/lib/content/renderer/client/biology/homeostasis";
+import {
   BodyPlanesLab,
   LabEquipmentLab,
   SpecimenDrawingLab,
   SpillResponseLab,
   WasteSortLab,
 } from "@/lib/content/renderer/client/biology/laboratory";
+import {
+  ActiveTransportPumpLab,
+  PlasmolysisCellLab,
+} from "@/lib/content/renderer/client/biology/membrane";
 import {
   BinaryFissionLab,
   ChemotaxisLab,
@@ -63,6 +71,7 @@ import {
 } from "@/lib/content/renderer/client/biology/microbes";
 import {
   NeuronImpulseLab,
+  ReflexArcLab,
   SynapseLab,
 } from "@/lib/content/renderer/client/biology/nerve";
 import {
@@ -423,5 +432,25 @@ export const biologyRenderers = [
   {
     name: biologyComponentNames.stomatalGuardCellLab,
     component: StomatalGuardCellLab,
+  },
+  {
+    name: biologyComponentNames.activeTransportPumpLab,
+    component: ActiveTransportPumpLab,
+  },
+  {
+    name: biologyComponentNames.bloodGlucoseFeedbackLab,
+    component: BloodGlucoseFeedbackLab,
+  },
+  {
+    name: biologyComponentNames.plasmolysisCellLab,
+    component: PlasmolysisCellLab,
+  },
+  {
+    name: biologyComponentNames.reflexArcLab,
+    component: ReflexArcLab,
+  },
+  {
+    name: biologyComponentNames.thermoregulationSkinLab,
+    component: ThermoregulationSkinLab,
   },
 ] satisfies readonly RendererImplementation[];

@@ -3,6 +3,8 @@
 import type { FigureAttrs } from "@nakafa/aksara-contracts/assessment/figure";
 import { FigureAttrsSchema } from "@nakafa/aksara-contracts/assessment/figure";
 import { lazy } from "@repo/design-system/lib/lazy";
+import { blockGapVariants } from "@repo/design-system/lib/prose";
+import { cn } from "cn";
 import { Option, Schema } from "effect";
 import { Suspense } from "react";
 import { InlineContent } from "@/components/assessment/inline";
@@ -26,7 +28,13 @@ const FigureVisual = lazy(() =>
  */
 export function AssessmentFigure({ attrs }: { readonly attrs: FigureAttrs }) {
   return (
-    <figure aria-label={attrs.alt} className="grid gap-2">
+    <figure
+      aria-label={attrs.alt}
+      className={cn(
+        blockGapVariants(),
+        "grid gap-2 *:data-[slot=visual-card]:my-0"
+      )}
+    >
       <Suspense fallback={null}>
         <FigureVisual attrs={attrs} />
       </Suspense>

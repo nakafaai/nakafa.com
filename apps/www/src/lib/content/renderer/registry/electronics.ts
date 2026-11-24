@@ -1,6 +1,7 @@
 import { physicsComponentNames } from "@repo/design-system/lib/markdown/names";
 import {
   LogicGateLab,
+  RectifierDiodeLab,
   TransistorBiasLab,
   TransistorSwitchLab,
 } from "@/lib/content/renderer/client/physics/electronics";
@@ -11,6 +12,10 @@ export const electronicsRenderers = [
   {
     name: physicsComponentNames.logicGateLab,
     component: LogicGateLab,
+  },
+  {
+    name: physicsComponentNames.rectifierDiodeLab,
+    component: RectifierDiodeLab,
   },
   {
     name: physicsComponentNames.transistorBiasLab,
