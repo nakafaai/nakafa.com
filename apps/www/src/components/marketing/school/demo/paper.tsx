@@ -16,9 +16,15 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { useMissedPress } from "@repo/design-system/hooks/press";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Number as Num, Option, Schema } from "effect";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { useTranslations } from "use-intl";
 import { paperExam } from "@/components/marketing/school/demo/kinds";
 import {
@@ -26,6 +32,7 @@ import {
   useDemoExam,
 } from "@/components/marketing/school/demo/school";
 import { DEMO_EXAM } from "@/components/marketing/school/demo/seed";
+import { findArticle } from "@/components/player/article";
 import { PlayerFinish } from "@/components/player/finish";
 import { PlayerFlag } from "@/components/player/flag";
 import {
@@ -34,10 +41,14 @@ import {
   PlayerPrevious,
 } from "@/components/player/footer";
 import { PlayerGrid } from "@/components/player/navigator/grid";
-import { PlayerLegend } from "@/components/player/navigator/legend";
 import { PlayerSheet } from "@/components/player/navigator/sheet";
+import {
+  PlayerNavigatorHeader,
+  PlayerSidebar,
+} from "@/components/player/navigator/sidebar";
 import { PlayerProvider, usePlayer } from "@/components/player/provider";
-import { PlayerDigits } from "@/components/player/timer";
+import { PlayerTimer, PlayerTimerCard } from "@/components/player/timer";
+import { readingMeasureVariants } from "@/components/shared/page/width";
 import {
   TEMPLATE_ICON,
   TEMPLATE_NAME,
@@ -120,7 +131,11 @@ export function PaperDemo() {
         <TryExamIdContext value={DEMO_EXAM.examId}>
           <TryGoneContext value={false}>
             <TryStoreContext value={store}>
-              <PlayerProvider keys={QuestionTemplate.literals} mode="single">
+              <PlayerProvider
+                keys={QuestionTemplate.literals}
+                mode="single"
+                persist={false}
+              >
                 <PaperTurn>
                   <PaperTypes />
                   <PaperWindow />
@@ -143,6 +158,7 @@ export function PaperDemo() {
 function PaperTurn({ children }: { children: ReactNode }) {
   const goTo = usePlayer((state) => state.goTo);
   const current = usePlayer((state) => state.current);
+  const mode = usePlayer((state) => state.mode);
   const [engaged, setEngaged] = useState(false);
   const shouldReduceMotion = useReducedMotion();
   const { entry, ref: viewRef } = useIntersection({
@@ -154,6 +170,7 @@ function PaperTurn({ children }: { children: ReactNode }) {
   });
   const ref = useMergedRef(viewRef, hoverRef, focusRef);
   const turning =
+    mode === "single" &&
     (entry?.isIntersecting ?? false) &&
     !(hovered || focused || engaged || shouldReduceMotion);
 
@@ -240,18 +257,53 @@ function usePaperModels() {
   });
 }
 
+/** Vertical inset of the framed question body, in pixels, used when scrolling a jumped-to question into view. */
+const BODY_INSET_PX = 24;
+
 /**
- * The player as a student sits the paper, in a frame one screen tall that holds one height whatever the type: the
- * header with the exam's title, its clock and the finish, the question the paper stands on, the navigator in its pane
- * beside it from the large breakpoint, and the footer that steps, flags and opens the navigator below it. Every part
- * is the player's own. Finishing returns to the first question, since nothing was sent.
+ * The player as a student sits the paper, in a frame one screen tall that holds one height whatever the type:
+ * the paper column on the left (header with title, mobile timer, and finish; scrollable questions; footer with
+ * steps, flag, and sheet opener) beside the full-height player pane on the right from the large breakpoint
+ * (`PlayerSidebar`: navigator header, timer card, question grid, and `PlayerTools` footer with accessibility
+ * legend and view switcher). Every part is the player's own. Finishing returns to the first question, since
+ * nothing was sent.
  */
 function PaperWindow() {
   const t = useTranslations("Exams");
+  const tCommon = useTranslations("Common");
   const result = useDemoExam();
   const models = usePaperModels();
   const goTo = usePlayer((state) => state.goTo);
   const close = usePlayer((state) => state.close);
+  const jump = usePlayer((state) => state.jump);
+  const mode = usePlayer((state) => state.mode);
+  const body = useRef<HTMLDivElement>(null);
+
+  // Keeps jumped-to questions in view inside the demo frame without scrolling or stealing focus from the landing page.
+  const reveal = useEffectEvent((key: string) => {
+    const container = body.current;
+    if (container === null) {
+      return;
+    }
+    if (mode === "single") {
+      container.scrollTop = 0;
+      return;
+    }
+    Option.map(findArticle(container, key), (article) => {
+      const top =
+        article.getBoundingClientRect().top -
+        container.getBoundingClientRect().top +
+        container.scrollTop -
+        BODY_INSET_PX;
+      container.scrollTo({ behavior: "instant", top: Num.max(0, top) });
+    });
+  });
+
+  useLayoutEffect(() => {
+    if (jump) {
+      reveal(jump.key);
+    }
+  }, [jump]);
 
   if (!QueryResult.isSuccess(result)) {
     return null;
@@ -260,59 +312,72 @@ function PaperWindow() {
 
   return (
     <div
-      className="bg-background ring-foreground/10 flex h-[min(40rem,85svh)] flex-col overflow-hidden rounded-xl shadow-xs ring-1"
+      className="bg-background ring-foreground/10 flex h-[min(40rem,85svh)] overflow-hidden rounded-xl shadow-xs ring-1"
       data-slot="paper-demo"
     >
-      <div className="grid min-h-16 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 border-b px-4">
-        <h3 className="min-w-0 truncate text-base font-medium">{exam.title}</h3>
-        <PlayerDigits seconds={TIME_LEFT} />
-        <div className="flex justify-end">
-          <PlayerFinish
-            description={t("try-note")}
-            label={t("try-finish")}
-            locked={false}
-            onFinish={() => {
-              close();
-              goTo(QuestionTemplate.literals[0]);
-            }}
-            pending={false}
-            questions={models}
-            title={t("try-finish")}
-          />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <header className="grid h-16 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 border-b px-4 sm:px-6">
+          <h3 className="min-w-0 truncate text-base font-medium">
+            {exam.title}
+          </h3>
+          <PlayerTimer seconds={TIME_LEFT} />
+          <div className="flex justify-end">
+            <PlayerFinish
+              description={t("try-note")}
+              label={t("try-finish")}
+              locked={false}
+              onFinish={() => {
+                close();
+                goTo(QuestionTemplate.literals[0]);
+              }}
+              pending={false}
+              questions={models}
+              title={t("try-finish")}
+            />
+          </div>
+        </header>
+        <div
+          className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6"
+          ref={body}
+        >
+          <div className={readingMeasureVariants()}>
+            {/* The paper starts on one question at a time, and a hidden question runs no effect to say its text can
+                draw, so the paper waits only for the question the reader starts on. */}
+            <TryReveal questions={Arr.take(exam.questions, 1)}>
+              <div className="flex flex-col gap-12">
+                {Arr.map(exam.questions, (question, index) => (
+                  <ExamTryQuestion
+                    key={question.id}
+                    number={index + 1}
+                    question={question}
+                  />
+                ))}
+              </div>
+            </TryReveal>
+          </div>
         </div>
+        <footer className="grid h-16 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-x-2 border-t px-4 sm:px-6">
+          <div className="flex justify-start">
+            <PlayerPrevious />
+          </div>
+          <div className="relative flex items-center self-stretch">
+            <PlayerFlag locked={false} questions={models} />
+            <PlayerOpener />
+          </div>
+          <div className="flex justify-end">
+            <PlayerNext />
+          </div>
+        </footer>
       </div>
-      <div className="flex min-h-0 flex-1">
-        <div className="min-w-0 flex-1 overflow-y-auto px-4 py-6 sm:px-8">
-          {/* The paper shows one question at a time, and a hidden question runs no effect to say its text can
-              draw, so the paper waits only for the question the reader starts on. */}
-          <TryReveal questions={Arr.take(exam.questions, 1)}>
-            {Arr.map(exam.questions, (question, index) => (
-              <ExamTryQuestion
-                key={question.id}
-                number={index + 1}
-                question={question}
-              />
-            ))}
-          </TryReveal>
-        </div>
-        <div className="hidden w-64 shrink-0 flex-col gap-6 overflow-y-auto border-s p-4 lg:flex">
+      <aside
+        aria-label={tCommon("exam-questions")}
+        className="hidden w-80 shrink-0 border-s [--pane-end:1.5rem] lg:flex"
+      >
+        <PlayerSidebar header={<PlayerNavigatorHeader questions={models} />}>
+          <PlayerTimerCard seconds={TIME_LEFT} />
           <PlayerGrid questions={models} />
-          {/* This column has no footer to hold the player's info, so it names the marks itself. */}
-          <PlayerLegend />
-        </div>
-      </div>
-      <div className="grid h-16 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-x-2 border-t px-4">
-        <div className="flex justify-start">
-          <PlayerPrevious />
-        </div>
-        <div className="relative flex items-center self-stretch">
-          <PlayerFlag locked={false} questions={models} />
-          <PlayerOpener />
-        </div>
-        <div className="flex justify-end">
-          <PlayerNext />
-        </div>
-      </div>
+        </PlayerSidebar>
+      </aside>
       <PlayerSheet>
         <PlayerGrid questions={models} />
       </PlayerSheet>

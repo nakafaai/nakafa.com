@@ -33,8 +33,19 @@ describe("player store", () => {
       mode: "single",
       overlay: "none",
       pending: null,
+      persist: true,
       pinned: false,
     });
+  });
+
+  it("keeps view choices local when persistence is off", () => {
+    expect(
+      createPlayerStore({
+        keys: ["a"],
+        mode: "single",
+        persist: false,
+      }).getState().persist
+    ).toBe(false);
   });
 
   it("reads a finished paper as a review", () => {

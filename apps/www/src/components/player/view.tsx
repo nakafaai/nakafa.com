@@ -45,6 +45,7 @@ export function PlayerViewSwitch() {
  */
 function useChooseView() {
   const choose = usePlayer((state) => state.choose);
+  const persist = usePlayer((state) => state.persist);
   const router = useRouter();
   const [, startTransition] = useTransition();
 
@@ -55,7 +56,12 @@ function useChooseView() {
     }
     startTransition(async () => {
       const choice = await Effect.runPromise(
-        choose(next.value, rememberPlayerMode(router, next.value))
+        choose(
+          next.value,
+          persist
+            ? rememberPlayerMode(router, next.value)
+            : Effect.succeed(true)
+        )
       );
       if (choice === "reverted") {
         toast.error(

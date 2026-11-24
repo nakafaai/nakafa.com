@@ -49,6 +49,8 @@ const PlayerStateSchema = Schema.Struct({
   pending: Schema.NullOr(Schema.String),
   /** Whether a jump or a focus holds `current` until the page moves away from its anchor. */
   pinned: Schema.Boolean,
+  /** Whether a view choice is saved to the server and the address; false in an embedded demo. */
+  persist: Schema.Boolean,
   /**
    * Whether the player shows a finished paper to read, with nothing to answer, flag or finish: the last
    * question then leads nowhere, where a running paper's leads to its finish.
@@ -123,6 +125,7 @@ function jumpTo(previous: PlayerJump | null, key: string): PlayerJump {
 export function createPlayerStore(input: {
   keys: readonly string[];
   mode: PlayerMode;
+  persist?: boolean;
   review?: boolean;
 }) {
   return createStore<PlayerStore>()((set, get) => {
@@ -189,6 +192,7 @@ export function createPlayerStore(input: {
       open: (overlay) => set({ landed: false, overlay }),
       overlay: "none",
       pending: null,
+      persist: input.persist ?? true,
       pinned: false,
       review: input.review ?? false,
       saved: input.mode,
