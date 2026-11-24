@@ -45,6 +45,7 @@ export function PlayerProvider({
   children,
   keys,
   mode,
+  persist = true,
   review = false,
 }: {
   /** Whether the address names the current question. */
@@ -54,10 +55,14 @@ export function PlayerProvider({
   keys: readonly string[];
   /** The view the server resolved, so hydration never switches it. */
   mode: PlayerMode;
+  /** Whether a view choice is saved to the server and the address; false in an embedded demo. */
+  persist?: boolean;
   /** Whether the paper is finished, to read with nothing to answer, flag or finish. */
   review?: boolean;
 }) {
-  const [store] = useState(() => createPlayerStore({ keys, mode, review }));
+  const [store] = useState(() =>
+    createPlayerStore({ keys, mode, persist, review })
+  );
   // Before the first paint, so a reload never shows the first question before the one the address names.
   const openAddressed = useEffectEvent(() => {
     Option.map(

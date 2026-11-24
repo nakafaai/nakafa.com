@@ -30,7 +30,7 @@ const digitsVariants = cva(
  * paint, before the animated digits render, so the row around it never moves
  * when they arrive.
  */
-export function PlayerDigits({
+function PlayerDigits({
   seconds,
   size,
 }: VariantProps<typeof digitsVariants> & { seconds: number }) {
