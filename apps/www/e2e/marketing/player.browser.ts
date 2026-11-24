@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { loadMarketingPage } from "@/e2e/support/marketing";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { pressInPopup, waitForPopupsGone } from "@/e2e/support/popup";
 import { stepTo } from "@/e2e/support/scroll";
 import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 
@@ -24,7 +25,12 @@ const verifyLandingPlayer = Effect.fn("NakafaE2E.verifyLandingPlayer")(
     yield* loadMarketingPage(page, "/en/school");
     const section = page.locator("section#player");
     const paperDemo = section.locator('[data-slot="paper-demo"]');
-    yield* stepTo(page, paperDemo);
+    // Step to the compact selector above the frame so stepTo lands cleanly on short phone viewports.
+    yield* stepTo(
+      page,
+      section.getByRole("combobox", { name: "Question types" })
+    );
+    yield* Effect.promise(() => expect(paperDemo).toBeVisible());
 
     const sidebar = paperDemo.locator("[data-player-sidebar]");
     const answer = paperDemo.getByRole("radio", { name: MOMENTUM });
@@ -73,14 +79,16 @@ const verifyLandingPlayer = Effect.fn("NakafaE2E.verifyLandingPlayer")(
         expect(page.getByText("Answered", { exact: true })).toBeVisible()
       );
       yield* Effect.promise(() => page.keyboard.press("Escape"));
+      yield* Effect.promise(() => waitForPopupsGone(page));
 
       // View switching stays local inside the demo without server requests or errors.
       yield* Effect.promise(() =>
         sidebar.getByRole("button", { name: "One question" }).click()
       );
       yield* Effect.promise(() =>
-        page.getByRole("menuitemradio", { name: "List" }).click()
+        pressInPopup(page.getByRole("menuitemradio", { name: "List" }))
       );
+      yield* Effect.promise(() => waitForPopupsGone(page));
       yield* Effect.promise(() =>
         expect(
           paperDemo.getByText("Momentum is measured in joules.")
@@ -90,8 +98,9 @@ const verifyLandingPlayer = Effect.fn("NakafaE2E.verifyLandingPlayer")(
         sidebar.getByRole("button", { name: "List" }).click()
       );
       yield* Effect.promise(() =>
-        page.getByRole("menuitemradio", { name: "One question" }).click()
+        pressInPopup(page.getByRole("menuitemradio", { name: "One question" }))
       );
+      yield* Effect.promise(() => waitForPopupsGone(page));
       return;
     }
 

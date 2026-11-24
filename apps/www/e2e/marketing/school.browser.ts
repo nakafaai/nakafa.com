@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { loadMarketingPage } from "@/e2e/support/marketing";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { pressInPopup, waitForPopupsGone } from "@/e2e/support/popup";
 import { stepTo } from "@/e2e/support/scroll";
 import {
   desktopViewport,
@@ -127,8 +128,9 @@ const verifySchoolLanding = Effect.fn("NakafaE2E.verifySchoolLanding")(
     const openWidth = yield* Effect.promise(triggerWidth);
     expect(openWidth).toBeCloseTo(width);
     yield* Effect.promise(() =>
-      menu.getByRole("option", { name: "True or false table" }).click()
+      pressInPopup(menu.getByRole("option", { name: "True or false table" }))
     );
+    yield* Effect.promise(() => waitForPopupsGone(page));
     yield* Effect.promise(() =>
       expect(paper.getByText("Momentum is measured in joules.")).toBeVisible()
     );
@@ -136,8 +138,11 @@ const verifySchoolLanding = Effect.fn("NakafaE2E.verifySchoolLanding")(
     expect(selectedWidth).toBeCloseTo(width);
     yield* Effect.promise(() => types.click());
     yield* Effect.promise(() =>
-      menu.getByRole("option", { name: "Multiple choice", exact: true }).click()
+      pressInPopup(
+        menu.getByRole("option", { name: "Multiple choice", exact: true })
+      )
     );
+    yield* Effect.promise(() => waitForPopupsGone(page));
     yield* Effect.promise(() => page.emulateMedia({ reducedMotion: "reduce" }));
     const answer = paper.getByRole("radio", { name: MOMENTUM });
     yield* Effect.promise(() => answer.click());
