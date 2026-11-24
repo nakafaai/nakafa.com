@@ -1,4 +1,5 @@
 import { mathematicsComponentNames } from "@repo/design-system/lib/markdown/names";
+import { ArgumentChainLab } from "@/lib/content/renderer/client/mathematics/argument";
 import {
   DiceRollLab,
   GaltonBoardLab,
@@ -11,6 +12,7 @@ import {
   HistogramChart,
   ScatterDiagram,
 } from "@/lib/content/renderer/client/mathematics/charts";
+import { CounterexampleGridLab } from "@/lib/content/renderer/client/mathematics/counterexample";
 import { QuadraticEquationReadingRoomProblem } from "@/lib/content/renderer/client/mathematics/equation";
 import {
   FunctionAndNonFunctionDiagram,
@@ -41,6 +43,10 @@ export const mathematicsRenderers = [
     component: AbacusBaseLab,
   },
   {
+    name: mathematicsComponentNames.argumentChainLab,
+    component: ArgumentChainLab,
+  },
+  {
     name: mathematicsComponentNames.bacterialGrowth,
     component: BacterialGrowth,
   },
@@ -59,6 +65,10 @@ export const mathematicsRenderers = [
   {
     name: mathematicsComponentNames.chart,
     component: Chart,
+  },
+  {
+    name: mathematicsComponentNames.counterexampleGridLab,
+    component: CounterexampleGridLab,
   },
   {
     name: mathematicsComponentNames.diceRollLab,
