@@ -14,15 +14,13 @@ export type PlantTissue = typeof PlantTissueSchema.Type;
 
 const TissueStatusSchema = Schema.Literals(["living", "dead"]);
 
-export type TissueStatus = typeof TissueStatusSchema.Type;
-
 const TissueProfileSchema = Schema.Struct({
   lignified: Schema.Boolean,
   status: TissueStatusSchema,
   wallScale: Schema.Finite,
 });
 
-export type TissueProfile = typeof TissueProfileSchema.Type;
+type TissueProfile = typeof TissueProfileSchema.Type;
 
 /** Structural profile of each plant tissue type for the 3D cutaway block. */
 export function tissueProfile(tissue: PlantTissue): TissueProfile {

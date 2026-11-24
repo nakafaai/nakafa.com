@@ -47,7 +47,17 @@ const DEFAULT_PARTS: MeristemParts = {
   vascularCambium: "",
 };
 
-const MeristemPartsContext = createContext<MeristemParts>(DEFAULT_PARTS);
+const MeristemSceneContext = createContext<{
+  readonly organ: PlantOrgan;
+  readonly parts: MeristemParts;
+  readonly position: number;
+  readonly years: number;
+}>({
+  organ: "root",
+  parts: DEFAULT_PARTS,
+  position: 20,
+  years: 3,
+});
 
 const ROOT_HAIRS = [
   { id: "h1", side: -1, y: 1.06 },
@@ -71,14 +81,8 @@ function MeristemCamera() {
   );
 }
 
-function PrimaryApexView({
-  organ,
-  position,
-}: {
-  readonly organ: PlantOrgan;
-  readonly position: number;
-}) {
-  const parts = use(MeristemPartsContext);
+function PrimaryApexView() {
+  const { organ, parts, position } = use(MeristemSceneContext);
   const scan = evaluatePrimaryZone(position);
   const isRoot = organ === "root";
   const scanY = isRoot ? scan.axisY : 1.58 - scan.axisY;
@@ -195,8 +199,8 @@ function PrimaryApexView({
   );
 }
 
-function SecondaryTrunkView({ years }: { readonly years: number }) {
-  const parts = use(MeristemPartsContext);
+function SecondaryTrunkView() {
+  const { parts, years } = use(MeristemSceneContext);
   const cross = evaluateSecondaryGrowth(years);
   const rings = useMemo(
     () =>
@@ -320,19 +324,20 @@ export function MeristemGrowthScene({
     specimenRef.current.rotation.y = Math.sin(angleRef.current) * 0.25;
   });
 
+  const sceneValue = useMemo(
+    () => ({ organ, parts, position, years }),
+    [organ, parts, position, years]
+  );
+
   return (
-    <MeristemPartsContext value={parts}>
+    <MeristemSceneContext value={sceneValue}>
       <group>
         <SimulationTicker running={playing} />
         <MeristemCamera />
         <group ref={specimenRef}>
-          {mode === "primary" ? (
-            <PrimaryApexView organ={organ} position={position} />
-          ) : (
-            <SecondaryTrunkView years={years} />
-          )}
+          {mode === "primary" ? <PrimaryApexView /> : <SecondaryTrunkView />}
         </group>
       </group>
-    </MeristemPartsContext>
+    </MeristemSceneContext>
   );
 }

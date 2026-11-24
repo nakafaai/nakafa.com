@@ -70,7 +70,7 @@ export function PlantTissueAnatomyLab({
   readonly title: NonNullable<ReactNode>;
 }) {
   const [selected, setSelected] = useState<PlantTissue>(tissues[0]);
-  const active = tissues.includes(selected) ? selected : tissues[0];
+  const active = Arr.contains(tissues, selected) ? selected : tissues[0];
   const profile = tissueProfile(active);
   const copy = labels.tissues[active];
 

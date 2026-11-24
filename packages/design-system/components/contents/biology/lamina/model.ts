@@ -26,7 +26,7 @@ const LeafLayerSpecSchema = Schema.Struct({
   focusY: Schema.Finite,
 });
 
-export type LeafLayerSpec = typeof LeafLayerSpecSchema.Type;
+type LeafLayerSpec = typeof LeafLayerSpecSchema.Type;
 
 /** Chloroplast density and vertical focus height for each leaf cross-section layer. */
 export function leafLayerSpec(layer: LeafLayer): LeafLayerSpec {

@@ -27,15 +27,14 @@ const ResponseSchema = Schema.Struct({
   yieldPercent: Schema.Int,
 });
 
+const SystemThermoSchema = Schema.Struct({
+  baseYield: Schema.Finite,
+  deltaGas: Schema.Int,
+  exothermic: Schema.Boolean,
+});
+
 const SYSTEM_THERMO: Readonly<
-  Record<
-    LeChatelierSystem,
-    {
-      readonly baseYield: number;
-      readonly deltaGas: number;
-      readonly exothermic: boolean;
-    }
-  >
+  Record<LeChatelierSystem, typeof SystemThermoSchema.Type>
 > = {
   contact: { baseYield: 68, deltaGas: -1, exothermic: true },
   haber: { baseYield: 52, deltaGas: -2, exothermic: true },

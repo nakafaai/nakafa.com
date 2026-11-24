@@ -81,7 +81,7 @@ export function StomatalGuardCellLab({
   );
   const [lightLevel, setLightLevel] = useState(light.value);
 
-  const activeCondition = conditions.includes(selectedCondition)
+  const activeCondition = Arr.contains(conditions, selectedCondition)
     ? selectedCondition
     : conditions[0];
   const reading = evaluateStomata(

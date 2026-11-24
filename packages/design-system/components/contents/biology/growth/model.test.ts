@@ -3,6 +3,7 @@ import {
   evaluateGrowthCurve,
   sampleGrowthCurve,
 } from "@repo/design-system/components/contents/biology/growth/model";
+import { Array as Arr, Option } from "effect";
 
 describe("plant growth curve model", () => {
   it("models all five sigmoid phases for annual plants", () => {
@@ -38,6 +39,6 @@ describe("plant growth curve model", () => {
     const curve = sampleGrowthCurve("annual", 2);
     expect(curve).toHaveLength(5);
     expect(curve[0]?.time).toBe(0);
-    expect(curve.at(-1)?.time).toBe(100);
+    expect(Option.getOrUndefined(Arr.last(curve))?.time).toBe(100);
   });
 });

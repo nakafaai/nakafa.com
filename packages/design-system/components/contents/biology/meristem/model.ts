@@ -22,7 +22,7 @@ const PrimaryScanSchema = Schema.Struct({
   zone: GrowthZoneSchema,
 });
 
-export type PrimaryScan = typeof PrimaryScanSchema.Type;
+type PrimaryScan = typeof PrimaryScanSchema.Type;
 
 const SecondaryCrossSectionSchema = Schema.Struct({
   outerRadius: Schema.Finite,
@@ -30,7 +30,7 @@ const SecondaryCrossSectionSchema = Schema.Struct({
   xylemRadius: Schema.Finite,
 });
 
-export type SecondaryCrossSection = typeof SecondaryCrossSectionSchema.Type;
+type SecondaryCrossSection = typeof SecondaryCrossSectionSchema.Type;
 
 function zoneForPosition(position: number): GrowthZone {
   if (position < 34) {

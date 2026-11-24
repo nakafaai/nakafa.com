@@ -25,7 +25,7 @@ const GrowthSampleSchema = Schema.Struct({
   time: Schema.Finite,
 });
 
-export type GrowthSample = typeof GrowthSampleSchema.Type;
+type GrowthSample = typeof GrowthSampleSchema.Type;
 
 function sigmoid(x: number): number {
   return 1 / (1 + Math.exp(-x));

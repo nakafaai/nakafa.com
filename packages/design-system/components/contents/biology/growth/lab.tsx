@@ -56,7 +56,9 @@ export function PlantGrowthCurveLab({
   const [selectedType, setSelectedType] = useState<PlantLifeCycle>(types[0]);
   const [time, setTime] = useState(35);
 
-  const activeType = types.includes(selectedType) ? selectedType : types[0];
+  const activeType = Arr.contains(types, selectedType)
+    ? selectedType
+    : types[0];
   const sample = evaluateGrowthCurve(activeType, time);
   const phaseCopy = labels.phases[sample.phase];
 

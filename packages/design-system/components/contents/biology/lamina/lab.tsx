@@ -62,7 +62,7 @@ export function LeafLaminaCrossSectionLab({
   readonly title: NonNullable<ReactNode>;
 }) {
   const [selected, setSelected] = useState<LeafLayer>(layers[0]);
-  const active = layers.includes(selected) ? selected : layers[0];
+  const active = Arr.contains(layers, selected) ? selected : layers[0];
   const spec = leafLayerSpec(active);
   const copy = labels.layers[active];
 

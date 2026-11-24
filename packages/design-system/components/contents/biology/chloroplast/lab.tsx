@@ -95,7 +95,7 @@ export function ChloroplastStageLab({
   const [co2Val, setCo2Val] = useState(co2.value);
   const [tempVal, setTempVal] = useState(temperature.value);
 
-  const activeStage = stages.includes(selectedStage)
+  const activeStage = Arr.contains(stages, selectedStage)
     ? selectedStage
     : stages[0];
   const reading = evaluateChloroplast({

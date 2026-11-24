@@ -91,8 +91,10 @@ export function RootShootGrowthZoneLab({
   const [position, setPosition] = useState(20);
   const [year, setYear] = useState(years.value);
 
-  const activeMode = modes.includes(selectedMode) ? selectedMode : modes[0];
-  const activeOrgan = organs.includes(selectedOrgan)
+  const activeMode = Arr.contains(modes, selectedMode)
+    ? selectedMode
+    : modes[0];
+  const activeOrgan = Arr.contains(organs, selectedOrgan)
     ? selectedOrgan
     : organs[0];
   const primary = evaluatePrimaryZone(position);
