@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
 import { Schema } from "effect";
-import { pressInPopup } from "@/e2e/support/popup";
+import { pressInPopup, waitForPopupsGone } from "@/e2e/support/popup";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** One person and one of the school's roles, as the Roles page names them. */
@@ -26,13 +26,16 @@ export async function giveRole(page: Page, grant: typeof RoleOf.Type) {
   await waitUntilTakenOver(give);
   await give.click();
   const dialog = page.getByRole("dialog", { name: "Give a role" });
-  await dialog.getByRole("combobox", { name: "Person" }).click();
+  await pressInPopup(dialog.getByRole("combobox", { name: "Person" }));
   await pressInPopup(page.getByRole("option", { name: grant.person }));
-  await dialog.getByRole("combobox", { name: "Role" }).click();
+  await waitForPopupsGone(page);
+  await pressInPopup(dialog.getByRole("combobox", { name: "Role" }));
   await pressInPopup(
     page.getByRole("option", { exact: true, name: grant.role })
   );
-  await dialog.getByRole("button", { name: "Give role" }).click();
+  await waitForPopupsGone(page);
+  await pressInPopup(dialog.getByRole("button", { name: "Give role" }));
+  await waitForPopupsGone(page);
   await expect(grantRow(page, grant)).toBeVisible();
 }
 
@@ -44,8 +47,10 @@ export async function revokeRole(page: Page, grant: typeof RoleOf.Type) {
   await waitUntilTakenOver(more);
   await more.click();
   await pressInPopup(page.getByRole("menuitem", { name: "Revoke" }));
-  await page
-    .getByRole("dialog", { name: "Revoke this role?" })
-    .getByRole("button", { name: "Revoke" })
-    .click();
+  await pressInPopup(
+    page
+      .getByRole("dialog", { name: "Revoke this role?" })
+      .getByRole("button", { name: "Revoke" })
+  );
+  await waitForPopupsGone(page);
 }
