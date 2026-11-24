@@ -1,4 +1,5 @@
 import {
+  useDocumentVisibility,
   useEventListener,
   useInViewport,
   useMergedRef,
@@ -6,44 +7,59 @@ import {
   useTimeout,
   useWindowEvent,
 } from "@mantine/hooks";
+import {
+  BLINK_DURATION,
+  blinkScale,
+  drawFrame,
+  POP_DURATION,
+  popProgress,
+  readPalette,
+} from "@repo/design-system/components/nina/canvas";
+import { createCache } from "@repo/design-system/components/nina/draw";
 import { Frame } from "@repo/design-system/components/nina/frame";
 import { marked } from "@repo/design-system/components/nina/mark";
-import { paint, sameFigure } from "@repo/design-system/components/nina/paint";
 import { Picture } from "@repo/design-system/components/ui/picture";
 import { usePageSettled } from "@repo/design-system/components/ui/settled";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { createFramePace } from "@repo/design-system/lib/pace";
+import { pictureHeight } from "@repo/design-system/lib/picture";
+import { HALF_BOX, WHOLE_BOX } from "@repo/mascot/nina/box";
 import type { MoodSchema } from "@repo/mascot/nina/face";
 import { scene } from "@repo/mascot/nina/figure";
 import type { Life } from "@repo/mascot/nina/life";
 import {
+  frame as frameOf,
   gazeAt,
+  isStill,
   press,
   retarget,
   start,
   step,
-  view,
 } from "@repo/mascot/nina/life";
 import type { Options } from "@repo/mascot/nina/options";
 import { homeOf, modeOf } from "@repo/mascot/nina/options";
-import { Array as Arr, Effect, Random } from "effect";
+import { Effect, Random } from "effect";
 import type { FrameData } from "motion";
 import { cancelFrame, frame } from "motion";
 import {
   createContext,
+  useCallback,
   useEffect,
   useEffectEvent,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
-import { flushSync } from "react-dom";
 
 interface LiveProps {
   label: string;
   options: Options;
   size: number;
 }
+
+/** Caps backing store DPR at 3 so high-DPI screens stay razor-sharp without unbounded memory. */
+const MAX_DPR = 3;
 
 /** The Nina on screen, which her picture and her life read. */
 const LiveContext = createContext<LiveProps | null>(null);
@@ -52,42 +68,6 @@ const LiveContext = createContext<LiveProps | null>(null);
 function useLive() {
   return useRequired(LiveContext, "useLive");
 }
-
-/** A thing that she picks up arrives with a small pop, not from nowhere. */
-const POP: Keyframe[] = [
-  {
-    opacity: 0,
-    transform: "scale(0.9)",
-    transformBox: "fill-box",
-    transformOrigin: "center",
-  },
-  {
-    opacity: 1,
-    transform: "scale(1)",
-    transformBox: "fill-box",
-    transformOrigin: "center",
-  },
-];
-const POP_EASE = "cubic-bezier(0.23, 1, 0.32, 1)";
-
-/** Her eyes close for a moment and open again. */
-const BLINK: Keyframe[] = [
-  {
-    transform: "scaleY(1)",
-    transformBox: "fill-box",
-    transformOrigin: "center",
-  },
-  {
-    transform: "scaleY(0.1)",
-    transformBox: "fill-box",
-    transformOrigin: "center",
-  },
-  {
-    transform: "scaleY(1)",
-    transformBox: "fill-box",
-    transformOrigin: "center",
-  },
-];
 
 /** Down behind the edge, a short wait, and back. She never rises above her place. */
 const DUCK: Keyframe[] = [
@@ -132,37 +112,79 @@ function Calm() {
 }
 
 /**
- * Her life. One clock moves all of the Ninas of a page, and only while they can
- * be seen, once the page has loaded and settled. Her limbs follow the act
- * through springs, her eyes follow the pointer, she blinks, and a press is a
- * small surprise.
+ * Her live Canvas 2D life. The server draws her first paint as a static SVG;
+ * once awakened in the viewport on a settled, visible page, she renders onto a
+ * native-DPR 2D canvas without per-frame SVG DOM mutations or React re-renders.
  *
- * A frame does not make React draw her again. Her picture is drawn with React
- * once, and every frame after it writes the numbers that changed straight onto
- * the elements that React made (`paint`). Only when she changes what she is
- * made of, such as a new face or a thing in her arms, is she drawn with React
- * again, in the same frame, as a new figure.
+ * A tile sleeps at 0% CPU whenever her eyes have reached the pointer and no
+ * blink or click reaction is playing, waking immediately on pointer movement,
+ * press, theme change, or her next blink.
  */
 function Alive() {
   const { label, options, size } = useLive();
-  const [figure, setFigure] = useState(() => ({
-    ...scene(options),
-    version: 0,
-  }));
+  const mode = modeOf(options);
+  const box = options.whole === true ? WHOLE_BOX : HALF_BOX;
+  const height = pictureHeight(size, box);
+  const named = label !== "";
+
   const root = useRef<HTMLSpanElement>(null);
   const stage = useRef<HTMLSpanElement>(null);
-  const svg = useRef<SVGSVGElement>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const ctx = useRef<CanvasRenderingContext2D | null>(null);
+  const palette = useRef<ReturnType<typeof readPalette>>(undefined);
+  const cache = useRef<ReturnType<typeof createCache>>(undefined);
   const life = useRef<Life>(undefined);
-  const shown = useRef(figure.shapes);
   const holding = useRef(false);
   const pointer = useRef<readonly [number, number]>(undefined);
   const where = useRef<DOMRect>(undefined);
+  const rectDirty = useRef(true);
   const ducking = useRef<Animation>(undefined);
+  const blinkStart = useRef(-BLINK_DURATION);
+  const popStart = useRef(-POP_DURATION);
+  const wakeLoop = useRef<() => void>(undefined);
+
   const { inViewport, ref: watch } = useInViewport<HTMLSpanElement>();
-  // Her life starts once the page has loaded and settled, so her frames never
-  // compete with the page's own loading; until then she is her first picture.
   const settled = usePageSettled();
-  const living = inViewport && settled;
+  const visibility = useDocumentVisibility();
+  const living = inViewport && settled && visibility === "visible";
+  const latest = useEffectEvent(() => options);
+  const home = homeOf(options);
+
+  const renderNow = useCallback(
+    (now: number, current: Life, asked: Options) => {
+      const element = canvas.current;
+      const context = ctx.current;
+      if (element === null || context === null) {
+        return false;
+      }
+      if (palette.current === undefined) {
+        palette.current = readPalette(element);
+      }
+      if (cache.current === undefined) {
+        cache.current = createCache();
+      }
+      const snapshot = frameOf(current, asked);
+      if (snapshot.holds && !holding.current) {
+        popStart.current = now;
+      }
+      holding.current = snapshot.holds;
+      drawFrame(
+        context,
+        snapshot,
+        palette.current,
+        cache.current,
+        {
+          eyeScaleY: blinkScale(now - blinkStart.current),
+          heldPop: popProgress(now - popStart.current),
+        },
+        element.width,
+        element.height
+      );
+      return true;
+    },
+    []
+  );
+
   const pressed = useEventListener("click", () => {
     if (life.current === undefined) {
       return;
@@ -173,22 +195,83 @@ function Alive() {
       ducking.current?.cancel();
       ducking.current = stage.current?.animate(DUCK, { duration: 980 });
     }
+    wakeLoop.current?.();
   });
+
   const place = useMergedRef(root, watch, pressed);
-  const latest = useEffectEvent(() => options);
-  const home = homeOf(options);
 
   useWindowEvent(
     "pointermove",
     (event) => {
       pointer.current = [event.clientX, event.clientY];
+      wakeLoop.current?.();
     },
     { passive: true }
   );
 
+  useWindowEvent(
+    "scroll",
+    () => {
+      rectDirty.current = true;
+    },
+    { capture: true, passive: true }
+  );
+
+  useWindowEvent(
+    "resize",
+    () => {
+      rectDirty.current = true;
+    },
+    { passive: true }
+  );
+
+  // Sync backing store dimensions and paint the initial frame synchronously before first canvas paint.
+  useLayoutEffect(() => {
+    const element = canvas.current;
+    if (element === null) {
+      return;
+    }
+    const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+    const nextWidth = Math.max(1, Math.round(size * dpr));
+    const nextHeight = Math.max(1, Math.round(height * dpr));
+    if (element.width !== nextWidth || element.height !== nextHeight) {
+      element.width = nextWidth;
+      element.height = nextHeight;
+    }
+    if (ctx.current === null) {
+      ctx.current = element.getContext("2d");
+    }
+    if (life.current === undefined) {
+      life.current = start(latest(), draw);
+      holding.current = frameOf(life.current, latest()).holds;
+    }
+    palette.current = readPalette(element);
+    renderNow(performance.now(), life.current, latest());
+  }, [height, renderNow, size]);
+
+  // Refresh resolved CSS tokens when the document theme changes.
+  useEffect(() => {
+    const element = canvas.current;
+    if (element === null) {
+      return;
+    }
+    const observer = new MutationObserver(() => {
+      palette.current = readPalette(element);
+      if (life.current !== undefined) {
+        renderNow(performance.now(), life.current, latest());
+      }
+    });
+    observer.observe(document.documentElement, {
+      attributeFilter: ["class", "data-theme", "style"],
+      attributes: true,
+    });
+    return () => observer.disconnect();
+  }, [renderNow]);
+
   useEffect(() => {
     if (life.current) {
       life.current = retarget(life.current, home);
+      wakeLoop.current?.();
     }
   }, [home]);
 
@@ -197,18 +280,43 @@ function Alive() {
       return;
     }
     if (life.current === undefined) {
-      // What she holds when her life begins is already in her picture, and
-      // does not arrive with a pop.
       life.current = start(latest(), draw);
-      holding.current = view(life.current, latest()).holds;
+      holding.current = frameOf(life.current, latest()).holds;
     }
     const pace = createFramePace();
     let waited = 0;
+    let running = false;
+
+    const stopLoop = () => {
+      if (!running) {
+        return;
+      }
+      running = false;
+      cancelFrame(measure);
+      cancelFrame(advance);
+    };
+
+    const startLoop = () => {
+      if (running) {
+        return;
+      }
+      running = true;
+      waited = 0;
+      frame.read(measure, true);
+      frame.render(advance, true);
+    };
+
     const measure = () => {
-      if (pace.isDue(performance.now())) {
+      if (
+        pointer.current !== undefined &&
+        rectDirty.current &&
+        pace.isDue(performance.now())
+      ) {
         where.current = root.current?.getBoundingClientRect();
+        rectDirty.current = false;
       }
     };
+
     const advance = ({ delta }: FrameData) => {
       const current = life.current;
       const at = pointer.current;
@@ -218,46 +326,38 @@ function Alive() {
         return;
       }
       const asked = latest();
+      const target =
+        at !== undefined && where.current !== undefined
+          ? gazeAt(at, where.current)
+          : ([0, 0] as const);
       const next = step(
         current,
         asked,
         Math.min(0.05, waited / 1000 || 0.016),
-        at !== undefined && where.current !== undefined
-          ? gazeAt(at, where.current)
-          : [0, 0],
+        target,
         draw
       );
       life.current = next;
-      const seen = view(next, asked);
-      if (sameFigure(shown.current, seen.picture.shapes)) {
-        if (svg.current) {
-          paint(svg.current, shown.current, seen.picture.shapes);
-        }
-      } else {
-        flushSync(() => {
-          setFigure((before) => ({
-            ...seen.picture,
-            version: before.version + 1,
-          }));
-        });
-      }
-      shown.current = seen.picture.shapes;
-      if (seen.holds && !holding.current) {
-        svg.current
-          ?.querySelector('[data-part="held"]')
-          ?.animate(POP, { duration: 180, easing: POP_EASE });
-      }
-      holding.current = seen.holds;
+      renderNow(startedAt, next, asked);
       waited = 0;
+      const animatingEffect =
+        startedAt - blinkStart.current < BLINK_DURATION ||
+        startedAt - popStart.current < POP_DURATION;
+      if (!animatingEffect && isStill(next, asked, target)) {
+        stopLoop();
+        return;
+      }
       pace.rest(startedAt);
     };
-    frame.read(measure, true);
-    frame.render(advance, true);
+
+    wakeLoop.current = startLoop;
+    startLoop();
     return () => {
-      cancelFrame(measure);
-      cancelFrame(advance);
+      wakeLoop.current = undefined;
+      stopLoop();
+      pace.stop();
     };
-  }, [living]);
+  }, [living, renderNow]);
 
   useEffect(() => {
     if (!living) {
@@ -265,11 +365,8 @@ function Alive() {
     }
     let timer = 0;
     const blink = () => {
-      for (const eye of Arr.fromIterable(
-        svg.current?.querySelectorAll("[data-eye]") ?? []
-      )) {
-        eye.animate(BLINK, { duration: 160, easing: "ease-out" });
-      }
+      blinkStart.current = performance.now();
+      wakeLoop.current?.();
       timer = window.setTimeout(blink, 2600 + draw() * 2400);
     };
     timer = window.setTimeout(blink, 1800);
@@ -279,16 +376,15 @@ function Alive() {
   useEffect(() => () => ducking.current?.cancel(), []);
 
   return (
-    <Frame mode={modeOf(options)} ref={place}>
+    <Frame mode={mode} ref={place}>
       <span className="block" ref={stage}>
-        <Picture
-          box={figure.box}
-          key={figure.version}
-          label={label}
-          marked={marked}
-          ref={svg}
-          shapes={figure.shapes}
-          size={size}
+        <canvas
+          aria-hidden={named ? undefined : true}
+          aria-label={named ? label : undefined}
+          className="block"
+          ref={canvas}
+          role={named ? "img" : undefined}
+          style={{ height, width: size }}
         />
       </span>
     </Frame>

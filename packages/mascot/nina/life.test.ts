@@ -2,7 +2,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { scene } from "@repo/mascot/nina/figure";
 import type { Life } from "@repo/mascot/nina/life";
 import {
+  frame,
   gazeAt,
+  isStill,
   press,
   retarget,
   start,
@@ -266,6 +268,50 @@ describe("her life", () => {
         scene({ ...options, look: looking.gaze })
       );
     }
+  });
+
+  it("describes a live frame directly for whole, peek and tile modes", () => {
+    const whole = frame(start(WHOLE, LOWEST), WHOLE);
+    expect(whole.mode).toBe("whole");
+    expect(whole.lean).toBeUndefined();
+    expect(whole.tile).toBeUndefined();
+    expect(whole.holds).toBe(false);
+
+    const reading: Options = { act: "reading", whole: true };
+    expect(frame(start(reading, LOWEST), reading).holds).toBe(true);
+    expect(frame(start(reading, LOWEST), reading).look).toEqual(
+      BEHAVIORS.reading.pose(BEHAVIORS.reading.still).look
+    );
+
+    const peek = frame(start(PEEK, LOWEST), PEEK);
+    expect(peek.mode).toBe("peek");
+    expect(peek.lean).toBe("peek");
+
+    const plainTile = frame(start({}, LOWEST), {});
+    expect(plainTile.mode).toBe("tile");
+    expect(plainTile.lean).toBe("center");
+    expect(plainTile.tile).toBeUndefined();
+
+    const coloredTile = frame(start(TILE, LOWEST), TILE);
+    expect(coloredTile.tile).toBe("cream");
+    expect(coloredTile.lean).toBe("right");
+  });
+
+  it("knows when a tile has settled and can stop ticking", () => {
+    const tileLife = start(TILE, LOWEST);
+    expect(isStill(tileLife, TILE, STILL)).toBe(true);
+    expect(isStill(tileLife, TILE, [3, 0])).toBe(false);
+    expect(isStill(tileLife, TILE, [0, 3])).toBe(false);
+    expect(isStill(start(WHOLE, LOWEST), WHOLE, STILL)).toBe(false);
+    expect(isStill(start(PEEK, LOWEST), PEEK, STILL)).toBe(false);
+
+    const flashed = press(tileLife, TILE).life;
+    expect(isStill(flashed, TILE, STILL)).toBe(false);
+    expect(isStill(wait(flashed, TILE, 70), TILE, STILL)).toBe(true);
+
+    const fidgeting: Options = { ...TILE, fidget: ["drumming"] };
+    expect(isStill(start(fidgeting, LOWEST), fidgeting, STILL)).toBe(false);
+    expect(isStill({ ...tileLife, until: 1 }, TILE, STILL)).toBe(false);
   });
 });
 

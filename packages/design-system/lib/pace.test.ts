@@ -10,13 +10,21 @@ afterEach(() => {
 });
 
 describe("createFramePace", () => {
-  it("draws every frame while a frame is cheap", async () => {
+  it("draws every frame while a frame is cheap, reusing one channel across frames", async () => {
     const pace = createFramePace();
 
     expect(pace.isDue(0)).toBe(true);
-    paintedAt(2);
+    paintedAt(0.5);
     pace.rest(0);
-    await vi.waitFor(() => expect(pace.isDue(16)).toBe(true));
+    await vi.waitFor(() => expect(pace.isDue(8)).toBe(true));
+
+    paintedAt(10);
+    pace.rest(8);
+    await vi.waitFor(() => expect(pace.isDue(24)).toBe(true));
+
+    pace.stop();
+    // Stopping twice is a safe no-op.
+    pace.stop();
   });
 
   it("holds the loop until its frame has painted, then rests seven times what the frame took", async () => {
@@ -27,5 +35,8 @@ describe("createFramePace", () => {
     expect(pace.isDue(10_000)).toBe(false);
     await vi.waitFor(() => expect(pace.isDue(260)).toBe(true));
     expect(pace.isDue(259)).toBe(false);
+
+    pace.stop();
+    expect(pace.isDue(0)).toBe(true);
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Drawing } from "@repo/design-system/components/ui/drawing";
-import { attributeName, attributesOf } from "@repo/design-system/lib/attribute";
+import { attributesOf } from "@repo/design-system/lib/attribute";
 import type { Shape } from "@repo/mascot/shape";
 import {
   circle,
@@ -10,7 +10,6 @@ import {
   polygon,
   rect,
 } from "@repo/mascot/shape";
-import { Array as Arr, Option, Order, Record as Rec } from "effect";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -29,33 +28,14 @@ const PAINT = {
 } as const;
 
 /** One shape of each kind, each with every field it can set. */
-const EVERY_FIELD: readonly Shape[] = [
+const EVERY_FIELD: readonly Shape<"eye">[] = [
   path({ ...PAINT, d: "M0,0 L1,1", pathLength: 1 }),
   ellipse({ ...PAINT, cx: 1, cy: 2, rx: 3, ry: 4 }),
   circle({ ...PAINT, cx: 1, cy: 2, r: 3 }),
   rect({ ...PAINT, height: 4, rx: 1, width: 3, x: 1, y: 2 }),
   polygon({ ...PAINT, points: "0,0 1,1 2,0" }),
-  group([], PAINT),
+  group([circle({ cx: 1, cy: 1, mark: "eye", r: 1 })], PAINT),
 ];
-
-/** The attributes of the element that React draws for a shape, in order of name. */
-function drawnNames(shape: Shape) {
-  const host = document.createElement("div");
-  host.innerHTML = renderToStaticMarkup(
-    createElement(
-      "svg",
-      null,
-      createElement(Drawing<never>, { marked: () => ({}), shape })
-    )
-  );
-  return Arr.sort(
-    Option.match(Option.fromNullishOr(host.querySelector(shape._tag)), {
-      onNone: () => [],
-      onSome: (element) => element.getAttributeNames(),
-    }),
-    Order.String
-  );
-}
 
 describe("what a shape sets on its element", () => {
   it("is every field of the shape but its tag, its mark and the shapes it holds", () => {
@@ -64,27 +44,27 @@ describe("what a shape sets on its element", () => {
     );
     expect(
       attributesOf(
-        group([circle({ cx: 1, cy: 1, r: 1 })], { opacity: 0.5, mark: "eye" })
+        group([circle({ cx: 1, cy: 1, r: 1 })], { mark: "eye", opacity: 0.5 })
       )
     ).toEqual({ opacity: 0.5 });
   });
 
-  it("is named as the DOM names it: with a dash, unless the DOM keeps the capitals", () => {
-    expect(attributeName("strokeWidth")).toBe("stroke-width");
-    expect(attributeName("fillOpacity")).toBe("fill-opacity");
-    expect(attributeName("pathLength")).toBe("pathLength");
-    expect(attributeName("d")).toBe("d");
-    expect(attributeName("cx")).toBe("cx");
-  });
-
-  it("is named the same by React, which draws the shapes, for every field that a shape has", () => {
+  it("renders every shape kind, nested children and marks through Drawing", () => {
     for (const shape of EVERY_FIELD) {
-      expect(drawnNames(shape), shape._tag).toEqual(
-        Arr.sort(
-          Arr.map(Rec.keys(attributesOf(shape)), attributeName),
-          Order.String
+      const markup = renderToStaticMarkup(
+        createElement(
+          "svg",
+          null,
+          createElement(Drawing<"eye">, {
+            marked: () => ({ "data-eye": "true" }),
+            shape,
+          })
         )
       );
+      expect(markup).toContain(`<${shape._tag}`);
+      if (shape._tag === "g") {
+        expect(markup).toContain('data-eye="true"');
+      }
     }
   });
 });

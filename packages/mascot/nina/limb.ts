@@ -77,18 +77,34 @@ const TORSO_POINTS = Arr.flatMap(
 
 /** Each point of the outline with the one before it, the first with the last. */
 const TORSO_EDGES = Arr.zip(TORSO_POINTS, Arr.rotate(TORSO_POINTS, 1));
+const TORSO_MIN_X = Math.min(...Arr.map(TORSO_POINTS, ([x]) => x));
+const TORSO_MAX_X = Math.max(...Arr.map(TORSO_POINTS, ([x]) => x));
+const TORSO_MIN_Y = Math.min(...Arr.map(TORSO_POINTS, ([, y]) => y));
+const TORSO_MAX_Y = Math.max(...Arr.map(TORSO_POINTS, ([, y]) => y));
 
 /** Whether a place is on her body. */
 export function onBody(x: number, y: number) {
-  return Arr.reduce(TORSO_EDGES, false, (inside, [current, previous]) => {
-    const crosses =
+  if (
+    x < TORSO_MIN_X ||
+    x > TORSO_MAX_X ||
+    y < TORSO_MIN_Y ||
+    y > TORSO_MAX_Y
+  ) {
+    return false;
+  }
+  let inside = false;
+  for (const [current, previous] of TORSO_EDGES) {
+    if (
       current[1] > y !== previous[1] > y &&
       x <
         ((previous[0] - current[0]) * (y - current[1])) /
           (previous[1] - current[1]) +
-          current[0];
-    return crosses ? !inside : inside;
-  });
+          current[0]
+    ) {
+      inside = !inside;
+    }
+  }
+  return inside;
 }
 
 /** Where on the middle line of a limb, and which way it runs there. */
@@ -132,7 +148,7 @@ function middle(a: Place, b: Place) {
 }
 
 /** Both edges of a limb and the places that round its two ends. */
-function edges(c: Curve, girth: Girth, start: number) {
+export function edges(c: Curve, girth: Girth, start = 0) {
   const sides = Arr.makeBy(STEPS + 1, (i) => {
     const t = start + ((1 - start) * i) / STEPS;
     const { dx, dy, len, x, y } = frame(c, t);

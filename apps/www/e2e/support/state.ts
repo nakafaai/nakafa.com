@@ -71,7 +71,7 @@ export const expectThings = Effect.fn("NakafaE2E.expectThings")(function* (
   page: Page,
   shown: boolean
 ) {
-  const pictures = page.locator(STATE_FIGURE).locator("svg");
+  const pictures = page.locator(STATE_FIGURE).locator("svg, canvas");
   yield* Effect.promise(() => expect(pictures).toHaveCount(3));
   yield* Effect.forEach(
     [pictures.first(), pictures.last()],

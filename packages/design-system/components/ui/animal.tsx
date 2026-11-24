@@ -2,6 +2,7 @@ import { Picture } from "@repo/design-system/components/ui/picture";
 import type { Mascot } from "@repo/mascot/code";
 import { CANVAS, draw, stand } from "@repo/mascot/draw";
 import { Array as Arr } from "effect";
+import { useMemo } from "react";
 
 interface Props {
   /**
@@ -29,7 +30,24 @@ function marked() {
  * it is the circle, so the animal has no border and no rounding of its own.
  */
 export function Animal({ mascot }: Props) {
-  if (mascot === undefined) {
+  const animal = mascot?.animal;
+  const eyes = mascot?.eyes;
+  const ground = mascot?.ground;
+  const palette = mascot?.palette;
+  const pose = mascot?.pose;
+  const shapes = useMemo(
+    () =>
+      animal === undefined ||
+      eyes === undefined ||
+      ground === undefined ||
+      palette === undefined ||
+      pose === undefined
+        ? undefined
+        : Arr.of(draw({ animal, eyes, ground, palette, pose })),
+    [animal, eyes, ground, palette, pose]
+  );
+
+  if (shapes === undefined) {
     return null;
   }
   return (
@@ -38,7 +56,7 @@ export function Animal({ mascot }: Props) {
       className="size-full"
       data-look=""
       marked={marked}
-      shapes={Arr.of(draw(mascot))}
+      shapes={shapes}
     />
   );
 }
@@ -57,13 +75,19 @@ export function AnimalFigure({
   className?: string;
   mascot: typeof Mascot.Type;
 }) {
+  const { animal, eyes, ground, palette, pose } = mascot;
+  const shapes = useMemo(
+    () => Arr.of(stand({ animal, eyes, ground, palette, pose })),
+    [animal, eyes, ground, palette, pose]
+  );
+
   return (
     <Picture
       box={BOX}
       className={className}
       data-look=""
       marked={marked}
-      shapes={Arr.of(stand(mascot))}
+      shapes={shapes}
     />
   );
 }

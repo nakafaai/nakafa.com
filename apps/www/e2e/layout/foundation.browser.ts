@@ -150,7 +150,7 @@ for (const scheme of SCHEMES) {
         await expect(empty).toBeVisible({
           timeout: readinessTimeoutMilliseconds,
         });
-        await expect(empty.locator("svg").first()).toBeVisible();
+        await expect(empty.locator("svg, canvas").first()).toBeVisible();
         await shoot(page, `empty-${width}-${scheme}`);
       });
     });

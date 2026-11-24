@@ -1,14 +1,17 @@
+import { HALF_BOX, WHOLE_BOX } from "@repo/mascot/nina/box";
 import type { Look } from "@repo/mascot/nina/face";
 import { LookSchema, MoodSchema } from "@repo/mascot/nina/face";
-import { appear } from "@repo/mascot/nina/figure";
+import { appear, viewed } from "@repo/mascot/nina/figure";
 import type { Options } from "@repo/mascot/nina/options";
 import {
   BEHAVIORS,
   BehaviorSchema,
   homeOf,
   modeOf,
+  moodOf,
 } from "@repo/mascot/nina/options";
 import type { Pose } from "@repo/mascot/nina/pose";
+import { REST } from "@repo/mascot/nina/pose";
 import {
   followPeek,
   followWhole,
@@ -281,6 +284,48 @@ export function view(life: Life, options: Options) {
       gladOf(life)
     ),
   };
+}
+
+/**
+ * What her live canvas needs for one frame, without formatting limb SVG paths:
+ * the sprung pose, her mood, where her eyes look, her window and whether she
+ * holds something.
+ */
+export function frame(life: Life, options: Options) {
+  const mode = modeOf(options);
+  const pose = BEHAVIORS[life.act].pose(life.clock);
+  return {
+    box: options.whole === true ? WHOLE_BOX : HALF_BOX,
+    holds: pose.held.length > 0,
+    lean: options.whole === true ? undefined : (options.lean ?? "center"),
+    look: pose.look ?? viewed(options.side, life.gaze),
+    mode,
+    mood: moodOf(options, pose, gladOf(life)),
+    pose: mode === "tile" ? REST : sprung(life, options, pose),
+    side: options.side,
+    tile: options.whole === true ? undefined : options.tile,
+  };
+}
+
+/**
+ * Whether a live Nina has settled and needs no frame until the pointer moves,
+ * a click lands, or a blink begins. Only a tile can rest completely: whole and
+ * peek figures breathe and sway their limbs continuously.
+ */
+export function isStill(life: Life, options: Options, pointer: Look) {
+  if (modeOf(options) !== "tile") {
+    return false;
+  }
+  if (life.glad !== undefined && life.now < life.glad.until) {
+    return false;
+  }
+  if ((options.fidget?.length ?? 0) > 0 || life.until > 0) {
+    return false;
+  }
+  return (
+    Math.abs(pointer[0] - life.gaze[0]) < 0.02 &&
+    Math.abs(pointer[1] - life.gaze[1]) < 0.02
+  );
 }
 
 /** Where she should look to face the pointer, a few units at most, from where it is. */
