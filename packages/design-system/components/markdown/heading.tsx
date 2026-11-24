@@ -73,12 +73,9 @@ export function Heading({
 }: {
   Tag: HeadingTag;
   className?: string | undefined;
-  enableLink?: boolean;
+  enableLink?: boolean | undefined;
   id?: string | undefined;
 } & HeadingProps) {
-  const id =
-    explicitId ?? createHeadingId(extractTextFromNode(props.children) ?? "");
-
   if (!enableLink) {
     return (
       <Tag
@@ -87,13 +84,16 @@ export function Heading({
           "flex items-center",
           className
         )}
-        id={id}
+        id={explicitId}
         {...props}
       >
         <HeadingText Tag={Tag}>{props.children}</HeadingText>
       </Tag>
     );
   }
+
+  const id =
+    explicitId ?? createHeadingId(extractTextFromNode(props.children) ?? "");
 
   return (
     <Tag

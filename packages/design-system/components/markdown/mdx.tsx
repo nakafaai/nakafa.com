@@ -91,32 +91,44 @@ export function ContentGrid({
 }
 
 /** Renders a level-one MDX heading with Nakafa typography. */
-export function MdxHeading1(props: HeadingProps) {
+export function MdxHeading1(
+  props: { readonly enableLink?: boolean | undefined } & HeadingProps
+) {
   return <Heading Tag="h1" {...props} />;
 }
 
 /** Renders a level-two MDX heading with Nakafa typography. */
-export function MdxHeading2(props: HeadingProps) {
+export function MdxHeading2(
+  props: { readonly enableLink?: boolean | undefined } & HeadingProps
+) {
   return <Heading Tag="h2" {...props} />;
 }
 
 /** Renders a level-three MDX heading with Nakafa typography. */
-export function MdxHeading3(props: HeadingProps) {
+export function MdxHeading3(
+  props: { readonly enableLink?: boolean | undefined } & HeadingProps
+) {
   return <Heading Tag="h3" {...props} />;
 }
 
 /** Renders a level-four MDX heading with Nakafa typography. */
-export function MdxHeading4(props: HeadingProps) {
+export function MdxHeading4(
+  props: { readonly enableLink?: boolean | undefined } & HeadingProps
+) {
   return <Heading Tag="h4" {...props} />;
 }
 
 /** Renders a level-five MDX heading with Nakafa typography. */
-export function MdxHeading5(props: HeadingProps) {
+export function MdxHeading5(
+  props: { readonly enableLink?: boolean | undefined } & HeadingProps
+) {
   return <Heading Tag="h5" {...props} />;
 }
 
 /** Renders a level-six MDX heading with Nakafa typography. */
-export function MdxHeading6(props: HeadingProps) {
+export function MdxHeading6(
+  props: { readonly enableLink?: boolean | undefined } & HeadingProps
+) {
   return <Heading Tag="h6" {...props} />;
 }
 

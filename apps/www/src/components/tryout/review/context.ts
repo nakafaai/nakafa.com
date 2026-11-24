@@ -23,22 +23,54 @@ export const TryoutReviewContext = createContext<{
   readonly score: TryoutScoreResult;
 } | null>(null);
 
+/** Whether one question's explanation stands open under the review's global and per-question state. */
+export function isExplanationOpen(
+  state: {
+    readonly allOpen: boolean;
+    readonly overrides: HashSet.HashSet<string>;
+  },
+  key: string
+) {
+  return state.allOpen
+    ? !HashSet.has(state.overrides, key)
+    : HashSet.has(state.overrides, key);
+}
+
 /**
- * Creates the explanations a review shows open, by question, with the one action that opens or closes
- * one: its question's own button and the result's footer both press it.
+ * Creates the explanations a review shows open: a question's own toggle flips its override, while the
+ * pane's toggle opens every explanation at once (or closes them all once already open). Both return
+ * whether the action opened an explanation.
  */
 export function createExplainedStore() {
   return createStore<{
-    readonly open: HashSet.HashSet<string>;
-    readonly toggle: (key: string) => void;
-  }>()((set) => ({
-    open: HashSet.empty(),
-    toggle: (key) =>
-      set((state) => ({
-        open: HashSet.has(state.open, key)
-          ? HashSet.remove(state.open, key)
-          : HashSet.add(state.open, key),
-      })),
+    readonly allOpen: boolean;
+    readonly overrides: HashSet.HashSet<string>;
+    readonly toggle: (key: string) => boolean;
+    readonly toggleAll: (current: string | null) => boolean;
+  }>()((set, get) => ({
+    allOpen: false,
+    overrides: HashSet.empty(),
+    toggle: (key) => {
+      const state = get();
+      const nextOpen = !isExplanationOpen(state, key);
+      set({
+        overrides: HashSet.has(state.overrides, key)
+          ? HashSet.remove(state.overrides, key)
+          : HashSet.add(state.overrides, key),
+      });
+      return nextOpen;
+    },
+    toggleAll: (current) => {
+      const state = get();
+      const nextOpen =
+        !state.allOpen ||
+        (current !== null && HashSet.has(state.overrides, current));
+      set({
+        allOpen: nextOpen,
+        overrides: HashSet.empty(),
+      });
+      return nextOpen;
+    },
   }));
 }
 

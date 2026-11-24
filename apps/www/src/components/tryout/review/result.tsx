@@ -3,20 +3,23 @@ import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { HashSet, Number as Num, Option } from "effect";
+import { Array as Arr, Number as Num, Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
+import { readQuestionIds } from "@/components/player/ids";
 import { PlayerReviewGrid } from "@/components/player/navigator/review";
 import { usePlayer } from "@/components/player/provider";
 import { formatClock } from "@/components/player/time";
 import { PaneFact, PaneFacts } from "@/components/shared/page/pane";
 import type { createExplainedStore } from "@/components/tryout/review/context";
 import {
+  isExplanationOpen,
   TryoutExplainedContext,
   TryoutReviewContext,
 } from "@/components/tryout/review/context";
 import { reviewCellsOf } from "@/components/tryout/review/model";
+import { scrollExplanationIntoView } from "@/components/tryout/review/scroll";
 
 /** Reads the review around the caller (`TryoutReviewFrame`). */
 export function useTryoutReview() {
@@ -116,24 +119,39 @@ export function TryoutResult() {
 }
 
 /**
- * The result's footer action: the explanation of the current question, which it opens and closes; a question
- * whose explanation waits for Pro opens its offer. The colors of the numbers are named in the player's info.
+ * The result's footer action: opens every question's explanation globally (and scrolls to the active
+ * question's explanation), or closes them all once already open. A question whose explanation waits
+ * for Pro opens its offer. The colors of the numbers are named in the player's info.
  */
 export function TryoutResultFooter() {
   const t = useTranslations("Tryouts");
+  const { runtime } = useTryoutReview();
   const current = usePlayer((state) => state.current);
   const explained = useTryoutExplained(
-    (state) => current !== null && HashSet.has(state.open, current)
+    (state) =>
+      state.allOpen && (current === null || isExplanationOpen(state, current))
   );
-  const toggle = useTryoutExplained((state) => state.toggle);
+  const toggleAll = useTryoutExplained((state) => state.toggleAll);
 
   return (
     <Button
       aria-pressed={explained}
       disabled={current === null}
       onClick={() => {
-        if (current !== null) {
-          toggle(current);
+        if (current === null) {
+          return;
+        }
+        if (toggleAll(current)) {
+          Option.map(
+            Arr.findFirst(
+              runtime.questions,
+              (question) => question.placementId === current
+            ),
+            (question) =>
+              scrollExplanationIntoView(
+                readQuestionIds(question.questionOrder).explanation
+              )
+          );
         }
       }}
       type="button"

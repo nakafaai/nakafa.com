@@ -1,6 +1,9 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import { readExplanation } from "@repo/backend/confect/tryouts/rows";
+import {
+  findActiveExplanationSnapshotId,
+  readExplanation,
+} from "@repo/backend/confect/tryouts/rows";
 import type { readTryoutSectionContentAccess } from "@repo/backend/confect/tryouts/runtime/content";
 import { isTryoutReviewPreviewQuestion } from "@repo/backend/confect/tryouts/runtime/content";
 import type { PlacedQuestion } from "@repo/backend/confect/tryouts/runtime/question";
@@ -25,14 +28,21 @@ type ReviewAccess = Pick<
  */
 export const readQuestionBody = Effect.fn("tryouts.runtime.readQuestionBody")(
   function* (input: {
+    readonly activeSnapshotId: Option.Option<string>;
     readonly appLocale: AppLocaleCode;
+    readonly fallbackSnapshotId?: string | undefined;
     readonly question: PlacedQuestion;
     readonly reviewed: boolean;
     readonly version: PlacedQuestionVersion;
   }) {
     const { reviewed, version } = input;
     const explanation = reviewed
-      ? yield* readExplanation(version.hash, input.appLocale)
+      ? yield* readExplanation({
+          activeSnapshotId: input.activeSnapshotId,
+          fallbackSnapshotId: input.fallbackSnapshotId,
+          language: input.appLocale,
+          versionHash: version.hash,
+        })
       : Option.none();
     return yield* Schema.encodeEffect(TryoutQuestionBodyText)({
       ...(Option.isSome(explanation) ? { explanation: explanation.value } : {}),
@@ -55,14 +65,19 @@ export const readQuestionBody = Effect.fn("tryouts.runtime.readQuestionBody")(
  * Reads the bodies of a section's questions in their order, each in every language of its section
  * (`readQuestionBody`). In a review, a learner entitled to every answer (`answers`) receives each key's
  * answer and each version's explanation in `appLocale`, and anyone else (`preview`) only those of the
- * section's leading questions.
+ * section's leading questions. Resolves the active snapshot once per query before reading explanations.
  */
 export const readSectionBodies = Effect.fn("tryouts.runtime.readSectionBodies")(
   function* (input: {
     readonly access: ReviewAccess;
     readonly appLocale: AppLocaleCode;
+    readonly attemptSnapshotId: string;
     readonly placements: readonly Docs["tryoutAttemptPlacements"][];
   }) {
+    const activeSnapshotId =
+      input.access.answers || input.access.preview
+        ? yield* findActiveExplanationSnapshotId()
+        : Option.none<string>();
     return yield* Effect.forEach(input.placements, (placement) =>
       Effect.gen(function* () {
         const question = yield* readPlacedQuestion(placement);
@@ -78,7 +93,9 @@ export const readSectionBodies = Effect.fn("tryouts.runtime.readSectionBodies")(
               Effect.catchTag("TryoutRuntimeError", Effect.die)
             );
             const body = yield* readQuestionBody({
+              activeSnapshotId,
               appLocale: input.appLocale,
+              fallbackSnapshotId: input.attemptSnapshotId,
               question,
               reviewed,
               version,

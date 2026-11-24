@@ -152,7 +152,7 @@ const expectFullReview = Effect.fn("NakafaE2E.expectFullTryoutReview")(
     );
     yield* Effect.promise(() =>
       expect(
-        questionArticle(page, 1).getByRole("heading", { name: "Explanation" })
+        questionArticle(page, 1).getByRole("region", { name: "Explanation" })
       ).toBeVisible()
     );
   }

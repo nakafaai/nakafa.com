@@ -297,7 +297,7 @@ test.describe("The result of a finished try-out", () => {
           );
           yield* Effect.promise(() =>
             expect(
-              questionArticle(page, JUMP + 1).getByRole("heading", {
+              questionArticle(page, JUMP + 1).getByRole("region", {
                 name: "Explanation",
               })
             ).toBeVisible()

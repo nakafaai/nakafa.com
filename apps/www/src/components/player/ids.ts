@@ -8,6 +8,7 @@ export function readQuestionIds(number: number) {
   return {
     anchor,
     article: `exercise-${anchor}`,
+    explanation: `${anchor}-explanation`,
     title: `${anchor}-title`,
   };
 }
