@@ -52,5 +52,5 @@ runs:
         echo "state=$all" >> "$GITHUB_OUTPUT"
         [ "$VERIFY" = gate ] || exit 0
         description="Gate failed"
-        [ "$all" = success ] && description="Gate passed; the merge queue proves the browsers"
+        [ "$all" = success ] && description="Gate passed; ready to merge"
         post verify "$all" "$description"

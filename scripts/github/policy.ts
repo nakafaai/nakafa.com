@@ -48,9 +48,6 @@ const PREPARED_PATHS = `${expression("runner.temp")}/snapshots\n~/.cache/convex/
 /** The key of a proof machine's browsers: one Playwright release's builds of the engines it runs. */
 const PLAYWRIGHT_BROWSERS = `playwright-${expression("runner.os")}-${expression("runner.arch")}-${expression("steps.playwright.outputs.version")}-${expression("env.ENGINES_KEY")}`;
 
-/** The key of the browsers that the warming of main saves: those of the machine that runs all three engines. */
-const PLAYWRIGHT_ALL_BROWSERS = `playwright-${expression("runner.os")}-${expression("runner.arch")}-${expression("steps.playwright.outputs.version")}-chromium-firefox-webkit`;
-
 /** The folder Playwright downloads its browsers into. */
 const PLAYWRIGHT_PATH = "~/.cache/ms-playwright";
 
@@ -61,9 +58,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     action: "actions/checkout",
     approvedSha: "3d3c42e5aac5ba805825da76410c181273ba90b1",
     expectedTag: "v7.0.1",
-    expectedUsages: 6,
+    expectedUsages: 5,
     reason:
-      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit, and the proof workflow checks out the verified head (a pull request's, a merge group's or a dispatched one) without credentials: its gate job and its backend shard job, which the matrix runs once per shard, with the whole history, its proof job, which the matrix runs once per engine, and its warming of main's caches on a push to main.",
+      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit, and the proof workflow checks out the verified head (a pull request's or a dispatched one) without credentials: its gate job and its backend shard job with the whole history, and its proof job once per engine.",
   },
   {
     action: "oven-sh/setup-bun",
@@ -95,12 +92,6 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
       },
       { key: PLAYWRIGHT_BROWSERS, path: PLAYWRIGHT_PATH },
       {
-        key: `prepared-${expression("steps.key.outputs.key")}`,
-        "lookup-only": "true",
-        path: PREPARED_PATHS,
-      },
-      { key: PLAYWRIGHT_ALL_BROWSERS, path: PLAYWRIGHT_PATH },
-      {
         key: `urls-prod-${expression("github.run_id")}-${expression("github.run_attempt")}`,
         path: ".cache/urls",
         "restore-keys": "urls-prod-\n",
@@ -113,9 +104,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
       "restore-keys": `${RELEASE_READS}\n${STAGE_READS}\n`,
     },
     expectedTag: "v6.1.0",
-    expectedUsages: 6,
+    expectedUsages: 4,
     reason:
-      "The proof workflow restores the prepared acceptance runtime only by its exact key, the hash of everything that state depends on, so a changed input never reuses it, and the browsers of the Playwright release and engines a machine runs, which never change within a release. The warming of main looks the prepared runtime up without downloading it, and prepares only when main's scope lacks it. The deploy job restores the newest Convex reads that a deploy of the same stage kept, the same release first: every store entry is keyed by what its answer depends on, so the cache key names the stage and the release alone, never the code or the dependencies, which would read the whole release again (docs/convex/cost.md, Deploy reads). A production deploy also restores the newest ledger of published addresses, the addresses Nakafa ever published that must all keep answering (apps/www/scripts/urls.ts).",
+      "The proof workflow restores the prepared acceptance runtime only by its exact key, the hash of everything that state depends on, so a changed input never reuses it, and the browsers of the Playwright release and engines a machine runs, which never change within a release. The deploy job restores the newest Convex reads that a deploy of the same stage kept, the same release first: every store entry is keyed by what its answer depends on, so the cache key names the stage and the release alone, never the code or the dependencies, which would read the whole release again (docs/convex/cost.md, Deploy reads). A production deploy also restores the newest ledger of published addresses, the addresses Nakafa ever published that must all keep answering (apps/www/scripts/urls.ts).",
   },
   {
     action: "actions/cache/save",
@@ -125,7 +116,6 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
         path: PREPARED_PATHS,
       },
       { key: PLAYWRIGHT_BROWSERS, path: PLAYWRIGHT_PATH },
-      { key: PLAYWRIGHT_ALL_BROWSERS, path: PLAYWRIGHT_PATH },
       {
         key: expression("steps.urls.outputs.cache-primary-key"),
         path: ".cache/urls",
@@ -137,9 +127,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
       path: ".cache/reads",
     },
     expectedTag: "v6.1.0",
-    expectedUsages: 6,
+    expectedUsages: 4,
     reason:
-      "The proof workflow saves a prepared acceptance runtime it had to prepare, under its exact key, and the browsers it had to download, as the warming of main does in main's scope, which merge groups read. The deploy job saves the Convex reads it added under its own run's key, so the next deploy of the release restores them (docs/convex/cost.md, Deploy reads). A production deploy also keeps the ledger of published addresses it recorded, under its own run's key, for the next one (apps/www/scripts/urls.ts).",
+      "The proof workflow saves a prepared acceptance runtime it had to prepare, under its exact key, and the browsers it had to download. The deploy job saves the Convex reads it added under its own run's key, so the next deploy of the release restores them (docs/convex/cost.md, Deploy reads). A production deploy also keeps the ledger of published addresses it recorded, under its own run's key, for the next one (apps/www/scripts/urls.ts).",
   },
   {
     action: "actions/upload-artifact",
@@ -153,9 +143,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     action: "actions/download-artifact",
     approvedSha: "9000827ccba6bdab643e8b6fd33ac0654aef8333",
     expectedTag: "v8.0.2",
-    expectedUsages: 5,
+    expectedUsages: 4,
     reason:
-      "CLI publishing and verification download separated artifacts, a merge group's verdict downloads its engines' results to prove their failing specs on its base, and the last backend shard downloads the shards' Vitest blobs to merge them.",
+      "CLI publishing and verification download separated artifacts, and the last backend shard downloads the shards' Vitest blobs to merge them.",
   },
   {
     action: "actions/setup-node",
@@ -171,9 +161,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
       "package-manager-cache": "false",
     },
     expectedTag: "v7.1.0",
-    expectedUsages: 6,
+    expectedUsages: 5,
     reason:
-      "CLI publication, its verification, and the deploy job pin Node without dependency caching, and the install action pins it for every job that installs dependencies, because Bun does not provision the Node runtime that pnpm's devEngines download used to provide. The proof job and the warming of main also install the Node major that convex.json names for Convex's \"use node\" actions, from the runner's tool cache instead of Homebrew.",
+      "CLI publication, its verification, and the deploy job pin Node without dependency caching, and the install action pins it for every job that installs dependencies, because Bun does not provision the Node runtime that pnpm's devEngines download used to provide. The proof job also installs the Node major that convex.json names for Convex's \"use node\" actions, from the runner's tool cache instead of Homebrew.",
   },
 ]);
 

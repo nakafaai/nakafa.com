@@ -1,6 +1,7 @@
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect, Layer, Option, Ref } from "effect";
+import { runText } from "#scripts/process";
 import {
   formatProof,
   parseProofArguments,
@@ -139,6 +140,10 @@ describe("proof command line", () => {
         expect(yield* Ref.get(calls)).toEqual([
           `bun run --cwd packages/backend acceptance proof ${SHA} e2e/a.browser.ts`,
         ]);
+        const passthrough = yield* runText("true", []).pipe(
+          Effect.provide(scriptedShell(() => undefined, calls))
+        );
+        expect(passthrough.code).toBe(0);
       }).pipe(Effect.provide(NodeServices.layer)),
     PROCESS_TIMEOUT
   );

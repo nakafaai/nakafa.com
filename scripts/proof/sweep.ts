@@ -40,14 +40,11 @@ const runGit = Effect.fn("proof.runGit")(function* (
 
 /**
  * Cancels every queued proof run whose head is no longer worth proving: not the
- * head of an open pull request, not the head of a merge group in the queue, and
- * not main's head. A group's head is the base the group behind it proves its
- * failing specs on (`scripts/proof/group.ts`). A head that a newer push
+ * head of an open pull request and not main's head. A head that a newer push
  * replaced, or that merged, would otherwise hold one of the 20 jobs that every
  * proof and gate of the account shares.
- * Runs that already started keep going, and so does every run a pull request
- * or a merge group started: GitHub's merge queue waits on a merge group's run,
- * and a pull request's own concurrency group cancels its superseded runs.
+ * Runs that already started keep going, and a pull request's own concurrency
+ * group cancels its superseded runs.
  * Returns how many it cancelled.
  */
 export const sweepSuperseded = Effect.fn("proof.sweepSuperseded")(function* () {
@@ -67,17 +64,7 @@ export const sweepSuperseded = Effect.fn("proof.sweepSuperseded")(function* () {
     "--jq",
     ".[].headRefOid",
   ]);
-  const groups = yield* gh([
-    "api",
-    `repos/${REPOSITORY}/git/matching-refs/heads/gh-readonly-queue/`,
-    "--jq",
-    ".[].object.sha",
-  ]);
-  const keep = HashSet.fromIterable([
-    ...lines(heads),
-    ...lines(groups),
-    yield* mainHead,
-  ]);
+  const keep = HashSet.fromIterable([...lines(heads), yield* mainHead]);
   const queued = yield* gh([
     "run",
     "list",
