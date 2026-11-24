@@ -388,3 +388,13 @@ The gate ran React Doctor on the head's changes against main (`--scope changed`)
 
 1. **The whole app.** A pull request's gate runs `bun run doctor --verbose --scope full --blocking warning`, which fails on any finding in `www`, a warning included, wherever it stands. React Doctor 0.9.23 has no score threshold, and its score comes from its API, so the gate reads the findings: the score and the failure leave out the same findings (`design`-tagged rules by default), and `www` overrides neither, so a head with no finding scores 100. Measured on 20 November: main at 93 with four findings exits 1, and the head that fixes them scores 100 and exits 0.
 2. **The pull request alone.** As "Each Check Runs Once" decided, a merge group's gate skips Doctor, which would audit the same app again. A finding that only two merged changes make together fails the next pull request's gate, whose head holds main.
+
+## Amendment: The Merge Queue Is Deleted, 24 November 2026
+
+The merge queue bottlenecked production landings by re-running the gate and browser shards for 20+ minutes on pull requests that had already passed `verify`, while the `Warm` job burned runner minutes on every push to `main` solely for `gh-readonly-queue/` branches. The owner directed full removal of the merge queue setup in favor of a fast, cost-efficient direct-merge pipeline.
+
+### Decision
+
+1. **Ruleset 19504599 drops `merge_queue`.** `main` retains `deletion`, `non_fast_forward`, `pull_request` (squash/rebase, resolved review threads), and `required_status_checks` (`verify`). Every production-ready pull request with a green `verify` check squash-merges directly into `main` and deploys live via `.github/workflows/deploy.yml`.
+2. **Dead merge-queue scaffolding is deleted.** `.github/workflows/proof.yml` drops `merge_group`, `push` (`Warm`), `inputs.base`, and group verdicts; `.github/actions/verdict`, `scripts/proof/group.ts`, `scripts/proof/group.test.ts`, `scripts/proof/select.ts`, and `scripts/proof/select.test.ts` are removed; `scripts/proof/sweep.ts` stops querying `gh-readonly-queue/`; and `scripts/github/policy.ts` reflects the slimmer action usage counts.
+3. **On-demand browser proofs stay intact.** `bun run proof <sha> [spec...]` and `bun run gate <sha>` continue running via `workflow_dispatch` whenever cross-browser acceptance verification is needed.

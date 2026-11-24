@@ -74,6 +74,13 @@ for one status: GitHub's merge queue lands every pull request on `verify`, which
 `proof.yml` posts from the gate on a pull request and from the gate and three
 engines on a merge group. The train is deleted.
 
+## Amendment: Direct Merges Without Merge Queue, 24 November 2026
+
+ADR 0048, "The Merge Queue Is Deleted", removes GitHub's merge queue from the
+`main` ruleset and deletes the `merge_group`, `Warm`, verdict, and diff-select
+scaffolding. Every pull request still requires `verify` from the fast gate in
+`proof.yml` and squash-merges directly to `main` for immediate production deploy.
+
 ## References
 
 - [Confect React clients](https://confect.dev/v10/clients/react)

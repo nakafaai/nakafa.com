@@ -6,54 +6,30 @@
 # local production server over the local Convex backend binary, with the inert
 # acceptance environment, and the chosen specs in Chromium, Firefox and WebKit).
 #
-# GitHub's merge queue requires one commit status, `verify`, and this workflow
-# posts it at two depths (docs/adr/0048-proof.md, "The Merge Queue Is Switched
-# On"). A pull request runs the gate alone, and the gate's verdict is `verify`.
-# A merge group runs the gate and the three engines over the specs its diff
-# selects (scripts/proof/select.ts), and the job that finishes last posts
-# `verify` from the gate and the three engine statuses through
-# .github/actions/verdict, which proves a failing spec on the group's base and
-# sets aside what the base fails too ("A Merge Group Sets Aside What Its Base
-# Fails"). `workflow_dispatch`
-# serves `bun run gate`, whose gate also posts `verify`, `bun run proof`, and a
-# merge group rehearsal that names its `base`.
+# Pull requests merge directly into main once `verify` passes (docs/adr/0048-proof.md,
+# "The Merge Queue Is Deleted"). A pull request runs the gate alone and posts
+# `verify`. `workflow_dispatch` serves `bun run gate`, whose gate also posts
+# `verify`, and `bun run proof`, which builds and runs the named specs or every
+# browser suite.
 #
-# Each check runs once where it can fail ("Each Check Runs Once"): the specs in
-# the merge group alone, React Doctor and the audit on the pull request alone.
-#
-# Jobs side by side and no `needs`: the gate, and up to four proof jobs per
-# engine. Each proof job selects the run's specs first: a selection of at most
-# ten specs installs, prepares and builds once on the first Chromium job, which
-# runs the three engines one after another; one of at most 80 runs each engine
-# on its own machine; a larger one, or every suite, splits each engine into up
-# to four shards on machines of their own; every job its selection needs no
-# machine for ends there. Every `needs` stage waits in the account's free runner
-# queue again from the back, which turned 14 minutes of work into three hours,
-# while jobs without one leave the queue together. Each job posts its own
-# statuses: the gate `gate/<part>` and `gate`, the proof `proof/<engine>/<shard>`
-# for a sharded engine, `proof/<engine>` from the job that finds all of an
-# engine's shards final, and `proof` from the job that finds all three engine
-# statuses of this run final.
-#
-# A push to main runs only the warming job, which saves main's prepared runtime
-# and the browsers in main's scope, the only one a merge group can restore from.
+# Jobs side by side and no `needs`: the gate, the three backend shards, and up
+# to four proof jobs per engine when dispatched with `proof: true`. Every `needs`
+# stage waits in the account's free runner queue again from the back, while jobs
+# without one leave the queue together. Each job posts its own statuses: the gate
+# `gate/<part>` and `gate`, the proof `proof/<engine>/<shard>` for a sharded
+# engine, `proof/<engine>` from the job that finds all of an engine's shards
+# final, and `proof` from the job that finds all three engine statuses of this
+# run final.
 #
 # It reads no secret, publishes nothing and touches no Convex or Cloudflare
 # deployment. A pull request from a fork gets a read-only token, so its run
-# posts no status and it cannot enter the queue.
+# posts no status.
 name: Proof
-run-name: ${{ github.event_name == 'push' && 'Warm' || 'Proof' }} ${{ inputs.sha || github.event.pull_request.head.sha || github.event.merge_group.head_sha || github.sha }} ${{ inputs.nonce }}
+run-name: Proof ${{ inputs.sha || github.event.pull_request.head.sha }} ${{ inputs.nonce }}
 
 on:
-  # A push to main warms the caches that merge groups restore: a group runs on a
-  # gh-readonly-queue branch, which reads only main's caches, and what it saves
-  # itself no later group can read.
-  push:
-    branches: [ main ]
   pull_request:
     types: [ opened, synchronize, reopened, ready_for_review ]
-  merge_group:
-    types: [ checks_requested ]
   workflow_dispatch:
     inputs:
       sha:
@@ -85,11 +61,6 @@ on:
         required: false
         default: true
         type: boolean
-      base:
-        description: Verify as a merge group on this base, selecting the specs from its diff to the head and posting verify
-        required: false
-        default: ""
-        type: string
       nonce:
         description: Names this run, so the caller that dispatched it finds it
         required: false
@@ -97,45 +68,37 @@ on:
         type: string
 
 # A push to a pull request cancels the run of the head it replaced, whose
-# statuses name that older head only, and a push to main cancels the warming of
-# the main it replaced. Every other run has a group of its own, so a merge group
-# or a dispatch is never cancelled by a later one.
+# statuses name that older head only. Every dispatch has a group of its own so a
+# later run never cancels it.
 concurrency:
-  group: ${{ github.event_name == 'pull_request' && format('proof-pull-{0}', github.event.pull_request.number) || github.event_name == 'push' && 'proof-warm' || format('proof-run-{0}', github.run_id) }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
+  group: ${{ github.event_name == 'pull_request' && format('proof-pull-{0}', github.event.pull_request.number) || format('proof-run-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions: {}
 
 env:
-  SHA: ${{ inputs.sha || github.event.pull_request.head.sha || github.event.merge_group.head_sha }}
-  BASE: ${{ github.event.merge_group.base_sha || inputs.base }}
-  # Who posts `verify`: `gate`, the gate alone (a pull request or a dispatch
-  # without the browsers); `group`, the last of the gate and the three engines
-  # (a merge group or its rehearsal); empty, nobody (a proof or a baseline).
-  VERIFY: ${{ (github.event_name == 'merge_group' || inputs.base != '') && 'group' || (github.event_name == 'pull_request' || !inputs.proof) && 'gate' || '' }}
+  SHA: ${{ inputs.sha || github.event.pull_request.head.sha }}
+  # Who posts `verify`: `gate` on a pull request or a gate-only dispatch; empty
+  # on a browser proof dispatch.
+  VERIFY: ${{ (github.event_name == 'pull_request' || (inputs.gate && !inputs.proof)) && 'gate' || '' }}
   URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
 jobs:
   gate:
     name: Gate
     # A draft runs nothing until it is marked ready for review.
-    if: (github.event_name == 'pull_request' && !github.event.pull_request.draft) || github.event_name == 'merge_group' || inputs.gate
+    if: (github.event_name == 'pull_request' && !github.event.pull_request.draft) || inputs.gate
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
-      # A group's verdict, which this job posts when it finishes last, proves
-      # the failing specs on the base through a dispatched run of this workflow.
-      actions: write
       contents: read
       statuses: write
     env:
       GH_TOKEN: ${{ github.token }}
       # A head typechecks and tests the workspaces it changes against main and
-      # their dependents, and a merge group those its own pull requests change
-      # against its base (main, or the head of the group ahead, which proves
-      # its own); `full` runs every workspace.
+      # their dependents; `full` runs every workspace.
       AFFECTED: ${{ !inputs.full && '--affected' || '' }}
-      TURBO_SCM_BASE: ${{ github.event.merge_group.base_sha || inputs.base || 'origin/main' }}
+      TURBO_SCM_BASE: origin/main
     steps:
       # `gate/backend` belongs to the backend job, whose first shard marks it
       # pending: this job may start after that shard has already posted it.
@@ -197,15 +160,10 @@ jobs:
           # A package that reaches a workspace its tag denies (`boundaries` in turbo.json) is not ready.
           bun run boundaries || failed=1
           # Doctor audits the whole app on the head and fails on any finding, a
-          # warning included, so `www` keeps its score of 100: a finding main
-          # already holds fails as surely as a new one. The audit reads live
-          # advisories. Both judge a pull request alone: in a merge group Doctor
-          # would audit the same app again, and a new advisory would stop the
-          # queue for nothing an entry in it changed.
-          if [ "$VERIFY" != group ]; then
-            bun run doctor --verbose --scope full --blocking warning || failed=1
-            bun run security:audit || failed=1
-          fi
+          # warning included, so `www` keeps its score of 100. The audit reads
+          # live advisories.
+          bun run doctor --verbose --scope full --blocking warning || failed=1
+          bun run security:audit || failed=1
           bun run test:scripts || failed=1
           # One suite at a time: a runner has 4 cores, and the suites time some of
           # their tests, so each takes the whole machine as it does on the Mac.
@@ -254,14 +212,6 @@ jobs:
         with:
           known: ${{ steps.parts.outputs.known }}
 
-      # The last of the gate and the three engines to post its own status finds
-      # all four final and posts `verify`.
-      - name: Post the group's verdict
-        if: always() && env.VERIFY == 'group'
-        uses: ./.github/actions/verdict
-        with:
-          known: ${{ steps.gate.outputs.state && format('gate={0}', steps.gate.outputs.state) || '' }}
-
   backend:
     # The backend suite, about 1,070 test files, runs in three shards on three
     # runners beside the gate, so it leaves the gate's critical path: one runner
@@ -269,7 +219,7 @@ jobs:
     # waits on the shards: as the engines do for the verdict, the shard that
     # finishes last merges the three and posts `gate/backend`.
     name: Backend
-    if: (github.event_name == 'pull_request' && !github.event.pull_request.draft) || github.event_name == 'merge_group' || inputs.gate
+    if: (github.event_name == 'pull_request' && !github.event.pull_request.draft) || inputs.gate
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:
@@ -278,14 +228,12 @@ jobs:
       matrix:
         shard: [ 1, 2, 3 ]
     permissions:
-      # As for the gate: the shard that finishes last may post the group's verdict.
-      actions: write
       contents: read
       statuses: write
     env:
       GH_TOKEN: ${{ github.token }}
       AFFECTED: ${{ !inputs.full && '--affected' || '' }}
-      TURBO_SCM_BASE: ${{ github.event.merge_group.base_sha || inputs.base || 'origin/main' }}
+      TURBO_SCM_BASE: origin/main
       SHARD: ${{ matrix.shard }}
       SHARDS: ${{ strategy.job-total }}
       # Turbo's first run prints a telemetry notice, which a step must not read.
@@ -459,17 +407,11 @@ jobs:
         with:
           known: ${{ steps.backend.outputs.known }}
 
-      - name: Post the group's verdict
-        if: always() && env.VERIFY == 'group' && (steps.last.outputs.merge == 'true' || (steps.affected.outputs.tasks == '0' && matrix.shard == 1))
-        uses: ./.github/actions/verdict
-        with:
-          known: ${{ (steps.merged.outputs.state || steps.idle.outputs.state) && format('gate={0}', steps.merged.outputs.state || steps.idle.outputs.state) || '' }}
-
   proof:
     # A fixed name: GitHub appends the matrix entry, Proof (chromium, firefox, webkit), and a job the event skips
     # reads Proof instead of the unexpanded expression, as a pull request showed it (owner, 15 Nov 2026).
     name: Proof
-    if: github.event_name == 'merge_group' || inputs.proof
+    if: inputs.proof
     runs-on: ubuntu-latest
     timeout-minutes: 350
     strategy:
@@ -482,22 +424,16 @@ jobs:
         # entry's one build in all three engines, one after another; one of at
         # most SHARD_SPECS runs each engine on its first entry, side by side; a
         # larger one, or every suite, splits each engine into one shard per
-        # SHARD_SPECS specs, at most four. Twelve entries, the gate and the three
-        # backend shards ask for 16 of the account's 20 free runners at once, so
-        # every job leaves the queue together; an entry that ends holds its runner
-        # for its install alone, about a minute.
+        # SHARD_SPECS specs, at most four.
         engine: [ chromium, firefox, webkit ]
         shard: [ 1, 2, 3, 4 ]
     permissions:
-      # As for the gate: the job that finishes last posts the group's verdict.
-      actions: write
       contents: read
       statuses: write
     env:
       GH_TOKEN: ${{ github.token }}
       ENGINE: ${{ matrix.engine }}
       SHARD: ${{ matrix.shard }}
-      # A merge group's proof of its base retries no failing test (scripts/proof/github.ts, dispatchProof).
       ACCEPTANCE_RETRIES: ${{ github.event_name == 'workflow_dispatch' && !inputs.retries && '0' || '1' }}
       # The most specs that one machine runs in all three engines. A spec takes an
       # engine about 25 seconds on these runners (the median of 60 engine jobs on
@@ -539,20 +475,13 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/install
 
-      # A merge group proves the specs its diff selects: those it changes, the
-      # folders its app source paths name, and the smoke spec. A dispatch proves
-      # the specs it names, or every suite.
+      # A dispatch proves the specs it names, or every suite.
       - name: Select the specs
         id: select
         env:
           NAMED: ${{ inputs.specs }}
         run: |
           specs="$NAMED"
-          if [ -n "$BASE" ]; then
-            [[ "$BASE" =~ ^[0-9a-f]{40}$ ]] || { echo "base must be a full lower-case commit SHA." >&2; exit 1; }
-            git fetch --quiet --no-tags --depth=1 origin "$BASE"
-            specs="$(node scripts/proof/select.ts "$BASE" "$SHA")"
-          fi
           [[ "$specs" =~ ^(e2e/[A-Za-z0-9/_.-]+\.browser\.ts( |$))*$ ]] || { echo "specs must be spec files under apps/www." >&2; exit 1; }
           echo "Specs: ${specs:-every suite}"
           # The engines this machine runs and each engine's number of shards:
@@ -596,7 +525,6 @@ jobs:
             contexts+=("proof/$engine")
             [ "$TOTAL" = 1 ] || contexts+=("proof/$engine/$SHARD")
           done
-          [ "$VERIFY" != group ] || contexts+=(verify)
           for context in "${contexts[@]}"; do
             retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
               -f state=pending -f context="$context" -f target_url="$URL" -f description="Verifying"
@@ -903,103 +831,3 @@ jobs:
           [ "$(jq 'all(.[]; . == "success")' <<< "$STATES")" = true ] && all=success
           retry gh api --silent "repos/$GITHUB_REPOSITORY/statuses/$SHA" \
             -f state="$all" -f context=proof -f target_url="$URL" -f description="Chromium, Firefox and WebKit: $all"
-
-      - name: Post the group's verdict
-        if: always() && env.VERIFY == 'group' && (env.ENGINES != '' || steps.select.outcome != 'success')
-        uses: ./.github/actions/verdict
-        with:
-          known: |
-            ${{ steps.proof.outputs.known }}
-            ${{ steps.engine.outputs.known }}
-
-  # Prepares main's runtime and downloads the browsers once per push to main, and
-  # saves both in main's scope, so a merge group whose head changes no backend
-  # input restores its prepared runtime and every group restores its browsers.
-  # It posts no status and builds nothing.
-  warm:
-    name: Warm
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    env:
-      ENGINES: chromium firefox webkit
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Name Node for Convex actions
-        id: convex
-        run: echo "node=$(jq -r .node.nodeVersion packages/backend/convex.json)" >> "$GITHUB_OUTPUT"
-
-      - name: Install Node for Convex actions
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: ${{ steps.convex.outputs.node }}
-          package-manager-cache: false
-
-      - name: Point the runtime at Node for Convex actions
-        run: echo "CONVEX_NODE_BIN=$(dirname "$(command -v node)")" >> "$GITHUB_ENV"
-
-      - name: Install dependencies
-        uses: ./.github/actions/install
-
-      - name: Name the browsers
-        id: playwright
-        working-directory: apps/www
-        run: echo "version=$(bunx --no-install playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
-
-      # The key of the proof machine that runs all three engines.
-      - name: Restore the browsers
-        id: browsers
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}-chromium-firefox-webkit
-          path: ~/.cache/ms-playwright
-
-      - name: Download the browsers
-        if: steps.browsers.outputs.cache-hit != 'true'
-        working-directory: apps/www
-        run: |
-          read -ra engines <<< "$ENGINES"
-          bunx --no-install playwright install "${engines[@]}"
-
-      - name: Save the browsers
-        if: steps.browsers.outputs.cache-hit != 'true'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}-chromium-firefox-webkit
-          path: ~/.cache/ms-playwright
-
-      - name: Name the prepared runtime
-        id: key
-        run: |
-          key="$(bun run --cwd packages/backend acceptance key | grep -E '^[0-9a-f]{64}$' | tail -1)"
-          [ -n "$key" ] || { echo "The prepared runtime has no key." >&2; exit 1; }
-          echo "key=$key" >> "$GITHUB_OUTPUT"
-          echo "ACCEPTANCE_SNAPSHOTS=$RUNNER_TEMP/snapshots" >> "$GITHUB_ENV"
-
-      - name: Restore the prepared runtime
-        id: restore
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          key: prepared-${{ steps.key.outputs.key }}
-          lookup-only: true
-          path: |
-            ${{ runner.temp }}/snapshots
-            ~/.cache/convex/binaries
-
-      - name: Prepare
-        if: steps.restore.outputs.cache-hit != 'true'
-        run: bun run --cwd packages/backend acceptance prepare
-
-      - name: Save the prepared runtime
-        if: steps.restore.outputs.cache-hit != 'true'
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          key: prepared-${{ steps.key.outputs.key }}
-          path: |
-            ${{ runner.temp }}/snapshots
-            ~/.cache/convex/binaries
