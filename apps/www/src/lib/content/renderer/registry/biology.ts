@@ -40,6 +40,11 @@ import {
   LactaseColumnLab,
 } from "@/lib/content/renderer/client/biology/enzymes";
 import {
+  ChloroplastStageLab,
+  LeafLaminaCrossSectionLab,
+  StomatalGuardCellLab,
+} from "@/lib/content/renderer/client/biology/foliage";
+import {
   FungiMyceliumLab,
   HyphaeDecayLab,
 } from "@/lib/content/renderer/client/biology/fungi";
@@ -93,6 +98,11 @@ import {
   MusclePairLab,
   VertebraLab,
 } from "@/lib/content/renderer/client/biology/support";
+import {
+  PlantGrowthCurveLab,
+  PlantTissueAnatomyLab,
+  RootShootGrowthZoneLab,
+} from "@/lib/content/renderer/client/biology/tissue";
 import { SarsCov2VirionLab } from "@/lib/content/renderer/client/biology/virion";
 import {
   AntibodyNeutralizeLab,
@@ -389,5 +399,29 @@ export const biologyRenderers = [
   {
     name: biologyComponentNames.waterBondLab,
     component: WaterBondLab,
+  },
+  {
+    name: biologyComponentNames.chloroplastStageLab,
+    component: ChloroplastStageLab,
+  },
+  {
+    name: biologyComponentNames.leafLaminaCrossSectionLab,
+    component: LeafLaminaCrossSectionLab,
+  },
+  {
+    name: biologyComponentNames.plantGrowthCurveLab,
+    component: PlantGrowthCurveLab,
+  },
+  {
+    name: biologyComponentNames.plantTissueAnatomyLab,
+    component: PlantTissueAnatomyLab,
+  },
+  {
+    name: biologyComponentNames.rootShootGrowthZoneLab,
+    component: RootShootGrowthZoneLab,
+  },
+  {
+    name: biologyComponentNames.stomatalGuardCellLab,
+    component: StomatalGuardCellLab,
   },
 ] satisfies readonly RendererImplementation[];

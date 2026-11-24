@@ -20,6 +20,11 @@ import {
   ValenceElectronLab,
 } from "@/lib/content/renderer/client/chemistry/electron";
 import {
+  DynamicEquilibriumLab,
+  EquilibriumQuotientLab,
+  LeChatelierLab,
+} from "@/lib/content/renderer/client/chemistry/equilibrium";
+import {
   CombiningVolumesLab,
   ConstantCompositionLab,
   MassConservationLab,
@@ -231,5 +236,17 @@ export const chemistryRenderers = [
   {
     name: chemistryComponentNames.valenceElectronLab,
     component: ValenceElectronLab,
+  },
+  {
+    name: chemistryComponentNames.dynamicEquilibriumLab,
+    component: DynamicEquilibriumLab,
+  },
+  {
+    name: chemistryComponentNames.equilibriumQuotientLab,
+    component: EquilibriumQuotientLab,
+  },
+  {
+    name: chemistryComponentNames.leChatelierLab,
+    component: LeChatelierLab,
   },
 ] satisfies readonly RendererImplementation[];
