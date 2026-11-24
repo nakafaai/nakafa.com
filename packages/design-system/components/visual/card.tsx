@@ -34,6 +34,7 @@ import {
   visualCardVariants,
 } from "@repo/design-system/components/visual/variants";
 import { useRequired } from "@repo/design-system/hooks/required";
+import { blockGapVariants } from "@repo/design-system/lib/prose";
 import type { RenderableProps } from "@repo/design-system/lib/render";
 import { renderElement } from "@ui-sdk/react/primitive";
 import { cn } from "cn";
@@ -182,7 +183,7 @@ function VisualCard({
 
   return (
     <VisualContext value={store}>
-      <div data-slot="visual-card" style={place}>
+      <div className={blockGapVariants()} data-slot="visual-card" style={place}>
         <Card
           className={cn(
             "gap-0 py-0",

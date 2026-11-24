@@ -6,9 +6,13 @@ import type {
   TableRowNode,
 } from "@nakafa/aksara-contracts/assessment/document";
 import { CodeBlockMdx } from "@repo/design-system/components/markdown/code/client";
-import { BlockMath } from "@repo/design-system/components/markdown/math";
+import {
+  BlockMath,
+  MathContainer,
+} from "@repo/design-system/components/markdown/math";
 import {
   ContentBlock,
+  ContentGrid,
   ContentStack,
   MdxBlockquote,
   MdxHeading3,
@@ -29,7 +33,10 @@ import { Array as Arr, Match, Schema } from "effect";
 import { AssessmentFigure } from "@/components/assessment/figure";
 import { InlineContent } from "@/components/assessment/inline";
 import { AssessmentInteraction } from "@/components/assessment/interaction";
-import { placeNodes } from "@/components/assessment/place";
+import {
+  groupConsecutiveMath,
+  placeNodes,
+} from "@/components/assessment/place";
 
 /**
  * How a block sits: a page gives each paragraph its own spacing, as an article's text, and a line
@@ -76,7 +83,7 @@ function Blocks({
   readonly blocks: readonly BlockNode[];
   readonly flow: typeof FlowSchema.Type;
 }) {
-  return Arr.map(placeNodes(blocks), ({ key, node }) => (
+  return Arr.map(placeNodes(groupConsecutiveMath(blocks)), ({ key, node }) => (
     <Block block={node} flow={flow} key={key} />
   ));
 }
@@ -121,6 +128,11 @@ function Block({
           <Blocks blocks={content} flow="page" />
         </ContentBlock>
       ),
+      contentGrid: ({ content }) => (
+        <ContentGrid>
+          <Blocks blocks={content} flow="page" />
+        </ContentGrid>
+      ),
       contentStack: ({ content }) => (
         <ContentStack>
           <Blocks blocks={content} flow="page" />
@@ -151,6 +163,13 @@ function Block({
         <AssessmentInteraction inline={false} interaction={attrs.interaction} />
       ),
       mathBlock: ({ attrs }) => <BlockMath math={attrs.latex} />,
+      mathContainer: ({ content }) => (
+        <MathContainer>
+          {Arr.map(placeNodes(content), ({ key, node }) => (
+            <BlockMath key={key} math={node.attrs.latex} />
+          ))}
+        </MathContainer>
+      ),
       orderedList: ({ attrs, content }) => (
         <MdxOrderedList start={attrs.start}>
           <ListItems items={content} />
