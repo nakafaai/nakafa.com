@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect, MutableList, Option, String as Str } from "effect";
-import { pressInPopup } from "@/e2e/support/popup";
+import { pressInPopup, waitForPopupsGone } from "@/e2e/support/popup";
 import {
   createSchool,
   hostAddress,
@@ -10,6 +10,7 @@ import {
   signInOwner,
 } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { closeToasts } from "@/e2e/support/toast";
 import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** A web address, as an opened PDF has. */
@@ -82,6 +83,8 @@ test("the Owner records the graduation decision, issues the SKL, opens its check
   await dialog.getByLabel("Place of issue").fill("Bandung");
   await dialog.getByLabel("Head of school").fill("Dra. Siti Aminah, M.Pd.");
   await dialog.getByRole("button", { name: "Save decision" }).click();
+  await waitForPopupsGone(page);
+  await closeToasts(page);
   await expect(row).toContainText("Ready");
   await page
     .locator("header")
@@ -90,12 +93,13 @@ test("the Owner records the graduation decision, issues the SKL, opens its check
   await expect(row).toContainText("Issued", {
     timeout: readinessTimeoutMilliseconds,
   });
+  await closeToasts(page);
 
-  // The student opens beside the list with the transcript, the SKL's PDF, and its check page.
+  // The student opens beside the list on a wide screen, or in a sheet on a phone, with the transcript, the SKL's PDF, and its check page.
   await row.getByRole("button", { name: "Acceptance Learner" }).click();
-  const detail = page.getByRole("complementary", {
-    name: "Student's graduation",
-  });
+  const detail = page
+    .getByRole("complementary", { name: "Student's graduation" })
+    .or(page.getByRole("dialog", { name: "Acceptance Learner" }));
   await expect(detail.getByRole("cell", { name: "Matematika" })).toBeVisible();
   await expect(detail.getByRole("link", { name: "Open SKL" })).toHaveAttribute(
     "href",
@@ -111,6 +115,13 @@ test("the Owner records the graduation decision, issues the SKL, opens its check
     () => ""
   );
   expect(code).toHaveLength(64);
+
+  if (
+    await page.getByRole("dialog", { name: "Acceptance Learner" }).isVisible()
+  ) {
+    await page.keyboard.press("Escape");
+    await waitForPopupsGone(page);
+  }
 
   // The e-Ijazah readiness workbook saves under the class group's name.
   const readiness = page.waitForEvent("download");

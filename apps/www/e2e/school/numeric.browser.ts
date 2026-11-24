@@ -15,13 +15,16 @@ const TRY_PATH = /\/exams\/[^/]+\/try$/u;
 /** The page of the first question, whose name starts with its number. */
 const FIRST_QUESTION = /^Question 1\b/u;
 
+/** A desktop window wide enough to show the For teachers panel beside the paper. */
+const DESKTOP = { height: 900, width: 1440 };
+
 test("a teacher turns a question into a numeric answer, keys its number with a tolerance, a fraction and a unit, and the student types a fraction", async ({
   baseURL,
   browser,
 }) => {
   const school = await Effect.runPromise(createSchool());
   const host = `${school.slug}.localhost`;
-  const context = await browser.newContext();
+  const context = await browser.newContext({ viewport: DESKTOP });
   await Effect.runPromise(
     signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
   );
