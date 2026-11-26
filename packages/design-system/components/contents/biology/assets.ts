@@ -119,3 +119,92 @@ export const HRA_PLACENTA_ASSET = {
   processedWith:
     "gltf-transform optimize --compress false --simplify-ratio 0.15 --simplify-error 0.03",
 } as const;
+
+export const HRA_LUNGS_ASSET = {
+  path: "/models/biology/hra-lungs.glb",
+  sourceTitle: "Human Reference Atlas 3D Reference Organ: Lung, Male v1.4",
+  sourceUrl:
+    "https://cdn.humanatlas.io/digital-objects/ref-organ/lung-male/v1.4/assets/3d-vh-m-lung.glb",
+  license: "CC-BY-4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+  originalSha256:
+    "bba95516fa993ac45c3b1c53f32b58d97232ffd78ae56397e5a2589c6ce4903d",
+  processedSha256:
+    "388f438ea437127314987b3c2be47883c6fe4040792d8b2cdddfa0ec206ddf23",
+  processedWith:
+    "Stripped COLOR_0 and hard NORMAL, then gltf-transform dedup, flatten, weld, simplify (ratio 0.06, error 0.02), prune",
+} as const;
+
+export const HRA_BODY_ASSET = {
+  path: "/models/biology/hra-body.glb",
+  sourceTitle: "Human Reference Atlas 3D Reference Organ: Skin, Male v1.3",
+  sourceUrl:
+    "https://cdn.humanatlas.io/digital-objects/ref-organ/skin-male/v1.3/assets/3d-vh-m-skin.glb",
+  license: "CC-BY-4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+  originalSha256:
+    "8d0963adbce98bf3606ec59467b1fe4ad69653df17dac515d4fb69026e62f064",
+  processedSha256:
+    "38df2c3e3df7bb3adc0e433b785da71974b2e7789e434baa4eee41fb93dae9d8",
+  processedWith:
+    "Stripped COLOR_0, then gltf-transform dedup, flatten, weld, simplify (ratio 0.14, error 0.015), prune",
+} as const;
+
+export const CC0_BARRAMUNDI_FISH_ASSET = {
+  path: "/models/biology/cc0-barramundi-fish.glb",
+  sourceTitle: "Barramundi Fish (Khronos glTF-Sample-Assets)",
+  sourceUrl:
+    "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/BarramundiFish/glTF-Binary/BarramundiFish.glb",
+  license: "CC0-1.0",
+  licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
+  originalSha256:
+    "ecc3bafb6b00f2c8b810863c388e3768a7b7ea0d0335e8cb8c574c266e571f4a",
+  processedSha256:
+    "3806accd67bb7bddde96852a02ad301f7ea22ba0dcba4ba8472474c305d8460a",
+  processedWith:
+    "gltf-transform optimize --compress false --texture-size 512 --texture-compress webp --simplify-ratio 0.65 --simplify-error 0.005",
+} as const;
+
+export const MIT_BIRD_FLIGHT_ASSET = {
+  path: "/models/biology/mit-bird-flight.glb",
+  sourceTitle: "Stork Flight Morph-Target Model (Three.js Examples)",
+  sourceUrl:
+    "https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/Stork.glb",
+  license: "MIT",
+  licenseUrl: "https://opensource.org/licenses/MIT",
+  originalSha256:
+    "60ca9355daaddeab33d93d6856d99c12b7ed086f989bf1a1ba288f7e96e1559b",
+  processedSha256:
+    "60ca9355daaddeab33d93d6856d99c12b7ed086f989bf1a1ba288f7e96e1559b",
+  processedWith: "Copied intact to preserve morph-target wing flap animation.",
+} as const;
+
+export const CC0_DEER_ASSET = {
+  path: "/models/biology/cc0-deer.glb",
+  sourceTitle: "Deer (Quaternius Ultimate Animals Pack)",
+  sourceUrl:
+    "https://raw.githubusercontent.com/trebeljahr/quaternius-showcase/main/public/glb/animals_pack/Deer.glb",
+  license: "CC0-1.0",
+  licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
+  originalSha256:
+    "b6558249bfb225313c35dd1b6c91d832b2031d064039bb6b3600a624a882a174",
+  processedSha256:
+    "c462a71ae68a9162e68002ca5acc7aff8667a85f3df385496a33a64ad82c37cd",
+  processedWith:
+    "Stripped unused skins, animations, JOINTS_0, WEIGHTS_0, then gltf-transform dedup, flatten, weld, prune",
+} as const;
+
+export const CC0_FOX_ASSET = {
+  path: "/models/biology/cc0-fox.glb",
+  sourceTitle: "Fox (Quaternius Ultimate Animals Pack)",
+  sourceUrl:
+    "https://raw.githubusercontent.com/trebeljahr/quaternius-showcase/main/public/glb/animals_pack/Fox.glb",
+  license: "CC0-1.0",
+  licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
+  originalSha256:
+    "1785e9ce836107276853a8a8183d7c6fa14e5befbd105d79be1fb7e38de9f446",
+  processedSha256:
+    "815fcc1f5023444485c96e28a6fcea680a22ca70ea51669a8a35ab53b34a7930",
+  processedWith:
+    "Stripped unused skins, animations, JOINTS_0, WEIGHTS_0, then gltf-transform dedup, flatten, weld, prune",
+} as const;

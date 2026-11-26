@@ -1,0 +1,29 @@
+Open-Source 3D Fauna Reference Models
+
+1. cc0-barramundi-fish.glb
+   Title: Barramundi Fish (Khronos glTF-Sample-Assets)
+   Source: https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/BarramundiFish/glTF-Binary/BarramundiFish.glb
+   License: Creative Commons Zero v1.0 Universal (CC0-1.0)
+   License URL: https://creativecommons.org/publicdomain/zero/1.0/
+   Processing: gltf-transform optimize --compress false --texture-size 512 --texture-compress webp --simplify-ratio 0.65 --simplify-error 0.005
+
+2. mit-bird-flight.glb
+   Title: Stork Flight Morph-Target Model (Three.js Examples, originally by Mirada / ro.me)
+   Source: https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/models/gltf/Stork.glb
+   License: MIT License
+   License URL: https://opensource.org/licenses/MIT
+   Processing: Copied intact to preserve morph-target wing flap animation.
+
+3. cc0-deer.glb
+   Title: Deer (Quaternius Ultimate Animals Pack)
+   Source: https://raw.githubusercontent.com/trebeljahr/quaternius-showcase/main/public/glb/animals_pack/Deer.glb
+   License: Creative Commons Zero v1.0 Universal (CC0-1.0)
+   License URL: https://creativecommons.org/publicdomain/zero/1.0/
+   Processing: Stripped unused skins, animations, JOINTS_0, WEIGHTS_0, then gltf-transform dedup, flatten, weld, prune
+
+4. cc0-fox.glb
+   Title: Fox (Quaternius Ultimate Animals Pack)
+   Source: https://raw.githubusercontent.com/trebeljahr/quaternius-showcase/main/public/glb/animals_pack/Fox.glb
+   License: Creative Commons Zero v1.0 Universal (CC0-1.0)
+   License URL: https://creativecommons.org/publicdomain/zero/1.0/
+   Processing: Stripped unused skins, animations, JOINTS_0, WEIGHTS_0, then gltf-transform dedup, flatten, weld, prune

@@ -32,3 +32,11 @@ Included optimized GLB files:
 5. hra-placenta.glb
    Source: https://cdn.humanatlas.io/digital-objects/ref-organ/placenta-full-term-female/v1.1/assets/3d-vh-f-placenta-full-term.glb
    Processing: gltf-transform optimize (dedup, weld, simplify --ratio 0.15 --error 0.03)
+
+6. hra-lungs.glb
+   Source: https://cdn.humanatlas.io/digital-objects/ref-organ/lung-male/v1.4/assets/3d-vh-m-lung.glb
+   Processing: Stripped COLOR_0 and hard NORMAL, then gltf-transform dedup, flatten, weld, simplify (ratio 0.06, error 0.02), prune
+
+7. hra-body.glb
+   Source: https://cdn.humanatlas.io/digital-objects/ref-organ/skin-male/v1.3/assets/3d-vh-m-skin.glb
+   Processing: Stripped COLOR_0, then gltf-transform dedup, flatten, weld, simplify (ratio 0.14, error 0.015), prune
