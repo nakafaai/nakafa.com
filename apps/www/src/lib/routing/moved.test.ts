@@ -51,6 +51,36 @@ describe("readMovedRedirect", () => {
       location: "/en/curriculum/merdeka/class-11",
       status: 308,
     });
+    expect(
+      Option.getOrThrow(
+        readAt("/de/lehrplaene/singapur-moe/sekundarstufe/naturwissenschaften")
+      )
+    ).toEqual({
+      location: "/de/lehrplaene/singapur-moe/sekundarstufe",
+      status: 308,
+    });
+    expect(
+      Option.getOrThrow(
+        readAt("/en/curriculum/singapore-moe/secondary/science")
+      )
+    ).toEqual({
+      location: "/en/curriculum/singapore-moe/secondary",
+      status: 308,
+    });
+    expect(
+      Option.getOrThrow(readAt("/id/kurikulum/singapore-moe/secondary/sains"))
+    ).toEqual({
+      location: "/id/kurikulum/singapore-moe/secondary",
+      status: 308,
+    });
+    expect(
+      Option.getOrThrow(
+        readAt("/ms/kurikulum/singapore-moe/sekolah-menengah/sains")
+      )
+    ).toEqual({
+      location: "/ms/kurikulum/singapore-moe/sekolah-menengah",
+      status: 308,
+    });
     expect(Option.isNone(readAt("/id/latihan/tka/matematika"))).toBe(true);
   });
 
