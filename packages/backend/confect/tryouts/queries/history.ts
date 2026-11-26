@@ -1,3 +1,4 @@
+import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { loadActiveAssessment } from "@repo/backend/confect/tryouts/active";
@@ -6,6 +7,7 @@ import {
   readCatalogSet,
 } from "@repo/backend/confect/tryouts/catalog/rows";
 import type { TryoutSetIdentity } from "@repo/backend/confect/tryouts/route";
+import { readAttemptDestination } from "@repo/backend/confect/tryouts/runtime/attempt/destination";
 import {
   loadAttemptSections,
   readAttemptResume,
@@ -83,16 +85,67 @@ export function homeOrder<
 }
 
 /**
+ * Resolves the active catalog row and verified route for an attempt in `targetLocale`, none when the set
+ * is not published in that locale or cannot open that attempt there.
+ */
+const readRecentCatalog = Effect.fn(
+  "tryouts.queries.history.readRecentCatalog"
+)(function* (
+  snapshotId: string,
+  attempt: Docs["tryoutAttempts"],
+  targetLocale: AppLocaleCode
+) {
+  const country = {
+    appLocale: targetLocale,
+    countryKey: attempt.countryKey,
+  };
+  const [found, place, track, destination] = yield* Effect.all(
+    [
+      readCatalogSet(snapshotId, attempt.setIdentity, targetLocale),
+      readCatalogNode(snapshotId, { ...country, kind: "country" }),
+      readCatalogNode(snapshotId, {
+        ...country,
+        examKey: attempt.examKey,
+        kind: "track",
+        trackKey: attempt.trackKey,
+      }),
+      targetLocale === attempt.appLocale ||
+      attempt.assessmentSnapshotId === snapshotId
+        ? Effect.succeed(attempt.setPublicPath)
+        : readAttemptDestination(attempt, targetLocale),
+    ],
+    { concurrency: "unbounded" }
+  );
+  if (
+    Option.isNone(found) ||
+    Option.isNone(place) ||
+    Option.isNone(track) ||
+    destination === null
+  ) {
+    return Option.none();
+  }
+  return Option.some({
+    countryCode: place.value.countryCode,
+    locale: targetLocale,
+    sections: found.value.sections,
+    set: found.value.set,
+    track: track.value.title,
+  });
+});
+
+/**
  * The try-outs the current app user sat last, one row a set, in the order the home shows them
- * (`homeOrder`): the set by the titles the active release gives its track and itself in the language
- * it was sat in, its country's flag code and its exam's key for its picture, the part to go on with
- * while it runs, how its newest attempt stands, its time, its answered and right questions, and its
- * published score once it has one. A set the active release no longer publishes has no page to open,
- * so it is left out. Each set is a few small reads by its identity, never the whole catalog.
+ * (`homeOrder`): the set by the titles and localized route the active release gives its track and
+ * itself in the viewer's `locale` (falling back to the locale the attempt was sat in when the set
+ * is not published in `locale`), its country's flag code and its exam's key for its picture, the
+ * part to go on with while it runs, how its newest attempt stands, its time, its answered and right
+ * questions, and its published score once it has one. A set the active release no longer publishes
+ * has no page to open, so it is left out. Each set is a few small reads by its identity, never the
+ * whole catalog.
  */
 export const readRecentAttempts = Effect.fn(
   "tryouts.queries.history.readRecent"
-)(function* () {
+)(function* (locale: AppLocaleCode) {
   const { appUser } = yield* requireAuth();
   const { snapshotId } = yield* loadActiveAssessment();
   const attempts = yield* readNewestAttempts(appUser._id, RECENT_ATTEMPTS_READ);
@@ -106,41 +159,26 @@ export const readRecentAttempts = Effect.fn(
   const rows = yield* Effect.forEach(
     homeOrder(newest),
     Effect.fn("tryouts.queries.history.projectRecent")(function* (attempt) {
-      const found = yield* readCatalogSet(
-        snapshotId,
-        attempt.setIdentity,
-        attempt.appLocale
-      );
-      const country = {
-        appLocale: attempt.appLocale,
-        countryKey: attempt.countryKey,
-      };
-      const [place, track] = yield* Effect.all(
-        [
-          readCatalogNode(snapshotId, { ...country, kind: "country" }),
-          readCatalogNode(snapshotId, {
-            ...country,
-            examKey: attempt.examKey,
-            kind: "track",
-            trackKey: attempt.trackKey,
-          }),
-        ],
-        { concurrency: "unbounded" }
-      );
-      if (
-        Option.isNone(found) ||
-        Option.isNone(place) ||
-        Option.isNone(track)
-      ) {
+      const primary = yield* readRecentCatalog(snapshotId, attempt, locale);
+      let resolved = primary;
+      if (Option.isNone(resolved) && locale !== attempt.appLocale) {
+        resolved = yield* readRecentCatalog(
+          snapshotId,
+          attempt,
+          attempt.appLocale
+        );
+      }
+      if (Option.isNone(resolved)) {
         return Option.none();
       }
+      const catalog = resolved.value;
       const [result, sections] = yield* Effect.all(
         [loadAttemptScoreResult(attempt), loadAttemptSections(attempt)],
         { concurrency: "unbounded" }
       );
       const { resumeSectionKey } = readAttemptResume(attempt, sections);
       const part = Arr.findFirst(
-        found.value.sections,
+        catalog.sections,
         (section) =>
           attempt.status === "in-progress" &&
           section.sectionKey === resumeSectionKey
@@ -153,16 +191,17 @@ export const readRecentAttempts = Effect.fn(
         ),
         attemptId: attempt._id,
         correct: attempt.totalCorrect,
-        countryCode: place.value.countryCode,
+        countryCode: catalog.countryCode,
         examKey: attempt.examKey,
         expiresAt: attempt.expiresAt,
+        locale: catalog.locale,
         part: Option.getOrNull(
           Option.map(part, (section) => ({
             key: section.sectionKey,
             title: section.title,
           }))
         ),
-        publicPath: found.value.set.publicPath,
+        publicPath: catalog.set.publicPath,
         questions: attempt.totalQuestions,
         score: Option.getOrNull(
           Option.map(
@@ -172,8 +211,8 @@ export const readRecentAttempts = Effect.fn(
         ),
         startedAt: attempt.startedAt,
         status: attempt.status,
-        title: found.value.set.title,
-        track: track.value.title,
+        title: catalog.set.title,
+        track: catalog.track,
       });
     }),
     { concurrency: "unbounded" }

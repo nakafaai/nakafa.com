@@ -182,6 +182,35 @@ describe("tryout route paths", () => {
         getTryoutPageTarget({ publicPath: "try-out/indonesia/snbt/2027" })
       )
     ).toBe(true);
+    expect(getTryoutPublicPathTarget("try-out", "id")).toEqual(
+      Option.some({
+        from: "/$locale",
+        params: { locale: "id" },
+        to: "/$locale/try-out",
+      })
+    );
+    expect(
+      getTryoutPageTarget({
+        attemptId: "attempt-1",
+        locale: "id",
+        publicPath:
+          "try-out/jerman/aufnahmepruefung/studienkolleg-tu-darmstadt/matematika/set-6",
+      })
+    ).toEqual(
+      Option.some({
+        from: "/$locale",
+        params: {
+          country: "jerman",
+          exam: "aufnahmepruefung",
+          group: "studienkolleg-tu-darmstadt",
+          locale: "id",
+          set: "set-6",
+          track: "matematika",
+        },
+        search: { attemptId: "attempt-1" },
+        to: "/$locale/try-out/$country/$exam/$group/$track/$set",
+      })
+    );
   });
 
   it("builds the catalog href when no route coordinate is given", () => {

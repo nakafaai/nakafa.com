@@ -4075,6 +4075,8 @@
     "badge-sections-hint": "{count} von {next} Try-out-Teilen",
     "badge-sets-hint": "{count} von {next} Try-out-Sets",
     "leaders-title": "Bestenliste",
+    "leaders-empty-title": "Noch keine Einträge",
+    "leaders-empty-description": "Schließ eine Lektion oder ein Try-out ab, um deine ersten Sterne zu sammeln und in Führung zu gehen.",
     "you": "{name} (du)"
   },
   "Faq": {

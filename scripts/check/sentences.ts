@@ -105,6 +105,7 @@ export const SENTENCE_KEYS = HashSet.make(
   "PricingPage.faq.17.answer",
   "PricingPage.faq.6.answer",
   "PricingPage.faq.9.answer",
+  "Progress.leaders-empty-description",
   "SchoolEntry.outsider-description",
   "SchoolSettings.card-code-description",
   "SchoolSettings.cohort-edit-description",

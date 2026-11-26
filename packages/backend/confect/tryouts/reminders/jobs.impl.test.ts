@@ -110,7 +110,10 @@ describe("tryouts/reminders/jobs", () => {
         expect(inbox.page).toMatchObject([
           {
             changeType: "tryout.reminder",
-            set: { setKey: "set-1" },
+            set: {
+              locale: "id",
+              publicPath: expect.stringContaining("set-1"),
+            },
           },
         ]);
         yield* Effect.promise(() =>

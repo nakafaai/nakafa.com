@@ -79,7 +79,7 @@ function HomePage() {
                   "flex min-w-0 flex-col gap-6 py-6"
                 )}
               >
-                <HomeStreak name={Option.fromUndefinedOr(name)} />
+                <HomeStreak name={Option.fromUndefinedOr(name)} now={now} />
                 <ClockProvider renderedAt={now}>
                   <HomeTryouts attempts={attempts} start={start} />
                 </ClockProvider>

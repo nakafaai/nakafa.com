@@ -60,7 +60,7 @@ export const homeScreenHandler = accountHandler(
           readOptional(progress.queries.growth, {}, token),
           readOptional(progress.queries.week, {}, token),
           readOptional(progress.queries.leaders, {}, token),
-          readOptional(tryouts.queries.history.recent, {}, token),
+          readOptional(tryouts.queries.history.recent, { locale }, token),
           readOptional(
             learningPreferences.queries.getCurrentTryout,
             { locale },

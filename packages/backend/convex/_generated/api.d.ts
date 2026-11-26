@@ -13511,10 +13511,8 @@ export declare const api: {
                 id: Id<"notifications">;
                 readAt?: number;
                 set: {
-                  countryKey: string;
-                  examKey: string;
-                  setKey: string;
-                  trackKey: string;
+                  locale: "en" | "id" | "de" | "ms";
+                  publicPath: string;
                 } | null;
               }
           >;
@@ -13607,10 +13605,8 @@ export declare const api: {
             id: Id<"notifications">;
             readAt?: number;
             set: {
-              countryKey: string;
-              examKey: string;
-              setKey: string;
-              trackKey: string;
+              locale: "en" | "id" | "de" | "ms";
+              publicPath: string;
             } | null;
           }
       >;
@@ -18077,7 +18073,7 @@ export declare const api: {
         recent: FunctionReference<
           "query",
           "public",
-          {},
+          { locale: "en" | "id" | "de" | "ms" },
           Array<{
             answered: number;
             attemptId: Id<"tryoutAttempts">;
@@ -18085,6 +18081,7 @@ export declare const api: {
             countryCode: string;
             examKey: string;
             expiresAt: number;
+            locale: "en" | "id" | "de" | "ms";
             part: { key: string; title: string } | null;
             publicPath: string;
             questions: number;

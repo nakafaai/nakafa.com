@@ -20,7 +20,7 @@ import {
 import * as m from "motion/react-m";
 import { useTranslations } from "use-intl";
 import { useProgress } from "@/components/progress/context";
-import { weekBars } from "@/components/progress/level";
+import { emptyWeek, weekBars } from "@/components/progress/level";
 import { LevelMeter } from "@/components/progress/meter";
 import { usePanes, useWide } from "@/components/shared/page/panes";
 import { useCurrentLocale } from "@/lib/routing/link";
@@ -85,7 +85,13 @@ function WeekDay({ bar }: { bar: Bar }) {
  * of this place, and a press on her makes the flame flare. Nothing here takes
  * the primary colour: that belongs to the header's button.
  */
-export function HomeStreak({ name }: { name: Option.Option<string> }) {
+export function HomeStreak({
+  name,
+  now,
+}: {
+  name: Option.Option<string>;
+  now: number;
+}) {
   const t = useTranslations("Home");
   const tProgress = useTranslations("Progress");
   const wide = useWide();
@@ -94,10 +100,8 @@ export function HomeStreak({ name }: { name: Option.Option<string> }) {
   const showSheet = usePanes((state) => state.showSheet);
   const { week } = useProgress();
   const days = week?.streak ?? 0;
-  const { bars, learnedToday, stars } = weekBars(
-    week?.days ?? [],
-    week?.today ?? ""
-  );
+  const current = week ?? emptyWeek(now);
+  const { bars, learnedToday, stars } = weekBars(current.days, current.today);
   let sentence = t("hero-start");
   if (learnedToday) {
     sentence = t("hero-kept", { days });
@@ -113,46 +117,50 @@ export function HomeStreak({ name }: { name: Option.Option<string> }) {
           </h2>
           <p className="text-muted-foreground truncate">{sentence}</p>
         </div>
-        <div className="flex flex-col gap-4 border-t p-4 sm:flex-row sm:items-center">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <div
-              className="-ms-3 flex shrink-0 items-end"
-              onPointerDown={() => {
-                if (!still) {
-                  fan.start({
-                    scale: [1, 1.18, 1],
-                    transition: { duration: 0.5, ease: [0.23, 1, 0.32, 1] },
-                  });
-                }
-              }}
-            >
-              <Nina act="fanning" label="" size={76} whole />
-              <LazyMotion features={domAnimation} strict>
-                <m.div
-                  animate={fan}
-                  className="flex size-14 origin-bottom items-end"
-                >
-                  <Flame
-                    className="max-h-full max-w-full"
-                    stage={tierOf(days)}
-                  />
-                </m.div>
-              </LazyMotion>
+        <div className="@container border-t p-4">
+          <div className="flex flex-col gap-4 @2xl:flex-row @2xl:items-center">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div
+                className="-ms-3 flex shrink-0 items-end"
+                onPointerDown={() => {
+                  if (!still) {
+                    fan.start({
+                      scale: [1, 1.18, 1],
+                      transition: { duration: 0.5, ease: [0.23, 1, 0.32, 1] },
+                    });
+                  }
+                }}
+              >
+                <Nina act="fanning" label="" size={76} whole />
+                <LazyMotion features={domAnimation} strict>
+                  <m.div
+                    animate={fan}
+                    className="flex size-14 origin-bottom items-end"
+                  >
+                    <Flame
+                      className="max-h-full max-w-full"
+                      stage={tierOf(days)}
+                    />
+                  </m.div>
+                </LazyMotion>
+              </div>
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="truncate font-medium">
+                  {t("streak", { days })}
+                </span>
+                <span className="text-muted-foreground truncate text-sm">
+                  {t("week-stars", { stars })}
+                </span>
+              </div>
             </div>
-            <div className="flex min-w-0 flex-col gap-0.5">
-              <span className="truncate font-medium">
-                {t("streak", { days })}
-              </span>
-              <span className="text-muted-foreground truncate text-sm">
-                {t("week-stars", { stars })}
-              </span>
-            </div>
+            {bars.length === 0 ? null : (
+              <ol className="flex min-w-0 gap-1 @2xl:w-80 @2xl:shrink-0">
+                {Arr.map(bars, (bar) => (
+                  <WeekDay bar={bar} key={bar.day} />
+                ))}
+              </ol>
+            )}
           </div>
-          <ol className="flex min-w-0 gap-1 sm:w-88">
-            {Arr.map(bars, (bar) => (
-              <WeekDay bar={bar} key={bar.day} />
-            ))}
-          </ol>
         </div>
         {wide ? null : (
           <footer className="flex items-center gap-3 border-t p-4">

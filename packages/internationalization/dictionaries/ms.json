@@ -4075,6 +4075,8 @@
     "badge-sections-hint": "{count} daripada {next} bahagian try-out",
     "badge-sets-hint": "{count} daripada {next} set try-out",
     "leaders-title": "Papan pendahulu",
+    "leaders-empty-title": "Belum ada pendahulu",
+    "leaders-empty-description": "Habiskan satu pelajaran atau try-out untuk dapat Bintang pertamamu dan dahului carta.",
     "you": "{name} (kamu)"
   },
   "Faq": {
