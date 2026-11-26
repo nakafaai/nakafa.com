@@ -418,6 +418,17 @@ test("the Level filter draws each level with the bars its rows draw", async ({
 }) => {
   await page.setViewportSize({ height: 900, width: 1440 });
   await visit(page, trackHref);
+  const readBarWidths = (scope: ReturnType<Page["locator"]>) =>
+    scope
+      .locator('span[aria-hidden="true"] > span')
+      .evaluateAll((bars) =>
+        bars.map((bar) => bar.getBoundingClientRect().width)
+      );
+  const rowWidths = await readBarWidths(
+    page.locator("tbody tr").first().locator("td").nth(1)
+  );
+  expect(rowWidths).toHaveLength(4);
+  expect(Math.min(...rowWidths)).toBeGreaterThanOrEqual(3);
   await page
     .locator("thead")
     .getByRole("button", { name: LEVEL_HEAD })
@@ -429,9 +440,9 @@ test("the Level filter draws each level with the bars its rows draw", async ({
       name: level,
     });
     await expect(option).toBeVisible();
-    await expect(option.locator('span[aria-hidden="true"] > span')).toHaveCount(
-      4
-    );
+    const widths = await readBarWidths(option);
+    expect(widths).toHaveLength(4);
+    expect(Math.min(...widths)).toBeGreaterThanOrEqual(1);
   }
 });
 
