@@ -175,7 +175,7 @@ test("keeps try-out catalog cards one title line tall on a phone and desktop", a
       }
     });
 
-  for (const width of [320, 1440]) {
+  for (const width of [320, 1024, 1440]) {
     await page.setViewportSize({ height: 844, width });
     await expect(heading).toHaveCSS("text-overflow", "ellipsis");
     await expect(heading).toHaveCSS("white-space", "nowrap");
@@ -186,7 +186,7 @@ test("keeps try-out catalog cards one title line tall on a phone and desktop", a
       );
     expect(heights.length).toBeGreaterThan(1);
     expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(0.1);
-    if (width === 1440) {
+    if (width === 1024) {
       expect(
         await heading.evaluate((title) => title.scrollWidth > title.clientWidth)
       ).toBe(true);
