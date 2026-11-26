@@ -1,6 +1,19 @@
 import { useFrame, useThree } from "@react-three/fiber";
+import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
+import {
+  CYL_FLOOR,
+  CYL_INNER_R,
+  GasCylinder,
+  PistonAssembly,
+  RetortStand,
+  RIG_Z,
+} from "@repo/design-system/components/contents/chemistry/avogadro/apparatus";
 import type { GasCondition } from "@repo/design-system/components/contents/chemistry/avogadro/model";
 import { evaluateAvogadroGas } from "@repo/design-system/components/contents/chemistry/avogadro/model";
+import {
+  GlassThermometer,
+  THERM_X,
+} from "@repo/design-system/components/contents/chemistry/avogadro/thermometer";
 import {
   SimulationTicker,
   simulationStep,
@@ -8,11 +21,16 @@ import {
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
+import {
+  useVisualScene,
+  useVisualStop,
+} from "@repo/design-system/components/visual/card";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { Array as Arr } from "effect";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
+
+const MAX_MOLECULES = 24;
 
 function AvogadroCamera() {
   const narrow = isNarrowThreeScene(
@@ -21,13 +39,62 @@ function AvogadroCamera() {
   );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0, 1.55, 3.35] : [0, 1.32, 2.7]}
-      cameraTarget={[0, 0.65, 0]}
-      fov={38}
-      maxDistance={5.8}
-      minDistance={1.4}
+      cameraPosition={narrow ? [0, 0.36, 1.24] : [0, 0.29, 0.94]}
+      cameraTarget={[0.01, 0.21, 0.02]}
+      fov={37}
+      maxDistance={2.4}
+      minDistance={0.4}
     />
   );
+}
+
+/** Deterministic triangle-wave bounce in [0, 1] for analytical reflection without drift. */
+function triangleWave(value: number): number {
+  const wrapped = ((value % 2) + 2) % 2;
+  return wrapped <= 1 ? wrapped : 2 - wrapped;
+}
+
+function createMoleculeSeeds() {
+  return Arr.makeBy(MAX_MOLECULES, (idx) => {
+    const angle = idx * 2.399_96;
+    const radFrac = 0.22 + ((idx * 17) % 10) * 0.072;
+    return {
+      id: `m-${idx}`,
+      ox: Math.cos(angle) * radFrac,
+      oy: ((idx * 31 + 7) % 100) / 100,
+      oz: Math.sin(angle) * radFrac,
+      rx: idx * 0.7,
+      ry: idx * 1.1,
+      vx: 0.72 + ((idx * 13) % 7) * 0.14,
+      vy: 0.85 + ((idx * 19) % 7) * 0.16,
+      vz: 0.68 + ((idx * 11) % 7) * 0.15,
+    };
+  });
+}
+
+function moleculeCoords(
+  seed: {
+    readonly ox: number;
+    readonly oy: number;
+    readonly oz: number;
+    readonly vx: number;
+    readonly vy: number;
+    readonly vz: number;
+  },
+  phase: number,
+  pistonY: number
+): readonly [number, number, number] {
+  const maxR = CYL_INNER_R - 0.016;
+  const minY = CYL_FLOOR + 0.012;
+  const maxY = Math.max(minY + 0.012, pistonY - 0.02);
+  const rawX =
+    (triangleWave((seed.ox + 1) * 0.5 + phase * seed.vx) * 2 - 1) * maxR;
+  const rawZ =
+    (triangleWave((seed.oz + 1) * 0.5 + phase * seed.vz) * 2 - 1) * maxR;
+  const dist = Math.hypot(rawX, rawZ);
+  const clamp = dist > maxR ? maxR / dist : 1;
+  const y = minY + triangleWave(seed.oy + phase * seed.vy) * (maxY - minY);
+  return [rawX * clamp, y, RIG_Z + rawZ * clamp] as const;
 }
 
 export function AvogadroGasScene({
@@ -45,125 +112,143 @@ export function AvogadroGasScene({
   >;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
-  const swarmRef = useRef<Group>(null);
-  const phaseRef = useRef(0);
-  const reading = evaluateAvogadroGas(condition, moles);
+  const invalidate = useThree((state) => state.invalidate);
+  const labelInk = useLabelInk();
 
+  const moleculeRefs = useRef<(Group | null)[]>([]);
+  const phaseRef = useRef(0);
+
+  const reading = evaluateAvogadroGas(condition, moles);
   const pistonY = Math.min(
-    1.1,
-    Math.max(0.26, 0.16 + (reading.volumeDm3 / 75) * 0.94)
+    0.278,
+    Math.max(0.088, 0.068 + (reading.volumeDm3 / 75) * 0.215)
   );
-  const particleCount = Math.min(12, Math.max(3, Math.round(moles * 4)));
-  const particles = useMemo(
-    () =>
-      Arr.makeBy(particleCount, (index) => ({
-        id: `g-${index}`,
-        x: -0.2 + (index % 3) * 0.2,
-        y: 0.12 + ((index + 0.5) / particleCount) * (pistonY - 0.2),
-        z: index % 2 === 0 ? -0.1 : 0.1,
-      })),
-    [particleCount, pistonY]
+  const moleculeCount = Math.min(
+    MAX_MOLECULES,
+    Math.max(6, Math.round(moles * 8))
   );
+  const seeds = useMemo(createMoleculeSeeds, []);
+  const activeSeeds = useMemo(
+    () => Arr.take(seeds, moleculeCount),
+    [moleculeCount, seeds]
+  );
+
+  const syncMolecules = (phase: number) => {
+    for (let i = 0; i < activeSeeds.length; i += 1) {
+      const group = moleculeRefs.current[i];
+      const seed = activeSeeds[i];
+      if (group !== null && group !== undefined && seed !== undefined) {
+        const [x, y, z] = moleculeCoords(seed, phase, pistonY);
+        group.position.set(x, y, z);
+        group.rotation.set(seed.rx + phase * 3.1, seed.ry + phase * 2.4, 0);
+      }
+    }
+  };
+
+  useEffect(() => {
+    syncMolecules(phaseRef.current);
+  });
+
+  useVisualStop(() => {
+    phaseRef.current = 0;
+    syncMolecules(0);
+    invalidate();
+  });
 
   useFrame((_, delta) => {
-    if (!playing || swarmRef.current === null) {
+    if (!playing) {
       return;
     }
-    phaseRef.current +=
-      simulationStep(delta) * (condition === "rtp" ? 2.4 : 1.6);
-    swarmRef.current.rotation.y = Math.sin(phaseRef.current) * 0.22;
+    const speed = condition === "rtp" ? 1.55 : 0.92;
+    phaseRef.current += simulationStep(delta) * speed;
+    syncMolecules(phaseRef.current);
   });
+
+  const moleculeColor =
+    condition === "rtp" ? PROCESS_COLORS.ammoniaCyan : PROCESS_COLORS.coldBlue;
 
   return (
     <group>
       <SimulationTicker running={playing} />
       <AvogadroCamera />
-      {/* Graduated glass gas cylinder */}
-      <mesh position={[0, 0.62, 0]}>
-        <cylinderGeometry args={[0.38, 0.38, 1.12, 24, 1, true]} />
-        <meshStandardMaterial
-          color={PROCESS_COLORS.glassClear}
-          opacity={0.34}
-          side={2}
-          transparent
-        />
-      </mesh>
-      {/* Movable metallic piston */}
-      <mesh castShadow position={[0, pistonY, 0]}>
-        <cylinderGeometry args={[0.36, 0.36, 0.08, 22]} />
-        <meshStandardMaterial
-          color={PROCESS_COLORS.alloySteel}
-          metalness={0.5}
-          roughness={0.35}
-        />
-      </mesh>
-      <mesh position={[0, pistonY + 0.22, 0]}>
-        <cylinderGeometry args={[0.04, 0.04, 0.38, 12]} />
-        <meshStandardMaterial color={PROCESS_COLORS.ironDark} />
-      </mesh>
-      {/* Gas molecules bouncing beneath piston */}
-      <group ref={swarmRef}>
-        {Arr.map(particles, (particle) => (
-          <mesh
-            key={particle.id}
-            position={[particle.x, particle.y, particle.z]}
-          >
-            <sphereGeometry args={[0.044, 12, 10]} />
-            <meshStandardMaterial
-              color={
-                condition === "rtp"
-                  ? PROCESS_COLORS.ammoniaCyan
-                  : PROCESS_COLORS.coldBlue
-              }
-              roughness={0.25}
-            />
-          </mesh>
-        ))}
+      <RetortStand />
+      <GasCylinder />
+      <PistonAssembly pistonY={pistonY} />
+      <GlassThermometer condition={condition} />
+
+      {/* 3D diatomic gas molecules bouncing beneath the piston */}
+      <group>
+        {Arr.map(activeSeeds, (seed, index) => {
+          const initPos = moleculeCoords(seed, 0, pistonY);
+          return (
+            <group
+              key={seed.id}
+              position={initPos}
+              ref={(el) => {
+                moleculeRefs.current[index] = el;
+              }}
+              rotation={[seed.rx, seed.ry, 0]}
+            >
+              <mesh position={[-0.0046, 0, 0]}>
+                <sphereGeometry args={[0.0064, 14, 12]} />
+                <meshPhysicalMaterial
+                  clearcoat={0.65}
+                  clearcoatRoughness={0.14}
+                  color={moleculeColor}
+                  emissive={moleculeColor}
+                  emissiveIntensity={0.22}
+                  roughness={0.22}
+                />
+              </mesh>
+              <mesh position={[0.0046, 0, 0]}>
+                <sphereGeometry args={[0.0064, 14, 12]} />
+                <meshPhysicalMaterial
+                  clearcoat={0.65}
+                  clearcoatRoughness={0.14}
+                  color={moleculeColor}
+                  emissive={moleculeColor}
+                  emissiveIntensity={0.22}
+                  roughness={0.22}
+                />
+              </mesh>
+            </group>
+          );
+        })}
       </group>
-      {/* Side thermometer */}
-      <mesh position={[0.58, 0.56, 0]}>
-        <cylinderGeometry args={[0.032, 0.032, 0.84, 12]} />
-        <meshStandardMaterial
-          color={
-            condition === "rtp"
-              ? PROCESS_COLORS.weakAcidOrange
-              : PROCESS_COLORS.coldBlue
-          }
-        />
-      </mesh>
-      {/* Labels */}
+
+      {/* Adaptive labels */}
       <ThreeLabel
-        color={PROCESS_COLORS.labelInk}
+        color={labelInk}
         fontSize="compact"
-        position={[0, pistonY + 0.48, 0]}
+        position={[0, pistonY + 0.168, RIG_Z]}
       >
         <span>{parts.piston}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={PROCESS_COLORS.labelInk}
+        color={labelInk}
         fontSize="compact"
-        position={[-0.74, 0.9, 0]}
+        position={[-0.185, 0.305, RIG_Z + 0.03]}
       >
         <span>{parts.cylinder}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={PROCESS_COLORS.labelInk}
+        color={labelInk}
         fontSize="compact"
-        position={[-0.76, 0.48, 0]}
+        position={[-0.185, 0.162, RIG_Z + 0.05]}
       >
         <span>{parts.volumeScale}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={PROCESS_COLORS.labelInk}
+        color={labelInk}
         fontSize="compact"
-        position={[0.88, 0.72, 0]}
+        position={[THERM_X + 0.088, 0.255, RIG_Z + 0.02]}
       >
         <span>{parts.thermometer}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={PROCESS_COLORS.labelInk}
+        color={labelInk}
         fontSize="compact"
-        position={[0.74, 0.26, 0]}
+        position={[0.165, 0.068, RIG_Z + 0.085]}
       >
         <span>{parts.gasParticles}</span>
       </ThreeLabel>

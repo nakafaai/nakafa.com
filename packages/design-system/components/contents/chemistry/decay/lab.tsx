@@ -9,11 +9,14 @@ import {
 import { HandSlider } from "@repo/design-system/components/contents/chemistry/slider";
 import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
 import { useCycleClock } from "@repo/design-system/components/contents/simulation/clock";
+import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
+  useVisualScene,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -24,6 +27,9 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -152,9 +158,18 @@ export function RadioactiveDecayLab({
   );
 }
 
+const TRAY_SPAN = SIDE * 0.5 + 0.6;
+const CORNER_BOLTS = [
+  [-TRAY_SPAN / 2 + 0.22, -TRAY_SPAN / 2 + 0.22],
+  [TRAY_SPAN / 2 - 0.22, -TRAY_SPAN / 2 + 0.22],
+  [-TRAY_SPAN / 2 + 0.22, TRAY_SPAN / 2 - 0.22],
+  [TRAY_SPAN / 2 - 0.22, TRAY_SPAN / 2 - 0.22],
+] as const;
+
 /**
- * The nuclei on a square sample: carbon-14 dark, nitrogen-14 violet. While
- * the card plays, time runs and reports back to the card a few times a second.
+ * The nuclei on a machined radiometric aluminium specimen tray with a side
+ * Geiger-Muller detector probe: carbon-14 dark graphite, nitrogen-14 violet,
+ * and a brief golden beta-emission flash at the moment of decay.
  */
 function DecaySample({
   onTime,
@@ -165,6 +180,7 @@ function DecaySample({
   readonly times: readonly number[];
   readonly years: number;
 }) {
+  const playing = useVisualScene((card) => card.playing, false);
   const mesh = useRef<InstancedMesh>(null);
   const totalYears = HALF_LIVES * CARBON_HALF_LIFE;
   const clock = useCycleClock({
@@ -177,6 +193,8 @@ function DecaySample({
   });
   const carbon = useMemo(() => new Color(getColor("NEUTRAL", 800)), []);
   const nitrogen = useMemo(() => new Color(PLOT_COLORS.violet), []);
+  const flash = useMemo(() => new Color(INSTRUMENT_COLORS.tapeYellow), []);
+  const activity = 0.5 ** (years / CARBON_HALF_LIFE);
 
   useLayoutEffect(() => {
     const instances = mesh.current;
@@ -191,7 +209,7 @@ function DecaySample({
     )) {
       place.position.set(
         ((site % SIDE) - (SIDE - 1) / 2) * 0.5,
-        0.2,
+        0.24,
         (Math.floor(site / SIDE) - (SIDE - 1) / 2) * 0.5
       );
       place.scale.setScalar(0.19);
@@ -206,11 +224,19 @@ function DecaySample({
     if (instances === null) {
       return;
     }
+    const now = clock.current;
     for (const [index, decay] of Arr.map(
       times,
       (time, at) => [at, time] as const
     )) {
-      instances.setColorAt(index, decay > clock.current ? carbon : nitrogen);
+      const recentBeta = playing && decay <= now && now - decay < 140;
+      let tone = nitrogen;
+      if (recentBeta) {
+        tone = flash;
+      } else if (decay > now) {
+        tone = carbon;
+      }
+      instances.setColorAt(index, tone);
     }
     if (instances.instanceColor !== null) {
       instances.instanceColor.needsUpdate = true;
@@ -219,13 +245,59 @@ function DecaySample({
 
   return (
     <group>
-      <mesh position={[0, 0.02, 0]} receiveShadow>
-        <boxGeometry args={[SIDE * 0.5 + 0.4, 0.04, SIDE * 0.5 + 0.4]} />
-        <meshStandardMaterial color={getColor("STONE", 600)} roughness={0.8} />
+      <SimulationTicker running={playing} />
+      {/* Machined dark anodised radiometric specimen tray with brass border & corner screws */}
+      <mesh position={[0, 0.04, 0]} receiveShadow>
+        <boxGeometry args={[TRAY_SPAN + 0.55, 0.08, TRAY_SPAN + 0.55]} />
+        <MetalMaterial color={CAR_COLORS.castIron} roughness={0.52} />
       </mesh>
-      <instancedMesh args={[undefined, undefined, times.length]} ref={mesh}>
-        <sphereGeometry args={[1, 14, 10]} />
-        <meshPhysicalMaterial clearcoat={0.6} roughness={0.35} />
+      <mesh position={[0, 0.085, 0]} receiveShadow>
+        <boxGeometry args={[TRAY_SPAN, 0.03, TRAY_SPAN]} />
+        <meshPhysicalMaterial
+          clearcoat={0.25}
+          color={BENCH_COLORS.epoxy}
+          roughness={0.58}
+        />
+      </mesh>
+      {Arr.map(CORNER_BOLTS, ([bx, bz]) => (
+        <mesh castShadow key={`bolt-${bx}-${bz}`} position={[bx, 0.108, bz]}>
+          <cylinderGeometry args={[0.14, 0.14, 0.06, 6]} />
+          <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.28} />
+        </mesh>
+      ))}
+      {/* Side-mounted Geiger-Muller detector probe with activity LED */}
+      <group
+        position={[TRAY_SPAN / 2 + 0.95, 0.55, -0.6]}
+        rotation={[0, 0, 0.28]}
+      >
+        <mesh castShadow>
+          <cylinderGeometry args={[0.28, 0.3, 2.2, 24]} />
+          <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.32} />
+        </mesh>
+        <mesh position={[0, -1.18, 0]}>
+          <cylinderGeometry args={[0.32, 0.24, 0.24, 24]} />
+          <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.26} />
+        </mesh>
+        <mesh position={[0, 0.82, 0.28]}>
+          <sphereGeometry args={[0.1, 14, 12]} />
+          <meshStandardMaterial
+            color={INSTRUMENT_COLORS.statusLed}
+            emissive={INSTRUMENT_COLORS.statusLed}
+            emissiveIntensity={0.25 + activity * 1.4}
+          />
+        </mesh>
+      </group>
+      <instancedMesh
+        args={[undefined, undefined, times.length]}
+        castShadow
+        ref={mesh}
+      >
+        <sphereGeometry args={[1, 16, 12]} />
+        <meshPhysicalMaterial
+          clearcoat={0.68}
+          clearcoatRoughness={0.14}
+          roughness={0.3}
+        />
       </instancedMesh>
     </group>
   );

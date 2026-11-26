@@ -17,9 +17,6 @@ export const CONSTANT_COMPOSITION_MODE_IDS = [
 export type ConstantCompositionModeId =
   (typeof CONSTANT_COMPOSITION_MODE_IDS)[number];
 
-export type ConstantCompositionSceneColors = ReturnType<
-  typeof getConstantCompositionSceneColors
->;
 export const ConstantCompositionScenePointSchema = Schema.Tuple([
   Schema.Finite,
   Schema.Finite,
@@ -29,9 +26,9 @@ export type ConstantCompositionScenePoint =
   typeof ConstantCompositionScenePointSchema.Type;
 
 export const CONSTANT_COMPOSITION_SCENE_VIEW = {
-  cameraPosition: [0, 2.0, 4.55],
-  cameraTarget: [0, 0, 0],
-  narrowCameraPosition: [0, 2.35, 5.1],
+  cameraPosition: [0, 0.28, 0.7],
+  cameraTarget: [0, 0.12, 0.02],
+  narrowCameraPosition: [0, 0.34, 0.88],
 } satisfies Record<string, ConstantCompositionScenePoint>;
 
 export function isConstantCompositionModeId(

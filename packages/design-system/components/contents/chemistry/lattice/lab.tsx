@@ -1,4 +1,4 @@
-import { useThree } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import type { CrystalId } from "@repo/design-system/components/contents/chemistry/lattice/crystal";
 import {
   CrystalIdSchema,
@@ -8,9 +8,12 @@ import {
 } from "@repo/design-system/components/contents/chemistry/lattice/crystal";
 import { ELEMENTS } from "@repo/design-system/components/contents/chemistry/molecule/elements";
 import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
+import { useSimulationClock } from "@repo/design-system/components/contents/simulation/clock";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
+import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Slider } from "@repo/design-system/components/ui/slider";
@@ -28,10 +31,12 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr, Option, Schema } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { InstancedMesh } from "three";
+import type { Group, InstancedMesh } from "three";
 import { Object3D } from "three";
 import { useFormatter } from "use-intl";
 
@@ -112,7 +117,12 @@ export function IonLatticeLab({
   const number = (value: number) => mathNumber(format.number(value, "math"));
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setChosen(undefined);
+        setCells(2);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
@@ -170,7 +180,12 @@ export function IonLatticeLab({
         >
           <Suspense>
             <LatticeCamera lattice={crystal.lattice} />
-            <LatticeBlock crystalId={shown} sites={sites} />
+            <LatticeBlock
+              cells={cells}
+              crystalId={shown}
+              floorY={-latticeDepth(crystal, cells) - FLOOR_GAP}
+              sites={sites}
+            />
           </Suspense>
         </ScienceStage>
       </VisualCardBody>
@@ -215,17 +230,33 @@ export function IonLatticeLab({
 
 /**
  * The block of ions, drawn as two instanced meshes, one per kind, so a
- * three-cell block of 343 ions costs two draw calls.
+ * three-cell block of 343 ions costs two draw calls. Rotates smoothly while
+ * playing, pauses cleanly, and rewinds on stop or reset.
  */
 function LatticeBlock({
+  cells,
   crystalId,
+  floorY,
   sites,
 }: {
+  readonly cells: number;
   readonly crystalId: CrystalId;
+  readonly floorY: number;
   readonly sites: ReturnType<typeof rockSalt>;
 }) {
   const crystal = getCrystal(crystalId);
   const spacing = crystal.lattice / 2 / PICOMETRES;
+  const blockEdge = (cells * crystal.lattice) / PICOMETRES;
+  const turntableRef = useRef<Group>(null);
+  const { advance, playing } = useSimulationClock(0);
+
+  useFrame((_, delta) => {
+    const t = advance(delta);
+    if (turntableRef.current !== null) {
+      turntableRef.current.rotation.y = t * 0.42;
+    }
+  });
+
   const kinds = useMemo(
     () =>
       Arr.map(["cation", "anion"] as const, (kind) => ({
@@ -238,16 +269,37 @@ function LatticeBlock({
 
   return (
     <group>
-      {Arr.map(kinds, (each) => (
-        <IonInstances
-          color={ELEMENTS[each.ion.symbol].color}
-          key={`${crystalId}-${each.kind}-${sites.length}`}
-          positions={Arr.map(each.sites, (site) =>
-            Arr.map(site.position, (coordinate) => coordinate * spacing)
-          )}
-          radius={(each.ion.radius / PICOMETRES) * ION_SCALE}
-        />
-      ))}
+      <SimulationTicker running={playing} />
+      {/* Bevelled laboratory crystallography specimen plinth */}
+      <group position={[0, floorY, 0]}>
+        <mesh position={[0, 0.08, 0]} receiveShadow>
+          <cylinderGeometry
+            args={[blockEdge * 0.72, blockEdge * 0.78, 0.16, 48]}
+          />
+          <meshPhysicalMaterial
+            clearcoat={0.35}
+            color={BENCH_COLORS.epoxy}
+            metalness={0.25}
+            roughness={0.48}
+          />
+        </mesh>
+        <mesh position={[0, 0.165, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[blockEdge * 0.71, 0.028, 12, 64]} />
+          <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.28} />
+        </mesh>
+      </group>
+      <group ref={turntableRef}>
+        {Arr.map(kinds, (each) => (
+          <IonInstances
+            color={ELEMENTS[each.ion.symbol].color}
+            key={`${crystalId}-${each.kind}-${sites.length}`}
+            positions={Arr.map(each.sites, (site) =>
+              Arr.map(site.position, (coordinate) => coordinate * spacing)
+            )}
+            radius={(each.ion.radius / PICOMETRES) * ION_SCALE}
+          />
+        ))}
+      </group>
     </group>
   );
 }

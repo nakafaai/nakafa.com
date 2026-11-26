@@ -1,12 +1,14 @@
-import { Line } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
+import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
+import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import type {
   ConstantCompositionModeId,
-  ConstantCompositionSceneColors,
   ConstantCompositionScenePoint,
 } from "@repo/design-system/components/contents/chemistry/constant-composition-law/data";
 import {
   ConstantCompositionScenePointSchema,
   EXACT_RATIO_MODE_ID,
+  getConstantCompositionSceneColors,
   HYDROGEN_EXCESS_MODE_ID,
   OXYGEN_EXCESS_MODE_ID,
 } from "@repo/design-system/components/contents/chemistry/constant-composition-law/data";
@@ -17,19 +19,31 @@ import {
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/label";
 import { atomSymbol } from "@repo/design-system/components/contents/chemistry/symbol";
+import { useSimulationClock } from "@repo/design-system/components/contents/simulation/clock";
+import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import {
+  GlassMaterial,
+  MetalMaterial,
+} from "@repo/design-system/components/three/physical";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import type { Group } from "three";
+import { LatheGeometry, Quaternion, Vector2, Vector3 } from "three";
 
-const BEFORE_X = -1.08;
-const AFTER_X = 1.08;
-const READOUT_Y = -0.84;
-const SCENE_SCALE = 1.25;
-const HYDROGEN_RADIUS = 0.095;
-const OXYGEN_RADIUS = 0.15;
-const BOND_LINE_WIDTH = 2.5;
+const BEFORE_X = -0.17;
+const AFTER_X = 0.17;
+const DISH_Z = 0.03;
+const DISH_CENTER_Y = 0.125;
+const HYDROGEN_RADIUS = 0.017;
+const OXYGEN_RADIUS = 0.026;
+const UP = new Vector3(0, 1, 0);
 
 const AtomElementSchema = Schema.Literals(["hydrogen", "oxygen"]);
 type AtomElement = typeof AtomElementSchema.Type;
@@ -49,20 +63,12 @@ const CompositionBondSchema = Schema.Struct({
 type CompositionBond = typeof CompositionBondSchema.Type;
 
 const WATER_ATOMS = [
-  {
-    element: "oxygen",
-    id: "water-o",
-    position: [0, 0.02, 0],
-  },
-  {
-    element: "hydrogen",
-    id: "water-h-left",
-    position: [-0.24, -0.1, 0.06],
-  },
+  { element: "oxygen", id: "water-o", position: [0, 0.008, 0] },
+  { element: "hydrogen", id: "water-h-left", position: [-0.044, -0.018, 0.01] },
   {
     element: "hydrogen",
     id: "water-h-right",
-    position: [0.24, -0.1, -0.06],
+    position: [0.044, -0.018, -0.01],
   },
 ] satisfies CompositionAtom[];
 
@@ -87,154 +93,252 @@ const CompositionLayoutSchema = Schema.Struct({
 const SCENE_LAYOUTS = {
   [EXACT_RATIO_MODE_ID]: {
     beforeAtoms: [
-      atom("exact-h-1", "hydrogen", [-0.24, -0.12, 0.04]),
-      atom("exact-h-2", "hydrogen", [0, 0.2, -0.06]),
-      atom("exact-o-1", "oxygen", [0.26, -0.09, 0.04]),
+      atom("exact-h-1", "hydrogen", [-0.044, -0.016, 0.01]),
+      atom("exact-h-2", "hydrogen", [0, 0.038, -0.012]),
+      atom("exact-o-1", "oxygen", [0.046, -0.012, 0.008]),
     ],
     leftoverAtoms: [],
   },
   [HYDROGEN_EXCESS_MODE_ID]: {
     beforeAtoms: [
-      atom("h-excess-h-1", "hydrogen", [-0.3, -0.14, 0.04]),
-      atom("h-excess-h-2", "hydrogen", [-0.06, 0.22, -0.08]),
-      atom("h-excess-h-3", "hydrogen", [0.02, -0.34, 0.08]),
-      atom("h-excess-o-1", "oxygen", [0.28, -0.08, 0.02]),
+      atom("h-excess-h-1", "hydrogen", [-0.052, -0.018, 0.01]),
+      atom("h-excess-h-2", "hydrogen", [-0.008, 0.04, -0.014]),
+      atom("h-excess-h-3", "hydrogen", [0.004, -0.048, 0.016]),
+      atom("h-excess-o-1", "oxygen", [0.05, -0.01, 0.004]),
     ],
-    leftoverAtoms: [atom("leftover-h", "hydrogen", [0.48, -0.2, 0.08])],
+    leftoverAtoms: [atom("leftover-h", "hydrogen", [0.072, -0.036, 0.022])],
   },
   [OXYGEN_EXCESS_MODE_ID]: {
     beforeAtoms: [
-      atom("o-excess-h-1", "hydrogen", [-0.28, -0.14, 0.04]),
-      atom("o-excess-h-2", "hydrogen", [-0.04, 0.2, -0.08]),
-      atom("o-excess-o-1", "oxygen", [0.25, -0.04, 0.02]),
-      atom("o-excess-o-2", "oxygen", [0.05, -0.38, 0.1]),
+      atom("o-excess-h-1", "hydrogen", [-0.05, -0.018, 0.01]),
+      atom("o-excess-h-2", "hydrogen", [-0.006, 0.038, -0.014]),
+      atom("o-excess-o-1", "oxygen", [0.046, -0.004, 0.004]),
+      atom("o-excess-o-2", "oxygen", [0.008, -0.052, 0.018]),
     ],
-    leftoverAtoms: [atom("leftover-o", "oxygen", [0.5, -0.19, 0.06])],
+    leftoverAtoms: [atom("leftover-o", "oxygen", [0.076, -0.034, 0.018])],
   },
 } satisfies Record<
   ConstantCompositionModeId,
   typeof CompositionLayoutSchema.Type
 >;
 
+function createWatchGlassGeometry() {
+  const profile = Arr.map(
+    [
+      [0.001, 0.004],
+      [0.052, 0.005],
+      [0.095, 0.013],
+      [0.118, 0.026],
+      [0.121, 0.028],
+      [0.116, 0.029],
+      [0.092, 0.017],
+      [0.05, 0.009],
+      [0.001, 0.008],
+    ] as const,
+    ([r, y]) => new Vector2(r, y)
+  );
+  return new LatheGeometry(profile, 48);
+}
+
+function WatchGlassStage({
+  children,
+  x,
+}: {
+  readonly children: ReactNode;
+  readonly x: number;
+}) {
+  const dishGeo = useMemo(createWatchGlassGeometry, []);
+  useEffect(() => () => dishGeo.dispose(), [dishGeo]);
+
+  return (
+    <group position={[x, 0, DISH_Z]}>
+      <mesh position={[0, 0.004, 0]} receiveShadow>
+        <cylinderGeometry args={[0.088, 0.094, 0.008, 40]} />
+        <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.3} />
+      </mesh>
+      <mesh castShadow geometry={dishGeo} position={[0, 0.004, 0]}>
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.34} />
+      </mesh>
+      <group position={[0, DISH_CENTER_Y, 0]}>{children}</group>
+    </group>
+  );
+}
+
+function ReactionPointer() {
+  return (
+    <group position={[0, 0, DISH_Z]}>
+      <mesh castShadow position={[0, 0.005, 0]} receiveShadow>
+        <cylinderGeometry args={[0.024, 0.028, 0.01, 24]} />
+        <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.3} />
+      </mesh>
+      <mesh castShadow position={[0, 0.062, 0]}>
+        <cylinderGeometry args={[0.0045, 0.005, 0.11, 16]} />
+        <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.25} />
+      </mesh>
+      <group position={[0, DISH_CENTER_Y, 0]} rotation={[0, 0, -Math.PI / 2]}>
+        <mesh castShadow position={[0, -0.012, 0]}>
+          <cylinderGeometry args={[0.0052, 0.0052, 0.056, 20]} />
+          <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.24} />
+        </mesh>
+        <mesh castShadow position={[0, 0.024, 0]}>
+          <coneGeometry args={[0.014, 0.028, 24]} />
+          <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.25} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+function BondCylinder({
+  color,
+  end,
+  start,
+}: {
+  readonly color: string;
+  readonly end: ConstantCompositionScenePoint;
+  readonly start: ConstantCompositionScenePoint;
+}) {
+  const { length, mid, quat } = useMemo(() => {
+    const a = new Vector3(start[0], start[1], start[2]);
+    const b = new Vector3(end[0], end[1], end[2]);
+    const dir = b.clone().sub(a);
+    const len = dir.length();
+    const q = new Quaternion().setFromUnitVectors(UP, dir.normalize());
+    return {
+      length: len,
+      mid: a.clone().add(b).multiplyScalar(0.5),
+      quat: q,
+    };
+  }, [end, start]);
+
+  return (
+    <mesh castShadow position={mid} quaternion={quat}>
+      <cylinderGeometry args={[0.0045, 0.0045, length, 16]} />
+      <MetalMaterial color={color} roughness={0.28} />
+    </mesh>
+  );
+}
+
 export function ConstantCompositionScene({
-  colors,
   labels,
   modeId,
 }: {
-  colors: ConstantCompositionSceneColors;
   labels: Pick<
     ConstantCompositionLabProps["labels"],
     "after" | "before" | "modes"
   >;
   modeId: ConstantCompositionModeId;
 }) {
+  const labelInk = useLabelInk();
   const modeLabels = labels.modes[modeId];
   const layout = SCENE_LAYOUTS[modeId];
+  const beforeRef = useRef<Group>(null);
+  const afterRef = useRef<Group>(null);
+  const { advance, playing } = useSimulationClock(0);
+
+  useFrame((_, delta) => {
+    const t = advance(delta);
+    if (beforeRef.current !== null) {
+      beforeRef.current.rotation.y = Math.sin(t * 0.9) * 0.35;
+      beforeRef.current.position.y = Math.sin(t * 1.6) * 0.005;
+    }
+    if (afterRef.current !== null) {
+      afterRef.current.rotation.y = t * 0.65;
+    }
+  });
 
   return (
-    <group position={[0, -0.04, 0]} scale={SCENE_SCALE}>
+    <group>
+      <SimulationTicker running={playing} />
+      <LabBench width={2.6} />
+      <ReactionPointer />
       <ThreeLabel
-        color={colors.text}
+        color={labelInk}
         fontSize="compact"
-        position={[BEFORE_X, 0.58, 0.16]}
+        position={[BEFORE_X, 0.228, DISH_Z]}
       >
         {labels.before}
       </ThreeLabel>
       <ThreeLabel
-        color={colors.text}
+        color={labelInk}
         fontSize="compact"
-        position={[BEFORE_X, READOUT_Y, 0.22]}
+        position={[BEFORE_X, 0.025, DISH_Z + 0.13]}
       >
         {modeLabels.readoutBefore}
       </ThreeLabel>
       <ThreeLabel
-        color={colors.text}
+        color={labelInk}
         fontSize="compact"
-        position={[AFTER_X, READOUT_Y, 0.22]}
-      >
-        {modeLabels.readoutAfter}
-      </ThreeLabel>
-      <ThreeLabel
-        color={colors.text}
-        fontSize="compact"
-        position={[AFTER_X, 0.58, 0.16]}
+        position={[AFTER_X, 0.228, DISH_Z]}
       >
         {labels.after}
       </ThreeLabel>
-      <CompositionStage x={BEFORE_X}>
-        {Arr.map(layout.beforeAtoms, (atomData) => (
-          <AtomParticle atomData={atomData} colors={colors} key={atomData.id} />
-        ))}
-      </CompositionStage>
-
-      <CompositionStage x={AFTER_X}>
-        <WaterMolecule colors={colors} />
-        {Arr.map(layout.leftoverAtoms, (atomData) => (
-          <LeftoverAtom atomData={atomData} colors={colors} key={atomData.id} />
-        ))}
-      </CompositionStage>
+      <ThreeLabel
+        color={labelInk}
+        fontSize="compact"
+        position={[AFTER_X, 0.025, DISH_Z + 0.13]}
+      >
+        {modeLabels.readoutAfter}
+      </ThreeLabel>
+      <WatchGlassStage x={BEFORE_X}>
+        <group ref={beforeRef}>
+          {Arr.map(layout.beforeAtoms, (atomData) => (
+            <AtomParticle atomData={atomData} key={atomData.id} />
+          ))}
+        </group>
+      </WatchGlassStage>
+      <WatchGlassStage x={AFTER_X}>
+        <group ref={afterRef}>
+          <WaterMolecule />
+          {Arr.map(layout.leftoverAtoms, (atomData) => (
+            <LeftoverAtom atomData={atomData} key={atomData.id} />
+          ))}
+        </group>
+      </WatchGlassStage>
     </group>
   );
 }
 
-function CompositionStage({ children, x }: { children: ReactNode; x: number }) {
-  return <group position={[x, 0, 0]}>{children}</group>;
-}
+function WaterMolecule() {
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
+  const colors = getConstantCompositionSceneColors(resolvedTheme);
 
-function WaterMolecule({ colors }: { colors: ConstantCompositionSceneColors }) {
   return (
-    <group rotation={[0, -0.24, 0]} scale={1.12}>
+    <group rotation={[0, -0.22, 0]} scale={1.1}>
       {Arr.map(WATER_BONDS, (bond) => (
-        <Line
+        <BondCylinder
           color={colors.bond}
+          end={bond.end}
           key={bond.id}
-          lineWidth={BOND_LINE_WIDTH}
-          points={[bond.start, bond.end]}
-          toneMapped={false}
+          start={bond.start}
         />
       ))}
       {Arr.map(WATER_ATOMS, (atomData) => (
-        <AtomParticle atomData={atomData} colors={colors} key={atomData.id} />
+        <AtomParticle atomData={atomData} key={atomData.id} />
       ))}
     </group>
   );
 }
 
-function LeftoverAtom({
-  atomData,
-  colors,
-}: {
-  atomData: CompositionAtom;
-  colors: ConstantCompositionSceneColors;
-}) {
+function LeftoverAtom({ atomData }: { atomData: CompositionAtom }) {
   const [x, y, z] = atomData.position;
 
   return (
     <group position={[x, y, z]}>
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry
-          args={[atomRadius(atomData.element) * 1.32, 0.01, 12, 48]}
+          args={[atomRadius(atomData.element) * 1.38, 0.0022, 12, 40]}
         />
-        <meshStandardMaterial color={colors.bond} opacity={0.62} transparent />
+        <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.28} />
       </mesh>
-      <AtomParticle
-        atomData={{
-          ...atomData,
-          position: [0, 0, 0],
-        }}
-        colors={colors}
-      />
+      <AtomParticle atomData={{ ...atomData, position: [0, 0, 0] }} />
     </group>
   );
 }
 
-function AtomParticle({
-  atomData,
-  colors,
-}: {
-  atomData: CompositionAtom;
-  colors: ConstantCompositionSceneColors;
-}) {
+function AtomParticle({ atomData }: { atomData: CompositionAtom }) {
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
+  const colors = getConstantCompositionSceneColors(resolvedTheme);
   const radius = atomRadius(atomData.element);
   const color =
     atomData.element === "hydrogen" ? colors.hydrogen : colors.oxygen;
@@ -242,8 +346,13 @@ function AtomParticle({
   return (
     <group position={atomData.position}>
       <mesh castShadow>
-        <sphereGeometry args={[radius, 32, 20]} />
-        <meshStandardMaterial color={color} roughness={0.34} />
+        <sphereGeometry args={[radius, 32, 22]} />
+        <meshPhysicalMaterial
+          clearcoat={0.72}
+          clearcoatRoughness={0.14}
+          color={color}
+          roughness={0.24}
+        />
       </mesh>
       <ChemistryParticleLabel
         color={colors.sphereText}
@@ -263,11 +372,7 @@ function atom(
   element: AtomElement,
   position: ConstantCompositionScenePoint
 ): CompositionAtom {
-  return {
-    element,
-    id,
-    position,
-  };
+  return { element, id, position };
 }
 
 function atomRadius(element: AtomElement) {

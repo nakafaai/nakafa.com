@@ -88,7 +88,7 @@ export function MatterParticleReaderLab({
   }
 
   return (
-    <VisualCard>
+    <VisualCard onReset={() => setSelectedModeId(ATOM_MODE_ID)}>
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
@@ -117,8 +117,8 @@ export function MatterParticleReaderLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always" setting="studio">
-          <Suspense>
+        <ScienceStage floor={-0.78} reach={2.4} setting="studio">
+          <Suspense fallback={null}>
             <MatterParticleCameraControls />
             <MatterParticleSceneColorsProvider colors={sceneColors}>
               <MatterParticleReaderScene modeId={selectedModeId} />
