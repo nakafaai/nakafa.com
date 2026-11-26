@@ -12,8 +12,14 @@ import { useRequired } from "@repo/design-system/hooks/required";
 import { MutableHashMap } from "effect";
 import type { ComponentProps, ReactNode } from "react";
 import { createContext, useCallback, useEffect, useMemo, useRef } from "react";
-import type { Group } from "three";
-import { Color, MathUtils, OrthographicCamera, Vector3 } from "three";
+import type { Camera, Group, OrthographicCamera } from "three";
+import { Color, MathUtils, Vector3 } from "three";
+
+function isOrthographicCamera(camera: Camera): camera is OrthographicCamera {
+  return (
+    "isOrthographicCamera" in camera && camera.isOrthographicCamera === true
+  );
+}
 
 type LabelAnchorX = "center" | "left" | "right";
 type LabelAnchorY = "bottom" | "middle" | "top";
@@ -153,8 +159,7 @@ export function ThreeLabel({
   const labelColor = color instanceof Color ? color.getStyle() : color;
   const worldFontSize = resolveThreeFontSize(fontSize);
   const distanceFactor =
-    (worldFontSize *
-      (camera instanceof OrthographicCamera ? 1 : canvasHeight)) /
+    (worldFontSize * (isOrthographicCamera(camera) ? 1 : canvasHeight)) /
     LABEL_BASE_FONT_SIZE;
   const gapPixels =
     worldFontSize > 0 ? (gap * LABEL_BASE_FONT_SIZE) / worldFontSize : 0;
@@ -179,13 +184,12 @@ export function ThreeLabel({
     }
     object.getWorldPosition(labelPosition);
     activeCamera.getWorldPosition(cameraPosition);
-    const pixelsPerUnit =
-      activeCamera instanceof OrthographicCamera
-        ? activeCamera.zoom
-        : size.height /
-          (2 *
-            Math.tan(MathUtils.degToRad(activeCamera.fov) / 2) *
-            labelPosition.distanceTo(cameraPosition));
+    const pixelsPerUnit = isOrthographicCamera(activeCamera)
+      ? activeCamera.zoom
+      : size.height /
+        (2 *
+          Math.tan(MathUtils.degToRad(activeCamera.fov) / 2) *
+          labelPosition.distanceTo(cameraPosition));
     const naturalSize = worldFontSize * pixelsPerUnit;
     if (!(Number.isFinite(naturalSize) && naturalSize > 0)) {
       return;

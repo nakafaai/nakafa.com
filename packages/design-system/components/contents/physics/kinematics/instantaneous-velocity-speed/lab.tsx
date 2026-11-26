@@ -20,6 +20,10 @@ import {
   formatRoundedSpeedMath,
   formatSignedRoundedSpeedMath,
 } from "@repo/design-system/components/contents/physics/kinematics/math";
+import {
+  SimulationTicker,
+  simulationStep,
+} from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
@@ -31,6 +35,8 @@ import {
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
+  useVisualScene,
+  useVisualStop,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -244,27 +250,37 @@ function MeasurementPoint({ x }: { x: number }) {
 }
 
 function AnimatedCar({ motion }: { motion: InstantaneousVelocitySpeedState }) {
+  const playing = useVisualScene((card) => card.playing, false);
   const groupRef = useRef<Group>(null);
-  const animationStartRef = useRef<number | null>(null);
-  const scenarioIdRef = useRef<InstantaneousSpeedCaseId | null>(null);
+  const elapsedRef = useRef(0);
+  const scenarioIdRef = useRef<InstantaneousSpeedCaseId>(motion.scenario.id);
 
-  useFrame((state) => {
+  useVisualStop(() => {
+    elapsedRef.current = 0;
+    groupRef.current?.position.set(
+      motion.startX,
+      0.025,
+      INSTANTANEOUS_SPEED_SCENE.trackZ
+    );
+  });
+
+  useFrame((_, delta) => {
     if (!groupRef.current) {
       return;
     }
 
-    if (
-      animationStartRef.current === null ||
-      scenarioIdRef.current !== motion.scenario.id
-    ) {
-      animationStartRef.current = state.clock.elapsedTime;
+    if (scenarioIdRef.current !== motion.scenario.id) {
+      elapsedRef.current = 0;
       scenarioIdRef.current = motion.scenario.id;
     }
 
-    const elapsedSeconds =
-      (state.clock.elapsedTime - animationStartRef.current) %
-      (motion.loopSeconds + INSTANTANEOUS_SPEED_SCENE.pauseSeconds);
-    const carX = getAnimatedCarX(motion, elapsedSeconds);
+    const totalLoop =
+      motion.loopSeconds + INSTANTANEOUS_SPEED_SCENE.pauseSeconds;
+    if (playing) {
+      elapsedRef.current =
+        (elapsedRef.current + simulationStep(delta)) % totalLoop;
+    }
+    const carX = getAnimatedCarX(motion, elapsedRef.current);
 
     groupRef.current.position.set(
       carX,
@@ -274,32 +290,35 @@ function AnimatedCar({ motion }: { motion: InstantaneousVelocitySpeedState }) {
   });
 
   return (
-    <CameraBounds
-      motion={{
-        translation: {
-          x: {
-            min: Math.min(motion.startX, motion.endX),
-            max: Math.max(motion.startX, motion.endX),
+    <>
+      <SimulationTicker running={playing} />
+      <CameraBounds
+        motion={{
+          translation: {
+            x: {
+              min: Math.min(motion.startX, motion.endX),
+              max: Math.max(motion.startX, motion.endX),
+            },
+            y: { min: 0.025, max: 0.025 },
+            z: {
+              min: INSTANTANEOUS_SPEED_SCENE.trackZ,
+              max: INSTANTANEOUS_SPEED_SCENE.trackZ,
+            },
           },
-          y: { min: 0.025, max: 0.025 },
-          z: {
-            min: INSTANTANEOUS_SPEED_SCENE.trackZ,
-            max: INSTANTANEOUS_SPEED_SCENE.trackZ,
-          },
-        },
-      }}
-      objectRef={groupRef}
-    >
-      <group
-        rotation={[0, getCarRotationY(motion.scenario.direction), 0]}
-        scale={INSTANTANEOUS_SPEED_SCENE.carScale}
+        }}
+        objectRef={groupRef}
       >
-        <PhysicsCarModel
-          bodyColor={INSTANTANEOUS_SPEED_COLORS.car}
-          modelPath={INSTANTANEOUS_SPEED_CAR_MODEL_PATH}
-        />
-      </group>
-    </CameraBounds>
+        <group
+          rotation={[0, getCarRotationY(motion.scenario.direction), 0]}
+          scale={INSTANTANEOUS_SPEED_SCENE.carScale}
+        >
+          <PhysicsCarModel
+            bodyColor={INSTANTANEOUS_SPEED_COLORS.car}
+            modelPath={INSTANTANEOUS_SPEED_CAR_MODEL_PATH}
+          />
+        </group>
+      </CameraBounds>
+    </>
   );
 }
 

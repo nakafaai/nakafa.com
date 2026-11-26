@@ -23,6 +23,7 @@ import { SurfaceMaterial } from "@repo/design-system/components/three/surface/ma
 import { Strake } from "@repo/design-system/components/three/vessel/strake";
 import {
   useVisualScene,
+  useVisualStop,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -161,6 +162,11 @@ function KiteScene({
     parts.up * ARROW_SCALE,
     0,
   ] as const;
+
+  useVisualStop(() => {
+    clock.current = 0;
+    flier.current?.rotation.set(0, 0, 0);
+  });
 
   useFrame((_, delta) => {
     if (playing) {

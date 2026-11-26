@@ -19,6 +19,10 @@ import {
   UNIFORM_CIRCULAR_MOTION_PERIODS,
   UNIFORM_CIRCULAR_MOTION_SCENE,
 } from "@repo/design-system/components/contents/physics/kinematics/uniform-circular-motion/data";
+import {
+  SimulationTicker,
+  simulationStep,
+} from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
@@ -30,6 +34,8 @@ import {
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
+  useVisualScene,
+  useVisualStop,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -192,49 +198,60 @@ function CircularMotionCamera() {
 }
 
 function CircularCar({ motion }: { motion: UniformCircularMotionState }) {
+  const playing = useVisualScene((card) => card.playing, false);
   const groupRef = useRef<Group>(null);
-  const animationStartRef = useRef<number | null>(null);
-  const animationPeriodRef = useRef<UniformCircularMotionPeriod | null>(null);
+  const elapsedRef = useRef(0);
+  const animationPeriodRef = useRef<UniformCircularMotionPeriod>(motion.period);
 
-  useFrame((state) => {
+  useVisualStop(() => {
+    elapsedRef.current = 0;
+    const { x, z } = getPointOnCircle(0, motion.radius);
+    groupRef.current?.position.set(x, 0.025, z);
+    groupRef.current?.rotation.set(0, 0, 0);
+  });
+
+  useFrame((_, delta) => {
     if (!groupRef.current) {
       return;
     }
 
-    if (
-      animationStartRef.current === null ||
-      animationPeriodRef.current !== motion.period
-    ) {
+    if (animationPeriodRef.current !== motion.period) {
       animationPeriodRef.current = motion.period;
-      animationStartRef.current = state.clock.elapsedTime;
+      elapsedRef.current = 0;
     }
 
-    const elapsed = state.clock.elapsedTime - animationStartRef.current;
-    const angle = (elapsed / motion.period) * Math.PI * 2;
+    if (playing) {
+      elapsedRef.current += simulationStep(delta);
+    }
+
+    const angle = (elapsedRef.current / motion.period) * Math.PI * 2;
     const { x, z } = getPointOnCircle(angle, motion.radius);
     groupRef.current.position.set(x, 0.025, z);
     groupRef.current.rotation.set(0, -angle, 0);
   });
 
   return (
-    <CameraBounds
-      motion={{
-        rotation: "y",
-        translation: {
-          x: { min: -motion.radius, max: motion.radius },
-          y: { min: 0.025, max: 0.025 },
-          z: { min: -motion.radius, max: motion.radius },
-        },
-      }}
-      objectRef={groupRef}
-    >
-      <group
-        rotation={[0, 0, 0]}
-        scale={UNIFORM_CIRCULAR_MOTION_SCENE.carScale}
+    <>
+      <SimulationTicker running={playing} />
+      <CameraBounds
+        motion={{
+          rotation: "y",
+          translation: {
+            x: { min: -motion.radius, max: motion.radius },
+            y: { min: 0.025, max: 0.025 },
+            z: { min: -motion.radius, max: motion.radius },
+          },
+        }}
+        objectRef={groupRef}
       >
-        <CarModel />
-      </group>
-    </CameraBounds>
+        <group
+          rotation={[0, 0, 0]}
+          scale={UNIFORM_CIRCULAR_MOTION_SCENE.carScale}
+        >
+          <CarModel />
+        </group>
+      </CameraBounds>
+    </>
   );
 }
 

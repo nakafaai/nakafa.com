@@ -13,7 +13,10 @@ import {
 } from "@repo/design-system/components/contents/physics/renewable-energy/pendulum/swing";
 import { Pipe } from "@repo/design-system/components/contents/physics/renewable-energy/world/parts";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
+import {
+  useVisualScene,
+  useVisualStop,
+} from "@repo/design-system/components/visual/card";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
@@ -51,6 +54,10 @@ export function PendulumScene({
   const time = useRef(0);
   const shown = useRef<Drag | undefined>(undefined);
   const arm = useRef<Group>(null);
+
+  useVisualStop(() => {
+    time.current = 0;
+  });
 
   useFrame((_, delta) => {
     if (shown.current !== drag) {

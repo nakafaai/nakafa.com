@@ -13,7 +13,10 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import type { CoordinateTuple } from "@repo/design-system/components/three/frame";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
+import {
+  useVisualScene,
+  useVisualStop,
+} from "@repo/design-system/components/visual/card";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
@@ -185,6 +188,10 @@ export function RampScene({
       unit[1] * size * ARROW_SCALE,
       0,
     ] satisfies CoordinateTuple;
+
+  useVisualStop(() => {
+    motion.current = { along: START, rest: 0, speed: 0 };
+  });
 
   useFrame((_, delta) => {
     const state = motion.current;

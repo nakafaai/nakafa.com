@@ -15,6 +15,10 @@ import {
   RELATIVE_MOVEMENT_SCENE,
   RELATIVE_MOVEMENT_TARGET_CAR_MODEL_PATH,
 } from "@repo/design-system/components/contents/physics/kinematics/relative-movement/data";
+import {
+  SimulationTicker,
+  simulationStep,
+} from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
@@ -26,6 +30,8 @@ import {
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
+  useVisualScene,
+  useVisualStop,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -192,6 +198,7 @@ function RelativeMovementCamera() {
 }
 
 function AnimatedCarPair({ motion }: { motion: RelativeMovementState }) {
+  const playing = useVisualScene((card) => card.playing, false);
   const initial = getInitialCarPositions(motion);
   const seconds = getLoopSeconds(motion);
   const worldScale = getSceneUnitsPerMeter(motion, seconds);
@@ -200,24 +207,31 @@ function AnimatedCarPair({ motion }: { motion: RelativeMovementState }) {
   const targetEnd = initial.targetX + motion.targetSpeed * worldScale * seconds;
   const observerRef = useRef<Group>(null);
   const targetRef = useRef<Group>(null);
-  const animationStartRef = useRef<number | null>(null);
-  const animationCaseRef = useRef<RelativeMovementCaseId | null>(null);
+  const elapsedRef = useRef(0);
+  const animationCaseRef = useRef<RelativeMovementCaseId>(motion.caseId);
 
-  useFrame((state) => {
+  useVisualStop(() => {
+    elapsedRef.current = 0;
+    if (observerRef.current && targetRef.current) {
+      observerRef.current.position.x = initial.observerX;
+      targetRef.current.position.x = initial.targetX;
+    }
+  });
+
+  useFrame((_, delta) => {
     if (!(observerRef.current && targetRef.current)) {
       return;
     }
 
-    if (
-      animationStartRef.current === null ||
-      animationCaseRef.current !== motion.caseId
-    ) {
+    if (animationCaseRef.current !== motion.caseId) {
       animationCaseRef.current = motion.caseId;
-      animationStartRef.current = state.clock.elapsedTime;
+      elapsedRef.current = 0;
     }
 
-    const elapsed = state.clock.elapsedTime - animationStartRef.current;
-    const positions = getCarPositions(motion, elapsed);
+    if (playing) {
+      elapsedRef.current += simulationStep(delta);
+    }
+    const positions = getCarPositions(motion, elapsedRef.current);
 
     observerRef.current.position.x = positions.observerX;
     targetRef.current.position.x = positions.targetX;
@@ -225,6 +239,7 @@ function AnimatedCarPair({ motion }: { motion: RelativeMovementState }) {
 
   return (
     <>
+      <SimulationTicker running={playing} />
       <CameraBounds
         motion={{
           translation: {

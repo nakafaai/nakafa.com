@@ -4,6 +4,7 @@ import { createPerformanceMonitor } from "@repo/design-system/components/three/m
 import {
   useVisualReset,
   useVisualScene,
+  useVisualStop,
 } from "@repo/design-system/components/visual/card";
 import { isSoftwareRenderer } from "@repo/design-system/lib/device";
 import type { ReactNode } from "react";
@@ -53,6 +54,13 @@ export function SceneTime({ controlled }: { readonly controlled: boolean }) {
   const playing = useVisualScene((state) => state.playing, false);
   const active = controlled ? playing : true;
   const elapsed = useRef(0);
+
+  useVisualStop(() => {
+    elapsed.current = 0;
+    const state = store.getState();
+    state.clock.elapsedTime = 0;
+    state.invalidate();
+  });
 
   useVisualReset(() => {
     elapsed.current = 0;
