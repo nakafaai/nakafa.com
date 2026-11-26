@@ -2,7 +2,8 @@ import { CameraBounds } from "@repo/design-system/components/three/camera/framin
 import { useStage } from "@repo/design-system/components/three/stage/context";
 import type { GroundSchema } from "@repo/design-system/components/three/stage/grain";
 import { paintGround } from "@repo/design-system/components/three/stage/grain";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
+import type { Material } from "three";
 import {
   DataTexture,
   LinearFilter,
@@ -12,8 +13,59 @@ import {
   SRGBColorSpace,
 } from "three";
 
-/** How far the ground spreads from the lab's middle, in reaches: as far as the haze hides it. */
-export const GROUND_REACHES = 12;
+/** How far the ground spreads from the lab's middle, in reaches: past the haze and horizon fade. */
+export const GROUND_REACHES = 16;
+
+/** Where radial horizon fade begins and completes, in reaches from the scene origin. */
+export const HORIZON_FADE_INNER = 2.8;
+export const HORIZON_FADE_OUTER = 12.5;
+
+/**
+ * Returns a material ref callback that dissolves a horizontal stage surface
+ * (terrain, road, pavement, rail, sea, or bench) smoothly to transparent
+ * between `innerRadius` and `outerRadius` around the scene origin using a
+ * C2-continuous quintic falloff so no hard horizon edge ever appears against
+ * the sky or photo backdrop.
+ */
+export function useHorizonFade(innerRadius: number, outerRadius: number) {
+  return useCallback(
+    (material: Material | null) => {
+      if (material === null) {
+        return;
+      }
+      material.onBeforeCompile = (shader) => {
+        shader.uniforms.uHorizonInner = { value: innerRadius };
+        shader.uniforms.uHorizonOuter = { value: outerRadius };
+        shader.vertexShader = shader.vertexShader
+          .replace(
+            "#include <common>",
+            "#include <common>\nvarying vec3 vHorizonWorldPos;"
+          )
+          .replace(
+            "#include <worldpos_vertex>",
+            "#include <worldpos_vertex>\nvHorizonWorldPos = (modelMatrix * vec4(transformed, 1.0)).xyz;"
+          );
+        shader.fragmentShader = shader.fragmentShader
+          .replace(
+            "#include <common>",
+            "#include <common>\nuniform float uHorizonInner;\nuniform float uHorizonOuter;\nvarying vec3 vHorizonWorldPos;"
+          )
+          .replace(
+            "#include <dithering_fragment>",
+            `float horizonT = clamp((length(vHorizonWorldPos.xz) - uHorizonInner) / max(0.0001, uHorizonOuter - uHorizonInner), 0.0, 1.0);
+float horizonSmooth = 1.0 - horizonT * horizonT * horizonT * (horizonT * (horizonT * 6.0 - 15.0) + 10.0);
+gl_FragColor.a *= horizonSmooth;
+if (gl_FragColor.a <= 0.002) discard;
+#include <dithering_fragment>`
+          );
+      };
+      material.customProgramCacheKey = () =>
+        `horizon-fade-${innerRadius.toFixed(2)}-${outerRadius.toFixed(2)}`;
+      material.needsUpdate = true;
+    },
+    [innerRadius, outerRadius]
+  );
+}
 
 /** How many pixels a side of the painted ground has. */
 const GROUND_PIXELS = 256;
@@ -98,12 +150,17 @@ export function Terrain({ kind }: { readonly kind: typeof GroundSchema.Type }) {
   const { floor = 0, reach } = useStage();
   const tiles = (2 * GROUND_REACHES) / TILE_REACHES;
   const { bump, map, patches } = useGround(kind, [tiles, tiles]);
+  const horizonFade = useHorizonFade(
+    HORIZON_FADE_INNER * reach,
+    HORIZON_FADE_OUTER * reach
+  );
 
   return (
     <CameraBounds exclude>
       <mesh
         position={[0, floor, 0]}
         receiveShadow
+        renderOrder={-10}
         rotation={[-Math.PI / 2, 0, 0]}
         userData={{ treatAsOpaque: true }}
       >
@@ -113,9 +170,12 @@ export function Terrain({ kind }: { readonly kind: typeof GroundSchema.Type }) {
           aoMapIntensity={1}
           bumpMap={bump}
           bumpScale={0.35}
+          depthWrite
           map={map}
           metalness={0}
+          ref={horizonFade}
           roughness={0.94}
+          transparent
         />
       </mesh>
     </CameraBounds>

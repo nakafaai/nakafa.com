@@ -35,7 +35,7 @@ import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
 import { isMobileDevice } from "@repo/design-system/lib/device";
-import { AXIS_COLORS, PLOT_COLORS } from "@repo/design-system/lib/plot";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr, Option, Schema } from "effect";
@@ -157,7 +157,7 @@ export function OrbitalCloudLab({
           <Suspense>
             <OrbitalCamera reach={widest} />
             <OrbitalCloud id={shown} />
-            <OrbitalAxes reach={widest} />
+            <OrbitalAxes />
           </Suspense>
         </ScienceStage>
       </VisualCardBody>
@@ -331,58 +331,15 @@ function OrbitalLobe({
 }
 
 /**
- * Shared Cartesian coordinate axes through the nucleus (`Axes`), with
- * directional cones at the orbital's outer reach and a faint equatorial ring
- * so nodal planes and lobe alignment read clearly from any angle.
+ * Unbounded Cartesian coordinate axes through the nucleus (`Axes`), matching
+ * the mathematics coordinate system so X, Y, and Z run edge-to-edge without
+ * artificial truncation from any camera angle.
  */
-function OrbitalAxes({ reach }: { readonly reach: number }) {
-  const tipDistance = reach * 0.96;
-  const coneRadius = Math.max(0.032, reach * 0.018);
-  const coneHeight = coneRadius * 3.1;
-  const tips = [
-    {
-      color: AXIS_COLORS.x,
-      name: "x",
-      position: [tipDistance, 0, 0] as const,
-      rotation: [0, 0, -Math.PI / 2] as const,
-    },
-    {
-      color: AXIS_COLORS.y,
-      name: "y",
-      position: [0, tipDistance, 0] as const,
-      rotation: [0, 0, 0] as const,
-    },
-    {
-      color: AXIS_COLORS.z,
-      name: "z",
-      position: [0, 0, tipDistance] as const,
-      rotation: [Math.PI / 2, 0, 0] as const,
-    },
-  ] as const;
-
+function OrbitalAxes() {
   return (
     <CameraBounds exclude>
-      <Axes reach={Math.max(reach * 1.25, 3.2)} showLabels showZAxis />
+      <Axes reach={100} showLabels showZAxis />
       <Origin color={PLOT_COLORS.slate} size={0.05} />
-      {Arr.map(tips, (tip) => (
-        <mesh key={tip.name} position={tip.position} rotation={tip.rotation}>
-          <coneGeometry args={[coneRadius, coneHeight, 20]} />
-          <meshStandardMaterial
-            color={tip.color}
-            roughness={0.32}
-            toneMapped={false}
-          />
-        </mesh>
-      ))}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[reach * 0.85, 0.006, 12, 96]} />
-        <meshBasicMaterial
-          color={PLOT_COLORS.slate}
-          depthWrite={false}
-          opacity={0.18}
-          transparent
-        />
-      </mesh>
     </CameraBounds>
   );
 }

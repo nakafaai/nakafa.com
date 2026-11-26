@@ -293,6 +293,7 @@ export function SkySetting() {
         <ProceduralPhotoFallback file="sky" />
       )}
       <Sun direction={SKY_SUN} intensity={2.4} />
+      <Haze color={dark ? getColor("SLATE", 700) : getColor("SLATE", 200)} />
     </>
   );
 }

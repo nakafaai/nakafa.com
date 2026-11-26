@@ -16,6 +16,13 @@ import { Frustum, Matrix4, Vector2, Vector3 } from "three";
 const LABEL_EDGE_SPACE = 4;
 const LABEL_GAP = 12;
 const LABEL_SIDES = [1, -1] as const;
+const AXIS_SEGMENTS = 48;
+
+function sampleAxisPoints(from: Vector3, to: Vector3): readonly Vector3[] {
+  return Arr.makeBy(AXIS_SEGMENTS + 1, (step) =>
+    new Vector3().lerpVectors(from, to, step / AXIS_SEGMENTS)
+  );
+}
 
 function showAxisLabel(
   element: HTMLDivElement,
@@ -288,12 +295,17 @@ export function Axes({
         { name: "Y" as const, color: AXIS_COLORS.y, geometry: geometry.y },
         { name: "Z" as const, color: AXIS_COLORS.z, geometry: geometry.z },
       ],
-      ({ geometry: axis, ...identity }) => ({
-        ...identity,
-        visible: axis.visible && (identity.name !== "Z" || showZAxis),
-        from: new Vector3(axis.from.x, axis.from.y, axis.from.z),
-        to: new Vector3(axis.to.x, axis.to.y, axis.to.z),
-      })
+      ({ geometry: axis, ...identity }) => {
+        const from = new Vector3(axis.from.x, axis.from.y, axis.from.z);
+        const to = new Vector3(axis.to.x, axis.to.y, axis.to.z);
+        return {
+          ...identity,
+          visible: axis.visible && (identity.name !== "Z" || showZAxis),
+          from,
+          points: sampleAxisPoints(from, to),
+          to,
+        };
+      }
     );
   }, [origin, reach, showZAxis]);
 
@@ -304,8 +316,10 @@ export function Axes({
           <group key={axis.name}>
             <Line
               color={axis.color}
+              fog={false}
+              frustumCulled={false}
               lineWidth={2}
-              points={[axis.from, axis.to]}
+              points={[...axis.points]}
               // The grid's lines are transparent and draw after every opaque
               // object, so an opaque axis would show the grid line at zero as a
               // pale stripe down its middle. Drawing the axis in the same pass,

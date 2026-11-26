@@ -7,7 +7,10 @@ import {
 import { pathStrip } from "@repo/design-system/components/three/stage/strip";
 import {
   groundTexture,
+  HORIZON_FADE_INNER,
+  HORIZON_FADE_OUTER,
   useGround,
+  useHorizonFade,
 } from "@repo/design-system/components/three/stage/terrain";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
@@ -76,6 +79,7 @@ function Band({
       geometry={geometry}
       position={[0, floor + layer * LAYER, 0]}
       receiveShadow
+      renderOrder={-9 + layer}
     >
       {children}
     </mesh>
@@ -130,6 +134,11 @@ export function Pavement({
     [marks]
   );
 
+  const { reach } = useStage();
+  const horizonFade = useHorizonFade(
+    HORIZON_FADE_INNER * reach,
+    HORIZON_FADE_OUTER * reach
+  );
   const paint = getColor("ZINC", 100);
   const edge = width / 2 - LINE_WIDTH * 1.6;
   const bands = {
@@ -163,6 +172,7 @@ export function Pavement({
           polygonOffset
           polygonOffsetFactor={-1}
           polygonOffsetUnits={-4}
+          ref={horizonFade}
           roughness={0.96}
           transparent
         />
@@ -177,6 +187,7 @@ export function Pavement({
           polygonOffset
           polygonOffsetFactor={-1}
           polygonOffsetUnits={-4}
+          ref={horizonFade}
           roughness={0.96}
           transparent
         />
@@ -187,11 +198,14 @@ export function Pavement({
           aoMapIntensity={0.8}
           bumpMap={asphalt.bump}
           bumpScale={0.35}
+          depthWrite
           map={asphalt.map}
           polygonOffset
           polygonOffsetFactor={-2}
           polygonOffsetUnits={-8}
+          ref={horizonFade}
           roughness={0.86}
+          transparent
         />
       </Band>
       <Band geometry={bands.dashes} layer={3}>
@@ -199,9 +213,11 @@ export function Pavement({
           alphaMap={marks.dashes}
           alphaTest={0.5}
           color={paint}
+          depthWrite={false}
           polygonOffset
           polygonOffsetFactor={-3}
           polygonOffsetUnits={-12}
+          ref={horizonFade}
           roughness={0.7}
           transparent
         />
@@ -209,19 +225,25 @@ export function Pavement({
       <Band geometry={bands.farLine} layer={3}>
         <meshStandardMaterial
           color={paint}
+          depthWrite={false}
           polygonOffset
           polygonOffsetFactor={-3}
           polygonOffsetUnits={-12}
+          ref={horizonFade}
           roughness={0.7}
+          transparent
         />
       </Band>
       <Band geometry={bands.nearLine} layer={3}>
         <meshStandardMaterial
           color={paint}
+          depthWrite={false}
           polygonOffset
           polygonOffsetFactor={-3}
           polygonOffsetUnits={-12}
+          ref={horizonFade}
           roughness={0.7}
+          transparent
         />
       </Band>
     </CameraBounds>

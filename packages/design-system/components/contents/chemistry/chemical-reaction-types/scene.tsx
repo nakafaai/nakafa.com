@@ -1,10 +1,10 @@
-import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import { useChemicalReactionTypeScene } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/context";
 import type { ChemicalReactionTypeSceneLabelsSchema } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
 import {
   ReactionModel,
   ReactionPhaseContext,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/models";
+import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
@@ -24,9 +24,7 @@ export function ChemicalReactionTypesScene({
   return (
     <group position={[0, -0.08, 0]} scale={SCENE_SCALE}>
       <CameraBounds exclude>
-        <group position={[0, -0.58, 0.32]} scale={[3, 2.8, 4.2]}>
-          <LabBench width={2.8} />
-        </group>
+        <SeamlessBenchSurface radius={22} y={-0.58} />
       </CameraBounds>
       <ThreeLabel
         anchorY="bottom"

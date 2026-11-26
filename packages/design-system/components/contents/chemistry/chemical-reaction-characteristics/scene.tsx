@@ -1,4 +1,3 @@
-import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import {
   useReactionCharacteristicsColors,
   useReactionCharacteristicsCue,
@@ -24,6 +23,7 @@ import {
   PRECIPITATE_CUE_ID,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
 import type { ReactionCharacteristicsLabProps } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/lab";
+import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
@@ -91,12 +91,7 @@ export function ReactionCharacteristicsScene({
   return (
     <group position={[0, SCENE_Y, 0]} scale={SCENE_SCALE}>
       <CameraBounds exclude>
-        <group
-          position={[0, BENCH_Y * BEAKER_SCALE, 0.32]}
-          scale={[3.2, 3.1, 4.2]}
-        >
-          <LabBench width={2.8} />
-        </group>
+        <SeamlessBenchSurface radius={22} y={BENCH_Y * BEAKER_SCALE} />
       </CameraBounds>
       <ThreeLabel
         anchorY="bottom"
