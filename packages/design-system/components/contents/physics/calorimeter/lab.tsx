@@ -155,8 +155,10 @@ export function SpecificHeatCalorimeterLab({
         <ScienceStage floor={0} reach={2.2} setting="lab">
           <Suspense fallback={null}>
             <CalorimeterScene
+              massKg={massVal}
               material={active}
               parts={labels.parts}
+              powerW={powerVal}
               temperatureRiseK={reading.temperatureRiseK}
             />
           </Suspense>

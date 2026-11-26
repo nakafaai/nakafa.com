@@ -121,7 +121,11 @@ export function PlanckBlackbodyLab({
       >
         <ScienceStage floor={0} reach={2.2} setting="lab">
           <Suspense fallback={null}>
-            <PlanckCavityScene parts={labels.parts} temperatureK={tempK} />
+            <PlanckCavityScene
+              model={active}
+              parts={labels.parts}
+              temperatureK={tempK}
+            />
           </Suspense>
         </ScienceStage>
       </VisualCardBody>
