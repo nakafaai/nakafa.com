@@ -19,8 +19,9 @@ import type { PartStep } from "@/components/tryout/pane/model";
 import { partScore, partStep } from "@/components/tryout/pane/model";
 import { TryoutPartInfoDialog } from "@/components/tryout/pane/part";
 import { TryoutPageLink } from "@/components/tryout/route/link";
+import { TryoutClock } from "@/components/tryout/runtime/countdown";
 import {
-  useSetTryoutPressed,
+  useSetTryoutPressIntent,
   useTryoutStartPhase,
 } from "@/components/tryout/runtime/start";
 import type { TryoutPart } from "@/components/tryout/set/model";
@@ -57,6 +58,7 @@ const cardVariants = cva(
   "flex min-w-0 flex-1 items-center gap-3 rounded-lg p-2 text-start",
   {
     variants: {
+      dimmed: { false: "", true: "opacity-60" },
       link: {
         false: "",
         true: "hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring transition-colors ease-out outline-none focus-visible:ring-3",
@@ -158,7 +160,7 @@ function StepCard({
   }
   if (attempt?.status !== "in-progress") {
     return (
-      <StartPress next={next} step={step}>
+      <StartPress next={next} part={part} publicPath={publicPath} step={step}>
         {children}
       </StartPress>
     );
@@ -166,7 +168,7 @@ function StepCard({
   if (attempt.activeSectionKey !== null) {
     return (
       <div
-        className={cardVariants({ link: false, next })}
+        className={cardVariants({ dimmed: true, link: false, next })}
         data-part-step={step}
       >
         {children}
@@ -270,22 +272,26 @@ function OpenPart({
   );
 }
 
-/** A part of a set the learner has not started: a press waits for the footer's action, which answers it. */
+/** A part of a set the learner has not started: a press passes this exact part to the page's action. */
 function StartPress({
   children,
   next,
+  part,
+  publicPath,
   step,
 }: {
   children: ReactNode;
   next: boolean;
+  part: TryoutPart;
+  publicPath: string;
   step: PartStep;
 }) {
-  const press = useSetTryoutPressed();
+  const setIntent = useSetTryoutPressIntent();
   return (
     <button
       className={cardVariants({ link: true, next })}
       data-part-step={step}
-      onClick={() => press(true)}
+      onClick={() => setIntent({ kind: "part", part, publicPath })}
       type="button"
     >
       {children}
@@ -320,7 +326,16 @@ export function SetPath() {
         {Arr.map(Arr.zip(sections, looks), ([section, look], index) => {
           const step = partStep(attempt, section.sectionKey);
           const score = partScore(attempt, section.sectionKey);
+          const runningHere =
+            attempt?.status === "in-progress" &&
+            attempt.activeSectionKey === section.sectionKey;
+          const waitingForOther =
+            attempt?.status === "in-progress" &&
+            attempt.activeSectionKey !== null &&
+            !runningHere &&
+            step !== "done";
           const gives =
+            !(runningHere || waitingForOther) &&
             (step === "next" || step === "todo") &&
             !Arr.contains(claims.sections, section.sectionKey);
           const part: TryoutPart = {
@@ -352,12 +367,19 @@ export function SetPath() {
                     {section.title}
                   </span>
                   <span className={rowLineVariants({ line: "fact" })}>
-                    {t("set-facts", {
-                      count: section.questionCount,
-                      minutes: section.timeLimitSeconds / 60,
-                    })}
+                    {waitingForOther
+                      ? t("part-waiting-label")
+                      : t("set-facts", {
+                          count: section.questionCount,
+                          minutes: section.timeLimitSeconds / 60,
+                        })}
                   </span>
                 </span>
+                {runningHere && attempt.activeSectionExpiresAt !== null ? (
+                  <span className="text-primary shrink-0 text-xs font-medium tabular-nums">
+                    <TryoutClock expiresAt={attempt.activeSectionExpiresAt} />
+                  </span>
+                ) : null}
                 {Option.match(score, {
                   onNone: () => null,
                   onSome: (value) => (

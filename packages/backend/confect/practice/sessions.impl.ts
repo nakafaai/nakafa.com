@@ -14,6 +14,7 @@ import {
 } from "@repo/backend/confect/practice/answer";
 import {
   openPracticeSession,
+  readPracticeSetSummary,
   restartPracticeSession,
 } from "@repo/backend/confect/practice/session";
 import spec from "@repo/backend/confect/practice/sessions.spec";
@@ -110,12 +111,27 @@ const explain = FunctionImpl.make(
   })
 );
 
+/** Compact practice progress of each practised section in one set, empty for a visitor. */
+const summary = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "summary",
+  Effect.fn("practice.sessions.summary")(function* (args) {
+    const auth = yield* getOptionalAppUserForRead();
+    if (!auth) {
+      return [];
+    }
+    return yield* readPracticeSetSummary(auth.appUser._id, args);
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(open),
   Layer.provide(restart),
   Layer.provide(check),
   Layer.provide(state),
   Layer.provide(content),
+  Layer.provide(summary),
   Layer.provide(explain),
   Layer.provide(atomic),
   Layer.provide(sessionMiddleware),

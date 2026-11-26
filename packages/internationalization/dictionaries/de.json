@@ -2458,7 +2458,7 @@
     "open-set-cta": "Aufgabensätze anzeigen",
     "free-cta": "Kostenlos starten",
     "start-dialog-title": "Diesen Probetest starten?",
-    "start-dialog-description": "Jeder Versuch bleibt {hours, plural, one {# Stunde} other {# Stunden}} offen.",
+    "start-dialog-description": "Jeder Versuch bleibt {hours, plural, one {# Stunde} other {# Stunden}} offen, und der Timer jedes Teils startet erst, wenn du ihn öffnest.",
     "free-dialog-title": "Probetest kostenlos starten",
     "free-dialog-description": "Dein Ergebnis bleibt, Lösungswege gibt es mit Nakafa Pro.",
     "restart-dialog-title": "Diesen Probetest von vorn beginnen?",
@@ -2554,7 +2554,16 @@
     "reward-sections": "{count, number} Teile abgeschlossen",
     "reward-paper": "Fragen abgeschlossen",
     "medal-name": "Medaille {name}",
-    "verdict": "{state, select, correct {Richtig} incorrect {Falsch} pending {Wartet auf die Bewertung} other {Noch offen}}"
+    "verdict": "{state, select, correct {Richtig} incorrect {Falsch} pending {Wartet auf die Bewertung} other {Noch offen}}",
+    "discard-cta": "Sitzung verlassen",
+    "discard-dialog-title": "Diese Sitzung verlassen?",
+    "discard-dialog-description": "Es hat noch kein Teil begonnen, daher wird diese Sitzung ohne Punktzahl entfernt.",
+    "discard-confirm-cta": "Sitzung verlassen",
+    "lobby-hint": "Wähle einen beliebigen Teil, sobald du bereit bist.",
+    "part-running-label": "Läuft",
+    "part-waiting-label": "Erst aktiven Teil beenden",
+    "practice-mode-description": "Wähle einen beliebigen Teil zum Üben ohne Timer und prüfe jede Antwort sofort.",
+    "practice-part-facts": "{count, number} Fragen, ohne Timer"
   },
   "Player": {
     "navigator-answered": "{answered, number} von {total, number} beantwortet",
@@ -3748,6 +3757,10 @@
     },
     "essay-too-long": {
       "title": "Text zu lang für eine Antwort."
+    },
+    "tryout-discard-error": {
+      "title": "Sitzung konnte nicht verlassen werden",
+      "description": "Versuche es gleich noch einmal."
     }
   },
   "Ai": {

@@ -6,7 +6,8 @@ import { client } from "@repo/backend/test/client";
 import { TRYOUT_NOW, tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Effect } from "effect";
 
-const { check, content, explain, open, restart, state } = practice.sessions;
+const { check, content, explain, open, restart, state, summary } =
+  practice.sessions;
 
 /** The first section of the fixture's set 1, read in Indonesian. */
 const TARGET = {
@@ -141,8 +142,10 @@ describe("practice/sessions", () => {
           world.t.mutation(async (ctx) => {
             const rows = await ctx.db
               .query("assessmentRows")
-              .withIndex("by_kind_and_versionHash_and_language", (index) =>
-                index.eq("kind", "explanation")
+              .withIndex("by_snapshotId_and_kind_and_identity", (index) =>
+                index
+                  .eq("snapshotId", world.snapshotId)
+                  .eq("kind", "explanation")
               )
               .collect();
             await Promise.all(
@@ -335,6 +338,54 @@ describe("practice/sessions", () => {
           world.t.run((ctx) => ctx.db.get("practiceSessions", sessionId))
         );
         expect(session?.questionLanguage).toBe("id");
+      })
+  );
+
+  it.effect(
+    "summarizes practised sections of a set, tracks checked counts, and falls back when a legacy row has no count",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        const setTarget = { ...FIXTURE_TRACK, setKey: "set-1" } as const;
+        expect(yield* world.visitor.query(summary, setTarget)).toEqual([]);
+        expect(yield* world.learner.query(summary, setTarget)).toEqual([]);
+
+        const { one, sessionId, two } = yield* openPractice(world);
+        expect(yield* world.learner.query(summary, setTarget)).toEqual([
+          { checkedCount: 0, questionCount: 2, sectionKey: "section-a" },
+        ]);
+
+        yield* world.learner.mutation(check, {
+          questionId: one,
+          response: [...FIRST.correct],
+        });
+        expect(yield* world.learner.query(summary, setTarget)).toEqual([
+          { checkedCount: 1, questionCount: 2, sectionKey: "section-a" },
+        ]);
+
+        // Legacy session rows without checkedCount still compute and increment the exact count.
+        yield* Effect.promise(() =>
+          world.t.mutation((ctx) =>
+            ctx.db.patch("practiceSessions", sessionId, {
+              checkedCount: undefined,
+            })
+          )
+        );
+        expect(yield* world.learner.query(summary, setTarget)).toEqual([
+          { checkedCount: 1, questionCount: 2, sectionKey: "section-a" },
+        ]);
+        yield* world.learner.mutation(check, {
+          questionId: two,
+          response: ["option-2"],
+        });
+        expect(yield* world.learner.query(summary, setTarget)).toEqual([
+          { checkedCount: 2, questionCount: 2, sectionKey: "section-a" },
+        ]);
+
+        yield* world.learner.mutation(restart, { sessionId });
+        expect(yield* world.learner.query(summary, setTarget)).toEqual([
+          { checkedCount: 0, questionCount: 2, sectionKey: "section-a" },
+        ]);
       })
   );
 });

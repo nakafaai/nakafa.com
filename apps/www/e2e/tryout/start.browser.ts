@@ -135,8 +135,8 @@ const recordStartFrames = Effect.fn("NakafaE2E.recordStartFrames")(function* (
 });
 
 /**
- * Opens a set's pane signed in, presses its Start and confirms once, then requires the dialog to close
- * immediately and the first section's running player to open locked with its timer and first question.
+ * Opens a set's pane signed in, presses a specific part and confirms once, then requires the dialog to close
+ * immediately and that section's running player to open locked with its timer and first question.
  */
 const verifyOnePress = Effect.fn("NakafaE2E.verifyOnePressStart")(function* (
   page: Page,
@@ -149,7 +149,7 @@ const verifyOnePress = Effect.fn("NakafaE2E.verifyOnePressStart")(function* (
   yield* Effect.promise(() =>
     page.goto(target.setHref, { waitUntil: "commit" })
   );
-  // The set's pane holds Start in its footer: beside the table on a desktop, in a drawer on a phone.
+  // Wait for the set's pane footer Start button to enable, then click the first part row directly.
   const start = page.locator("footer").getByRole("button", {
     exact: true,
     name: target.messages.Tryouts.action["start-cta"],
@@ -158,11 +158,11 @@ const verifyOnePress = Effect.fn("NakafaE2E.verifyOnePressStart")(function* (
     expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
   );
   yield* Effect.promise(() => waitUntilTakenOver(start));
-  yield* activate(start, hasTouch);
+  yield* activate(page.locator("ol").getByRole("button").first(), hasTouch);
   yield* activate(
     page.getByRole("dialog").getByRole("button", {
       exact: true,
-      name: target.messages.Tryouts["free-cta"],
+      name: target.messages.Tryouts.action["start-cta"],
     }),
     hasTouch
   );
@@ -390,7 +390,7 @@ test("a hard load of a set whose attempt runs never reads Start", async ({
           await waitForLoadsSettled(page);
           await page.goto(SET_HREF, { waitUntil: "commit" });
           await expect(
-            page.locator("main").getByRole("link", {
+            page.locator("main").getByRole("button", {
               exact: true,
               name: messages.action["continue-cta"],
             })
@@ -450,10 +450,13 @@ test("a press while the learner read is pending resumes the running section it b
             timeout: readinessTimeoutMilliseconds,
           });
           await waitUntilTakenOver(start);
-          await start.click();
+          await page.locator("ol").getByRole("button").first().click();
           await page
             .getByRole("dialog")
-            .getByRole("button", { exact: true, name: messages["free-cta"] })
+            .getByRole("button", {
+              exact: true,
+              name: messages.action["start-cta"],
+            })
             .click();
           await page.waitForURL(ATTEMPT_ADDRESS);
 

@@ -22,8 +22,11 @@ import { getTileLooks } from "@repo/design-system/lib/look";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Duration, Option, Schema, Tuple } from "effect";
 import { useId, useState } from "react";
-import { useTranslations } from "use-intl";
+import { useFormatter, useTranslations } from "use-intl";
+import { PaneFact, PaneFacts } from "@/components/shared/page/pane";
+import { useOptionalSetPane } from "@/components/tryout/pane/context";
 import { getTryoutPracticeTarget } from "@/components/tryout/route/path";
+import type { TryoutPart } from "@/components/tryout/set/model";
 import { TargetLink } from "@/lib/routing/link";
 
 /** How a learner takes the set: a practice with no clock, or the timed simulation of the real exam. */
@@ -53,6 +56,8 @@ const MODES = [
 ] as const;
 
 interface TryoutStartDialogProps {
+  /** Single-section direct-entry part facts, shown before its non-pausable timer starts. */
+  readonly entryPart?: TryoutPart | undefined;
   readonly finishedAttempt: boolean;
   readonly kind: TryoutStartAccess["kind"];
   readonly onPrimary: () => void;
@@ -65,17 +70,20 @@ interface TryoutStartDialogProps {
 /**
  * Asks how the learner takes the set before it starts, as two cards side by side, each the mode's tile, its name
  * and what it means in two short facts: the practice, with no clock and a check on every question, or the timed
- * simulation, whose score goes on the set's board. The simulation is chosen first. Its one primary starts the
- * chosen mode and closes the dialog with the press: the page shows what the start brings while the server answers.
- * A page with no practice shows the simulation alone, as a card with no radio.
+ * simulation, whose score goes on the set's board. For a single-section set, simulation also shows exact question
+ * count and duration before the non-pausable clock starts.
  */
 export function TryoutStartDialog(props: TryoutStartDialogProps) {
   const t = useTranslations("Tryouts");
+  const tCommon = useTranslations("Common");
+  const format = useFormatter();
+  const setPane = useOptionalSetPane();
   const [mode, setMode] = useState<StartMode>("simulation");
   const copy = getDialogCopy(props, t);
   const practice = getTryoutPracticeTarget(props.pagePath);
   const practicing = Option.filter(practice, () => mode === "practice");
-  const selectable = Option.isSome(practice);
+  const hasPracticeTab = props.entryPart === undefined && setPane !== null;
+  const selectable = Option.isSome(practice) || hasPracticeTab;
   const shown = selectable
     ? MODES
     : Arr.filter(MODES, (each) => each.mode === "simulation");
@@ -90,48 +98,81 @@ export function TryoutStartDialog(props: TryoutStartDialogProps) {
       selectable={selectable}
     />
   ));
+  const showEntryFacts = props.entryPart !== undefined && mode === "simulation";
+  const switchesToPracticeTab = mode === "practice" && hasPracticeTab;
 
   return (
     <ResponsiveDialog
-      action={Option.match(practicing, {
-        onNone: () => (
-          <Button onClick={props.onPrimary} type="button">
-            <HugeIcons data-icon="inline-start" icon={Rocket01Icon} />
-            {copy.primary}
-          </Button>
-        ),
-        onSome: (target) => (
-          <TargetLink
-            className={buttonVariants()}
-            onClick={() => props.setOpen(false)}
-            target={target}
+      action={
+        switchesToPracticeTab ? (
+          <Button
+            onClick={() => {
+              props.setOpen(false);
+              setPane.setMode("practice");
+            }}
+            type="button"
           >
             <HugeIcons data-icon="inline-start" icon={Target02Icon} />
             {t("practice-start-cta")}
-          </TargetLink>
-        ),
-      })}
-      description={copy.description}
+          </Button>
+        ) : (
+          Option.match(practicing, {
+            onNone: () => (
+              <Button onClick={props.onPrimary} type="button">
+                <HugeIcons data-icon="inline-start" icon={Rocket01Icon} />
+                {copy.primary}
+              </Button>
+            ),
+            onSome: (target) => (
+              <TargetLink
+                className={buttonVariants()}
+                onClick={() => props.setOpen(false)}
+                target={target}
+              >
+                <HugeIcons data-icon="inline-start" icon={Target02Icon} />
+                {t("practice-start-cta")}
+              </TargetLink>
+            ),
+          })
+        )
+      }
+      description={
+        showEntryFacts ? t("start-part-description") : copy.description
+      }
       open={props.open}
       setOpen={props.setOpen}
       title={copy.title}
     >
-      {selectable ? (
-        <RadioGroup
-          aria-label={t("start-mode-label")}
-          className="grid gap-3"
-          onValueChange={(next) => {
-            if (Schema.is(StartMode)(next)) {
-              setMode(next);
-            }
-          }}
-          value={mode}
-        >
-          {cards}
-        </RadioGroup>
-      ) : (
-        cards
-      )}
+      <div className="flex flex-col gap-3">
+        {selectable ? (
+          <RadioGroup
+            aria-label={t("start-mode-label")}
+            className="grid gap-3"
+            onValueChange={(next) => {
+              if (Schema.is(StartMode)(next)) {
+                setMode(next);
+              }
+            }}
+            value={mode}
+          >
+            {cards}
+          </RadioGroup>
+        ) : (
+          cards
+        )}
+        {showEntryFacts && props.entryPart !== undefined ? (
+          <PaneFacts layout="grid">
+            <PaneFact label={tCommon("exam-questions")}>
+              {format.number(props.entryPart.questionCount)}
+            </PaneFact>
+            <PaneFact label={t("set-column-duration")}>
+              {t("set-duration-minutes", {
+                minutes: props.entryPart.timeLimitSeconds / 60,
+              })}
+            </PaneFact>
+          </PaneFacts>
+        ) : null}
+      </div>
     </ResponsiveDialog>
   );
 }

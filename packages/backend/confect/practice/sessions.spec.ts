@@ -30,6 +30,24 @@ export class PracticeError extends Schema.TaggedError<
   message: Schema.String,
 }) {}
 
+/** One set whose sections' practice progress is read together. */
+const practiceSetTargetValidator = Schema.Struct({
+  countryKey: tryoutRouteKeyValidator,
+  examKey: tryoutRouteKeyValidator,
+  setKey: tryoutRouteKeyValidator,
+  trackKey: tryoutRouteKeyValidator,
+});
+export type PracticeSetTarget = typeof practiceSetTargetValidator.Type;
+
+/** Compact practice progress of each practised section in one set. */
+const practiceSetSummaryValidator = Schema.Array(
+  Schema.Struct({
+    checkedCount: Schema.Finite,
+    questionCount: Schema.Finite,
+    sectionKey: tryoutRouteKeyValidator,
+  })
+);
+
 /** The section of a set that a learner practises, and the locale its questions are read in. */
 const practiceTargetValidator = Schema.Struct({
   countryKey: tryoutRouteKeyValidator,
@@ -133,6 +151,14 @@ export default GroupSpec.make()
       }),
       returns: () => practiceContentValidator,
       error: () => Schema.Union([AuthFailure, PracticeError, ReleaseError]),
+    }).middleware(Session)
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "summary",
+      args: () => practiceSetTargetValidator.fields,
+      returns: () => practiceSetSummaryValidator,
+      error: () => AuthFailure,
     }).middleware(Session)
   )
   .addFunction(

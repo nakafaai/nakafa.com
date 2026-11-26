@@ -1,13 +1,35 @@
+import { useMutation } from "@confect/react";
+import { Delete02Icon } from "@hugeicons/core-free-icons";
+import { useDisclosure } from "@mantine/hooks";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Button } from "@repo/design-system/components/ui/button";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { toast } from "@repo/design-system/lib/toast/notify";
+import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
-import { Array as Arr, Option } from "effect";
+import { useConvex } from "convex/react";
+import { Array as Arr, Effect, Option } from "effect";
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { PaneFact, PaneFacts } from "@/components/shared/page/pane";
 import { useSetPane } from "@/components/tryout/pane/context";
 import { TryoutResultFacts } from "@/components/tryout/review/result";
+import {
+  getTryoutPageTarget,
+  getTryoutPublicPathHref,
+} from "@/components/tryout/route/path";
 import { TryoutClock } from "@/components/tryout/runtime/countdown";
+import { canDiscardTryoutAttempt } from "@/components/tryout/runtime/state";
 import { TryoutAttemptPicker } from "@/components/tryout/score/history";
+import { DISCARD_ERROR } from "@/components/tryout/set/copy";
+import { keepActionName } from "@/components/tryout/set/kept";
+import type { CurrentAttempt } from "@/components/tryout/set/model";
 import { useFactsWaiting } from "@/components/tryout/set/name";
+import { discardAttemptProgram } from "@/components/tryout/set/program";
+import { requireConvexOnline } from "@/lib/convex/online";
 
 /** The day an attempt was taken, short enough for a fact. */
 const TAKEN = { day: "numeric", month: "short", year: "numeric" } as const;
@@ -42,27 +64,133 @@ function AttemptPart({
   );
 }
 
-/** A running attempt's facts: the time it has left, ticking, and how many parts it finished. */
+/** Allows leaving an active attempt before any section has started. */
+function DiscardAttemptControl({
+  attemptId,
+}: {
+  readonly attemptId: Id<"tryoutAttempts">;
+}) {
+  const t = useTranslations("Tryouts");
+  const { view } = useSetPane();
+  const navigate = useNavigate();
+  const convex = useConvex();
+  const discard = useMutation(tryouts.mutations.attempts.discardAttempt);
+  const [dialogOpen, dialog] = useDisclosure(false);
+  const [busy, setBusy] = useState(false);
+
+  function onConfirm() {
+    if (busy) {
+      return;
+    }
+    dialog.close();
+    setBusy(true);
+    const setAddress = `/${view.route.locale}${getTryoutPublicPathHref(view.page.set.publicPath)}`;
+    const program = discardAttemptProgram({
+      attemptId,
+      failureMessage: DISCARD_ERROR,
+      mutation: discard,
+      onFailure: Effect.sync(() => setBusy(false)),
+      onSuccess: keepActionName(setAddress, "start-cta").pipe(
+        Effect.andThen(
+          Effect.sync(() => {
+            setBusy(false);
+            Option.map(
+              getTryoutPageTarget({ publicPath: view.page.set.publicPath }),
+              (target) => navigate({ ...target, replace: true })
+            );
+          })
+        )
+      ),
+    });
+    Effect.runPromise(
+      requireConvexOnline(convex).pipe(
+        Effect.andThen(program),
+        Effect.catchTag("ConvexOfflineError", () =>
+          Effect.sync(() => {
+            toast.error(DISCARD_ERROR, { position: "bottom-center" });
+            setBusy(false);
+          })
+        )
+      )
+    );
+  }
+
+  return (
+    <>
+      <Button
+        inert={busy}
+        onClick={dialog.open}
+        size="sm"
+        type="button"
+        variant="outline"
+      >
+        <Spinner icon={Delete02Icon} isLoading={busy} />
+        {t("discard-cta")}
+      </Button>
+      <ResponsiveDialog
+        action={
+          <Button
+            data-agent-confirm=""
+            inert={busy}
+            onClick={onConfirm}
+            type="button"
+            variant="destructive"
+          >
+            <Spinner icon={Delete02Icon} isLoading={busy} />
+            {t("discard-confirm-cta")}
+          </Button>
+        }
+        description={t("discard-dialog-description")}
+        open={dialogOpen}
+        setOpen={(open) => (open ? dialog.open() : dialog.close())}
+        title={t("discard-dialog-title")}
+      >
+        <p className="text-muted-foreground text-sm">{view.page.set.title}</p>
+      </ResponsiveDialog>
+    </>
+  );
+}
+
+/** A running attempt's facts: the time it has left, ticking, how many parts it finished, and lobby actions. */
 function RunningFacts({
   attempt,
 }: {
-  attempt: { completedSectionKeys: readonly string[]; expiresAt: number };
+  attempt: Pick<
+    CurrentAttempt,
+    | "activeSectionKey"
+    | "attemptId"
+    | "completedSectionKeys"
+    | "expiresAt"
+    | "startedSectionCount"
+    | "status"
+  >;
 }) {
   const t = useTranslations("Tryouts");
   const tCommon = useTranslations("Common");
   const { sections } = useSetPane();
+  const discardable = canDiscardTryoutAttempt(attempt);
   return (
-    <PaneFacts layout="grid">
-      <PaneFact label={t("remaining-time-label")}>
-        <TryoutClock expiresAt={attempt.expiresAt} />
-      </PaneFact>
-      <PaneFact label={t("parts-done-label")}>
-        {tCommon("count-of", {
-          count: attempt.completedSectionKeys.length,
-          total: sections.length,
-        })}
-      </PaneFact>
-    </PaneFacts>
+    <>
+      <PaneFacts layout="grid">
+        <PaneFact label={t("remaining-time-label")}>
+          <TryoutClock expiresAt={attempt.expiresAt} />
+        </PaneFact>
+        <PaneFact label={t("parts-done-label")}>
+          {tCommon("count-of", {
+            count: attempt.completedSectionKeys.length,
+            total: sections.length,
+          })}
+        </PaneFact>
+      </PaneFacts>
+      {attempt.activeSectionKey === null ? (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-muted-foreground text-xs">{t("lobby-hint")}</p>
+          {discardable ? (
+            <DiscardAttemptControl attemptId={attempt.attemptId} />
+          ) : null}
+        </div>
+      ) : null}
+    </>
   );
 }
 

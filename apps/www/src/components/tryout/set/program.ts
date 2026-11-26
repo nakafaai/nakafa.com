@@ -94,6 +94,38 @@ export const startEntrySectionProgram = Effect.fn("tryout.startSection")(
     )
 );
 
+/** Discards an unstarted attempt, then runs what follows, showing a localized toast on failure. */
+export const discardAttemptProgram = Effect.fn("tryout.discardAttempt")(
+  (input: {
+    readonly attemptId: Id<"tryoutAttempts">;
+    readonly failureMessage: ToastCopy;
+    readonly mutation: (args: {
+      attemptId: Id<"tryoutAttempts">;
+    }) => InvokeReturn<typeof tryouts.mutations.attempts.discardAttempt>;
+    readonly onFailure?: Effect.Effect<void>;
+    readonly onSuccess?: Effect.Effect<void>;
+  }) =>
+    Effect.tryPromise({
+      try: () => input.mutation({ attemptId: input.attemptId }),
+      catch: (cause) => new TryoutClientRequestError({ cause }),
+    }).pipe(
+      Effect.flatMap((result) =>
+        Effect.fromResult(result).pipe(
+          Effect.mapError((cause) => new TryoutClientRequestError({ cause }))
+        )
+      ),
+      Effect.andThen(input.onSuccess ?? Effect.void),
+      Effect.catchTag("TryoutClientRequestError", (error) =>
+        reportRequestFailure(
+          error,
+          "tryout-discard",
+          input.failureMessage
+        ).pipe(Effect.andThen(input.onFailure ?? Effect.void))
+      ),
+      Effect.asVoid
+    )
+);
+
 /** Reports one unexpected request failure and shows the localized fallback. */
 function reportRequestFailure(
   error: unknown,

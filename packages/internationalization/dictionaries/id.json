@@ -2458,7 +2458,7 @@
     "open-set-cta": "Lihat set",
     "free-cta": "Mulai gratis",
     "start-dialog-title": "Mulai try out ini?",
-    "start-dialog-description": "Tiap percobaan aktif {hours, plural, other {# jam}}.",
+    "start-dialog-description": "Tiap percobaan aktif {hours, plural, other {# jam}}, dan waktu tiap bagian baru berjalan saat kamu memulainya.",
     "free-dialog-title": "Mulai try out gratis",
     "free-dialog-description": "Skor tetap tercatat, pembahasan ada di Nakafa Pro.",
     "restart-dialog-title": "Mulai try out ini dari awal?",
@@ -2554,7 +2554,16 @@
     "reward-sections": "{count, number} bagian selesai",
     "reward-paper": "Soal selesai",
     "medal-name": "Medali {name}",
-    "verdict": "{state, select, correct {Benar} incorrect {Salah} pending {Menunggu dinilai} other {Belum dijawab}}"
+    "verdict": "{state, select, correct {Benar} incorrect {Salah} pending {Menunggu dinilai} other {Belum dijawab}}",
+    "discard-cta": "Batalkan sesi",
+    "discard-dialog-title": "Batalkan sesi ini?",
+    "discard-dialog-description": "Belum ada bagian yang dimulai, jadi sesi ini dihapus tanpa mencatat nilai.",
+    "discard-confirm-cta": "Ya, batalkan",
+    "lobby-hint": "Pilih bagian mana saja saat kamu siap.",
+    "part-running-label": "Sedang berjalan",
+    "part-waiting-label": "Selesaikan bagian aktif dulu",
+    "practice-mode-description": "Pilih bagian mana saja untuk latihan tanpa batas waktu dan cek jawaban langsung.",
+    "practice-part-facts": "{count, number} soal, tanpa waktu"
   },
   "Player": {
     "navigator-answered": "{answered, number} dari {total, number} terjawab",
@@ -3748,6 +3757,10 @@
     },
     "essay-too-long": {
       "title": "Teks terlalu panjang untuk jawaban."
+    },
+    "tryout-discard-error": {
+      "title": "Gagal membatalkan sesi",
+      "description": "Coba lagi beberapa saat lagi."
     }
   },
   "Ai": {

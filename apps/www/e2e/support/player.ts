@@ -184,15 +184,19 @@ export const runFirstSection = Effect.fn("NakafaE2E.runFirstSection")(
     yield* openCountry(page);
     yield* openTrack(page, hasTouch);
 
-    // The set opens beside the track's table, and its pane's Start asks for the mode, then opens the first
-    // section running.
+    // The set opens beside the track's table; pressing a part asks to confirm that exact part and opens it running.
     const start = yield* openSetPane(page, hasTouch);
     yield* Effect.promise(() =>
       expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
     );
-    yield* activate(start, hasTouch);
     yield* activate(
-      page.getByRole("dialog").getByRole("button", { name: "Start free" }),
+      page.getByRole("complementary").locator("ol").getByRole("button").first(),
+      hasTouch
+    );
+    yield* activate(
+      page
+        .getByRole("dialog")
+        .getByRole("button", { exact: true, name: "Start" }),
       hasTouch
     );
     yield* arriveLocked(page, (pathname) => pathname.startsWith(`${setHref}/`));
@@ -225,13 +229,18 @@ export const confirmFinish = Effect.fn("NakafaE2E.confirmTryoutFinish")(
 );
 
 /**
- * Finishes the running section, then waits until the attempt's set shows again,
- * still locked, so the server has stored the finish before the page moves on.
+ * Finishes the running section, then waits until the attempt's set lobby shows again,
+ * with the shell unlocked so the learner can pick the next part freely.
  */
 export const finishSection = Effect.fn("NakafaE2E.finishTryoutSection")(
   function* (page: Page, hasTouch: boolean) {
     yield* confirmFinish(page, hasTouch);
-    yield* arriveLocked(page, (pathname) => pathname === setHref);
+    yield* Effect.promise(() =>
+      expect(page).toHaveURL(
+        (url) => url.pathname === setHref && url.searchParams.has("attemptId"),
+        { timeout: readinessTimeoutMilliseconds }
+      )
+    );
   }
 );
 

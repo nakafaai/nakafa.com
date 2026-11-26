@@ -7,6 +7,9 @@ import { assessmentRowFacts } from "@repo/backend/confect/contentRelease/assessm
 import {
   findActiveExplanationSnapshotId,
   readExplanation,
+  readItemKey,
+  readItemVersion,
+  readStimulus,
 } from "@repo/backend/confect/tryouts/rows";
 import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Effect, Option, Schema } from "effect";
@@ -303,6 +306,97 @@ describe("tryouts/rows readExplanation", () => {
         expect(noActiveResult.activeSnapshotId).toBeNull();
         assert.ok(noActiveResult.fromHistorical);
         expect(noActiveResult.withoutFallback).toBeNull();
+      })
+  );
+});
+
+describe("tryouts/rows snapshot isolation", () => {
+  it.effect(
+    "reads item, key, and stimulus rows only from the requested snapshot and never leaks another snapshot",
+    () =>
+      Effect.gen(function* () {
+        const world = yield* tryoutWorld();
+        const seeded = yield* Effect.promise(() =>
+          world.t.query(async (ctx) => {
+            const rows = await ctx.db
+              .query("assessmentRows")
+              .withIndex("by_snapshotId_and_index", (query) =>
+                query.eq("snapshotId", world.snapshotId)
+              )
+              .collect();
+            return {
+              item: Option.getOrNull(
+                Arr.findFirst(rows, (row) => row.kind === "item")
+              ),
+              key: Option.getOrNull(
+                Arr.findFirst(rows, (row) => row.kind === "key")
+              ),
+              stimulus: Option.getOrNull(
+                Arr.findFirst(rows, (row) => row.kind === "stimulus")
+              ),
+            };
+          })
+        );
+        assert.ok(seeded.item?.versionHash);
+        assert.ok(seeded.key?.versionHash);
+        assert.ok(seeded.stimulus?.versionHash);
+        const itemHash = seeded.item.versionHash;
+        const keyHash = seeded.key.versionHash;
+        const stimulusHash = seeded.stimulus.versionHash;
+
+        // Insert broken rows with the same hashes under an unactivated candidate snapshot.
+        yield* Effect.promise(() =>
+          world.t.mutation(async (ctx) => {
+            await ctx.db.insert("assessmentRows", {
+              identity: "candidate-item",
+              index: 1,
+              kind: "item",
+              rowHash: "sha256:0000",
+              rowJson: "{}",
+              snapshotId: "candidate-broken",
+              versionHash: itemHash,
+            });
+            await ctx.db.insert("assessmentRows", {
+              identity: keyHash,
+              index: 2,
+              kind: "key",
+              rowHash: "sha256:0001",
+              rowJson: "{}",
+              snapshotId: "candidate-broken",
+              versionHash: keyHash,
+            });
+            await ctx.db.insert("assessmentRows", {
+              identity: "candidate-stimulus",
+              index: 3,
+              kind: "stimulus",
+              rowHash: "sha256:0002",
+              rowJson: "{}",
+              snapshotId: "candidate-broken",
+              versionHash: stimulusHash,
+            });
+          })
+        );
+
+        const good = yield* world.run(
+          Effect.all({
+            item: readItemVersion(world.snapshotId, itemHash),
+            key: readItemKey(world.snapshotId, keyHash),
+            stimulus: readStimulus(world.snapshotId, stimulusHash),
+          })
+        );
+        expect(good.item.hash).toBe(itemHash);
+        expect(good.key.version).toBe(keyHash);
+        expect(good.stimulus.hash).toBe(stimulusHash);
+
+        // Reading from the broken snapshot fails cleanly without leaking the active snapshot.
+        expect(
+          yield* world.run(
+            readItemVersion("candidate-broken", itemHash).pipe(
+              Effect.flip,
+              Effect.map(({ code }) => ({ code }))
+            )
+          )
+        ).toEqual({ code: "CONTENT_RELEASE_INTEGRITY" });
       })
   );
 });

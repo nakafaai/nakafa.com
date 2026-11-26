@@ -6,10 +6,34 @@ import type {
   Growth,
   SetClaims as SetClaimsSchema,
 } from "@repo/backend/confect/progress/view";
-import { Array as Arr, HashSet, Option } from "effect";
+import { Array as Arr, HashSet, Option, Schema } from "effect";
 import type { CurrentAttempt } from "@/components/tryout/set/model";
 
 type SetClaims = typeof SetClaimsSchema.Type;
+
+/** The two modes a learner can switch between in a set's pane: timed simulation or untimed practice. */
+export const SetPaneModeSchema = Schema.Literals(["simulation", "practice"]);
+export type SetPaneMode = typeof SetPaneModeSchema.Type;
+
+/** Compact practice progress of one section in the current set. */
+const PracticeSectionSummarySchema = Schema.Struct({
+  checkedCount: Schema.Finite,
+  questionCount: Schema.Finite,
+  sectionKey: Schema.String,
+});
+type PracticeSectionSummary = typeof PracticeSectionSummarySchema.Type;
+
+const SelectPracticePathInputSchema = Schema.Struct({
+  sections: Schema.Array(
+    Schema.Struct({
+      publicPath: Schema.optionalKey(Schema.String),
+      sectionKey: Schema.String,
+    })
+  ),
+  setPublicPath: Schema.String,
+  summaries: Schema.Array(PracticeSectionSummarySchema),
+});
+type SelectPracticePathInput = typeof SelectPracticePathInputSchema.Type;
 
 /** A set nobody has claimed anything of yet, as a visitor's pane reads it. */
 export const NO_CLAIMS: SetClaims = { sections: [], set: false, stars: 0 };
@@ -74,4 +98,30 @@ export function partScore(
     attempt.sectionScores,
     (entry) => entry.sectionKey === sectionKey
   );
+}
+
+/** The practice progress summary of one section in the current set, if the learner has started practising it. */
+export function partPracticeSummary(
+  summaries: readonly PracticeSectionSummary[],
+  sectionKey: string
+): Option.Option<PracticeSectionSummary> {
+  return Arr.findFirst(summaries, (entry) => entry.sectionKey === sectionKey);
+}
+
+/**
+ * Selects the best section path to open when pressing the practice footer CTA: the first section with
+ * remaining unchecked questions, or else the first section of the set.
+ */
+export function selectPracticePath(input: SelectPracticePathInput): string {
+  const unfinished = Arr.findFirst(input.sections, (section) =>
+    Option.match(partPracticeSummary(input.summaries, section.sectionKey), {
+      onNone: () => true,
+      onSome: (summary) => summary.checkedCount < summary.questionCount,
+    })
+  );
+  const chosen = Option.orElse(unfinished, () => Arr.head(input.sections));
+  return Option.match(chosen, {
+    onNone: () => input.setPublicPath,
+    onSome: (section) => section.publicPath ?? input.setPublicPath,
+  });
 }

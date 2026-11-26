@@ -51,6 +51,7 @@ export function readAttemptResume(
       )
     : nextSection;
   return {
+    activeSectionExpiresAt: inProgressSection?.expiresAt ?? null,
     activeSectionKey: inProgressSection?.sectionKey ?? null,
     resumeSectionKey: resumeSection?.sectionKey ?? null,
   };

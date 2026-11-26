@@ -42,52 +42,67 @@ export const decodeAs = Effect.fn("tryouts.rows.decodeAs")(function* <
     Effect.flatMap(({ record }) =>
       Schema.decodeUnknownEffect(Rows.cases[kind])(record.row)
     ),
-    Effect.catchTag("SchemaError", () =>
-      releaseFail(
-        "CONTENT_RELEASE_INTEGRITY",
-        `A stored ${kind} row is not an assessment ${kind} row.`
+    Effect.catchTag("SchemaError", (error) =>
+      Effect.logError("Failed to decode stored assessment row", {
+        cause: error.message,
+        identity: stored.value.identity,
+        kind,
+        snapshotId: stored.value.snapshotId,
+        versionHash: stored.value.versionHash,
+      }).pipe(
+        Effect.andThen(
+          releaseFail(
+            "CONTENT_RELEASE_INTEGRITY",
+            `A stored ${kind} row is not an assessment ${kind} row.`
+          )
+        )
       )
     )
   );
 });
 
 /**
- * Reads one row of a content-addressed kind by its version hash: an item version, a stimulus
- * version, or a key. The same hash names the same content in every snapshot that holds it, so the
- * first stored row serves.
+ * Reads one row of a content-addressed kind from one exact snapshot by its version hash: an item
+ * version, a stimulus version, or a key. Scoping to `snapshotId` keeps every read isolated to the
+ * frozen or active snapshot, so stale or candidate rows never leak across snapshots.
  */
 const readByHash = Effect.fn("tryouts.rows.readByHash")(function* <
   K extends "item" | "key" | "stimulus",
->(kind: K, versionHash: string) {
+>(snapshotId: string, kind: K, versionHash: string) {
   const stored = yield* (yield* DatabaseReader)
     .table("assessmentRows")
-    .index("by_kind_and_versionHash_and_language", (index) =>
-      index.eq("kind", kind).eq("versionHash", versionHash)
+    .index("by_snapshotId_and_kind_and_versionHash", (index) =>
+      index
+        .eq("snapshotId", snapshotId)
+        .eq("kind", kind)
+        .eq("versionHash", versionHash)
     )
     .first()
     .pipe(Effect.catchTag("DocumentDecodeError", Effect.die));
   return yield* decodeAs(kind, stored);
 });
 
-/** Reads the item version an attempt froze, by its hash. */
+/** Reads the item version an attempt froze in its snapshot, by its hash. */
 export const readItemVersion = Effect.fn("tryouts.rows.readItemVersion")(
-  function* (versionHash: string) {
-    return (yield* readByHash("item", versionHash)).version;
+  function* (snapshotId: string, versionHash: string) {
+    return (yield* readByHash(snapshotId, "item", versionHash)).version;
   }
 );
 
-/** Reads the key of the item version an attempt froze, by the version's hash. */
+/** Reads the key of the item version an attempt froze in its snapshot, by the version's hash. */
 export const readItemKey = Effect.fn("tryouts.rows.readItemKey")(function* (
+  snapshotId: string,
   versionHash: string
 ) {
-  return (yield* readByHash("key", versionHash)).key;
+  return (yield* readByHash(snapshotId, "key", versionHash)).key;
 });
 
-/** Reads the stimulus version an item version was written against, by its hash. */
+/** Reads the stimulus version an item version was written against in its snapshot, by its hash. */
 export const readStimulus = Effect.fn("tryouts.rows.readStimulus")(function* (
+  snapshotId: string,
   versionHash: string
 ) {
-  return (yield* readByHash("stimulus", versionHash)).version;
+  return (yield* readByHash(snapshotId, "stimulus", versionHash)).version;
 });
 
 /**

@@ -2458,7 +2458,7 @@
     "open-set-cta": "View sets",
     "free-cta": "Start free",
     "start-dialog-title": "Start this try out?",
-    "start-dialog-description": "Each attempt stays open {hours, plural, one {# hour} other {# hours}}.",
+    "start-dialog-description": "Each attempt stays open {hours, plural, one {# hour} other {# hours}}, and each part's timer starts only when you open it.",
     "free-dialog-title": "Start a free try out",
     "free-dialog-description": "Your score is kept, and solutions come with Nakafa Pro.",
     "restart-dialog-title": "Start this try out from the beginning?",
@@ -2554,7 +2554,16 @@
     "reward-sections": "{count, number} parts finished",
     "reward-paper": "Questions finished",
     "medal-name": "{name} medal",
-    "verdict": "{state, select, correct {Correct} incorrect {Wrong} pending {Waiting for its grade} other {Unanswered}}"
+    "verdict": "{state, select, correct {Correct} incorrect {Wrong} pending {Waiting for its grade} other {Unanswered}}",
+    "discard-cta": "Leave session",
+    "discard-dialog-title": "Leave this session?",
+    "discard-dialog-description": "No part has started yet, so leaving removes this session without recording a score.",
+    "discard-confirm-cta": "Leave session",
+    "lobby-hint": "Pick any part when you are ready.",
+    "part-running-label": "In progress",
+    "part-waiting-label": "Finish active part first",
+    "practice-mode-description": "Pick any part to practise without a timer and check each answer right away.",
+    "practice-part-facts": "{count, number} questions, no timer"
   },
   "Player": {
     "navigator-answered": "{answered, number} of {total, number} answered",
@@ -3748,6 +3757,10 @@
     },
     "essay-too-long": {
       "title": "That text is too long for an answer."
+    },
+    "tryout-discard-error": {
+      "title": "Could not leave session",
+      "description": "Try again in a moment."
     }
   },
   "Ai": {

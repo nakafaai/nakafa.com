@@ -17,6 +17,7 @@ import { Array as Arr, Effect, Option } from "effect";
  */
 export const placeVersion = Effect.fn("tryouts.runtime.placeVersion")(
   function* (
+    snapshotId: string,
     // A paper's place and a frozen placement both hold the versions in the section's order.
     place: Pick<typeof PlacementSchema.Type, "versions">,
     language: ContentLanguage
@@ -31,11 +32,13 @@ export const placeVersion = Effect.fn("tryouts.runtime.placeVersion")(
         `The place holds no version in ${language}.`
       );
     }
-    const version = yield* readItemVersion(placed.value.hash);
+    const version = yield* readItemVersion(snapshotId, placed.value.hash);
     const stimulus =
       version.stimulus === undefined
         ? Option.none()
-        : Option.some((yield* readStimulus(version.stimulus.hash)).document);
+        : Option.some(
+            (yield* readStimulus(snapshotId, version.stimulus.hash)).document
+          );
     return {
       hash: version.hash,
       interactions: version.interactions,

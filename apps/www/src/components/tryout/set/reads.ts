@@ -1,4 +1,5 @@
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import practice from "@repo/backend/confect/_generated/refs/practice";
 import progress from "@repo/backend/confect/_generated/refs/progress";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Duration, Effect, Option, Schema } from "effect";
@@ -58,15 +59,21 @@ export function setReadArgs(address: SetAddress) {
         ? identity
         : { ...identity, attemptId: address.attemptId },
     claims: identity,
+    practice: {
+      countryKey: set.countryKey,
+      examKey: set.examKey,
+      setKey: set.setKey,
+      trackKey: set.trackKey,
+    },
   };
 }
 
 /**
  * Warms a learner's reads of a set before its page opens (`warmQuery`): the attempt, how far they grew, their
- * Stars of the set, and its board, all at once, so the pane paints whole in its first frame. When a bare set
- * address answers with a redirect to a running attempt, its retained attempt and board are warmed too so the
- * redirect paints whole. A read that has not answered within `WARM_WAIT` lets the set open, and the pane waits
- * for it there.
+ * Stars of the set, its board, and its practice progress, all at once, so the pane paints whole in its first
+ * frame. When a bare set address answers with a redirect to a running attempt, its retained attempt and board are
+ * warmed too so the redirect paints whole. A read that has not answered within `WARM_WAIT` lets the set open, and
+ * the pane waits for it there.
  */
 export const warmSetReads = Effect.fn("tryout.set.warmReads")(function* (
   address: SetAddress
@@ -79,6 +86,7 @@ export const warmSetReads = Effect.fn("tryout.set.warmReads")(function* (
         warmQuery(progress.queries.growth, {}),
         warmQuery(progress.queries.claims, args.claims),
         warmQuery(tryouts.queries.ranks.bySet, args.board),
+        warmQuery(practice.sessions.summary, args.practice),
       ],
       { concurrency: "unbounded" }
     );

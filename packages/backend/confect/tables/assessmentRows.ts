@@ -49,8 +49,8 @@ export default Table.make(() =>
     "appLocale",
     "order",
   ])
-  .index("by_kind_and_versionHash_and_language", [
+  .index("by_snapshotId_and_kind_and_versionHash", [
+    "snapshotId",
     "kind",
     "versionHash",
-    "language",
   ]);

@@ -4,7 +4,10 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import type { PracticeTarget } from "@repo/backend/confect/practice/sessions.spec";
+import type {
+  PracticeSetTarget,
+  PracticeTarget,
+} from "@repo/backend/confect/practice/sessions.spec";
 import { PracticeError } from "@repo/backend/confect/practice/sessions.spec";
 import { loadActiveAssessment } from "@repo/backend/confect/tryouts/active";
 import { chooseStartLanguage } from "@repo/backend/confect/tryouts/language";
@@ -84,26 +87,67 @@ export const readPracticeAnswers = Effect.fn("practice.session.answers")(
   }
 );
 
+/** Maximum number of sections read for one set's practice summary. */
+const PRACTICE_SET_SECTIONS_MAX = 32;
+
+/** Compact progress of every section the caller practised in one set. */
+export const readPracticeSetSummary = Effect.fn("practice.session.summary")(
+  function* (userId: Id<"users">, target: PracticeSetTarget) {
+    const sessions = yield* (yield* DatabaseReader)
+      .table("practiceSessions")
+      .index("by_userId_and_set_and_sectionKey", (query) =>
+        query
+          .eq("userId", userId)
+          .eq("countryKey", target.countryKey)
+          .eq("examKey", target.examKey)
+          .eq("trackKey", target.trackKey)
+          .eq("setKey", target.setKey)
+      )
+      .take(PRACTICE_SET_SECTIONS_MAX)
+      .pipe(Effect.orDie);
+    return yield* Effect.forEach(
+      sessions,
+      (session) =>
+        Effect.gen(function* () {
+          const checkedCount =
+            session.checkedCount ??
+            (yield* readPracticeAnswers(session)).length;
+          return {
+            checkedCount,
+            questionCount: session.questionCount,
+            sectionKey: session.sectionKey,
+          };
+        }),
+      { concurrency: "unbounded" }
+    );
+  }
+);
+
 /**
- * Freezes one section of a set from the active release, as a try-out start freezes its paper
- * (`freezeAttempt`): the snapshot and release it read, its paper, and the section's places in order. A
- * set without the section, or a paper the freeze refuses, cannot be practised.
+ * Freezes one section of a set from the active release, reading only that section's items and keys
+ * from the active snapshot: the snapshot and release it read, its paper, and the section's places in
+ * order. A set without the section, or a paper the freeze refuses, cannot be practised.
  */
 const freezeSection = Effect.fn("practice.session.freeze")(function* (
   target: PracticeTarget
 ) {
   const active = yield* loadActiveAssessment();
-  const source = yield* loadTryoutStartSource(active, {
-    countryKey: target.countryKey,
-    examKey: target.examKey,
-    locale: target.locale,
-    setKey: target.setKey,
-    trackKey: target.trackKey,
-  });
+  const source = yield* loadTryoutStartSource(
+    active,
+    {
+      countryKey: target.countryKey,
+      examKey: target.examKey,
+      locale: target.locale,
+      setKey: target.setKey,
+      trackKey: target.trackKey,
+    },
+    target.sectionKey
+  );
   const frozen = yield* freezeAttempt({
     items: source.items,
     paper: source.paper.paper,
     profile: source.profile.profile,
+    sectionKey: target.sectionKey,
     sections: source.sections,
   }).pipe(
     Effect.catchTag("TryoutFreezeError", (error) =>
@@ -150,7 +194,7 @@ const writeQuestions = Effect.fn("practice.session.writeQuestions")(function* (
           practiceSessionId: sessionId,
         })
         .pipe(Effect.orDie),
-    { discard: true }
+    { concurrency: "unbounded", discard: true }
   );
 });
 
@@ -180,6 +224,7 @@ export const openPracticeSession = Effect.fn("practice.session.open")(
       .insert({
         appLocale: target.locale,
         assessmentSnapshotId: frozen.active.snapshotId,
+        checkedCount: 0,
         countryKey: target.countryKey,
         examKey: target.examKey,
         lastActivityAt: now,
@@ -216,13 +261,17 @@ export const restartPracticeSession = Effect.fn("practice.session.restart")(
       answers,
       (answer) =>
         writer.table("practiceAnswers").delete(answer._id).pipe(Effect.orDie),
-      { discard: true }
+      { concurrency: "unbounded", discard: true }
     );
     const active = yield* loadActiveAssessment();
     if (active.releaseId === session.releaseId) {
       yield* writer
         .table("practiceSessions")
-        .patch(session._id, { lastActivityAt: now, startedAt: now })
+        .patch(session._id, {
+          checkedCount: 0,
+          lastActivityAt: now,
+          startedAt: now,
+        })
         .pipe(Effect.orDie);
       return session._id;
     }
@@ -234,7 +283,7 @@ export const restartPracticeSession = Effect.fn("practice.session.restart")(
           .table("practiceQuestions")
           .delete(question._id)
           .pipe(Effect.orDie),
-      { discard: true }
+      { concurrency: "unbounded", discard: true }
     );
     const frozen = yield* freezeSection({
       countryKey: session.countryKey,
@@ -263,6 +312,7 @@ export const restartPracticeSession = Effect.fn("practice.session.restart")(
       .table("practiceSessions")
       .patch(session._id, {
         assessmentSnapshotId: frozen.active.snapshotId,
+        checkedCount: 0,
         lastActivityAt: now,
         paper: { hash: frozen.paper.hash, id: frozen.paper.paper.id },
         questionCount: frozen.places.length,

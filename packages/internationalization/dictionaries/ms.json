@@ -2458,7 +2458,7 @@
     "open-set-cta": "Lihat set",
     "free-cta": "Mula percuma",
     "start-dialog-title": "Mulakan percubaan ini?",
-    "start-dialog-description": "Setiap cubaan kekal aktif {hours, plural, one {# jam} other {# jam}}.",
+    "start-dialog-description": "Setiap cubaan kekal aktif {hours, plural, one {# jam} other {# jam}}, dan pemasa setiap bahagian hanya bermula apabila kamu membukanya.",
     "free-dialog-title": "Mulakan percubaan percuma",
     "free-dialog-description": "Skor kamu disimpan, penyelesaian ada dengan Nakafa Pro.",
     "restart-dialog-title": "Mulakan percubaan ini dari awal?",
@@ -2554,7 +2554,16 @@
     "reward-sections": "{count, number} bahagian selesai",
     "reward-paper": "Soalan selesai",
     "medal-name": "Pingat {name}",
-    "verdict": "{state, select, correct {Betul} incorrect {Salah} pending {Menunggu markah} other {Belum dijawab}}"
+    "verdict": "{state, select, correct {Betul} incorrect {Salah} pending {Menunggu markah} other {Belum dijawab}}",
+    "discard-cta": "Tinggalkan sesi",
+    "discard-dialog-title": "Tinggalkan sesi ini?",
+    "discard-dialog-description": "Belum ada bahagian yang dimulakan, jadi sesi ini dibuang tanpa merekodkan skor.",
+    "discard-confirm-cta": "Ya, tinggalkan",
+    "lobby-hint": "Pilih mana-mana bahagian apabila kamu bersedia.",
+    "part-running-label": "Sedang berjalan",
+    "part-waiting-label": "Selesaikan bahagian aktif dulu",
+    "practice-mode-description": "Pilih mana-mana bahagian untuk latihan tanpa pemasa dan semak jawapan serta-merta.",
+    "practice-part-facts": "{count, number} soalan, tiada pemasa"
   },
   "Player": {
     "navigator-answered": "{answered, number} daripada {total, number} dijawab",
@@ -3748,6 +3757,10 @@
     },
     "essay-too-long": {
       "title": "Teks terlalu panjang untuk jawapan."
+    },
+    "tryout-discard-error": {
+      "title": "Tidak dapat meninggalkan sesi",
+      "description": "Cuba lagi sebentar nanti."
     }
   },
   "Ai": {

@@ -12,5 +12,6 @@ export default {
 ["check"]: RegisteredConvexFunction.register({ ...definitions["check"], handler: forward(definitions["check"].handler) }),
 ["state"]: RegisteredConvexFunction.register({ ...definitions["state"], handler: forward(definitions["state"].handler) }),
 ["content"]: RegisteredConvexFunction.register({ ...definitions["content"], handler: forward(definitions["content"].handler) }),
+["summary"]: RegisteredConvexFunction.register({ ...definitions["summary"], handler: forward(definitions["summary"].handler) }),
 ["explain"]: RegisteredConvexFunction.register({ ...definitions["explain"], handler: forward(definitions["explain"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../practice/sessions.spec")["default"]>;

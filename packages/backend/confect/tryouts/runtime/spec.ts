@@ -43,6 +43,7 @@ const tryoutSectionScoreSummaryValidator = Schema.Struct({
   totalQuestions: Schema.Finite,
 });
 export const tryoutAttemptStateValidator = Schema.Struct({
+  activeSectionExpiresAt: Schema.Union([Schema.Finite, Schema.Null]),
   activeSectionKey: Schema.Union([tryoutRouteKeyValidator, Schema.Null]),
   attemptId: IdSchema("tryoutAttempts"),
   attemptNumber: Schema.Finite,
@@ -57,6 +58,8 @@ export const tryoutAttemptStateValidator = Schema.Struct({
     Schema.Array(tryoutSectionScoreSummaryValidator)
   ),
   startedAt: Schema.Finite,
+  /** Count of section attempts started in this attempt; zero while the learner has only opened the lobby. */
+  startedSectionCount: Schema.Finite,
   status: tryoutStatusValidator,
 });
 const runtimeResponseValidator = Schema.Struct({

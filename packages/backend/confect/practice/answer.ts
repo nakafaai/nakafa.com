@@ -93,6 +93,8 @@ export const checkPracticeAnswer = Effect.fn("practice.answer.check")(
       gradeAnswer(yield* readPlacedQuestion(question), response)
     );
     const writer = yield* DatabaseWriter;
+    const priorChecked =
+      session.checkedCount ?? (yield* readPracticeAnswers(session)).length;
     yield* writer
       .table("practiceAnswers")
       .insert({
@@ -105,7 +107,10 @@ export const checkPracticeAnswer = Effect.fn("practice.answer.check")(
       .pipe(Effect.orDie);
     yield* writer
       .table("practiceSessions")
-      .patch(session._id, { lastActivityAt: now })
+      .patch(session._id, {
+        checkedCount: priorChecked + 1,
+        lastActivityAt: now,
+      })
       .pipe(Effect.orDie);
     return { verdict: verdictOf(graded.grade) };
   }
@@ -145,10 +150,11 @@ export const readPracticeState = Effect.fn("practice.answer.state")(function* (
 
 /** A question's version in the language its session reads in (`placeVersion`). */
 const readSessionVersion = (
+  snapshotId: string,
   question: Pick<Docs["practiceQuestions"], "versions">,
   language: ContentLanguage
 ) =>
-  placeVersion(question, language).pipe(
+  placeVersion(snapshotId, question, language).pipe(
     // The session's language is one of its section's, and every question holds a version in it.
     Effect.catchTag("TryoutRuntimeError", Effect.die)
   );
@@ -162,21 +168,28 @@ export const readPracticeContent = Effect.fn("practice.answer.content")(
   ) {
     const session = yield* requirePracticeSession(userId, sessionId);
     const questions = yield* readPracticeQuestions(session);
-    return yield* Effect.forEach(questions, (question) =>
-      Effect.gen(function* () {
-        const [placed, version] = yield* Effect.all([
-          readPlacedQuestion(question),
-          readSessionVersion(question, session.questionLanguage),
-        ]);
-        const body = yield* readQuestionBody({
-          activeSnapshotId: Option.none(),
-          appLocale,
-          question: placed,
-          reviewed: false,
-          version,
-        });
-        return { body, questionId: question._id, versionHash: version.hash };
-      })
+    return yield* Effect.forEach(
+      questions,
+      (question) =>
+        Effect.gen(function* () {
+          const [placed, version] = yield* Effect.all([
+            readPlacedQuestion(question),
+            readSessionVersion(
+              session.assessmentSnapshotId,
+              question,
+              session.questionLanguage
+            ),
+          ]);
+          const body = yield* readQuestionBody({
+            activeSnapshotId: Option.none(),
+            appLocale,
+            question: placed,
+            reviewed: false,
+            version,
+          });
+          return { body, questionId: question._id, versionHash: version.hash };
+        }),
+      { concurrency: "unbounded" }
     );
   }
 );
@@ -210,7 +223,11 @@ export const readPracticeExplanation = Effect.fn("practice.answer.explain")(
     }
     const [placed, version, activeSnapshotId] = yield* Effect.all([
       readPlacedQuestion(question),
-      readSessionVersion(question, session.questionLanguage),
+      readSessionVersion(
+        session.assessmentSnapshotId,
+        question,
+        session.questionLanguage
+      ),
       findActiveExplanationSnapshotId(),
     ]);
     const explanation = yield* readExplanation({

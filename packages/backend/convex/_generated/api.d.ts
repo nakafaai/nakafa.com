@@ -14461,6 +14461,21 @@ export declare const api: {
           sessionId: Id<"practiceSessions">;
         } | null
       >;
+      summary: FunctionReference<
+        "query",
+        "public",
+        {
+          countryKey: string;
+          examKey: string;
+          setKey: string;
+          trackKey: string;
+        },
+        Array<{
+          checkedCount: number;
+          questionCount: number;
+          sectionKey: string;
+        }>
+      >;
     };
   };
   progress: {
@@ -16895,6 +16910,12 @@ export declare const api: {
         >;
       };
       attempts: {
+        discardAttempt: FunctionReference<
+          "mutation",
+          "public",
+          { attemptId: Id<"tryoutAttempts"> },
+          { discarded: true }
+        >;
         startAttempt: FunctionReference<
           "mutation",
           "public",
@@ -16991,15 +17012,7 @@ export declare const api: {
         getStartAccess: FunctionReference<
           "query",
           "public",
-          {
-            countryKey: string;
-            destinationSectionKey?: string;
-            examKey: string;
-            locale: "en" | "id" | "de" | "ms";
-            now: number;
-            setKey: string;
-            trackKey: string;
-          },
+          {},
           { kind: "free-attempt" } | { kind: "included" }
         >;
       };
@@ -17045,6 +17058,7 @@ export declare const api: {
               }>;
               initialState: {
                 attempt: {
+                  activeSectionExpiresAt: number | null;
                   activeSectionKey: string | null;
                   attemptId: Id<"tryoutAttempts">;
                   attemptNumber: number;
@@ -17095,6 +17109,7 @@ export declare const api: {
                     totalQuestions: number;
                   }>;
                   startedAt: number;
+                  startedSectionCount: number;
                   status: "in-progress" | "completed" | "expired";
                 };
                 runtime: null | {
@@ -17279,6 +17294,7 @@ export declare const api: {
               }>;
               initialState: {
                 attempt: {
+                  activeSectionExpiresAt: number | null;
                   activeSectionKey: string | null;
                   attemptId: Id<"tryoutAttempts">;
                   attemptNumber: number;
@@ -17329,6 +17345,7 @@ export declare const api: {
                     totalQuestions: number;
                   }>;
                   startedAt: number;
+                  startedSectionCount: number;
                   status: "in-progress" | "completed" | "expired";
                 };
                 runtime: null | {
@@ -17509,6 +17526,7 @@ export declare const api: {
               }>;
               initialState: {
                 attempt: {
+                  activeSectionExpiresAt: number | null;
                   activeSectionKey: string | null;
                   attemptId: Id<"tryoutAttempts">;
                   attemptNumber: number;
@@ -17559,6 +17577,7 @@ export declare const api: {
                     totalQuestions: number;
                   }>;
                   startedAt: number;
+                  startedSectionCount: number;
                   status: "in-progress" | "completed" | "expired";
                 };
                 runtime: null | {
@@ -18140,6 +18159,7 @@ export declare const api: {
           },
           null | {
             attempt: {
+              activeSectionExpiresAt: number | null;
               activeSectionKey: string | null;
               attemptId: Id<"tryoutAttempts">;
               attemptNumber: number;
@@ -18189,6 +18209,7 @@ export declare const api: {
                 totalQuestions: number;
               }>;
               startedAt: number;
+              startedSectionCount: number;
               status: "in-progress" | "completed" | "expired";
             };
             runtime: null | {
@@ -18293,6 +18314,7 @@ export declare const api: {
           },
           null | {
             attempt: {
+              activeSectionExpiresAt: number | null;
               activeSectionKey: string | null;
               attemptId: Id<"tryoutAttempts">;
               attemptNumber: number;
@@ -18342,6 +18364,7 @@ export declare const api: {
                 totalQuestions: number;
               }>;
               startedAt: number;
+              startedSectionCount: number;
               status: "in-progress" | "completed" | "expired";
             };
             runtime: null | {

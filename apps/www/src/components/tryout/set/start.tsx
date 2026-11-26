@@ -15,7 +15,6 @@ import { Effect, Option, Schema } from "effect";
 import type { ReactNode } from "react";
 import { useEffect, useEffectEvent, useState } from "react";
 import { useConvexAuth } from "@/components/auth/convex";
-import { useNow } from "@/components/player/now";
 import { keptStorage } from "@/components/player/storage";
 import { ConvexIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
@@ -30,7 +29,9 @@ import {
 import {
   useAnswerPress,
   useSetTryoutPressed,
+  useSetTryoutPressIntent,
   useTryoutPressed,
+  useTryoutPressIntent,
   useTryoutStart,
   useTryoutStartPhase,
 } from "@/components/tryout/runtime/start";
@@ -42,11 +43,12 @@ import {
   readKeptName,
   tryoutActionNameOf,
 } from "@/components/tryout/set/kept";
-import type { CurrentAttempt } from "@/components/tryout/set/model";
+import type { CurrentAttempt, TryoutPart } from "@/components/tryout/set/model";
 import { TryoutPartSchema } from "@/components/tryout/set/model";
 import { TryoutActionName } from "@/components/tryout/set/name";
 import {
   ContinueTryoutButton,
+  TryoutPartStartDialog,
   useStartPart,
 } from "@/components/tryout/set/part";
 import { startAttemptProgram } from "@/components/tryout/set/program";
@@ -63,6 +65,8 @@ const StartTryoutRequestSchema = Schema.Struct({
   destination: TryoutPageAddressSchema,
   /** The part whose page the start lands on; none lands on the set. */
   destinationPart: Schema.optionalKey(TryoutPartSchema),
+  /** Single-section direct-entry part facts, shown in the start confirmation dialog. */
+  entryPart: Schema.optionalKey(TryoutPartSchema),
   /** The section the start opens, whose player shows on the page the start lands on; none opens no section. */
   entrySectionKey: Schema.optionalKey(Schema.String),
   examKey: Schema.String,
@@ -199,16 +203,18 @@ function TryoutStartSignInButton({
   );
 }
 
-/** Builds the startAttempt mutation arguments from one start request. */
-function startArgsOf(request: StartTryoutRequest) {
+/** Builds the startAttempt mutation arguments from one start request, optionally starting one chosen part. */
+function startArgsOf(
+  request: StartTryoutRequest,
+  chosenPart?: TryoutPart | undefined
+) {
+  const destinationSectionKey =
+    chosenPart?.sectionKey ?? request.destinationPart?.sectionKey;
+  const entrySectionKey = chosenPart?.sectionKey ?? request.entrySectionKey;
   return {
     countryKey: request.countryKey,
-    ...(request.destinationPart === undefined
-      ? {}
-      : { destinationSectionKey: request.destinationPart.sectionKey }),
-    ...(request.entrySectionKey === undefined
-      ? {}
-      : { entrySectionKey: request.entrySectionKey }),
+    ...(destinationSectionKey === undefined ? {} : { destinationSectionKey }),
+    ...(entrySectionKey === undefined ? {} : { entrySectionKey }),
     examKey: request.examKey,
     locale: request.locale,
     setKey: request.setKey,
@@ -265,8 +271,9 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const navigate = useNavigate();
   const phase = useTryoutStartPhase();
   const start = useTryoutStart();
-  const pressed = useTryoutPressed();
-  const setPressed = useSetTryoutPressed();
+  const pressIntent = useTryoutPressIntent();
+  const setPressIntent = useSetTryoutPressIntent();
+  const pressed = pressIntent.kind !== "idle";
   /** Navigates to one try-out page. A page that names no route leaves the page on screen, and its start idle. */
   function navigateTo(
     address: TryoutPageAddress,
@@ -285,23 +292,13 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const startAttempt = useMutation(tryouts.mutations.attempts.startAttempt);
   const startPart = useStartPart();
   const convex = useConvex();
-  const now = useNow(false);
   const [dialogOpen, dialog] = useDisclosure(false);
   const address = setAddressOf(request);
   const [keptName] = useState(() => readSetName(address));
   const entrySectionKey = request.entrySectionKey;
   const access = useQuery(
     tryouts.queries.access.getStartAccess,
-    isAuthenticated && attempt?.status !== "in-progress"
-      ? {
-          countryKey: request.countryKey,
-          examKey: request.examKey,
-          locale: request.locale,
-          now,
-          setKey: request.setKey,
-          trackKey: request.trackKey,
-        }
-      : "skip"
+    isAuthenticated && attempt?.status !== "in-progress" ? {} : "skip"
   );
   if (QueryResult.isFailure(access)) {
     throw access.error;
@@ -316,6 +313,16 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   });
   const started = phase !== "idle";
   const authRedirect = `/${request.locale}${getTryoutPageHref(request.authRedirect)}`;
+  const chosenPart =
+    !(started || state.resolvingAccess) &&
+    isAuthenticated &&
+    attempt?.status !== "in-progress" &&
+    pressIntent.kind === "part"
+      ? pressIntent.part
+      : null;
+  const waitingPress =
+    pressIntent.kind === "set" ||
+    (pressIntent.kind === "part" && chosenPart === null);
 
   /** Opens the correct decision or continues an already-active runtime, once the page knows which. */
   function answerStart() {
@@ -323,11 +330,13 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       return;
     }
     if (state.resolvingAccess) {
-      setPressed(true);
+      if (pressIntent.kind === "idle") {
+        setPressIntent({ kind: "set" });
+      }
       return;
     }
     if (pressed) {
-      setPressed(false);
+      setPressIntent({ kind: "idle" });
     }
     if (!isAuthenticated) {
       navigate({
@@ -348,19 +357,20 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     dialog.open();
   }
 
-  /**
-   * Starts the attempt transactionally after confirmation. The confirmation closes at once, and the page
-   * moves to the attempt's address once the server answers; until then a start that opens a section shows
-   * its player, and any other start holds its button.
-   */
-  function onPrimary() {
+  /** Starts the attempt transactionally after confirmation, either into the lobby or one chosen section. */
+  function runStart(targetPart: TryoutPart | null) {
     if (started) {
       return;
     }
     dialog.close();
-    start.begin(entrySectionKey === undefined ? "starting" : "opening");
+    setPressIntent({ kind: "idle" });
+    const opensSection = targetPart !== null || entrySectionKey !== undefined;
+    start.begin(
+      opensSection ? "opening" : "starting",
+      targetPart ?? request.entryPart ?? null
+    );
     const program = startAttemptProgram({
-      args: startArgsOf(request),
+      args: startArgsOf(request, targetPart ?? undefined),
       failureMessage: START_ERROR,
       mutation: startAttempt,
       onFailure: Effect.sync(start.end),
@@ -396,10 +406,10 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   }
   const answerPress = useEffectEvent(() => answerStart());
   useEffect(() => {
-    if (pressed && !state.resolvingAccess) {
+    if (waitingPress && !state.resolvingAccess) {
       answerPress();
     }
-  }, [pressed, state.resolvingAccess]);
+  }, [waitingPress, state.resolvingAccess]);
 
   return (
     <>
@@ -408,13 +418,14 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
         inert={started}
         onClick={answerStart}
       >
-        <Spinner icon={Rocket01Icon} isLoading={started || pressed} />
+        <Spinner icon={Rocket01Icon} isLoading={started || waitingPress} />
         <TryoutActionName keptAt={state.keptAt} name={state.name} />
       </Button>
       <TryoutStartDialog
+        entryPart={request.entryPart}
         finishedAttempt={state.finishedAttempt}
         kind={state.dialogKind}
-        onPrimary={onPrimary}
+        onPrimary={() => runStart(null)}
         open={dialogOpen}
         pagePath={request.authRedirect.publicPath}
         setOpen={(open) => {
@@ -425,6 +436,19 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
           dialog.close();
         }}
       />
+      {chosenPart === null ? null : (
+        <TryoutPartStartDialog
+          busy={started}
+          onStart={() => runStart(chosenPart)}
+          open
+          part={chosenPart}
+          setOpen={(open) => {
+            if (!open) {
+              setPressIntent({ kind: "idle" });
+            }
+          }}
+        />
+      )}
     </>
   );
 }
