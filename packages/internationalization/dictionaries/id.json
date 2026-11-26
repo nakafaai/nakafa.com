@@ -2231,7 +2231,8 @@
     "count-of": "{count, number} dari {total, number}",
     "less": "Lebih sedikit",
     "date": "Tanggal",
-    "start": "Mulai"
+    "start": "Mulai",
+    "stop": "Hentikan"
   },
   "LearningPrograms": {
     "metadata-title": "Mulai belajar di Nakafa",

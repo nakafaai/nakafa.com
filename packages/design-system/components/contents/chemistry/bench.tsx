@@ -1,87 +1,78 @@
+import {
+  createBeakerMarkingsTexture,
+  createEpoxyTexture,
+  createFlaskMarkingsTexture,
+  latheProfile,
+  liquidMeniscus,
+  ReagentShelf,
+} from "@repo/design-system/components/contents/chemistry/glassware";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   GlassMaterial,
   LiquidMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
+import { getColor } from "@repo/design-system/lib/color";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr } from "effect";
 import type { ReactNode, Ref } from "react";
 import { useEffect, useImperativeHandle, useMemo, useRef } from "react";
-import { ExtrudeGeometry, Shape, Vector2 } from "three";
+import { ExtrudeGeometry, Shape } from "three";
+
+/** How thick the wall of laboratory borosilicate glassware is, about 1.8 mm. */
+export const GLASS_WALL = 0.0018;
 
 /**
- * A school chemistry bench at real size, in metres: a dark epoxy worktop 0.9 m
- * deep on a pale cabinet, with a row of reagent bottles along its back edge.
- * The lab around it is the stage's `lab` setting. Experiments stand on the
- * worktop at y = 0.
+ * A school chemistry bench at real size, in metres: a speckled dark phenolic
+ * epoxy worktop 0.9 m deep with beveled edge and stainless backsplash rail on
+ * a pale laboratory cabinet, backed by a row of translucent borosilicate
+ * reagent bottles with visible liquid menisci and printed formula labels.
+ * Experiments stand on the worktop at y = 0.
  */
 export function LabBench({ width = 2.4 }: { readonly width?: number }) {
-  const bottles = Arr.map(Arr.range(0, 5), (index) => ({
-    color: BOTTLE_GLASS[index % BOTTLE_GLASS.length],
-    key: index,
-    x: -width / 2 + 0.25 + index * 0.17,
-  }));
+  const epoxyTex = useMemo(createEpoxyTexture, []);
+  useEffect(() => () => epoxyTex?.dispose(), [epoxyTex]);
+
   return (
     <group>
       <mesh position={[0, -0.025, 0]} receiveShadow>
         <boxGeometry args={[width, 0.05, 0.9]} />
         <meshPhysicalMaterial
-          clearcoat={0.6}
-          clearcoatRoughness={0.3}
-          color={BENCH_COLORS.epoxy}
-          roughness={0.55}
+          clearcoat={0.28}
+          clearcoatRoughness={0.42}
+          color={epoxyTex === null ? BENCH_COLORS.epoxy : getColor("WHITE")}
+          map={epoxyTex}
+          roughness={0.58}
         />
+      </mesh>
+      <mesh position={[0, -0.048, 0.448]}>
+        <boxGeometry args={[width, 0.008, 0.012]} />
+        <meshStandardMaterial color={BENCH_COLORS.epoxyDrip} roughness={0.45} />
+      </mesh>
+      <mesh position={[0, 0.026, -0.442]} receiveShadow>
+        <boxGeometry args={[width, 0.052, 0.016]} />
+        <MetalMaterial color={BENCH_COLORS.backsplashSteel} roughness={0.34} />
       </mesh>
       <mesh position={[0, -0.47, 0.02]}>
         <boxGeometry args={[width - 0.04, 0.84, 0.86]} />
-        <meshStandardMaterial color={BENCH_COLORS.cabinet} roughness={0.6} />
+        <meshStandardMaterial color={BENCH_COLORS.cabinet} roughness={0.62} />
       </mesh>
-      {Arr.map(bottles, (bottle) => (
-        <group key={bottle.key} position={[bottle.x, 0, -0.34]}>
-          <mesh castShadow>
-            <latheGeometry args={[BOTTLE_PROFILE, 28]} />
-            <meshPhysicalMaterial
-              clearcoat={1}
-              color={bottle.color}
-              roughness={0.15}
-            />
-          </mesh>
-          <mesh position={[0, 0.165, 0]}>
-            <cylinderGeometry args={[0.018, 0.018, 0.025, 20]} />
-            <meshStandardMaterial
-              color={BENCH_COLORS.bottleCap}
-              roughness={0.6}
-            />
-          </mesh>
-        </group>
-      ))}
+      <mesh position={[0, -0.22, 0.452]}>
+        <boxGeometry args={[width - 0.1, 0.005, 0.004]} />
+        <meshStandardMaterial
+          color={BENCH_COLORS.cabinetSeam}
+          roughness={0.8}
+        />
+      </mesh>
+      <mesh position={[0, -0.14, 0.458]}>
+        <boxGeometry args={[0.16, 0.012, 0.012]} />
+        <MetalMaterial color={BENCH_COLORS.cabinetHandle} roughness={0.32} />
+      </mesh>
+      <ReagentShelf width={width} />
     </group>
   );
 }
-
-/** Amber, clear and green reagent glass. */
-const BOTTLE_GLASS = [
-  BENCH_COLORS.bottleAmber,
-  BENCH_COLORS.bottleClear,
-  BENCH_COLORS.bottleGreen,
-] as const;
-
-/** A reagent bottle's outline, turned around its axis: body, shoulder, neck. */
-const BOTTLE_PROFILE = Arr.map(
-  [
-    [0, 0],
-    [0.045, 0],
-    [0.048, 0.006],
-    [0.048, 0.11],
-    [0.04, 0.13],
-    [0.02, 0.145],
-    [0.018, 0.155],
-    [0, 0.155],
-  ] as const,
-  ([radius, height]) => new Vector2(radius, height)
-);
 
 /** What a simulation writes on the balance's display every frame. */
 export interface ScaleRig {
@@ -89,10 +80,47 @@ export interface ScaleRig {
   readonly show: (text: string) => void;
 }
 
+const CONSOLE_KEYS = [
+  { color: BENCH_COLORS.balanceKeyTare, id: "tare", x: 0.044 },
+  { color: BENCH_COLORS.balanceKey, id: "zero", x: 0.066 },
+  { color: BENCH_COLORS.balanceKey, id: "unit", x: 0.088 },
+] as const;
+
+const BALANCE = {
+  feet: [
+    [0.12, 0.14],
+    [-0.12, 0.14],
+    [0.12, -0.14],
+    [-0.12, -0.14],
+  ],
+  pan: -0.035,
+  panel: [0, 0.072, 0.122],
+  slope: 0.43,
+} as const;
+
+function createBalanceBody() {
+  const side = new Shape();
+  side.moveTo(-0.17, 0);
+  side.lineTo(0.17, 0);
+  side.lineTo(0.17, 0.03);
+  side.lineTo(0.075, 0.074);
+  side.lineTo(-0.17, 0.074);
+  side.closePath();
+  const geometry = new ExtrudeGeometry(side, {
+    bevelEnabled: true,
+    bevelSegments: 4,
+    bevelSize: 0.006,
+    bevelThickness: 0.006,
+    depth: 0.288,
+  });
+  geometry.translate(0, 0, -0.144);
+  return geometry;
+}
+
 /**
- * A laboratory top-pan balance: a pale body, a stainless pan 0.2 m across on
- * top, and a display that a simulation writes through `ref` without
- * re-rendering React. Whatever stands on the pan goes in `children`.
+ * A laboratory top-pan analytical balance with brushed stainless weighing pan,
+ * recessed well, spirit-level bubble vial, tactile membrane keys, and backlit
+ * LCD display that updates via `ref` without re-rendering React.
  */
 export function Scale({
   children,
@@ -121,146 +149,145 @@ export function Scale({
   return (
     <group>
       {Arr.map(BALANCE.feet, ([x, z]) => (
-        <mesh key={`${x}-${z}`} position={[x, 0.003, z]}>
-          <cylinderGeometry args={[0.012, 0.014, 0.006, 16]} />
-          <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.8} />
+        <mesh key={`${x}-${z}`} position={[x, 0.004, z]}>
+          <cylinderGeometry args={[0.014, 0.016, 0.008, 20]} />
+          <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.85} />
         </mesh>
       ))}
+      <mesh position={[0, 0.012, 0]} receiveShadow>
+        <boxGeometry args={[0.286, 0.014, 0.332]} />
+        <meshStandardMaterial
+          color={BENCH_COLORS.balanceSkirt}
+          roughness={0.62}
+        />
+      </mesh>
       <mesh
         castShadow
         geometry={body}
-        position={[0, 0.012, 0]}
+        position={[0, 0.014, 0]}
         receiveShadow
         rotation={[0, -Math.PI / 2, 0]}
       >
-        <meshStandardMaterial
+        <meshPhysicalMaterial
+          clearcoat={0.22}
+          clearcoatRoughness={0.38}
           color={BENCH_COLORS.balanceBody}
+          metalness={0.08}
+          roughness={0.44}
+        />
+      </mesh>
+      <mesh position={[0, 0.09, BALANCE.pan]}>
+        <cylinderGeometry args={[0.106, 0.108, 0.006, 64]} />
+        <meshStandardMaterial
+          color={BENCH_COLORS.balanceWell}
           roughness={0.6}
         />
       </mesh>
-      <group position={BALANCE.panel} rotation={[BALANCE.slope, 0, 0]}>
+      <mesh position={[0, 0.093, BALANCE.pan]}>
+        <cylinderGeometry args={[0.024, 0.028, 0.008, 32]} />
+        <MetalMaterial color={BENCH_COLORS.panPedestal} roughness={0.35} />
+      </mesh>
+      <group position={[-0.118, 0.09, 0.068]}>
         <mesh>
-          <boxGeometry args={[0.15, 0.004, 0.042]} />
-          <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.5} />
+          <cylinderGeometry args={[0.009, 0.0095, 0.005, 24]} />
+          <MetalMaterial color={BENCH_COLORS.levelRing} roughness={0.35} />
         </mesh>
-        <mesh position={[-0.02, 0.0025, 0]}>
-          <boxGeometry args={[0.09, 0.002, 0.028]} />
+        <mesh position={[0, 0.0028, 0]}>
+          <cylinderGeometry args={[0.007, 0.007, 0.0018, 20]} />
+          <meshStandardMaterial
+            color={BENCH_COLORS.levelFluid}
+            emissive={BENCH_COLORS.levelGlow}
+            emissiveIntensity={0.28}
+            roughness={0.18}
+          />
+        </mesh>
+        <mesh position={[0.0012, 0.0038, -0.0008]}>
+          <sphereGeometry args={[0.002, 12, 10]} />
+          <meshStandardMaterial
+            color={BENCH_COLORS.levelBubble}
+            roughness={0.12}
+          />
+        </mesh>
+      </group>
+      <group position={BALANCE.panel} rotation={[BALANCE.slope, 0, 0]}>
+        <mesh castShadow>
+          <boxGeometry args={[0.205, 0.006, 0.05]} />
+          <meshPhysicalMaterial
+            clearcoat={0.2}
+            color={BENCH_COLORS.balanceBezel}
+            metalness={0.25}
+            roughness={0.45}
+          />
+        </mesh>
+        <mesh position={[-0.032, 0.0032, 0]}>
+          <boxGeometry args={[0.116, 0.002, 0.034]} />
+          <MetalMaterial color={BENCH_COLORS.balanceFrame} roughness={0.38} />
+        </mesh>
+        <mesh position={[-0.032, 0.0044, 0]}>
+          <boxGeometry args={[0.108, 0.0014, 0.028]} />
           <meshStandardMaterial
             color={BENCH_COLORS.lcd}
             emissive={BENCH_COLORS.lcdGlow}
-            emissiveIntensity={0.6}
-            roughness={0.2}
+            emissiveIntensity={0.8}
+            roughness={0.16}
           />
         </mesh>
-        {Arr.map([0.045, 0.062] as const, (x) => (
-          <mesh key={x} position={[x, 0.003, 0]}>
-            <cylinderGeometry args={[0.006, 0.006, 0.004, 16]} />
-            <meshStandardMaterial
-              color={BENCH_COLORS.balanceKey}
-              roughness={0.5}
-            />
-          </mesh>
+        <mesh position={[-0.032, 0.0054, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[0.108, 0.028]} />
+          <GlassMaterial color={BENCH_COLORS.lcdCover} opacity={0.14} />
+        </mesh>
+        {Arr.map(CONSOLE_KEYS, (key) => (
+          <group key={key.id} position={[key.x, 0.0045, 0]}>
+            <mesh>
+              <boxGeometry args={[0.017, 0.003, 0.018]} />
+              <meshStandardMaterial
+                color={BENCH_COLORS.balanceKeyFrame}
+                roughness={0.55}
+              />
+            </mesh>
+            <mesh position={[0, 0.0018, 0]}>
+              <boxGeometry args={[0.014, 0.0022, 0.015]} />
+              <meshStandardMaterial color={key.color} roughness={0.42} />
+            </mesh>
+          </group>
         ))}
         <ThreeLabel
           color={BENCH_COLORS.lcdInk}
           fontSize="compact"
+          minimumFontSize={15}
           outlineColor={BENCH_COLORS.lcdHalo}
           outlineWidth={0.003}
-          position={[-0.02, 0.006, 0]}
+          position={[-0.032, 0.0072, 0]}
         >
           {reading ?? (
             <>
-              <span className="font-mono tabular-nums" ref={display} />{" "}
-              <span className="font-mono">{unitLabel}</span>
+              <span
+                className="font-mono font-semibold tabular-nums"
+                ref={display}
+              />{" "}
+              <span className="font-mono font-semibold">{unitLabel}</span>
             </>
           )}
         </ThreeLabel>
       </group>
-      <mesh castShadow position={[0, 0.095, BALANCE.pan]}>
-        <cylinderGeometry args={[0.1, 0.098, 0.006, 64]} />
-        <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.3} />
+      <mesh castShadow position={[0, 0.095, BALANCE.pan]} receiveShadow>
+        <cylinderGeometry args={[0.1, 0.097, 0.006, 64]} />
+        <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.24} />
       </mesh>
-      <mesh position={[0, 0.098, BALANCE.pan]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.099, 0.002, 8, 64]} />
-        <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.25} />
+      <mesh position={[0, 0.0982, BALANCE.pan]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.099, 0.0022, 10, 64]} />
+        <MetalMaterial color={BENCH_COLORS.panRim} roughness={0.2} />
+      </mesh>
+      <mesh position={[0, 0.0982, BALANCE.pan]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.088, 0.0007, 8, 64]} />
+        <MetalMaterial color={BENCH_COLORS.panInnerGroove} roughness={0.35} />
       </mesh>
       <group position={[0, 0.098, BALANCE.pan]}>{children}</group>
     </group>
   );
 }
 
-/**
- * A top-loading laboratory balance, 30 cm wide and 34 cm deep: a flat back
- * that carries the pan and a front sloped toward the user for the display and
- * the keys. The side profile is drawn in the depth and height plane, front at
- * +0.17 m, and extruded across the width.
- */
-const BALANCE = {
-  feet: [
-    [0.12, 0.14],
-    [-0.12, 0.14],
-    [0.12, -0.14],
-    [-0.12, -0.14],
-  ],
-  pan: -0.035,
-  panel: [0, 0.07, 0.122],
-  slope: 0.43,
-} as const;
-
-/** The balance's housing: its side profile extruded 30 cm across, edges rounded. */
-function createBalanceBody() {
-  const side = new Shape();
-  side.moveTo(-0.17, 0);
-  side.lineTo(0.17, 0);
-  side.lineTo(0.17, 0.03);
-  side.lineTo(0.075, 0.074);
-  side.lineTo(-0.17, 0.074);
-  side.closePath();
-  const geometry = new ExtrudeGeometry(side, {
-    bevelEnabled: true,
-    bevelSegments: 3,
-    bevelSize: 0.006,
-    bevelThickness: 0.006,
-    depth: 0.288,
-  });
-  geometry.translate(0, 0, -0.144);
-  return geometry;
-}
-
-/** An outline turned around a vertical axis, from its radii at each height. */
-function profile(points: readonly (readonly [number, number])[]) {
-  return Arr.map(points, ([radius, height]) => new Vector2(radius, height));
-}
-
-/** How high water climbs the glass where it meets the wall, about 1.5 mm. */
-const MENISCUS_RISE = 0.0015;
-
-/** How far in from the wall the curve of the meniscus reaches, at most. */
-const MENISCUS_REACH = 0.004;
-
-/** How thick the wall of school glassware is, about 1.5 mm. */
-export const GLASS_WALL = 0.0015;
-
-/**
- * The surface of a liquid in glass, as lathe points from the wall inward:
- * water wets glass, so its surface climbs the wall in a concave meniscus and
- * lies flat in the middle, where a reading is taken.
- */
-function meniscus(radius: number, level: number) {
-  const reach = Math.min(MENISCUS_REACH, radius * 0.6);
-  return Arr.map(Arr.range(0, 6), (step) => {
-    const share = step / 6;
-    return [
-      radius - share * reach,
-      level + MENISCUS_RISE * (1 - share) ** 2,
-    ] as const;
-  });
-}
-
-/**
- * A liquid standing in a straight glass, a beaker or a burette, from
- * `bottom` up to `level` metres, its surface curved into a meniscus.
- */
+/** A liquid standing in a straight glass, from `bottom` to `level` with meniscus. */
 export function ColumnLiquid({
   bottom,
   color,
@@ -276,10 +303,10 @@ export function ColumnLiquid({
 }) {
   const points = useMemo(
     () =>
-      profile([
+      latheProfile([
         [0.0005, bottom],
         [radius, bottom],
-        ...meniscus(radius, level),
+        ...liquidMeniscus(radius, level),
         [0.0005, level],
       ]),
     [bottom, level, radius]
@@ -292,16 +319,22 @@ export function ColumnLiquid({
   );
 }
 
-/** A 250 mL conical (Erlenmeyer) flask: its outer wall, base to rim, in metres. */
-const FLASK_WALL = profile([
+const FLASK_WALL = latheProfile([
   [0.001, 0],
   [0.04, 0],
-  [0.043, 0.004],
-  [0.043, 0.012],
-  [0.018, 0.105],
-  [0.016, 0.112],
-  [0.016, 0.145],
-  [0.018, 0.147],
+  [0.0435, 0.004],
+  [0.0435, 0.013],
+  [0.0182, 0.105],
+  [0.0162, 0.112],
+  [0.0162, 0.144],
+  [0.019, 0.147],
+  [0.0172, 0.1485],
+  [0.0146, 0.145],
+  [0.0146, 0.112],
+  [0.0166, 0.104],
+  [0.0414, 0.013],
+  [0.039, 0.004],
+  [0.001, 0.0035],
 ]);
 
 /** The radius of the flask's inside at height `y`, for the liquid it holds. */
@@ -315,24 +348,41 @@ export function flaskRadiusAt(y: number) {
   return 0.04 - ((y - 0.012) / (0.105 - 0.012)) * (0.04 - 0.016);
 }
 
-/**
- * A conical flask of clear borosilicate glass. It stays transparent rather
- * than transmissive: three.js leaves transparent objects out of the scene a
- * transmissive surface refracts, so the liquid inside would vanish.
- */
+/** A conical 250 mL Erlenmeyer flask of borosilicate 3.3 glass with graduations. */
 export function Flask() {
+  const markings = useMemo(createFlaskMarkingsTexture, []);
+  useEffect(() => () => markings?.dispose(), [markings]);
+
   return (
-    <mesh castShadow>
-      <latheGeometry args={[FLASK_WALL, 64]} />
-      <GlassMaterial color={BENCH_COLORS.glass} />
-    </mesh>
+    <group>
+      <mesh castShadow renderOrder={2}>
+        <latheGeometry args={[FLASK_WALL, 64]} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.26} />
+      </mesh>
+      <mesh position={[0, 0.147, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.0176, 0.0015, 10, 48]} />
+        <GlassMaterial color={BENCH_COLORS.glassEdge} opacity={0.54} />
+      </mesh>
+      {markings === null ? null : (
+        <mesh
+          position={[0, 0.058, 0]}
+          renderOrder={3}
+          rotation={[0, -Math.PI, 0]}
+        >
+          <cylinderGeometry args={[0.02, 0.041, 0.088, 40, 1, true]} />
+          <meshBasicMaterial
+            depthWrite={false}
+            map={markings}
+            opacity={0.88}
+            transparent
+          />
+        </mesh>
+      )}
+    </group>
   );
 }
 
-/**
- * The liquid in a conical flask, filled to `level` metres: the flask's
- * inside, turned up to a surface that climbs the glass in a meniscus.
- */
+/** The liquid in a conical flask, filled to `level` metres with a curved meniscus. */
 export function FlaskLiquid({
   color,
   level,
@@ -344,13 +394,13 @@ export function FlaskLiquid({
 }) {
   const points = useMemo(
     () =>
-      profile([
-        [0.001, 0.003],
+      latheProfile([
+        [0.001, 0.0038],
         ...Arr.map(Arr.range(0, 7), (step) => {
-          const y = 0.003 + ((level - 0.003) * step) / 8;
+          const y = 0.0038 + ((level - 0.0038) * step) / 8;
           return [flaskRadiusAt(y) - 0.002, y] as const;
         }),
-        ...meniscus(flaskRadiusAt(level) - 0.002, level),
+        ...liquidMeniscus(flaskRadiusAt(level) - 0.002, level),
         [0.001, level],
       ]),
     [level]
@@ -363,21 +413,59 @@ export function FlaskLiquid({
   );
 }
 
-/** A 100 mL beaker, 50 mm across and 70 mm tall, of clear glass. */
-const BEAKER_WALL = profile([
+const BEAKER_WALL = latheProfile([
   [0.001, 0],
-  [0.025, 0],
-  [0.0265, 0.003],
-  [0.0265, 0.07],
-  [0.028, 0.072],
+  [0.0245, 0],
+  [0.0268, 0.0035],
+  [0.0268, 0.069],
+  [0.0286, 0.072],
+  [0.0272, 0.0732],
+  [0.0249, 0.069],
+  [0.0249, 0.0042],
+  [0.023, 0.0032],
+  [0.001, 0.0032],
 ]);
 
-/** A beaker of clear borosilicate glass. */
+/** A 100 mL borosilicate Griffin beaker with double-walled rim, pouring lip, and graduations. */
 export function Beaker() {
+  const markings = useMemo(createBeakerMarkingsTexture, []);
+  useEffect(() => () => markings?.dispose(), [markings]);
+
   return (
-    <mesh castShadow>
-      <latheGeometry args={[BEAKER_WALL, 64]} />
-      <GlassMaterial color={BENCH_COLORS.glass} />
-    </mesh>
+    <group>
+      <mesh castShadow renderOrder={2}>
+        <latheGeometry args={[BEAKER_WALL, 64]} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.28} />
+      </mesh>
+      <mesh position={[0, 0.0722, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.0277, 0.0012, 10, 56]} />
+        <GlassMaterial color={BENCH_COLORS.glassEdge} opacity={0.56} />
+      </mesh>
+      <mesh
+        position={[0.0282, 0.0715, 0]}
+        rotation={[0, 0, -0.35]}
+        scale={[1.1, 0.65, 0.7]}
+      >
+        <cylinderGeometry
+          args={[0.003, 0.0042, 0.007, 14, 1, true, -1.2, 2.4]}
+        />
+        <GlassMaterial color={BENCH_COLORS.glassEdge} opacity={0.62} />
+      </mesh>
+      {markings === null ? null : (
+        <mesh
+          position={[0, 0.036, 0]}
+          renderOrder={3}
+          rotation={[0, -Math.PI, 0]}
+        >
+          <cylinderGeometry args={[0.0271, 0.0271, 0.058, 44, 1, true]} />
+          <meshBasicMaterial
+            depthWrite={false}
+            map={markings}
+            opacity={0.92}
+            transparent
+          />
+        </mesh>
+      )}
+    </group>
   );
 }
