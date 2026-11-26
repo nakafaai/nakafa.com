@@ -28,6 +28,7 @@ import {
 } from "@/components/tryout/route/path";
 import {
   useEndTryoutStart,
+  useTryoutOpeningPart,
   useTryoutStartPhase,
 } from "@/components/tryout/runtime/start";
 import {
@@ -35,6 +36,7 @@ import {
   getTryoutRuntimeState,
   isTryoutStateLive,
   selectActionAttempt,
+  shouldLockTryoutShell,
 } from "@/components/tryout/runtime/state";
 import { tryoutSectionPartsOf } from "@/components/tryout/section/model";
 import { TryoutSetEntry } from "@/components/tryout/set/entry";
@@ -273,27 +275,29 @@ function ResolvedTryoutSetPage({
 }) {
   const { paper } = useTryoutSetPage();
   const opening = useTryoutStartPhase() === "opening";
+  const openingPart = useTryoutOpeningPart();
   const { now, view } = useTryoutSetView({ binding, state });
   const { destination } = view.start;
   const entrySection =
     view.entrySection?.visibility === "internal-entry"
       ? view.entrySection
       : null;
+  const openingTarget = openingPart ?? destination?.part ?? null;
 
-  if (entrySection === null && opening && destination) {
-    return <TryoutSetOpening part={destination.part} view={view} />;
+  if (entrySection === null && opening && openingTarget) {
+    return <TryoutSetOpening part={openingTarget} view={view} />;
   }
   if (entrySection === null || !(paper || opening)) {
     return (
       <>
-        <SetLock binding={binding} />
+        <SetLock binding={binding} state={state} />
         <TryoutSetPane view={view} />
       </>
     );
   }
   return (
     <>
-      <SetLock binding={binding} />
+      <SetLock binding={binding} state={state} />
       <TryoutInternalSet
         value={{
           entrySection,
@@ -348,26 +352,38 @@ function TryoutSetOpening({
 }
 
 /**
- * Locks the app shell while the attempt this page is bound to runs, its pane beside the table as its paper
- * alike, or while the learner's press opens the set's entry section, so the page takes the whole screen from the
- * press on and a running attempt holds the learner in it until they leave it.
+ * Locks the app shell only while a timed section clock is actively running or opening.
+ * Idle attempt lobby states between parts keep app navigation unlocked.
  */
-function SetLock({ binding }: Pick<TryoutSetPageClientProps, "binding">) {
+function SetLock({
+  binding,
+  state,
+}: Pick<TryoutSetPageClientProps, "binding"> & { readonly state: SetState }) {
   const { page, route } = useTryoutSetPage();
   const opening = useTryoutStartPhase() === "opening";
-  if (binding?.initialState.attempt.status === "in-progress") {
+  const attempt = state?.attempt ?? binding?.initialState.attempt ?? null;
+  const activeSectionKey =
+    attempt?.status === "in-progress" ? attempt.activeSectionKey : null;
+  if (!shouldLockTryoutShell({ activeSectionKey, opening })) {
+    return null;
+  }
+  if (
+    binding !== null &&
+    attempt?.status === "in-progress" &&
+    activeSectionKey !== null
+  ) {
     return (
       <ShellLock
         remember={getTryoutAttemptLock({
           attemptId: binding.attemptId,
           locale: route.locale,
           setPath: page.set.publicPath,
-          until: binding.initialState.attempt.expiresAt,
+          until: attempt.activeSectionExpiresAt ?? attempt.expiresAt,
         })}
       />
     );
   }
-  return opening ? <ShellLock /> : null;
+  return <ShellLock />;
 }
 
 /** Renders one direct-entry runtime from its exact authenticated query. */

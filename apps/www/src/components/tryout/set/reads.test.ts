@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import practice from "@repo/backend/confect/_generated/refs/practice";
 import progress from "@repo/backend/confect/_generated/refs/progress";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Duration, Effect, Fiber } from "effect";
@@ -24,12 +25,20 @@ const identity = {
   trackKey: "utbk",
 };
 
+const practiceTarget = {
+  countryKey: "indonesia",
+  examKey: "snbt",
+  setKey: "set-1",
+  trackKey: "utbk",
+};
+
 describe("setReadArgs", () => {
   it("reads the learner's current attempt, and places it on the board, when the address names none", () => {
     expect(setReadArgs({ attemptId: undefined, locale: "id", set })).toEqual({
       attempt: { request: { ...identity, kind: "current" } },
       board: identity,
       claims: identity,
+      practice: practiceTarget,
     });
   });
 
@@ -45,6 +54,7 @@ describe("setReadArgs", () => {
       },
       board: { ...identity, attemptId: "attempt-1" },
       claims: identity,
+      practice: practiceTarget,
     });
   });
 });
@@ -55,7 +65,7 @@ describe("warmSetReads", () => {
   });
 
   it.effect(
-    "warms the attempt, the growth, the Stars and the board at once",
+    "warms the attempt, the growth, the Stars, the board, and practice summary at once",
     () =>
       Effect.gen(function* () {
         vi.mocked(warmQuery).mockReturnValue(Effect.succeedNone);
@@ -68,6 +78,7 @@ describe("warmSetReads", () => {
           [progress.queries.growth, {}],
           [progress.queries.claims, identity],
           [tryouts.queries.ranks.bySet, identity],
+          [practice.sessions.summary, practiceTarget],
         ]);
       })
   );
@@ -93,6 +104,7 @@ describe("warmSetReads", () => {
           [progress.queries.growth, {}],
           [progress.queries.claims, identity],
           [tryouts.queries.ranks.bySet, identity],
+          [practice.sessions.summary, practiceTarget],
           [
             tryouts.queries.attemptPage.getSet,
             {
@@ -118,7 +130,7 @@ describe("warmSetReads", () => {
       Effect.gen(function* () {
         vi.mocked(warmQuery).mockReturnValue(Effect.succeedNone);
         yield* warmSetReads({ attemptId: "attempt-1", locale: "id", set });
-        expect(vi.mocked(warmQuery).mock.calls).toHaveLength(4);
+        expect(vi.mocked(warmQuery).mock.calls).toHaveLength(5);
       })
   );
 

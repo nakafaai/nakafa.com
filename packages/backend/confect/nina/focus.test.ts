@@ -156,13 +156,17 @@ describe("Nina question focus", () => {
       if (!placement) {
         throw new Error("Expected the focused question.");
       }
+      const attempt = await ctx.db.get("tryoutAttempts", f.focus.attemptId);
+      if (!attempt) {
+        throw new Error("Expected the focused attempt.");
+      }
       for (const row of await ctx.db
         .query("assessmentRows")
-        .withIndex("by_kind_and_versionHash_and_language", (index) =>
+        .withIndex("by_snapshotId_and_kind_and_identity", (index) =>
           index
+            .eq("snapshotId", attempt.assessmentSnapshotId)
             .eq("kind", "explanation")
-            .eq("versionHash", placement.versions[0].hash)
-            .eq("language", "en")
+            .eq("identity", `${placement.versions[0].hash}\0en`)
         )
         .collect()) {
         await ctx.db.delete("assessmentRows", row._id);
@@ -188,10 +192,17 @@ describe("Nina question focus", () => {
       if (!placement) {
         throw new Error("Expected the focused question.");
       }
+      const attempt = await ctx.db.get("tryoutAttempts", f.focus.attemptId);
+      if (!attempt) {
+        throw new Error("Expected the focused attempt.");
+      }
       for (const row of await ctx.db
         .query("assessmentRows")
-        .withIndex("by_kind_and_versionHash_and_language", (index) =>
-          index.eq("kind", "item").eq("versionHash", placement.versions[0].hash)
+        .withIndex("by_snapshotId_and_kind_and_versionHash", (index) =>
+          index
+            .eq("snapshotId", attempt.assessmentSnapshotId)
+            .eq("kind", "item")
+            .eq("versionHash", placement.versions[0].hash)
         )
         .collect()) {
         await ctx.db.delete("assessmentRows", row._id);

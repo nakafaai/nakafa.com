@@ -3,7 +3,7 @@ import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { tryoutRouteKeyValidator } from "@repo/backend/confect/tryouts/route";
-import { Schema, Struct } from "effect";
+import { Schema } from "effect";
 export const startAttemptArgsValidator = Schema.Struct({
   countryKey: tryoutRouteKeyValidator,
   destinationSectionKey: Schema.optionalKey(tryoutRouteKeyValidator),
@@ -23,14 +23,6 @@ export const startAttemptResultValidator = Schema.Struct({
   }),
 });
 export type StartAttemptResult = typeof startAttemptResultValidator.Type;
-export const startAccessArgsValidator = Schema.Struct({
-  ...startAttemptArgsValidator.mapFields(
-    Struct.omit(["entryLanguage", "entrySectionKey"])
-  ).fields,
-  ...{
-    now: Schema.Finite,
-  },
-});
 export const tryoutStartAccessValidator = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("free-attempt"),

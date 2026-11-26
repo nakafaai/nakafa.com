@@ -40,8 +40,16 @@ describe("tryouts/runtime/placeVersion", () => {
         const read = yield* world.run(
           Effect.gen(function* () {
             const table = yield* readPlace(attemptId, "section-b");
-            const malay = yield* placeVersion(table, language("ms"));
-            const english = yield* placeVersion(table, language("en"));
+            const malay = yield* placeVersion(
+              world.snapshotId,
+              table,
+              language("ms")
+            );
+            const english = yield* placeVersion(
+              world.snapshotId,
+              table,
+              language("en")
+            );
             const [interaction] = english.interactions;
             const column =
               interaction.kind === "matrix"
@@ -83,10 +91,16 @@ describe("tryouts/runtime/placeVersion", () => {
         const read = yield* world.run(
           Effect.gen(function* () {
             const choice = yield* readPlace(attemptId, "section-a");
-            const malay = yield* placeVersion(choice, language("ms"));
-            const refused = yield* placeVersion(choice, language("de")).pipe(
-              Effect.flip
+            const malay = yield* placeVersion(
+              world.snapshotId,
+              choice,
+              language("ms")
             );
+            const refused = yield* placeVersion(
+              world.snapshotId,
+              choice,
+              language("de")
+            ).pipe(Effect.flip);
             return {
               code: refused.code,
               reading: Option.isNone(malay.stimulus),

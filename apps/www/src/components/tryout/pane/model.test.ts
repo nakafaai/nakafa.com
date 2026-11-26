@@ -2,8 +2,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
 import {
   NO_CLAIMS,
+  partPracticeSummary,
   partScore,
   partStep,
+  selectPracticePath,
   starsLeft,
 } from "@/components/tryout/pane/model";
 
@@ -76,5 +78,70 @@ describe("partScore", () => {
 
   it("returns the score summary of a scored part", () => {
     expect(partScore(running, "verbal")).toEqual(Option.some(scoredVerbal));
+  });
+});
+
+describe("partPracticeSummary", () => {
+  const summaries = [
+    { checkedCount: 10, questionCount: 10, sectionKey: "verbal" },
+    { checkedCount: 3, questionCount: 15, sectionKey: "numeric" },
+  ];
+
+  it("finds a section's practice summary or returns none when unstarted", () => {
+    expect(partPracticeSummary(summaries, "numeric")).toEqual(
+      Option.some(summaries[1])
+    );
+    expect(partPracticeSummary(summaries, "english")).toEqual(Option.none());
+  });
+});
+
+describe("selectPracticePath", () => {
+  const sections = [
+    {
+      publicPath: "try-out/indonesia/snbt/2027/utbk/set-1/verbal",
+      sectionKey: "verbal",
+    },
+    {
+      publicPath: "try-out/indonesia/snbt/2027/utbk/set-1/numeric",
+      sectionKey: "numeric",
+    },
+  ];
+  const setPublicPath = "try-out/indonesia/snbt/2027/utbk/set-1";
+
+  it("selects the first unfinished section, falling back to the first section or set path", () => {
+    expect(
+      selectPracticePath({
+        sections,
+        setPublicPath,
+        summaries: [
+          { checkedCount: 10, questionCount: 10, sectionKey: "verbal" },
+          { checkedCount: 3, questionCount: 15, sectionKey: "numeric" },
+        ],
+      })
+    ).toBe(sections[1].publicPath);
+    expect(
+      selectPracticePath({
+        sections,
+        setPublicPath,
+        summaries: [
+          { checkedCount: 10, questionCount: 10, sectionKey: "verbal" },
+          { checkedCount: 15, questionCount: 15, sectionKey: "numeric" },
+        ],
+      })
+    ).toBe(sections[0].publicPath);
+    expect(
+      selectPracticePath({
+        sections: [{ sectionKey: "internal" }],
+        setPublicPath,
+        summaries: [],
+      })
+    ).toBe(setPublicPath);
+    expect(
+      selectPracticePath({
+        sections: [],
+        setPublicPath,
+        summaries: [],
+      })
+    ).toBe(setPublicPath);
   });
 });

@@ -195,8 +195,8 @@ describe("tryouts/queries/runtime", () => {
         world.t.mutation(async (ctx) => {
           const items = await ctx.db
             .query("assessmentRows")
-            .withIndex("by_kind_and_versionHash_and_language", (query) =>
-              query.eq("kind", "item")
+            .withIndex("by_snapshotId_and_kind_and_versionHash", (query) =>
+              query.eq("snapshotId", world.snapshotId).eq("kind", "item")
             )
             .collect();
           await Promise.all(Arr.map(items, (row) => ctx.db.delete(row._id)));

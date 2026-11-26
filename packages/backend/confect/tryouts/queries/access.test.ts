@@ -5,25 +5,13 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
 import { TRYOUT_NOW } from "@repo/backend/test/tryout/world";
-import type { FunctionArgs } from "convex/server";
-
-const startAccessArgs: FunctionArgs<
-  typeof api.tryouts.queries.access.getStartAccess
-> = {
-  countryKey: "indonesia",
-  examKey: "snbt",
-  locale: "id",
-  now: TRYOUT_NOW,
-  setKey: "set-1",
-  trackKey: "2027",
-};
 
 describe("tryouts/queries/access", () => {
   it("shows free access to anonymous and free accounts", async () => {
     const t = createConvexTestWithAuth();
 
     expect(
-      await t.query(api.tryouts.queries.access.getStartAccess, startAccessArgs)
+      await t.query(api.tryouts.queries.access.getStartAccess, {})
     ).toEqual({ kind: "free-attempt" });
 
     const identity = await t.mutation((ctx) =>
@@ -35,10 +23,7 @@ describe("tryouts/queries/access", () => {
     const authed = t.withIdentity({ subject: identity.sessionId });
 
     expect(
-      await authed.query(
-        api.tryouts.queries.access.getStartAccess,
-        startAccessArgs
-      )
+      await authed.query(api.tryouts.queries.access.getStartAccess, {})
     ).toEqual({ kind: "free-attempt" });
   });
 
@@ -54,10 +39,7 @@ describe("tryouts/queries/access", () => {
     const authed = t.withIdentity({ subject: identity.sessionId });
 
     expect(
-      await authed.query(
-        api.tryouts.queries.access.getStartAccess,
-        startAccessArgs
-      )
+      await authed.query(api.tryouts.queries.access.getStartAccess, {})
     ).toEqual({ kind: "included" });
   });
 });

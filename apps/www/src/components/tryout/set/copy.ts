@@ -10,3 +10,8 @@ export const START_ERROR: ToastCopy = {
   description: "tryout-start-error.description",
   title: "tryout-start-error.title",
 };
+/** The copy of an unstarted attempt that could not be discarded. */
+export const DISCARD_ERROR: ToastCopy = {
+  description: "tryout-discard-error.description",
+  title: "tryout-discard-error.title",
+};

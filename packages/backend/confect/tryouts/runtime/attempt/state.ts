@@ -44,6 +44,7 @@ export const loadAttemptState = Effect.fn("tryouts.attempt.loadState")(
           })
     );
     return {
+      activeSectionExpiresAt: resume.activeSectionExpiresAt,
       activeSectionKey: resume.activeSectionKey,
       attemptId: attempt._id,
       attemptNumber: attempt.attemptNumber,
@@ -66,6 +67,7 @@ export const loadAttemptState = Effect.fn("tryouts.attempt.loadState")(
         : null,
       sectionScores,
       startedAt: attempt.startedAt,
+      startedSectionCount: sections.length,
       status: attempt.status,
     };
   }

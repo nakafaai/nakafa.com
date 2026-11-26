@@ -24,6 +24,24 @@ interface TryoutSetActionProps {
   };
 }
 
+/** Selects the section fields for a set start request without nested ternaries. */
+function resolveSectionTarget(input: {
+  readonly destination: TryoutSetDestination;
+  readonly entrySection: SetEntrySection;
+  readonly hasActiveAttempt: boolean;
+}) {
+  if (input.entrySection.visibility === "internal-entry") {
+    return {
+      entryPart: input.destination.part,
+      entrySectionKey: input.entrySection.sectionKey,
+    };
+  }
+  if (input.hasActiveAttempt) {
+    return { destinationPart: input.destination.part };
+  }
+  return {};
+}
+
 /** Renders the only valid set-page action for the current attempt state. */
 export function TryoutSetAction({ value }: TryoutSetActionProps) {
   if (
@@ -32,22 +50,23 @@ export function TryoutSetAction({ value }: TryoutSetActionProps) {
     return null;
   }
 
-  const entrySectionKey =
-    value.entrySection.visibility === "internal-entry"
-      ? value.entrySection.sectionKey
-      : undefined;
+  const hasActiveAttempt = value.activeAttempt?.status === "in-progress";
+  const sectionTarget = resolveSectionTarget({
+    destination: value.destination,
+    entrySection: value.entrySection,
+    hasActiveAttempt,
+  });
   const request: StartTryoutRequest = {
     authRedirect: { publicPath: value.currentPath },
     countryKey: value.set.countryKey,
-    destination: value.destination.address,
-    // An internal entry has no page of its own, so its start stays on the set and opens its section there;
-    // any other start opens the destination section and lands on its page, where it already runs.
-    ...(entrySectionKey === undefined
-      ? {
-          destinationPart: value.destination.part,
-          entrySectionKey: value.destination.part.sectionKey,
-        }
-      : { entrySectionKey }),
+    // Multi-section sets open an unlocked 24-hour lobby on the set page with zero running section
+    // clocks so learners choose which part to start and when. Once an attempt is active, continuing
+    // targets the running or next unfinished part. Single-section internal-entry sets start their one
+    // paper directly after transparent confirmation of question count and duration.
+    destination: hasActiveAttempt
+      ? value.destination.address
+      : { publicPath: value.set.publicPath },
+    ...sectionTarget,
     examKey: value.set.examKey,
     locale: value.locale,
     setKey: value.set.setKey,

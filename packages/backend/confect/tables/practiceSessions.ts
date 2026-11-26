@@ -31,6 +31,7 @@ export default Table.make(() =>
     assessmentSnapshotId: Schema.String,
     releaseId: Schema.String,
     paper: Schema.Struct({ hash: Sha256HashSchema, id: PaperIdSchema }),
+    checkedCount: Schema.optionalKey(Schema.Finite),
     questionCount: Schema.Finite,
     startedAt: Schema.Finite,
     lastActivityAt: Schema.Finite,

@@ -10,6 +10,7 @@ import {
   getTryoutPublicPath,
 } from "@/components/tryout/route/path";
 import { useTryoutStartPhase } from "@/components/tryout/runtime/start";
+import { shouldLockTryoutShell } from "@/components/tryout/runtime/state";
 import { useTryoutPlayerPath } from "@/components/tryout/section/header";
 import { useTryoutSectionPage } from "@/components/tryout/section/page";
 
@@ -38,6 +39,10 @@ export function TryoutSectionPaper({ children }: { children: ReactNode }) {
   const { binding, page, parts, route, setPath } = useTryoutSectionPage();
   const opening = useTryoutStartPhase() === "opening";
   const running = binding?.initialState.attempt.status === "in-progress";
+  const activeSectionKey = running
+    ? binding.initialState.attempt.activeSectionKey
+    : null;
+  const locked = shouldLockTryoutShell({ activeSectionKey, opening });
   const visibleParts =
     binding && !running
       ? Arr.filter(parts, (part) =>
@@ -59,7 +64,7 @@ export function TryoutSectionPaper({ children }: { children: ReactNode }) {
     <TryoutPaperProvider
       attemptId={binding?.attemptId}
       current={page.section.sectionKey}
-      locked={running || opening}
+      locked={locked}
       parts={visibleParts}
       path={path}
       title={page.section.title}
@@ -70,23 +75,33 @@ export function TryoutSectionPaper({ children }: { children: ReactNode }) {
 }
 
 /**
- * Locks the app shell while the attempt this page is bound to runs, or while the learner's press opens
- * a section here, so the page takes the whole screen from the press on.
+ * Locks the app shell only while a timed section clock is actively running or while the learner's press opens
+ * a section here, so the page takes the whole screen during timed work and stays unlocked in the lobby.
  */
 export function TryoutSectionLock() {
   const { binding, page, route } = useTryoutSectionPage();
   const opening = useTryoutStartPhase() === "opening";
-  if (binding?.initialState.attempt.status === "in-progress") {
+  const attempt = binding?.initialState.attempt;
+  const activeSectionKey =
+    attempt?.status === "in-progress" ? attempt.activeSectionKey : null;
+  if (!shouldLockTryoutShell({ activeSectionKey, opening })) {
+    return null;
+  }
+  if (
+    binding &&
+    attempt?.status === "in-progress" &&
+    activeSectionKey !== null
+  ) {
     return (
       <ShellLock
         remember={getTryoutAttemptLock({
           attemptId: binding.attemptId,
           locale: route.locale,
           setPath: page.set.publicPath,
-          until: binding.initialState.attempt.expiresAt,
+          until: attempt.activeSectionExpiresAt ?? attempt.expiresAt,
         })}
       />
     );
   }
-  return opening ? <ShellLock /> : null;
+  return <ShellLock />;
 }

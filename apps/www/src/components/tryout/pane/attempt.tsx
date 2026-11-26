@@ -1,13 +1,33 @@
+import { useMutation } from "@confect/react";
+import { Delete02Icon } from "@hugeicons/core-free-icons";
+import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
+import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import { Button } from "@repo/design-system/components/ui/button";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { toast } from "@repo/design-system/lib/toast/notify";
+import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
-import { Array as Arr, Option } from "effect";
+import { useConvex } from "convex/react";
+import { Array as Arr, Effect, Option } from "effect";
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { PaneFact, PaneFacts } from "@/components/shared/page/pane";
 import { useSetPane } from "@/components/tryout/pane/context";
 import { TryoutResultFacts } from "@/components/tryout/review/result";
+import {
+  getTryoutPageTarget,
+  getTryoutPublicPathHref,
+} from "@/components/tryout/route/path";
 import { TryoutClock } from "@/components/tryout/runtime/countdown";
 import { TryoutAttemptPicker } from "@/components/tryout/score/history";
+import { DISCARD_ERROR } from "@/components/tryout/set/copy";
+import { keepActionName } from "@/components/tryout/set/kept";
+import type { CurrentAttempt } from "@/components/tryout/set/model";
 import { useFactsWaiting } from "@/components/tryout/set/name";
+import { discardAttemptProgram } from "@/components/tryout/set/program";
+import { requireConvexOnline } from "@/lib/convex/online";
 
 /** The day an attempt was taken, short enough for a fact. */
 const TAKEN = { day: "numeric", month: "short", year: "numeric" } as const;
@@ -19,9 +39,11 @@ const TAKEN = { day: "numeric", month: "short", year: "numeric" } as const;
 function AttemptPart({
   children,
   className,
+  waiting,
 }: {
   children: ReactNode;
   className?: string;
+  waiting?: boolean;
 }) {
   const { view } = useSetPane();
   return (
@@ -30,6 +52,7 @@ function AttemptPart({
         "-mx-(--pane-end,1rem) flex flex-col gap-4 border-b px-(--pane-end,1rem) py-4 first:pt-0 last:border-b-0 last:pb-0",
         className
       )}
+      data-attempt-waiting={waiting ? "" : undefined}
     >
       <TryoutAttemptPicker
         attempt={view.actionAttempt}
@@ -42,11 +65,89 @@ function AttemptPart({
   );
 }
 
+/** Confirms leaving an active attempt before any section has started. */
+export function DiscardAttemptDialog({
+  attemptId,
+  open,
+  setOpen,
+}: {
+  readonly attemptId: Id<"tryoutAttempts">;
+  readonly open: boolean;
+  readonly setOpen: (open: boolean) => void;
+}) {
+  const t = useTranslations("Tryouts");
+  const { view } = useSetPane();
+  const navigate = useNavigate();
+  const convex = useConvex();
+  const discard = useMutation(tryouts.mutations.attempts.discardAttempt);
+  const [busy, setBusy] = useState(false);
+
+  function onConfirm() {
+    if (busy) {
+      return;
+    }
+    setOpen(false);
+    setBusy(true);
+    const setAddress = `/${view.route.locale}${getTryoutPublicPathHref(view.page.set.publicPath)}`;
+    const program = discardAttemptProgram({
+      attemptId,
+      failureMessage: DISCARD_ERROR,
+      mutation: discard,
+      onFailure: Effect.sync(() => setBusy(false)),
+      onSuccess: keepActionName(setAddress, "start-cta").pipe(
+        Effect.andThen(
+          Effect.sync(() => {
+            setBusy(false);
+            Option.map(
+              getTryoutPageTarget({ publicPath: view.page.set.publicPath }),
+              (target) => navigate({ ...target, replace: true })
+            );
+          })
+        )
+      ),
+    });
+    Effect.runPromise(
+      requireConvexOnline(convex).pipe(
+        Effect.andThen(program),
+        Effect.catchTag("ConvexOfflineError", () =>
+          Effect.sync(() => {
+            toast.error(DISCARD_ERROR, { position: "bottom-center" });
+            setBusy(false);
+          })
+        )
+      )
+    );
+  }
+
+  return (
+    <ResponsiveDialog
+      action={
+        <Button
+          data-agent-confirm=""
+          inert={busy}
+          onClick={onConfirm}
+          type="button"
+          variant="destructive"
+        >
+          <Spinner icon={Delete02Icon} isLoading={busy} />
+          {t("discard-confirm-cta")}
+        </Button>
+      }
+      description={t("discard-dialog-description")}
+      open={open}
+      setOpen={setOpen}
+      title={t("discard-dialog-title")}
+    >
+      <p className="text-muted-foreground text-sm">{view.page.set.title}</p>
+    </ResponsiveDialog>
+  );
+}
+
 /** A running attempt's facts: the time it has left, ticking, and how many parts it finished. */
 function RunningFacts({
   attempt,
 }: {
-  attempt: { completedSectionKeys: readonly string[]; expiresAt: number };
+  attempt: Pick<CurrentAttempt, "completedSectionKeys" | "expiresAt">;
 }) {
   const t = useTranslations("Tryouts");
   const tCommon = useTranslations("Common");
@@ -81,7 +182,10 @@ function WaitingAttempt() {
     tCommon("date"),
   ];
   return (
-    <AttemptPart className="hidden has-[[data-attempt-picker]:not([hidden])]:flex">
+    <AttemptPart
+      className="hidden has-[[data-attempt-picker]:not([hidden])]:flex"
+      waiting
+    >
       <PaneFacts layout="grid">
         {Arr.map(labels, (label) => (
           <PaneFact key={label} label={label}>

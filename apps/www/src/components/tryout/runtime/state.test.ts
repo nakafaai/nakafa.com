@@ -1,11 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
+  canDiscardTryoutAttempt,
   getActiveTryoutAttempt,
   getTryoutRuntimeState,
   holdsTryoutQuestions,
   isTryoutRuntimeRunning,
   isTryoutStateLive,
   selectActionAttempt,
+  shouldLockTryoutShell,
 } from "@/components/tryout/runtime/state";
 
 const NOW = 1000;
@@ -148,6 +150,35 @@ describe("isTryoutRuntimeRunning", () => {
       })
     ).toBe(false);
     expect(isTryoutRuntimeRunning({ kind: "none" })).toBe(false);
+  });
+});
+
+describe("shouldLockTryoutShell", () => {
+  it("locks only when a timed section is running or opening", () => {
+    expect(
+      shouldLockTryoutShell({ activeSectionKey: null, opening: false })
+    ).toBe(false);
+    expect(
+      shouldLockTryoutShell({ activeSectionKey: "section-a", opening: false })
+    ).toBe(true);
+    expect(
+      shouldLockTryoutShell({ activeSectionKey: null, opening: true })
+    ).toBe(true);
+  });
+});
+
+describe("canDiscardTryoutAttempt", () => {
+  it("allows discarding only an active attempt with zero started sections", () => {
+    expect(canDiscardTryoutAttempt(null)).toBe(false);
+    expect(
+      canDiscardTryoutAttempt({ startedSectionCount: 0, status: "in-progress" })
+    ).toBe(true);
+    expect(
+      canDiscardTryoutAttempt({ startedSectionCount: 1, status: "in-progress" })
+    ).toBe(false);
+    expect(
+      canDiscardTryoutAttempt({ startedSectionCount: 0, status: "completed" })
+    ).toBe(false);
   });
 });
 

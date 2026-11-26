@@ -1,14 +1,38 @@
 import { QueryResult, useQuery } from "@confect/react";
-import { Link01Icon } from "@hugeicons/core-free-icons";
-import { useClipboard } from "@mantine/hooks";
+import {
+  Delete02Icon,
+  Link01Icon,
+  MoreHorizontalIcon,
+  Rocket01Icon,
+  Target02Icon,
+} from "@hugeicons/core-free-icons";
+import { useClipboard, useDisclosure } from "@mantine/hooks";
+import practice from "@repo/backend/confect/_generated/refs/practice";
 import progress from "@repo/backend/confect/_generated/refs/progress";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  ButtonGroup,
+  ButtonGroupSeparator,
+} from "@repo/design-system/components/ui/button-group";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Tabs,
+  TabsList,
+  TabsTab,
+} from "@repo/design-system/components/ui/tabs";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { getRouteApi } from "@tanstack/react-router";
-import { Array as Arr, Number as Num, Option } from "effect";
+import { Array as Arr, Number as Num, Option, Schema } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -23,18 +47,32 @@ import {
   PaneHeader,
 } from "@/components/shared/page/pane";
 import { TryoutLevel } from "@/components/tryout/level";
-import { SetAttempt } from "@/components/tryout/pane/attempt";
+import {
+  DiscardAttemptDialog,
+  SetAttempt,
+} from "@/components/tryout/pane/attempt";
 import { SetBoard } from "@/components/tryout/pane/board";
 import {
   SetPaneContext,
   setPaneOf,
   useSetPane,
 } from "@/components/tryout/pane/context";
-import { NO_GROWTH, starsLeft } from "@/components/tryout/pane/model";
+import type { SetPaneMode } from "@/components/tryout/pane/model";
+import {
+  NO_GROWTH,
+  SetPaneModeSchema,
+  selectPracticePath,
+  starsLeft,
+} from "@/components/tryout/pane/model";
 import { SetPath } from "@/components/tryout/pane/path";
+import { SetPractice } from "@/components/tryout/pane/practice";
 import { SetRewards } from "@/components/tryout/pane/rewards";
 import { attemptOf } from "@/components/tryout/route/intent";
-import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
+import {
+  getTryoutPracticeTarget,
+  getTryoutPublicPathHref,
+} from "@/components/tryout/route/path";
+import { canDiscardTryoutAttempt } from "@/components/tryout/runtime/state";
 import { TryoutSetAction } from "@/components/tryout/set/action";
 import type {
   CurrentAttempt,
@@ -45,6 +83,7 @@ import type {
 } from "@/components/tryout/set/model";
 import { setReadArgs } from "@/components/tryout/set/reads";
 import { useLastValue } from "@/lib/data/kept";
+import { TargetLink } from "@/lib/routing/link";
 
 /** Props of the set's pane: what the set's surfaces draw, which the paper of a set entered by its one section shares. */
 export interface TryoutSetPaneProps {
@@ -86,6 +125,7 @@ const setRoute = getRouteApi(
 export function TryoutSetPane({ view }: TryoutSetPaneProps) {
   // A visitor's pane, which a learner's page shows too until its session loads, unless the session fails to load.
   const failed = useLiveSession((state) => state.hasError);
+  const [mode, setMode] = useState<SetPaneMode>("simulation");
   return (
     <ConvexIsland
       fallback={
@@ -95,22 +135,33 @@ export function TryoutSetPane({ view }: TryoutSetPaneProps) {
             board: Option.none(),
             claims: Option.none(),
             growth: Option.none(),
+            mode,
+            practice: Option.none(),
+            setMode,
             view,
           })}
         />
       }
     >
-      <LearnerSetPane view={view} />
+      <LearnerSetPane mode={mode} setMode={setMode} view={view} />
     </ConvexIsland>
   );
 }
 
 /**
- * A learner's pane: how far they grew, what they hold of the set's Stars, and the set's board, read live. It is
- * pending until each read and the learner's attempt first answered; after that a read that reloads, as when the
- * address names another attempt, keeps its last answer, so the pane never blanks.
+ * A learner's pane: how far they grew, what they hold of the set's Stars, the set's board, and its
+ * practice progress, read live. It is pending until each read and the learner's attempt first answered;
+ * after that a read that reloads, as when the address names another attempt, keeps its last answer, so
+ * the pane never blanks.
  */
-function LearnerSetPane({ view }: TryoutSetPaneProps) {
+function LearnerSetPane({
+  mode,
+  setMode,
+  view,
+}: TryoutSetPaneProps & {
+  readonly mode: SetPaneMode;
+  readonly setMode: (mode: SetPaneMode) => void;
+}) {
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const attemptId = setRoute.useSearch({ select: attemptOf });
@@ -128,6 +179,12 @@ function LearnerSetPane({ view }: TryoutSetPaneProps) {
   const board = useLastAnswer(
     useQuery(tryouts.queries.ranks.bySet, isAuthenticated ? args.board : "skip")
   );
+  const practiceSummary = useLastAnswer(
+    useQuery(
+      practice.sessions.summary,
+      isAuthenticated ? args.practice : "skip"
+    )
+  );
   const pending = useFirstWait(
     isLoading ||
       (isAuthenticated &&
@@ -144,6 +201,9 @@ function LearnerSetPane({ view }: TryoutSetPaneProps) {
         claims: Option.flatMap(claims, Option.fromNullOr),
         // A learner who earned nothing yet has no progress record, and stands at level 1.
         growth: Option.map(growth, (value) => value ?? NO_GROWTH),
+        mode,
+        practice: practiceSummary,
+        setMode,
         view,
       })}
     />
@@ -170,6 +230,36 @@ function useFirstWait(waiting: boolean) {
   return waiting && !painted;
 }
 
+/** The mode bar under the pane's header: switch freely between timed simulation and untimed practice. */
+function SetPaneModeBar() {
+  const t = useTranslations("Tryouts");
+  const { mode, setMode } = useSetPane();
+  return (
+    <Tabs
+      onValueChange={(next) => {
+        if (Schema.is(SetPaneModeSchema)(next)) {
+          setMode(next);
+        }
+      }}
+      value={mode}
+    >
+      <TabsList
+        aria-label={t("start-mode-label")}
+        className="px-(--pane-end,1rem)"
+      >
+        <TabsTab value="simulation">
+          <HugeIcons icon={Rocket01Icon} />
+          {t("simulation-cta")}
+        </TabsTab>
+        <TabsTab value="practice">
+          <HugeIcons icon={Target02Icon} />
+          {t("practice-cta")}
+        </TabsTab>
+      </TabsList>
+    </Tabs>
+  );
+}
+
 /**
  * The pane's three parts, each one concern, over what the variant read. While `pending`, the header's line and the
  * body carry `data-pane-read`, which a signed-in hint hides (`globals.css`).
@@ -185,12 +275,19 @@ function SetPaneFrame({
   return (
     <SetPaneContext value={value}>
       <SetPaneHeader read={read} />
+      <SetPaneModeBar />
       <PaneBody>
         <div className="contents" data-pane-read={read}>
-          <SetAttempt />
-          <SetPath />
-          <SetRewards />
-          <SetBoard />
+          {value.mode === "practice" ? (
+            <SetPractice />
+          ) : (
+            <>
+              <SetAttempt />
+              <SetPath />
+              <SetRewards />
+              <SetBoard />
+            </>
+          )}
         </div>
       </PaneBody>
       <SetPaneFooter />
@@ -241,57 +338,109 @@ function SetPaneHeader({ read }: { read: "pending" | undefined }) {
   );
 }
 
-/** Copies the set's own address, which opens this pane for whoever it is sent to. */
-function SetShare() {
+/**
+ * The pane's footer on one row: the set's level at its start, then one split primary button group
+ * pairing the dynamic primary action with a More menu (Share, and destructive Leave session while
+ * the attempt lobby has zero started sections).
+ */
+function SetPaneFooter() {
+  const t = useTranslations("Tryouts");
   const tCommon = useTranslations("Common");
   const clipboard = useClipboard({ timeout: 1000 });
-  const { view } = useSetPane();
-  return (
-    <Button
-      onClick={() => {
-        clipboard.copy(
-          new URL(
-            `/${view.route.locale}${getTryoutPublicPathHref(view.page.set.publicPath)}`,
-            SITE_ORIGIN
-          ).toString()
-        );
-        toast.success(
-          { title: "link-copied.title" },
-          { position: "bottom-center" }
-        );
-      }}
-      size="icon"
-      tooltip={tCommon("share")}
-      type="button"
-      variant="outline"
-    >
-      <HugeIcons icon={Link01Icon} />
-    </Button>
+  const [discardOpen, discardDialog] = useDisclosure(false);
+  const { mode, practice: summaries, sections, view } = useSetPane();
+  const activeAttempt = view.activeAttempt;
+  const discardable =
+    activeAttempt !== null && canDiscardTryoutAttempt(activeAttempt);
+  const practiceTarget = getTryoutPracticeTarget(
+    selectPracticePath({
+      sections,
+      setPublicPath: view.page.set.publicPath,
+      summaries,
+    })
   );
-}
 
-/** The pane's footer on one row: the set's level at its start, then its link and its one primary action. */
-function SetPaneFooter() {
-  const { view } = useSetPane();
+  function copyLink() {
+    clipboard.copy(
+      new URL(
+        `/${view.route.locale}${getTryoutPublicPathHref(view.page.set.publicPath)}`,
+        SITE_ORIGIN
+      ).toString()
+    );
+    toast.success(
+      { title: "link-copied.title" },
+      { position: "bottom-center" }
+    );
+  }
+
   return (
     <PaneFooter>
       <span className="me-auto">
         <TryoutLevel level={view.page.set.level} />
       </span>
-      <SetShare />
-      <TryoutSetAction
-        value={{
-          activeAttempt: view.activeAttempt,
-          currentPath: view.currentPath,
-          ...(view.actionAttempt === undefined
-            ? {}
-            : { currentAttempt: view.actionAttempt }),
-          destination: view.start.destination,
-          entrySection: view.start.entrySection,
-          locale: view.route.locale,
-          set: view.start.set,
-        }}
-      />
+      <ButtonGroup variant="default">
+        {mode === "practice" && Option.isSome(practiceTarget) ? (
+          <TargetLink
+            className={buttonVariants({ variant: "default" })}
+            target={practiceTarget.value}
+          >
+            <HugeIcons data-icon="inline-start" icon={Target02Icon} />
+            {t("practice-start-cta")}
+          </TargetLink>
+        ) : (
+          <TryoutSetAction
+            value={{
+              activeAttempt: view.activeAttempt,
+              currentPath: view.currentPath,
+              ...(view.actionAttempt === undefined
+                ? {}
+                : { currentAttempt: view.actionAttempt }),
+              destination: view.start.destination,
+              entrySection: view.start.entrySection,
+              locale: view.route.locale,
+              set: view.start.set,
+            }}
+          />
+        )}
+        <ButtonGroupSeparator />
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button size="icon" tooltip={tCommon("more-actions")}>
+                <HugeIcons icon={MoreHorizontalIcon} />
+              </Button>
+            }
+          />
+          <DropdownMenuContent align="end" label={tCommon("menu-actions")}>
+            <DropdownMenuItem icon={Link01Icon} onSelect={copyLink}>
+              {tCommon("share")}
+            </DropdownMenuItem>
+            {discardable ? (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  icon={Delete02Icon}
+                  onSelect={discardDialog.open}
+                  variant="destructive"
+                >
+                  {t("discard-cta")}
+                </DropdownMenuItem>
+              </>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </ButtonGroup>
+      {discardable ? (
+        <ConvexIsland fallback={null}>
+          <DiscardAttemptDialog
+            attemptId={activeAttempt.attemptId}
+            open={discardOpen}
+            setOpen={(open) =>
+              open ? discardDialog.open() : discardDialog.close()
+            }
+          />
+        </ConvexIsland>
+      ) : null}
     </PaneFooter>
   );
 }

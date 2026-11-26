@@ -84,7 +84,11 @@ export const readQuestionFocus = Effect.fn("nina.focus.read")(function* (
     return null;
   }
   const { attempt, placement, section } = entitled.value;
-  const version = yield* placeVersion(placement, section.questionLanguage);
+  const version = yield* placeVersion(
+    attempt.assessmentSnapshotId,
+    placement,
+    section.questionLanguage
+  );
   const [question, activeSnapshotId, response] = yield* Effect.all([
     readPlacedQuestion(placement),
     findActiveExplanationSnapshotId(),

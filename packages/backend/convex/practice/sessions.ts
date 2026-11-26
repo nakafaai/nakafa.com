@@ -6,4 +6,5 @@ export const explain = registeredFunctions.explain;
 export const open = registeredFunctions.open;
 export const restart = registeredFunctions.restart;
 export const state = registeredFunctions.state;
+export const summary = registeredFunctions.summary;
 export const experimental_reuseContext = true;

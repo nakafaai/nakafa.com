@@ -88,7 +88,11 @@ export const readSectionBodies = Effect.fn("tryouts.runtime.readSectionBodies")(
         const [first, ...rest] = placement.versions;
         const readBody = Effect.fn("tryouts.runtime.readSectionBody")(
           function* (language: typeof first.language) {
-            const version = yield* placeVersion(placement, language).pipe(
+            const version = yield* placeVersion(
+              input.attemptSnapshotId,
+              placement,
+              language
+            ).pipe(
               // Each language read here is one of the placement's own.
               Effect.catchTag("TryoutRuntimeError", Effect.die)
             );

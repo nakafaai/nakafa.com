@@ -14,7 +14,7 @@ import { createContext } from "react";
 export const ButtonGroupVariant = createContext<
   | Extract<
       VariantProps<typeof buttonVariants>["variant"],
-      "ghost" | "inverse-outline" | "outline" | "secondary"
+      "default" | "ghost" | "inverse-outline" | "outline" | "secondary"
     >
   | undefined
 >(undefined);

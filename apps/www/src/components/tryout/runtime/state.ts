@@ -54,6 +54,31 @@ export function isTryoutStateLive(state: TryoutReactiveState | null) {
 }
 
 /**
+ * Locks the app shell only while a timed section clock is actively running or opening.
+ * Idle lobby states between sections keep navigation free.
+ */
+export function shouldLockTryoutShell(input: {
+  readonly activeSectionKey: string | null;
+  readonly opening: boolean;
+}) {
+  return input.opening || input.activeSectionKey !== null;
+}
+
+/** Whether an active attempt can be discarded because no section has started yet. */
+export function canDiscardTryoutAttempt(
+  attempt: Pick<
+    typeof tryoutAttemptStateValidator.Type,
+    "startedSectionCount" | "status"
+  > | null
+) {
+  return (
+    attempt !== null &&
+    attempt.status === "in-progress" &&
+    attempt.startedSectionCount === 0
+  );
+}
+
+/**
  * Whether a state holds a running attempt's questions. From then on an answer changes nothing the page's
  * own read carries: the live state repeats alone, until it stops holding them.
  */

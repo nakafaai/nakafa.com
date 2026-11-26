@@ -217,12 +217,20 @@ export const freezeAttempt = Effect.fn("tryouts.start.freezeAttempt")(
     readonly items: readonly PlacedItem[];
     readonly paper: Paper;
     readonly profile: ExamProfile;
+    readonly sectionKey?: string;
     readonly sections: readonly CatalogSection[];
   }) {
     const items = HashMap.fromIterable(
       Arr.map(source.items, (item) => Tuple.make(item.version.hash, item))
     );
-    const frozen = yield* Effect.forEach(source.profile.sections, (template) =>
+    const templates =
+      source.sectionKey === undefined
+        ? source.profile.sections
+        : Arr.filter(
+            source.profile.sections,
+            (template) => template.id === source.sectionKey
+          );
+    const frozen = yield* Effect.forEach(templates, (template) =>
       Effect.gen(function* () {
         const paperSection = Arr.findFirst(
           source.paper.sections,

@@ -48,7 +48,8 @@ export const loadTryoutStartSource = Effect.fn(
   "tryouts.start.loadTryoutStartSource"
 )(function* (
   active: { readonly releaseId: string; readonly snapshotId: string },
-  args: StartAttemptArgs
+  args: StartAttemptArgs,
+  sectionKey?: string
 ) {
   const setIdentity = tryoutSetIdentityOf(args);
   const found = yield* readCatalogSet(
@@ -65,13 +66,32 @@ export const loadTryoutStartSource = Effect.fn(
   const { sections, set } = found.value;
   const paper = yield* readPaper(active.snapshotId, set.paper);
   const profile = yield* readProfile(active.snapshotId, paper.paper.profile);
+  const targetSections =
+    sectionKey === undefined
+      ? paper.paper.sections
+      : Arr.filter(
+          paper.paper.sections,
+          ({ section }) => section === sectionKey
+        );
+  // A place freezes every language of its section, so a learner may switch in the section.
+  const hashes = Arr.dedupe(
+    Arr.flatMap(targetSections, ({ placements }) =>
+      Arr.flatMap(placements, ({ versions }) =>
+        Arr.map(versions, ({ hash }) => hash)
+      )
+    )
+  );
   const items = yield* Effect.forEach(
-    // A place freezes every language of its section, so a learner may switch in the section.
-    Arr.flatMap(paper.paper.sections, ({ placements }) =>
-      Arr.flatMap(placements, ({ versions }) => versions)
-    ),
-    ({ hash }) =>
-      Effect.all({ key: readItemKey(hash), version: readItemVersion(hash) })
+    hashes,
+    (hash) =>
+      Effect.all(
+        {
+          key: readItemKey(active.snapshotId, hash),
+          version: readItemVersion(active.snapshotId, hash),
+        },
+        { concurrency: "unbounded" }
+      ),
+    { concurrency: "unbounded" }
   );
   return {
     active,
