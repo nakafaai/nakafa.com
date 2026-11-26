@@ -1,7 +1,6 @@
 import { captureException } from "@repo/analytics/posthog/capture";
 import { SceneFailure } from "@repo/design-system/components/three/failure";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { VisualCardNoteProvider } from "@repo/design-system/components/visual/card";
 import { untilNearScreen } from "@repo/design-system/lib/screen";
 import { useHydrated } from "@tanstack/react-router";
 import { Deferred, Effect, Exit, Fiber, Option } from "effect";
@@ -86,10 +85,6 @@ function VisualBoundaryFallback({
  * while the lesson loads: the charts of a lesson drew in tasks of up to 284 ms at
  * 4x CPU right after hydration, wherever they stood (ADR 0039 D22). A visual of
  * a client navigation draws at once, in the page's first frame.
- *
- * The document's `footer`, the note its author wrote under a visual, goes to
- * the visual's card through `VisualCardNoteProvider`, so every visual of the
- * catalog ends with its note without reading it itself.
  */
 export function withHydrationBoundary<P extends object>(
   Renderer: ComponentType<P>
@@ -126,30 +121,28 @@ export function withHydrationBoundary<P extends object>(
     }, [wait]);
 
     return (
-      <VisualCardNoteProvider note={props.footer}>
-        <div ref={box}>
-          <ErrorBoundary
-            FallbackComponent={VisualBoundaryFallback}
-            onError={(error, info) => {
-              if (!isStaleChunkError(error)) {
-                captureException(error, {
-                  component_stack: info.componentStack,
-                  source: "visual-hydration-boundary",
-                });
-              }
-            }}
-            report={false}
-          >
-            <Activity mode="visible">
-              <Suspense fallback={null}>
-                <UntilNearScreen wait={wait}>
-                  <Renderer {...props} />
-                </UntilNearScreen>
-              </Suspense>
-            </Activity>
-          </ErrorBoundary>
-        </div>
-      </VisualCardNoteProvider>
+      <div ref={box}>
+        <ErrorBoundary
+          FallbackComponent={VisualBoundaryFallback}
+          onError={(error, info) => {
+            if (!isStaleChunkError(error)) {
+              captureException(error, {
+                component_stack: info.componentStack,
+                source: "visual-hydration-boundary",
+              });
+            }
+          }}
+          report={false}
+        >
+          <Activity mode="visible">
+            <Suspense fallback={null}>
+              <UntilNearScreen wait={wait}>
+                <Renderer {...props} />
+              </UntilNearScreen>
+            </Suspense>
+          </Activity>
+        </ErrorBoundary>
+      </div>
     );
   }
   // A client navigation settles the renderer's code with the page's tree

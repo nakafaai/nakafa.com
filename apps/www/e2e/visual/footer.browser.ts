@@ -19,18 +19,26 @@ const BAND_ORDER = [
   "visual-card-actions",
   "visual-card-table",
   "visual-card-footer",
-  "visual-card-note",
 ];
 
 /**
- * Reads the slots of a visual card's bands in their order in the page, and
- * whether the body holds anything but the visual: a button, a field, a table
- * or a list of readouts.
+ * Reads the slots of a visual card's bands in their order in the page,
+ * whether the body holds anything but the visual, and whether any footer band
+ * violates the single-structured-footer rule.
  */
 function readBands(card: Locator) {
   return card.evaluate((element) => ({
     bodyControls: element.querySelectorAll(
       '[data-slot="visual-card-body"] :is(button, input, select, textarea, table, dl)'
+    ).length,
+    footerBands: Array.from(element.children).filter((child) => {
+      const slot = child.getAttribute("data-slot");
+      return slot === "visual-card-footer" || slot === "visual-card-table";
+    }).length,
+    noteBands: element.querySelectorAll('[data-slot="visual-card-note"]')
+      .length,
+    plainFooterParagraphs: element.querySelectorAll(
+      '[data-slot="visual-card-footer"] p'
     ).length,
     slots: Array.from(element.children, (child) =>
       child.getAttribute("data-slot")
@@ -122,6 +130,9 @@ const expectBandsInOrder = Effect.fn("NakafaE2E.expectVisualBandsInOrder")(
         Arr.filter(BAND_ORDER, (slot) => Arr.contains(known, slot))
       );
       expect(bands.bodyControls).toBe(0);
+      expect(bands.noteBands).toBe(0);
+      expect(bands.footerBands).toBeLessThanOrEqual(1);
+      expect(bands.plainFooterParagraphs).toBe(0);
     });
   }
 );

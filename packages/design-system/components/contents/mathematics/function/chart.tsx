@@ -17,7 +17,6 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
-  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
   VisualCardTable,
@@ -85,7 +84,7 @@ export function FunctionChart({
           <TableBody>
             <TableRow>
               <TableHead scope="row">
-                <InlineMath math="f(x)" />
+                <InlineMath math={formula} />
               </TableHead>
               {Arr.map(plot.values, ({ x, y }) => (
                 <TableCell key={x}>
@@ -96,11 +95,6 @@ export function FunctionChart({
           </TableBody>
         </Table>
       </VisualCardTable>
-      <VisualCardFooter>
-        <div className="flex justify-center">
-          <InlineMath math={formula} />
-        </div>
-      </VisualCardFooter>
     </VisualCard>
   );
 }

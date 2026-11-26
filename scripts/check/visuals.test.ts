@@ -6,6 +6,8 @@ import { inspectVisualSource } from "#scripts/check/visuals";
 const VISUAL = "packages/design-system/components/contents/example.tsx";
 const HEADLESS =
   "a VisualCard has no VisualCardHeader. Every visual names what it shows: draw a VisualCardHeader with its title and description first in the card, or in what a frame that places its children receives.";
+const FOOTER_RULE =
+  "A VisualCard may hold at most one footer band (VisualCardFooter with structured key-value VisualCardFacts, or VisualCardTable), never stacked double footers, VisualCardNote, or plain-text paragraphs.";
 
 /** Inspects one module with the visual card policy alone. */
 function inspect(sourceText: string, file = VISUAL) {
@@ -105,6 +107,56 @@ export function Scene() {
             "packages/design-system/components/visual/example.ts"
           ),
           []
+        );
+      })
+  );
+
+  it.effect(
+    "rejects double footers, VisualCardNote, and plain-text footers while allowing one structured footer per card",
+    () =>
+      Effect.gen(function* () {
+        assert.deepStrictEqual(
+          yield* inspect(`
+export function Broken() {
+  return (
+    <VisualCardNoteProvider note="bad">
+      <VisualCard>
+        <VisualCardHeader description="Desc" title="Title" />
+        <VisualCardBody />
+        <VisualCardTable />
+        <VisualCardFooter>
+          <p>Plain sentence</p>
+          Loose text
+          {"Quoted text"}
+        </VisualCardFooter>
+        <VisualCardNote>Extra note</VisualCardNote>
+      </VisualCard>
+      <VisualCard>
+        <VisualCardHeader description="Outer" title="Outer" />
+        <VisualCardBody>
+          <VisualCard>
+            <VisualCardHeader description="Inner" title="Inner" />
+            <VisualCardBody />
+            {true && <VisualCardFooter />}
+          </VisualCard>
+        </VisualCardBody>
+        <VisualCardFooter>
+          <VisualCardFacts>
+            <VisualFact label="Key" value="Value" />
+          </VisualCardFacts>
+        </VisualCardFooter>
+      </VisualCard>
+    </VisualCardNoteProvider>
+  );
+}`),
+          [
+            `${VISUAL}:4: <VisualCardNoteProvider> is banned. ${FOOTER_RULE}`,
+            `${VISUAL}:14: <VisualCardNote> is banned. ${FOOTER_RULE}`,
+            `${VISUAL}:9: a VisualCard has multiple footer bands. ${FOOTER_RULE}`,
+            `${VISUAL}:10: a VisualCardFooter holds plain text instead of structured key-value VisualCardFacts. ${FOOTER_RULE}`,
+            `${VISUAL}:11: a VisualCardFooter holds plain text instead of structured key-value VisualCardFacts. ${FOOTER_RULE}`,
+            `${VISUAL}:12: a VisualCardFooter holds plain text instead of structured key-value VisualCardFacts. ${FOOTER_RULE}`,
+          ]
         );
       })
   );

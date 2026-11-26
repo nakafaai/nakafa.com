@@ -19,13 +19,16 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { getLineSeriesCue } from "@repo/design-system/lib/charts/cue";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 
 const EXPONENTIAL_BASE = 3;
 const LINEAR_SCALING_FACTOR = 3;
@@ -64,6 +67,7 @@ const VIRUS_CUES = {
 
 /** Renders the exponential virus-growth chart for function exploration lessons. */
 export function VirusChart({ labels }: Props) {
+  const t = useTranslations("Common");
   const chartConfig = {
     exponential: {
       cue: VIRUS_CUES.exponential,
@@ -172,7 +176,9 @@ export function VirusChart({ labels }: Props) {
         <VisualCardFullscreen />
       </VisualCardActions>
       <VisualCardFooter>
-        <p className="text-sm">{labels.caption}</p>
+        <VisualCardFacts>
+          <VisualFact label={t("note")} value={labels.caption} />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

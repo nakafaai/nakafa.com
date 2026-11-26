@@ -9,7 +9,6 @@ import {
   VisualCard,
   VisualCardBody,
   VisualCardHeader,
-  VisualCardNoteProvider,
 } from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
 import { useId } from "react";
@@ -23,7 +22,7 @@ import {
 
 interface Props {
   readonly description: ReactNode;
-  /** The note its author wrote under the figure, which the card shows last. */
+  /** Accepted for compiled corpus compatibility; never rendered as a second or plain-text footer. */
   readonly footer?: ReactNode;
   readonly labels?: Readonly<Record<string, ReactNode>>;
   readonly scene: MathVisualScene;
@@ -31,9 +30,8 @@ interface Props {
 }
 
 /** Renders one stable mathematical scene without content-specific components. */
-export function MathVisual({ description, footer, title, ...scene }: Props) {
-  const readouts =
-    scene.scene.space === "plane" ? (scene.scene.readouts ?? []) : [];
+export function MathVisual({ description, labels, scene, title }: Props) {
+  const readouts = scene.space === "plane" ? (scene.readouts ?? []) : [];
   const identifier = useId();
   const descriptionId = `${identifier}-description`;
   const titleId = `${identifier}-title`;
@@ -41,30 +39,31 @@ export function MathVisual({ description, footer, title, ...scene }: Props) {
   return (
     <CoordinateProvider>
       <ParameterProvider
-        labels={scene.labels ?? {}}
-        parameters={scene.scene.parameters ?? []}
+        labels={labels ?? {}}
+        parameters={scene.parameters ?? []}
         readouts={readouts}
       >
-        <VisualCardNoteProvider note={footer}>
-          <VisualCard>
-            <VisualCardHeader
-              description={<span id={descriptionId}>{description}</span>}
-              title={<span id={titleId}>{title}</span>}
+        <VisualCard>
+          <VisualCardHeader
+            description={<span id={descriptionId}>{description}</span>}
+            title={<span id={titleId}>{title}</span>}
+          />
+          <ParameterSliders />
+          <VisualCardBody
+            aria-describedby={descriptionId}
+            aria-labelledby={titleId}
+            className="relative m-0"
+            data-scene="math"
+            render={<figure />}
+          >
+            <DeferredMathScene
+              {...(labels === undefined ? {} : { labels })}
+              scene={scene}
             />
-            <ParameterSliders />
-            <VisualCardBody
-              aria-describedby={descriptionId}
-              aria-labelledby={titleId}
-              className="relative m-0"
-              data-scene="math"
-              render={<figure />}
-            >
-              <DeferredMathScene {...scene} />
-            </VisualCardBody>
-            <CoordinateControls />
-            <MathReadouts />
-          </VisualCard>
-        </VisualCardNoteProvider>
+          </VisualCardBody>
+          <CoordinateControls />
+          <MathReadouts />
+        </VisualCard>
       </ParameterProvider>
     </CoordinateProvider>
   );
