@@ -3,6 +3,7 @@ import { simulationStep } from "@repo/design-system/components/contents/simulati
 import {
   useVisualReset,
   useVisualScene,
+  useVisualStop,
 } from "@repo/design-system/components/visual/card";
 import { useEffect, useLayoutEffect, useRef } from "react";
 
@@ -15,8 +16,8 @@ const HOLD = 1.6;
  * Before the learner presses Play, and whenever the run's inputs change while
  * it is paused, the clock stands at `end`, so the still frame shows the
  * outcome: where the car stopped, how long the marks are. Playing runs from
- * `start`, rests on the end, and loops. The scene calls `advance` once in its
- * own frame callback and draws the time it returns.
+ * `start`, rests on the end, and loops. Stopping rewinds cleanly to `start`
+ * and stays paused until Play is pressed again.
  */
 export function useTimeline(start: number, end: number) {
   const playing = useVisualScene((card) => card.playing, false);
@@ -34,6 +35,12 @@ export function useTimeline(start: number, end: number) {
       invalidate();
     }
   }, [invalidate, playing]);
+
+  useVisualStop(() => {
+    shownPlaying.current = false;
+    time.current = start;
+    invalidate();
+  });
 
   useVisualReset(() => {
     time.current = playing ? start : end;

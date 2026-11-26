@@ -23,7 +23,9 @@ import { threeSceneFrameVariants } from "@repo/design-system/components/three/sc
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
+  useVisualReset,
   useVisualScene,
+  useVisualStop,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -236,6 +238,18 @@ function CalxScene({
     }
   }, [day]);
 
+  useVisualStop(() => {
+    clock.current = 0;
+    sent.current = 0;
+    onDay(0);
+  });
+
+  useVisualReset(() => {
+    clock.current = LAVOISIER.days;
+    sent.current = LAVOISIER.days;
+    onDay(LAVOISIER.days);
+  });
+
   useFrame(({ clock: frame }, delta) => {
     if (playing) {
       const next =
@@ -296,13 +310,13 @@ function CalxScene({
           />
         </mesh>
       </group>
-      <mesh castShadow position={BULB}>
+      <mesh castShadow position={[BULB.x, BULB.y, BULB.z]} renderOrder={2}>
         <sphereGeometry args={[0.05, 40, 24]} />
-        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.14} />
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.22} />
       </mesh>
-      <mesh position={[BULB.x, BULB.y - 0.03, 0]}>
+      <mesh position={[BULB.x, BULB.y - 0.01, BULB.z]}>
         <sphereGeometry
-          args={[0.036, 32, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2]}
+          args={[0.044, 32, 14, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2]}
         />
         <MetalMaterial color={REAGENT_COLORS.mercury} roughness={0.08} />
       </mesh>
@@ -311,13 +325,13 @@ function CalxScene({
         <meshStandardMaterial color={REAGENT_COLORS.calx} roughness={0.8} />
         {Arr.map(Arr.range(1, SPECKS), (index) => {
           const angle = hashUnit(index, 2) * Math.PI * 2;
-          const radius = 0.033 * Math.sqrt(hashUnit(index, 3));
+          const radius = 0.039 * Math.sqrt(hashUnit(index, 3));
           return (
             <Instance
               key={index}
               position={[
                 BULB.x + Math.cos(angle) * radius,
-                BULB.y - 0.029,
+                BULB.y - 0.009,
                 Math.sin(angle) * radius,
               ]}
               rotation={[0, angle, 0]}
@@ -328,7 +342,7 @@ function CalxScene({
       <mesh geometry={neck}>
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.16} />
       </mesh>
-      <group position={JAR}>
+      <group position={[JAR.x, JAR.y, JAR.z]}>
         <mesh position={[0, 0.015, 0]} receiveShadow>
           <cylinderGeometry args={[0.11, 0.1, 0.03, 48, 1, true]} />
           <meshStandardMaterial color={BENCH_COLORS.trough} roughness={0.6} />

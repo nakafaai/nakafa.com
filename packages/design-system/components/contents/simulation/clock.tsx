@@ -8,6 +8,7 @@ import { simulationStep } from "@repo/design-system/components/contents/simulati
 import {
   useVisualReset,
   useVisualScene,
+  useVisualStop,
 } from "@repo/design-system/components/visual/card";
 import { useEffect, useEffectEvent, useRef } from "react";
 
@@ -29,6 +30,11 @@ export function useSimulationClock(initial = 0) {
       invalidate();
     }
   }, [invalidate, playing]);
+
+  useVisualStop(() => {
+    time.current = initial;
+    invalidate();
+  });
 
   useVisualReset(() => {
     time.current = initial;
@@ -104,6 +110,16 @@ export function useCycleClock({
       invalidate();
     }
   }, [invalidate, playing]);
+
+  useVisualStop(() => {
+    const start = initial ?? 0;
+    shownPlaying.current = false;
+    state.current = { hold: 0, value: start };
+    clock.current = start;
+    sent.current = start;
+    onValue(start);
+    invalidate();
+  });
 
   useVisualReset(() => {
     const start = initial ?? 0;

@@ -2,8 +2,14 @@ import {
   CenterFocusIcon,
   PauseIcon,
   PlayIcon,
+  RotateCcwIcon,
+  StopIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  ButtonGroup,
+  ButtonGroupSeparator,
+} from "@repo/design-system/components/ui/button-group";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -15,28 +21,50 @@ import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 
 /**
- * Starts the scene moving by itself, or stops it. It has the look of every other
- * scene action, since a page keeps one primary button: its icon shows play or
- * pause. It is a toggle: its name stays "Play" and `aria-pressed` says whether
- * the scene plays.
+ * Playback transport controls for an interactive 3D or animated visual card:
+ * Play, Pause, Stop (pause and rewind without moving the camera), and Reset
+ * (stop, rewind, restore controls, and return the camera to its initial view).
  */
-function VisualCardPlay() {
+function VisualCardTransport() {
   const t = useTranslations("Common");
-  const { playing, togglePlaying } = useVisual((state) => ({
+  const { pause, play, playing, reset, stop } = useVisual((state) => ({
+    pause: state.pause,
+    play: state.play,
     playing: state.playing,
-    togglePlaying: state.togglePlaying,
+    reset: state.reset,
+    stop: state.stop,
   }));
 
   return (
-    <Button
-      aria-pressed={playing}
-      onClick={togglePlaying}
-      size="icon"
-      tooltip={t("play")}
-      variant="secondary"
-    >
-      <HugeIcons icon={playing ? PauseIcon : PlayIcon} />
-    </Button>
+    <ButtonGroup variant="secondary">
+      <Button
+        aria-pressed={playing}
+        disabled={playing}
+        onClick={play}
+        size="icon"
+        tooltip={t("play")}
+      >
+        <HugeIcons icon={PlayIcon} />
+      </Button>
+      <ButtonGroupSeparator />
+      <Button
+        aria-pressed={!playing}
+        disabled={!playing}
+        onClick={pause}
+        size="icon"
+        tooltip={t("pause")}
+      >
+        <HugeIcons icon={PauseIcon} />
+      </Button>
+      <ButtonGroupSeparator />
+      <Button onClick={stop} size="icon" tooltip={t("stop")}>
+        <HugeIcons icon={StopIcon} />
+      </Button>
+      <ButtonGroupSeparator />
+      <Button onClick={reset} size="icon" tooltip={t("reset")}>
+        <HugeIcons icon={RotateCcwIcon} />
+      </Button>
+    </ButtonGroup>
   );
 }
 
@@ -53,12 +81,11 @@ function VisualCardReset() {
 }
 
 /**
- * The actions every 3D scene has, in one band under it: play, then full screen
- * joined with the menu of the scene's other actions, which starts with the first
- * view back. A scene with actions of its own, such as the grid of a coordinate
- * scene, passes them as menu items, and they follow. A static stand-in of the
- * scene passes `inert` to the band, which makes every action in it inert, so none
- * takes focus until the scene is mounted.
+ * The actions every 3D scene has, in one band under it: Play, Pause, Stop, and
+ * Reset transport controls on the left, then full screen joined with the menu
+ * of the scene's other actions on the right, which starts with resetting the
+ * camera view. A static stand-in of the scene passes `inert` to the band so
+ * none of the actions take focus until the scene mounts.
  */
 function VisualCardSceneActions({
   children,
@@ -69,7 +96,7 @@ function VisualCardSceneActions({
 }) {
   return (
     <VisualCardActions data-scene-actions="" inert={inert}>
-      <VisualCardPlay />
+      <VisualCardTransport />
       <VisualCardMenu>
         <VisualCardReset />
         {children}

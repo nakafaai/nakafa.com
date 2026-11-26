@@ -50,12 +50,14 @@ export function P5Sketch<State>({
 }) {
   const t = useTranslations("Error");
   const playing = useVisualScene((card) => card.playing, false);
+  const stopCount = useVisualScene((card) => card.stopCount, 0);
   const view = useVisualScene((card) => card.view, 0);
   const [loaded, setLoaded] = useState<Exit.Exit<typeof p5, SketchLoadError>>();
   const [node, setNode] = useState<HTMLDivElement | null>(null);
   const start = useStartVisualScene();
   const instance = useRef<p5>(undefined);
   const latest = useRef(state);
+  const lastStopCount = useRef(stopCount);
 
   useLayoutEffect(() => {
     latest.current = state;
@@ -79,8 +81,15 @@ export function P5Sketch<State>({
     }
   });
 
-  // A sketch is an animation: once it first draws, the card starts playing it.
-  const startPlaying = useEffectEvent(() => start());
+  // A sketch is an animation: once it first draws, the card starts playing it,
+  // unless the remount was triggered by an explicit Stop or Reset action.
+  const startPlaying = useEffectEvent(() => {
+    if (lastStopCount.current !== stopCount) {
+      lastStopCount.current = stopCount;
+      return;
+    }
+    start();
+  });
 
   useEffect(() => {
     if (!(loaded && Exit.isSuccess(loaded) && node)) {
@@ -139,8 +148,8 @@ export function P5Sketch<State>({
     <Intersection
       aria-label={label}
       className="relative aspect-square w-full overflow-hidden sm:aspect-video"
-      // A reset of the view mounts a new box, which starts the sketch over.
-      key={view}
+      // A stop or view reset mounts a fresh canvas at frame 0.
+      key={`${view}-${stopCount}`}
       once
       onIntersect={load}
       ref={setNode}

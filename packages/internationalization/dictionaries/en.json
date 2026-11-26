@@ -2231,7 +2231,8 @@
     "count-of": "{count, number} of {total, number}",
     "less": "Show less",
     "date": "Date",
-    "start": "Start"
+    "start": "Start",
+    "stop": "Stop"
   },
   "LearningPrograms": {
     "metadata-title": "Start learning with Nakafa",

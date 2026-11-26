@@ -123,6 +123,24 @@ function useVisualReset(onReset: () => void) {
 }
 
 /**
+ * Runs `onStop` whenever the surrounding card's stop or reset action increments
+ * the stop count, so timelines and animations rewind to their opening frame.
+ */
+function useVisualStop(onStop: () => void) {
+  const stopCount = useVisualScene((state) => state.stopCount, 0);
+  const shown = useRef(stopCount);
+  const stop = useEffectEvent(onStop);
+
+  useEffect(() => {
+    if (shown.current === stopCount) {
+      return;
+    }
+    shown.current = stopCount;
+    stop();
+  }, [stopCount]);
+}
+
+/**
  * A card for one interactive visual: a 3D scene, a chart, a diagram or a
  * sketch. It composes, in this order, `VisualCardHeader`, an optional
  * `VisualCardToolbar`, `VisualCardBody`, optional `VisualCardActions`, and at
@@ -390,6 +408,7 @@ export {
   useVisual,
   useVisualReset,
   useVisualScene,
+  useVisualStop,
   VisualCard,
   VisualCardActions,
   VisualCardBody,
