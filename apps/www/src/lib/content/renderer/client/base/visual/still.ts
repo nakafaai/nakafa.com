@@ -4,6 +4,10 @@ import type { CoordinateFrame } from "@repo/design-system/components/three/frame
 import { createAxisGeometry } from "@repo/design-system/components/three/frame";
 import { gridSteps, stepValues } from "@repo/design-system/lib/geometry/step";
 import { Array as Arr, Option, Result, Schema } from "effect";
+import {
+  collectCurvePolylines,
+  resolveAutoCurveLabels,
+} from "@/lib/content/renderer/client/base/visual/autolabel";
 import type { FormulaShape } from "@/lib/content/renderer/client/base/visual/formula";
 import {
   labelPoint,
@@ -414,9 +418,37 @@ export function drawStill(
     top: bottom - margin,
     width: width + margin * 2,
   };
+  const authoredPoints = Arr.flatMap(objects, (object) =>
+    Arr.flatMap(sceneLabels, (label) =>
+      label.objectId === object.id
+        ? Option.toArray(
+            Option.map(labelPoint(label.at, scope), (point) =>
+              projectVisualPoint(point, projection)
+            )
+          )
+        : []
+    )
+  );
+  const autoLabels = Arr.map(
+    resolveAutoCurveLabels(
+      scene,
+      collectCurvePolylines(geometry.paths, shapes),
+      authoredPoints,
+      world.focus,
+      world.origin
+    ),
+    (label) => ({
+      appearance: label.appearance,
+      at: flat(label.at),
+      key: label.key,
+      latex: label.latex,
+      placement: label.placement,
+    })
+  );
   const numbered = numberAxes(scene, flat, world, drawing);
   return {
     areas,
+    autoLabels,
     axes,
     dots,
     grid: numbered.grid,

@@ -1,3 +1,4 @@
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { getColor } from "@repo/design-system/lib/color";
 import { AXIS_COLORS, STROKE_DASH } from "@repo/design-system/lib/plot";
@@ -194,6 +195,21 @@ export function MathPicture({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
           }}
         >
           {labels[label.key]}
+        </span>
+      ))}
+      {Arr.map(still.autoLabels, (label) => (
+        <span
+          className={labelVariants({ placement: label.placement })}
+          key={label.key}
+          style={{
+            WebkitTextStroke: "0.24em var(--card)",
+            color: resolveMathAppearance(label.appearance),
+            left: `calc(50% + ${label.at[0] - middle.x} * ${scale})`,
+            paintOrder: "stroke fill",
+            top: `calc(50% - ${label.at[1] - middle.y} * ${scale})`,
+          }}
+        >
+          <InlineMath math={label.latex} />
         </span>
       ))}
       {Arr.map(still.ticks, (tick) => {
