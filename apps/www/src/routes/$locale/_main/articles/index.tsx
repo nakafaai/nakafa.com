@@ -169,8 +169,8 @@ function ArticleIndexPage() {
             )
           )}
         </SubjectList>
+        {page.nextSearch ? <ArticleNext search={page.nextSearch} /> : null}
       </PageStack>
-      {page.nextSearch ? <ArticleNext search={page.nextSearch} /> : null}
     </Page>
   );
 }

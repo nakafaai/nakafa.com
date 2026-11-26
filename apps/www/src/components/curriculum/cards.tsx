@@ -27,7 +27,7 @@ export function CurriculumCardGrid({
 }) {
   return (
     <CatalogActionLabelContext value={actionLabel}>
-      <CatalogGrid className="pt-6 pb-24">
+      <CatalogGrid>
         {Arr.map(cards, ({ route, visual }, index) => (
           <CatalogCard
             action={(anchor) => (

@@ -1,7 +1,7 @@
 import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { PageBody } from "@/components/shared/page/body";
-import { Page } from "@/components/shared/page/frame";
+import { PageStack } from "@/components/shared/page/body";
+import { CatalogPage } from "@/components/shared/page/frame";
 import { TryoutCountryPageClient } from "@/components/tryout/catalog/country";
 import { TryoutTrailHeader } from "@/components/tryout/catalog/trail";
 import { readTryoutCountryFn } from "@/components/tryout/route/catalog.functions";
@@ -41,15 +41,15 @@ export const Route = createFileRoute("/$locale/_main/try-out/$country/")({
 function TryoutCountryPage() {
   const route = Route.useLoaderData();
   return (
-    <Page>
+    <CatalogPage>
       <TryoutTrailHeader
         labels={route.labels}
         title={route.title}
         trail={route.trail}
       />
-      <PageBody>
+      <PageStack>
         <TryoutCountryPageClient page={{ exams: route.exams }} />
-      </PageBody>
-    </Page>
+      </PageStack>
+    </CatalogPage>
   );
 }

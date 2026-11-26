@@ -2,15 +2,14 @@ import { Menu02Icon } from "@hugeicons/core-free-icons";
 import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
-import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { CurriculumCardGrid } from "@/components/curriculum/cards";
 import { CurriculumHeader } from "@/components/curriculum/header";
 import { ContainerList } from "@/components/shared/card/list";
 import { CardMaterial } from "@/components/shared/card/material";
 import { SidebarTree } from "@/components/shared/outline/tree";
-import { PageBody } from "@/components/shared/page/body";
-import { Page } from "@/components/shared/page/frame";
+import { PageStack, PageState } from "@/components/shared/page/body";
+import { CatalogPage, Page } from "@/components/shared/page/frame";
 import {
   PageOutline,
   PageOutlineFooter,
@@ -78,73 +77,99 @@ export const Route = createFileRoute("/$locale/_main/curricula/$curriculum/$")({
 
 function CurriculumRoutePage() {
   const page = Route.useLoaderData();
+  if (page.materialCards.length > 0) {
+    return <CurriculumMaterialsPage />;
+  }
+  if (page.childCards.length > 0) {
+    return <CurriculumCatalogPage />;
+  }
+  return <CurriculumEmptyPage />;
+}
+
+/** A curriculum node that lists materials with its reading outline at the right edge. */
+function CurriculumMaterialsPage() {
+  const page = Route.useLoaderData();
   const { labels, route } = page;
-  const hasOutline = page.materialCards.length > 0;
   return (
-    <CurriculumOutline enabled={hasOutline}>
+    <PageOutlineProvider>
       <Page>
         <CurriculumHeader
-          action={hasOutline ? <CurriculumOutlineToggle /> : undefined}
+          action={<CurriculumOutlineToggle />}
           homeLabel={labels.home}
           options={page.options}
           subjectLabel={labels.subject}
           title={route.title}
           trail={page.trail}
         />
-        <PageBody>
-          {page.materialCards.length > 0 ? (
-            <ContainerList className="pt-6 sm:grid-cols-1">
-              {Arr.map(page.materialCards, (material) => (
-                <CardMaterial
-                  key={material.link.publicPath}
-                  material={material}
-                />
-              ))}
-            </ContainerList>
-          ) : null}
-          {page.materialCards.length === 0 && page.childCards.length === 0 ? (
-            <ComingSoon />
-          ) : null}
-          {page.materialCards.length === 0 && page.childCards.length > 0 ? (
-            <CurriculumCardGrid
-              actionLabel={labels.routeAction}
-              cards={page.childCards}
-            />
-          ) : null}
-        </PageBody>
+        <PageStack>
+          <ContainerList className="sm:grid-cols-1">
+            {Arr.map(page.materialCards, (material) => (
+              <CardMaterial
+                key={material.link.publicPath}
+                material={material}
+              />
+            ))}
+          </ContainerList>
+        </PageStack>
       </Page>
-      {hasOutline ? (
-        <PageOutline
-          footer={
-            <PageOutlineFooter>
-              <ReportButton />
-              {page.sourceUrl ? (
-                <GithubButton githubUrl={page.sourceUrl} />
-              ) : null}
-              <ShareButton />
-            </PageOutlineFooter>
-          }
-          header={<PageOutlineHeader {...page.toc} />}
-        >
-          <SidebarTree data={page.chapters} title={route.title} />
-        </PageOutline>
-      ) : null}
-    </CurriculumOutline>
+      <PageOutline
+        footer={
+          <PageOutlineFooter>
+            <ReportButton />
+            {page.sourceUrl ? (
+              <GithubButton githubUrl={page.sourceUrl} />
+            ) : null}
+            <ShareButton />
+          </PageOutlineFooter>
+        }
+        header={<PageOutlineHeader {...page.toc} />}
+      >
+        <SidebarTree data={page.chapters} title={route.title} />
+      </PageOutline>
+    </PageOutlineProvider>
   );
 }
 
-/** The state of the page's outline, for a page that lists materials. Any other page has no outline to hold. */
-function CurriculumOutline({
-  children,
-  enabled,
-}: {
-  children: ReactNode;
-  enabled: boolean;
-}) {
-  return enabled ? (
-    <PageOutlineProvider>{children}</PageOutlineProvider>
-  ) : (
-    children
+/** A curriculum catalog node: its child tracks or grades in the wider 4xl catalog frame. */
+function CurriculumCatalogPage() {
+  const page = Route.useLoaderData();
+  const { labels, route } = page;
+  return (
+    <CatalogPage>
+      <CurriculumHeader
+        homeLabel={labels.home}
+        options={page.options}
+        subjectLabel={labels.subject}
+        title={route.title}
+        trail={page.trail}
+      />
+      <PageStack>
+        <CurriculumCardGrid
+          actionLabel={labels.routeAction}
+          cards={page.childCards}
+        />
+      </PageStack>
+    </CatalogPage>
+  );
+}
+
+/** A curriculum node with neither materials nor child cards yet. */
+function CurriculumEmptyPage() {
+  const page = Route.useLoaderData();
+  const { labels, route } = page;
+  return (
+    <Page>
+      <CurriculumHeader
+        homeLabel={labels.home}
+        options={page.options}
+        subjectLabel={labels.subject}
+        title={route.title}
+        trail={page.trail}
+      />
+      <PageState>
+        <ComingSoon />
+      </PageState>
+    </Page>
   );
 }
 

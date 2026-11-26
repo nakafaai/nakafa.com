@@ -9,7 +9,6 @@ import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import type { TileLook } from "@repo/design-system/lib/look";
-import { cn } from "cn";
 import { Predicate } from "effect";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
@@ -33,15 +32,9 @@ interface CatalogCardProps {
  * column at every width instead of floating in a wide one, and every catalog grid spaces its cards alike.
  * Its caller names the cards' action through `CatalogActionLabelContext`.
  */
-export function CatalogGrid({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export function CatalogGrid({ children }: { children: ReactNode }) {
   return (
-    <div className={cn("@container", className)}>
+    <div className="@container">
       <div
         className="grid grid-cols-1 gap-4 @xl:grid-cols-2 @2xl:grid-cols-3"
         data-slot="catalog-grid"

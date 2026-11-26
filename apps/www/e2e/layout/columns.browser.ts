@@ -6,13 +6,20 @@ import { withObservedPageErrors } from "@/e2e/support/observe";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-// The shared content column's cap, Tailwind's max-w-3xl.
+// The shared content column's cap (max-w-3xl) and the catalog frame's cap (max-w-4xl).
 const columnMaxWidth = 768;
+const catalogMaxWidth = 896;
 // Pages whose lists are narrower than the column, so a shrinking column shows.
 const columnRoutes = [
   appRoutes.quranId,
   "/en/articles",
   "/en/articles/politics",
+];
+// Catalog pages whose header and card grid share the wider 4xl frame.
+const catalogRoutes = [
+  "/en/curricula",
+  "/en/curriculum/merdeka",
+  "/en/try-out/indonesia",
 ];
 // Reading pages, whose header, title, body and footer all stand in the column.
 const readingRoutes = [
@@ -37,9 +44,9 @@ const visit = Effect.fn("NakafaE2E.visitLayoutRoute")(function* (
 const BODY =
   'main :is(article, [data-slot="page-stack"], [data-slot="page-list"])';
 
-/** The page column spans the app shell's width up to the shared cap. */
+/** The page column spans the app shell's width up to the given cap. */
 const verifyContentColumn = Effect.fn("NakafaE2E.verifyContentColumn")(
-  function* (page: Page, href: string) {
+  function* (page: Page, href: string, maxWidth: number = columnMaxWidth) {
     yield* visit(page, href);
     yield* Effect.promise(() =>
       expect(page.locator(BODY).first()).toBeVisible()
@@ -61,7 +68,7 @@ const verifyContentColumn = Effect.fn("NakafaE2E.verifyContentColumn")(
     );
 
     yield* Effect.sync(() =>
-      expect(widths.column).toBe(Math.min(widths.shell, columnMaxWidth))
+      expect(widths.column).toBe(Math.min(widths.shell, maxWidth))
     );
   }
 );
@@ -129,16 +136,53 @@ for (const width of [390, 1440]) {
       });
     }
 
-    test("the catalog grid fits the consumer column", async ({ page }) => {
-      await Effect.runPromise(visit(page, "/en/curricula"));
-      const grid = page.locator('[data-slot="catalog-grid"]');
-      await expect(grid).toBeVisible();
-      expect(
-        await grid.evaluate(
-          (element) =>
-            getComputedStyle(element).gridTemplateColumns.split(" ").length
+    for (const href of catalogRoutes) {
+      test(`${href} spans the 4xl catalog frame`, async ({ page }) => {
+        await Effect.runPromise(
+          withObservedPageErrors(
+            page,
+            verifyContentColumn(page, href, catalogMaxWidth)
+          )
+        );
+        const grid = page.locator('[data-slot="catalog-grid"]');
+        await expect(grid).toBeVisible();
+        expect(
+          await grid.evaluate(
+            (element) =>
+              getComputedStyle(element).gridTemplateColumns.split(" ").length
+          )
+        ).toBe(width === 390 ? 1 : 3);
+      });
+    }
+
+    test("curriculum material lists keep bottom rhythm clearance", async ({
+      page,
+    }) => {
+      await Effect.runPromise(
+        withObservedPageErrors(
+          page,
+          visit(page, "/en/curriculum/merdeka/class-10/biology")
         )
-      ).toBe(width === 390 ? 1 : 3);
+      );
+      const cards = page.locator('[data-slot="page-stack"] [data-slot="card"]');
+      await expect(cards.first()).toBeVisible();
+      const clearance = await page.evaluate(() => {
+        const stack = document.querySelector('[data-slot="page-stack"]');
+        const list = Array.from(
+          document.querySelectorAll(
+            '[data-slot="page-stack"] [data-slot="card"]'
+          )
+        );
+        const last = list.at(-1);
+        if (!(stack && last)) {
+          return 0;
+        }
+        return Math.round(
+          stack.getBoundingClientRect().bottom -
+            last.getBoundingClientRect().bottom
+        );
+      });
+      expect(clearance).toBeGreaterThanOrEqual(24);
     });
   });
 }

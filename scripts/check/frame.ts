@@ -9,7 +9,7 @@ const APP_SOURCE = /^apps\/www\/src\//u;
 const MARKETING_SOURCE =
   /^apps\/www\/src\/(?:components\/marketing|routes\/\$locale\/_marketing)\//u;
 /** A page's width as a bare class. A width behind a breakpoint sizes a sheet, not a page. */
-const PAGE_WIDTH = /(?<![\w:-])max-w-(?:3xl|7xl)(?![\w-])/gu;
+const PAGE_WIDTH = /(?<![\w:-])max-w-(?:3xl|4xl|7xl)(?![\w-])/gu;
 
 /**
  * Reports a page width written by hand. Header and body disagreed the moment each named its own, so a row reads the

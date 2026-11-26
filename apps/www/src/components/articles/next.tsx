@@ -23,7 +23,7 @@ export function ArticleNext({
   const t = useTranslations("Common");
   const label = t("next");
   return (
-    <nav aria-label={label} className="mt-10 flex justify-center">
+    <nav aria-label={label} className="flex justify-center pt-4">
       <TargetLink
         className={buttonVariants({ variant: "outline" })}
         target={articleNextTarget({ category, search })}

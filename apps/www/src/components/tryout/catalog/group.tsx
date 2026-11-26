@@ -1,7 +1,6 @@
 import type { Ref } from "@confect/core";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { getTileLooks } from "@repo/design-system/lib/look";
-import { cn } from "cn";
 
 import { Array as Arr, Tuple } from "effect";
 import type { Locale } from "use-intl";
@@ -12,10 +11,6 @@ import {
   CatalogGrid,
 } from "@/components/shared/catalog/card";
 import { CatalogActionLabelContext } from "@/components/shared/catalog/label";
-import {
-  pageRhythmVariants,
-  pageRowVariants,
-} from "@/components/shared/page/width";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { getTryoutSubjectIcons } from "@/components/tryout/catalog/icons";
 import { TryoutPageLink } from "@/components/tryout/route/link";
@@ -51,9 +46,7 @@ export function TryoutGroupPageClient({
 
   return (
     <CatalogActionLabelContext value={tTryouts("open-set-cta")}>
-      <CatalogGrid
-        className={cn(pageRowVariants(), pageRhythmVariants(), "pb-24")}
-      >
+      <CatalogGrid>
         {Arr.map(Arr.zip(page.tracks, visuals), ([track, visual], index) => (
           <CatalogCard
             action={(anchor) => (

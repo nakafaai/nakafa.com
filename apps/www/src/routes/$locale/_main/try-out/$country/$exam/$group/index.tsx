@@ -1,6 +1,7 @@
 import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
-import { Page } from "@/components/shared/page/frame";
+import { PageStack } from "@/components/shared/page/body";
+import { CatalogPage } from "@/components/shared/page/frame";
 import { TryoutGroupPageClient } from "@/components/tryout/catalog/group";
 import { TryoutTrailHeader } from "@/components/tryout/catalog/trail";
 import { readTryoutGroupFn } from "@/components/tryout/route/catalog.functions";
@@ -56,13 +57,15 @@ function TryoutGroupPage() {
   const { locale } = Route.useParams();
   const route = Route.useLoaderData();
   return (
-    <Page>
+    <CatalogPage>
       <TryoutTrailHeader
         labels={route.labels}
         title={route.title}
         trail={route.trail}
       />
-      <TryoutGroupPageClient locale={locale} page={route.page} />
-    </Page>
+      <PageStack>
+        <TryoutGroupPageClient locale={locale} page={route.page} />
+      </PageStack>
+    </CatalogPage>
   );
 }

@@ -8,10 +8,11 @@ describe("the page frame policy", () => {
     expect(
       inspectFrameSource(
         PAGE,
-        `const a = 1;\nconst view = "mx-auto max-w-7xl";\n`
+        `const a = 1;\nconst view = "mx-auto max-w-7xl";\nconst catalog = "mx-auto max-w-4xl";\n`
       )
     ).toEqual([
       `${PAGE}:2: read the page's frame from shared/page/width.ts instead of max-w-7xl.`,
+      `${PAGE}:3: read the page's frame from shared/page/width.ts instead of max-w-4xl.`,
     ]);
   });
 

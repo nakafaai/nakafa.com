@@ -10,8 +10,8 @@ import { Array as Arr, Effect, Schema } from "effect";
 import { createTranslator } from "use-intl/core";
 import { CurriculumCardGrid } from "@/components/curriculum/cards";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
-import { PageBody } from "@/components/shared/page/body";
-import { Page } from "@/components/shared/page/frame";
+import { PageStack, PageState } from "@/components/shared/page/body";
+import { CatalogPage } from "@/components/shared/page/frame";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import {
@@ -131,7 +131,7 @@ export const Route = createFileRoute("/$locale/_main/curricula/")({
 function CurriculumIndexPage() {
   const page = Route.useLoaderData();
   return (
-    <Page>
+    <CatalogPage>
       <BreadcrumbHeader
         value={{
           home: HOME_TARGET,
@@ -140,16 +140,18 @@ function CurriculumIndexPage() {
           title: page.title,
         }}
       />
-      <PageBody>
-        {page.cards.length > 0 ? (
+      {page.cards.length > 0 ? (
+        <PageStack>
           <CurriculumCardGrid
             actionLabel={page.actionLabel}
             cards={page.cards}
           />
-        ) : (
+        </PageStack>
+      ) : (
+        <PageState>
           <ComingSoon />
-        )}
-      </PageBody>
-    </Page>
+        </PageState>
+      )}
+    </CatalogPage>
   );
 }

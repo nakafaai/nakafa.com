@@ -1,6 +1,6 @@
 import type { BrowserContext, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { signInLearner } from "@/e2e/support/learner";
 import { finishOnboarding } from "@/e2e/support/onboarding";
@@ -10,21 +10,43 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 /** The widths a learner meets, from the smallest phone to a wide desktop. */
 const WIDTHS = [320, 390, 768, 1024, 1440, 1920] as const;
 
-/** Pages of every kind that need no account: a lesson, an article, a surah and a try-out set. */
-const PUBLIC = [
-  "/en/subjects/chemistry/structure-matter/isotope",
-  "/en/articles/politics/merah-putih-cabinet-analysis",
-  appRoutes.quranSurahId,
-  "/en/articles",
-  "/en/curriculum",
-  "/en/chat",
-  appRoutes.tryout,
-  "/en/try-out/indonesia/snbt/2027/utbk/set-1",
-] as const;
+/** The consumer reading measure (3xl) and catalog card grid measure (4xl). */
+const COLUMN_WIDTH = 768;
+const CATALOG_WIDTH = 896;
 
-/** The header rule fills the space beside the outline, while its row stays centered at up to 3xl. */
-const readHeaderColumns = (page: Page, address: string) =>
+const HeaderTargetSchema = Schema.Struct({
+  address: Schema.String,
+  max: Schema.Finite,
+});
+type HeaderTarget = typeof HeaderTargetSchema.Type;
+
+/** Pages of every kind that need no account, with the width their frame sets. */
+const PUBLIC: readonly HeaderTarget[] = [
+  {
+    address: "/en/subjects/chemistry/structure-matter/isotope",
+    max: COLUMN_WIDTH,
+  },
+  {
+    address: "/en/articles/politics/merah-putih-cabinet-analysis",
+    max: COLUMN_WIDTH,
+  },
+  { address: appRoutes.quranSurahId, max: COLUMN_WIDTH },
+  { address: "/en/articles", max: COLUMN_WIDTH },
+  { address: "/en/curriculum", max: CATALOG_WIDTH },
+  { address: "/en/curriculum/merdeka", max: CATALOG_WIDTH },
+  { address: "/en/chat", max: COLUMN_WIDTH },
+  { address: appRoutes.tryout, max: CATALOG_WIDTH },
+  {
+    address: "/en/try-out/indonesia/tka/senior-high-school",
+    max: CATALOG_WIDTH,
+  },
+  { address: "/en/try-out/indonesia/snbt/2027/utbk/set-1", max: COLUMN_WIDTH },
+];
+
+/** The header rule fills the space beside the outline, while its row stays centered up to the page's width. */
+const readHeaderColumns = (page: Page, target: HeaderTarget) =>
   Effect.gen(function* () {
+    const { address, max } = target;
     yield* Effect.promise(() =>
       page.setViewportSize({ height: 900, width: WIDTHS[0] })
     );
@@ -75,7 +97,7 @@ const readHeaderColumns = (page: Page, address: string) =>
           expect(geometry?.width, label).toBe(geometry?.available);
           expect(geometry?.bandOffset, label).toBe(0);
           expect(geometry?.rowWidth, label).toBe(
-            Math.min(768, geometry?.available ?? 0)
+            Math.min(max, geometry?.available ?? 0)
           );
           expect(geometry?.rowOffset, label).toBe(0);
         }).toPass({ timeout: readinessTimeoutMilliseconds });
@@ -88,20 +110,20 @@ const readContext = <E>(
   browser: Parameters<typeof withBrowserContext>[0],
   baseURL: string,
   prepare: (context: BrowserContext, page: Page) => Effect.Effect<void, E>,
-  addresses: readonly string[]
+  targets: readonly HeaderTarget[]
 ) =>
   withBrowserContext(browser, { baseURL, serviceWorkers: "block" }, (context) =>
     Effect.gen(function* () {
       const page = yield* Effect.promise(() => context.newPage());
       yield* prepare(context, page);
-      return yield* Effect.forEach(addresses, (address) =>
-        readHeaderColumns(page, address)
+      return yield* Effect.forEach(targets, (target) =>
+        readHeaderColumns(page, target)
       );
     })
   );
 
-/** The consumer shell sets one centered reading measure for public and signed-in pages. */
-test("the consumer header spans the page around a centered 3xl row from 320 to 1920 px", async ({
+/** The consumer shell sets a 3xl reading measure by default and 4xl for catalog card pages. */
+test("the consumer header spans the page around its centered 3xl or 4xl row from 320 to 1920 px", async ({
   baseURL,
   browser,
 }) => {
@@ -118,7 +140,11 @@ test("the consumer header spans the page around a centered 3xl row from 320 to 1
             signInLearner(context, base).pipe(
               Effect.andThen(Effect.promise(() => finishOnboarding(page)))
             ),
-          ["/en/home", "/en/notifications", "/en/user/settings"]
+          [
+            { address: "/en/home", max: COLUMN_WIDTH },
+            { address: "/en/notifications", max: COLUMN_WIDTH },
+            { address: "/en/user/settings", max: COLUMN_WIDTH },
+          ]
         ),
       ],
       { concurrency: 1 }

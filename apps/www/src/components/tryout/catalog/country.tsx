@@ -53,7 +53,7 @@ export function TryoutCountryPageClient({
 
   return (
     <CatalogActionLabelContext value={tCommon("view-options")}>
-      <CatalogGrid className="pt-6 pb-24">
+      <CatalogGrid>
         {Arr.map(Arr.zip(page.exams, visuals), ([exam, visual], index) => (
           <CatalogCard
             action={(anchor) => (

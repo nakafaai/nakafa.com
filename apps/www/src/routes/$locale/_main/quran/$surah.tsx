@@ -164,7 +164,7 @@ function QuranSurahPage() {
             <FragmentLanding />
           </QuranVersesProvider>
         </PageStack>
-        <PaginationContent pagination={page.pagination} />
+        <PaginationContent className="pb-6" pagination={page.pagination} />
         <SheetEntry key={`assistant:${page.surah}`} />
       </Page>
       <PageOutline

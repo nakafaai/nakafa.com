@@ -22,3 +22,11 @@ export function Page({
     </div>
   );
 }
+
+/**
+ * A catalog page of the app: a grid of visual choices whose header row and body
+ * widen together to 4xl so three cards sit comfortably beside each other on desktop.
+ */
+export function CatalogPage({ children }: { children: ReactNode }) {
+  return <Page width="catalog">{children}</Page>;
+}
