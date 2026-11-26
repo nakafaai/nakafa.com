@@ -1,6 +1,16 @@
 import type { Size } from "@react-three/fiber";
-import type { Camera } from "three";
-import { OrthographicCamera, PerspectiveCamera, Vector3 } from "three";
+import type { Camera, OrthographicCamera, PerspectiveCamera } from "three";
+import { Vector3 } from "three";
+
+function isOrthographicCamera(camera: Camera): camera is OrthographicCamera {
+  return (
+    "isOrthographicCamera" in camera && camera.isOrthographicCamera === true
+  );
+}
+
+function isPerspectiveCamera(camera: Camera): camera is PerspectiveCamera {
+  return "isPerspectiveCamera" in camera && camera.isPerspectiveCamera === true;
+}
 
 /** Reusable scratch vectors to keep per-frame overlay projections allocation-free. */
 const SCRATCH_NDC = new Vector3();
@@ -90,10 +100,10 @@ export function isBehindCamera(point: Vector3, camera: Camera): boolean {
  * from a perspective camera.
  */
 export function objectScale(point: Vector3, camera: Camera): number {
-  if (camera instanceof OrthographicCamera) {
+  if (isOrthographicCamera(camera)) {
     return camera.zoom;
   }
-  if (camera instanceof PerspectiveCamera) {
+  if (isPerspectiveCamera(camera)) {
     const verticalFov = (camera.fov * Math.PI) / 180;
     const distance = point.distanceTo(
       camera.getWorldPosition(SCRATCH_CAMERA_POS)
@@ -113,12 +123,7 @@ export function objectZIndex(
   camera: Camera,
   range: readonly [number, number]
 ): number | undefined {
-  if (
-    !(
-      camera instanceof PerspectiveCamera ||
-      camera instanceof OrthographicCamera
-    )
-  ) {
+  if (!(isPerspectiveCamera(camera) || isOrthographicCamera(camera))) {
     return undefined;
   }
   const distance = point.distanceTo(

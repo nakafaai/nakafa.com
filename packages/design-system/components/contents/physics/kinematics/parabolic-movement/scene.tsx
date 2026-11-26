@@ -1,5 +1,6 @@
 import { useReducedMotion } from "@mantine/hooks";
 import { useFrame } from "@react-three/fiber";
+import { SportsBall } from "@repo/design-system/components/contents/physics/kinematics/ball";
 import { useParabolicMotion } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/context";
 import type {
   ParabolicLaunchId,
@@ -15,7 +16,15 @@ import {
   toSceneTuple,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import { ProjectileRange } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/ground";
+import {
+  SimulationTicker,
+  simulationStep,
+} from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import {
+  useVisualScene,
+  useVisualStop,
+} from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
@@ -82,7 +91,7 @@ function GhostBalls() {
       {Arr.map(motion.ghostTimes, (time) => {
         const point = getProjectilePoint(motion, time);
         const progress = time / motion.flightTime;
-        const opacity = 0.18 + progress * 0.12;
+        const opacity = 0.16 + progress * 0.1;
 
         return (
           <group key={time} position={toSceneTuple(point.x, point.y, 0)}>
@@ -96,7 +105,7 @@ function GhostBalls() {
                 transparent
               />
             </mesh>
-            <mesh scale={0.48}>
+            <mesh scale={0.44}>
               <sphereGeometry args={[PARABOLIC_SCENE.ballRadius, 24, 14]} />
               <meshBasicMaterial
                 color={LAUNCH_COLORS[motion.scenario.id]}
@@ -114,13 +123,21 @@ function GhostBalls() {
 }
 
 function AnimatedBall() {
+  const playing = useVisualScene((card) => card.playing, false);
   const motion = useParabolicMotion();
   const ballRef = useRef<Group>(null);
-  const startRef = useRef<number | null>(null);
-  const scenarioRef = useRef<ParabolicLaunchId | null>(null);
+  const elapsedRef = useRef(motion.flightTime * 0.5);
+  const scenarioRef = useRef<ParabolicLaunchId>(motion.scenario.id);
   const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
 
-  useFrame(({ clock }) => {
+  useVisualStop(() => {
+    elapsedRef.current = 0;
+    if (ballRef.current) {
+      placeBall(ballRef.current, motion, getParabolicLoopSample(motion, 0));
+    }
+  });
+
+  useFrame((_, delta) => {
     if (!ballRef.current) {
       return;
     }
@@ -131,40 +148,44 @@ function AnimatedBall() {
       return;
     }
 
-    if (
-      startRef.current === null ||
-      scenarioRef.current !== motion.scenario.id
-    ) {
+    if (scenarioRef.current !== motion.scenario.id) {
       scenarioRef.current = motion.scenario.id;
-      startRef.current = clock.elapsedTime;
+      elapsedRef.current = motion.flightTime * 0.5;
+    }
+
+    if (playing) {
+      elapsedRef.current += simulationStep(delta);
     }
 
     placeBall(
       ballRef.current,
       motion,
-      getParabolicLoopSample(motion, clock.elapsedTime - startRef.current)
+      getParabolicLoopSample(motion, elapsedRef.current)
     );
   });
 
   return (
-    <CameraBounds
-      motion={{
-        rotation: "all",
-        translation: {
-          x: { min: -motion.rangeWorld / 2, max: motion.rangeWorld / 2 },
-          y: {
-            min: getProjectileSceneY(0),
-            max: getProjectileSceneY(motion.peakWorld),
+    <>
+      <SimulationTicker running={playing && !calm} />
+      <CameraBounds
+        motion={{
+          rotation: "all",
+          translation: {
+            x: { min: -motion.rangeWorld / 2, max: motion.rangeWorld / 2 },
+            y: {
+              min: getProjectileSceneY(0),
+              max: getProjectileSceneY(motion.peakWorld),
+            },
+            z: { min: 0, max: 0 },
           },
-          z: { min: 0, max: 0 },
-        },
-      }}
-      objectRef={ballRef}
-    >
-      <group>
-        <ProjectileBall color={LAUNCH_COLORS[motion.scenario.id]} />
-      </group>
-    </CameraBounds>
+        }}
+        objectRef={ballRef}
+      >
+        <group>
+          <ProjectileBall color={LAUNCH_COLORS[motion.scenario.id]} />
+        </group>
+      </CameraBounds>
+    </>
   );
 }
 
@@ -195,28 +216,11 @@ function placeBall(
 function ProjectileBall({ color }: { color: string }) {
   return (
     <group>
-      <mesh castShadow>
-        <sphereGeometry args={[PARABOLIC_SCENE.ballRadius, 48, 24]} />
-        <meshStandardMaterial color={color} metalness={0.05} roughness={0.34} />
-      </mesh>
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry
-          args={[PARABOLIC_SCENE.ballRadius * 1.01, 0.012, 10, 64]}
-        />
-        <meshStandardMaterial
-          color={PROJECTILE_COLORS.ballBand}
-          roughness={0.42}
-        />
-      </mesh>
-      <mesh rotation={[0, Math.PI / 2, 0]}>
-        <torusGeometry
-          args={[PARABOLIC_SCENE.ballRadius * 1.01, 0.01, 10, 64]}
-        />
-        <meshStandardMaterial
-          color={PROJECTILE_COLORS.ballBand}
-          roughness={0.42}
-        />
-      </mesh>
+      <SportsBall
+        color={color}
+        radius={PARABOLIC_SCENE.ballRadius}
+        seamColor={PROJECTILE_COLORS.ballBand}
+      />
     </group>
   );
 }

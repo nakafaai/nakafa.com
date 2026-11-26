@@ -19,6 +19,10 @@ import {
   UNIFORM_LINEAR_MOTION_SCENE,
   UNIFORM_LINEAR_MOTION_SPEEDS,
 } from "@repo/design-system/components/contents/physics/kinematics/uniform-linear-motion/data";
+import {
+  SimulationTicker,
+  simulationStep,
+} from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
@@ -30,6 +34,8 @@ import {
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
+  useVisualScene,
+  useVisualStop,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -206,48 +212,57 @@ function UniformLinearMotionScene({
 }
 
 function AnimatedCar({ motion }: { motion: UniformLinearMotionState }) {
+  const playing = useVisualScene((card) => card.playing, false);
   const groupRef = useRef<Group>(null);
-  const animationStartRef = useRef<number | null>(null);
-  const animationSpeedRef = useRef<UniformLinearMotionSpeed | null>(null);
+  const elapsedRef = useRef(0);
+  const animationSpeedRef = useRef<UniformLinearMotionSpeed>(motion.speed);
 
-  useFrame((state) => {
+  useVisualStop(() => {
+    elapsedRef.current = 0;
+    groupRef.current?.position.set(motion.startX, 0.025, 0);
+  });
+
+  useFrame((_, delta) => {
     if (!groupRef.current) {
       return;
     }
 
-    if (
-      animationStartRef.current === null ||
-      animationSpeedRef.current !== motion.speed
-    ) {
+    if (animationSpeedRef.current !== motion.speed) {
       animationSpeedRef.current = motion.speed;
-      animationStartRef.current = state.clock.elapsedTime;
+      elapsedRef.current = 0;
     }
 
-    const elapsed =
-      (state.clock.elapsedTime - animationStartRef.current) %
-      (motion.duration + PAUSE_SECONDS);
-    const carX = getAnimatedCarX(motion, elapsed);
+    if (playing) {
+      elapsedRef.current =
+        (elapsedRef.current + simulationStep(delta)) %
+        (motion.duration + PAUSE_SECONDS);
+    }
+
+    const carX = getAnimatedCarX(motion, elapsedRef.current);
     groupRef.current.position.set(carX, 0.025, 0);
   });
 
   return (
-    <CameraBounds
-      motion={{
-        translation: {
-          x: { min: motion.startX, max: motion.endX },
-          y: { min: 0.025, max: 0.025 },
-          z: { min: 0, max: 0 },
-        },
-      }}
-      objectRef={groupRef}
-    >
-      <group rotation={[0, Math.PI / 2, 0]} scale={0.66}>
-        <PhysicsCarModel
-          bodyColor={UNIFORM_LINEAR_MOTION_COLORS.car}
-          modelPath={UNIFORM_LINEAR_MOTION_CAR_MODEL_PATH}
-        />
-      </group>
-    </CameraBounds>
+    <>
+      <SimulationTicker running={playing} />
+      <CameraBounds
+        motion={{
+          translation: {
+            x: { min: motion.startX, max: motion.endX },
+            y: { min: 0.025, max: 0.025 },
+            z: { min: 0, max: 0 },
+          },
+        }}
+        objectRef={groupRef}
+      >
+        <group rotation={[0, Math.PI / 2, 0]} scale={0.66}>
+          <PhysicsCarModel
+            bodyColor={UNIFORM_LINEAR_MOTION_COLORS.car}
+            modelPath={UNIFORM_LINEAR_MOTION_CAR_MODEL_PATH}
+          />
+        </group>
+      </CameraBounds>
+    </>
   );
 }
 

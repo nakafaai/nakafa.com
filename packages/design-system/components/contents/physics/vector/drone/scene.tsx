@@ -15,7 +15,10 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import type { CoordinateTuple } from "@repo/design-system/components/three/frame";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
+import {
+  useVisualScene,
+  useVisualStop,
+} from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
@@ -260,6 +263,10 @@ export function DroneScene({
   const corners = Arr.map(hopCorners(hops), scenePoint);
   // A real drone would be a speck over a flight this long, so it is drawn larger than life, by a share of the path.
   const legible = Math.max(4, length / 5);
+
+  useVisualStop(() => {
+    time.current = 0;
+  });
 
   useFrame((_, delta) => {
     if (playing) {

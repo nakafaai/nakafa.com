@@ -20,6 +20,10 @@ import {
   isGlbbScenarioId,
 } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
 import { PhysicsTrainModel } from "@repo/design-system/components/contents/physics/kinematics/train";
+import {
+  SimulationTicker,
+  simulationStep,
+} from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
@@ -31,6 +35,8 @@ import {
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
+  useVisualScene,
+  useVisualStop,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -184,25 +190,31 @@ export function NonUniformLinearMotionLab({
 }
 
 function AnimatedTrain({ motion }: { motion: GlbbMotionState }) {
+  const playing = useVisualScene((card) => card.playing, false);
   const groupRef = useRef<Group>(null);
-  const animationStartRef = useRef<number | null>(null);
-  const scenarioRef = useRef<GlbbScenarioId | null>(null);
+  const elapsedRef = useRef(0);
+  const scenarioRef = useRef<GlbbScenarioId>(motion.scenario.id);
 
-  useFrame((state) => {
+  useVisualStop(() => {
+    elapsedRef.current = 0;
+    groupRef.current?.position.set(motion.trainStartX, 0.05, 0);
+  });
+
+  useFrame((_, delta) => {
     if (!groupRef.current) {
       return;
     }
 
-    if (
-      animationStartRef.current === null ||
-      scenarioRef.current !== motion.scenario.id
-    ) {
+    if (scenarioRef.current !== motion.scenario.id) {
       scenarioRef.current = motion.scenario.id;
-      animationStartRef.current = state.clock.elapsedTime;
+      elapsedRef.current = 0;
     }
 
-    const elapsed = state.clock.elapsedTime - animationStartRef.current;
-    const time = getGlbbLoopTime(motion, elapsed);
+    if (playing) {
+      elapsedRef.current += simulationStep(delta);
+    }
+
+    const time = getGlbbLoopTime(motion, elapsedRef.current);
     const sample = getGlbbPositionSample(
       motion.scenario,
       time,
@@ -213,26 +225,29 @@ function AnimatedTrain({ motion }: { motion: GlbbMotionState }) {
   });
 
   return (
-    <CameraBounds
-      motion={{
-        translation: {
-          x: {
-            min: motion.trainStartX,
-            max: motion.trainStartX + motion.worldDisplacement,
+    <>
+      <SimulationTicker running={playing} />
+      <CameraBounds
+        motion={{
+          translation: {
+            x: {
+              min: motion.trainStartX,
+              max: motion.trainStartX + motion.worldDisplacement,
+            },
+            y: { min: 0.05, max: 0.05 },
+            z: { min: 0, max: 0 },
           },
-          y: { min: 0.05, max: 0.05 },
-          z: { min: 0, max: 0 },
-        },
-      }}
-      objectRef={groupRef}
-    >
-      <group rotation={[0, Math.PI / 2, 0]} scale={GLBB_SCENE.trainScale}>
-        <PhysicsTrainModel
-          bodyColor={GLBB_COLORS.trainBody}
-          modelPath={GLBB_TRAIN_MODEL_PATH}
-        />
-      </group>
-    </CameraBounds>
+        }}
+        objectRef={groupRef}
+      >
+        <group rotation={[0, Math.PI / 2, 0]} scale={GLBB_SCENE.trainScale}>
+          <PhysicsTrainModel
+            bodyColor={GLBB_COLORS.trainBody}
+            modelPath={GLBB_TRAIN_MODEL_PATH}
+          />
+        </group>
+      </CameraBounds>
+    </>
   );
 }
 

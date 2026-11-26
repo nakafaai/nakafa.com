@@ -1,3 +1,4 @@
+import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import type { SpinPeriod } from "@repo/design-system/components/contents/physics/kinematics/wheel/spin";
 import {
@@ -14,12 +15,15 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
+  useVisualReset,
   useVisualScene,
+  useVisualStop,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -51,71 +55,113 @@ const ARROW_SCALE = 0.07;
 const SLOW_MOTION = 0.25;
 
 interface WheelSceneProps {
+  readonly onReset: () => void;
   readonly period: SpinPeriod;
 }
 
-/** The fork, its base, and the axle the wheel turns on. */
+/** The fork, its chamfered cast-iron base, and the quick-release axle the wheel turns on. */
 function WheelStand() {
   return (
     <group>
-      <mesh castShadow position={[0, 0.012, 0]} receiveShadow>
-        <boxGeometry args={[0.42, 0.024, 0.28]} />
-        <meshStandardMaterial
+      <RoundedBox
+        args={[0.44, 0.032, 0.3]}
+        castShadow
+        position={[0, 0.016, 0]}
+        radius={0.008}
+        receiveShadow
+        smoothness={2}
+      >
+        <SurfaceMaterial
           color={ROAD_COLORS.lampPost}
-          metalness={0.6}
-          roughness={0.4}
+          metalness={0.75}
+          roughness={0.42}
+          surface="brushed"
         />
-      </mesh>
-      {Arr.map([-0.05, 0.05], (side) => (
-        <mesh castShadow key={side} position={[0, AXLE_HEIGHT / 2, side]}>
-          <cylinderGeometry args={[0.012, 0.016, AXLE_HEIGHT, 16]} />
-          <meshStandardMaterial
-            color={CAR_COLORS.chrome}
-            metalness={1}
-            roughness={0.25}
-          />
-        </mesh>
+      </RoundedBox>
+      {Arr.map([-0.052, 0.052], (side) => (
+        <group key={side}>
+          <mesh castShadow position={[0, AXLE_HEIGHT / 2, side]}>
+            <cylinderGeometry args={[0.012, 0.018, AXLE_HEIGHT, 20]} />
+            <SurfaceMaterial
+              color={CAR_COLORS.chrome}
+              metalness={1}
+              roughness={0.25}
+              surface="brushed"
+            />
+          </mesh>
+          <mesh
+            castShadow
+            position={[0, AXLE_HEIGHT, side * 1.35]}
+            rotation={[Math.PI / 2, 0, 0]}
+          >
+            <cylinderGeometry args={[0.014, 0.014, 0.016, 6]} />
+            <SurfaceMaterial
+              color={CAR_COLORS.castIron}
+              metalness={0.9}
+              roughness={0.35}
+              surface="brushed"
+            />
+          </mesh>
+        </group>
       ))}
       <mesh
         castShadow
         position={[0, AXLE_HEIGHT, 0]}
         rotation={[Math.PI / 2, 0, 0]}
       >
-        <cylinderGeometry args={[0.008, 0.008, 0.13, 12]} />
-        <meshStandardMaterial
+        <cylinderGeometry args={[0.009, 0.009, 0.15, 16]} />
+        <SurfaceMaterial
           color={CAR_COLORS.chrome}
           metalness={1}
           roughness={0.2}
+          surface="brushed"
         />
       </mesh>
     </group>
   );
 }
 
-/** The wheel: tyre, rim, hub, spokes, the orange valve on the rim and the teal reflector on a spoke. */
+/** The wheel: treaded rubber tyre, brushed alloy rim, flanged hub, spokes, valve and prismatic reflector. */
 function Wheel({ ref }: { readonly ref: Ref<Group> }) {
   return (
     <group position={[0, AXLE_HEIGHT, 0]} ref={ref}>
       <mesh castShadow>
-        <torusGeometry args={[VALVE_RADIUS + 0.018, 0.016, 20, 96]} />
-        <meshStandardMaterial color={CAR_COLORS.tyre} roughness={0.9} />
+        <torusGeometry args={[VALVE_RADIUS + 0.018, 0.018, 24, 96]} />
+        <SurfaceMaterial
+          color={CAR_COLORS.tyre}
+          repeat={[24, 2]}
+          surface="rubber"
+        />
       </mesh>
       <mesh castShadow>
-        <torusGeometry args={[VALVE_RADIUS, 0.009, 14, 96]} />
-        <meshStandardMaterial
-          color={CAR_COLORS.rimDark}
-          metalness={0.9}
-          roughness={0.3}
+        <torusGeometry args={[VALVE_RADIUS, 0.01, 16, 96]} />
+        <SurfaceMaterial
+          color={CAR_COLORS.rimBright}
+          metalness={0.95}
+          roughness={0.26}
+          surface="brushed"
         />
       </mesh>
       <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.022, 0.022, 0.07, 20]} />
-        <meshStandardMaterial
+        <cylinderGeometry args={[0.024, 0.024, 0.072, 24]} />
+        <SurfaceMaterial
           color={CAR_COLORS.hub}
-          metalness={0.8}
-          roughness={0.35}
+          metalness={0.9}
+          roughness={0.32}
+          surface="brushed"
         />
       </mesh>
+      {Arr.map([-0.022, 0.022] as const, (fz) => (
+        <mesh key={fz} position={[0, 0, fz]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.034, 0.034, 0.006, 24]} />
+          <SurfaceMaterial
+            color={CAR_COLORS.chrome}
+            metalness={1}
+            roughness={0.24}
+            surface="brushed"
+          />
+        </mesh>
+      ))}
       {Arr.makeBy(SPOKES, (index) => {
         const angle = (index / SPOKES) * Math.PI * 2;
         const middle = (VALVE_RADIUS + 0.022) / 2;
@@ -168,7 +214,7 @@ function Wheel({ ref }: { readonly ref: Ref<Group> }) {
  * The wheel turning at the chosen period, slowed down so the eye can follow,
  * with each marked point's velocity drawn tangent to its circle.
  */
-function WheelScene({ period }: WheelSceneProps) {
+function WheelScene({ onReset, period }: WheelSceneProps) {
   const playing = useVisualScene((card) => card.playing, false);
   const wheel = useRef<Group>(null);
   const angle = useRef(0);
@@ -176,6 +222,11 @@ function WheelScene({ period }: WheelSceneProps) {
   const reflectorArrow = useRef<VectorArrowHandle>(null);
   const from = useRef(new Vector3());
   const vector = useRef(new Vector3());
+
+  useVisualStop(() => {
+    angle.current = 0;
+  });
+  useVisualReset(onReset);
 
   useFrame((_, delta) => {
     if (playing) {
@@ -281,7 +332,7 @@ export function BicycleWheelSpeedLab({
               maxDistance={2.4}
               minDistance={0.6}
             />
-            <WheelScene period={period} />
+            <WheelScene onReset={() => setPeriod(1)} period={period} />
           </Suspense>
         </ScienceStage>
       </VisualCardBody>

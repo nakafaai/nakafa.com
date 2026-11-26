@@ -8,7 +8,9 @@ import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
+  useVisualReset,
   useVisualScene,
+  useVisualStop,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -113,7 +115,11 @@ export function WindEnergyConversionLab({
               cameraTarget={[0.03, 0.94, 0.14]}
               fov={34}
             />
-            <WindConversionScene colors={colors} windSpeed={windSpeed} />
+            <WindConversionScene
+              colors={colors}
+              onReset={() => setWindSpeed(DEFAULT_WIND_SPEED)}
+              windSpeed={windSpeed}
+            />
           </Suspense>
         </ScienceStage>
       </VisualCardBody>
@@ -132,13 +138,22 @@ export function WindEnergyConversionLab({
 
 function WindConversionScene({
   colors,
+  onReset,
   windSpeed,
 }: {
   colors: ReturnType<typeof getWindSceneColors>;
+  onReset: () => void;
   windSpeed: number;
 }) {
   const rotorRef = useRef<Group>(null);
   const playing = useVisualScene((card) => card.playing, true);
+
+  useVisualStop(() => {
+    if (rotorRef.current) {
+      rotorRef.current.rotation.z = 0;
+    }
+  });
+  useVisualReset(onReset);
 
   useFrame((_, delta) => {
     if (!(playing && rotorRef.current)) {
@@ -156,6 +171,7 @@ function WindConversionScene({
             color={colors.wind}
             index={gust.index}
             key={gust.id}
+            playing={playing}
             windSpeed={windSpeed}
           />
         ))}
@@ -168,13 +184,16 @@ function WindConversionScene({
 function WindGust({
   color,
   index,
+  playing,
   windSpeed,
 }: {
   color: string;
   index: number;
+  playing: boolean;
   windSpeed: number;
 }) {
   const ref = useRef<Group>(null);
+  const timeRef = useRef(0);
   const seed = useMemo(() => {
     const column = index % 9;
     const row = Math.floor(index / 9) % 8;
@@ -188,13 +207,20 @@ function WindGust({
     };
   }, [index]);
 
-  useFrame((state) => {
+  useVisualStop(() => {
+    timeRef.current = 0;
+  });
+
+  useFrame((_, delta) => {
     if (!ref.current) {
       return;
     }
 
     const speed = 0.18 + windSpeed * 0.035;
-    const progress = (state.clock.elapsedTime * speed + seed.phase) % 1;
+    if (playing) {
+      timeRef.current += simulationStep(delta) * speed;
+    }
+    const progress = (timeRef.current + seed.phase) % 1;
     const wakeProgress = Math.max(0, (progress - 0.58) / 0.42);
     const swirl =
       Math.sin(wakeProgress * Math.PI * 2.4 + index * 0.73) *
