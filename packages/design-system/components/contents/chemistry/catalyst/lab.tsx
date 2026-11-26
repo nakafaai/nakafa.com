@@ -137,7 +137,7 @@ export function CatalystPathwayLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.5} setting="lab">
+        <ScienceStage floor={0} reach={0.95} setting="lab">
           <Suspense fallback={null}>
             <CatalystPathwayScene
               catalyst={catalyst}

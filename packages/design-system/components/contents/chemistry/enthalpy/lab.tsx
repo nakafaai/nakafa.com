@@ -128,7 +128,7 @@ export function CalorimeterEnthalpyLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.5} setting="lab">
+        <ScienceStage floor={0} reach={0.85} setting="lab">
           <Suspense fallback={null}>
             <CalorimeterEnthalpyScene
               moles={molVal}

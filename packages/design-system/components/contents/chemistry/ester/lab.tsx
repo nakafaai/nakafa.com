@@ -1,4 +1,5 @@
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
+import { esterTint } from "@repo/design-system/components/contents/chemistry/ester/geometry";
 import type { EsterId } from "@repo/design-system/components/contents/chemistry/ester/model";
 import { EsterificationRefluxScene } from "@repo/design-system/components/contents/chemistry/ester/scene";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
@@ -24,7 +25,6 @@ import {
 } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { VisualSlider } from "@repo/design-system/components/visual/slider";
-import { ORGANIC_COLORS } from "@repo/design-system/lib/material/organic";
 import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -133,7 +133,7 @@ export function EsterificationRefluxLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.5} setting="lab">
+        <ScienceStage floor={0} reach={0.95} setting="lab">
           <Suspense fallback={null}>
             <EsterificationRefluxScene
               ester={active}
@@ -149,7 +149,7 @@ export function EsterificationRefluxLab({
       <VisualCardFooter>
         <VisualCardFacts>
           <VisualFactIndicator
-            indicatorColor={ORGANIC_COLORS.esterRose}
+            indicatorColor={esterTint(active)}
             label={labels.ester}
             value={copy?.name ?? active}
           />

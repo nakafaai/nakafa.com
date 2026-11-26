@@ -109,7 +109,7 @@ export function ContactSulfuricTowerLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.7} setting="lab">
+        <ScienceStage floor={0} reach={1.35} setting="lab">
           <Suspense fallback={null}>
             <ContactSulfuricScene parts={labels.parts} stage={active} />
           </Suspense>

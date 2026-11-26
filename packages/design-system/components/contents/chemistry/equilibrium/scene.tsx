@@ -1,6 +1,14 @@
 import { useFrame, useThree } from "@react-three/fiber";
+import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
+import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
+import {
+  AnalogPressureGauge,
+  MachinedRateArrows,
+  PressureReactor,
+} from "@repo/design-system/components/contents/chemistry/equilibrium/geometry";
 import type { DynamicSystem } from "@repo/design-system/components/contents/chemistry/equilibrium/model";
 import { MAX_SIMULATION_TIME } from "@repo/design-system/components/contents/chemistry/equilibrium/model";
+import { MoleculeCluster } from "@repo/design-system/components/contents/chemistry/equilibrium/molecules";
 import {
   SimulationTicker,
   simulationStep,
@@ -10,22 +18,27 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { EQUILIBRIUM_COLORS } from "@repo/design-system/lib/material/equilibrium";
-import { Array as Arr } from "effect";
+import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
+import { Array as Arr, Match } from "effect";
 import { useMemo, useRef } from "react";
 import type { Group } from "three";
 
-const PARTICLE_COUNT = 28;
+const BENCH_Z = 0.04;
+const MIN_MOLECULES = 12;
+const MAX_MOLECULES = 38;
 
-function particleSeed(index: number) {
+function moleculeSeed(index: number) {
   const angle = index * 2.399_96;
-  const radius = 0.22 + ((index * 11) % 9) * 0.072;
-  const y = 0.22 + ((index * 17) % 10) * 0.092;
+  const radius = 0.011 + ((index * 11) % 9) * 0.0052;
+  const y = 0.052 + ((index * 17) % 12) * 0.0124;
   return {
-    phase: index * 0.7,
-    radius,
-    x: Math.cos(angle) * radius,
-    y,
-    z: Math.sin(angle) * radius,
+    id: `mol-${index}`,
+    position: [Math.cos(angle) * radius, y, Math.sin(angle) * radius] as const,
+    rotation: [
+      (index * 0.83) % (Math.PI * 2),
+      (index * 1.17) % (Math.PI * 2),
+      (index * 0.59) % (Math.PI * 2),
+    ] as const,
   };
 }
 
@@ -36,19 +49,28 @@ function ReactorCamera() {
   );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0, 1.9, 3.9] : [0, 1.5, 3.05]}
-      cameraTarget={[0, 0.56, 0]}
+      cameraPosition={narrow ? [0.02, 0.29, 0.88] : [0.02, 0.24, 0.69]}
+      cameraTarget={[0.01, 0.165, BENCH_Z]}
       fov={38}
-      maxDistance={6.2}
-      minDistance={1.5}
+      maxDistance={1.5}
+      minDistance={0.28}
     />
   );
 }
 
+/**
+ * Bench-scale sealed borosilicate equilibrium pressure reactor with bolted
+ * stainless flanges, brass valves, live analog pressure gauge, authentic 3D
+ * reactant/product molecules scaled by initial concentration, and machined
+ * bidirectional rate arrows.
+ */
 export function DynamicEquilibriumScene({
   balanced,
   elapsed,
   forwardRate,
+  initial = 1,
+  initialMax = 2,
+  initialMin = 0.2,
   onElapsed,
   productLabel,
   productShare,
@@ -59,6 +81,9 @@ export function DynamicEquilibriumScene({
   readonly balanced: boolean;
   readonly elapsed: number;
   readonly forwardRate: number;
+  readonly initial?: number;
+  readonly initialMax?: number;
+  readonly initialMin?: number;
   readonly onElapsed: (next: number) => void;
   readonly productLabel: string;
   readonly productShare: number;
@@ -67,24 +92,56 @@ export function DynamicEquilibriumScene({
   readonly system: DynamicSystem;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
+  const labelInk = useLabelInk();
   const swarmRef = useRef<Group>(null);
   const clockRef = useRef(elapsed);
   const reportRef = useRef(elapsed);
 
-  const particles = useMemo(() => Arr.makeBy(PARTICLE_COUNT, particleSeed), []);
-  const productCount = Math.round(PARTICLE_COUNT * productShare);
-  const reactantColor =
-    system === "nitrogenDioxide"
-      ? EQUILIBRIUM_COLORS.n2o4Pale
-      : EQUILIBRIUM_COLORS.reactant;
-  const productColor =
-    system === "nitrogenDioxide"
-      ? EQUILIBRIUM_COLORS.no2Brown
-      : EQUILIBRIUM_COLORS.product;
+  const densityRatio =
+    initialMax > initialMin
+      ? Math.max(
+          0,
+          Math.min(1, (initial - initialMin) / (initialMax - initialMin))
+        )
+      : 0.5;
+  const visibleCount = Math.round(
+    MIN_MOLECULES + densityRatio * (MAX_MOLECULES - MIN_MOLECULES)
+  );
+  const allParticles = useMemo(
+    () => Arr.makeBy(MAX_MOLECULES, moleculeSeed),
+    []
+  );
+  const activeParticles = useMemo(
+    () => Arr.take(allParticles, visibleCount),
+    [allParticles, visibleCount]
+  );
+  const productCount = Math.round(visibleCount * productShare);
+
+  const gasHazeColor = Match.value(system).pipe(
+    Match.when("nitrogenDioxide", () => EQUILIBRIUM_COLORS.no2Brown),
+    Match.when("hydrogenIodide", () => PROCESS_COLORS.iodineViolet),
+    Match.when("generic", () => EQUILIBRIUM_COLORS.vesselGlass),
+    Match.exhaustive
+  );
+  const gasHazeOpacity = Match.value(system).pipe(
+    Match.when(
+      "nitrogenDioxide",
+      () => 0.04 + productShare * (0.35 + densityRatio * 0.65) * 0.34
+    ),
+    Match.when(
+      "hydrogenIodide",
+      () => 0.03 + (1 - productShare) * (0.35 + densityRatio * 0.65) * 0.24
+    ),
+    Match.when("generic", () => 0.04 + densityRatio * 0.05),
+    Match.exhaustive
+  );
 
   useFrame((_, delta) => {
     if (!playing) {
       clockRef.current = elapsed;
+      if (swarmRef.current !== null) {
+        swarmRef.current.position.y = 0;
+      }
       return;
     }
     const dt = simulationStep(delta);
@@ -96,104 +153,62 @@ export function DynamicEquilibriumScene({
     }
     if (swarmRef.current !== null) {
       swarmRef.current.rotation.y +=
-        dt * (0.45 + (forwardRate + reverseRate) * 0.25);
+        dt * (0.45 + (forwardRate + reverseRate) * 0.28);
+      swarmRef.current.position.y = Math.sin(next * 3.8) * 0.0028;
     }
   });
 
-  const forwardScale = Math.min(1.4, 0.35 + forwardRate * 0.6);
-  const reverseScale = Math.min(1.4, 0.35 + reverseRate * 0.6);
+  const forwardScale = Math.min(
+    1.42,
+    Math.max(0.42, 0.42 + forwardRate * 0.56)
+  );
+  const reverseScale = Math.min(
+    1.42,
+    Math.max(0.42, 0.42 + reverseRate * 0.56)
+  );
 
   return (
     <group>
       <SimulationTicker running={playing} />
       <ReactorCamera />
-      <mesh castShadow position={[0, 0.05, 0]} receiveShadow>
-        <cylinderGeometry args={[1.1, 1.16, 0.1, 32]} />
-        <meshStandardMaterial
-          color={EQUILIBRIUM_COLORS.vesselBase}
-          roughness={0.55}
+      <LabBench width={2.4} />
+      {/* Sealed borosilicate pressure reactor standing on y = 0 */}
+      <group position={[0, 0, BENCH_Z]}>
+        <PressureReactor
+          balanced={balanced}
+          gasHazeColor={gasHazeColor}
+          gasHazeOpacity={gasHazeOpacity}
         />
-      </mesh>
-      <mesh position={[0, 0.64, 0]}>
-        <cylinderGeometry args={[0.98, 0.98, 1.1, 36]} />
-        <meshPhysicalMaterial
-          color={
-            balanced
-              ? EQUILIBRIUM_COLORS.balancedGlow
-              : EQUILIBRIUM_COLORS.vesselGlass
-          }
-          opacity={0.22}
-          roughness={0.14}
-          transparent
+        <AnalogPressureGauge pressureRatio={densityRatio} />
+        <group ref={swarmRef}>
+          {Arr.map(activeParticles, (pt, index) => (
+            <MoleculeCluster
+              index={index}
+              isProduct={index < productCount}
+              key={pt.id}
+              position={pt.position}
+              rotation={pt.rotation}
+              system={system}
+            />
+          ))}
+        </group>
+        <MachinedRateArrows
+          forwardScale={forwardScale}
+          reverseScale={reverseScale}
         />
-      </mesh>
-      <group ref={swarmRef}>
-        {Arr.map(particles, (pt, index) => {
-          const isProduct = index < productCount;
-          return (
-            <mesh
-              castShadow
-              key={pt.phase}
-              position={[pt.x, pt.y, pt.z]}
-              scale={isProduct ? 1 : 1.18}
-            >
-              <sphereGeometry args={[0.056, 14, 10]} />
-              <meshStandardMaterial
-                color={isProduct ? productColor : reactantColor}
-                roughness={0.38}
-              />
-            </mesh>
-          );
-        })}
       </group>
-      {/* Bidirectional rate arrows */}
-      <group position={[0, 1.32, 0]}>
-        <mesh position={[0, 0.07, 0]} scale={[forwardScale, 1, 1]}>
-          <boxGeometry args={[0.75, 0.045, 0.045]} />
-          <meshStandardMaterial
-            color={EQUILIBRIUM_COLORS.forwardArrow}
-            roughness={0.4}
-          />
-        </mesh>
-        <mesh
-          position={[0.42 * forwardScale, 0.07, 0]}
-          rotation={[0, 0, -Math.PI / 2]}
-        >
-          <coneGeometry args={[0.065, 0.14, 10]} />
-          <meshStandardMaterial
-            color={EQUILIBRIUM_COLORS.forwardArrow}
-            roughness={0.4}
-          />
-        </mesh>
-        <mesh position={[0, -0.07, 0]} scale={[reverseScale, 1, 1]}>
-          <boxGeometry args={[0.75, 0.045, 0.045]} />
-          <meshStandardMaterial
-            color={EQUILIBRIUM_COLORS.reverseArrow}
-            roughness={0.4}
-          />
-        </mesh>
-        <mesh
-          position={[-0.42 * reverseScale, -0.07, 0]}
-          rotation={[0, 0, Math.PI / 2]}
-        >
-          <coneGeometry args={[0.065, 0.14, 10]} />
-          <meshStandardMaterial
-            color={EQUILIBRIUM_COLORS.reverseArrow}
-            roughness={0.4}
-          />
-        </mesh>
-      </group>
+      {/* Adaptive theme-aware labels */}
       <ThreeLabel
-        color={EQUILIBRIUM_COLORS.labelInk}
+        color={labelInk}
         fontSize="compact"
-        position={[-0.92, 1.18, 0.2]}
+        position={[-0.145, 0.296, BENCH_Z + 0.015]}
       >
         <span>{reactantLabel}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={EQUILIBRIUM_COLORS.labelInk}
+        color={labelInk}
         fontSize="compact"
-        position={[0.92, 1.18, 0.2]}
+        position={[0.155, 0.296, BENCH_Z + 0.015]}
       >
         <span>{productLabel}</span>
       </ThreeLabel>

@@ -128,10 +128,12 @@ export function GreenCatalystCycleLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.5} setting="lab">
+        <ScienceStage floor={0} reach={0.95} setting="lab">
           <Suspense fallback={null}>
             <GreenCatalystScene
               cycles={cycleVal}
+              cyclesMax={cycles.max}
+              cyclesMin={cycles.min}
               mode={active}
               parts={labels.parts}
             />

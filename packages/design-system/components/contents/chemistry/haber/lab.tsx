@@ -102,7 +102,7 @@ export function HaberAmmoniaConverterLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.6} setting="lab">
+        <ScienceStage floor={0} reach={1.3} setting="lab">
           <Suspense fallback={null}>
             <HaberConverterScene
               parts={labels.parts}
