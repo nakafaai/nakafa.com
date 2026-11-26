@@ -1,4 +1,3 @@
-import { valueNoise } from "@repo/design-system/components/contents/simulation/grain";
 import { BIOME_COLORS } from "@repo/design-system/lib/material/biome";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
@@ -14,85 +13,13 @@ import {
 } from "three";
 
 export const RIB_LEVELS = [
-  { id: "r1", spread: 0.54, y: 1.04 },
-  { id: "r2", spread: 0.62, y: 0.9 },
-  { id: "r3", spread: 0.67, y: 0.76 },
-  { id: "r4", spread: 0.69, y: 0.62 },
-  { id: "r5", spread: 0.66, y: 0.48 },
-  { id: "r6", spread: 0.6, y: 0.35 },
+  { id: "r1", spread: 0.56, y: 1.04 },
+  { id: "r2", spread: 0.64, y: 0.9 },
+  { id: "r3", spread: 0.69, y: 0.76 },
+  { id: "r4", spread: 0.71, y: 0.62 },
+  { id: "r5", spread: 0.68, y: 0.48 },
+  { id: "r6", spread: 0.62, y: 0.35 },
 ] as const;
-
-/** Computes anatomically sculpted coordinates and fissure groove intensity for a lung vertex. */
-function sculptLungPoint(
-  ux: number,
-  uy: number,
-  uz: number,
-  side: "left" | "right"
-) {
-  const sign = side === "left" ? 1 : -1;
-  const apexTaper = 0.52 + 0.54 * (1 - (uy + 1) * 0.5) ** 0.72;
-  let x = ux * 0.25 * apexTaper;
-  let y = uy * 0.42;
-  const z = uz * 0.27 * apexTaper;
-
-  if (ux * -sign > 0.1) {
-    x *= 0.66;
-  }
-  if (uy < -0.58) {
-    const baseFactor = (-0.58 - uy) / 0.42;
-    y += (1 - Math.min(1, Math.hypot(ux, uz))) * 0.08 * baseFactor;
-  }
-  if (side === "left" && ux < 0.05 && uy < 0.15 && uy > -0.82 && uz > -0.25) {
-    const notch =
-      Math.max(0, 1 - Math.abs(uy + 0.3) * 1.9) * Math.max(0, 0.2 - ux);
-    x += notch * 0.34;
-  }
-  const oblique = Math.exp(-((Math.abs(uy - (uz * 0.55 - 0.08)) / 0.06) ** 2));
-  const horiz =
-    side === "right" && uz > -0.1
-      ? Math.exp(-((Math.abs(uy - 0.12) / 0.05) ** 2))
-      : 0;
-  const fissure = Math.min(1, oblique + horiz);
-  const lobule =
-    (valueNoise(ux * 6 + sign * 3, uy * 6 + uz * 4, 32) - 0.5) * 0.018;
-  const indent = 1 - fissure * 0.09 + lobule;
-  return { fissure, x: x * indent, y, z: z * indent };
-}
-
-/** Sculpted anatomical lung lobe with conical apex, concave base, fissures, and left cardiac notch. */
-export function useSculptedLung(side: "left" | "right") {
-  const geometry = useMemo(() => {
-    const geom = new SphereGeometry(1, 56, 44);
-    const pos = geom.getAttribute("position");
-    const colors = new Float32Array(pos.count * 3);
-    const apexCol = new Color(BIOME_COLORS.lungApex);
-    const bodyCol = new Color(BIOME_COLORS.lungCoral);
-    const fissureCol = new Color(BIOME_COLORS.lungFissure);
-    const c = new Color();
-
-    for (let i = 0; i < pos.count; i += 1) {
-      const ux = pos.getX(i);
-      const uy = pos.getY(i);
-      const uz = pos.getZ(i);
-      const sculpted = sculptLungPoint(ux, uy, uz, side);
-      pos.setXYZ(i, sculpted.x, sculpted.y, sculpted.z);
-
-      const heightT = Math.min(1, Math.max(0, (uy + 1) * 0.5));
-      const mottle = valueNoise(ux * 9 + 2, uy * 9 + uz * 9, 32);
-      c.copy(bodyCol)
-        .lerp(apexCol, heightT * 0.45 + mottle * 0.18)
-        .lerp(fissureCol, sculpted.fissure * 0.72);
-      colors[i * 3] = c.r;
-      colors[i * 3 + 1] = c.g;
-      colors[i * 3 + 2] = c.b;
-    }
-    geom.setAttribute("color", new BufferAttribute(colors, 3));
-    geom.computeVertexNormals();
-    return geom;
-  }, [side]);
-  useEffect(() => () => geometry.dispose(), [geometry]);
-  return geometry;
-}
 
 /** Sculpted muscular diaphragm with bilateral domes and fibrous central tendon trefoil. */
 export function useSculptedDiaphragm() {
@@ -124,9 +51,9 @@ export function useSculptedDiaphragm() {
         1 + 0.025 * Math.sin(Math.atan2(uz, ux) * 18) * (1 - uy);
       pos.setXYZ(
         i,
-        ux * 0.65 * ribRipple,
+        ux * 0.66 * ribRipple,
         uy * 0.34 * domeMod,
-        uz * 0.46 * ribRipple
+        uz * 0.47 * ribRipple
       );
 
       const radial = Math.hypot(ux, uz);
@@ -168,8 +95,8 @@ export function useRibArcs() {
             new Vector3(side * 0.07, lvl.y - slope * 0.45, d * 0.84),
           ]);
           return {
-            bone: new TubeGeometry(boneCurve, 26, 0.021, 9, false),
-            cartilage: new TubeGeometry(cartilageCurve, 14, 0.018, 8, false),
+            bone: new TubeGeometry(boneCurve, 26, 0.02, 9, false),
+            cartilage: new TubeGeometry(cartilageCurve, 14, 0.017, 8, false),
             id: `${lvl.id}-${side === 1 ? "l" : "r"}`,
             intercostal: new TubeGeometry(
               new CatmullRomCurve3([
@@ -178,7 +105,7 @@ export function useRibArcs() {
                 new Vector3(side * w * 0.76, lvl.y - 0.165, d * 0.54),
               ]),
               20,
-              0.015,
+              0.014,
               7,
               false
             ),
@@ -201,7 +128,7 @@ export function useRibArcs() {
   return arcs;
 }
 
-/** Builds sculpted sternum bone (manubrium, body, xiphoid) and bifurcating bronchi. */
+/** Builds sculpted sternum bone (manubrium, body, xiphoid) and proximal airway trachea connector. */
 export function useAirwayAndSternum() {
   const resources = useMemo(() => {
     const sternum = new LatheGeometry(
@@ -222,10 +149,10 @@ export function useAirwayAndSternum() {
       new CatmullRomCurve3([
         new Vector3(0, 1.07, -0.02),
         new Vector3(0.11, 1.0, -0.02),
-        new Vector3(0.24, 0.9, -0.01),
+        new Vector3(0.22, 0.9, -0.01),
       ]),
       14,
-      0.044,
+      0.042,
       10,
       false
     );
@@ -233,10 +160,10 @@ export function useAirwayAndSternum() {
       new CatmullRomCurve3([
         new Vector3(0, 1.07, -0.02),
         new Vector3(-0.1, 0.99, -0.02),
-        new Vector3(-0.22, 0.88, -0.01),
+        new Vector3(-0.2, 0.88, -0.01),
       ]),
       14,
-      0.048,
+      0.045,
       10,
       false
     );

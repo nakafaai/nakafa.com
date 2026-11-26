@@ -1,4 +1,6 @@
 import { useFrame, useThree } from "@react-three/fiber";
+import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
+import { AnimatedFlightBird } from "@repo/design-system/components/contents/biology/fauna";
 import {
   useFoliageMaterial,
   useGrassClump,
@@ -7,7 +9,11 @@ import {
 } from "@repo/design-system/components/contents/biology/flora";
 import type { TrophicScenario } from "@repo/design-system/components/contents/biology/trophic/model";
 import { evaluateTrophicPyramid } from "@repo/design-system/components/contents/biology/trophic/model";
-import { useTrophicSpecimens } from "@repo/design-system/components/contents/biology/trophic/specimens";
+import {
+  TrophicDeerSpecimen,
+  TrophicFoxSpecimen,
+  useTrophicProps,
+} from "@repo/design-system/components/contents/biology/trophic/specimens";
 import {
   SimulationTicker,
   simulationStep,
@@ -22,7 +28,6 @@ import { BIOME_COLORS } from "@repo/design-system/lib/material/biome";
 import { Array as Arr } from "effect";
 import { useRef } from "react";
 import type { Group } from "three";
-import { DoubleSide } from "three";
 
 const PRODUCER_OFFSETS = [
   [-0.4, -0.22],
@@ -37,15 +42,14 @@ const PRODUCER_OFFSETS = [
 ] as const;
 
 const HERBIVORE_OFFSETS = [
-  [-0.34, 0.06],
-  [-0.11, -0.14],
-  [0.14, 0.14],
-  [0.34, -0.08],
+  [-0.3, 0.08, 0.55],
+  [0.02, -0.14, -0.3],
+  [0.31, 0.1, -0.65],
 ] as const;
 
 const PREDATOR_OFFSETS = [
-  [-0.2, 0.04],
-  [0.2, -0.04],
+  [-0.22, 0.05, 0.45],
+  [0.22, -0.04, -0.5],
 ] as const;
 
 function TrophicCamera() {
@@ -55,8 +59,8 @@ function TrophicCamera() {
   );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0.62, 1.85, 4.15] : [0.52, 1.52, 3.4]}
-      cameraTarget={[0, 0.76, 0]}
+      cameraPosition={narrow ? [0.64, 1.94, 4.35] : [0.56, 1.62, 3.6]}
+      cameraTarget={[0, 0.84, 0]}
       fov={36}
       maxDistance={6.8}
       minDistance={1.6}
@@ -91,7 +95,7 @@ function TrophicDeck({
       </mesh>
       <mesh position={[0, height * 0.42, 0]}>
         <boxGeometry args={[width * 0.96, height * 0.62, depth * 0.96]} />
-        <GlassMaterial color={color} opacity={0.28} />
+        <GlassMaterial color={color} opacity={0.26} />
       </mesh>
     </group>
   );
@@ -117,6 +121,7 @@ export function FoodWebTrophicScene({
   readonly scenario: TrophicScenario;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
+  const ink = useLabelInk();
   const heatRef = useRef<Group>(null);
   const apexRef = useRef<Group>(null);
   const phaseRef = useRef(0);
@@ -126,8 +131,7 @@ export function FoodWebTrophicScene({
   const moss = useMossCushion(32);
   const mushrooms = useMushroomCluster(33);
   const foliageMat = useFoliageMaterial();
-  const { apex, heatRibbonA, heatRibbonB, herbivore, log, secondary } =
-    useTrophicSpecimens();
+  const { heatRibbonA, heatRibbonB, log } = useTrophicProps();
 
   useFrame((_, delta) => {
     if (!playing) {
@@ -139,13 +143,13 @@ export function FoodWebTrophicScene({
     }
     if (apexRef.current !== null) {
       apexRef.current.position.y =
-        1.26 + Math.sin(phaseRef.current * 1.4) * 0.04;
+        1.52 + Math.sin(phaseRef.current * 1.4) * 0.045;
     }
   });
 
   const energyScale = Math.min(
-    1.3,
-    Math.max(0.68, Math.sqrt(energyInput / 10_000))
+    1.26,
+    Math.max(0.72, Math.sqrt(energyInput / 10_000))
   );
   const w0 = Math.min(
     2.25,
@@ -159,7 +163,7 @@ export function FoodWebTrophicScene({
     1.12,
     Math.max(0.32, (state.secondaryKj / 100) * 0.68 + 0.22)
   );
-  const w3 = state.tertiaryKj > 0 ? Math.max(0.42, 0.5 * energyScale) : 0.24;
+  const w3 = state.tertiaryKj > 0 ? Math.max(0.46, 0.52 * energyScale) : 0.26;
   const producerGlass =
     scenario === "algalBloom"
       ? BIOME_COLORS.lichenLime
@@ -173,8 +177,9 @@ export function FoodWebTrophicScene({
       <SimulationTicker running={playing} />
       <TrophicCamera />
 
+      {/* Tier 1: Producers (lush grass / moss flora) */}
       <TrophicDeck color={producerGlass} height={0.28} width={w0} y={0.07} />
-      <group position={[0, 0.11, 0]}>
+      <group position={[0, 0.12, 0]}>
         {Arr.map(Arr.take(PRODUCER_OFFSETS, producerCount), ([ox, oz]) => (
           <mesh
             castShadow
@@ -192,83 +197,62 @@ export function FoodWebTrophicScene({
         ))}
       </group>
 
+      {/* Tier 2: Primary consumers (CC0 grazing deer) */}
       <TrophicDeck
         color={BIOME_COLORS.cloverGreen}
         height={0.26}
         width={w1}
         y={0.44}
       />
-      <group position={[0, 0.48, 0]}>
-        {Arr.map(HERBIVORE_OFFSETS, ([ox, oz]) => (
-          <mesh
-            castShadow
-            geometry={herbivore}
-            key={`herb-${ox}-${oz}`}
-            position={[ox * w1, 0, oz * w1 * 0.62]}
-            rotation={[0, ox * 4, 0]}
-            scale={0.78 * energyScale}
-          >
-            <meshPhysicalMaterial
-              clearcoat={0.72}
-              clearcoatRoughness={0.18}
-              roughness={0.28}
-              vertexColors
-            />
-          </mesh>
+      <group position={[0, 0.485, 0]}>
+        {Arr.map(HERBIVORE_OFFSETS, ([ox, oz, rot]) => (
+          <TrophicDeerSpecimen
+            key={`deer-${ox}-${oz}`}
+            position={[ox * w1, 0, oz * w1 * 0.56]}
+            rotationY={rot}
+            scale={0.86 * energyScale}
+          />
         ))}
       </group>
 
+      {/* Tier 3: Secondary consumers (CC0 foxes) */}
       <TrophicDeck
         color={BIOME_COLORS.heatAmber}
         height={0.24}
         width={w2}
-        y={0.82}
+        y={0.9}
       />
-      <group position={[0, 0.86, 0]}>
-        {Arr.map(PREDATOR_OFFSETS, ([ox, oz]) => (
-          <mesh
-            castShadow
-            geometry={secondary}
-            key={`sec-${ox}-${oz}`}
-            position={[ox * w2, 0, oz * w2 * 0.55]}
-            rotation={[0, ox > 0 ? -0.4 : 0.4, 0]}
+      <group position={[0, 0.945, 0]}>
+        {Arr.map(PREDATOR_OFFSETS, ([ox, oz, rot]) => (
+          <TrophicFoxSpecimen
+            key={`fox-${ox}-${oz}`}
+            position={[ox * w2, 0, oz * w2 * 0.52]}
+            rotationY={rot}
             scale={0.82 * energyScale}
-          >
-            <meshPhysicalMaterial
-              clearcoat={0.22}
-              clearcoatRoughness={0.4}
-              roughness={0.52}
-              vertexColors
-            />
-          </mesh>
+          />
         ))}
       </group>
 
+      {/* Tier 4: Tertiary apex consumer (animated morph-target soaring golden-brown raptor) */}
       <TrophicDeck
         color={BIOME_COLORS.predatorOrange}
         height={0.2}
         width={w3}
-        y={1.18}
+        y={1.28}
       />
-      <group position={[0, 1.26, 0]} ref={apexRef}>
-        <mesh
-          castShadow
-          geometry={apex}
-          rotation={[0, -0.35, 0]}
-          scale={0.85 * energyScale}
-        >
-          <meshPhysicalMaterial
-            clearcoat={0.2}
-            clearcoatRoughness={0.42}
-            opacity={state.tertiaryKj > 0 ? 1 : 0.22}
-            roughness={0.48}
-            side={DoubleSide}
-            transparent={state.tertiaryKj === 0}
-            vertexColors
-          />
-        </mesh>
+      <group position={[0, 1.52, 0]} ref={apexRef} rotation={[0.08, -0.52, 0]}>
+        <AnimatedFlightBird
+          color={BIOME_COLORS.raptorFeather}
+          opacity={state.tertiaryKj > 0 ? 1 : 0.24}
+          playing={playing}
+          poseTime={0.26}
+          sheenColor={BIOME_COLORS.raptorGold}
+          speed={0.95}
+          targetExtent={0.62 * energyScale}
+        />
       </group>
 
+      {/* Decomposer nurse log & fruiting mushrooms */}
       <group position={[-1.34, 0, 0.24]}>
         <mesh castShadow geometry={log} receiveShadow>
           <SurfaceMaterial
@@ -288,6 +272,7 @@ export function FoodWebTrophicScene({
         </mesh>
       </group>
 
+      {/* Rising respiratory heat-loss plumes */}
       <group position={[1.14, 0.48, 0]} ref={heatRef} scale={energyScale}>
         <mesh geometry={heatRibbonA}>
           <meshPhysicalMaterial
@@ -313,46 +298,23 @@ export function FoodWebTrophicScene({
         </mesh>
       </group>
 
-      <ThreeLabel
-        color={BIOME_COLORS.labelInk}
-        fontSize="compact"
-        position={[0, 1.66, 0]}
-      >
+      {/* Dynamic light/dark-mode labels */}
+      <ThreeLabel color={ink} fontSize="compact" position={[0, 1.88, 0]}>
         <span>{parts.tertiaryConsumer}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={BIOME_COLORS.labelInk}
-        fontSize="compact"
-        position={[-0.95, 1.04, 0.22]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[-0.98, 1.14, 0.22]}>
         <span>{parts.secondaryConsumer}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={BIOME_COLORS.labelInk}
-        fontSize="compact"
-        position={[0.88, 0.62, 0.45]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[0.92, 0.64, 0.45]}>
         <span>{parts.primaryConsumer}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={BIOME_COLORS.labelInk}
-        fontSize="compact"
-        position={[0, 0.24, 0.94]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[0, 0.24, 0.94]}>
         <span>{parts.producer}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={BIOME_COLORS.labelInk}
-        fontSize="compact"
-        position={[-1.18, 0.48, 0.26]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[-1.2, 0.48, 0.26]}>
         <span>{parts.decomposer}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={BIOME_COLORS.labelInk}
-        fontSize="compact"
-        position={[1.24, 1.38, 0]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[1.24, 1.38, 0]}>
         <span>{parts.heatLoss}</span>
       </ThreeLabel>
     </group>

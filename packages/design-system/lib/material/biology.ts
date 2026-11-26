@@ -80,4 +80,15 @@ export const BIOLOGY_COLORS = {
   hypha: "#f4f1e9",
   sporangium: "#33302d",
   sporangiumYoung: "#e6e0d0",
+
+  // Anatomical sculpture skin & botanical dicot stem tissues.
+  skinClay: "#d9b59b",
+  skinSheen: "#edd3be",
+  stemEpidermis: "#3e6b2c",
+  stemCortex: "#8eb563",
+  stemSclerenchyma: "#6b7d48",
+  stemCambium: "#b8d47c",
+  stemPith: "#ebe3c0",
+  stemXylem: "#b8323e",
+  stemPhloem: "#e5a935",
 } as const;
