@@ -15,6 +15,7 @@ export const STALE_FUNCTION_MESSAGE =
  */
 const STALE_CHUNK_MESSAGES = [
   "Failed to fetch dynamically imported module",
+  "Failed to load module script",
   "error loading dynamically imported module",
   "Importing a module script failed",
   STALE_FUNCTION_MESSAGE,

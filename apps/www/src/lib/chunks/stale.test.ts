@@ -40,6 +40,13 @@ describe("stale chunks", () => {
     expect(
       isStaleChunkError(new TypeError("Importing a module script failed."))
     ).toBe(true);
+    expect(
+      isStaleChunkError(
+        new TypeError(
+          "Failed to load module script: Expected a JavaScript module script"
+        )
+      )
+    ).toBe(true);
     expect(isStaleChunkError(new Error("Something else failed"))).toBe(false);
     expect(
       isStaleChunkError("Failed to fetch dynamically imported module")

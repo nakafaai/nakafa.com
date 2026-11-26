@@ -141,6 +141,10 @@ export function ThreeLabel({
   const group = useRef<Group>(null);
   const content = useRef<HTMLSpanElement>(null);
   const lastScale = useRef(Number.NaN);
+  const attachContent = useCallback((element: HTMLSpanElement | null) => {
+    content.current = element;
+    lastScale.current = Number.NaN;
+  }, []);
   const labelPosition = useMemo(() => new Vector3(), []);
   const cameraPosition = useMemo(() => new Vector3(), []);
   const camera = useThree((state) => state.camera);
@@ -170,6 +174,9 @@ export function ThreeLabel({
       }
       return;
     }
+    if (size.height <= 0) {
+      return;
+    }
     object.getWorldPosition(labelPosition);
     activeCamera.getWorldPosition(cameraPosition);
     const pixelsPerUnit =
@@ -180,6 +187,9 @@ export function ThreeLabel({
             Math.tan(MathUtils.degToRad(activeCamera.fov) / 2) *
             labelPosition.distanceTo(cameraPosition));
     const naturalSize = worldFontSize * pixelsPerUnit;
+    if (!(Number.isFinite(naturalSize) && naturalSize > 0)) {
+      return;
+    }
     const nextScale =
       MathUtils.clamp(naturalSize, minimumFontSize, maximumFontSize) /
       naturalSize;
@@ -306,7 +316,7 @@ export function ThreeLabel({
         <LabelHtml>
           <span
             aria-hidden="true"
-            ref={content}
+            ref={attachContent}
             style={{
               display: "inline-block",
               transformOrigin: `${anchorOrigin(anchorX)} ${anchorOrigin(anchorY)}`,
