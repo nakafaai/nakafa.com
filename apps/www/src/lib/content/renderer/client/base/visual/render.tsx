@@ -1,3 +1,4 @@
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinates";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
@@ -7,6 +8,10 @@ import { Polygon } from "@repo/design-system/components/three/polygon";
 import { Array as Arr, Option, Result } from "effect";
 import type { ComponentProps, ReactNode } from "react";
 import { useMemo } from "react";
+import {
+  collectCurvePolylines,
+  resolveAutoCurveLabels,
+} from "@/lib/content/renderer/client/base/visual/autolabel";
 import {
   labelPoint,
   resolveFormulaShapes,
@@ -112,6 +117,16 @@ export function MathScene({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
         : []
     )
   );
+  const autoLabels = resolveAutoCurveLabels(
+    scene,
+    collectCurvePolylines(
+      geometry.paths,
+      Result.getOrElse(formulas, () => [])
+    ),
+    Arr.map(anchors, (anchor) => anchor.position),
+    world.focus,
+    world.origin
+  );
   return (
     <CoordinateSystem
       cameraFraming={scene.view.kind === "camera" ? undefined : "content"}
@@ -177,6 +192,18 @@ export function MathScene({ labels = EMPTY_LABELS, scene }: MathSceneProps) {
           position={pointTuple(label.position)}
         >
           {labels[label.key]}
+        </ThreeLabel>
+      ))}
+      {Arr.map(autoLabels, (label) => (
+        <ThreeLabel
+          {...resolveLabelAnchor(label.placement)}
+          color={resolveMathAppearance(label.appearance)}
+          fontSize="diagram"
+          gap={0.15}
+          key={label.key}
+          position={pointTuple(label.at)}
+        >
+          <InlineMath math={label.latex} />
         </ThreeLabel>
       ))}
     </CoordinateSystem>
