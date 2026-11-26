@@ -124,7 +124,7 @@ export function RubberVulcanizationLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.5} setting="lab">
+        <ScienceStage floor={0} reach={1.25} setting="lab">
           <Suspense fallback={null}>
             <RubberVulcanizationScene
               parts={labels.parts}

@@ -35,9 +35,17 @@ const MultipleProportionsAtomSchema = Schema.Struct({
 });
 export type MultipleProportionsAtom = typeof MultipleProportionsAtomSchema.Type;
 
+const MultipleProportionsBondOrderSchema = Schema.Literals([1, 2, 3]);
+
+const MultipleProportionsBondSchema = Schema.Tuple([
+  Schema.String,
+  Schema.String,
+  MultipleProportionsBondOrderSchema,
+]);
+
 const MultipleProportionsMoleculeSchema = Schema.Struct({
   atoms: Schema.Array(MultipleProportionsAtomSchema),
-  bonds: Schema.Array(Schema.Tuple([Schema.String, Schema.String])),
+  bonds: Schema.Array(MultipleProportionsBondSchema),
   id: Schema.String,
   position: MultipleProportionsScenePointSchema,
 });
@@ -47,21 +55,24 @@ export type MultipleProportionsMolecule =
 const MultipleProportionsCompoundModelSchema = Schema.Struct({
   formula: Schema.String,
   molecules: Schema.Array(MultipleProportionsMoleculeSchema),
+  plaqueFormula: Schema.String,
+  plaqueSubtitle: Schema.String,
 });
 export type MultipleProportionsCompoundModel =
   typeof MultipleProportionsCompoundModelSchema.Type;
 
 const MultipleProportionsModeModelSchema = Schema.Struct({
   first: MultipleProportionsCompoundModelSchema,
+  ratioText: Schema.String,
   second: MultipleProportionsCompoundModelSchema,
 });
 type MultipleProportionsModeModel =
   typeof MultipleProportionsModeModelSchema.Type;
 
 export const MULTIPLE_PROPORTIONS_SCENE_VIEW = {
-  cameraPosition: [0, 2.25, 4.9],
-  cameraTarget: [0, 0, 0],
-  narrowCameraPosition: [0, 2.65, 5.55],
+  cameraPosition: [0, 0.29, 0.78],
+  cameraTarget: [0, 0.125, 0.02],
+  narrowCameraPosition: [0, 0.35, 0.98],
 } satisfies Record<string, MultipleProportionsScenePoint>;
 
 export const MULTIPLE_PROPORTIONS_MODELS = {
@@ -73,13 +84,16 @@ export const MULTIPLE_PROPORTIONS_MODELS = {
           "water",
           [0, 0, 0],
           [
-            atom("water-o", "oxygen", [0, 0.02, 0]),
-            atom("water-h-left", "hydrogen", [-0.28, -0.12, 0.05]),
-            atom("water-h-right", "hydrogen", [0.28, -0.12, -0.05]),
+            atom("water-o", "oxygen", [0, 0.008, 0]),
+            atom("water-h-left", "hydrogen", [-0.044, -0.019, 0.008]),
+            atom("water-h-right", "hydrogen", [0.044, -0.019, -0.008]),
           ]
         ),
       ],
+      plaqueFormula: "H₂O",
+      plaqueSubtitle: "1 O per 2 H",
     },
+    ratioText: "1 : 2",
     second: {
       formula: "\\mathrm{H_2O_2}",
       molecules: [
@@ -87,18 +101,20 @@ export const MULTIPLE_PROPORTIONS_MODELS = {
           "peroxide",
           [0, 0, 0],
           [
-            atom("peroxide-o-left", "oxygen", [-0.15, 0.02, 0.03]),
-            atom("peroxide-o-right", "oxygen", [0.15, 0.02, -0.03]),
-            atom("peroxide-h-left", "hydrogen", [-0.43, -0.11, 0.06]),
-            atom("peroxide-h-right", "hydrogen", [0.43, -0.11, -0.06]),
+            atom("peroxide-o-left", "oxygen", [-0.025, 0.006, 0.008]),
+            atom("peroxide-o-right", "oxygen", [0.025, 0.006, -0.008]),
+            atom("peroxide-h-left", "hydrogen", [-0.064, -0.018, 0.018]),
+            atom("peroxide-h-right", "hydrogen", [0.064, -0.018, -0.018]),
           ],
           [
-            ["peroxide-o-left", "peroxide-o-right"],
-            ["peroxide-o-left", "peroxide-h-left"],
-            ["peroxide-o-right", "peroxide-h-right"],
+            ["peroxide-o-left", "peroxide-o-right", 1],
+            ["peroxide-o-left", "peroxide-h-left", 1],
+            ["peroxide-o-right", "peroxide-h-right", 1],
           ]
         ),
       ],
+      plaqueFormula: "H₂O₂",
+      plaqueSubtitle: "2 O per 2 H",
     },
   },
   [CARBON_OXIDES_MODE_ID]: {
@@ -109,12 +125,16 @@ export const MULTIPLE_PROPORTIONS_MODELS = {
           "carbon-monoxide",
           [0, 0, 0],
           [
-            atom("carbon-monoxide-c", "carbon", [-0.14, 0, 0.02]),
-            atom("carbon-monoxide-o", "oxygen", [0.16, 0, -0.02]),
-          ]
+            atom("carbon-monoxide-c", "carbon", [-0.024, 0, 0.004]),
+            atom("carbon-monoxide-o", "oxygen", [0.026, 0, -0.004]),
+          ],
+          [["carbon-monoxide-c", "carbon-monoxide-o", 3]]
         ),
       ],
+      plaqueFormula: "CO",
+      plaqueSubtitle: "1 O per 1 C",
     },
+    ratioText: "1 : 2",
     second: {
       formula: "\\mathrm{CO_2}",
       molecules: [
@@ -122,16 +142,18 @@ export const MULTIPLE_PROPORTIONS_MODELS = {
           "carbon-dioxide",
           [0, 0, 0],
           [
-            atom("carbon-dioxide-o-left", "oxygen", [-0.32, 0, 0.02]),
+            atom("carbon-dioxide-o-left", "oxygen", [-0.052, 0, 0.004]),
             atom("carbon-dioxide-c", "carbon", [0, 0, 0]),
-            atom("carbon-dioxide-o-right", "oxygen", [0.32, 0, -0.02]),
+            atom("carbon-dioxide-o-right", "oxygen", [0.052, 0, -0.004]),
           ],
           [
-            ["carbon-dioxide-c", "carbon-dioxide-o-left"],
-            ["carbon-dioxide-c", "carbon-dioxide-o-right"],
+            ["carbon-dioxide-c", "carbon-dioxide-o-left", 2],
+            ["carbon-dioxide-c", "carbon-dioxide-o-right", 2],
           ]
         ),
       ],
+      plaqueFormula: "CO₂",
+      plaqueSubtitle: "2 O per 1 C",
     },
   },
   [NITROGEN_OXIDES_MODE_ID]: {
@@ -140,32 +162,39 @@ export const MULTIPLE_PROPORTIONS_MODELS = {
       molecules: [
         molecule(
           "nitrous-oxide-top",
-          [0, 0.2, 0],
+          [0, 0.032, 0],
           [
-            atom("nitrous-oxide-top-n-left", "nitrogen", [-0.25, 0, 0.04]),
+            atom("nitrous-oxide-top-n-left", "nitrogen", [-0.044, 0, 0.006]),
             atom("nitrous-oxide-top-n-right", "nitrogen", [0, 0, 0]),
-            atom("nitrous-oxide-top-o", "oxygen", [0.27, 0, -0.04]),
+            atom("nitrous-oxide-top-o", "oxygen", [0.046, 0, -0.006]),
           ],
           [
-            ["nitrous-oxide-top-n-left", "nitrous-oxide-top-n-right"],
-            ["nitrous-oxide-top-n-right", "nitrous-oxide-top-o"],
+            ["nitrous-oxide-top-n-left", "nitrous-oxide-top-n-right", 2],
+            ["nitrous-oxide-top-n-right", "nitrous-oxide-top-o", 2],
           ]
         ),
         molecule(
           "nitrous-oxide-bottom",
-          [0, -0.22, 0],
+          [0, -0.032, 0],
           [
-            atom("nitrous-oxide-bottom-n-left", "nitrogen", [-0.25, 0, -0.04]),
+            atom(
+              "nitrous-oxide-bottom-n-left",
+              "nitrogen",
+              [-0.044, 0, -0.006]
+            ),
             atom("nitrous-oxide-bottom-n-right", "nitrogen", [0, 0, 0]),
-            atom("nitrous-oxide-bottom-o", "oxygen", [0.27, 0, 0.04]),
+            atom("nitrous-oxide-bottom-o", "oxygen", [0.046, 0, 0.006]),
           ],
           [
-            ["nitrous-oxide-bottom-n-left", "nitrous-oxide-bottom-n-right"],
-            ["nitrous-oxide-bottom-n-right", "nitrous-oxide-bottom-o"],
+            ["nitrous-oxide-bottom-n-left", "nitrous-oxide-bottom-n-right", 2],
+            ["nitrous-oxide-bottom-n-right", "nitrous-oxide-bottom-o", 2],
           ]
         ),
       ],
+      plaqueFormula: "2 N₂O",
+      plaqueSubtitle: "0.5 O per N",
     },
+    ratioText: "1 : 4",
     second: {
       formula: "\\mathrm{NO_2}",
       molecules: [
@@ -173,16 +202,18 @@ export const MULTIPLE_PROPORTIONS_MODELS = {
           "nitrogen-dioxide",
           [0, 0, 0],
           [
-            atom("nitrogen-dioxide-o-left", "oxygen", [-0.28, -0.08, 0.04]),
-            atom("nitrogen-dioxide-n", "nitrogen", [0, 0.1, 0]),
-            atom("nitrogen-dioxide-o-right", "oxygen", [0.28, -0.08, -0.04]),
+            atom("nitrogen-dioxide-o-left", "oxygen", [-0.046, -0.015, 0.008]),
+            atom("nitrogen-dioxide-n", "nitrogen", [0, 0.016, 0]),
+            atom("nitrogen-dioxide-o-right", "oxygen", [0.046, -0.015, -0.008]),
           ],
           [
-            ["nitrogen-dioxide-n", "nitrogen-dioxide-o-left"],
-            ["nitrogen-dioxide-n", "nitrogen-dioxide-o-right"],
+            ["nitrogen-dioxide-n", "nitrogen-dioxide-o-left", 2],
+            ["nitrogen-dioxide-n", "nitrogen-dioxide-o-right", 1],
           ]
         ),
       ],
+      plaqueFormula: "NO₂",
+      plaqueSubtitle: "2 O per N",
     },
   },
 } satisfies Record<MultipleProportionsModeId, MultipleProportionsModeModel>;
@@ -205,7 +236,7 @@ function molecule(
   id: string,
   position: MultipleProportionsScenePoint,
   atoms: readonly MultipleProportionsAtom[],
-  bonds: readonly (readonly [string, string])[] = defaultBonds(atoms)
+  bonds: readonly (readonly [string, string, 1 | 2 | 3])[] = defaultBonds(atoms)
 ): MultipleProportionsMolecule {
   return { atoms, bonds, id, position };
 }
@@ -213,6 +244,6 @@ function molecule(
 function defaultBonds(atoms: readonly MultipleProportionsAtom[]) {
   return Arr.map(
     Arr.drop(atoms, 1),
-    (atomData) => [atoms[0].id, atomData.id] as const
+    (atomData) => [atoms[0].id, atomData.id, 1] as const
   );
 }

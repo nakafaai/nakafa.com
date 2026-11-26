@@ -1,22 +1,18 @@
-import { PointMaterial, Points } from "@react-three/drei";
-import { useThree } from "@react-three/fiber";
+import {
+  BOHR,
+  OrbitalAxes,
+  OrbitalCamera,
+  OrbitalCloud,
+} from "@repo/design-system/components/contents/chemistry/orbital/scene";
 import type { OrbitalId } from "@repo/design-system/components/contents/chemistry/orbital/wave";
 import {
-  boundaryDensity,
   OrbitalIdSchema,
   orbitalNumbers,
   orbitalReach,
   radialNodes,
-  sampleCloud,
-  waveGrid,
 } from "@repo/design-system/components/contents/chemistry/orbital/wave";
-import { useInvalidateOnChange } from "@repo/design-system/components/contents/simulation/clock";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { Axes } from "@repo/design-system/components/three/axes";
-import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { Origin } from "@repo/design-system/components/three/origin";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -33,34 +29,9 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { getColor } from "@repo/design-system/lib/color";
-import { isMobileDevice } from "@repo/design-system/lib/device";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr, Option, Schema } from "effect";
 import type { ReactNode } from "react";
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { Color, DoubleSide, MeshPhysicalMaterial } from "three";
-import { MarchingCubes } from "three/examples/jsm/objects/MarchingCubes.js";
-
-/** How long one Bohr radius is in the scene, so a 3s cloud stands larger than a 1s one. */
-const BOHR = 0.17;
-
-/** How many candidate points the faint cloud inside the surface is sampled from, by device. */
-const CANDIDATES = { desktop: 160_000, phone: 60_000 } as const;
-
-/** How much brighter than base color a cloud's points glow in each theme. */
-const GLOW = { dark: 1.35, light: 0.92 } as const;
-
-/** The share of the electron's probability the drawn surface holds, as chemistry books draw an orbital. */
-const BOUNDARY_SHARE = 0.9;
-
-/** How many grid cells a side the boundary surface is traced through, by device. */
-const SURFACE_CELLS = { desktop: 72, phone: 48 } as const;
-
-/** The most triangles one lobe's surface may take, enough for a d lobe at the finest grid. */
-const SURFACE_TRIANGLES = 120_000;
+import { Suspense, useState } from "react";
 
 /** The words an orbital lab reads from its lesson. */
 interface OrbitalLabels {
@@ -82,11 +53,7 @@ interface OrbitalLabels {
  * An orbital lab: the electron cloud of a hydrogen orbital, thousands of
  * points crowding where the electron is most likely to be found, sampled from
  * the real wave function. Lobes of one sign glow amber and of the other
- * violet, so the nodal planes between them read at a glance, and a larger
- * shell stands larger. The footer reads the orbital, its quantum numbers, and
- * how many radial and angular nodes it has.
- *
- * @param orbitals - The orbitals to offer, in order
+ * violet, with nodal planes/cones and radial rings showing where psi = 0.
  */
 export function OrbitalCloudLab({
   description,
@@ -122,7 +89,7 @@ export function OrbitalCloudLab({
   }
 
   return (
-    <VisualCard>
+    <VisualCard onReset={() => setChosen(undefined)}>
       <VisualCardHeader description={description} title={title} />
 
       {offered.length > 1 ? (
@@ -185,178 +152,5 @@ export function OrbitalCloudLab({
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-/**
- * An orbital as chemistry books and molecular software draw it: the surface
- * that holds 90% of the electron's probability, one glossy translucent shell
- * per sign of the wave function, over a faint cloud of sampled points that
- * shows where the electron is most likely found, around a small bright
- * nucleus.
- */
-function OrbitalCloud({ id }: { readonly id: OrbitalId }) {
-  useInvalidateOnChange(id);
-  const resolvedTheme = useTheme((state) => state.resolvedTheme);
-  const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
-  const phone = isMobileDevice();
-  const cells = phone ? SURFACE_CELLS.phone : SURFACE_CELLS.desktop;
-  const surface = useMemo(() => {
-    const wave = waveGrid(id, cells);
-    const level = boundaryDensity(wave, BOUNDARY_SHARE);
-    return Arr.map(
-      [
-        { color: PLOT_COLORS.amber, phase: 1 },
-        { color: PLOT_COLORS.violet, phase: -1 },
-      ] as const,
-      (lobe) => ({
-        color: lobe.color,
-        field: Float32Array.from(wave, (value) =>
-          value * lobe.phase > 0 ? value * value : 0
-        ),
-        level,
-      })
-    );
-  }, [cells, id]);
-  const glow = isDarkTheme ? GLOW.dark : GLOW.light;
-  const geometry = useMemo(() => {
-    const cloud = sampleCloud(
-      id,
-      phone ? CANDIDATES.phone : CANDIDATES.desktop
-    );
-    const plus = new Color(PLOT_COLORS.amber).multiplyScalar(glow);
-    const minus = new Color(PLOT_COLORS.violet).multiplyScalar(glow);
-    return {
-      colors: Float32Array.from(
-        Arr.flatMap(cloud, (point) =>
-          (point.phase === 1 ? plus : minus).toArray()
-        )
-      ),
-      positions: Float32Array.from(
-        Arr.flatMap(cloud, (point) =>
-          Arr.map(point.position, (coordinate) => coordinate * BOHR)
-        )
-      ),
-    };
-  }, [glow, id, phone]);
-
-  return (
-    <group>
-      {Arr.map(surface, (lobe) => (
-        <OrbitalLobe
-          cells={cells}
-          color={lobe.color}
-          field={lobe.field}
-          key={`${id}-${lobe.color}`}
-          level={lobe.level}
-          size={orbitalReach(id) * BOHR}
-        />
-      ))}
-      <Points colors={geometry.colors} key={id} positions={geometry.positions}>
-        <PointMaterial
-          depthWrite={false}
-          opacity={isDarkTheme ? 0.42 : 0.48}
-          size={0.02}
-          sizeAttenuation
-          toneMapped={false}
-          transparent
-          vertexColors
-        />
-      </Points>
-      <mesh>
-        <sphereGeometry args={[0.045, 28, 20]} />
-        <meshStandardMaterial
-          color={isDarkTheme ? getColor("WHITE") : getColor("SLATE", 800)}
-          emissive={isDarkTheme ? getColor("WHITE") : PLOT_COLORS.amber}
-          emissiveIntensity={isDarkTheme ? 2.4 : 0.6}
-          roughness={0.2}
-        />
-      </mesh>
-    </group>
-  );
-}
-
-/**
- * One lobe sign's boundary surface, traced once by marching cubes through
- * the density of that sign, at the level that holds 90% of the probability,
- * and drawn as glossy translucent glass so the cloud inside still shows.
- */
-function OrbitalLobe({
-  cells,
-  color,
-  field,
-  level,
-  size,
-}: {
-  readonly cells: number;
-  readonly color: string;
-  readonly field: Float32Array;
-  readonly level: number;
-  readonly size: number;
-}) {
-  const shell = useMemo(() => {
-    const cubes = new MarchingCubes(
-      cells,
-      new MeshPhysicalMaterial({
-        clearcoat: 1,
-        clearcoatRoughness: 0.06,
-        color,
-        depthWrite: false,
-        envMapIntensity: 1.35,
-        metalness: 0.04,
-        opacity: 0.6,
-        roughness: 0.14,
-        side: DoubleSide,
-        transparent: true,
-      }),
-      false,
-      false,
-      SURFACE_TRIANGLES
-    );
-    cubes.field.set(field);
-    cubes.isolation = level;
-    cubes.update();
-    return cubes;
-  }, [cells, color, field, level]);
-
-  useEffect(
-    () => () => {
-      shell.geometry.dispose();
-      Arr.map(Arr.ensure(shell.material), (material) => material.dispose());
-    },
-    [shell]
-  );
-
-  return <primitive object={shell} scale={size} />;
-}
-
-/**
- * Unbounded Cartesian coordinate axes through the nucleus (`Axes`), matching
- * the mathematics coordinate system so X, Y, and Z run edge-to-edge without
- * artificial truncation from any camera angle.
- */
-function OrbitalAxes() {
-  return (
-    <CameraBounds exclude>
-      <Axes reach={100} showLabels showZAxis />
-      <Origin color={PLOT_COLORS.slate} size={0.05} />
-    </CameraBounds>
-  );
-}
-
-/** Frames the widest offered cloud from slightly above, farther back on a narrow card. */
-function OrbitalCamera({ reach }: { readonly reach: number }) {
-  const size = useThree((state) => state.size);
-  const narrow = size.width < size.height * 1.2;
-  const distance = reach * (narrow ? 3.6 : 2.95);
-  return (
-    <CameraControls
-      cameraPosition={[distance * 0.56, distance * 0.36, distance * 0.74]}
-      cameraTarget={[0, 0, 0]}
-      fov={40}
-      maxDistance={distance * 2.2}
-      minDistance={reach * 0.65}
-      orbitOnPlay
-    />
   );
 }
