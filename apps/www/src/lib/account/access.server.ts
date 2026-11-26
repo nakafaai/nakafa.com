@@ -18,7 +18,7 @@ export const readToken = Effect.fn("www.account.token")(function* () {
 });
 
 /** Ends the request with a 307 to sign-in, the answer of the reference's `admitAccountRoute`. */
-export const redirectToAuth = Effect.fn("www.account.redirect")(function* (
+const redirectToAuth = Effect.fn("www.account.redirect")(function* (
   locale: Locale
 ) {
   return yield* Effect.die(

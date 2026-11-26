@@ -68,6 +68,8 @@ export function useTryoutSetColumns() {
       cell: (info) => <TryoutSetName row={info.row.original} />,
       header: tCommon("name"),
       id: "title",
+      // A set's name is short, such as Set 1, so it holds no more than a short name's room.
+      width: "short",
     }),
     setColumns.choice((row) => row.level, {
       cell: (info) => <TryoutLevel level={info.row.original.level} />,

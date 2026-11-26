@@ -2,14 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { Schema } from "effect";
 import { ChatInput, LocaleInput } from "@/lib/account/input";
 
-/** Home: the onboarding gate, the account name and the recently viewed subjects. */
-export const homeScreenFn = createServerFn({ method: "GET" })
-  .validator(Schema.toStandardSchemaV1(LocaleInput))
-  .handler(async (options) => {
-    const { homeScreenHandler } = await import("@/lib/account/home.server");
-    return homeScreenHandler(options);
-  });
-
 /** The chat sidebar that every chat page shows. */
 export const chatSidebarScreenFn = createServerFn({ method: "GET" }).handler(
   async (options) => {

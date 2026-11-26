@@ -29,6 +29,7 @@ import {
   DialogTitle,
 } from "@ui-sdk/react/dialog";
 import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type * as React from "react";
 import { createContext, use, useState } from "react";
@@ -144,6 +145,42 @@ function Command({
 }
 
 /**
+ * Where the search field's parts stand. The palette's field stands in its tinted window, padded, with its icon over
+ * the card of rows under it (`palette`). A picker's field is the popup's first row, flush with its edges, so its icon,
+ * its words and its clear button stand on the lines the picker's label, option icons and ticks stand on, 12px from
+ * the popup's start, and its 40px row leaves the icon 12px from its top and bottom too (`list`).
+ */
+const commandInputVariants = cva(
+  "relative flex shrink-0 items-center has-[input:placeholder-shown]:[--command-clear:hidden]",
+  {
+    defaultVariants: { inset: "palette" },
+    variants: {
+      inset: { list: "", palette: "px-2.5 py-1.5" },
+    },
+  }
+);
+
+const commandInputIconVariants = cva(
+  "text-muted-foreground pointer-events-none absolute opacity-80",
+  {
+    defaultVariants: { inset: "palette" },
+    variants: {
+      inset: { list: "start-3", palette: "start-5.5" },
+    },
+  }
+);
+
+const commandInputClearVariants = cva(
+  "[visibility:var(--command-clear,visible)] absolute",
+  {
+    defaultVariants: { inset: "palette" },
+    variants: {
+      inset: { list: "end-1", palette: "end-3" },
+    },
+  }
+);
+
+/**
  * The search field of a command list, with its search icon and a button that empties it. It does not autofocus: the
  * dialog or the popup around it focuses it when it opens, by its `initialFocus`.
  */
@@ -151,25 +188,27 @@ function CommandInput({
   "aria-label": ariaLabel,
   className,
   clearLabel,
+  inset,
   placeholder,
   ...props
-}: Omit<React.ComponentProps<typeof CommandInputPrimitive>, "className"> & {
-  className?: string | undefined;
-  /** The name of the button that empties the search, in the reader's language. */
-  clearLabel: string;
-  /** What the box shows while empty, which says what to search for. It names the box, unless `aria-label` does. */
-  placeholder: string;
-}) {
+}: Omit<React.ComponentProps<typeof CommandInputPrimitive>, "className"> &
+  VariantProps<typeof commandInputVariants> & {
+    className?: string | undefined;
+    /** The name of the button that empties the search, in the reader's language. */
+    clearLabel: string;
+    /** What the box shows while empty, which says what to search for. It names the box, unless `aria-label` does. */
+    placeholder: string;
+  }) {
   const controller = use(CommandControllerContext);
 
   return (
     <div
-      className="relative flex shrink-0 items-center px-2.5 py-1.5 has-[input:placeholder-shown]:[--command-clear:hidden]"
+      className={commandInputVariants({ inset })}
       data-slot="command-input-wrapper"
     >
       <HugeIcons
         aria-hidden="true"
-        className="text-muted-foreground pointer-events-none absolute start-5.5 opacity-80"
+        className={commandInputIconVariants({ inset })}
         icon={Search02Icon}
       />
       <CommandInputPrimitive
@@ -184,7 +223,7 @@ function CommandInput({
         {...props}
       />
       <Button
-        className="[visibility:var(--command-clear,visible)] absolute end-3"
+        className={commandInputClearVariants({ inset })}
         onClick={() => {
           controller?.setQuery("");
           controller?.focus();

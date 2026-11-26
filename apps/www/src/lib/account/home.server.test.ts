@@ -1,20 +1,12 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
-import contents from "@repo/backend/confect/_generated/refs/contents";
-import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
-import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
-import progress from "@repo/backend/confect/_generated/refs/progress";
-import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import { EMPTY_TALLY } from "@repo/backend/confect/progress/schema";
 import { isRedirect } from "@tanstack/react-router";
-import { Array as Arr, Deferred, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import {
   chatScreenHandler,
   chatSidebarScreenHandler,
-  homeScreenHandler,
   notificationsScreenHandler,
 } from "@/lib/account/home.server";
 
@@ -63,31 +55,6 @@ beforeEach(() => {
   mocks.scheduleCurrentServerExceptionCapture.mockReturnValue(Effect.void);
 });
 
-const account = {
-  appUser: { _id: "users-1", name: "Nabil", username: "nabil" },
-};
-
-/** The try-out hub: every country that holds try-outs. */
-const HUB = {
-  countries: [
-    {
-      countryCode: "ID",
-      countryKey: "indonesia",
-      examCount: 2,
-      publicPath: "try-out/indonesia",
-      title: "Indonesia",
-    },
-    {
-      countryCode: "DE",
-      countryKey: "germany",
-      examCount: 1,
-      publicPath: "try-out/germany",
-      title: "Germany",
-    },
-  ],
-  sourceRevision: null,
-};
-
 /** Answers each Confect query with its value and fails any other query. */
 function answerQueries(answers: ReadonlyArray<readonly [unknown, unknown]>) {
   mocks.preloadConfectQuery.mockImplementation((ref) =>
@@ -117,205 +84,6 @@ function sessionWith(token: Option.Option<string>) {
     Effect.succeed(Effect.succeed({ convexToken: token }))
   );
 }
-
-describe("homeScreenHandler", () => {
-  it("sends a visitor to sign-in", async () => {
-    sessionWith(Option.none());
-    const cause = await failureOf(
-      homeScreenHandler({ data: { locale: "en" } })
-    );
-    expect(isRedirect(cause)).toBe(true);
-  });
-
-  it("sends a signed-in visitor who is not authenticated to sign-in", async () => {
-    sessionWith(Option.some("token"));
-    answerQueries([
-      [
-        onboarding.queries.getStatus,
-        { isAuthenticated: false, isRequired: false },
-      ],
-      [auth.queries.getCurrentUser, null],
-      [contents.queries.recent.getRecentlyViewed, []],
-      [progress.queries.growth, null],
-      [progress.queries.week, null],
-      [progress.queries.leaders, []],
-      [tryouts.queries.history.recent, []],
-      [learningPreferences.queries.getCurrentTryout, null],
-      [tryouts.queries.catalog.getHubPage, HUB],
-    ]);
-    const cause = await failureOf(
-      homeScreenHandler({ data: { locale: "en" } })
-    );
-    expect(isRedirect(cause)).toBe(true);
-  });
-
-  it("sends a learner who must finish onboarding to the onboarding page", async () => {
-    sessionWith(Option.some("token"));
-    answerQueries([
-      [
-        onboarding.queries.getStatus,
-        { isAuthenticated: true, isRequired: true },
-      ],
-      [auth.queries.getCurrentUser, account],
-      [contents.queries.recent.getRecentlyViewed, []],
-      [progress.queries.growth, null],
-      [progress.queries.week, null],
-      [progress.queries.leaders, []],
-      [tryouts.queries.history.recent, []],
-      [learningPreferences.queries.getCurrentTryout, null],
-      [tryouts.queries.catalog.getHubPage, HUB],
-    ]);
-    const cause = await failureOf(
-      homeScreenHandler({ data: { locale: "en" } })
-    );
-    expect(isRedirect(cause)).toBe(true);
-  });
-
-  it("answers the home screen with the name, the progress, the week, the last try-outs and the last lesson", async () => {
-    sessionWith(Option.some("token"));
-    const week = { days: [], streak: 2, today: "2026-11-09" };
-    const attempt = {
-      answered: 4,
-      attemptId: "attempt-1",
-      correct: 0,
-      countryCode: "ID",
-      examKey: "snbt",
-      expiresAt: 2000,
-      locale: "en",
-      part: { key: "quantitative-knowledge", title: "Quantitative knowledge" },
-      publicPath: "try-out/indonesia/snbt/2027/set-1",
-      questions: 160,
-      score: null,
-      startedAt: 1000,
-      status: "in-progress",
-      title: "Set 1",
-      track: "UTBK",
-    };
-    answerQueries([
-      [
-        onboarding.queries.getStatus,
-        { isAuthenticated: true, isRequired: false },
-      ],
-      [auth.queries.getCurrentUser, account],
-      [
-        contents.queries.recent.getRecentlyViewed,
-        [{ content_id: "math-1", materialDomain: "mathematics" }],
-      ],
-      [
-        progress.queries.growth,
-        {
-          lifetime: 30,
-          tally: EMPTY_TALLY,
-        },
-      ],
-      [progress.queries.week, week],
-      [progress.queries.leaders, []],
-      [tryouts.queries.history.recent, [attempt]],
-      [learningPreferences.queries.getCurrentTryout, null],
-    ]);
-    const screen = await homeScreenHandler({ data: { locale: "en" } });
-    expect(screen.name).toBe("Nabil");
-    expect(screen.recent).toEqual([
-      { content_id: "math-1", materialDomain: "mathematics" },
-    ]);
-    expect(screen.recentLooks).toHaveLength(1);
-    expect(screen.growth).toMatchObject({
-      level: 1,
-      lifetime: 30,
-    });
-    expect(screen.week).toEqual(week);
-    expect(screen.attempts).toEqual([attempt]);
-    // A learner who has sat a try-out is shown it, so nothing is read for where to begin.
-    expect(screen.start).toBeNull();
-    expect(mocks.preloadConfectQuery).not.toHaveBeenCalledWith(
-      tryouts.queries.catalog.getHubPage,
-      expect.anything(),
-      expect.anything()
-    );
-    expect(screen.username).toBe(account.appUser.username);
-    expect(mocks.preloadConfectQuery).toHaveBeenCalledWith(
-      contents.queries.recent.getRecentlyViewed,
-      { limit: 3, locale: "en" },
-      "token"
-    );
-    expect(mocks.preloadConfectQuery).toHaveBeenCalledWith(
-      tryouts.queries.history.recent,
-      { locale: "en" },
-      "token"
-    );
-    expect(screen.seo).toMatchObject({
-      canonicalPath: "/en",
-      indexable: false,
-    });
-  });
-
-  it.effect("reads the gate and the page together, in one round trip", () =>
-    Effect.gen(function* () {
-      sessionWith(Option.some("token"));
-      const pageRead = yield* Deferred.make<void>();
-      mocks.preloadConfectQuery.mockImplementation((ref) => {
-        if (ref === onboarding.queries.getStatus) {
-          // The gate answers only once a read of the page has gone out beside it.
-          return Deferred.await(pageRead).pipe(
-            Effect.as({ isAuthenticated: true, isRequired: false })
-          );
-        }
-        return Deferred.succeed(pageRead, undefined).pipe(
-          Effect.as(ref === auth.queries.getCurrentUser ? account : [])
-        );
-      });
-      const screen = yield* Effect.promise(() =>
-        homeScreenHandler({ data: { locale: "en" } })
-      );
-      expect(screen.name).toBe("Nabil");
-    })
-  );
-
-  it("answers the home screen with no recent subjects, try-outs or leaderboard when the server refuses them", async () => {
-    sessionWith(Option.some("token"));
-    mocks.preloadConfectQuery.mockImplementation((ref) => {
-      if (ref === onboarding.queries.getStatus) {
-        return Effect.succeed({ isAuthenticated: true, isRequired: false });
-      }
-      if (
-        ref === contents.queries.recent.getRecentlyViewed ||
-        ref === progress.queries.leaders ||
-        ref === tryouts.queries.history.recent
-      ) {
-        return Effect.fail({ _tag: "ReleaseError" });
-      }
-      return Effect.succeed(account);
-    });
-    const screen = await homeScreenHandler({ data: { locale: "en" } });
-    expect(screen.attempts).toStrictEqual([]);
-    expect(screen.leaders).toStrictEqual([]);
-    expect(screen.recent).toStrictEqual([]);
-    expect(screen.recentLooks).toStrictEqual([]);
-    expect(screen.name).toBe("Nabil");
-  });
-
-  it("answers the home screen without a name when the account is gone", async () => {
-    sessionWith(Option.some("token"));
-    answerQueries([
-      [
-        onboarding.queries.getStatus,
-        { isAuthenticated: true, isRequired: false },
-      ],
-      [auth.queries.getCurrentUser, null],
-      [contents.queries.recent.getRecentlyViewed, []],
-      [progress.queries.growth, null],
-      [progress.queries.week, null],
-      [progress.queries.leaders, []],
-      [tryouts.queries.history.recent, []],
-      [learningPreferences.queries.getCurrentTryout, null],
-      [tryouts.queries.catalog.getHubPage, HUB],
-    ]);
-    const screen = await homeScreenHandler({ data: { locale: "en" } });
-    expect(screen.name).toBeUndefined();
-    expect(screen.week).toBeUndefined();
-    expect(screen.growth).toMatchObject({ level: 1, lifetime: 0 });
-  });
-});
 
 describe("chatSidebarScreenHandler", () => {
   it("reads no chats for a visitor", async () => {

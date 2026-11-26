@@ -1,4 +1,3 @@
-import "@tanstack/react-start/server-only";
 import type { TrendingSubject } from "@repo/backend/confect/lib/validators/trending";
 import { getLessonIcons } from "@repo/contents/curriculum/lesson";
 import type { TileLook } from "@repo/design-system/lib/look";
@@ -17,8 +16,9 @@ import { Array as Arr, Tuple } from "effect";
  * has a free one, and a lesson that stands in both lists draws two different
  * icons on that page.
  *
- * The families hold many icons that a row never needs, so this stays on the
- * server and passes each row only the icon it took.
+ * The families hold many icons that a row never needs, so the home loader
+ * imports this module dynamically on demand, keeping the icon families out of
+ * every page's first JavaScript bundle.
  *
  * @param materials - The rows of one list, in the order they show
  * @param shown - The looks of the lists that the page shows before this one
