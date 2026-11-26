@@ -133,7 +133,7 @@ function DrawerPanel({
  * shadcn's own. In a row, the actions keep their own widths and stand at the end, as a pane's footer holds them.
  */
 const drawerFooterVariants = cva(
-  "bg-muted/70 pb-[max(--spacing(4),env(safe-area-inset-bottom))] mt-auto flex shrink-0 gap-2 border-t p-4",
+  "bg-muted/70 pb-[max(--spacing(4),env(safe-area-inset-bottom))] mt-auto flex shrink-0 gap-2 border-t px-4 pt-4",
   {
     defaultVariants: { layout: "stack" },
     variants: {
