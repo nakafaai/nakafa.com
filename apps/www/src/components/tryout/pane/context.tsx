@@ -1,7 +1,7 @@
 import type { Ref } from "@confect/core";
-import type island from "@repo/backend/confect/_generated/refs/island";
+import type progress from "@repo/backend/confect/_generated/refs/progress";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import { EMPTY_TALLY } from "@repo/backend/confect/island/schema";
+import { EMPTY_TALLY } from "@repo/backend/confect/progress/schema";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { Option } from "effect";
 import { createContext } from "react";
@@ -9,8 +9,8 @@ import { NO_CLAIMS } from "@/components/tryout/pane/model";
 import type { TryoutSetPaneProps } from "@/components/tryout/pane/set";
 import { readSetSections } from "@/components/tryout/set/sections";
 
-type Growth = NonNullable<Ref.Returns<typeof island.queries.growth>>;
-type Claims = NonNullable<Ref.Returns<typeof island.queries.claims>>;
+type Growth = NonNullable<Ref.Returns<typeof progress.queries.growth>>;
+type Claims = NonNullable<Ref.Returns<typeof progress.queries.claims>>;
 type Board = Ref.Returns<typeof tryouts.queries.ranks.bySet>;
 
 /**

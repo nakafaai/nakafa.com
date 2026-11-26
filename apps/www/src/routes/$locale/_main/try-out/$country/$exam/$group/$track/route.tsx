@@ -30,10 +30,10 @@ import { MessagesProvider } from "@/lib/i18n/provider";
 import { readStaticData } from "@/lib/static/data";
 
 /**
- * The messages the track's pages read that the student shell does not carry: Island, for the learner's level,
- * medals and leaderboard in the set's pane (ADR 0047, D27).
+ * The messages the track's pages read that the student shell does not carry: Progress, for the learner's level,
+ * medals and leaderboard in the set's pane.
  */
-const TRACK_NAMESPACES = ["Island"] as const;
+const TRACK_NAMESPACES = ["Progress"] as const;
 
 const localeRoute = getRouteApi("/$locale");
 const mainRoute = getRouteApi("/$locale/_main");

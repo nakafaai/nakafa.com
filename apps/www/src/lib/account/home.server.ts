@@ -4,15 +4,16 @@ import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import contents from "@repo/backend/confect/_generated/refs/contents";
-import island from "@repo/backend/confect/_generated/refs/island";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
+import progress from "@repo/backend/confect/_generated/refs/progress";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { notFound, redirect } from "@tanstack/react-router";
 import { Clock, Effect, Option, Schema } from "effect";
 import { createTranslator } from "use-intl/core";
 import { getMaterialLooks } from "@/components/home/look";
+import { progressSummary } from "@/components/progress/level";
 import {
   accountHandler,
   admitAccount,
@@ -24,13 +25,12 @@ import type { ScreenSeo } from "@/lib/account/head";
 import type { ChatInput, LocaleInput } from "@/lib/account/input";
 import { readTryoutStart } from "@/lib/account/start.server";
 import { readOptional, readRequired } from "@/lib/data/read.server";
-import { entryOf } from "@/lib/island/entry";
 
 /**
  * Home: the onboarding gate, the account name and profile name, the learner's
- * island and their week, the try-outs they sat last, and the lessons they
- * opened last. The gate's status and the page's reads
- * go out together, so the screen waits on one Convex round trip.
+ * progress and week, the try-outs they sat last, and the lessons they opened
+ * last. The gate's status and the page's reads go out together, so the screen
+ * waits on one Convex round trip.
  */
 export const homeScreenHandler = accountHandler(
   ({ locale }: typeof LocaleInput.Type) =>
@@ -41,7 +41,7 @@ export const homeScreenHandler = accountHandler(
         messages,
         account,
         recentRows,
-        own,
+        growth,
         week,
         leaders,
         attempts,
@@ -57,9 +57,9 @@ export const homeScreenHandler = accountHandler(
             { locale, limit: 3 },
             token
           ),
-          readOptional(island.queries.own, {}, token),
-          readOptional(island.queries.week, {}, token),
-          readOptional(island.queries.leaders, {}, token),
+          readOptional(progress.queries.growth, {}, token),
+          readOptional(progress.queries.week, {}, token),
+          readOptional(progress.queries.leaders, {}, token),
           readOptional(tryouts.queries.history.recent, {}, token),
           readOptional(
             learningPreferences.queries.getCurrentTryout,
@@ -103,7 +103,7 @@ export const homeScreenHandler = accountHandler(
           sat.length === 0
             ? yield* readTryoutStart(locale, preference, token)
             : null,
-        island: entryOf(own, account?.appUser._id),
+        growth: progressSummary(growth),
         leaders: leaders ?? [],
         name: Option.getOrUndefined(
           Option.map(Option.fromNullishOr(account), (user) => user.appUser.name)

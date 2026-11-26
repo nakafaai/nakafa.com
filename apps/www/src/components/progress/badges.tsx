@@ -28,13 +28,13 @@ function BadgesMore({ username }: { username: string }) {
 }
 
 /**
- * The learner's best medals in the world pane (the owner's home notes, 14
- * Nov): one row of four, so the pane never fills with a wall that has no end.
- * The whole wall is on their profile, one press away.
+ * The learner's best medals in the progress pane: one row of four, so the pane
+ * never fills with a wall that has no end. The whole wall is on their profile,
+ * one press away.
  */
 export function BadgesSection() {
-  const t = useTranslations("Island");
-  const { island, username } = useProgress();
+  const t = useTranslations("Progress");
+  const { growth, username } = useProgress();
   return (
     <PaneSection
       action={Option.match(username, {
@@ -44,7 +44,7 @@ export function BadgesSection() {
       title={t("badges-title")}
     >
       <ul className="grid grid-cols-4 gap-x-3">
-        {Arr.map(bestOf(wallOf(island.tally), SHOWN), (medal) => (
+        {Arr.map(bestOf(wallOf(growth.tally), SHOWN), (medal) => (
           <MedalItem key={medal.name} medal={medal} />
         ))}
       </ul>

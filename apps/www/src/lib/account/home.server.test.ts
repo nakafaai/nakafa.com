@@ -3,12 +3,12 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import contents from "@repo/backend/confect/_generated/refs/contents";
-import island from "@repo/backend/confect/_generated/refs/island";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
+import progress from "@repo/backend/confect/_generated/refs/progress";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import { EMPTY_TALLY } from "@repo/backend/confect/island/schema";
+import { EMPTY_TALLY } from "@repo/backend/confect/progress/schema";
 import { isRedirect } from "@tanstack/react-router";
 import { Array as Arr, Deferred, Effect, Option } from "effect";
 import {
@@ -136,9 +136,9 @@ describe("homeScreenHandler", () => {
       ],
       [auth.queries.getCurrentUser, null],
       [contents.queries.recent.getRecentlyViewed, []],
-      [island.queries.own, null],
-      [island.queries.week, null],
-      [island.queries.leaders, []],
+      [progress.queries.growth, null],
+      [progress.queries.week, null],
+      [progress.queries.leaders, []],
       [tryouts.queries.history.recent, []],
       [learningPreferences.queries.getCurrentTryout, null],
       [tryouts.queries.catalog.getHubPage, HUB],
@@ -158,9 +158,9 @@ describe("homeScreenHandler", () => {
       ],
       [auth.queries.getCurrentUser, account],
       [contents.queries.recent.getRecentlyViewed, []],
-      [island.queries.own, null],
-      [island.queries.week, null],
-      [island.queries.leaders, []],
+      [progress.queries.growth, null],
+      [progress.queries.week, null],
+      [progress.queries.leaders, []],
       [tryouts.queries.history.recent, []],
       [learningPreferences.queries.getCurrentTryout, null],
       [tryouts.queries.catalog.getHubPage, HUB],
@@ -171,7 +171,7 @@ describe("homeScreenHandler", () => {
     expect(isRedirect(cause)).toBe(true);
   });
 
-  it("answers the home screen with the name, the island, the week, the last try-outs and the last lesson", async () => {
+  it("answers the home screen with the name, the progress, the week, the last try-outs and the last lesson", async () => {
     sessionWith(Option.some("token"));
     const week = { days: [], streak: 2, today: "2026-11-09" };
     const attempt = {
@@ -201,17 +201,14 @@ describe("homeScreenHandler", () => {
         [{ content_id: "math-1", materialDomain: "mathematics" }],
       ],
       [
-        island.queries.own,
+        progress.queries.growth,
         {
-          access: "link",
-          balance: 30,
-          blueprints: [],
           lifetime: 30,
           tally: EMPTY_TALLY,
         },
       ],
-      [island.queries.week, week],
-      [island.queries.leaders, []],
+      [progress.queries.week, week],
+      [progress.queries.leaders, []],
       [tryouts.queries.history.recent, [attempt]],
       [learningPreferences.queries.getCurrentTryout, null],
     ]);
@@ -221,8 +218,7 @@ describe("homeScreenHandler", () => {
       { content_id: "math-1", materialDomain: "mathematics" },
     ]);
     expect(screen.recentLooks).toHaveLength(1);
-    expect(screen.island).toMatchObject({
-      balance: 30,
+    expect(screen.growth).toMatchObject({
       level: 1,
       lifetime: 30,
     });
@@ -277,7 +273,7 @@ describe("homeScreenHandler", () => {
       }
       if (
         ref === contents.queries.recent.getRecentlyViewed ||
-        ref === island.queries.leaders ||
+        ref === progress.queries.leaders ||
         ref === tryouts.queries.history.recent
       ) {
         return Effect.fail({ _tag: "ReleaseError" });
@@ -301,9 +297,9 @@ describe("homeScreenHandler", () => {
       ],
       [auth.queries.getCurrentUser, null],
       [contents.queries.recent.getRecentlyViewed, []],
-      [island.queries.own, null],
-      [island.queries.week, null],
-      [island.queries.leaders, []],
+      [progress.queries.growth, null],
+      [progress.queries.week, null],
+      [progress.queries.leaders, []],
       [tryouts.queries.history.recent, []],
       [learningPreferences.queries.getCurrentTryout, null],
       [tryouts.queries.catalog.getHubPage, HUB],
@@ -311,7 +307,7 @@ describe("homeScreenHandler", () => {
     const screen = await homeScreenHandler({ data: { locale: "en" } });
     expect(screen.name).toBeUndefined();
     expect(screen.week).toBeUndefined();
-    expect(screen.island).toMatchObject({ level: 1, lifetime: 0 });
+    expect(screen.growth).toMatchObject({ level: 1, lifetime: 0 });
   });
 });
 

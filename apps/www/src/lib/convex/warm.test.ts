@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import island from "@repo/backend/confect/_generated/refs/island";
+import progress from "@repo/backend/confect/_generated/refs/progress";
 import type { FunctionReference } from "convex/server";
 import { getFunctionName } from "convex/server";
 import { Effect, Fiber, MutableHashSet, MutableList, Option } from "effect";
@@ -59,7 +59,7 @@ describe("warmQuery", () => {
   it.effect("warms nothing on a page that made no client", () =>
     Effect.gen(function* () {
       made.read.mockReturnValue(Option.none());
-      expect(yield* warmQuery(island.queries.growth, {})).toEqual(
+      expect(yield* warmQuery(progress.queries.growth, {})).toEqual(
         Option.none()
       );
     })
@@ -71,11 +71,11 @@ describe("warmQuery", () => {
       Effect.gen(function* () {
         const convex = client("none");
         const fiber = yield* Effect.forkChild(
-          warmQuery(island.queries.growth, {})
+          warmQuery(progress.queries.growth, {})
         );
         yield* Effect.yieldNow;
         expect(convex.watched()).toEqual([
-          island.queries.growth.convexFunctionName,
+          progress.queries.growth.convexFunctionName,
         ]);
         expect(fiber.pollUnsafe()).toBeUndefined();
 
@@ -91,13 +91,13 @@ describe("warmQuery", () => {
   it.effect("ends at once for an answer the client already holds", () =>
     Effect.gen(function* () {
       const valueClient = client("value");
-      expect(yield* warmQuery(island.queries.growth, {})).toEqual(
+      expect(yield* warmQuery(progress.queries.growth, {})).toEqual(
         Option.some({ lifetime: 0 })
       );
       expect(valueClient.open()).toBe(1);
 
       const failureClient = client("failure");
-      expect(yield* warmQuery(island.queries.growth, {})).toEqual(
+      expect(yield* warmQuery(progress.queries.growth, {})).toEqual(
         Option.none()
       );
       expect(failureClient.open()).toBe(1);

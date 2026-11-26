@@ -112,10 +112,6 @@ import integrationWebhooks from "./tables/integrationWebhooks";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
-import islandAwards from "./tables/islandAwards";
-import islandChunks from "./tables/islandChunks";
-import islandGuests from "./tables/islandGuests";
-import islands from "./tables/islands";
 import journalCursors from "./tables/journalCursors";
 import journalEntries from "./tables/journalEntries";
 import learningEngagementQueue from "./tables/learningEngagementQueue";
@@ -149,6 +145,8 @@ import practiceQuestions from "./tables/practiceQuestions";
 import practiceSessions from "./tables/practiceSessions";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
+import progress from "./tables/progress";
+import progressAwards from "./tables/progressAwards";
 import pushSubscriptions from "./tables/pushSubscriptions";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
@@ -298,10 +296,6 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly irtCalibrationRuns: typeof irtCalibrationRuns;
   readonly irtScaleItems: typeof irtScaleItems;
   readonly irtScaleVersions: typeof irtScaleVersions;
-  readonly islandAwards: typeof islandAwards;
-  readonly islandChunks: typeof islandChunks;
-  readonly islandGuests: typeof islandGuests;
-  readonly islands: typeof islands;
   readonly journalCursors: typeof journalCursors;
   readonly journalEntries: typeof journalEntries;
   readonly learningEngagementQueue: typeof learningEngagementQueue;
@@ -335,6 +329,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly practiceSessions: typeof practiceSessions;
   readonly programBuckets: typeof programBuckets;
   readonly programCatalog: typeof programCatalog;
+  readonly progress: typeof progress;
+  readonly progressAwards: typeof progressAwards;
   readonly pushSubscriptions: typeof pushSubscriptions;
   readonly quranRows: typeof quranRows;
   readonly quranSearch: typeof quranSearch;
@@ -483,10 +479,6 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   irtCalibrationRuns,
   irtScaleItems,
   irtScaleVersions,
-  islandAwards,
-  islandChunks,
-  islandGuests,
-  islands,
   journalCursors,
   journalEntries,
   learningEngagementQueue,
@@ -520,6 +512,8 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   practiceSessions,
   programBuckets,
   programCatalog,
+  progress,
+  progressAwards,
   pushSubscriptions,
   quranRows,
   quranSearch,

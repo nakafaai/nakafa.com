@@ -12,6 +12,7 @@ import { readPathSegments } from "@/lib/routing/public/tryout/route";
 const GONE_FAMILIES = HashSet.make(
   "ask",
   "exercises",
+  "island",
   "latihan",
   "practice",
   "subject"

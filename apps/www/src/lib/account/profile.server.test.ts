@@ -5,8 +5,8 @@ import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import comments from "@repo/backend/confect/_generated/refs/comments";
-import island from "@repo/backend/confect/_generated/refs/island";
 import posts from "@repo/backend/confect/_generated/refs/posts";
+import progress from "@repo/backend/confect/_generated/refs/progress";
 import users from "@repo/backend/confect/_generated/refs/users";
 import { isNotFound } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option } from "effect";
@@ -244,7 +244,7 @@ describe("profileBadgesHandler", () => {
     };
     answerQueries([
       [users.queries.getProfileByUsername, profile],
-      [island.queries.medals, medals],
+      [progress.queries.medals, medals],
     ]);
     expect(
       await profileBadgesHandler({ data: { locale: "en", username: "Nabil" } })
@@ -253,13 +253,13 @@ describe("profileBadgesHandler", () => {
       seo: { canonicalPath: "/en/@nabil/badges", indexable: false },
     });
     expect(mocks.preloadConfectQuery).toHaveBeenCalledWith(
-      island.queries.medals,
+      progress.queries.medals,
       { username: profile.username },
       undefined
     );
     answerQueries([
       [users.queries.getProfileByUsername, profile],
-      [island.queries.medals, null],
+      [progress.queries.medals, null],
     ]);
     const cause = await failureOf(
       profileBadgesHandler({ data: { locale: "en", username: "nabil" } })

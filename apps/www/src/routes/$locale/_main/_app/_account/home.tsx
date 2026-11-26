@@ -10,7 +10,7 @@ import { HomeStreak } from "@/components/home/streak";
 import { HomeTryouts } from "@/components/home/tryouts";
 import { ClockProvider } from "@/components/player/now";
 import { ProgressContext, progressOf } from "@/components/progress/context";
-import { WorldPane } from "@/components/progress/pane";
+import { ProgressPane } from "@/components/progress/pane";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { Page } from "@/components/shared/page/frame";
 import {
@@ -42,14 +42,14 @@ export const Route = createFileRoute("/$locale/_main/_app/_account/home")({
  * only thing on the page in the primary colour: it opens the lesson they read
  * last, or the subjects when they have read none. The body is three sections
  * in the header's own column, each one concern: their run of days, the
- * try-outs they sat, and the lessons they opened. Their world stands beside
- * the page on a wide screen, and opens as a sheet from the first section on a
- * phone.
+ * try-outs they sat, and the lessons they opened. Their progress pane stands
+ * beside the page on a wide screen, and opens as a sheet from the first section
+ * on a phone.
  */
 function HomePage() {
   const {
     attempts,
-    island,
+    growth,
     leaders,
     name,
     now,
@@ -62,7 +62,7 @@ function HomePage() {
   return (
     <ProgressContext
       value={progressOf({
-        island,
+        growth,
         leaders,
         username: Option.fromUndefinedOr(username),
         week,
@@ -86,7 +86,7 @@ function HomePage() {
                 <HomeContinue looks={recentLooks} recent={recent} />
               </div>
             </PanesList>
-            <WorldPane />
+            <ProgressPane />
           </Panes>
         </Page>
       </PanesProvider>

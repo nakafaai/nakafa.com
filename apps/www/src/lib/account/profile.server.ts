@@ -4,8 +4,8 @@ import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import comments from "@repo/backend/confect/_generated/refs/comments";
-import island from "@repo/backend/confect/_generated/refs/island";
 import posts from "@repo/backend/confect/_generated/refs/posts";
+import progress from "@repo/backend/confect/_generated/refs/progress";
 import { notFound } from "@tanstack/react-router";
 import { Clock, Effect, String as Str } from "effect";
 import { createTranslator } from "use-intl/core";
@@ -162,7 +162,7 @@ export const profileBadgesHandler = accountHandler(
       const token = yield* readToken();
       const { profile } = yield* readProfileOrNotFound(username, token);
       const medals = yield* readRequired(
-        island.queries.medals,
+        progress.queries.medals,
         { username: profile.username },
         token
       );

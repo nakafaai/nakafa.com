@@ -3,7 +3,7 @@ import {
   DatabaseReader,
   QueryCtx,
 } from "@repo/backend/confect/_generated/services";
-import { leaderNameOf } from "@repo/backend/confect/island/leaders";
+import { leaderIdentityOf } from "@repo/backend/confect/progress/leaders";
 import { setRanks } from "@repo/backend/confect/tryouts/rank/board";
 import type { TryoutSetIdentity } from "@repo/backend/confect/tryouts/route";
 import { tryoutSetIdentityOf } from "@repo/backend/confect/tryouts/route";
@@ -39,18 +39,17 @@ const placeOf = (setIdentity: string, score: number) =>
     })
   ).pipe(Effect.map((above) => above + 1));
 
-/** A best as a board row: the best itself, its learner's first name and mascot, its score, and whether it is the viewer's. */
+/** A best as a board row: the best itself, its learner's public identity, its score, and whether it is the viewer's. */
 const rowOf = Effect.fn("tryouts.rank.rowOf")(function* (
   best: Docs["tryoutSetBests"],
   viewer: Option.Option<Docs["users"]["_id"]>
 ) {
   const database = yield* DatabaseReader;
   const user = yield* database.table("users").get(best.userId);
+  const identity = yield* leaderIdentityOf(user, viewer);
   return {
+    ...identity,
     id: best._id,
-    mascot: user.mascot,
-    name: leaderNameOf(user.name),
-    own: Option.exists(viewer, (id) => id === best.userId),
     score: best.publishedScore,
   };
 });

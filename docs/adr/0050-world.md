@@ -2,6 +2,8 @@
 
 ## Status
 
+Retired on 26 November 2026 by ADR 0051. The world game, its chunks, guest book, blueprints, routes, renderer, and recordings were removed in full.
+
 Accepted on 20 November 2026, on the owner's go-ahead of that day after playing the prototype. It replaces these decisions of ADR 0047: D3 (the world is blocks), D5's block gestures, D6 (edits as packed blocks), D7's shelves of blocks by level, D10's village laid from blocks, D13's block book, D14 (blocks settle), D16 (farming on block soil), D17 (the home's tiers of blocks), D23's ring of six isles, D37's synthesized sound and D45 (cottages with rooms). ADR 0047 D1 (a full-screen route), D2 (a renderer of our own), D4's palette, D9 (the budget), D11 and D25 (the species and their models), D20 (crisp pixels), D21 and D22 (true bodies with room), D24 and D50 (the living sea), D29 to D31 (levels, medals, the run of days), D32 and D33 (one wind, weather that lands), D43 and D51 (water with depth that mirrors its banks, a sun that casts shadows), D48 and D49 (bodies that move) and D54 (the villagers' day) hold and are carried onto the new world.
 
 ## Context

@@ -14,6 +14,9 @@ describe("gone addresses", () => {
       "/ask/pork-barrel-politics-definition-indonesia-examples",
       "/id/ask/what-is-a-unit-vector-and-its-purpose",
       "/ask/how-to-create-a-new-quadratic-equation-from-its-roots.md",
+      "/island",
+      "/id/island",
+      "/en/island/nabil",
     ]) {
       expect(isGoneAddress(pathname), pathname).toBe(true);
     }

@@ -1,8 +1,11 @@
-import { AWARD_RULES, EMPTY_TALLY } from "@repo/backend/confect/island/schema";
+import {
+  AWARD_RULES,
+  EMPTY_TALLY,
+} from "@repo/backend/confect/progress/schema";
 import type {
   Growth,
   SetClaims as SetClaimsSchema,
-} from "@repo/backend/confect/island/view";
+} from "@repo/backend/confect/progress/view";
 import { Array as Arr, HashSet, Option } from "effect";
 import type { CurrentAttempt } from "@/components/tryout/set/model";
 
@@ -11,7 +14,7 @@ type SetClaims = typeof SetClaimsSchema.Type;
 /** A set nobody has claimed anything of yet, as a visitor's pane reads it. */
 export const NO_CLAIMS: SetClaims = { sections: [], set: false, stars: 0 };
 
-/** How far a learner with no island yet grew: nothing, so they stand at level 1. */
+/** How far a learner with no progress yet grew: nothing, so they stand at level 1. */
 export const NO_GROWTH: typeof Growth.Type = {
   lifetime: 0,
   tally: EMPTY_TALLY,

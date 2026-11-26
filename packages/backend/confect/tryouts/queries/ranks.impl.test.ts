@@ -20,7 +20,7 @@ import { Array as Arr, Effect } from "effect";
 const identity = { ...FIXTURE_TRACK, locale: "id" as const, setKey: "set-1" };
 
 /** Seeds a learner named `name` with a started attempt of the fixture set, and answers the attempt. */
-const seedLearner = (world: TryoutWorld, name: string) =>
+const seedLearner = (world: TryoutWorld, name: string, username?: string) =>
   Effect.promise(() =>
     world.t.mutation(async (ctx) => {
       const learner = await seedAuthenticatedUser(ctx, {
@@ -28,6 +28,9 @@ const seedLearner = (world: TryoutWorld, name: string) =>
         now: TRYOUT_NOW,
         suffix: name.toLowerCase().replaceAll(" ", "-"),
       });
+      if (username !== undefined) {
+        await ctx.db.patch("users", learner.userId, { username });
+      }
       return insertStartedAttempt(ctx, learner.userId);
     })
   );
@@ -100,7 +103,7 @@ describe("tryouts/queries/ranks", () => {
       Effect.gen(function* () {
         const world = yield* tryoutWorld();
         const { attemptId } = yield* world.start();
-        const raka = yield* seedLearner(world, "Raka Pratama");
+        const raka = yield* seedLearner(world, "Raka Pratama", "raka");
         const salsa = yield* seedLearner(world, "Salsa");
         yield* score(world, attemptId, 600);
         yield* score(world, raka, 700);
@@ -122,9 +125,10 @@ describe("tryouts/queries/ranks", () => {
             own: false,
             place: 1,
             score: 800,
+            username: "raka",
           }),
-          expect.objectContaining({ place: 2, score: 600 }),
-          expect.objectContaining({ place: 2, score: 600 }),
+          expect.objectContaining({ place: 2, score: 600, username: null }),
+          expect.objectContaining({ place: 2, score: 600, username: null }),
         ]);
         expect(Arr.filter(board.leaders, (leader) => leader.own)).toEqual([
           expect.objectContaining({ place: 2, score: 600 }),

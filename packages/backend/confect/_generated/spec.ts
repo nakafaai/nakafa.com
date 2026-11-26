@@ -169,8 +169,6 @@ import integrations_reads from "../integrations/reads.spec";
 import integrations_tokens from "../integrations/tokens.spec";
 import integrations_webhooks from "../integrations/webhooks.spec";
 import integrations_writes from "../integrations/writes.spec";
-import island_mutations from "../island/mutations.spec";
-import island_queries from "../island/queries.spec";
 import journal_audit from "../journal/audit.spec";
 import learningPreferences_mutations from "../learningPreferences/mutations.spec";
 import learningPreferences_queries from "../learningPreferences/queries.spec";
@@ -215,6 +213,7 @@ import posts_mutations from "../posts/mutations.spec";
 import posts_queries from "../posts/queries.spec";
 import practice_sessions from "../practice/sessions.spec";
 import privacy_recovery from "../privacy/recovery.spec";
+import progress_queries from "../progress/queries.spec";
 import records_checks from "../records/checks.spec";
 import records_draw from "../records/draw.spec";
 import records_exports from "../records/exports.spec";
@@ -298,7 +297,6 @@ const spec: Spec.Spec<{
   readonly identity: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "identity", never, GroupSpec.NamedAt<typeof identity_cards, "cards"> | GroupSpec.NamedAt<typeof identity_logins, "logins"> | GroupSpec.NamedAt<typeof identity_seed, "seed">>, "identity">;
   readonly insight: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "insight", never, GroupSpec.NamedAt<typeof insight_calibration, "calibration"> | GroupSpec.NamedAt<typeof insight_drafts, "drafts"> | GroupSpec.NamedAt<typeof insight_narratives, "narratives"> | GroupSpec.NamedAt<typeof insight_observe, "observe"> | GroupSpec.NamedAt<typeof insight_practice, "practice"> | GroupSpec.NamedAt<typeof insight_reads, "reads"> | GroupSpec.NamedAt<typeof insight_retention, "retention"> | GroupSpec.NamedAt<typeof insight_tags, "tags">>, "insight">;
   readonly integrations: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "integrations", never, GroupSpec.NamedAt<typeof integrations_clients, "clients"> | GroupSpec.NamedAt<typeof integrations_devices, "devices"> | GroupSpec.NamedAt<typeof integrations_hooks, "hooks"> | GroupSpec.NamedAt<typeof integrations_reads, "reads"> | GroupSpec.NamedAt<typeof integrations_tokens, "tokens"> | GroupSpec.NamedAt<typeof integrations_webhooks, "webhooks"> | GroupSpec.NamedAt<typeof integrations_writes, "writes">>, "integrations">;
-  readonly island: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "island", never, GroupSpec.NamedAt<typeof island_mutations, "mutations"> | GroupSpec.NamedAt<typeof island_queries, "queries">>, "island">;
   readonly journal: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "journal", never, GroupSpec.NamedAt<typeof journal_audit, "audit">>, "journal">;
   readonly learningPreferences: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "learningPreferences", never, GroupSpec.NamedAt<typeof learningPreferences_mutations, "mutations"> | GroupSpec.NamedAt<typeof learningPreferences_queries, "queries">>, "learningPreferences">;
   readonly nina: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "nina", never, GroupSpec.NamedAt<typeof nina_brief, "brief"> | GroupSpec.NamedAt<typeof nina_conversation, "conversation"> | GroupSpec.NamedAt<typeof nina_documents, "documents"> | GroupSpec.NamedAt<typeof nina_focus, "focus"> | GroupSpec.NamedAt<typeof nina_judgment, "judgment"> | GroupSpec.NamedAt<typeof nina_lifecycle, "lifecycle"> | GroupSpec.NamedAt<typeof nina_memory, "memory"> | GroupSpec.NamedAt<typeof nina_messages, "messages"> | GroupSpec.NamedAt<typeof nina_phase, "phase"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof nina_portrait, GroupSpec.NamedAt<typeof nina_portrait_build, "build">>, "portrait"> | GroupSpec.NamedAt<typeof nina_presentation, "presentation"> | GroupSpec.NamedAt<typeof nina_response, "response"> | GroupSpec.NamedAt<typeof nina_sealed, "sealed"> | GroupSpec.NamedAt<typeof nina_summaries, "summaries"> | GroupSpec.NamedAt<typeof nina_turns, "turns"> | GroupSpec.NamedAt<typeof nina_uploads, "uploads"> | GroupSpec.NamedAt<typeof nina_usage, "usage"> | GroupSpec.NamedAt<typeof nina_waits, "waits">>, "nina">;
@@ -308,6 +306,7 @@ const spec: Spec.Spec<{
   readonly posts: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "posts", never, GroupSpec.NamedAt<typeof posts_cleanup, "cleanup"> | GroupSpec.NamedAt<typeof posts_mutations, "mutations"> | GroupSpec.NamedAt<typeof posts_queries, "queries">>, "posts">;
   readonly practice: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "practice", never, GroupSpec.NamedAt<typeof practice_sessions, "sessions">>, "practice">;
   readonly privacy: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "privacy", never, GroupSpec.NamedAt<typeof privacy_recovery, "recovery">>, "privacy">;
+  readonly progress: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "progress", never, GroupSpec.NamedAt<typeof progress_queries, "queries">>, "progress">;
   readonly records: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "records", never, GroupSpec.NamedAt<typeof records_checks, "checks"> | GroupSpec.NamedAt<typeof records_draw, "draw"> | GroupSpec.NamedAt<typeof records_exports, "exports"> | GroupSpec.NamedAt<typeof records_grades, "grades"> | GroupSpec.NamedAt<typeof records_graduations, "graduations"> | GroupSpec.NamedAt<typeof records_letters, "letters"> | GroupSpec.NamedAt<typeof records_prints, "prints"> | GroupSpec.NamedAt<typeof records_reports, "reports"> | GroupSpec.NamedAt<typeof records_schemes, "schemes"> | GroupSpec.NamedAt<typeof records_seed, "seed">>, "records">;
   readonly roster: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "roster", never, GroupSpec.NamedAt<typeof roster_entries, "entries"> | GroupSpec.NamedAt<typeof roster_exports, "exports"> | GroupSpec.NamedAt<typeof roster_imports, "imports">>, "roster">;
   readonly routes: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "routes", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "agent", never, GroupSpec.NamedAt<typeof routes_agent_quota, "quota">>, "agent">>, "routes">;
@@ -568,10 +567,6 @@ const spec: Spec.Spec<{
     ["webhooks"]: integrations_webhooks,
     ["writes"]: integrations_writes,
   }),
-  ["island"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
-    ["mutations"]: island_mutations,
-    ["queries"]: island_queries,
-  }),
   ["journal"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["audit"]: journal_audit,
   }),
@@ -634,6 +629,9 @@ const spec: Spec.Spec<{
   }),
   ["privacy"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["recovery"]: privacy_recovery,
+  }),
+  ["progress"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["queries"]: progress_queries,
   }),
   ["records"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["checks"]: records_checks,

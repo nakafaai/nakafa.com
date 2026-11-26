@@ -113,10 +113,6 @@ export type IntegrationWebhooksDoc = Document.Document<typeof schemaDefinition, 
 export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "irtCalibrationRuns">;
 export type IrtScaleItemsDoc = Document.Document<typeof schemaDefinition, "irtScaleItems">;
 export type IrtScaleVersionsDoc = Document.Document<typeof schemaDefinition, "irtScaleVersions">;
-export type IslandAwardsDoc = Document.Document<typeof schemaDefinition, "islandAwards">;
-export type IslandChunksDoc = Document.Document<typeof schemaDefinition, "islandChunks">;
-export type IslandGuestsDoc = Document.Document<typeof schemaDefinition, "islandGuests">;
-export type IslandsDoc = Document.Document<typeof schemaDefinition, "islands">;
 export type JournalCursorsDoc = Document.Document<typeof schemaDefinition, "journalCursors">;
 export type JournalEntriesDoc = Document.Document<typeof schemaDefinition, "journalEntries">;
 export type LearningEngagementQueueDoc = Document.Document<typeof schemaDefinition, "learningEngagementQueue">;
@@ -150,6 +146,8 @@ export type PracticeQuestionsDoc = Document.Document<typeof schemaDefinition, "p
 export type PracticeSessionsDoc = Document.Document<typeof schemaDefinition, "practiceSessions">;
 export type ProgramBucketsDoc = Document.Document<typeof schemaDefinition, "programBuckets">;
 export type ProgramCatalogDoc = Document.Document<typeof schemaDefinition, "programCatalog">;
+export type ProgressDoc = Document.Document<typeof schemaDefinition, "progress">;
+export type ProgressAwardsDoc = Document.Document<typeof schemaDefinition, "progressAwards">;
 export type PushSubscriptionsDoc = Document.Document<typeof schemaDefinition, "pushSubscriptions">;
 export type QuranRowsDoc = Document.Document<typeof schemaDefinition, "quranRows">;
 export type QuranSearchDoc = Document.Document<typeof schemaDefinition, "quranSearch">;
@@ -299,10 +297,6 @@ export interface Docs {
   irtCalibrationRuns: IrtCalibrationRunsDoc;
   irtScaleItems: IrtScaleItemsDoc;
   irtScaleVersions: IrtScaleVersionsDoc;
-  islandAwards: IslandAwardsDoc;
-  islandChunks: IslandChunksDoc;
-  islandGuests: IslandGuestsDoc;
-  islands: IslandsDoc;
   journalCursors: JournalCursorsDoc;
   journalEntries: JournalEntriesDoc;
   learningEngagementQueue: LearningEngagementQueueDoc;
@@ -336,6 +330,8 @@ export interface Docs {
   practiceSessions: PracticeSessionsDoc;
   programBuckets: ProgramBucketsDoc;
   programCatalog: ProgramCatalogDoc;
+  progress: ProgressDoc;
+  progressAwards: ProgressAwardsDoc;
   pushSubscriptions: PushSubscriptionsDoc;
   quranRows: QuranRowsDoc;
   quranSearch: QuranSearchDoc;

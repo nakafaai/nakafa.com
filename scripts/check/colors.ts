@@ -66,13 +66,6 @@ const OWNED_PAINT_SCOPES = [
   "apps/www/src/components/shared/qr/",
 ];
 /**
- * Where a color is the island's world art and no theme may change it: the block game's renderer
- * paints every face and sprite from one palette of named ramps, its sky and its seasons, and the
- * shader tints them for night, dusk and rain (docs/adr/0047-game.md, D4). The game's buttons and
- * panels around the canvas are chrome and take identity tokens as everywhere else.
- */
-const WORLD_PAINT_SCOPES = ["apps/www/src/lib/island/"];
-/**
  * Where white and black are no colors but the luminance of an SVG or CSS mask, which says how much
  * of a painted mark shows: the chart paints and the line overlay of the player. Any other color
  * written there is judged as everywhere else.
@@ -101,16 +94,15 @@ const CHROME_RULE =
 /**
  * Reports a color written into application chrome. Nakafa has many themes and each one chooses its
  * own colors, so a page or a component that writes one in place looks the same in all of them. A
- * lesson visual is judged by `inspectColorSource`, another owner's paint and the island's world art
- * are left alone, and a mask may say white and black. Tests are not judged.
+ * lesson visual is judged by `inspectColorSource`, another owner's paint is left alone, and a mask
+ * may say white and black. Tests are not judged.
  */
 export function inspectChromeColorSource(file: string, sourceFile: SourceFile) {
   if (
     TEST_PATTERN.test(file) ||
     !Arr.some(CHROME_DIRECTORIES, (directory) => file.startsWith(directory)) ||
     Arr.some(VISUAL_DIRECTORIES, (directory) => file.startsWith(directory)) ||
-    Arr.some(OWNED_PAINT_SCOPES, (scope) => file.startsWith(scope)) ||
-    Arr.some(WORLD_PAINT_SCOPES, (scope) => file.startsWith(scope))
+    Arr.some(OWNED_PAINT_SCOPES, (scope) => file.startsWith(scope))
   ) {
     return [];
   }

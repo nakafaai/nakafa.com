@@ -9,7 +9,7 @@ import { TryoutRuntimeErrorWire } from "@repo/backend/confect/tryouts/runtime/er
 import { MascotCode } from "@repo/mascot/code";
 import { Schema } from "effect";
 
-/** One learner on a set's board: their best, their first name and mascot, its score and place, and whether it is the viewer. */
+/** One learner on a set's board: their best, first name, mascot, accessible profile username, score, place, and whether it is the viewer. */
 const setLeaderValidator = Schema.Struct({
   id: IdSchema("tryoutSetBests"),
   mascot: MascotCode,
@@ -17,6 +17,7 @@ const setLeaderValidator = Schema.Struct({
   own: Schema.Boolean,
   place: Schema.Int,
   score: Schema.Finite,
+  username: Schema.NullOr(Schema.String),
 });
 
 /**

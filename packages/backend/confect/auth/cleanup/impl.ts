@@ -1,7 +1,7 @@
 import { cleanupUserConnections } from "@repo/backend/confect/auth/cleanup/connections";
-import { cleanupUserIsland } from "@repo/backend/confect/auth/cleanup/island";
 import { cleanupUserJournal } from "@repo/backend/confect/auth/cleanup/journal";
 import { cleanupUserLearningData } from "@repo/backend/confect/auth/cleanup/learning";
+import { cleanupUserProgress } from "@repo/backend/confect/auth/cleanup/progress";
 import { cleanupUserSocialData } from "@repo/backend/confect/auth/cleanup/social";
 import { cleanupUserTryouts } from "@repo/backend/confect/auth/cleanup/tryouts";
 import { shredLearnerKeys } from "@repo/backend/confect/vault/keys";
@@ -26,7 +26,7 @@ export const cleanupDeletedUserProgram = Effect.fn(
   if (yield* cleanupUserLearningData(userId)) {
     return true;
   }
-  if (yield* cleanupUserIsland(userId)) {
+  if (yield* cleanupUserProgress(userId)) {
     return true;
   }
   if (yield* cleanupUserConnections(userId)) {

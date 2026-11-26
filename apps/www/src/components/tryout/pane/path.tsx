@@ -1,7 +1,7 @@
 import { Flag02Icon, StarIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
-import { tierOf } from "@repo/backend/confect/island/badge";
-import { AWARD_RULES } from "@repo/backend/confect/island/schema";
+import { tierOf } from "@repo/backend/confect/progress/badge";
+import { AWARD_RULES } from "@repo/backend/confect/progress/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Medal } from "@repo/design-system/components/ui/medal";
@@ -300,7 +300,7 @@ function StartPress({
  */
 export function SetPath() {
   const t = useTranslations("Tryouts");
-  const tIsland = useTranslations("Island");
+  const tProgress = useTranslations("Progress");
   const tCommon = useTranslations("Common");
   const format = useFormatter();
   const { claims, sections, tally, view } = useSetPane();
@@ -393,7 +393,7 @@ export function SetPath() {
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className={rowLineVariants()}>{t("set-done")}</span>
               <span className={rowLineVariants({ line: "fact" })}>
-                {t("medal-name", { name: tIsland("badge-sets") })}
+                {t("medal-name", { name: tProgress("badge-sets") })}
               </span>
             </span>
             {claims.set ? null : <StepGain stars={AWARD_RULES.set.stars} />}

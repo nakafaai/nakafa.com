@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { EMPTY_TALLY } from "@repo/backend/confect/island/schema";
+import { EMPTY_TALLY } from "@repo/backend/confect/progress/schema";
 import { MaterialSchema } from "@repo/contents/taxonomy";
 import { MedalSchema } from "@repo/mascot/medal/name";
 import { Array as Arr } from "effect";
@@ -7,6 +7,7 @@ import {
   bestOf,
   levelProgress,
   medalsOf,
+  progressSummary,
   wallOf,
   weekBars,
 } from "@/components/progress/level";
@@ -17,6 +18,24 @@ function day(date: string, stars: number) {
 }
 
 describe("progress/level", () => {
+  it("derives level thresholds and tally from a growth record, defaulting to level 1", () => {
+    expect(progressSummary(null)).toEqual({
+      from: 0,
+      level: 1,
+      lifetime: 0,
+      next: 100,
+      tally: EMPTY_TALLY,
+    });
+    const tally = { ...EMPTY_TALLY, days: 2, lessons: 5 };
+    expect(progressSummary({ lifetime: 175, tally })).toEqual({
+      from: 100,
+      level: 2,
+      lifetime: 175,
+      next: 250,
+      tally,
+    });
+  });
+
   it("measures the way to the next level from the level reached", () => {
     expect(levelProgress({ from: 100, lifetime: 175, next: 250 })).toEqual({
       left: 75,
