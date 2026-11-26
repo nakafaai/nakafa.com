@@ -4,7 +4,6 @@ import {
   CONSTANT_COMPOSITION_MODE_IDS,
   CONSTANT_COMPOSITION_SCENE_VIEW,
   EXACT_RATIO_MODE_ID,
-  getConstantCompositionSceneColors,
   isConstantCompositionModeId,
 } from "@repo/design-system/components/contents/chemistry/constant-composition-law/data";
 import { ConstantCompositionScene } from "@repo/design-system/components/contents/chemistry/constant-composition-law/scene";
@@ -28,7 +27,6 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
@@ -66,12 +64,10 @@ export function ConstantCompositionLab({
   description,
   labels,
 }: ConstantCompositionLabProps) {
-  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const [selectedModeId, setSelectedModeId] =
     useState<ConstantCompositionModeId>(EXACT_RATIO_MODE_ID);
   const selectedLabels = labels.modes[selectedModeId];
   const t = useTranslations("Common");
-  const sceneColors = getConstantCompositionSceneColors(resolvedTheme);
 
   function handleModeChange(value: string) {
     if (!value) {
@@ -86,7 +82,7 @@ export function ConstantCompositionLab({
   }
 
   return (
-    <VisualCard>
+    <VisualCard onReset={() => setSelectedModeId(EXACT_RATIO_MODE_ID)}>
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
@@ -115,14 +111,10 @@ export function ConstantCompositionLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always" setting="lab">
-          <Suspense>
+        <ScienceStage floor={0} reach={1.05} setting="lab">
+          <Suspense fallback={null}>
             <ConstantCompositionCameraControls />
-            <ConstantCompositionScene
-              colors={sceneColors}
-              labels={labels}
-              modeId={selectedModeId}
-            />
+            <ConstantCompositionScene labels={labels} modeId={selectedModeId} />
           </Suspense>
         </ScienceStage>
       </VisualCardBody>
@@ -145,15 +137,19 @@ export function ConstantCompositionLab({
 
 function ConstantCompositionCameraControls() {
   const size = useThree((state) => state.size);
-  const cameraPosition = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO)
-    ? CONSTANT_COMPOSITION_SCENE_VIEW.narrowCameraPosition
-    : CONSTANT_COMPOSITION_SCENE_VIEW.cameraPosition;
+  const narrow = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO);
 
   return (
     <CameraControls
-      cameraPosition={cameraPosition}
+      cameraPosition={
+        narrow
+          ? CONSTANT_COMPOSITION_SCENE_VIEW.narrowCameraPosition
+          : CONSTANT_COMPOSITION_SCENE_VIEW.cameraPosition
+      }
       cameraTarget={CONSTANT_COMPOSITION_SCENE_VIEW.cameraTarget}
-      fov={43}
+      fov={38}
+      maxDistance={1.65}
+      minDistance={0.35}
     />
   );
 }

@@ -17,14 +17,19 @@ import {
   placeBond,
 } from "@repo/design-system/components/contents/chemistry/molecule/model";
 import type { CycleState } from "@repo/design-system/components/contents/simulation/cycle";
-import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
+import {
+  SimulationTicker,
+  simulationStep,
+} from "@repo/design-system/components/contents/simulation/ticker";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import {
   useVisualReset,
   useVisualScene,
+  useVisualStop,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { useTheme } from "@repo/design-system/providers/theme";
 import type { Result } from "effect";
 import { Array as Arr, Option } from "effect";
@@ -141,7 +146,15 @@ export function ReactionScene({
     invalidate();
   }, [invalidate, layout, store]);
 
+  useVisualStop(() => {
+    shownPlaying.current = false;
+    cycle.current = { hold: 0, value: 0 };
+    store.getState().setProgress(0);
+    invalidate();
+  });
+
   useVisualReset(() => {
+    shownPlaying.current = false;
     cycle.current = { hold: 0, value: 0 };
     invalidate();
   });
@@ -186,6 +199,7 @@ export function ReactionScene({
 
   return (
     <group>
+      <SimulationTicker running={playing} />
       {Arr.map(Arr.zip(layout.particles, atomRefs), ([particle, ref]) => (
         <AtomBall
           element={particle.element}
@@ -288,17 +302,25 @@ function ReactionGhosts({ layout }: { readonly layout: ReactionLayout }) {
   );
 }
 
-/** The arrow of the equation, standing between the two sides as a steel rod. */
+/** The arrow of the equation, standing between the two sides as a machined steel & brass pointer. */
 function ReactionArrow() {
   return (
     <group rotation={[0, 0, -Math.PI / 2]}>
-      <mesh castShadow position={[0, -0.15, 0]}>
-        <cylinderGeometry args={[0.06, 0.06, 1.1, 24]} />
-        <MetalMaterial color={getColor("SLATE", 400)} />
+      <mesh castShadow position={[0, -0.7, 0]}>
+        <cylinderGeometry args={[0.085, 0.085, 0.06, 28]} />
+        <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.28} />
       </mesh>
-      <mesh castShadow position={[0, 0.55, 0]}>
-        <coneGeometry args={[0.18, 0.42, 32]} />
-        <MetalMaterial color={getColor("SLATE", 400)} />
+      <mesh castShadow position={[0, -0.15, 0]}>
+        <cylinderGeometry args={[0.056, 0.056, 1.08, 28]} />
+        <MetalMaterial color={getColor("SLATE", 400)} roughness={0.24} />
+      </mesh>
+      <mesh castShadow position={[0, 0.36, 0]}>
+        <cylinderGeometry args={[0.088, 0.088, 0.06, 28]} />
+        <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.26} />
+      </mesh>
+      <mesh castShadow position={[0, 0.59, 0]}>
+        <coneGeometry args={[0.17, 0.42, 32]} />
+        <MetalMaterial color={getColor("SLATE", 300)} roughness={0.22} />
       </mesh>
     </group>
   );

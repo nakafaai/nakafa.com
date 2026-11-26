@@ -121,7 +121,7 @@ export function AlloySlipPlaneLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.5} setting="lab">
+        <ScienceStage floor={0} reach={1.15} setting="lab">
           <Suspense fallback={null}>
             <AlloySlipPlaneScene
               metal={active}

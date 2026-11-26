@@ -106,7 +106,7 @@ export function HalogenDisplacementLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.5} setting="lab">
+        <ScienceStage floor={0} reach={0.85} setting="lab">
           <Suspense fallback={null}>
             <HalogenDisplacementScene pair={active} parts={labels.parts} />
           </Suspense>
