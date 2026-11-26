@@ -40,10 +40,13 @@ const BARE_ADDRESSES: readonly MovedAddress[] = [
 ];
 
 /**
- * Retired pages that Search Console still showed with impressions on 13 November
- * 2026, each answered by the live page that took over its job: the old TKA
- * practice index by the TKA try-out, and the old grade 11 subject index by the
- * Kurikulum Merdeka class 11 page. Each one redirects exactly; nothing under it does.
+ * Retired pages that Search Console or the published URL ledger still hold,
+ * each answered by the live page that took over its job: the old TKA practice
+ * index by the TKA try-out, the old grade 11 subject index by the Kurikulum
+ * Merdeka class 11 page, and the retired Singapore combined Secondary Science
+ * course (split into separate Physics, Chemistry, and Biology courses in
+ * aksara#915) by the Singapore Secondary stage page. Each one redirects
+ * exactly; nothing under it does.
  */
 const SHOWN_ADDRESSES: readonly MovedAddress[] = [
   {
@@ -55,6 +58,26 @@ const SHOWN_ADDRESSES: readonly MovedAddress[] = [
     destination: "/en/curriculum/merdeka/class-11",
     permanent: true,
     source: "/en/subject/high-school/11",
+  },
+  {
+    destination: "/de/lehrplaene/singapur-moe/sekundarstufe",
+    permanent: true,
+    source: "/de/lehrplaene/singapur-moe/sekundarstufe/naturwissenschaften",
+  },
+  {
+    destination: "/en/curriculum/singapore-moe/secondary",
+    permanent: true,
+    source: "/en/curriculum/singapore-moe/secondary/science",
+  },
+  {
+    destination: "/id/kurikulum/singapore-moe/secondary",
+    permanent: true,
+    source: "/id/kurikulum/singapore-moe/secondary/sains",
+  },
+  {
+    destination: "/ms/kurikulum/singapore-moe/sekolah-menengah",
+    permanent: true,
+    source: "/ms/kurikulum/singapore-moe/sekolah-menengah/sains",
   },
 ];
 
