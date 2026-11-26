@@ -1,13 +1,10 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import chats from "@repo/backend/confect/_generated/refs/chats";
-import notifications from "@repo/backend/confect/_generated/refs/notifications";
-import { isRedirect } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option } from "effect";
 import {
   chatScreenHandler,
   chatSidebarScreenHandler,
-  notificationsScreenHandler,
 } from "@/lib/account/home.server";
 
 process.env.VITE_CONVEX_URL = "https://example.convex.cloud";
@@ -65,16 +62,6 @@ function answerQueries(answers: ReadonlyArray<readonly [unknown, unknown]>) {
         onSome: ([, value]) => Effect.succeed(value),
       }
     )
-  );
-}
-
-/** The failure that a rejected promise carries, or a test failure when it resolves. */
-function failureOf(run: Promise<unknown>) {
-  return run.then(
-    () => {
-      throw new Error("expected a failure");
-    },
-    (cause: unknown) => cause
   );
 }
 
@@ -164,26 +151,5 @@ describe("chatScreenHandler", () => {
     });
     expect(screen.title).toBeUndefined();
     expect(mocks.scheduleCurrentServerExceptionCapture).not.toHaveBeenCalled();
-  });
-});
-
-describe("notificationsScreenHandler", () => {
-  it("sends a visitor to sign-in", async () => {
-    sessionWith(Option.none());
-    const cause = await failureOf(
-      notificationsScreenHandler({ data: { locale: "en" } })
-    );
-    expect(isRedirect(cause)).toBe(true);
-  });
-
-  it("reads the first page of the inbox and a noindex head", async () => {
-    sessionWith(Option.some("token"));
-    answerQueries([[notifications.inbox.list, { page: ["note-1"] }]]);
-    const screen = await notificationsScreenHandler({ data: { locale: "en" } });
-    expect(screen.first).toEqual({ page: ["note-1"] });
-    expect(screen.seo).toMatchObject({
-      canonicalPath: "/en",
-      indexable: false,
-    });
   });
 });

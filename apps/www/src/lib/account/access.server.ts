@@ -2,7 +2,7 @@ import auth from "@repo/backend/confect/_generated/refs/auth";
 import users from "@repo/backend/confect/_generated/refs/users";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { notFound, redirect } from "@tanstack/react-router";
+import { notFound } from "@tanstack/react-router";
 import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { Effect, Option, String as Str } from "effect";
 import { readSessionMemo } from "@/lib/auth/session.server";
@@ -15,15 +15,6 @@ export const readToken = Effect.fn("www.account.token")(function* () {
   const readSession = yield* readSessionMemo(getRequest());
   const session = yield* readSession;
   return Option.getOrUndefined(session.convexToken);
-});
-
-/** Ends the request with a 307 to sign-in, the answer of the reference's `admitAccountRoute`. */
-const redirectToAuth = Effect.fn("www.account.redirect")(function* (
-  locale: Locale
-) {
-  return yield* Effect.die(
-    redirect({ params: { locale }, to: "/$locale/auth", statusCode: 307 })
-  );
 });
 
 /**
@@ -43,17 +34,6 @@ export function accountHandler<Data, A, E>(
     })
   );
 }
-
-/** Admits a signed-in visitor to an account screen and returns their token. */
-export const admitAccount = Effect.fn("www.account.admit")(function* (
-  locale: Locale
-) {
-  const token = yield* readToken();
-  if (token === undefined) {
-    return yield* redirectToAuth(locale);
-  }
-  return token;
-});
 
 /** The messages of one locale, read on the server only. */
 export const messagesFor = Effect.fn("www.account.messages")(function* (
