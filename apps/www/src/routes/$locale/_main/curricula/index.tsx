@@ -11,7 +11,7 @@ import { createTranslator } from "use-intl/core";
 import { CurriculumCardGrid } from "@/components/curriculum/cards";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { PageBody } from "@/components/shared/page/body";
-import { Page } from "@/components/shared/page/frame";
+import { CatalogPage } from "@/components/shared/page/frame";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import {
@@ -131,7 +131,7 @@ export const Route = createFileRoute("/$locale/_main/curricula/")({
 function CurriculumIndexPage() {
   const page = Route.useLoaderData();
   return (
-    <Page>
+    <CatalogPage>
       <BreadcrumbHeader
         value={{
           home: HOME_TARGET,
@@ -150,6 +150,6 @@ function CurriculumIndexPage() {
           <ComingSoon />
         )}
       </PageBody>
-    </Page>
+    </CatalogPage>
   );
 }

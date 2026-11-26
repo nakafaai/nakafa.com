@@ -3,9 +3,10 @@ import { cva } from "class-variance-authority";
 /**
  * The page's frame and its body's width. Every page's header row, tab row and frame stand at the one page width, so
  * the sidebar's button and the path stand at the same place on every page and a press between pages moves nothing.
- * A page's body reads its width from the page (`Page`): the full frame for a working surface, or the reading column
- * (3xl) for a lesson, an article, the Quran and a settings page, starting on the header's first letter. The page
- * fills the height its shell leaves and never grows past the width beside the sidebar.
+ * A page's body reads its width from the page (`Page`): the full frame for a working surface, the reading column
+ * (3xl) for a lesson, an article, the Quran and a settings page, or the catalog width (4xl) where both the header
+ * row and body widen together for visual card grids. The page fills the height its shell leaves and never grows past
+ * the width beside the sidebar.
  */
 export const pageFrameVariants = cva("flex min-h-0 w-full min-w-0 flex-col", {
   defaultVariants: { height: "content", width: "page" },
@@ -16,8 +17,10 @@ export const pageFrameVariants = cva("flex min-h-0 w-full min-w-0 flex-col", {
       screen:
         "h-[calc(100svh-var(--app-header-top,4rem))] flex-none overflow-clip lg:h-svh",
     },
-    /** How wide the page's body reads: the whole frame, or the reading column under the frame's header. */
+    /** How wide the page reads: the whole frame, the 3xl reading column, or the 4xl catalog frame. */
     width: {
+      catalog:
+        "[--body-width:var(--container-4xl)] [--page-width:var(--container-4xl)]",
       column: "[--body-width:var(--container-3xl)]",
       page: "",
     },

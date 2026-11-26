@@ -30,9 +30,9 @@ export function CardArticle({ article }: Props) {
       publicPath={article.publicPath}
       title={article.title}
     >
-      <Card className="relative h-full overflow-hidden">
+      <Card className="relative h-full overflow-hidden" lines="two">
         <div className="bg-primary absolute inset-0 h-0 transition-[height] group-hover:h-4" />
-        <CardHeader>
+        <CardHeader className="flex-1">
           <CardTitle className="leading-snug font-medium text-pretty">
             <h2 className="scroll-mt-28" id={id} title={article.title}>
               {article.title}

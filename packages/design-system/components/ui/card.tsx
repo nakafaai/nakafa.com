@@ -4,10 +4,11 @@ import type * as React from "react";
 /**
  * A card. `lines="one"` makes it a choice among cards of one size, such as a service of a
  * connector directory: its title and its description each keep one line and end in an ellipsis,
- * so every card of a grid keeps the height of the others whatever its words. A title that holds a
- * control, such as the press that opens the choice, cuts the control's words, so its focus ring
- * stays whole. The words stay whole for assistive technology, the caller gives each cut line its
- * full words as a `title`, and the choice's own detail shows them in full.
+ * so every card of a grid keeps the height of the others whatever its words. `lines="two"` clamps
+ * the title and description to two lines for editorial cards such as article lists. A title that
+ * holds a control, such as the press that opens the choice, cuts the control's words, so its focus
+ * ring stays whole. The words stay whole for assistive technology, the caller gives each cut line
+ * its full words as a `title`, and the choice's own detail shows them in full.
  */
 function Card({
   className,
@@ -15,7 +16,7 @@ function Card({
   size = "default",
   ...props
 }: React.ComponentProps<"div"> & {
-  lines?: "one" | "wrap";
+  lines?: "one" | "two" | "wrap";
   size?: "default" | "sm";
 }) {
   return (
@@ -49,7 +50,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "text-base leading-normal font-medium group-data-[lines=one]/card:min-w-0 group-data-[lines=one]/card:*:max-w-full group-data-[lines=one]/card:*:truncate group-data-[lines=one]/card:not-has-[>*]:truncate group-data-[size=sm]/card:text-sm",
+        "text-base leading-normal font-medium group-data-[lines=one]/card:min-w-0 group-data-[lines=one]/card:*:max-w-full group-data-[lines=one]/card:*:truncate group-data-[lines=one]/card:not-has-[>*]:truncate group-data-[lines=two]/card:min-w-0 group-data-[lines=two]/card:*:line-clamp-2 group-data-[lines=two]/card:not-has-[>*]:line-clamp-2 group-data-[size=sm]/card:text-sm",
         className
       )}
       data-slot="card-title"
@@ -62,7 +63,7 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "text-muted-foreground max-w-xl text-sm group-data-[lines=one]/card:truncate",
+        "text-muted-foreground max-w-xl text-sm group-data-[lines=one]/card:truncate group-data-[lines=two]/card:line-clamp-2",
         className
       )}
       data-slot="card-description"
