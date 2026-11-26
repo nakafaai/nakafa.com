@@ -99,7 +99,9 @@ test("a running try-out leads the home with its part, its clock and Continue, fr
           // browser's open client and sends no Worker server function request.
           await page.goto(setHref, { waitUntil: "commit" });
           await waitForLoadsSettled(page);
-          const homeLink = page.locator('a[href="/en/home"]').first();
+          const homeLink = page
+            .getByRole("navigation", { name: en.Common.breadcrumb })
+            .getByRole("link", { exact: true, name: en.Common.home });
           await expect(homeLink).toBeVisible({
             timeout: readinessTimeoutMilliseconds,
           });

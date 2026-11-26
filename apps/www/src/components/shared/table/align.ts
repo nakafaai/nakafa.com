@@ -74,7 +74,7 @@ export const headWidth = cva("", {
       days: "w-52 min-w-52",
       menu: "min-w-12",
       number: "w-28 min-w-28",
-      short: "w-36 min-w-36",
+      short: "w-32 min-w-32",
       shortText: "min-w-16",
       text: "min-w-32 not-first:w-72 @xl/table:min-w-50 @xl/table:not-first:min-w-64",
       values: "w-36 min-w-36 @xl/table:w-48 @xl/table:min-w-48",
