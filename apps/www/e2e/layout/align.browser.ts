@@ -40,7 +40,7 @@ const PUBLIC: readonly HeaderTarget[] = [
     address: "/en/try-out/indonesia/tka/senior-high-school",
     max: CATALOG_WIDTH,
   },
-  { address: "/en/try-out/indonesia/snbt/2027/utbk/set-1", max: COLUMN_WIDTH },
+  { address: "/en/try-out/indonesia/snbt/2027/utbk/set-1", max: CATALOG_WIDTH },
 ];
 
 /** The header rule fills the space beside the outline, while its row stays centered up to the page's width. */

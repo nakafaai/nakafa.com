@@ -194,14 +194,15 @@ function SortingHead<TData extends RowData>({
 
 /**
  * How wide a column of data stands: a column of one known value as wide as its longest value (`choiceWidth`), a column
- * of wide cells at the wide width, and every other column at the width of what it holds (`headWidth`).
+ * of wide cells at the wide width, a first column of short names at a short name's width, and every other column at
+ * the width of what it holds (`headWidth`).
  */
 function columnSizing(
   filter: HeadFilter,
   title: string,
   width: ColumnWidth | undefined
 ) {
-  if (width === "wide") {
+  if (width === "wide" || width === "short") {
     return { width };
   }
   if (width === "compact") {

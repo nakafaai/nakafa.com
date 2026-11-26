@@ -1,4 +1,4 @@
-import type { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import type { OptionIcon } from "@repo/design-system/components/ui/huge-icons";
 import type {
   AccessorFn,
   CellContext,
@@ -14,10 +14,11 @@ import type { dataTableFeatures } from "@/components/shared/table/features";
 
 /**
  * One value a column filters by: its label, and its icon, which fits the value and which no other value of the column
- * draws. A value holds a function's data (the icon), so it is a plain shape.
+ * draws: a Hugeicons icon, or the value's own mark, such as a level's bars, so the head's menu draws a value as its
+ * cells do. A value holds a function's data (the icon), so it is a plain shape.
  */
 export interface ColumnOption {
-  readonly icon: ComponentProps<typeof HugeIcons>["icon"];
+  readonly icon: NonNullable<ComponentProps<typeof OptionIcon>["icon"]>;
   readonly label: string;
   readonly value: string;
 }
@@ -60,8 +61,11 @@ export type ColumnSortWords = typeof ColumnSortWords.Type;
 /** What a column of one value adds when the server also sorts by the order of its values. */
 const ChoiceSort = Schema.Struct({ sort: Schema.optionalKey(ColumnSortWords) });
 
-/** A column that needs less or more room than its kind normally takes. */
-const ColumnWidth = Schema.Literals(["compact", "wide"]);
+/**
+ * A column that needs less or more room than its kind normally takes. `short` is a first column of short names, such
+ * as a try-out's sets: it holds a short name's room, so the columns beside it share the rest of the table.
+ */
+const ColumnWidth = Schema.Literals(["compact", "short", "wide"]);
 export type ColumnWidth = typeof ColumnWidth.Type;
 
 /** What every column of data declares: its ID, its name in the head, how its cell draws, and where it stands. */

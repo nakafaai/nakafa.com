@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { finishOnboarding } from "@/e2e/support/onboarding";
@@ -94,6 +94,33 @@ test("a running try-out leads the home with its part, its clock and Continue, fr
 
           await page.locator('main a[href*="attemptId="]').first().click();
           await page.waitForURL(ATTEMPT_ADDRESS);
+
+          // Navigating back to Home from inside the app reads Convex over the
+          // browser's open client and sends no Worker server function request.
+          await page.goto(setHref, { waitUntil: "commit" });
+          await waitForLoadsSettled(page);
+          const homeLink = page
+            .getByRole("navigation", { name: en.Common.breadcrumb })
+            .getByRole("link", { exact: true, name: en.Common.home });
+          await expect(homeLink).toBeVisible({
+            timeout: readinessTimeoutMilliseconds,
+          });
+          let serverFnRequests: readonly string[] = [];
+          const recordServerFn = (request: { url: () => string }) => {
+            if (request.url().includes("/_serverFn/")) {
+              serverFnRequests = Arr.append(serverFnRequests, request.url());
+            }
+          };
+          page.on("request", recordServerFn);
+          await homeLink.click();
+          await page.waitForURL("**/en/home");
+          await expect(
+            page.locator('main a[href*="attemptId="]').first()
+          ).toContainText(FIRST_PART, {
+            timeout: readinessTimeoutMilliseconds,
+          });
+          page.off("request", recordServerFn);
+          expect(serverFnRequests).toEqual([]);
         });
       })
     )

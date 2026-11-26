@@ -150,7 +150,8 @@ function TryoutTrackFrame() {
     return <Outlet />;
   }
   return (
-    <Page height="screen">
+    // A track's set table is a catalog, so its header and table stand at the catalog's width (4xl).
+    <Page height="screen" width="catalog">
       <TryoutTrailHeader
         labels={route.labels}
         title={route.page.track.title}

@@ -5,8 +5,8 @@ import { cva } from "class-variance-authority";
  * the sidebar's button and the path stand at the same place on every page and a press between pages moves nothing.
  * A page's body reads its width from the page (`Page`): the full frame for a working surface, the reading column
  * (3xl) for a lesson, an article, the Quran and a settings page, or the catalog width (4xl) where both the header
- * row and body widen together for visual card grids. The page fills the height its shell leaves and never grows past
- * the width beside the sidebar.
+ * row and body widen together for a catalog's card grid or a try-out track's set table. The page fills the height its
+ * shell leaves and never grows past the width beside the sidebar.
  */
 export const pageFrameVariants = cva("flex min-h-0 w-full min-w-0 flex-col", {
   defaultVariants: { height: "content", width: "page" },

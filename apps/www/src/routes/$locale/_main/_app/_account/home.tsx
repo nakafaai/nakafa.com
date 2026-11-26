@@ -1,9 +1,9 @@
 import { PlayIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { cn } from "cn";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Effect, Match, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { HomeContinue } from "@/components/home/continue";
 import { HomeStreak } from "@/components/home/streak";
@@ -24,13 +24,36 @@ import {
   getPrimaryNavigationTarget,
 } from "@/components/sidebar/data/navigation";
 import { signedInHead } from "@/lib/account/head";
-import { homeScreenFn } from "@/lib/account/home.functions";
 import { TargetLink } from "@/lib/routing/link";
 import { AddressLink } from "@/lib/routing/public/link";
 import { HOME_TARGET } from "@/lib/routing/target";
 
 export const Route = createFileRoute("/$locale/_main/_app/_account/home")({
-  loader: ({ params }) => homeScreenFn({ data: { locale: params.locale } }),
+  loader: async ({ params }) => {
+    const { readHomeScreen } = await import("@/lib/account/home");
+    const outcome = await Effect.runPromise(
+      readHomeScreen(params.locale, window.location.origin)
+    );
+    return Match.value(outcome).pipe(
+      Match.tagsExhaustive({
+        Onboarding: () => {
+          throw redirect({
+            params: { locale: params.locale },
+            statusCode: 307,
+            to: "/$locale/onboarding",
+          });
+        },
+        Ready: ({ screen }) => screen,
+        SignedOut: () => {
+          throw redirect({
+            params: { locale: params.locale },
+            statusCode: 307,
+            to: "/$locale/auth",
+          });
+        },
+      })
+    );
+  },
   head: ({ loaderData }) =>
     loaderData === undefined ? {} : signedInHead(loaderData.seo),
   component: HomePage,

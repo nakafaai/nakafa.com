@@ -1,121 +1,20 @@
 import { CHAT_LIST_PAGE_SIZE } from "@repo/backend/client/chats/list";
 import { INBOX_PAGE_SIZE } from "@repo/backend/client/notifications/list";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
-import contents from "@repo/backend/confect/_generated/refs/contents";
-import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
-import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
-import progress from "@repo/backend/confect/_generated/refs/progress";
-import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import { notFound, redirect } from "@tanstack/react-router";
-import { Clock, Effect, Option, Schema } from "effect";
+import { notFound } from "@tanstack/react-router";
+import { Clock, Effect, Schema } from "effect";
 import { createTranslator } from "use-intl/core";
-import { getMaterialLooks } from "@/components/home/look";
-import { progressSummary } from "@/components/progress/level";
 import {
   accountHandler,
   admitAccount,
   messagesFor,
   readToken,
-  redirectToAuth,
 } from "@/lib/account/access.server";
 import type { ScreenSeo } from "@/lib/account/head";
 import type { ChatInput, LocaleInput } from "@/lib/account/input";
-import { readTryoutStart } from "@/lib/account/start.server";
-import { readOptional, readRequired } from "@/lib/data/read.server";
-
-/**
- * Home: the onboarding gate, the account name and profile name, the learner's
- * progress and week, the try-outs they sat last, and the lessons they opened
- * last. The gate's status and the page's reads go out together, so the screen
- * waits on one Convex round trip.
- */
-export const homeScreenHandler = accountHandler(
-  ({ locale }: typeof LocaleInput.Type) =>
-    Effect.gen(function* () {
-      const token = yield* admitAccount(locale);
-      const [
-        status,
-        messages,
-        account,
-        recentRows,
-        growth,
-        week,
-        leaders,
-        attempts,
-        preference,
-        now,
-      ] = yield* Effect.all(
-        [
-          readRequired(onboarding.queries.getStatus, {}, token),
-          messagesFor(locale),
-          readOptional(auth.queries.getCurrentUser, {}, token),
-          readOptional(
-            contents.queries.recent.getRecentlyViewed,
-            { locale, limit: 3 },
-            token
-          ),
-          readOptional(progress.queries.growth, {}, token),
-          readOptional(progress.queries.week, {}, token),
-          readOptional(progress.queries.leaders, {}, token),
-          readOptional(tryouts.queries.history.recent, { locale }, token),
-          readOptional(
-            learningPreferences.queries.getCurrentTryout,
-            { locale },
-            token
-          ),
-          Clock.currentTimeMillis,
-        ],
-        { concurrency: "unbounded" }
-      );
-      if (!status.isAuthenticated) {
-        return yield* redirectToAuth(locale);
-      }
-      if (status.isRequired) {
-        return yield* Effect.die(
-          redirect({
-            params: { locale },
-            to: "/$locale/onboarding",
-            statusCode: 307,
-          })
-        );
-      }
-      const t = createTranslator({
-        locale,
-        messages,
-        namespace: "Metadata",
-      });
-      const seo: ScreenSeo = {
-        canonicalPath: `/${locale}`,
-        description: t("description"),
-        indexable: false,
-        locale,
-        title: t("title"),
-      };
-      const recent = recentRows ?? [];
-      const sat = attempts ?? [];
-      return {
-        attempts: sat,
-        now,
-        start:
-          sat.length === 0
-            ? yield* readTryoutStart(locale, preference, token)
-            : null,
-        growth: progressSummary(growth),
-        leaders: leaders ?? [],
-        name: Option.getOrUndefined(
-          Option.map(Option.fromNullishOr(account), (user) => user.appUser.name)
-        ),
-        recent,
-        recentLooks: getMaterialLooks(recent),
-        seo,
-        username: account?.appUser.username,
-        week: week ?? undefined,
-      };
-    })
-);
+import { readOptional } from "@/lib/data/read.server";
 
 /**
  * The chat sidebar that every chat page shows: the first page of the study chats

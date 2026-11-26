@@ -113,7 +113,8 @@ function PickerTrigger(props: ComponentProps<typeof PopoverTrigger>) {
  * list filters. A list with no option says so in one sentence under the search field in place of the label, where the
  * keyboard never covers it, as the palette does, and while the first page of a server's list is read it shows a
  * spinner there instead. A list read a page at a time loads its next page as its end
- * comes into view or into the keys' reach.
+ * comes into view or into the keys' reach. Its search icon, its label, its option icons and its ticks stand on one
+ * line 12px from each edge, on a phone's sheet as in a popover (`CommandInput`'s `list` inset).
  */
 function PickerContent<Item>({
   children,
@@ -168,8 +169,8 @@ function PickerContent<Item>({
           status={waiting ? "loading" : "idle"}
         >
           <CommandInput
-            className="h-9"
             clearLabel={common("clear-search")}
+            inset="list"
             maxLength={maxLength}
             placeholder={placeholder}
           />
@@ -177,9 +178,7 @@ function PickerContent<Item>({
             {label}
           </PopoverTitle>
           <CommandEmpty>{waiting ? <Spinner /> : empty}</CommandEmpty>
-          <CommandList className="p-1 [[data-presentation=sheet]_&]:p-2">
-            {Arr.map(items, children)}
-          </CommandList>
+          <CommandList className="p-1">{Arr.map(items, children)}</CommandList>
         </Command>
       </PickerLabelsContext>
     </PopoverContent>

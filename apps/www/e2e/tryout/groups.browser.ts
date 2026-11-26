@@ -14,6 +14,8 @@ const DARMSTADT =
 /** The name of an exam card's link and of a subject card's link. */
 const EXAM_CARD = /^View options /u;
 const SUBJECT_CARD = /^View sets /u;
+/** The head of a set table's level column, whose button opens its filter. */
+const LEVEL_HEAD = /Level/u;
 /** The country's design, which only its own page's metadata names. */
 const GERMANY_DESIGN = /\/open-graph\/tryout\/germany\/en-index\.png$/u;
 /** The Darmstadt Mathematics test's English design, which its page shares in English. */
@@ -382,6 +384,56 @@ for (const href of SET_TABLES) {
     });
   }
 }
+
+/**
+ * The owner's notes of 26 Nov: a track's set table stands at the catalog's width (4xl), its Name column holds a short
+ * name's room, so on a desktop every column stands whole without scrolling, and the Level filter draws each level with
+ * the bars its rows draw, never a separate icon.
+ */
+test("a track's set table keeps a short Name column and every column whole at 1440 px", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 900, width: 1440 });
+  await visit(page, trackHref);
+  const card = page.locator('[data-slot="table-card"]');
+  await expect(card.locator("tbody tr a[href]").first()).toBeVisible();
+  const table = await card.evaluate((element) => {
+    const viewport = element.querySelector<HTMLElement>(
+      '[data-slot="scroll-area-viewport"]'
+    );
+    const name = element.querySelector("thead th");
+    return {
+      name: name?.getBoundingClientRect().width ?? 0,
+      scrolls:
+        viewport !== null && viewport.scrollWidth > viewport.clientWidth + 1,
+    };
+  });
+  expect(table.name).toBeGreaterThan(0);
+  expect(table.name).toBeLessThanOrEqual(200);
+  expect(table.scrolls).toBe(false);
+});
+
+test("the Level filter draws each level with the bars its rows draw", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 900, width: 1440 });
+  await visit(page, trackHref);
+  await page
+    .locator("thead")
+    .getByRole("button", { name: LEVEL_HEAD })
+    .first()
+    .click();
+  for (const level of ["Easy", "Medium", "Hard", "Cooked"]) {
+    const option = page.getByRole("menuitemradio", {
+      exact: true,
+      name: level,
+    });
+    await expect(option).toBeVisible();
+    await expect(option.locator('span[aria-hidden="true"] > span')).toHaveCount(
+      4
+    );
+  }
+});
 
 /** An exam's official name is never translated, in any locale. */
 for (const country of [

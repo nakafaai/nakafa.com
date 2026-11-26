@@ -67,11 +67,11 @@ export function PaneHeader({
             {title}
           </DrawerTitle>
           <DrawerDescription
-            className="truncate"
+            className="flex h-5 items-center"
             dir="auto"
             title={descriptionText}
           >
-            {description}
+            <span className="min-w-0 flex-1 truncate">{description}</span>
           </DrawerDescription>
         </div>
       </DrawerHeader>
@@ -94,12 +94,14 @@ export function PaneHeader({
           >
             {title}
           </h2>
+          {/* The second line keeps one 20px line whatever it holds, text or a designed line such as a level's bar, so a
+            description that changes kind as a read answers never moves the title above it. */}
           <p
-            className="text-muted-foreground truncate text-sm"
+            className="text-muted-foreground flex h-5 items-center text-sm"
             dir="auto"
             title={descriptionText}
           >
-            {description}
+            <span className="min-w-0 flex-1 truncate">{description}</span>
           </p>
         </div>
       </div>

@@ -122,7 +122,7 @@ describe("the columns of a table", () => {
     });
   });
 
-  it("keeps the room a wide cell asks for in the column's meta", () => {
+  it("keeps the room a wide or short cell asks for in the column's meta", () => {
     expect(
       columns.number((row) => row.score, {
         header: "Score",
@@ -130,6 +130,13 @@ describe("the columns of a table", () => {
         width: "wide",
       })
     ).toMatchObject({ meta: { width: "wide" } });
+    expect(
+      columns.text((row) => row.name, {
+        header: "Name",
+        id: "name",
+        width: "short",
+      })
+    ).toMatchObject({ meta: { width: "short" } });
   });
 
   it("leaves the row's menu the one column with nothing to filter by", () => {
