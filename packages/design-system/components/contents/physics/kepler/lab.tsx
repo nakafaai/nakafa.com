@@ -115,7 +115,7 @@ export function KeplerOrbitPeriodLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.6} setting="lab">
+        <ScienceStage floor={0} reach={2.8} setting="space">
           <Suspense fallback={null}>
             <KeplerOrbitScene
               body={active}

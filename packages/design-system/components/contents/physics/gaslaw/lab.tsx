@@ -151,6 +151,7 @@ export function GasLawThermalLab({
             <GasLawScene
               effectiveVolumeL={reading.effectiveVolumeL}
               parts={labels.parts}
+              pressureKpa={reading.pressureKpa}
               temperatureK={active === "boyle" ? 300 : tempK}
             />
           </Suspense>

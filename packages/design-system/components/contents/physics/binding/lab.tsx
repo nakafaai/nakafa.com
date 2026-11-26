@@ -145,7 +145,7 @@ export function NuclearBindingCurveLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.2} setting="lab">
+        <ScienceStage floor={0} reach={2.2} setting="studio">
           <Suspense fallback={null}>
             <NuclearBindingScene
               nuclide={activeNuclide}
