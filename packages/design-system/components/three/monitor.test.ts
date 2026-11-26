@@ -34,14 +34,14 @@ describe("createPerformanceMonitor", () => {
     });
 
     for (let frame = 0; frame < 8; frame += 1) {
-      expect(monitor.record(28)).toBe("full");
+      expect(monitor.record(42)).toBe("full");
     }
-    // Recover below 16.7ms EMA so slow-frame counter clears.
+    // Recover below 20ms EMA so slow-frame counter clears.
     for (let frame = 0; frame < 20; frame += 1) {
       expect(monitor.record(10)).toBe("full");
     }
     for (let frame = 0; frame < 8; frame += 1) {
-      expect(monitor.record(28)).toBe("full");
+      expect(monitor.record(42)).toBe("full");
     }
     expect(monitor.current()).toBe("full");
   });
@@ -54,23 +54,35 @@ describe("createPerformanceMonitor", () => {
 
     // 10 sustained slow frames drop postprocessing first.
     for (let frame = 0; frame < 9; frame += 1) {
-      expect(monitor.record(30)).toBe("full");
+      expect(monitor.record(45)).toBe("full");
     }
-    expect(monitor.record(30)).toBe("direct");
+    expect(monitor.record(45)).toBe("direct");
 
     // During the 15-frame cooldown, quality holds at direct.
     for (let frame = 0; frame < 15; frame += 1) {
-      expect(monitor.record(30)).toBe("direct");
+      expect(monitor.record(45)).toBe("direct");
     }
 
     // 18 more slow frames step down DPR to reduced.
     for (let frame = 0; frame < 17; frame += 1) {
-      expect(monitor.record(30)).toBe("direct");
+      expect(monitor.record(45)).toBe("direct");
     }
-    expect(monitor.record(30)).toBe("reduced");
+    expect(monitor.record(45)).toBe("reduced");
 
     // Once at reduced, further samples stay at reduced.
-    expect(monitor.record(30)).toBe("reduced");
+    expect(monitor.record(45)).toBe("reduced");
+  });
+
+  it("keeps HD quality in 30 fps battery-saver mode without false degradation", () => {
+    const monitor = createPerformanceMonitor({
+      canReduceDpr: true,
+      hasPostprocessing: true,
+    });
+
+    for (let frame = 0; frame < 40; frame += 1) {
+      expect(monitor.record(33.3)).toBe("full");
+    }
+    expect(monitor.current()).toBe("full");
   });
 
   it("starts at direct when no postprocessing is active and never reduces DPR when disallowed", () => {
@@ -81,19 +93,19 @@ describe("createPerformanceMonitor", () => {
 
     expect(monitor.current()).toBe("direct");
     for (let frame = 0; frame < 40; frame += 1) {
-      expect(monitor.record(35)).toBe("direct");
+      expect(monitor.record(45)).toBe("direct");
     }
     expect(monitor.current()).toBe("direct");
   });
 
-  it("holds counter steady in the hysteresis band between 16.7ms and 20ms", () => {
+  it("holds counter steady in the hysteresis band between 20ms and 35ms", () => {
     const monitor = createPerformanceMonitor({
       canReduceDpr: true,
       hasPostprocessing: true,
     });
 
-    expect(monitor.record(18)).toBe("full");
-    expect(monitor.record(18)).toBe("full");
+    expect(monitor.record(25)).toBe("full");
+    expect(monitor.record(25)).toBe("full");
     expect(monitor.current()).toBe("full");
   });
 });

@@ -149,7 +149,7 @@ function ThreeCanvasComponent({
   const paced = hasCard ? playing : !calm && frameloop === "always";
   const drawn = stage === "drawn" && hasSlot && !retrying;
   const visibleStage = resolveVisibleStage(stage, drawn);
-  const dpr: [number, number] = dprReduced ? [1, 1] : baseDpr;
+  const dpr: [number, number] = dprReduced ? [1, 1.5] : baseDpr;
   const activeFrameloop = resolveFrameloop(running, paced);
 
   const cancelRetry = useEffectEvent(() => {

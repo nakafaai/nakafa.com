@@ -49,10 +49,11 @@ function Catcher() {
  * ground is made of stands on that ground, drawn as far as the haze. A lab
  * that names only the height gets an unseen shadow catcher.
  *
- * Static desktop labs bake soft contact shadows once (`frames={1}`) so they
- * add zero per-frame render passes. Mobile, low-end, software-rendered, and
- * animated labs rely on the directional key light's real-time shadow map alone,
- * avoiding 3 full-scene shadow and blur passes per frame.
+ * Static desktop and capable mobile labs bake soft contact shadows once
+ * (`frames={1}`) so they add zero per-frame render passes after frame one.
+ * Low-end, software-rendered, and animated labs rely on the directional key
+ * light's real-time shadow map alone, avoiding 3 full-scene shadow and blur
+ * passes per frame.
  */
 export function Ground() {
   const { animated, floor, ground, reach, tier } = useStage();
@@ -61,7 +62,7 @@ export function Ground() {
     return null;
   }
 
-  const bakeContactShadows = tier === "full" && !animated;
+  const bakeContactShadows = (tier === "full" || tier === "light") && !animated;
 
   return (
     <>

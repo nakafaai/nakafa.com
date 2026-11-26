@@ -17,6 +17,14 @@ import {
 } from "react";
 import { useTranslations } from "use-intl";
 
+/** Caps p5 pixel density so 2D sketches stay Retina-sharp on phones and desktops without runaway backing buffers. */
+function resolveSketchPixelDensity(): number {
+  const raw: unknown = Reflect.get(globalThis, "devicePixelRatio");
+  if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) {
+    return Math.min(Math.max(raw, 1), 3);
+  }
+  return 2;
+}
 /**
  * A p5 sketch in instance mode: it sets `setup` and `draw` on the instance it
  * is given, and reads the card's latest state through `read` on every frame.
@@ -78,15 +86,17 @@ export function P5Sketch<State>({
     if (!(loaded && Exit.isSuccess(loaded) && node)) {
       return;
     }
-    const sketch = new loaded.value(
-      (each) => program(each, () => latest.current),
-      node
-    );
+    const density = resolveSketchPixelDensity();
+    const sketch = new loaded.value((each) => {
+      each.pixelDensity(density);
+      program(each, () => latest.current);
+    }, node);
     instance.current = sketch;
     keepPlaying(sketch);
     startPlaying();
     const resize = new ResizeObserver(([entry]) => {
       if (entry) {
+        sketch.pixelDensity(resolveSketchPixelDensity());
         sketch.resizeCanvas(entry.contentRect.width, entry.contentRect.height);
         sketch.redraw();
       }
