@@ -8,7 +8,7 @@ import { CurriculumHeader } from "@/components/curriculum/header";
 import { ContainerList } from "@/components/shared/card/list";
 import { CardMaterial } from "@/components/shared/card/material";
 import { SidebarTree } from "@/components/shared/outline/tree";
-import { PageBody } from "@/components/shared/page/body";
+import { PageStack, PageState } from "@/components/shared/page/body";
 import { CatalogPage, Page } from "@/components/shared/page/frame";
 import {
   PageOutline,
@@ -101,8 +101,8 @@ function CurriculumMaterialsPage() {
           title={route.title}
           trail={page.trail}
         />
-        <PageBody>
-          <ContainerList className="pt-6 sm:grid-cols-1">
+        <PageStack>
+          <ContainerList className="sm:grid-cols-1">
             {Arr.map(page.materialCards, (material) => (
               <CardMaterial
                 key={material.link.publicPath}
@@ -110,7 +110,7 @@ function CurriculumMaterialsPage() {
               />
             ))}
           </ContainerList>
-        </PageBody>
+        </PageStack>
       </Page>
       <PageOutline
         footer={
@@ -143,12 +143,12 @@ function CurriculumCatalogPage() {
         title={route.title}
         trail={page.trail}
       />
-      <PageBody>
+      <PageStack>
         <CurriculumCardGrid
           actionLabel={labels.routeAction}
           cards={page.childCards}
         />
-      </PageBody>
+      </PageStack>
     </CatalogPage>
   );
 }
@@ -166,9 +166,9 @@ function CurriculumEmptyPage() {
         title={route.title}
         trail={page.trail}
       />
-      <PageBody>
+      <PageState>
         <ComingSoon />
-      </PageBody>
+      </PageState>
     </Page>
   );
 }

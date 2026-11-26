@@ -274,10 +274,10 @@ function ArticleCategoryPage() {
             <CardArticle article={article} key={article.publicPath} />
           ))}
         </ContainerList>
+        {page.nextSearch ? (
+          <ArticleNext category={page.routeSlug} search={page.nextSearch} />
+        ) : null}
       </PageStack>
-      {page.nextSearch ? (
-        <ArticleNext category={page.routeSlug} search={page.nextSearch} />
-      ) : null}
     </Page>
   );
 }

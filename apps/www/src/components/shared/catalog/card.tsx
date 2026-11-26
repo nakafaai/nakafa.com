@@ -34,7 +34,7 @@ interface CatalogCardProps {
  */
 export function CatalogGrid({ children }: { children: ReactNode }) {
   return (
-    <div className="@container pt-6 pb-24">
+    <div className="@container">
       <div
         className="grid grid-cols-1 gap-4 @xl:grid-cols-2 @2xl:grid-cols-3"
         data-slot="catalog-grid"

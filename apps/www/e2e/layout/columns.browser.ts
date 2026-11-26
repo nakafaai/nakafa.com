@@ -154,5 +154,35 @@ for (const width of [390, 1440]) {
         ).toBe(width === 390 ? 1 : 3);
       });
     }
+
+    test("curriculum material lists keep bottom rhythm clearance", async ({
+      page,
+    }) => {
+      await Effect.runPromise(
+        withObservedPageErrors(
+          page,
+          visit(page, "/en/curriculum/merdeka/class-10/biology")
+        )
+      );
+      const cards = page.locator('[data-slot="page-stack"] [data-slot="card"]');
+      await expect(cards.first()).toBeVisible();
+      const clearance = await page.evaluate(() => {
+        const stack = document.querySelector('[data-slot="page-stack"]');
+        const list = Array.from(
+          document.querySelectorAll(
+            '[data-slot="page-stack"] [data-slot="card"]'
+          )
+        );
+        const last = list.at(-1);
+        if (!(stack && last)) {
+          return 0;
+        }
+        return Math.round(
+          stack.getBoundingClientRect().bottom -
+            last.getBoundingClientRect().bottom
+        );
+      });
+      expect(clearance).toBeGreaterThanOrEqual(24);
+    });
   });
 }

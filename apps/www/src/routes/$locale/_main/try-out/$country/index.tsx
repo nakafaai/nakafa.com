@@ -1,6 +1,6 @@
 import { makeBreadcrumbNodes } from "@repo/seo/jsonld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { PageBody } from "@/components/shared/page/body";
+import { PageStack } from "@/components/shared/page/body";
 import { CatalogPage } from "@/components/shared/page/frame";
 import { TryoutCountryPageClient } from "@/components/tryout/catalog/country";
 import { TryoutTrailHeader } from "@/components/tryout/catalog/trail";
@@ -47,9 +47,9 @@ function TryoutCountryPage() {
         title={route.title}
         trail={route.trail}
       />
-      <PageBody>
+      <PageStack>
         <TryoutCountryPageClient page={{ exams: route.exams }} />
-      </PageBody>
+      </PageStack>
     </CatalogPage>
   );
 }
