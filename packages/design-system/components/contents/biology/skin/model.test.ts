@@ -14,4 +14,21 @@ describe("thermoregulation skin model", () => {
     expect(hot.sweatActive).toBe(true);
     expect(hot.heatLossPercent).toBeGreaterThan(cold.heatLossPercent);
   });
+
+  it("responds continuously to ambient temperature changes within each condition", () => {
+    const coolNormal = evaluateSkin("normal", 12);
+    const warmNormal = evaluateSkin("normal", 36);
+    expect(warmNormal.arterioleScale).toBeGreaterThan(
+      coolNormal.arterioleScale
+    );
+    expect(warmNormal.hairAngleRad).toBeGreaterThan(coolNormal.hairAngleRad);
+    expect(coolNormal.sweatActive).toBe(false);
+    expect(warmNormal.sweatActive).toBe(true);
+    expect(warmNormal.sweatIntensity).toBeGreaterThan(0);
+
+    const mildHot = evaluateSkin("hot", 26);
+    const extremeHot = evaluateSkin("hot", 42);
+    expect(extremeHot.arterioleScale).toBeGreaterThan(mildHot.arterioleScale);
+    expect(extremeHot.sweatIntensity).toBeGreaterThan(mildHot.sweatIntensity);
+  });
 });

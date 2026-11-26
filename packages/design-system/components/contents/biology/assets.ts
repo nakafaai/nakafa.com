@@ -43,3 +43,79 @@ export const BLUE_MARBLE_EARTH_TEXTURE_ASSET = {
     "b5ff8775b4f7c69982dea597c9d23433ac02cb5a3873171f7d9ab576ce4ec87c",
   processedWith: "Resized to 2048px wide JPEG with sips for web delivery.",
 } as const;
+
+export const HRA_KNEE_JOINT_ASSET = {
+  path: "/models/biology/hra-knee-joint.glb",
+  sourceTitle:
+    "Human Reference Atlas 3D Reference Organ: Knee, Male, Left v1.2",
+  sourceUrl:
+    "https://cdn.humanatlas.io/digital-objects/ref-organ/knee-male-left/v1.2/assets/3d-vh-m-knee-l.glb",
+  license: "CC-BY-4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+  originalSha256:
+    "2f15b825da044aafef760ab62aa2e9111f63d674efaa4c3d96ddb04f9b1ef6aa",
+  processedSha256:
+    "581649c95c08a127d6403ac66be386d695299860fff74db17578daf56c2dcaed",
+  processedWith:
+    "gltf-transform optimize --compress false --simplify-ratio 0.5 --simplify-error 0.01",
+} as const;
+
+export const HRA_LIVER_ASSET = {
+  path: "/models/biology/hra-liver.glb",
+  sourceTitle: "Human Reference Atlas 3D Reference Organ: Liver, Male v1.2",
+  sourceUrl:
+    "https://cdn.humanatlas.io/digital-objects/ref-organ/liver-male/v1.2/assets/3d-vh-m-liver.glb",
+  license: "CC-BY-4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+  originalSha256:
+    "8e4c38293cfdb6b4f47ef2930c7f4af9e37b9144d1cf26d07c8f12c5045eb404",
+  processedSha256:
+    "0c0b9772774af5292338cc778617da94fb308886d359e3d3e37b3ca7febd3741",
+  processedWith:
+    "gltf-transform optimize --compress false --simplify-ratio 0.12 --simplify-error 0.03",
+} as const;
+
+export const HRA_PANCREAS_ASSET = {
+  path: "/models/biology/hra-pancreas.glb",
+  sourceTitle: "Human Reference Atlas 3D Reference Organ: Pancreas, Male v1.3",
+  sourceUrl:
+    "https://cdn.humanatlas.io/digital-objects/ref-organ/pancreas-male/v1.3/assets/3d-vh-m-pancreas.glb",
+  license: "CC-BY-4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+  originalSha256:
+    "a89d7acbc9448ca1e6c09f7f6d6a18b2bd8a2e94cd4a0b51709915a8b7bea84e",
+  processedSha256:
+    "f41a78c078b39118e56565e5aa456b2ac9a8dc55161e72e2d2dc2a629e15425e",
+  processedWith: "gltf-transform simplify + optimize + quantize",
+} as const;
+
+export const HRA_PELVIS_ASSET = {
+  path: "/models/biology/hra-pelvis.glb",
+  sourceTitle: "Human Reference Atlas 3D Reference Organ: Pelvis, Male v1.3",
+  sourceUrl:
+    "https://cdn.humanatlas.io/digital-objects/ref-organ/pelvis-male/v1.3/assets/3d-vh-m-pelvis.glb",
+  license: "CC-BY-4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+  originalSha256:
+    "5bfd2c34b62a7224796d50002bcdf9ded60ea11485a118351dfd1f19c6853e77",
+  processedSha256:
+    "8591dadefc23e13158dbc3cff0138ea945046ca4210764d529fc0dd00ba7dcfe",
+  processedWith:
+    "gltf-transform optimize --compress false --simplify-ratio 0.25 --simplify-error 0.02",
+} as const;
+
+export const HRA_PLACENTA_ASSET = {
+  path: "/models/biology/hra-placenta.glb",
+  sourceTitle:
+    "Human Reference Atlas 3D Reference Organ: Placenta Full Term, Female v1.1",
+  sourceUrl:
+    "https://cdn.humanatlas.io/digital-objects/ref-organ/placenta-full-term-female/v1.1/assets/3d-vh-f-placenta-full-term.glb",
+  license: "CC-BY-4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+  originalSha256:
+    "32381ebb2b2369e8e83c2b1e5f94cb1cafccf1e1e23439f80bada482ab9e57ef",
+  processedSha256:
+    "f35dc42ce78db30c77d54dbad0fdcf7c2a85d73fb7ea419badf8d05d4ef7cda6",
+  processedWith:
+    "gltf-transform optimize --compress false --simplify-ratio 0.15 --simplify-error 0.03",
+} as const;
