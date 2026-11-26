@@ -18,6 +18,7 @@ import { nuclearRenderers } from "@/lib/content/renderer/registry/nuclear";
 import { opticsRenderers } from "@/lib/content/renderer/registry/optics";
 import { physicsRenderers } from "@/lib/content/renderer/registry/physics";
 import { politicsRenderers } from "@/lib/content/renderer/registry/politics";
+import { synthesisRenderers } from "@/lib/content/renderer/registry/synthesis";
 import { wavesRenderers } from "@/lib/content/renderer/registry/waves";
 import type { RendererImplementation } from "@/lib/content/renderer/selection";
 
@@ -33,6 +34,7 @@ export const catalogRenderers = [
   ...botanyRenderers,
   ...geneticsRenderers,
   ...chemistryRenderers,
+  ...synthesisRenderers,
   ...mathematicsRenderers,
   ...physicsRenderers,
   ...circuitRenderers,
