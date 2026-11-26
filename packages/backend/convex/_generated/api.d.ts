@@ -5155,7 +5155,28 @@ export declare const api: {
                           text: string;
                           type: "text";
                         }
-                      | { attrs: { latex: string }; type: "mathInline" }
+                      | {
+                          attrs: { latex: string };
+                          marks?: Array<
+                            | {
+                                type:
+                                  | "bold"
+                                  | "italic"
+                                  | "underline"
+                                  | "code"
+                                  | "subscript"
+                                  | "superscript";
+                              }
+                            | {
+                                attrs: {
+                                  variant: "success" | "warning" | null;
+                                };
+                                type: "highlight";
+                              }
+                            | { attrs: { href: string }; type: "link" }
+                          >;
+                          type: "mathInline";
+                        }
                     >;
                   }>;
                   shuffle: boolean;
@@ -5242,7 +5263,28 @@ export declare const api: {
                           text: string;
                           type: "text";
                         }
-                      | { attrs: { latex: string }; type: "mathInline" }
+                      | {
+                          attrs: { latex: string };
+                          marks?: Array<
+                            | {
+                                type:
+                                  | "bold"
+                                  | "italic"
+                                  | "underline"
+                                  | "code"
+                                  | "subscript"
+                                  | "superscript";
+                              }
+                            | {
+                                attrs: {
+                                  variant: "success" | "warning" | null;
+                                };
+                                type: "highlight";
+                              }
+                            | { attrs: { href: string }; type: "link" }
+                          >;
+                          type: "mathInline";
+                        }
                     >;
                     maxMatches: number;
                   }>;
@@ -5532,7 +5574,28 @@ export declare const api: {
                           text: string;
                           type: "text";
                         }
-                      | { attrs: { latex: string }; type: "mathInline" }
+                      | {
+                          attrs: { latex: string };
+                          marks?: Array<
+                            | {
+                                type:
+                                  | "bold"
+                                  | "italic"
+                                  | "underline"
+                                  | "code"
+                                  | "subscript"
+                                  | "superscript";
+                              }
+                            | {
+                                attrs: {
+                                  variant: "success" | "warning" | null;
+                                };
+                                type: "highlight";
+                              }
+                            | { attrs: { href: string }; type: "link" }
+                          >;
+                          type: "mathInline";
+                        }
                     >;
                   }>;
                   shuffle: boolean;
@@ -5619,7 +5682,28 @@ export declare const api: {
                           text: string;
                           type: "text";
                         }
-                      | { attrs: { latex: string }; type: "mathInline" }
+                      | {
+                          attrs: { latex: string };
+                          marks?: Array<
+                            | {
+                                type:
+                                  | "bold"
+                                  | "italic"
+                                  | "underline"
+                                  | "code"
+                                  | "subscript"
+                                  | "superscript";
+                              }
+                            | {
+                                attrs: {
+                                  variant: "success" | "warning" | null;
+                                };
+                                type: "highlight";
+                              }
+                            | { attrs: { href: string }; type: "link" }
+                          >;
+                          type: "mathInline";
+                        }
                     >;
                     maxMatches: number;
                   }>;
@@ -5939,7 +6023,28 @@ export declare const api: {
                           text: string;
                           type: "text";
                         }
-                      | { attrs: { latex: string }; type: "mathInline" }
+                      | {
+                          attrs: { latex: string };
+                          marks?: Array<
+                            | {
+                                type:
+                                  | "bold"
+                                  | "italic"
+                                  | "underline"
+                                  | "code"
+                                  | "subscript"
+                                  | "superscript";
+                              }
+                            | {
+                                attrs: {
+                                  variant: "success" | "warning" | null;
+                                };
+                                type: "highlight";
+                              }
+                            | { attrs: { href: string }; type: "link" }
+                          >;
+                          type: "mathInline";
+                        }
                     >;
                   }>;
                   shuffle: boolean;
@@ -6026,7 +6131,28 @@ export declare const api: {
                           text: string;
                           type: "text";
                         }
-                      | { attrs: { latex: string }; type: "mathInline" }
+                      | {
+                          attrs: { latex: string };
+                          marks?: Array<
+                            | {
+                                type:
+                                  | "bold"
+                                  | "italic"
+                                  | "underline"
+                                  | "code"
+                                  | "subscript"
+                                  | "superscript";
+                              }
+                            | {
+                                attrs: {
+                                  variant: "success" | "warning" | null;
+                                };
+                                type: "highlight";
+                              }
+                            | { attrs: { href: string }; type: "link" }
+                          >;
+                          type: "mathInline";
+                        }
                     >;
                     maxMatches: number;
                   }>;
@@ -6405,7 +6531,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                 }>;
                 shuffle: boolean;
@@ -6490,7 +6635,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                   maxMatches: number;
                 }>;
@@ -6756,7 +6920,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                 }>;
                 shuffle: boolean;
@@ -6841,7 +7024,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                   maxMatches: number;
                 }>;
@@ -7073,7 +7275,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                 }>;
                 shuffle: boolean;
@@ -7158,7 +7379,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                   maxMatches: number;
                 }>;
@@ -7425,7 +7665,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                 }>;
                 shuffle: boolean;
@@ -7510,7 +7769,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                   maxMatches: number;
                 }>;
@@ -7785,7 +8063,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                 }>;
                 shuffle: boolean;
@@ -7870,7 +8167,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                   maxMatches: number;
                 }>;
@@ -8153,7 +8469,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                 }>;
                 shuffle: boolean;
@@ -8238,7 +8573,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                   maxMatches: number;
                 }>;
@@ -8510,7 +8864,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                 }>;
                 shuffle: boolean;
@@ -8595,7 +8968,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                   maxMatches: number;
                 }>;
@@ -8873,7 +9265,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                 }>;
                 shuffle: boolean;
@@ -8958,7 +9369,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                   maxMatches: number;
                 }>;
@@ -9242,7 +9672,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                 }>;
                 shuffle: boolean;
@@ -9327,7 +9776,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                   maxMatches: number;
                 }>;
@@ -9935,7 +10403,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                 }>;
                 shuffle: boolean;
@@ -10020,7 +10507,26 @@ export declare const api: {
                         text: string;
                         type: "text";
                       }
-                    | { attrs: { latex: string }; type: "mathInline" }
+                    | {
+                        attrs: { latex: string };
+                        marks?: Array<
+                          | {
+                              type:
+                                | "bold"
+                                | "italic"
+                                | "underline"
+                                | "code"
+                                | "subscript"
+                                | "superscript";
+                            }
+                          | {
+                              attrs: { variant: "success" | "warning" | null };
+                              type: "highlight";
+                            }
+                          | { attrs: { href: string }; type: "link" }
+                        >;
+                        type: "mathInline";
+                      }
                   >;
                   maxMatches: number;
                 }>;
@@ -10408,7 +10914,28 @@ export declare const api: {
                           text: string;
                           type: "text";
                         }
-                      | { attrs: { latex: string }; type: "mathInline" }
+                      | {
+                          attrs: { latex: string };
+                          marks?: Array<
+                            | {
+                                type:
+                                  | "bold"
+                                  | "italic"
+                                  | "underline"
+                                  | "code"
+                                  | "subscript"
+                                  | "superscript";
+                              }
+                            | {
+                                attrs: {
+                                  variant: "success" | "warning" | null;
+                                };
+                                type: "highlight";
+                              }
+                            | { attrs: { href: string }; type: "link" }
+                          >;
+                          type: "mathInline";
+                        }
                     >;
                   }>;
                   shuffle: boolean;
@@ -10495,7 +11022,28 @@ export declare const api: {
                           text: string;
                           type: "text";
                         }
-                      | { attrs: { latex: string }; type: "mathInline" }
+                      | {
+                          attrs: { latex: string };
+                          marks?: Array<
+                            | {
+                                type:
+                                  | "bold"
+                                  | "italic"
+                                  | "underline"
+                                  | "code"
+                                  | "subscript"
+                                  | "superscript";
+                              }
+                            | {
+                                attrs: {
+                                  variant: "success" | "warning" | null;
+                                };
+                                type: "highlight";
+                              }
+                            | { attrs: { href: string }; type: "link" }
+                          >;
+                          type: "mathInline";
+                        }
                     >;
                     maxMatches: number;
                   }>;
@@ -11968,355 +12516,6 @@ export declare const api: {
           webhookId: Id<"integrationWebhooks">;
         },
         { id: Id<"integrationWebhooks">; secret: string }
-      >;
-    };
-  };
-  island: {
-    mutations: {
-      change: FunctionReference<
-        "mutation",
-        "public",
-        {
-          ops: Array<
-            | {
-                _tag: "land";
-                clears: Array<number>;
-                cx: number;
-                cz: number;
-                lifts: Array<number>;
-                paints: Array<number>;
-              }
-            | {
-                _tag: "set";
-                at: number;
-                cx: number;
-                cz: number;
-                kind:
-                  | "mango"
-                  | "flame"
-                  | "casuarina"
-                  | "pine"
-                  | "palm"
-                  | "banana"
-                  | "bush"
-                  | "rocks"
-                  | "sunflower"
-                  | "cottage"
-                  | "saung"
-                  | "well"
-                  | "bridge"
-                  | "windmill"
-                  | "lighthouse"
-                  | "library"
-                  | "flowerbed"
-                  | "lantern"
-                  | "bench"
-                  | "fence"
-                  | "ball"
-                  | "campfire"
-                  | "kite"
-                  | "balloon"
-                  | "reed"
-                  | "lily"
-                  | "coral"
-                  | "brain"
-                  | "seagrass"
-                  | "boat";
-                turn: number;
-              }
-            | { _tag: "take"; at: number; cx: number; cz: number }
-          >;
-        },
-        Array<"done" | "locked" | "full">
-      >;
-      greet: FunctionReference<
-        "mutation",
-        "public",
-        {
-          sticker: "wave" | "heart" | "star" | "flower" | "fish" | "sun";
-          username: string;
-        },
-        null
-      >;
-      open: FunctionReference<
-        "mutation",
-        "public",
-        { timeZone: string },
-        { entered: number | null }
-      >;
-      share: FunctionReference<
-        "mutation",
-        "public",
-        { access: "private" | "link" | "public" },
-        null
-      >;
-      unlock: FunctionReference<
-        "mutation",
-        "public",
-        {
-          kind:
-            | "mango"
-            | "flame"
-            | "casuarina"
-            | "pine"
-            | "palm"
-            | "banana"
-            | "bush"
-            | "rocks"
-            | "sunflower"
-            | "cottage"
-            | "saung"
-            | "well"
-            | "bridge"
-            | "windmill"
-            | "lighthouse"
-            | "library"
-            | "flowerbed"
-            | "lantern"
-            | "bench"
-            | "fence"
-            | "ball"
-            | "campfire"
-            | "kite"
-            | "balloon"
-            | "reed"
-            | "lily"
-            | "coral"
-            | "brain"
-            | "seagrass"
-            | "boat";
-        },
-        {
-          balance: number;
-          blueprints: Array<
-            | "mango"
-            | "flame"
-            | "casuarina"
-            | "pine"
-            | "palm"
-            | "banana"
-            | "bush"
-            | "rocks"
-            | "sunflower"
-            | "cottage"
-            | "saung"
-            | "well"
-            | "bridge"
-            | "windmill"
-            | "lighthouse"
-            | "library"
-            | "flowerbed"
-            | "lantern"
-            | "bench"
-            | "fence"
-            | "ball"
-            | "campfire"
-            | "kite"
-            | "balloon"
-            | "reed"
-            | "lily"
-            | "coral"
-            | "brain"
-            | "seagrass"
-            | "boat"
-          >;
-        }
-      >;
-    };
-    queries: {
-      claims: FunctionReference<
-        "query",
-        "public",
-        {
-          countryKey: string;
-          examKey: string;
-          locale: "en" | "id" | "de" | "ms";
-          setKey: string;
-          trackKey: string;
-        },
-        { sections: Array<string>; set: boolean; stars: number } | null
-      >;
-      growth: FunctionReference<
-        "query",
-        "public",
-        {},
-        {
-          lifetime: number;
-          tally: {
-            days: number;
-            lessons: number;
-            sections: number;
-            sets: number;
-            streak: number;
-            subjects: Record<string, number>;
-          };
-        } | null
-      >;
-      guests: FunctionReference<
-        "query",
-        "public",
-        {},
-        Array<{
-          at: number;
-          mascot: string;
-          name: string;
-          sticker: "wave" | "heart" | "star" | "flower" | "fish" | "sun";
-        }>
-      >;
-      leaders: FunctionReference<
-        "query",
-        "public",
-        {},
-        Array<{
-          level: number;
-          lifetime: number;
-          mascot: string;
-          name: string;
-          own: boolean;
-          place: number;
-        }>
-      >;
-      medals: FunctionReference<
-        "query",
-        "public",
-        { username: string },
-        {
-          level: number;
-          tally: {
-            days: number;
-            lessons: number;
-            sections: number;
-            sets: number;
-            streak: number;
-            subjects: Record<string, number>;
-          };
-        } | null
-      >;
-      own: FunctionReference<
-        "query",
-        "public",
-        {},
-        {
-          access: "private" | "link" | "public";
-          balance: number;
-          blueprints: Array<
-            | "mango"
-            | "flame"
-            | "casuarina"
-            | "pine"
-            | "palm"
-            | "banana"
-            | "bush"
-            | "rocks"
-            | "sunflower"
-            | "cottage"
-            | "saung"
-            | "well"
-            | "bridge"
-            | "windmill"
-            | "lighthouse"
-            | "library"
-            | "flowerbed"
-            | "lantern"
-            | "bench"
-            | "fence"
-            | "ball"
-            | "campfire"
-            | "kite"
-            | "balloon"
-            | "reed"
-            | "lily"
-            | "coral"
-            | "brain"
-            | "seagrass"
-            | "boat"
-          >;
-          lifetime: number;
-          tally: {
-            days: number;
-            lessons: number;
-            sections: number;
-            sets: number;
-            streak: number;
-            subjects: Record<string, number>;
-          };
-        } | null
-      >;
-      region: FunctionReference<
-        "query",
-        "public",
-        { rx: number; rz: number; username: string | null },
-        Array<{
-          clears: ArrayBuffer;
-          cx: number;
-          cz: number;
-          lifts: ArrayBuffer;
-          paints: ArrayBuffer;
-          things: Array<{
-            at: number;
-            kind:
-              | "mango"
-              | "flame"
-              | "casuarina"
-              | "pine"
-              | "palm"
-              | "banana"
-              | "bush"
-              | "rocks"
-              | "sunflower"
-              | "cottage"
-              | "saung"
-              | "well"
-              | "bridge"
-              | "windmill"
-              | "lighthouse"
-              | "library"
-              | "flowerbed"
-              | "lantern"
-              | "bench"
-              | "fence"
-              | "ball"
-              | "campfire"
-              | "kite"
-              | "balloon"
-              | "reed"
-              | "lily"
-              | "coral"
-              | "brain"
-              | "seagrass"
-              | "boat";
-            turn: number;
-          }>;
-        }>
-      >;
-      visit: FunctionReference<
-        "query",
-        "public",
-        { username: string },
-        {
-          access: "private" | "link" | "public";
-          level: number;
-          mascot: string;
-          name: string;
-          own: boolean;
-          owner: string;
-        } | null
-      >;
-      week: FunctionReference<
-        "query",
-        "public",
-        {},
-        {
-          days: Array<{
-            day: string;
-            lessons: number;
-            sections: number;
-            sets: number;
-            stars: number;
-          }>;
-          streak: number;
-          today: string;
-        } | null
       >;
     };
   };
@@ -14264,6 +14463,84 @@ export declare const api: {
             questionOrder: number;
           }>;
           sessionId: Id<"practiceSessions">;
+        } | null
+      >;
+    };
+  };
+  progress: {
+    queries: {
+      claims: FunctionReference<
+        "query",
+        "public",
+        {
+          countryKey: string;
+          examKey: string;
+          locale: "en" | "id" | "de" | "ms";
+          setKey: string;
+          trackKey: string;
+        },
+        { sections: Array<string>; set: boolean; stars: number } | null
+      >;
+      growth: FunctionReference<
+        "query",
+        "public",
+        {},
+        {
+          lifetime: number;
+          tally: {
+            days: number;
+            lessons: number;
+            sections: number;
+            sets: number;
+            streak: number;
+            subjects: Record<string, number>;
+          };
+        } | null
+      >;
+      leaders: FunctionReference<
+        "query",
+        "public",
+        {},
+        Array<{
+          level: number;
+          lifetime: number;
+          mascot: string;
+          name: string;
+          own: boolean;
+          place: number;
+          username: string | null;
+        }>
+      >;
+      medals: FunctionReference<
+        "query",
+        "public",
+        { username: string },
+        {
+          level: number;
+          tally: {
+            days: number;
+            lessons: number;
+            sections: number;
+            sets: number;
+            streak: number;
+            subjects: Record<string, number>;
+          };
+        } | null
+      >;
+      week: FunctionReference<
+        "query",
+        "public",
+        {},
+        {
+          days: Array<{
+            day: string;
+            lessons: number;
+            sections: number;
+            sets: number;
+            stars: number;
+          }>;
+          streak: number;
+          today: string;
         } | null
       >;
     };
@@ -17840,6 +18117,7 @@ export declare const api: {
               own: boolean;
               place: number;
               score: number;
+              username: string | null;
             }>;
             own: {
               id: Id<"tryoutSetBests">;
@@ -17848,6 +18126,7 @@ export declare const api: {
               own: boolean;
               place: number;
               score: number;
+              username: string | null;
             } | null;
             standing: number | null;
           }
@@ -23820,6 +24099,43 @@ export declare const internal: {
           null
         >;
         sweep: FunctionReference<"mutation", "internal", {}, null>;
+      };
+      repin: {
+        page: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            batchSize?: number;
+            cursor?: string | null;
+            fromSnapshotId: string;
+            phase?: "attempts" | "sessions";
+          },
+          {
+            cursor: string | null;
+            done: boolean;
+            phase: "attempts" | "sessions";
+            repinnedAttempts: number;
+            repinnedSessions: number;
+            skippedAttempts: number;
+            skippedSessions: number;
+            targetSnapshotId: string;
+          }
+        >;
+        run: FunctionReference<
+          "action",
+          "internal",
+          { batchSize?: number; fromSnapshotId: string; maxPages?: number },
+          {
+            cursor: string | null;
+            done: boolean;
+            phase: "attempts" | "sessions";
+            repinnedAttempts: number;
+            repinnedSessions: number;
+            skippedAttempts: number;
+            skippedSessions: number;
+            targetSnapshotId: string;
+          }
+        >;
       };
     };
     reminders: {

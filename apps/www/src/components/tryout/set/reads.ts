@@ -1,5 +1,5 @@
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
-import island from "@repo/backend/confect/_generated/refs/island";
+import progress from "@repo/backend/confect/_generated/refs/progress";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Duration, Effect, Option, Schema } from "effect";
 import { setAttemptRequest } from "@/components/tryout/route/learner";
@@ -76,8 +76,8 @@ export const warmSetReads = Effect.fn("tryout.set.warmReads")(function* (
     const [attempt] = yield* Effect.all(
       [
         warmQuery(tryouts.queries.attemptPage.getSet, args.attempt),
-        warmQuery(island.queries.growth, {}),
-        warmQuery(island.queries.claims, args.claims),
+        warmQuery(progress.queries.growth, {}),
+        warmQuery(progress.queries.claims, args.claims),
         warmQuery(tryouts.queries.ranks.bySet, args.board),
       ],
       { concurrency: "unbounded" }

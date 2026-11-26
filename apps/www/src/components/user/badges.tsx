@@ -1,20 +1,20 @@
 import type { Ref } from "@confect/core";
-import type island from "@repo/backend/confect/_generated/refs/island";
+import type progress from "@repo/backend/confect/_generated/refs/progress";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { medalsOf } from "@/components/progress/level";
 import { MedalItem, MedalWay } from "@/components/progress/medal";
 
-type Medals = NonNullable<Ref.Returns<typeof island.queries.medals>>;
+type Medals = NonNullable<Ref.Returns<typeof progress.queries.medals>>;
 
 /**
- * The Badges tab of a profile (the owner's home notes, 14 Nov): the learner's
- * level, how many medals they hold, and every medal there is, earned or still
- * a silhouette, each with its way to the next tier. It is the wall a learner
- * shows to other people, so the home's pane only keeps their best four.
+ * The Badges tab of a profile: the learner's level, how many medals they hold,
+ * and every medal there is, earned or still a silhouette, each with its way to
+ * the next tier. It is the wall a learner shows to other people, so the home's
+ * pane only keeps their best four.
  */
 export function UserBadges({ medals }: { medals: Medals }) {
-  const t = useTranslations("Island");
+  const t = useTranslations("Progress");
   const wall = medalsOf(medals.tally);
   return (
     <section className="flex flex-col gap-6 pt-6">

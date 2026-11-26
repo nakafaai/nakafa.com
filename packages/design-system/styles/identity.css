@@ -29,17 +29,6 @@
   --color-ink: oklch(0 0 0);
 }
 
-/* The sky of the island game, behind its canvas and behind the home's preview of it. It looks the
- * same in every theme, as the world it frames does (ADR 0047). */
-@theme static {
-  /* The sky behind the world while the renderer starts. */
-  --color-island-sky: #5aa7e6;
-  /* The top of the sky behind the home's island preview. */
-  --color-island-sky-high: #58a6e4;
-  /* The foot of the sky behind the home's island preview. */
-  --color-island-sky-low: #bfe2f0;
-}
-
 /* Each thing does one small thing by itself. The names are the `motion` of a
  * mark (@repo/mascot/thing/mark), and ui/thing.tsx applies them only to people
  * who have not asked for less motion. */

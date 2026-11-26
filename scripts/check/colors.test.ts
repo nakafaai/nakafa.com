@@ -207,27 +207,6 @@ const mark = "#2563eb";`,
   );
 
   it.effect(
-    "leaves the island's world art to its palette, and judges the game's chrome",
-    () =>
-      Effect.gen(function* () {
-        for (const file of [
-          "apps/www/src/lib/island/palette.ts",
-          "apps/www/src/lib/island/sky.ts",
-        ]) {
-          assert.deepStrictEqual(
-            yield* inspectChrome(`const grass = "#5a9a3c";`, file),
-            []
-          );
-        }
-        const hud = "apps/www/src/components/island/hud.tsx";
-        assert.deepStrictEqual(
-          yield* inspectChrome(`const slot = "bg-[#e9c992]";`, hud),
-          [`${hud}: ${CHROME_RULE}.`]
-        );
-      })
-  );
-
-  it.effect(
     "leaves another owner's paint, lesson visuals and tests alone",
     () =>
       Effect.gen(function* () {

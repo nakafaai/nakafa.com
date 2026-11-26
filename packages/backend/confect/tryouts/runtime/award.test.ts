@@ -2,12 +2,12 @@ import { describe, expect, it } from "@effect/vitest";
 import { tryoutWorld } from "@repo/backend/test/tryout/world";
 import { Array as Arr, Effect } from "effect";
 
-/** The island ledger and lifetime of the world's learner. */
-const readIsland = (world: Effect.Success<ReturnType<typeof tryoutWorld>>) =>
+/** The progress ledger and lifetime Stars of the world's learner. */
+const readProgress = (world: Effect.Success<ReturnType<typeof tryoutWorld>>) =>
   Effect.promise(() =>
     world.t.query(async (ctx) => ({
-      grants: await ctx.db.query("islandAwards").collect(),
-      islands: await ctx.db.query("islands").collect(),
+      grants: await ctx.db.query("progressAwards").collect(),
+      progress: await ctx.db.query("progress").collect(),
     }))
   );
 
@@ -28,14 +28,14 @@ describe("tryouts/runtime/award", () => {
         // A section closed without an answer grants nothing of its own.
         yield* world.startSection(first.attemptId, "section-b");
         yield* world.completeSection(first.attemptId, "section-b");
-        const once = yield* readIsland(world);
+        const once = yield* readProgress(world);
         expect(
           Arr.map(once.grants, (grant) => [grant.kind, grant.key])
         ).toEqual([
           ["section", "section:indonesia/snbt/2027/set-1:section-a"],
           ["set", "set:indonesia/snbt/2027/set-1"],
         ]);
-        expect(once.islands[0]?.lifetime).toBe(55);
+        expect(once.progress[0]?.lifetime).toBe(55);
 
         // A second attempt of the same set holds the same keys.
         const second = yield* world.start();
@@ -48,7 +48,7 @@ describe("tryouts/runtime/award", () => {
         yield* world.completeSection(second.attemptId, "section-a");
         yield* world.startSection(second.attemptId, "section-b");
         yield* world.completeSection(second.attemptId, "section-b");
-        expect((yield* readIsland(world)).grants).toHaveLength(2);
+        expect((yield* readProgress(world)).grants).toHaveLength(2);
       })
   );
 
@@ -60,7 +60,7 @@ describe("tryouts/runtime/award", () => {
         yield* world.startSection(attemptId, section);
         yield* world.completeSection(attemptId, section);
       }
-      expect(yield* readIsland(world)).toEqual({ grants: [], islands: [] });
+      expect(yield* readProgress(world)).toEqual({ grants: [], progress: [] });
     })
   );
 });

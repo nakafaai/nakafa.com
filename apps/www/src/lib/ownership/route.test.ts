@@ -31,7 +31,7 @@ const LOCALE_PREFIX_PATTERN = /^\/en\/?/u;
 /**
  * The path segments of a route file below the locale, as the router names them: pathless layouts (`_main`),
  * index and layout files leave no segment, a flat file name such as `verify.$hash` names its segments with dots, and
- * a segment that ends in `_` (`island_.$username`) is that segment standing outside its layout.
+ * a segment that ends in `_` (`$track_`) is that segment standing outside its layout.
  */
 function routeSegmentsOf(file: string) {
   return Arr.filter(
@@ -192,8 +192,6 @@ describe("public route ownership", () => {
     ["de", "school/pricing"],
     ["de", "chat/new"],
     ["de", "comment/fabricated"],
-    ["en", "island"],
-    ["en", "island/nabil"],
     ["de", "user/settings/learning"],
     ["de", "user/settings/subscriptions"],
     ["de", "user/settings/memory"],
@@ -227,7 +225,6 @@ describe("public route ownership", () => {
     ["de", "chat/id/fabricated"],
     ["de", "comment"],
     ["de", "comment/id/fabricated"],
-    ["en", "island/nabil/fabricated"],
     ["de", "onboarding/focus"],
     ["de", "onboarding/role"],
     ["de", "onboarding/fabricated"],

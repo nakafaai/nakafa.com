@@ -57,7 +57,7 @@ describe("contents/views/finish", () => {
           yield* world.reader.mutation(views.finishLesson, world.finish)
         ).toEqual({ _tag: "duplicate" });
         const grants = yield* Effect.promise(() =>
-          world.t.query((ctx) => ctx.db.query("islandAwards").collect())
+          world.t.query((ctx) => ctx.db.query("progressAwards").collect())
         );
         expect(grants).toMatchObject([
           { kind: "lesson", stars: 5, subject: "mathematics" },

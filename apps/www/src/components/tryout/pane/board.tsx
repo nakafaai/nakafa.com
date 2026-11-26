@@ -15,7 +15,7 @@ const FIRST = 5;
  * shows none, and neither does a visitor's pane.
  */
 export function SetBoard() {
-  const tIsland = useTranslations("Island");
+  const tProgress = useTranslations("Progress");
   const tCommon = useTranslations("Common");
   const format = useFormatter();
   const { board } = useSetPane();
@@ -41,7 +41,7 @@ export function SetBoard() {
           </Button>
         ) : null
       }
-      title={tIsland("leaders-title")}
+      title={tProgress("leaders-title")}
     >
       <LeaderList>
         {Arr.map(shown, (leader) => (

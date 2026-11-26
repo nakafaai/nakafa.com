@@ -13,7 +13,6 @@ export const APPLICATION_ROUTE_ROOTS = HashSet.make(
   "comment",
   "contributor",
   "home",
-  "island",
   "notifications",
   "og",
   "onboarding",

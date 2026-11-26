@@ -1,4 +1,4 @@
-import { tierOf } from "@repo/backend/confect/island/badge";
+import { tierOf } from "@repo/backend/confect/progress/badge";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Card } from "@repo/design-system/components/ui/card";
 import { Ember, Flame } from "@repo/design-system/components/ui/flame";
@@ -80,14 +80,14 @@ function WeekDay({ bar }: { bar: Bar }) {
  * The first section of the home (the owner's home notes, 14 Nov): who is
  * here and one sentence on today; the run of days as a drawn flame that grows
  * with it, beside the week, a small flame for every day learned; and on a
- * phone the island's level with the button that opens the learner's world.
+ * phone the learner's level with the button that opens the progress pane.
  * Nina keeps the fire: she stands beside the flame and fans it, her one act
  * of this place, and a press on her makes the flame flare. Nothing here takes
  * the primary colour: that belongs to the header's button.
  */
 export function HomeStreak({ name }: { name: Option.Option<string> }) {
   const t = useTranslations("Home");
-  const tIsland = useTranslations("Island");
+  const tProgress = useTranslations("Progress");
   const wide = useWide();
   const still = useReducedMotion();
   const fan = useAnimationControls();
@@ -158,7 +158,7 @@ export function HomeStreak({ name }: { name: Option.Option<string> }) {
           <footer className="flex items-center gap-3 border-t p-4">
             <LevelMeter className="flex-1" named />
             <Button onClick={showSheet} variant="outline">
-              {tIsland("world-title")}
+              {tProgress("title")}
             </Button>
           </footer>
         )}

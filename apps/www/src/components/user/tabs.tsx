@@ -16,12 +16,12 @@ export function UserTabs({
   username: string;
 }) {
   const t = useTranslations("Common");
-  const tIsland = useTranslations("Island");
+  const tProgress = useTranslations("Progress");
   const leafPath = useLeafRoutePath();
   // The label of each tab the address names, so a tab without a label does not
   // compile.
   const labels: Record<typeof ProfileTab.Type, string> = {
-    badges: tIsland("badges-title"),
+    badges: tProgress("badges-title"),
     chat: t("chat"),
     comments: t("comments"),
   };

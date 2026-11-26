@@ -1,17 +1,36 @@
-import { countsOf, markOf, tierOf } from "@repo/backend/confect/island/badge";
-import type { Tally } from "@repo/backend/confect/island/schema";
-import type { Week } from "@repo/backend/confect/island/view";
+import { countsOf, markOf, tierOf } from "@repo/backend/confect/progress/badge";
+import { growthOf } from "@repo/backend/confect/progress/level";
+import type { Tally } from "@repo/backend/confect/progress/schema";
+import { EMPTY_TALLY } from "@repo/backend/confect/progress/schema";
+import type { Growth, Week } from "@repo/backend/confect/progress/view";
 import { MedalSchema } from "@repo/mascot/medal/name";
 import { Array as Arr, Option, Order, pipe, Record } from "effect";
-import type { entryOf } from "@/lib/island/entry";
+
+/**
+ * The learner's progress summary derived from their growth record: their
+ * current level, the Stars thresholds for this level and the next, their
+ * lifetime Stars, and their tally for medals. A learner with no progress yet
+ * starts at level 1 with zero Stars and an empty tally.
+ */
+export function progressSummary(growth: typeof Growth.Type | null | undefined) {
+  const lifetime = growth?.lifetime ?? 0;
+  const reached = growthOf(lifetime);
+  return {
+    from: reached.from,
+    level: reached.level,
+    lifetime,
+    next: reached.next,
+    tally: growth?.tally ?? EMPTY_TALLY,
+  };
+}
 
 /** How far a learner is between the level they reached and the next one: the share done, and the Stars still to earn. */
 export function levelProgress(
-  island: Pick<ReturnType<typeof entryOf>, "from" | "lifetime" | "next">
+  growth: Pick<ReturnType<typeof progressSummary>, "from" | "lifetime" | "next">
 ) {
   return {
-    left: island.next - island.lifetime,
-    share: (island.lifetime - island.from) / (island.next - island.from),
+    left: growth.next - growth.lifetime,
+    share: (growth.lifetime - growth.from) / (growth.next - growth.from),
   };
 }
 
@@ -25,9 +44,9 @@ const KINDS: readonly (typeof MedalSchema.Type)[] = [
 ];
 
 /**
- * Every medal of a tally, as a profile shows them all (ADR 0047, D30), the
- * earned ones before those still to earn: its count, the tier it reached, the
- * counts its tier starts at and the next one does, and the share of the way there.
+ * Every medal of a tally, as a profile shows them all, the earned ones before
+ * those still to earn: its count, the tier it reached, the counts its tier
+ * starts at and the next one does, and the share of the way there.
  */
 export function medalsOf(tally: typeof Tally.Type) {
   const counts = countsOf(tally);

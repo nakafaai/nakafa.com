@@ -1,5 +1,5 @@
 import { StarIcon, Tick02Icon } from "@hugeicons/core-free-icons";
-import { AWARD_RULES } from "@repo/backend/confect/island/schema";
+import { AWARD_RULES } from "@repo/backend/confect/progress/schema";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva } from "class-variance-authority";
@@ -63,7 +63,7 @@ function SetMedal({ gain, name }: { gain: number; name: "sections" | "sets" }) {
  */
 export function SetRewards() {
   const t = useTranslations("Tryouts");
-  const tIsland = useTranslations("Island");
+  const tProgress = useTranslations("Progress");
   const format = useFormatter();
   const { claims, sections, view } = useSetPane();
   const keys = Arr.map(sections, (section) => section.sectionKey);
@@ -81,7 +81,7 @@ export function SetRewards() {
               data-icon="inline-start"
               icon={StarIcon}
             />
-            {tIsland("stars", { stars: format.number(left) })}
+            {tProgress("stars", { stars: format.number(left) })}
           </Badge>
         ) : (
           <Badge variant="muted">

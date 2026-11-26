@@ -3,7 +3,7 @@ import { requireAuth } from "@repo/backend/confect/auth/session";
 import type { FinishLessonArgs } from "@repo/backend/confect/contents/views/lesson";
 import { Unread } from "@repo/backend/confect/contents/views/lesson";
 import { validateIncomingContentTarget } from "@repo/backend/confect/contents/views/target";
-import { grantAward } from "@repo/backend/confect/island/award";
+import { grantAward } from "@repo/backend/confect/progress/award";
 import { Array as Arr, Clock, Duration, Effect } from "effect";
 
 /** The shortest time between opening a lesson and reaching its end that counts as reading it. */

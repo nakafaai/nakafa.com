@@ -20,7 +20,7 @@ const LessonContext = createContext<{
 
 /**
  * Marks the end of a lesson. Once a signed-in learner scrolls it into view, the
- * island grants the lesson's Stars, which the server allows only when the
+ * progress grants the lesson's Stars, which the server allows only when the
  * learner opened the lesson at least 45 seconds earlier (ADR 0042, D9). A
  * visitor's page has no client, so nothing mounts for them.
  */

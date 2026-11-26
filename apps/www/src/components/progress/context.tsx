@@ -1,18 +1,16 @@
-import type { Leader, Week } from "@repo/backend/confect/island/view";
+import type { Leader, Week } from "@repo/backend/confect/progress/view";
 import { useRequired } from "@repo/design-system/hooks/required";
 import type { Option } from "effect";
 import { createContext } from "react";
-import type { entryOf } from "@/lib/island/entry";
+import type { progressSummary } from "@/components/progress/level";
 
 /**
- * What the progress cards show (the owner's home sketch, 13 Nov): the
- * learner's island with its tally, their week, the global leaderboard, and the
- * name of their profile. A
- * page builds it once from its own reads, so the home and the try-out panes
- * show the same cards.
+ * What the progress cards show: the learner's growth with their tally, their
+ * week, the global leaderboard, and the name of their profile. A page builds
+ * it once from its own reads, so the home and try-out panes share the same cards.
  */
 export function progressOf(value: {
-  readonly island: ReturnType<typeof entryOf>;
+  readonly growth: ReturnType<typeof progressSummary>;
   readonly leaders: readonly (typeof Leader.Type)[];
   /** The learner's own profile name, where See all leads; none for an account without one. */
   readonly username: Option.Option<string>;
@@ -28,6 +26,5 @@ export const ProgressContext = createContext<ReturnType<
 
 /** The progress of the page around the caller. */
 export function useProgress() {
-  const progress = useRequired(ProgressContext, "useProgress");
-  return progress;
+  return useRequired(ProgressContext, "useProgress");
 }

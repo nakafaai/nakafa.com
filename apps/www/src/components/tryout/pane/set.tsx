@@ -1,7 +1,7 @@
 import { QueryResult, useQuery } from "@confect/react";
 import { Link01Icon } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
-import island from "@repo/backend/confect/_generated/refs/island";
+import progress from "@repo/backend/confect/_generated/refs/progress";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -13,6 +13,7 @@ import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ProgressContext, progressOf } from "@/components/progress/context";
+import { progressSummary } from "@/components/progress/level";
 import { LevelMeter } from "@/components/progress/meter";
 import { ConvexIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
@@ -44,7 +45,6 @@ import type {
 } from "@/components/tryout/set/model";
 import { setReadArgs } from "@/components/tryout/set/reads";
 import { useLastValue } from "@/lib/data/kept";
-import { entryOf } from "@/lib/island/entry";
 
 /** Props of the set's pane: what the set's surfaces draw, which the paper of a set entered by its one section shares. */
 export interface TryoutSetPaneProps {
@@ -120,10 +120,10 @@ function LearnerSetPane({ view }: TryoutSetPaneProps) {
     set: view.page.set,
   });
   const growth = useLastAnswer(
-    useQuery(island.queries.growth, isAuthenticated ? {} : "skip")
+    useQuery(progress.queries.growth, isAuthenticated ? {} : "skip")
   );
   const claims = useLastAnswer(
-    useQuery(island.queries.claims, isAuthenticated ? args.claims : "skip")
+    useQuery(progress.queries.claims, isAuthenticated ? args.claims : "skip")
   );
   const board = useLastAnswer(
     useQuery(tryouts.queries.ranks.bySet, isAuthenticated ? args.board : "skip")
@@ -142,7 +142,7 @@ function LearnerSetPane({ view }: TryoutSetPaneProps) {
       value={setPaneOf({
         board,
         claims: Option.flatMap(claims, Option.fromNullOr),
-        // A learner who earned nothing yet has no island, and stands at level 1.
+        // A learner who earned nothing yet has no progress record, and stands at level 1.
         growth: Option.map(growth, (value) => value ?? NO_GROWTH),
         view,
       })}
@@ -217,7 +217,7 @@ function SetPaneHeader({ read }: { read: "pending" | undefined }) {
     onSome: (value) => (
       <ProgressContext
         value={progressOf({
-          island: entryOf(value, undefined),
+          growth: progressSummary(value),
           leaders: [],
           username: Option.none(),
           week: undefined,

@@ -41,10 +41,9 @@ export const TIMING_TESTS = [
   "**/school/walk.browser.ts",
 ];
 
-// The visual cards, scenes, marketing pages and the island game.
+// The visual cards, scenes and marketing pages.
 export const VISUAL_TESTS = [
   "**/visual/**/*.browser.ts",
-  "**/island/**/*.browser.ts",
   "**/scene/**/*.browser.ts",
   "**/marketing/**/*.browser.ts",
   "**/consent/**/*.browser.ts",

@@ -1,0 +1,72 @@
+import { describe, expect, it } from "@effect/vitest";
+import { grantAward } from "@repo/backend/confect/progress/award";
+import {
+  createConvexTestWithAuth,
+  seedAuthenticatedUser,
+} from "@repo/backend/confect/test.helpers";
+import { internal } from "@repo/backend/convex/_generated/api";
+import { inMutation } from "@repo/backend/test/client";
+import { Array as Arr, Effect } from "effect";
+
+const NOW = Date.UTC(2026, 10, 8, 3, 0, 0);
+
+describe("auth/cleanup/progress", () => {
+  it.effect(
+    "deletes a deleted account's award ledger in batches, then its progress record, and keeps others'",
+    () =>
+      Effect.gen(function* () {
+        vi.useFakeTimers({ now: NOW });
+        const t = createConvexTestWithAuth();
+        const { deleted, kept } = yield* Effect.promise(() =>
+          t.mutation(async (ctx) => ({
+            deleted: await seedAuthenticatedUser(ctx, {
+              now: NOW,
+              suffix: "deleted",
+            }),
+            kept: await seedAuthenticatedUser(ctx, {
+              now: NOW,
+              suffix: "kept",
+            }),
+          }))
+        );
+        for (const day of Arr.range(0, 59)) {
+          vi.setSystemTime(NOW + day * 86_400_000);
+          yield* Effect.promise(() =>
+            t.run(
+              inMutation(() =>
+                grantAward(deleted.userId, { _tag: "set", set: `set-${day}` })
+              )
+            )
+          );
+        }
+        yield* Effect.promise(() =>
+          t.run(
+            inMutation(() =>
+              grantAward(kept.userId, { _tag: "set", set: "set-kept" })
+            )
+          )
+        );
+        const pages = yield* Effect.forEach(Arr.range(1, 4), () =>
+          Effect.promise(() =>
+            t.mutation(internal.auth.cleanup.cleanupDeletedUser, {
+              userId: deleted.userId,
+            })
+          )
+        );
+        // The ledger twice, then the progress record, then done.
+        expect(pages).toEqual([true, true, true, false]);
+        const state = yield* Effect.promise(() =>
+          t.query(async (ctx) => ({
+            grants: await ctx.db.query("progressAwards").collect(),
+            progress: await ctx.db.query("progress").collect(),
+          }))
+        );
+        expect(Arr.map(state.grants, (grant) => grant.userId)).toEqual([
+          kept.userId,
+        ]);
+        expect(Arr.map(state.progress, (record) => record.userId)).toEqual([
+          kept.userId,
+        ]);
+      })
+  );
+});

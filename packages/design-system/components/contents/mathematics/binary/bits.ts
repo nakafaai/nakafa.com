@@ -14,7 +14,7 @@ export const GroupingSchema = Schema.Literals(["none", "pairs", "triples"]);
 export type Grouping = typeof GroupingSchema.Type;
 
 /** The fewest and the most lamps a row may have. */
-export const BITS = { max: 8, min: 4 } as const;
+const BITS = { max: 8, min: 4 } as const;
 
 /** How many bits one group holds, and the base its digit is written in. */
 const GROUPS = {

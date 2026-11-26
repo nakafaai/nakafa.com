@@ -12,8 +12,8 @@ import { readRenderedRouteMessages } from "@/lib/i18n/rendered";
  */
 const APP_NAMESPACES = [
   "Connectors",
-  "Island",
   "Memory",
+  "Progress",
   "Subject",
   "Videos",
   "Weather",

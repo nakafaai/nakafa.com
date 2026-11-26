@@ -108,8 +108,6 @@ const ROOT_RULES: { readonly [Root in ApplicationRoot]: RootRule } = {
   comment: (segments) => segments.length === 1,
   contributor: isRootPage,
   home: isRootPage,
-  // The world game on the whole screen: the learner's own, and a visit to another learner's by their name (ADR 0050, W6).
-  island: (segments) => segments.length <= 1,
   notifications: isRootPage,
   onboarding: isRootPage,
   operators: isRootPage,

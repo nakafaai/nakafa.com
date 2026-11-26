@@ -55,7 +55,7 @@ export function MedalItem({
   /** How large the medal is drawn: small in the pane's row, large on a profile's wall. */
   size?: "large" | "small";
 }) {
-  const t = useTranslations("Island");
+  const t = useTranslations("Progress");
   const tSubject = useTranslations("Subject");
   return (
     <li className="min-w-0">

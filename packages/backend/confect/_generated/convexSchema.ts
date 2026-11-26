@@ -113,10 +113,6 @@ import integrationWebhooks from "./tables/integrationWebhooks";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
 import irtScaleItems from "./tables/irtScaleItems";
 import irtScaleVersions from "./tables/irtScaleVersions";
-import islandAwards from "./tables/islandAwards";
-import islandChunks from "./tables/islandChunks";
-import islandGuests from "./tables/islandGuests";
-import islands from "./tables/islands";
 import journalCursors from "./tables/journalCursors";
 import journalEntries from "./tables/journalEntries";
 import learningEngagementQueue from "./tables/learningEngagementQueue";
@@ -150,6 +146,8 @@ import practiceQuestions from "./tables/practiceQuestions";
 import practiceSessions from "./tables/practiceSessions";
 import programBuckets from "./tables/programBuckets";
 import programCatalog from "./tables/programCatalog";
+import progress from "./tables/progress";
+import progressAwards from "./tables/progressAwards";
 import pushSubscriptions from "./tables/pushSubscriptions";
 import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
@@ -299,10 +297,6 @@ export default $defineSchema({
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
   irtScaleItems: $Table.tableDefinition(irtScaleItems),
   irtScaleVersions: $Table.tableDefinition(irtScaleVersions),
-  islandAwards: $Table.tableDefinition(islandAwards),
-  islandChunks: $Table.tableDefinition(islandChunks),
-  islandGuests: $Table.tableDefinition(islandGuests),
-  islands: $Table.tableDefinition(islands),
   journalCursors: $Table.tableDefinition(journalCursors),
   journalEntries: $Table.tableDefinition(journalEntries),
   learningEngagementQueue: $Table.tableDefinition(learningEngagementQueue),
@@ -336,6 +330,8 @@ export default $defineSchema({
   practiceSessions: $Table.tableDefinition(practiceSessions),
   programBuckets: $Table.tableDefinition(programBuckets),
   programCatalog: $Table.tableDefinition(programCatalog),
+  progress: $Table.tableDefinition(progress),
+  progressAwards: $Table.tableDefinition(progressAwards),
   pushSubscriptions: $Table.tableDefinition(pushSubscriptions),
   quranRows: $Table.tableDefinition(quranRows),
   quranSearch: $Table.tableDefinition(quranSearch),

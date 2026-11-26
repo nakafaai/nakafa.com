@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import island from "@repo/backend/confect/_generated/refs/island";
+import progress from "@repo/backend/confect/_generated/refs/progress";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Duration, Effect, Fiber } from "effect";
 import { TestClock } from "effect/testing";
@@ -65,8 +65,8 @@ describe("warmSetReads", () => {
             tryouts.queries.attemptPage.getSet,
             { request: { ...identity, kind: "current" } },
           ],
-          [island.queries.growth, {}],
-          [island.queries.claims, identity],
+          [progress.queries.growth, {}],
+          [progress.queries.claims, identity],
           [tryouts.queries.ranks.bySet, identity],
         ]);
       })
@@ -90,8 +90,8 @@ describe("warmSetReads", () => {
             tryouts.queries.attemptPage.getSet,
             { request: { ...identity, kind: "current" } },
           ],
-          [island.queries.growth, {}],
-          [island.queries.claims, identity],
+          [progress.queries.growth, {}],
+          [progress.queries.claims, identity],
           [tryouts.queries.ranks.bySet, identity],
           [
             tryouts.queries.attemptPage.getSet,
