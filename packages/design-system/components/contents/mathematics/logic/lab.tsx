@@ -8,10 +8,7 @@ import {
   tableRows,
 } from "@repo/design-system/components/contents/mathematics/logic/table";
 import type { LogicMode } from "@repo/design-system/components/contents/mathematics/logic/truth";
-import {
-  truthOf,
-  usesQ,
-} from "@repo/design-system/components/contents/mathematics/logic/truth";
+import { usesQ } from "@repo/design-system/components/contents/mathematics/logic/truth";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
@@ -31,13 +28,10 @@ import {
 import {
   VisualCard,
   VisualCardBody,
-  VisualCardFacts,
-  VisualCardFooter,
   VisualCardHeader,
   VisualCardTable,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
-import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
@@ -203,21 +197,6 @@ export function SwitchLogicLab({
           </TableBody>
         </Table>
       </VisualCardTable>
-
-      <VisualCardFooter>
-        <VisualCardFacts>
-          <VisualFactTabular label={labels.p} value={word(state.p)} />
-          {withQ ? (
-            <VisualFactTabular label={labels.q} value={word(state.q)} />
-          ) : null}
-          {showTable ? (
-            <VisualFactTabular
-              label={labels.compounds[mode]}
-              value={word(truthOf(mode, state))}
-            />
-          ) : null}
-        </VisualCardFacts>
-      </VisualCardFooter>
     </VisualCard>
   );
 }
