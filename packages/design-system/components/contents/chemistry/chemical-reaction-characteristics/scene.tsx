@@ -1,8 +1,18 @@
-import { useFrame } from "@react-three/fiber";
+import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import {
   useReactionCharacteristicsColors,
   useReactionCharacteristicsCue,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/context";
+import {
+  BEAKER_WALL_HEIGHT,
+  ColorParticles,
+  GasBubbles,
+  LabThermometer,
+  LIQUID_BOTTOM_Y,
+  LIQUID_TOP_Y,
+  Precipitate,
+  ThermalSteam,
+} from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/cues";
 import type {
   ReactionCueId,
   ReactionSceneColors,
@@ -12,138 +22,64 @@ import {
   ENERGY_CUE_ID,
   GAS_CUE_ID,
   PRECIPITATE_CUE_ID,
-  ReactionScenePointSchema,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
 import type { ReactionCharacteristicsLabProps } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/lab";
-import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
+import { ArrowHelper } from "@repo/design-system/components/three/arrow";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   GlassMaterial,
   LiquidMaterial,
 } from "@repo/design-system/components/three/physical";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { Array as Arr, Schema } from "effect";
-import { useRef } from "react";
-import type { Group } from "three";
+import { getColor } from "@repo/design-system/lib/color";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { Array as Arr } from "effect";
+import { Vector2 } from "three";
 
-const BEFORE_BEAKER_X = -1.08;
-const AFTER_BEAKER_X = 1.08;
+const BEFORE_BEAKER_X = -1.16;
+const AFTER_BEAKER_X = 1.16;
 const BEAKER_SCALE = 1.08;
-const BEAKER_WALL_HEIGHT = 1.34;
-const BEAKER_TOP_RADIUS = 0.48;
-const BEAKER_BOTTOM_RADIUS = 0.39;
-const LIQUID_HEIGHT = 0.66;
-const LIQUID_Y = -0.2;
-const LIQUID_RADIUS = 0.36;
-const GLASS_OPACITY = 0.22;
-const LIQUID_OPACITY = 0.66;
+const BEAKER_TOP_RADIUS = 0.46;
+const BEAKER_BOTTOM_RADIUS = 0.41;
+const LIQUID_RADIUS = 0.375;
+const GLASS_OPACITY = 0.24;
+const LIQUID_OPACITY = 0.68;
 const SCENE_Y = -0.12;
-const SCENE_SCALE = 1.2;
-const BUBBLE_RADIUS = 0.055;
-const BUBBLE_RISE = 0.58;
-const BUBBLE_INITIAL_SCALE = 0.82;
-const BUBBLE_GROWTH = 0.32;
-const SOLID_RADIUS = 0.07;
-const COLOR_PARTICLE_RADIUS = 0.055;
-const HEAT_MARKER_HEIGHT = 0.38;
-const HEAT_MARKER_RADIUS = 0.018;
-const HEAT_MARKER_Y = 0.44;
+const SCENE_SCALE = 1.12;
+const BENCH_Y = -BEAKER_WALL_HEIGHT / 2 - 0.03;
+const GRADUATION_HEIGHTS = [-0.36, -0.1, 0.16, 0.42] as const;
 
-const BUBBLES = [
-  {
-    id: "bubble-left-low",
-    phase: 0.04,
-    position: [-0.18, -0.38, 0.08],
-    speed: 0.34,
-  },
-  {
-    id: "bubble-center-low",
-    phase: 0.18,
-    position: [0.02, -0.34, -0.04],
-    speed: 0.42,
-  },
-  {
-    id: "bubble-right-low",
-    phase: 0.31,
-    position: [0.2, -0.32, 0.12],
-    speed: 0.38,
-  },
-  {
-    id: "bubble-left-mid",
-    phase: 0.46,
-    position: [-0.12, -0.16, -0.12],
-    speed: 0.36,
-  },
-  {
-    id: "bubble-center-mid",
-    phase: 0.62,
-    position: [0.08, -0.12, 0.1],
-    speed: 0.4,
-  },
-  {
-    id: "bubble-right-mid",
-    phase: 0.78,
-    position: [0.23, -0.04, -0.06],
-    speed: 0.35,
-  },
-] satisfies ReactionParticle[];
+/** Turned borosilicate beaker profile: flat base, rounded heel, straight wall, flared pouring lip. */
+const BEAKER_LATHE_PROFILE = Arr.map(
+  [
+    [0.001, -BEAKER_WALL_HEIGHT / 2],
+    [BEAKER_BOTTOM_RADIUS - 0.035, -BEAKER_WALL_HEIGHT / 2],
+    [BEAKER_BOTTOM_RADIUS, -BEAKER_WALL_HEIGHT / 2 + 0.045],
+    [BEAKER_BOTTOM_RADIUS + 0.015, -BEAKER_WALL_HEIGHT / 2 + 0.22],
+    [BEAKER_TOP_RADIUS - 0.015, BEAKER_WALL_HEIGHT / 2 - 0.05],
+    [BEAKER_TOP_RADIUS + 0.025, BEAKER_WALL_HEIGHT / 2],
+  ] as const,
+  ([r, y]) => new Vector2(r, y)
+);
 
-const PRECIPITATE_PARTICLES = [
-  { id: "solid-left", position: [-0.24, -0.5, 0.05] },
-  { id: "solid-center-left", position: [-0.1, -0.53, -0.08] },
-  { id: "solid-center", position: [0.04, -0.49, 0.1] },
-  { id: "solid-center-right", position: [0.16, -0.52, -0.02] },
-  { id: "solid-right", position: [0.28, -0.5, 0.09] },
-] satisfies ReactionParticle[];
-
-const COLOR_PARTICLES = [
-  {
-    id: "color-left",
-    phase: 0.12,
-    position: [-0.22, -0.25, 0.12],
-    speed: 0.45,
-  },
-  {
-    id: "color-center-left",
-    phase: 0.3,
-    position: [-0.06, -0.1, -0.1],
-    speed: 0.4,
-  },
-  {
-    id: "color-center-right",
-    phase: 0.56,
-    position: [0.12, -0.22, 0.08],
-    speed: 0.42,
-  },
-  {
-    id: "color-right",
-    phase: 0.78,
-    position: [0.24, -0.03, -0.04],
-    speed: 0.36,
-  },
-] satisfies ReactionParticle[];
-
-const HEAT_MARKERS = [
-  { id: "heat-left", position: [-0.21, HEAT_MARKER_Y, 0] },
-  { id: "heat-center-left", position: [-0.07, HEAT_MARKER_Y, 0] },
-  { id: "heat-center-right", position: [0.07, HEAT_MARKER_Y, 0] },
-  { id: "heat-right", position: [0.21, HEAT_MARKER_Y, 0] },
-] satisfies ReactionParticle[];
+/** Concave capillary liquid meniscus inside the beaker, turned via LatheGeometry. */
+const LIQUID_MENISCUS_PROFILE = Arr.map(
+  [
+    [0.001, LIQUID_BOTTOM_Y],
+    [LIQUID_RADIUS - 0.02, LIQUID_BOTTOM_Y],
+    [LIQUID_RADIUS, LIQUID_BOTTOM_Y + 0.025],
+    [LIQUID_RADIUS + 0.012, LIQUID_TOP_Y + 0.028],
+    [LIQUID_RADIUS - 0.028, LIQUID_TOP_Y + 0.008],
+    [LIQUID_RADIUS - 0.08, LIQUID_TOP_Y],
+    [0.001, LIQUID_TOP_Y],
+  ] as const,
+  ([r, y]) => new Vector2(r, y)
+);
 
 type ReactionPhase = "after" | "before";
 
-const ReactionParticleSchema = Schema.Struct({
-  id: Schema.String,
-  phase: Schema.optionalKey(Schema.Finite),
-  position: ReactionScenePointSchema,
-  speed: Schema.optionalKey(Schema.Finite),
-});
-
-type ReactionParticle = typeof ReactionParticleSchema.Type;
-
 /**
- * Renders a paired 3D beaker scene for the selected reaction clue.
+ * Renders a paired 3D laboratory beaker scene on an epoxy bench for the selected reaction clue.
  */
 export function ReactionCharacteristicsScene({
   labels,
@@ -154,36 +90,57 @@ export function ReactionCharacteristicsScene({
 
   return (
     <group position={[0, SCENE_Y, 0]} scale={SCENE_SCALE}>
+      <CameraBounds exclude>
+        <group
+          position={[0, BENCH_Y * BEAKER_SCALE, 0.32]}
+          scale={[3.2, 3.1, 4.2]}
+        >
+          <LabBench width={2.8} />
+        </group>
+      </CameraBounds>
       <ThreeLabel
+        anchorY="bottom"
         color={colors.text}
         fontSize="compact"
-        position={[BEFORE_BEAKER_X, 0.88, 0.16]}
+        position={[BEFORE_BEAKER_X, 1, 0]}
       >
         {labels.before}
       </ThreeLabel>
       <ThreeLabel
+        anchorY="bottom"
         color={colors.text}
         fontSize="compact"
-        position={[AFTER_BEAKER_X, 0.88, 0.16]}
+        position={[AFTER_BEAKER_X, 1, 0]}
       >
         {labels.after}
       </ThreeLabel>
       <ReactionBeaker phase="before" x={BEFORE_BEAKER_X} />
-
+      <ArrowHelper
+        arrowSize={0.22}
+        color={getColor("WHITE")}
+        from={[-0.36, 0.02, 0]}
+        lineWidth={3}
+        to={[0.36, 0.02, 0]}
+      />
       <ReactionBeaker phase="after" x={AFTER_BEAKER_X} />
     </group>
   );
 }
 
-/**
- * Renders one 3D beaker state.
- */
+/** Renders one 3D laboratory beaker standing on a ceramic mat. */
 function ReactionBeaker({ phase, x }: { phase: ReactionPhase; x: number }) {
   const colors = useReactionCharacteristicsColors();
   const cueId = useReactionCharacteristicsCue((state) => state.cueId);
 
   return (
     <group position={[x, 0, 0]} scale={BEAKER_SCALE}>
+      <mesh position={[0, BENCH_Y + 0.015, 0]} receiveShadow>
+        <cylinderGeometry args={[0.56, 0.58, 0.03, 48]} />
+        <meshStandardMaterial
+          color={BENCH_COLORS.ceramicTile}
+          roughness={0.42}
+        />
+      </mesh>
       <BeakerGlass />
       <Liquid color={getLiquidColor({ colors, cueId, phase })} />
       <ReactionCueVisual phase={phase} />
@@ -191,24 +148,13 @@ function ReactionBeaker({ phase, x }: { phase: ReactionPhase; x: number }) {
   );
 }
 
-/**
- * Draws the glass wall, rim, and base without hiding the reaction cue.
- */
+/** Borosilicate glass beaker turned with LatheGeometry, poured lip, and graduation ticks. */
 function BeakerGlass() {
   const colors = useReactionCharacteristicsColors();
   return (
     <group>
       <mesh castShadow receiveShadow>
-        <cylinderGeometry
-          args={[
-            BEAKER_TOP_RADIUS,
-            BEAKER_BOTTOM_RADIUS,
-            BEAKER_WALL_HEIGHT,
-            64,
-            1,
-            true,
-          ]}
-        />
+        <latheGeometry args={[BEAKER_LATHE_PROFILE, 72]} />
         <GlassMaterial color={colors.glass} opacity={GLASS_OPACITY} />
       </mesh>
 
@@ -216,40 +162,56 @@ function BeakerGlass() {
         position={[0, BEAKER_WALL_HEIGHT / 2, 0]}
         rotation={[Math.PI / 2, 0, 0]}
       >
-        <torusGeometry args={[BEAKER_TOP_RADIUS, 0.018, 16, 72]} />
-        <GlassMaterial color={colors.glass} opacity={0.58} />
+        <torusGeometry args={[BEAKER_TOP_RADIUS + 0.015, 0.014, 16, 72]} />
+        <GlassMaterial color={colors.glass} opacity={0.62} />
       </mesh>
 
-      <mesh position={[0, -BEAKER_WALL_HEIGHT / 2, 0]}>
-        <cylinderGeometry
-          args={[BEAKER_BOTTOM_RADIUS, BEAKER_BOTTOM_RADIUS, 0.04, 64]}
-        />
-        <GlassMaterial color={colors.glass} opacity={0.34} />
-      </mesh>
+      {Arr.map(GRADUATION_HEIGHTS, (y, index) => {
+        const t = (y + BEAKER_WALL_HEIGHT / 2) / BEAKER_WALL_HEIGHT;
+        const radius =
+          BEAKER_BOTTOM_RADIUS +
+          (BEAKER_TOP_RADIUS - BEAKER_BOTTOM_RADIUS) * t +
+          0.004;
+        const arc = index % 2 === 0 ? Math.PI * 0.28 : Math.PI * 0.16;
+        return (
+          <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[radius, 0.004, 8, 48, arc]} />
+            <meshBasicMaterial
+              color={getColor("WHITE")}
+              depthWrite={false}
+              opacity={0.65}
+              transparent
+            />
+          </mesh>
+        );
+      })}
     </group>
   );
 }
 
-/**
- * Shows the liquid level in the beaker.
- */
+/** Liquid volume inside the beaker with a turned concave meniscus surface. */
 function Liquid({ color }: { color: string }) {
   return (
-    <mesh position={[0, LIQUID_Y, 0]}>
-      <cylinderGeometry
-        args={[LIQUID_RADIUS, LIQUID_RADIUS, LIQUID_HEIGHT, 64]}
-      />
+    <mesh>
+      <latheGeometry args={[LIQUID_MENISCUS_PROFILE, 64]} />
       <LiquidMaterial color={color} opacity={LIQUID_OPACITY} />
     </mesh>
   );
 }
 
-/**
- * Chooses the visible 3D cue only after the reaction state.
- */
+/** Chooses the visible 3D cue for the active state. */
 function ReactionCueVisual({ phase }: { phase: ReactionPhase }) {
   const colors = useReactionCharacteristicsColors();
   const cueId = useReactionCharacteristicsCue((state) => state.cueId);
+  if (cueId === ENERGY_CUE_ID) {
+    return (
+      <group>
+        <LabThermometer color={colors.heat} warm={phase === "after"} />
+        {phase === "after" ? <ThermalSteam /> : null}
+      </group>
+    );
+  }
+
   if (phase === "before") {
     return null;
   }
@@ -266,162 +228,10 @@ function ReactionCueVisual({ phase }: { phase: ReactionPhase }) {
     return <ColorParticles color={colors.liquidAfterColor} />;
   }
 
-  if (cueId === ENERGY_CUE_ID) {
-    return <HeatMarkers color={colors.heat} />;
-  }
-
   return null;
 }
 
-/**
- * Animates gas bubbles rising through the product side.
- */
-function GasBubbles() {
-  return (
-    <group>
-      {Arr.map(BUBBLES, (bubble) => (
-        <AnimatedBubble key={bubble.id} particle={bubble} />
-      ))}
-    </group>
-  );
-}
-
-/**
- * Renders one bubble with looping vertical motion.
- */
-function AnimatedBubble({ particle }: { particle: ReactionParticle }) {
-  const color = useReactionCharacteristicsColors().bubble;
-  const bubbleRef = useRef<Group>(null);
-  const [x, y, z] = particle.position;
-  const speed = particle.speed ?? 0.35;
-  const phase = particle.phase ?? 0;
-
-  useFrame(({ clock }) => {
-    if (!bubbleRef.current) {
-      return;
-    }
-
-    const progress = (clock.elapsedTime * speed + phase) % 1;
-    bubbleRef.current.position.set(x, y + progress * BUBBLE_RISE, z);
-    bubbleRef.current.scale.setScalar(
-      BUBBLE_INITIAL_SCALE + progress * BUBBLE_GROWTH
-    );
-  });
-
-  return (
-    <CameraBounds
-      motion={{
-        scale: BUBBLE_INITIAL_SCALE + BUBBLE_GROWTH,
-        translation: {
-          x: { min: x, max: x },
-          y: { min: y, max: y + BUBBLE_RISE },
-          z: { min: z, max: z },
-        },
-      }}
-      objectRef={bubbleRef}
-    >
-      <mesh>
-        <sphereGeometry args={[BUBBLE_RADIUS, 24, 16]} />
-        <meshStandardMaterial
-          color={color}
-          opacity={0.34}
-          roughness={0.12}
-          transparent
-        />
-      </mesh>
-    </CameraBounds>
-  );
-}
-
-/**
- * Shows insoluble solid particles collecting at the bottom.
- */
-function Precipitate({ color }: { color: string }) {
-  return (
-    <group>
-      {Arr.map(PRECIPITATE_PARTICLES, (particle) => (
-        <mesh castShadow key={particle.id} position={particle.position}>
-          <sphereGeometry args={[SOLID_RADIUS, 24, 16]} />
-          <meshStandardMaterial color={color} roughness={0.46} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-/**
- * Shows the product color as suspended particles inside the liquid.
- */
-function ColorParticles({ color }: { color: string }) {
-  const groupRef = useRef<Group>(null);
-  const playing = useVisualScene((card) => card.playing, true);
-
-  useFrame((_, delta) => {
-    if (!(playing && groupRef.current)) {
-      return;
-    }
-
-    groupRef.current.rotation.y += simulationStep(delta) * 0.35;
-  });
-
-  return (
-    <CameraBounds motion={{ rotation: "y" }} objectRef={groupRef}>
-      {Arr.map(COLOR_PARTICLES, (particle) => (
-        <mesh castShadow key={particle.id} position={particle.position}>
-          <sphereGeometry args={[COLOR_PARTICLE_RADIUS, 24, 16]} />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={0.12}
-            roughness={0.3}
-          />
-        </mesh>
-      ))}
-    </CameraBounds>
-  );
-}
-
-/**
- * Shows energy release or absorption as pulsing markers above the liquid.
- */
-function HeatMarkers({ color }: { color: string }) {
-  const groupRef = useRef<Group>(null);
-
-  useFrame(({ clock }) => {
-    if (!groupRef.current) {
-      return;
-    }
-
-    groupRef.current.scale.y = 0.9 + Math.sin(clock.elapsedTime * 4) * 0.12;
-  });
-
-  return (
-    <CameraBounds motion={{ scale: 1.02 }} objectRef={groupRef}>
-      {Arr.map(HEAT_MARKERS, (marker) => (
-        <mesh castShadow key={marker.id} position={marker.position}>
-          <cylinderGeometry
-            args={[
-              HEAT_MARKER_RADIUS,
-              HEAT_MARKER_RADIUS,
-              HEAT_MARKER_HEIGHT,
-              18,
-            ]}
-          />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={0.28}
-            roughness={0.24}
-          />
-        </mesh>
-      ))}
-    </CameraBounds>
-  );
-}
-
-/**
- * Chooses liquid color from the active cue and phase.
- */
+/** Chooses liquid color from the active cue and phase. */
 function getLiquidColor({
   colors,
   cueId,

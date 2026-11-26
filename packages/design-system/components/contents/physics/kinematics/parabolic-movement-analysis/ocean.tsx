@@ -1,6 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import type { ProjectileMotionState } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { PROJECTILE_SCENE } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
+import { useSimulationClock } from "@repo/design-system/components/contents/simulation/clock";
 import { Sea } from "@repo/design-system/components/three/stage/sea";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
@@ -64,18 +65,19 @@ function WindParticle({
   particle: (typeof WIND_PARTICLES)[number];
 }) {
   const particleRef = useRef<Mesh>(null);
+  const { advance } = useSimulationClock(0);
 
-  useFrame(({ clock }) => {
+  useFrame((_, delta) => {
     const mesh = particleRef.current;
 
     if (!mesh) {
       return;
     }
 
-    const loop = (particle.offset + clock.elapsedTime * particle.speed) % 1;
+    const elapsed = advance(delta);
+    const loop = (particle.offset + elapsed * particle.speed) % 1;
     const x = centerX - length / 2 + loop * length;
-    const y =
-      particle.y + Math.sin(clock.elapsedTime * 1.1 + particle.progress) * 0.05;
+    const y = particle.y + Math.sin(elapsed * 1.1 + particle.progress) * 0.05;
 
     mesh.position.set(x, y, particle.z);
   });

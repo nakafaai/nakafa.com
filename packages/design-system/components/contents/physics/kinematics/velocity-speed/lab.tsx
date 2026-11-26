@@ -18,6 +18,7 @@ import {
   VELOCITY_SPEED_COLORS,
   VELOCITY_SPEED_SCENE,
 } from "@repo/design-system/components/contents/physics/kinematics/velocity-speed/data";
+import { useSimulationClock } from "@repo/design-system/components/contents/simulation/clock";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
@@ -206,33 +207,42 @@ function RouteCones({ motion }: { motion: VelocitySpeedState }) {
 
 function TrafficCone({ x }: { x: number }) {
   return (
-    <group position={[x, 0, ROUTE_CONE_Z]}>
-      <mesh castShadow position={[0, 0.31, 0]}>
-        <coneGeometry args={[0.21, 0.48, 28]} />
-        <meshStandardMaterial
-          color={VELOCITY_SPEED_COLORS.coneBody}
-          roughness={0.48}
-        />
-      </mesh>
-      <mesh position={[0, 0.22, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.126, 0.012, 8, 28]} />
-        <meshStandardMaterial
-          color={VELOCITY_SPEED_COLORS.coneBand}
-          roughness={0.4}
-        />
-      </mesh>
-      <mesh position={[0, 0.36, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.077, 0.008, 8, 28]} />
-        <meshStandardMaterial
-          color={VELOCITY_SPEED_COLORS.coneBand}
-          roughness={0.4}
-        />
-      </mesh>
-      <mesh position={[0, 0.02, 0]} receiveShadow>
-        <boxGeometry args={[0.4, 0.035, 0.4]} />
+    <group position={[x, ROAD_Y, ROUTE_CONE_Z]}>
+      {/* Weighted octagonal rubber base */}
+      <mesh castShadow position={[0, 0.024, 0]} receiveShadow>
+        <cylinderGeometry args={[0.2, 0.23, 0.048, 8]} />
         <meshStandardMaterial
           color={VELOCITY_SPEED_COLORS.coneBase}
-          roughness={0.68}
+          roughness={0.82}
+        />
+      </mesh>
+      {/* Tapered PVC safety cone body */}
+      <mesh castShadow position={[0, 0.28, 0]} receiveShadow>
+        <cylinderGeometry args={[0.036, 0.175, 0.48, 32]} />
+        <meshPhysicalMaterial
+          clearcoat={0.4}
+          color={VELOCITY_SPEED_COLORS.coneBody}
+          roughness={0.36}
+        />
+      </mesh>
+      {/* Lower flush retro-reflective sleeve */}
+      <mesh position={[0, 0.22, 0]}>
+        <cylinderGeometry args={[0.12, 0.146, 0.082, 32, 1, true]} />
+        <meshStandardMaterial
+          color={VELOCITY_SPEED_COLORS.coneBand}
+          emissive={VELOCITY_SPEED_COLORS.coneBand}
+          emissiveIntensity={0.22}
+          roughness={0.24}
+        />
+      </mesh>
+      {/* Upper flush retro-reflective sleeve */}
+      <mesh position={[0, 0.36, 0]}>
+        <cylinderGeometry args={[0.082, 0.1, 0.058, 32, 1, true]} />
+        <meshStandardMaterial
+          color={VELOCITY_SPEED_COLORS.coneBand}
+          emissive={VELOCITY_SPEED_COLORS.coneBand}
+          emissiveIntensity={0.22}
+          roughness={0.24}
         />
       </mesh>
     </group>
@@ -291,17 +301,57 @@ function GuideSegment({
   startX: number;
   z: number;
 }) {
-  const length = Math.abs(endX - startX);
+  const delta = endX - startX;
+  const totalLength = Math.abs(delta);
 
-  if (length === 0) {
+  if (totalLength === 0) {
     return null;
   }
 
+  const sign = delta > 0 ? 1 : -1;
+  const headLength = Math.min(0.28, totalLength * 0.25);
+  const shaftLength = Math.max(0.01, totalLength - headLength);
+  const shaftCenterX = startX + (sign * shaftLength) / 2;
+  const headCenterX = endX - (sign * headLength) / 2;
+
   return (
-    <mesh position={[(startX + endX) / 2, GUIDE_Y, z]} renderOrder={1}>
-      <boxGeometry args={[length, 0.035, GUIDE_THICKNESS]} />
-      <meshBasicMaterial color={color} toneMapped={false} />
-    </mesh>
+    <group>
+      <mesh
+        castShadow
+        position={[shaftCenterX, GUIDE_Y, z]}
+        rotation={[0, 0, Math.PI / 2]}
+      >
+        <cylinderGeometry
+          args={[
+            GUIDE_THICKNESS * 0.55,
+            GUIDE_THICKNESS * 0.55,
+            shaftLength,
+            16,
+          ]}
+        />
+        <meshPhysicalMaterial
+          clearcoat={0.65}
+          color={color}
+          emissive={color}
+          emissiveIntensity={0.22}
+          roughness={0.26}
+        />
+      </mesh>
+      <mesh
+        castShadow
+        position={[headCenterX, GUIDE_Y, z]}
+        rotation={[0, 0, sign > 0 ? -Math.PI / 2 : Math.PI / 2]}
+      >
+        <coneGeometry args={[GUIDE_THICKNESS * 1.45, headLength, 20]} />
+        <meshPhysicalMaterial
+          clearcoat={0.65}
+          color={color}
+          emissive={color}
+          emissiveIntensity={0.28}
+          roughness={0.22}
+        />
+      </mesh>
+    </group>
   );
 }
 
@@ -315,22 +365,20 @@ function roundWaypoint(value: number) {
 
 function AnimatedCar({ motion }: { motion: VelocitySpeedState }) {
   const groupRef = useRef<Group>(null);
-  const startRef = useRef<number | null>(null);
-  const caseRef = useRef<VelocitySpeedCaseId | null>(null);
+  const { advance, time: simTime } = useSimulationClock(0);
+  const caseRef = useRef<VelocitySpeedCaseId>(motion.caseId);
 
-  useFrame((state) => {
+  useFrame((_, delta) => {
     if (!groupRef.current) {
       return;
     }
 
-    if (startRef.current === null || caseRef.current !== motion.caseId) {
+    if (caseRef.current !== motion.caseId) {
       caseRef.current = motion.caseId;
-      startRef.current = state.clock.elapsedTime;
+      simTime.current = 0;
     }
 
-    const elapsed =
-      (state.clock.elapsedTime - startRef.current) %
-      (motion.duration + PAUSE_SECONDS);
+    const elapsed = advance(delta) % (motion.duration + PAUSE_SECONDS);
     const sample = getVelocitySpeedSample(motion, elapsed);
     const rotationY = sample.direction > 0 ? Math.PI / 2 : -Math.PI / 2;
 

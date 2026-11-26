@@ -16,9 +16,12 @@ import {
   isDisplacementDistanceCaseId,
 } from "@repo/design-system/components/contents/physics/kinematics/displacement-distance/data";
 import { formatKeptZeroMeterMath } from "@repo/design-system/components/contents/physics/kinematics/math";
+import { useSimulationClock } from "@repo/design-system/components/contents/simulation/clock";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { ArrowHelper } from "@repo/design-system/components/three/arrow";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Route } from "@repo/design-system/components/three/stage/route";
@@ -36,6 +39,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -210,23 +214,20 @@ function DisplacementDistanceScene({
 
 function AnimatedCar({ motion }: { motion: DisplacementDistanceState }) {
   const carRef = useRef<Group>(null);
-  const animationStartRef = useRef<number | null>(null);
-  const animationCaseRef = useRef<DisplacementDistanceCaseId | null>(null);
+  const { advance, time: simTime } = useSimulationClock(0);
+  const animationCaseRef = useRef<DisplacementDistanceCaseId>(motion.caseId);
 
-  useFrame((state) => {
+  useFrame((_, delta) => {
     if (!carRef.current) {
       return;
     }
 
-    if (
-      animationStartRef.current === null ||
-      animationCaseRef.current !== motion.caseId
-    ) {
+    if (animationCaseRef.current !== motion.caseId) {
       animationCaseRef.current = motion.caseId;
-      animationStartRef.current = state.clock.elapsedTime;
+      simTime.current = 0;
     }
 
-    const elapsed = state.clock.elapsedTime - animationStartRef.current;
+    const elapsed = advance(delta);
     const progress = getAnimationProgress(motion, elapsed);
     const sample = getRouteSampleAtProgress(motion, progress);
 
@@ -268,18 +269,6 @@ function RouteLines({ motion }: { motion: DisplacementDistanceState }) {
     (point) =>
       new Vector3(point.x, DISPLACEMENT_DISTANCE_SCENE.routeLineY, point.z)
   );
-  const displacementPoints = [
-    new Vector3(
-      motion.start.x,
-      DISPLACEMENT_DISTANCE_SCENE.displacementLineY,
-      motion.start.z
-    ),
-    new Vector3(
-      motion.end.x,
-      DISPLACEMENT_DISTANCE_SCENE.displacementLineY,
-      motion.end.z
-    ),
-  ];
 
   return (
     <>
@@ -290,11 +279,20 @@ function RouteLines({ motion }: { motion: DisplacementDistanceState }) {
         toneMapped={false}
       />
       {motion.displacement > 0 ? (
-        <Line
+        <ArrowHelper
+          arrowSize={0.44}
           color={DISPLACEMENT_COLOR}
+          from={[
+            motion.start.x,
+            DISPLACEMENT_DISTANCE_SCENE.displacementLineY + 0.04,
+            motion.start.z,
+          ]}
           lineWidth={4}
-          points={displacementPoints}
-          toneMapped={false}
+          to={[
+            motion.end.x,
+            DISPLACEMENT_DISTANCE_SCENE.displacementLineY + 0.04,
+            motion.end.z,
+          ]}
         />
       ) : null}
     </>
@@ -304,14 +302,46 @@ function RouteLines({ motion }: { motion: DisplacementDistanceState }) {
 function StartEndMarkers({ motion }: { motion: DisplacementDistanceState }) {
   return (
     <>
-      <mesh position={[motion.start.x, 0.16, motion.start.z]}>
-        <sphereGeometry args={[0.13, 24, 16]} />
-        <meshStandardMaterial color={ROUTE_COLOR} roughness={0.42} />
-      </mesh>
-      <mesh position={[motion.end.x, 0.2, motion.end.z]}>
-        <coneGeometry args={[0.14, 0.28, 28]} />
-        <meshStandardMaterial color={CAR_COLOR} roughness={0.48} />
-      </mesh>
+      {/* Grounded start survey marker */}
+      <group position={[motion.start.x, ROAD_Y, motion.start.z]}>
+        <mesh castShadow position={[0, 0.025, 0]} receiveShadow>
+          <cylinderGeometry args={[0.18, 0.21, 0.05, 24]} />
+          <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.38} />
+        </mesh>
+        <mesh castShadow position={[0, 0.2, 0]}>
+          <cylinderGeometry args={[0.024, 0.028, 0.36, 16]} />
+          <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.28} />
+        </mesh>
+        <mesh castShadow position={[0, 0.4, 0]}>
+          <sphereGeometry args={[0.085, 24, 18]} />
+          <meshPhysicalMaterial
+            clearcoat={0.85}
+            color={ROUTE_COLOR}
+            emissive={ROUTE_COLOR}
+            emissiveIntensity={0.25}
+            roughness={0.2}
+          />
+        </mesh>
+      </group>
+      {/* Grounded finish checkpoint pennant */}
+      <group position={[motion.end.x, ROAD_Y, motion.end.z]}>
+        <mesh castShadow position={[0, 0.025, 0]} receiveShadow>
+          <cylinderGeometry args={[0.18, 0.21, 0.05, 24]} />
+          <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.38} />
+        </mesh>
+        <mesh castShadow position={[0, 0.34, 0]}>
+          <cylinderGeometry args={[0.022, 0.026, 0.64, 16]} />
+          <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.28} />
+        </mesh>
+        <mesh castShadow position={[0.14, 0.56, 0]}>
+          <boxGeometry args={[0.26, 0.16, 0.018]} />
+          <meshStandardMaterial color={CAR_COLOR} roughness={0.44} />
+        </mesh>
+        <mesh castShadow position={[0, 0.68, 0]}>
+          <sphereGeometry args={[0.036, 16, 12]} />
+          <MetalMaterial color={PLOT_COLORS.amber} roughness={0.22} />
+        </mesh>
+      </group>
     </>
   );
 }
