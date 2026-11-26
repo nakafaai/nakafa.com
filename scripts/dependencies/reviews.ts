@@ -73,8 +73,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "8.16.0",
-    "nakafa.com declares 8.16.0, which peers effect 4.1.5 exactly, the adopted cohort. 8.16.0 adds 20 chemistry 3D labs covering solution electrochemistry and indicators (PhIndicatorScaleLab, SaltBridgeIonFlowLab), thermochemistry and gas stoichiometry (CalorimeterEnthalpyLab, AvogadroGasVolumeLab), green chemistry (AtomEconomyReactorLab, GreenCatalystCycleLab), periodic groups and oxides (HalogenDisplacementLab, PeriodThreeOxideLab), organic synthesis and surfactants (AlkaneAlkeneIsomerLab, EsterificationRefluxLab, FractionalDistillationLab, SoapMicelleEmulsionLab), industrial chemistry (HaberAmmoniaConverterLab, SaponificationKettleLab), materials science (AlloySlipPlaneLab, ContactSulfuricTowerLab, GlassCeramicLatticeLab), and polymers (AdditionPolymerChainLab, CondensationNylonLab, RubberVulcanizationLab), bringing the visual catalog to 346 visuals in total. Every catalog figure renders in lessons and try-outs through one renderer, whose registry equals the catalog. Checked 26 November 2026.",
+    "8.17.0",
+    "nakafa.com declares 8.17.0, which peers effect 4.1.5 exactly, the adopted cohort. 8.17.0 adds 20 STEM 3D labs covering ecosystem ecology (FoodWebTrophicLab, QuadratSamplingLab, EcologicalSuccessionLab), human respiration (AlveolusGasExchangeLab, ThoraxDiaphragmLab), linear methods (EigenTransform3DLab, PcaProjection3DLab, QrGramSchmidt3DLab), derivative calculus (SecantToTangentLab, DerivativeSlopeFieldLab, OptimizationBox3DLab), integral calculus (RiemannSumConvergenceLab, SolidOfRevolutionLab, AreaBetweenCurvesLab), limits (EpsilonDeltaBandLab, AsymptoteBehaviorLab, SqueezeTheoremWaveLab), and 3D vector operations (Vector3DCrossProductLab, DotProductProjection3DLab, VectorParallelepipedLab), bringing the visual catalog to 366 visuals in total. Every catalog figure renders in lessons and try-outs through one renderer, whose registry equals the catalog. Checked 26 November 2026.",
   ],
   [
     "tsrs@latest",
