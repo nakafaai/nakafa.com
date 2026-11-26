@@ -387,7 +387,7 @@ function DropdownMenuCheckboxItem({
     >
       <DropdownMenuTick />
       <DropdownMenuIcon icon={icon} />
-      {children}
+      <span className="min-w-0 flex-1 truncate">{children}</span>
     </MenuCheckboxItem>
   );
 }
@@ -423,7 +423,7 @@ function DropdownMenuRadioItem({
     >
       <DropdownMenuTick />
       {plain ? null : <DropdownMenuIcon icon={icon} />}
-      {children}
+      <span className="min-w-0 flex-1 truncate">{children}</span>
     </MenuRadioItem>
   );
 }

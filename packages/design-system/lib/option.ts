@@ -12,12 +12,13 @@ export const optionRowVariants = cva(
   {
     defaultVariants: { mark: "none", size: "default" },
     variants: {
-      mark: { none: "", tick: "pe-8" },
+      // `size` sets `px-*`, so `mark` comes after it and `cn()` keeps `pe-8` for the tick.
       size: {
         default:
           "min-h-8 px-2 py-1.5 [[data-presentation=sheet]_&]:min-h-10 [[data-presentation=sheet]_&]:py-2",
         roomy: "min-h-11 px-3 py-3",
       },
+      mark: { none: "", tick: "pe-8" },
     },
   }
 );

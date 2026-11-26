@@ -63,7 +63,7 @@ function SheetHistoryContent() {
             key={chat._id}
             value={chat._id}
           >
-            <span className="max-w-62.5 truncate">{chat.title}</span>
+            <span className="block max-w-62.5 truncate">{chat.title}</span>
           </DropdownMenuRadioItem>
         ))}
       </DropdownMenuRadioGroup>
