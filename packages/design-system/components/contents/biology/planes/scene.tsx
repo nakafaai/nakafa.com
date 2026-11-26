@@ -201,20 +201,16 @@ function AnatomicalBody({
       </group>
 
       {/* Classroom-appropriate fitted anatomical athletic shorts over pelvic region */}
-      <group position={[0, 0.86, 0.015]}>
-        <mesh castShadow position={[0, 0.02, 0]} scale={[1.12, 1, 0.8]}>
-          <cylinderGeometry args={[0.162, 0.172, 0.24, 32]} />
+      <group position={[0, 0.87, 0.008]}>
+        <mesh castShadow position={[0, 0.015, 0]} scale={[1.1, 1, 0.9]}>
+          <cylinderGeometry args={[0.174, 0.204, 0.24, 36]} />
           <meshStandardMaterial
             color={LABORATORY_COLORS.plinth}
             roughness={0.8}
           />
         </mesh>
-        <mesh
-          castShadow
-          position={[0, -0.09, 0.015]}
-          scale={[1.28, 0.92, 0.92]}
-        >
-          <sphereGeometry args={[0.105, 24, 18]} />
+        <mesh castShadow position={[0, -0.095, 0.01]} scale={[1.38, 1, 1.06]}>
+          <sphereGeometry args={[0.118, 24, 18]} />
           <meshStandardMaterial
             color={LABORATORY_COLORS.plinth}
             roughness={0.8}
@@ -224,10 +220,11 @@ function AnatomicalBody({
           <mesh
             castShadow
             key={`short-leg-${side}`}
-            position={[side * 0.09, -0.12, 0]}
-            scale={[1, 1, 0.96]}
+            position={[side * 0.122, -0.145, 0.016]}
+            rotation={[0, 0, side * 0.11]}
+            scale={[1, 1, 1.02]}
           >
-            <cylinderGeometry args={[0.112, 0.098, 0.18, 24]} />
+            <cylinderGeometry args={[0.128, 0.116, 0.23, 28]} />
             <meshStandardMaterial
               color={LABORATORY_COLORS.plinth}
               roughness={0.8}

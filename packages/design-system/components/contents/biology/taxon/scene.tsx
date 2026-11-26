@@ -62,10 +62,10 @@ function TaxonRankTier({
   const depth = 2.7 - index * 0.33;
   const y = index * 0.068;
   const side = index % 2 === 0 ? -1 : 1;
-  const labelX = side * Math.max(0.42, width / 2 - 0.36);
+  const labelX = index === 6 ? 0 : side * Math.max(0.42, width / 2 - 0.36);
   const labelZ =
     index === 6
-      ? -depth / 2 - 0.14
+      ? -depth / 2 - 0.16
       : depth / 2 - 0.1 - Math.floor(index / 2) * 0.14;
 
   return (
@@ -132,9 +132,10 @@ export function TaxonRankScene({
   const nextStepWidth =
     sharedDepth < TAXON_RANKS.length ? 3.6 - sharedDepth * 0.44 : 0.6;
   const perchX =
-    sharedDepth >= 6 ? 0.32 : Math.min(1.52, nextStepWidth / 2 + 0.14);
-  const perchZ = sharedDepth >= 5 ? 0.08 : 0.24;
+    sharedDepth >= 6 ? 0.56 : Math.min(1.52, nextStepWidth / 2 + 0.14);
+  const perchZ = sharedDepth >= 5 ? 0.12 : 0.24;
   const perchY = terraceTopAt(perchX, perchZ);
+  const labelSpreadX = sharedDepth >= 6 ? 0.16 : 0;
 
   return (
     <group>
@@ -157,19 +158,28 @@ export function TaxonRankScene({
 
       <group position={[-perchX, perchY, perchZ]} rotation={[0, 0.28, 0]}>
         <TaxonSpecimenFigurine organism={first} />
-        <ThreeLabel color={ink} fontSize="compact" position={[0, 0.5, 0]}>
-          <span className="font-medium">{organismNames[first] ?? first}</span>
-        </ThreeLabel>
       </group>
+      <ThreeLabel
+        color={ink}
+        fontSize="compact"
+        position={[-perchX - labelSpreadX, perchY + 0.54, perchZ]}
+      >
+        <span className="font-medium">{organismNames[first] ?? first}</span>
+      </ThreeLabel>
+
       <group
         position={[perchX, perchY, perchZ]}
         rotation={[0, -Math.PI + 0.28, 0]}
       >
         <TaxonSpecimenFigurine organism={second} />
-        <ThreeLabel color={ink} fontSize="compact" position={[0, 0.5, 0]}>
-          <span className="font-medium">{organismNames[second] ?? second}</span>
-        </ThreeLabel>
       </group>
+      <ThreeLabel
+        color={ink}
+        fontSize="compact"
+        position={[perchX + labelSpreadX, perchY + 0.54, perchZ]}
+      >
+        <span className="font-medium">{organismNames[second] ?? second}</span>
+      </ThreeLabel>
     </group>
   );
 }
