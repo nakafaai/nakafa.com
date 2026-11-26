@@ -73,8 +73,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "8.15.0",
-    "nakafa.com declares 8.15.0, which peers effect 4.1.5 exactly, the adopted cohort. 8.15.0 adds 17 biology 3D labs covering plant nutrition (MineralDeficiencyLab, RootHairUptakeLab, CarnivorousPlantLab), vascular transport (XylemCohesionLab, PhloemTranslocationLab, PhytoremediationLab), phytohormones (AuxinAgarBendLab, PhytohormoneActionLab), flowering reproduction (FlowerAnatomyLab, FruitSeedDispersalLab), Mendelian and human inheritance (MonohybridCrossLab, DihybridCrossLab, PedigreeSexLinkedLab), variation and mutation (VariationDistributionLab, MeiosisShufflingLab, ChromosomeMutationLab), and membrane structure (FluidMosaicMembraneLab), bringing the visual catalog to 326 visuals in total. Every catalog figure renders in lessons and try-outs through one renderer, whose registry equals the catalog. Checked 24 November 2026.",
+    "8.16.0",
+    "nakafa.com declares 8.16.0, which peers effect 4.1.5 exactly, the adopted cohort. 8.16.0 adds 20 chemistry 3D labs covering solution electrochemistry and indicators (PhIndicatorScaleLab, SaltBridgeIonFlowLab), thermochemistry and gas stoichiometry (CalorimeterEnthalpyLab, AvogadroGasVolumeLab), green chemistry (AtomEconomyReactorLab, GreenCatalystCycleLab), periodic groups and oxides (HalogenDisplacementLab, PeriodThreeOxideLab), organic synthesis and surfactants (AlkaneAlkeneIsomerLab, EsterificationRefluxLab, FractionalDistillationLab, SoapMicelleEmulsionLab), industrial chemistry (HaberAmmoniaConverterLab, SaponificationKettleLab), materials science (AlloySlipPlaneLab, ContactSulfuricTowerLab, GlassCeramicLatticeLab), and polymers (AdditionPolymerChainLab, CondensationNylonLab, RubberVulcanizationLab), bringing the visual catalog to 346 visuals in total. Every catalog figure renders in lessons and try-outs through one renderer, whose registry equals the catalog. Checked 26 November 2026.",
   ],
   [
     "tsrs@latest",
