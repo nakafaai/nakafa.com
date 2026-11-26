@@ -10,9 +10,7 @@ export const Route = createFileRoute(
 )({
   loader: async ({ params }) => {
     const { readLearningScreen } = await import("@/lib/account/settings");
-    const outcome = await Effect.runPromise(
-      readLearningScreen(params.locale, window.location.origin)
-    );
+    const outcome = await Effect.runPromise(readLearningScreen(params.locale));
     return Match.value(outcome).pipe(
       Match.tagsExhaustive({
         NotFound: () => {

@@ -19,10 +19,9 @@ import { readRenderedRouteMessages } from "@/lib/i18n/rendered";
 
 /** Account settings: the signed-in account and head, read directly in the browser. */
 export const readSettingsScreen = Effect.fn("www.settings.read")(function* (
-  locale: Locale,
-  origin: string
+  locale: Locale
 ) {
-  const clientOption = yield* resolveAccountClient(origin);
+  const clientOption = yield* resolveAccountClient();
   if (Option.isNone(clientOption)) {
     return { _tag: "SignedOut" as const };
   }
@@ -59,10 +58,9 @@ export const readSettingsScreen = Effect.fn("www.settings.read")(function* (
 
 /** Learning settings: the account, saved preference, and curriculum programs in one parallel batch. */
 export const readLearningScreen = Effect.fn("www.settings.learning")(function* (
-  locale: Locale,
-  origin: string
+  locale: Locale
 ) {
-  const clientOption = yield* resolveAccountClient(origin);
+  const clientOption = yield* resolveAccountClient();
   if (Option.isNone(clientOption)) {
     return { _tag: "SignedOut" as const };
   }
@@ -118,10 +116,9 @@ export const readLearningScreen = Effect.fn("www.settings.learning")(function* (
 
 /** Memory settings: first page of memories, pause state, and read clock in one parallel batch. */
 export const readMemoryScreen = Effect.fn("www.settings.memory")(function* (
-  locale: Locale,
-  origin: string
+  locale: Locale
 ) {
-  const clientOption = yield* resolveAccountClient(origin);
+  const clientOption = yield* resolveAccountClient();
   if (Option.isNone(clientOption)) {
     return { _tag: "SignedOut" as const };
   }
@@ -169,8 +166,8 @@ export const readMemoryScreen = Effect.fn("www.settings.memory")(function* (
 
 /** Connector settings: first connections and offered Google connectors in one parallel batch. */
 export const readConnectorsScreen = Effect.fn("www.settings.connectors")(
-  function* (locale: Locale, origin: string) {
-    const clientOption = yield* resolveAccountClient(origin);
+  function* (locale: Locale) {
+    const clientOption = yield* resolveAccountClient();
     if (Option.isNone(clientOption)) {
       return { _tag: "SignedOut" as const };
     }
@@ -214,8 +211,8 @@ export const readConnectorsScreen = Effect.fn("www.settings.connectors")(
 
 /** Billing settings: the viewer's billing overview and page head in one parallel batch. */
 export const readSubscriptionsScreen = Effect.fn("www.settings.subscriptions")(
-  function* (locale: Locale, origin: string) {
-    const clientOption = yield* resolveAccountClient(origin);
+  function* (locale: Locale) {
+    const clientOption = yield* resolveAccountClient();
     if (Option.isNone(clientOption)) {
       return { _tag: "SignedOut" as const };
     }

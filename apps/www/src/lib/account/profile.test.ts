@@ -50,7 +50,6 @@ vi.mock("@/lib/i18n/rendered", () => ({
 }));
 
 const liveClient = { query: vi.fn() };
-const ORIGIN = "https://nakafa.com";
 const PROFILE = { _id: "u1", name: "Nabil", username: "nabil" };
 
 function answerRequired(answers: ReadonlyArray<readonly [unknown, unknown]>) {
@@ -78,7 +77,7 @@ const loadKnown = (isOwner: boolean) =>
         Effect.succeed({ appUser: { _id: "u1" } })
       );
     }
-    const outcome = yield* readProfileScreen("Nabil", "c", ORIGIN);
+    const outcome = yield* readProfileScreen("Nabil", "c");
     if (outcome._tag !== "Ready") {
       return expect.unreachable("expected Ready");
     }
@@ -119,7 +118,7 @@ describe("profile browser readers", () => {
       mocks.readAccountOptional.mockReturnValue(
         Effect.succeed({ appUser: { _id: "u1" } })
       );
-      expect(yield* readProfileScreen("Nabil", "c", ORIGIN)).toEqual({
+      expect(yield* readProfileScreen("Nabil", "c")).toEqual({
         _tag: "Ready",
         screen: { isOwner: true, profile: PROFILE },
       });
@@ -127,13 +126,13 @@ describe("profile browser readers", () => {
       mocks.resolveBrowserClient.mockReturnValue(
         Effect.succeed({ client: liveClient, signedIn: false })
       );
-      expect(yield* readProfileScreen("nabil", "", ORIGIN)).toEqual({
+      expect(yield* readProfileScreen("nabil", "")).toEqual({
         _tag: "Ready",
         screen: { isOwner: false, profile: PROFILE },
       });
 
       answerRequired([[users.queries.getProfileByUsername, null]]);
-      expect(yield* readProfileScreen("nobody", "", ORIGIN)).toEqual({
+      expect(yield* readProfileScreen("nobody", "")).toEqual({
         _tag: "NotFound",
       });
     })
@@ -147,13 +146,7 @@ describe("profile browser readers", () => {
         mocks.readAccountOptional.mockReturnValue(
           Effect.succeed({ page: ["p1"] })
         );
-        const ready = yield* readProfilePostsScreen(
-          "en",
-          "Nabil",
-          "c",
-          ORIGIN,
-          known
-        );
+        const ready = yield* readProfilePostsScreen("en", "Nabil", "c", known);
         expect(ready).toMatchObject({
           _tag: "Ready",
           screen: {
@@ -164,9 +157,9 @@ describe("profile browser readers", () => {
         expect(mocks.readAccountRequired).not.toHaveBeenCalled();
 
         answerRequired([[users.queries.getProfileByUsername, null]]);
-        expect(
-          yield* readProfilePostsScreen("en", "nobody", "c", ORIGIN)
-        ).toEqual({ _tag: "NotFound" });
+        expect(yield* readProfilePostsScreen("en", "nobody", "c")).toEqual({
+          _tag: "NotFound",
+        });
       })
   );
 
@@ -177,13 +170,7 @@ describe("profile browser readers", () => {
       mocks.readAccountOptional.mockReturnValue(
         Effect.succeed({ page: ["c1"] })
       );
-      const ready = yield* readProfileCommentsScreen(
-        "en",
-        "Nabil",
-        "c",
-        ORIGIN,
-        known
-      );
+      const ready = yield* readProfileCommentsScreen("en", "Nabil", "c", known);
       expect(ready).toMatchObject({
         _tag: "Ready",
         screen: {
@@ -198,13 +185,13 @@ describe("profile browser readers", () => {
         Effect.succeed({ _tag: "NotFound" })
       );
       expect(
-        yield* readProfileCommentsScreen("en", "nabil", "c", ORIGIN, known)
+        yield* readProfileCommentsScreen("en", "nabil", "c", known)
       ).toEqual({ _tag: "NotFound" });
 
       answerRequired([[users.queries.getProfileByUsername, null]]);
-      expect(
-        yield* readProfileCommentsScreen("en", "nobody", "c", ORIGIN)
-      ).toEqual({ _tag: "NotFound" });
+      expect(yield* readProfileCommentsScreen("en", "nobody", "c")).toEqual({
+        _tag: "NotFound",
+      });
     })
   );
 
@@ -212,13 +199,7 @@ describe("profile browser readers", () => {
     Effect.gen(function* () {
       const known = yield* loadKnown(true);
       answerRequired([[progress.queries.medals, { level: 3 }]]);
-      const ready = yield* readProfileBadgesScreen(
-        "en",
-        "Nabil",
-        "c",
-        ORIGIN,
-        known
-      );
+      const ready = yield* readProfileBadgesScreen("en", "Nabil", "c", known);
       expect(ready).toMatchObject({
         _tag: "Ready",
         screen: {
@@ -228,14 +209,14 @@ describe("profile browser readers", () => {
       });
 
       answerRequired([[progress.queries.medals, null]]);
-      expect(
-        yield* readProfileBadgesScreen("en", "nabil", "c", ORIGIN, known)
-      ).toEqual({ _tag: "NotFound" });
+      expect(yield* readProfileBadgesScreen("en", "nabil", "c", known)).toEqual(
+        { _tag: "NotFound" }
+      );
 
       answerRequired([[users.queries.getProfileByUsername, null]]);
-      expect(
-        yield* readProfileBadgesScreen("en", "nobody", "c", ORIGIN)
-      ).toEqual({ _tag: "NotFound" });
+      expect(yield* readProfileBadgesScreen("en", "nobody", "c")).toEqual({
+        _tag: "NotFound",
+      });
     })
   );
 
@@ -250,7 +231,6 @@ describe("profile browser readers", () => {
         "en",
         "Nabil",
         "c",
-        ORIGIN,
         ownerKnown
       );
       expect(ready).toMatchObject({
@@ -268,13 +248,13 @@ describe("profile browser readers", () => {
       );
 
       expect(
-        yield* readProfileChatScreen("en", "nabil", "c", ORIGIN, visitorKnown)
+        yield* readProfileChatScreen("en", "nabil", "c", visitorKnown)
       ).toEqual({ _tag: "NotFound" });
 
       answerRequired([[users.queries.getProfileByUsername, null]]);
-      expect(yield* readProfileChatScreen("en", "nobody", "c", ORIGIN)).toEqual(
-        { _tag: "NotFound" }
-      );
+      expect(yield* readProfileChatScreen("en", "nobody", "c")).toEqual({
+        _tag: "NotFound",
+      });
     })
   );
 });

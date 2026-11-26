@@ -1,24 +1,45 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import auth from "@repo/backend/confect/_generated/refs/auth";
-import { Effect, Option } from "effect";
+import { makeFunctionReference } from "convex/server";
+import { Effect, Option, Schema } from "effect";
+import { Base64Url } from "effect/encoding";
 import {
   readAccountOptional,
   readAccountRequired,
   resolveAccountClient,
   resolveBrowserClient,
 } from "@/lib/account/client";
+import type { AuthConvex } from "@/lib/auth/client";
 import { QueryReadFailed } from "@/lib/convex/read";
 
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
+/** Builds a JWT-shaped access token with the given expiry in epoch seconds. */
+function tokenWithExpiry(exp: number) {
+  return `head.${Base64Url.encode(encodeJson({ exp, sub: "session-1" }))}.sig`;
+}
+
+const FRESH_TOKEN = tokenWithExpiry(4_102_444_800);
+const EXPIRED_TOKEN = tokenWithExpiry(1);
+
 const mocks = vi.hoisted(() => ({
+  convexMutation: vi.fn(),
+  fetchAccessToken:
+    vi.fn<(opts: { forceRefreshToken: boolean }) => Promise<string | null>>(),
+  getAccessToken: vi.fn<() => string | null>(),
   hasSignedInHint: vi.fn<(cookie: string) => boolean>(),
   httpQuery: vi.fn(),
   httpSetAuth: vi.fn<(token: string) => void>(),
-  readBrowserSession:
+  readAuthClient:
     vi.fn<
-      (
-        origin: string
-      ) => Effect.Effect<{ accessToken: string; userId: string } | null>
+      (convex: AuthConvex) => Effect.Effect<{
+        fetchAccessToken: (opts: {
+          forceRefreshToken: boolean;
+        }) => Promise<string | null>;
+        getAccessToken: () => string | null;
+      }>
     >(),
+  readConvexClient: vi.fn(),
   readMadeClient: vi.fn<() => Option.Option<{ query: typeof vi.fn }>>(),
   readQueryOn:
     vi.fn<
@@ -40,6 +61,7 @@ vi.mock("convex/browser", () => ({
 }));
 
 vi.mock("@/lib/convex/client", () => ({
+  readConvexClient: mocks.readConvexClient,
   readMadeClient: mocks.readMadeClient,
 }));
 
@@ -51,8 +73,8 @@ vi.mock("@/lib/convex/read", async (importOriginal) => {
   };
 });
 
-vi.mock("@/lib/auth/token", () => ({
-  readBrowserSession: mocks.readBrowserSession,
+vi.mock("@/lib/auth/client", () => ({
+  readAuthClient: mocks.readAuthClient,
 }));
 
 vi.mock("@/lib/auth/hint", () => ({
@@ -64,12 +86,21 @@ vi.mock("@/lib/analytics/client", () => ({
 }));
 
 const liveClient = { query: vi.fn() };
-const ORIGIN = "https://nakafa.com";
+const MUTATION = makeFunctionReference<"mutation">("auth/school:signIn");
 
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.hasSignedInHint.mockReturnValue(false);
   mocks.readMadeClient.mockReturnValue(Option.none());
+  mocks.readConvexClient.mockReturnValue({ mutation: mocks.convexMutation });
+  mocks.getAccessToken.mockReturnValue(null);
+  mocks.fetchAccessToken.mockResolvedValue(null);
+  mocks.readAuthClient.mockReturnValue(
+    Effect.succeed({
+      fetchAccessToken: mocks.fetchAccessToken,
+      getAccessToken: mocks.getAccessToken,
+    })
+  );
   mocks.reportClientException.mockReturnValue(Effect.void);
 });
 
@@ -77,29 +108,62 @@ describe("resolveAccountClient", () => {
   it.effect("reuses the open live client when one already exists", () =>
     Effect.gen(function* () {
       mocks.readMadeClient.mockReturnValue(Option.some(liveClient));
-      const client = yield* resolveAccountClient(ORIGIN);
+      const client = yield* resolveAccountClient();
       expect(client).toEqual(Option.some(liveClient));
-      expect(mocks.readBrowserSession).not.toHaveBeenCalled();
+      expect(mocks.readAuthClient).not.toHaveBeenCalled();
     })
   );
 
-  it.effect("returns none on a cold load with no session", () =>
-    Effect.gen(function* () {
-      mocks.readBrowserSession.mockReturnValue(Effect.succeed(null));
-      const client = yield* resolveAccountClient(ORIGIN);
-      expect(Option.isNone(client)).toBe(true);
-    })
+  it.effect(
+    "reuses a fresh cached access token from AuthClient with zero refreshes and keeps readConvexClient lazy",
+    () =>
+      Effect.gen(function* () {
+        mocks.getAccessToken.mockReturnValue(FRESH_TOKEN);
+        const client = yield* resolveAccountClient();
+        expect(Option.isSome(client)).toBe(true);
+        expect(mocks.httpSetAuth).toHaveBeenCalledExactlyOnceWith(FRESH_TOKEN);
+        expect(mocks.fetchAccessToken).not.toHaveBeenCalled();
+        expect(mocks.readConvexClient).not.toHaveBeenCalled();
+
+        const passed = mocks.readAuthClient.mock.calls[0]?.[0];
+        mocks.convexMutation.mockResolvedValueOnce("ok");
+        expect(
+          yield* Effect.promise(
+            async () => await passed?.mutation(MUTATION, {})
+          )
+        ).toBe("ok");
+        expect(mocks.readConvexClient).toHaveBeenCalledOnce();
+      })
   );
 
-  it.effect("authenticates an HTTP client on a cold load with a session", () =>
-    Effect.gen(function* () {
-      mocks.readBrowserSession.mockReturnValue(
-        Effect.succeed({ accessToken: "cold-tok", userId: "u1" })
-      );
-      const client = yield* resolveAccountClient(ORIGIN);
-      expect(Option.isSome(client)).toBe(true);
-      expect(mocks.httpSetAuth).toHaveBeenCalledExactlyOnceWith("cold-tok");
-    })
+  it.effect(
+    "refreshes through AuthClient's mutex when the cached token is expired or absent",
+    () =>
+      Effect.gen(function* () {
+        mocks.getAccessToken.mockReturnValueOnce(EXPIRED_TOKEN);
+        mocks.fetchAccessToken.mockResolvedValueOnce(FRESH_TOKEN);
+        const refreshed = yield* resolveAccountClient();
+        expect(Option.isSome(refreshed)).toBe(true);
+        expect(mocks.fetchAccessToken).toHaveBeenCalledExactlyOnceWith({
+          forceRefreshToken: true,
+        });
+        expect(mocks.httpSetAuth).toHaveBeenCalledExactlyOnceWith(FRESH_TOKEN);
+
+        mocks.getAccessToken.mockReturnValueOnce(null);
+        mocks.fetchAccessToken.mockResolvedValueOnce(null);
+        const missing = yield* resolveAccountClient();
+        expect(Option.isNone(missing)).toBe(true);
+      })
+  );
+
+  it.effect(
+    "maps an AuthClient refresh failure to QueryReadFailed in the error channel",
+    () =>
+      Effect.gen(function* () {
+        mocks.fetchAccessToken.mockRejectedValueOnce(new Error("refresh down"));
+        const failure = yield* resolveAccountClient().pipe(Effect.flip);
+        expect(failure).toBeInstanceOf(QueryReadFailed);
+      })
   );
 });
 
@@ -107,7 +171,7 @@ describe("resolveBrowserClient", () => {
   it.effect("reuses the open live client when one exists", () =>
     Effect.gen(function* () {
       mocks.readMadeClient.mockReturnValue(Option.some(liveClient));
-      const result = yield* resolveBrowserClient("", ORIGIN);
+      const result = yield* resolveBrowserClient("");
       expect(result).toEqual({ client: liveClient, signedIn: true });
     })
   );
@@ -117,12 +181,10 @@ describe("resolveBrowserClient", () => {
     () =>
       Effect.gen(function* () {
         mocks.hasSignedInHint.mockReturnValue(true);
-        mocks.readBrowserSession.mockReturnValue(
-          Effect.succeed({ accessToken: "hint-tok", userId: "u1" })
-        );
-        const result = yield* resolveBrowserClient("signed-in=1", ORIGIN);
+        mocks.getAccessToken.mockReturnValue(FRESH_TOKEN);
+        const result = yield* resolveBrowserClient("signed-in=1");
         expect(result.signedIn).toBe(true);
-        expect(mocks.httpSetAuth).toHaveBeenCalledExactlyOnceWith("hint-tok");
+        expect(mocks.httpSetAuth).toHaveBeenCalledExactlyOnceWith(FRESH_TOKEN);
       })
   );
 
@@ -131,20 +193,20 @@ describe("resolveBrowserClient", () => {
     () =>
       Effect.gen(function* () {
         mocks.hasSignedInHint.mockReturnValue(true);
-        mocks.readBrowserSession.mockReturnValue(Effect.succeed(null));
-        const result = yield* resolveBrowserClient("signed-in=1", ORIGIN);
+        mocks.fetchAccessToken.mockResolvedValue(null);
+        const result = yield* resolveBrowserClient("signed-in=1");
         expect(result.signedIn).toBe(false);
         expect(mocks.httpSetAuth).not.toHaveBeenCalled();
       })
   );
 
   it.effect(
-    "returns an unauthenticated HTTP client without refreshing for a visitor",
+    "returns an unauthenticated HTTP client without touching AuthClient for a visitor",
     () =>
       Effect.gen(function* () {
-        const result = yield* resolveBrowserClient("", ORIGIN);
+        const result = yield* resolveBrowserClient("");
         expect(result.signedIn).toBe(false);
-        expect(mocks.readBrowserSession).not.toHaveBeenCalled();
+        expect(mocks.readAuthClient).not.toHaveBeenCalled();
       })
   );
 });

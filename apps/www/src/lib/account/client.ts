@@ -1,17 +1,71 @@
 import type { Ref } from "@confect/core";
 import { ConvexHttpClient } from "convex/browser";
-import { Effect, Option, Predicate } from "effect";
+import { Clock, Effect, Option, Predicate } from "effect";
 import { clientEnv } from "@/env.public";
 import { reportClientException } from "@/lib/analytics/client";
+import { readTokenClaims } from "@/lib/auth/claims";
+import type { AuthConvex } from "@/lib/auth/client";
+import { readAuthClient } from "@/lib/auth/client";
 import { hasSignedInHint } from "@/lib/auth/hint";
-import { readBrowserSession } from "@/lib/auth/token";
-import { readMadeClient } from "@/lib/convex/client";
+import { readConvexClient, readMadeClient } from "@/lib/convex/client";
 import { failAtGateway } from "@/lib/convex/http";
 import type { QueryClient } from "@/lib/convex/read";
-import { readQueryOn } from "@/lib/convex/read";
+import { QueryReadFailed, readQueryOn } from "@/lib/convex/read";
 
 /** Whether a failed read is a transport or decoding failure rather than a typed query refusal. */
 const isQueryReadFailed = Predicate.isTagged("QueryReadFailed");
+
+/** Margin before JWT expiry where a cached browser token is refreshed before use. */
+const TOKEN_REFRESH_MARGIN_MILLISECONDS = 30_000;
+
+/**
+ * Lazy Convex bridge for `readAuthClient` on a cold load before `PageProviders`
+ * mounts the live socket (`readMadeClient`). Its `mutation` runs only if an
+ * ambient OAuth sign-in executes, so calling `readAuthClient` never creates
+ * `shared` prematurely before `LiveCredentials` mounts.
+ */
+function lazyAuthConvex(): AuthConvex {
+  return {
+    mutation: (mutation, ...argsAndOptions) =>
+      readConvexClient(clientEnv.VITE_CONVEX_URL).mutation(
+        mutation,
+        ...argsAndOptions
+      ),
+    url: clientEnv.VITE_CONVEX_URL,
+  };
+}
+
+/** Whether a cached access token still has time left before expiry. */
+function isFreshToken(token: string, nowMillis: number): boolean {
+  return Option.exists(
+    readTokenClaims(token),
+    ({ exp }) => exp * 1000 > nowMillis + TOKEN_REFRESH_MARGIN_MILLISECONDS
+  );
+}
+
+/**
+ * Reads a usable Convex access token through the page's single `AuthClient`:
+ * reuses a fresh cached JWT from browser storage with zero network requests,
+ * or refreshes once under `AuthClient`'s cross-tab mutex so concurrent tabs
+ * and `PageProviders` never race `POST /api/auth/refresh` on the same refresh
+ * cookie.
+ */
+const readSessionToken = Effect.fn("www.account.readSessionToken")(
+  function* () {
+    const auth = yield* readAuthClient(lazyAuthConvex());
+    const held = auth.getAccessToken();
+    if (held !== null) {
+      const now = yield* Clock.currentTimeMillis;
+      if (isFreshToken(held, now)) {
+        return held;
+      }
+    }
+    return yield* Effect.tryPromise({
+      catch: (cause) => new QueryReadFailed({ cause }),
+      try: () => auth.fetchAccessToken({ forceRefreshToken: true }),
+    });
+  }
+);
 
 /** Creates one browser HTTP Convex client with gateway-failure detection. */
 function createBrowserHttpClient(token?: string): QueryClient {
@@ -29,20 +83,21 @@ function createBrowserHttpClient(token?: string): QueryClient {
  * (`_account`). On SPA navigation inside the app shell, the page's live
  * WebSocket client is already open and authenticated, so queries run directly
  * over it with zero Worker requests and zero token refreshes (ADR 0038 D2).
- * On a cold load before the shell mounts, the browser refreshes its session
- * once and reads Convex directly over HTTP.
+ * On a cold load before the shell mounts, the browser reuses its cached access
+ * token or refreshes once through `AuthClient`'s mutex and reads Convex
+ * directly over HTTP.
  */
 export const resolveAccountClient = Effect.fn("www.account.resolveClient")(
-  function* (origin: string) {
+  function* () {
     const live = readMadeClient();
     if (Option.isSome(live)) {
       return Option.some<QueryClient>(live.value);
     }
-    const session = yield* readBrowserSession(origin);
-    if (session === null) {
+    const token = yield* readSessionToken();
+    if (token === null) {
       return Option.none<QueryClient>();
     }
-    return Option.some(createBrowserHttpClient(session.accessToken));
+    return Option.some(createBrowserHttpClient(token));
   }
 );
 
@@ -54,17 +109,17 @@ export const resolveAccountClient = Effect.fn("www.account.resolveClient")(
  */
 export const resolveBrowserClient = Effect.fn(
   "www.account.resolveBrowserClient"
-)(function* (cookie: string, origin: string) {
+)(function* (cookie: string) {
   const live = readMadeClient();
   if (Option.isSome(live)) {
     const client: QueryClient = live.value;
     return { client, signedIn: true };
   }
   if (hasSignedInHint(cookie)) {
-    const session = yield* readBrowserSession(origin);
-    if (session !== null) {
+    const token = yield* readSessionToken();
+    if (token !== null) {
       return {
-        client: createBrowserHttpClient(session.accessToken),
+        client: createBrowserHttpClient(token),
         signedIn: true,
       };
     }

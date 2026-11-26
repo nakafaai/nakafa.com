@@ -79,10 +79,9 @@ const readTryoutStart = Effect.fn("www.home.readTryoutStart")(function* (
  * over the browser's Convex client with no Worker server function.
  */
 export const readHomeScreen = Effect.fn("www.home.read")(function* (
-  locale: Locale,
-  origin: string
+  locale: Locale
 ) {
-  const clientOption = yield* resolveAccountClient(origin);
+  const clientOption = yield* resolveAccountClient();
   if (Option.isNone(clientOption)) {
     return { _tag: "SignedOut" as const };
   }

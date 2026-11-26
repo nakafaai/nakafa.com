@@ -50,7 +50,6 @@ vi.mock("@/lib/i18n/rendered", () => ({
 }));
 
 const liveClient = { query: vi.fn() };
-const ORIGIN = "https://nakafa.com";
 const ACCOUNT = { appUser: { _id: "u1", name: "Nabil", username: "nabil" } };
 
 function answerRequired(answers: ReadonlyArray<readonly [unknown, unknown]>) {
@@ -91,19 +90,19 @@ describe("settings browser readers", () => {
   it.effect("returns SignedOut for every screen when no session exists", () =>
     Effect.gen(function* () {
       mocks.resolveAccountClient.mockReturnValue(Effect.succeedNone);
-      expect(yield* readSettingsScreen("en", ORIGIN)).toEqual({
+      expect(yield* readSettingsScreen("en")).toEqual({
         _tag: "SignedOut",
       });
-      expect(yield* readLearningScreen("en", ORIGIN)).toEqual({
+      expect(yield* readLearningScreen("en")).toEqual({
         _tag: "SignedOut",
       });
-      expect(yield* readMemoryScreen("en", ORIGIN)).toEqual({
+      expect(yield* readMemoryScreen("en")).toEqual({
         _tag: "SignedOut",
       });
-      expect(yield* readConnectorsScreen("en", ORIGIN)).toEqual({
+      expect(yield* readConnectorsScreen("en")).toEqual({
         _tag: "SignedOut",
       });
-      expect(yield* readSubscriptionsScreen("en", ORIGIN)).toEqual({
+      expect(yield* readSubscriptionsScreen("en")).toEqual({
         _tag: "SignedOut",
       });
     })
@@ -112,21 +111,21 @@ describe("settings browser readers", () => {
   it.effect("reads Account settings and maps missing account or refusal", () =>
     Effect.gen(function* () {
       answerRequired([[auth.queries.getCurrentUser, ACCOUNT]]);
-      const ready = yield* readSettingsScreen("en", ORIGIN);
+      const ready = yield* readSettingsScreen("en");
       expect(ready).toMatchObject({
         _tag: "Ready",
         screen: { account: ACCOUNT, seo: { title: "Settings" } },
       });
 
       answerRequired([[auth.queries.getCurrentUser, null]]);
-      expect(yield* readSettingsScreen("en", ORIGIN)).toEqual({
+      expect(yield* readSettingsScreen("en")).toEqual({
         _tag: "NotFound",
       });
 
       mocks.readAccountRequired.mockReturnValueOnce(
         Effect.succeed({ _tag: "SignedOut" })
       );
-      expect(yield* readSettingsScreen("en", ORIGIN)).toEqual({
+      expect(yield* readSettingsScreen("en")).toEqual({
         _tag: "SignedOut",
       });
     })
@@ -143,7 +142,7 @@ describe("settings browser readers", () => {
         mocks.readAccountOptional.mockReturnValue(
           Effect.succeed({ program: "merdeka" })
         );
-        const ready = yield* readLearningScreen("en", ORIGIN);
+        const ready = yield* readLearningScreen("en");
         expect(ready).toMatchObject({
           _tag: "Ready",
           screen: {
@@ -157,7 +156,7 @@ describe("settings browser readers", () => {
           [auth.queries.getCurrentUser, null],
           [learningPreferences.queries.listCurriculumPrograms, []],
         ]);
-        expect(yield* readLearningScreen("en", ORIGIN)).toEqual({
+        expect(yield* readLearningScreen("en")).toEqual({
           _tag: "NotFound",
         });
 
@@ -168,7 +167,7 @@ describe("settings browser readers", () => {
               : { _tag: "Value", value: [] }
           )
         );
-        expect(yield* readLearningScreen("en", ORIGIN)).toEqual({
+        expect(yield* readLearningScreen("en")).toEqual({
           _tag: "SignedOut",
         });
 
@@ -179,7 +178,7 @@ describe("settings browser readers", () => {
               : { _tag: "Value", value: ACCOUNT }
           )
         );
-        expect(yield* readLearningScreen("en", ORIGIN)).toEqual({
+        expect(yield* readLearningScreen("en")).toEqual({
           _tag: "NotFound",
         });
       })
@@ -191,7 +190,7 @@ describe("settings browser readers", () => {
         [nina.memory.list, { page: ["m1"] }],
         [nina.memory.state, { paused: true }],
       ]);
-      const ready = yield* readMemoryScreen("en", ORIGIN);
+      const ready = yield* readMemoryScreen("en");
       expect(ready).toMatchObject({
         _tag: "Ready",
         screen: { first: { page: ["m1"] }, paused: true },
@@ -201,7 +200,7 @@ describe("settings browser readers", () => {
         [nina.memory.list, { page: [] }],
         [nina.memory.state, null],
       ]);
-      expect(yield* readMemoryScreen("en", ORIGIN)).toEqual({
+      expect(yield* readMemoryScreen("en")).toEqual({
         _tag: "NotFound",
       });
 
@@ -212,7 +211,7 @@ describe("settings browser readers", () => {
             : { _tag: "Value", value: { paused: false } }
         )
       );
-      expect(yield* readMemoryScreen("en", ORIGIN)).toEqual({
+      expect(yield* readMemoryScreen("en")).toEqual({
         _tag: "SignedOut",
       });
 
@@ -223,7 +222,7 @@ describe("settings browser readers", () => {
             : { _tag: "Value", value: { page: [] } }
         )
       );
-      expect(yield* readMemoryScreen("en", ORIGIN)).toEqual({
+      expect(yield* readMemoryScreen("en")).toEqual({
         _tag: "NotFound",
       });
     })
@@ -235,7 +234,7 @@ describe("settings browser readers", () => {
         [connectors.connections.listOwn, { page: [] }],
         [connectors.google.offered, ["drive"]],
       ]);
-      const ready = yield* readConnectorsScreen("en", ORIGIN);
+      const ready = yield* readConnectorsScreen("en");
       expect(ready).toMatchObject({
         _tag: "Ready",
         screen: { first: { page: [] }, offered: ["drive"] },
@@ -248,7 +247,7 @@ describe("settings browser readers", () => {
             : { _tag: "Value", value: [] }
         )
       );
-      expect(yield* readConnectorsScreen("en", ORIGIN)).toEqual({
+      expect(yield* readConnectorsScreen("en")).toEqual({
         _tag: "SignedOut",
       });
 
@@ -259,7 +258,7 @@ describe("settings browser readers", () => {
             : { _tag: "Value", value: { page: [] } }
         )
       );
-      expect(yield* readConnectorsScreen("en", ORIGIN)).toEqual({
+      expect(yield* readConnectorsScreen("en")).toEqual({
         _tag: "NotFound",
       });
     })
@@ -268,7 +267,7 @@ describe("settings browser readers", () => {
   it.effect("reads Subscriptions settings and handles refusal", () =>
     Effect.gen(function* () {
       answerRequired([[billing.queries.overview, { plan: "pro" }]]);
-      const ready = yield* readSubscriptionsScreen("en", ORIGIN);
+      const ready = yield* readSubscriptionsScreen("en");
       expect(ready).toMatchObject({
         _tag: "Ready",
         screen: { overview: { plan: "pro" }, seo: { title: "Subscriptions" } },
@@ -277,7 +276,7 @@ describe("settings browser readers", () => {
       mocks.readAccountRequired.mockReturnValueOnce(
         Effect.succeed({ _tag: "SignedOut" })
       );
-      expect(yield* readSubscriptionsScreen("en", ORIGIN)).toEqual({
+      expect(yield* readSubscriptionsScreen("en")).toEqual({
         _tag: "SignedOut",
       });
     })

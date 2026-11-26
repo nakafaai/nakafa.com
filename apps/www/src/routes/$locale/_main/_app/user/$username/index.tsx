@@ -29,13 +29,7 @@ const readProfilePosts = createIsomorphicFn()
         known,
       ]);
       const outcome = await Effect.runPromise(
-        readProfilePostsScreen(
-          locale,
-          username,
-          document.cookie,
-          window.location.origin,
-          resolved
-        )
+        readProfilePostsScreen(locale, username, document.cookie, resolved)
       );
       return Match.value(outcome).pipe(
         Match.tagsExhaustive({

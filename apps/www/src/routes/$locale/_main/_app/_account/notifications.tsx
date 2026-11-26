@@ -31,7 +31,7 @@ export const Route = createFileRoute(
       "@/lib/account/notifications"
     );
     const outcome = await Effect.runPromise(
-      readNotificationsScreen(params.locale, window.location.origin)
+      readNotificationsScreen(params.locale)
     );
     return Match.value(outcome).pipe(
       Match.tagsExhaustive({

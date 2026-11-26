@@ -31,9 +31,7 @@ import { HOME_TARGET } from "@/lib/routing/target";
 export const Route = createFileRoute("/$locale/_main/_app/_account/home")({
   loader: async ({ params }) => {
     const { readHomeScreen } = await import("@/lib/account/home");
-    const outcome = await Effect.runPromise(
-      readHomeScreen(params.locale, window.location.origin)
-    );
+    const outcome = await Effect.runPromise(readHomeScreen(params.locale));
     return Match.value(outcome).pipe(
       Match.tagsExhaustive({
         Onboarding: () => {

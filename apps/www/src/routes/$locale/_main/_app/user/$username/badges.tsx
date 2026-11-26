@@ -29,13 +29,7 @@ const readProfileBadges = createIsomorphicFn()
         known,
       ]);
       const outcome = await Effect.runPromise(
-        readProfileBadgesScreen(
-          locale,
-          username,
-          document.cookie,
-          window.location.origin,
-          resolved
-        )
+        readProfileBadgesScreen(locale, username, document.cookie, resolved)
       );
       return Match.value(outcome).pipe(
         Match.tagsExhaustive({

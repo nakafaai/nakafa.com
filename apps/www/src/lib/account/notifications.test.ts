@@ -28,7 +28,6 @@ vi.mock("@/lib/i18n/rendered", () => ({
 }));
 
 const liveClient = { query: vi.fn() };
-const ORIGIN = "https://nakafa.com";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -43,7 +42,7 @@ describe("readNotificationsScreen", () => {
   it.effect("returns SignedOut when no account client can be resolved", () =>
     Effect.gen(function* () {
       mocks.resolveAccountClient.mockReturnValue(Effect.succeedNone);
-      expect(yield* readNotificationsScreen("en", ORIGIN)).toEqual({
+      expect(yield* readNotificationsScreen("en")).toEqual({
         _tag: "SignedOut",
       });
       expect(mocks.readAccountOptional).not.toHaveBeenCalled();
@@ -55,7 +54,7 @@ describe("readNotificationsScreen", () => {
       mocks.readAccountOptional.mockReturnValue(
         Effect.succeed({ page: ["note-1"] })
       );
-      const outcome = yield* readNotificationsScreen("en", ORIGIN);
+      const outcome = yield* readNotificationsScreen("en");
       expect(outcome._tag).toBe("Ready");
       if (outcome._tag !== "Ready") {
         return expect.unreachable("expected Ready");

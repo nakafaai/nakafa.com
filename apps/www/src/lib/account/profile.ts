@@ -84,10 +84,9 @@ const resolveIdentity = Effect.fn("www.profile.resolveIdentity")(function* (
 /** Profile layout: the profile and whether the viewer owns it, read directly in the browser. */
 export const readProfileScreen = Effect.fn("www.profile.screen")(function* (
   username: string,
-  cookie: string,
-  origin: string
+  cookie: string
 ) {
-  const { client, signedIn } = yield* resolveBrowserClient(cookie, origin);
+  const { client, signedIn } = yield* resolveBrowserClient(cookie);
   const identity = yield* readProfileOnClient(client, signedIn, username);
   if (Option.isNone(identity)) {
     return { _tag: "NotFound" as const };
@@ -100,10 +99,9 @@ export const readProfilePostsScreen = Effect.fn("www.profile.posts")(function* (
   locale: Locale,
   username: string,
   cookie: string,
-  origin: string,
   known?: ProfileIdentity
 ) {
-  const { client, signedIn } = yield* resolveBrowserClient(cookie, origin);
+  const { client, signedIn } = yield* resolveBrowserClient(cookie);
   const identity = yield* resolveIdentity(client, signedIn, username, known);
   if (Option.isNone(identity)) {
     return { _tag: "NotFound" as const };
@@ -143,10 +141,9 @@ export const readProfileCommentsScreen = Effect.fn("www.profile.comments")(
     locale: Locale,
     username: string,
     cookie: string,
-    origin: string,
     known?: ProfileIdentity
   ) {
-    const { client, signedIn } = yield* resolveBrowserClient(cookie, origin);
+    const { client, signedIn } = yield* resolveBrowserClient(cookie);
     const identity = yield* resolveIdentity(client, signedIn, username, known);
     if (Option.isNone(identity)) {
       return { _tag: "NotFound" as const };
@@ -194,10 +191,9 @@ export const readProfileBadgesScreen = Effect.fn("www.profile.badges")(
     locale: Locale,
     username: string,
     cookie: string,
-    origin: string,
     known?: ProfileIdentity
   ) {
-    const { client, signedIn } = yield* resolveBrowserClient(cookie, origin);
+    const { client, signedIn } = yield* resolveBrowserClient(cookie);
     const identity = yield* resolveIdentity(client, signedIn, username, known);
     if (Option.isNone(identity)) {
       return { _tag: "NotFound" as const };
@@ -236,10 +232,9 @@ export const readProfileChatScreen = Effect.fn("www.profile.chat")(function* (
   locale: Locale,
   username: string,
   cookie: string,
-  origin: string,
   known?: ProfileIdentity
 ) {
-  const { client, signedIn } = yield* resolveBrowserClient(cookie, origin);
+  const { client, signedIn } = yield* resolveBrowserClient(cookie);
   const identity = yield* resolveIdentity(client, signedIn, username, known);
   if (Option.isNone(identity) || !identity.value.isOwner) {
     return { _tag: "NotFound" as const };

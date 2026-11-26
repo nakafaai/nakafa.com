@@ -16,7 +16,7 @@ export const Route = createFileRoute(
   loader: async ({ params }) => {
     const { readConnectorsScreen } = await import("@/lib/account/settings");
     const outcome = await Effect.runPromise(
-      readConnectorsScreen(params.locale, window.location.origin)
+      readConnectorsScreen(params.locale)
     );
     return Match.value(outcome).pipe(
       Match.tagsExhaustive({

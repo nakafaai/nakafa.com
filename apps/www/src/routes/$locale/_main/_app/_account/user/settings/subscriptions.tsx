@@ -10,7 +10,7 @@ export const Route = createFileRoute(
   loader: async ({ params }) => {
     const { readSubscriptionsScreen } = await import("@/lib/account/settings");
     const outcome = await Effect.runPromise(
-      readSubscriptionsScreen(params.locale, window.location.origin)
+      readSubscriptionsScreen(params.locale)
     );
     return Match.value(outcome).pipe(
       Match.tagsExhaustive({

@@ -20,7 +20,7 @@ const readProfile = createIsomorphicFn()
   .client(async ({ username }: typeof ProfileInput.Type) => {
     const { readProfileScreen } = await import("@/lib/account/profile");
     const outcome = await Effect.runPromise(
-      readProfileScreen(username, document.cookie, window.location.origin)
+      readProfileScreen(username, document.cookie)
     );
     return Match.value(outcome).pipe(
       Match.tagsExhaustive({

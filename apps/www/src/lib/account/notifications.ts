@@ -17,8 +17,8 @@ import { readRenderedRouteMessages } from "@/lib/i18n/rendered";
  * server function.
  */
 export const readNotificationsScreen = Effect.fn("www.notifications.read")(
-  function* (locale: Locale, origin: string) {
-    const clientOption = yield* resolveAccountClient(origin);
+  function* (locale: Locale) {
+    const clientOption = yield* resolveAccountClient();
     if (Option.isNone(clientOption)) {
       return { _tag: "SignedOut" as const };
     }

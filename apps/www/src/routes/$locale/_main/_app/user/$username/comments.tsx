@@ -29,13 +29,7 @@ const readProfileComments = createIsomorphicFn()
         known,
       ]);
       const outcome = await Effect.runPromise(
-        readProfileCommentsScreen(
-          locale,
-          username,
-          document.cookie,
-          window.location.origin,
-          resolved
-        )
+        readProfileCommentsScreen(locale, username, document.cookie, resolved)
       );
       return Match.value(outcome).pipe(
         Match.tagsExhaustive({

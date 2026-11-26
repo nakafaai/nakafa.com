@@ -29,13 +29,7 @@ const readProfileChat = createIsomorphicFn()
         known,
       ]);
       const outcome = await Effect.runPromise(
-        readProfileChatScreen(
-          locale,
-          username,
-          document.cookie,
-          window.location.origin,
-          resolved
-        )
+        readProfileChatScreen(locale, username, document.cookie, resolved)
       );
       return Match.value(outcome).pipe(
         Match.tagsExhaustive({
