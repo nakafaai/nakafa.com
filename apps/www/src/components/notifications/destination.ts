@@ -71,7 +71,7 @@ export function addressOf(notification: ListNotification, locale: string) {
     const { set } = notification;
     return set === null
       ? undefined
-      : `/${locale}/try-out/${set.countryKey}/${set.examKey}/${set.trackKey}/${set.setKey}`;
+      : `/${set.locale}/${set.publicPath}?attemptId=${encodeURIComponent(notification.attemptId)}`;
   }
   return Option.getOrUndefined(
     Option.map(pageOf(notification), (url) => url.href)

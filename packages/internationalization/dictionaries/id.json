@@ -4075,6 +4075,8 @@
     "badge-sections-hint": "{count} dari {next} bagian try-out",
     "badge-sets-hint": "{count} dari {next} set try-out",
     "leaders-title": "Papan peringkat",
+    "leaders-empty-title": "Belum ada peringkat",
+    "leaders-empty-description": "Selesaikan materi atau try-out untuk dapat Bintang pertamamu dan pimpin papan peringkat.",
     "you": "{name} (kamu)"
   },
   "Faq": {

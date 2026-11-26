@@ -6,6 +6,8 @@ import type { ReactNode } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import { useProgress } from "@/components/progress/context";
 import { PaneSection } from "@/components/progress/section";
+import { EmptyState } from "@/components/state/empty";
+import { EmptyNina } from "@/components/state/nina";
 import { profileTarget } from "@/lib/profile/href";
 import { TargetLink } from "@/lib/routing/link";
 
@@ -113,23 +115,28 @@ export function LeaderRow({
   );
 }
 
-/** The global leaderboard: the learners with the most Stars, most first. */
+/** The global leaderboard: the learners with the most Stars, most first, or a friendly empty state before anyone earns Stars. */
 export function LeadersSection() {
   const t = useTranslations("Progress");
   const format = useFormatter();
   const { leaders } = useProgress();
-  if (leaders.length === 0) {
-    return null;
-  }
   return (
     <PaneSection title={t("leaders-title")}>
-      <LeaderList>
-        {Arr.map(leaders, (leader) => (
-          <LeaderRow key={leader.place} leader={leader}>
-            {t("stars", { stars: format.number(leader.lifetime) })}
-          </LeaderRow>
-        ))}
-      </LeaderList>
+      {leaders.length === 0 ? (
+        <EmptyState
+          description={t("leaders-empty-description")}
+          scene={<EmptyNina act="ranking" />}
+          title={t("leaders-empty-title")}
+        />
+      ) : (
+        <LeaderList>
+          {Arr.map(leaders, (leader) => (
+            <LeaderRow key={leader.place} leader={leader}>
+              {t("stars", { stars: format.number(leader.lifetime) })}
+            </LeaderRow>
+          ))}
+        </LeaderList>
+      )}
     </PaneSection>
   );
 }

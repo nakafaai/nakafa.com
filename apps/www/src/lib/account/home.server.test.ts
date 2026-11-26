@@ -181,6 +181,7 @@ describe("homeScreenHandler", () => {
       countryCode: "ID",
       examKey: "snbt",
       expiresAt: 2000,
+      locale: "en",
       part: { key: "quantitative-knowledge", title: "Quantitative knowledge" },
       publicPath: "try-out/indonesia/snbt/2027/set-1",
       questions: 160,
@@ -235,6 +236,11 @@ describe("homeScreenHandler", () => {
     expect(mocks.preloadConfectQuery).toHaveBeenCalledWith(
       contents.queries.recent.getRecentlyViewed,
       { limit: 3, locale: "en" },
+      "token"
+    );
+    expect(mocks.preloadConfectQuery).toHaveBeenCalledWith(
+      tryouts.queries.history.recent,
+      { locale: "en" },
       "token"
     );
     expect(screen.seo).toMatchObject({

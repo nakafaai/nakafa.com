@@ -6,7 +6,7 @@ import {
 import { scheduleAccountPush } from "@repo/backend/confect/notifications/schedule";
 import type { ReminderRow } from "@repo/backend/confect/notifications/schema";
 import { reminderView } from "@repo/backend/confect/notifications/schema";
-import { Effect, Option, Struct } from "effect";
+import { Effect, Option } from "effect";
 
 /**
  * Writes the inbox row of a try-out reminder, an hour before the learner's attempt ends, and schedules its push when
@@ -48,9 +48,10 @@ export const reminderNotice = Effect.fn("notifications.reminder.view")(
     return reminderView(
       row,
       Option.getOrNull(
-        Option.map(attempt, (found) =>
-          Struct.pick(found, ["countryKey", "examKey", "setKey", "trackKey"])
-        )
+        Option.map(attempt, (found) => ({
+          locale: found.appLocale,
+          publicPath: found.setPublicPath,
+        }))
       )
     );
   }

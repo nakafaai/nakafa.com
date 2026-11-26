@@ -2,6 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
+import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TryoutAttemptStateError } from "@repo/backend/confect/tryouts/attempt";
 import {
@@ -38,6 +39,7 @@ const recentRowValidator = Schema.Struct({
   countryCode: Schema.String,
   examKey: Schema.String,
   expiresAt: Schema.Finite,
+  locale: appLocaleValidator,
   part: Schema.Union([
     Schema.Struct({ key: Schema.String, title: Schema.String }),
     Schema.Null,
@@ -56,7 +58,7 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicQuery({
       name: "recent",
-      args: () => ({}),
+      args: () => ({ locale: appLocaleValidator }),
       returns: () => Schema.Array(recentRowValidator),
       error: () =>
         Schema.Union([

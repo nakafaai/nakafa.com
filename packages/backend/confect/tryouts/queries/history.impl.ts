@@ -26,8 +26,8 @@ const recent = FunctionImpl.make(
   databaseSchema,
   spec,
   "recent",
-  Effect.fn("tryouts.queries.history.recent")(function* () {
-    return yield* readRecentAttempts();
+  Effect.fn("tryouts.queries.history.recent")(function* ({ locale }) {
+    return yield* readRecentAttempts(locale);
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(

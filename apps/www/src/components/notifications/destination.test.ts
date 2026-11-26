@@ -80,13 +80,16 @@ describe("inbox row destinations", () => {
     expect(
       href(
         reminder({
-          countryKey: "indonesia",
-          examKey: "snbt",
-          setKey: "set-1",
-          trackKey: "utbk",
+          locale: "id",
+          publicPath:
+            "try-out/jerman/aufnahmepruefung/studienkolleg-tu-darmstadt/matematika/set-6",
         })
       )
-    ).toEqual(Option.some("/id/try-out/indonesia/snbt/utbk/set-1"));
+    ).toEqual(
+      Option.some(
+        "/id/try-out/jerman/aufnahmepruefung/studienkolleg-tu-darmstadt/matematika/set-6?attemptId=attempt-1"
+      )
+    );
     expect(href(reminder(null))).toEqual(Option.none());
   });
 

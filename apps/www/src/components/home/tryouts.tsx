@@ -232,6 +232,7 @@ function TryoutRow({ attempt }: { attempt: Attempt }) {
     <TryoutPageLink
       attemptId={attempt.attemptId}
       className={cn(rowLinkVariants(), "@container/row items-center")}
+      locale={attempt.locale}
       publicPath={attempt.publicPath}
     >
       <TryoutTile attempt={attempt} />

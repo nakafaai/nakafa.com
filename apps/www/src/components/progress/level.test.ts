@@ -5,6 +5,7 @@ import { MedalSchema } from "@repo/mascot/medal/name";
 import { Array as Arr } from "effect";
 import {
   bestOf,
+  emptyWeek,
   levelProgress,
   medalsOf,
   progressSummary,
@@ -123,5 +124,24 @@ describe("progress/level", () => {
       learnedToday: false,
       stars: 0,
     });
+  });
+
+  it("builds seven empty days for the current UTC week before the learner earns their first Star", () => {
+    const empty = emptyWeek(Date.UTC(2026, 10, 26, 9, 0, 0));
+    expect(empty.today).toBe("2026-11-26");
+    expect(empty.days).toHaveLength(7);
+    expect(empty.days[0]).toEqual(day("2026-11-23", 0));
+    expect(empty.days[6]).toEqual(day("2026-11-29", 0));
+    const bars = weekBars(empty.days, empty.today);
+    expect(bars.stars).toBe(0);
+    expect(bars.learnedToday).toBe(false);
+    expect(bars.bars[3]).toEqual({
+      ahead: false,
+      day: "2026-11-26",
+      share: 0,
+      stars: 0,
+      today: true,
+    });
+    expect(bars.bars[4]?.ahead).toBe(true);
   });
 });

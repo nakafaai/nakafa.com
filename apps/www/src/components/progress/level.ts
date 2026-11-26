@@ -3,8 +3,9 @@ import { growthOf } from "@repo/backend/confect/progress/level";
 import type { Tally } from "@repo/backend/confect/progress/schema";
 import { EMPTY_TALLY } from "@repo/backend/confect/progress/schema";
 import type { Growth, Week } from "@repo/backend/confect/progress/view";
+import { weekOf } from "@repo/backend/confect/progress/week";
 import { MedalSchema } from "@repo/mascot/medal/name";
-import { Array as Arr, Option, Order, pipe, Record } from "effect";
+import { Array as Arr, DateTime, Option, Order, pipe, Record } from "effect";
 
 /**
  * The learner's progress summary derived from their growth record: their
@@ -89,6 +90,21 @@ export function bestOf(wall: ReturnType<typeof wallOf>, most: number) {
     Arr.sortWith((medal) => -(medal.tier * 1e9 + medal.count), Order.Number),
     Arr.take(most)
   );
+}
+
+/** Seven empty days for the current UTC week, shown before the learner earns their first Star. */
+export function emptyWeek(now: number) {
+  const today = DateTime.formatIsoDateUtc(DateTime.makeUnsafe(now));
+  return {
+    days: Arr.map(weekOf(today), (day) => ({
+      day,
+      lessons: 0,
+      sections: 0,
+      sets: 0,
+      stars: 0,
+    })),
+    today,
+  };
 }
 
 /**

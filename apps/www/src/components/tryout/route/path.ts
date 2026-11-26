@@ -1,3 +1,4 @@
+import type { Locale } from "@repo/internationalization/src/locale";
 import { Array as Arr, Option, Schema } from "effect";
 import { PLAYER_MODE_PARAM } from "@/components/player/mode";
 import type { TryoutSectionRoute } from "@/components/tryout/section/model";
@@ -62,7 +63,8 @@ export function getTryoutPublicPathHref(publicPath: string) {
  * a path of any other shape, names no try-out page and has no target either.
  */
 export function getTryoutPublicPathTarget(
-  publicPath: string
+  publicPath: string,
+  locale?: Locale | undefined
 ): Option.Option<LinkTarget> {
   const [root, country, exam, group, track, set, section, ...rest] =
     publicPath.split("/");
@@ -76,13 +78,21 @@ export function getTryoutPublicPathTarget(
   ) {
     return Option.none();
   }
+  const withLocale = locale === undefined ? {} : { locale };
   if (country === undefined) {
-    return Option.some(TRYOUT_TARGET);
+    return Option.some(
+      locale === undefined
+        ? TRYOUT_TARGET
+        : ({
+            ...TRYOUT_TARGET,
+            params: { locale },
+          } satisfies LinkTarget)
+    );
   }
   if (exam === undefined) {
     return Option.some({
       from: LOCALE_ROUTE,
-      params: { country },
+      params: { ...withLocale, country },
       to: "/$locale/try-out/$country",
     } satisfies LinkTarget);
   }
@@ -92,27 +102,27 @@ export function getTryoutPublicPathTarget(
   if (track === undefined) {
     return Option.some({
       from: LOCALE_ROUTE,
-      params: { country, exam, group },
+      params: { ...withLocale, country, exam, group },
       to: "/$locale/try-out/$country/$exam/$group",
     } satisfies LinkTarget);
   }
   if (set === undefined) {
     return Option.some({
       from: LOCALE_ROUTE,
-      params: { country, exam, group, track },
+      params: { ...withLocale, country, exam, group, track },
       to: "/$locale/try-out/$country/$exam/$group/$track",
     } satisfies LinkTarget);
   }
   if (section === undefined) {
     return Option.some({
       from: LOCALE_ROUTE,
-      params: { country, exam, group, set, track },
+      params: { ...withLocale, country, exam, group, set, track },
       to: "/$locale/try-out/$country/$exam/$group/$track/$set",
     } satisfies LinkTarget);
   }
   return Option.some({
     from: LOCALE_ROUTE,
-    params: { country, exam, group, section, set, track },
+    params: { ...withLocale, country, exam, group, section, set, track },
     to: "/$locale/try-out/$country/$exam/$group/$track/$set/$section",
   } satisfies LinkTarget);
 }
@@ -123,7 +133,8 @@ export function getTryoutPublicPathTarget(
  */
 function setOrSectionTarget(
   publicPath: string,
-  search: Readonly<Record<string, string>>
+  search: Readonly<Record<string, string>>,
+  locale?: Locale | undefined
 ): Option.Option<LinkTarget> {
   const [root, country, exam, group, track, set, section, ...rest] =
     publicPath.split("/");
@@ -138,25 +149,34 @@ function setOrSectionTarget(
   ) {
     return Option.none();
   }
+  const withLocale = locale === undefined ? {} : { locale };
   if (!section) {
     return Option.some({
       from: LOCALE_ROUTE,
-      params: { country, exam, group, set, track },
+      params: { ...withLocale, country, exam, group, set, track },
       search,
       to: "/$locale/try-out/$country/$exam/$group/$track/$set",
     } satisfies LinkTarget);
   }
   return Option.some({
     from: LOCALE_ROUTE,
-    params: { country, exam, group, section, set, track },
+    params: { ...withLocale, country, exam, group, section, set, track },
     search,
     to: "/$locale/try-out/$country/$exam/$group/$track/$set/$section",
   } satisfies LinkTarget);
 }
 
 /** The target of a set or a section of try-out bound to one owned attempt. */
-function getTryoutAttemptTarget(publicPath: string, attemptId: string) {
-  return setOrSectionTarget(publicPath, { [ATTEMPT_ID_PARAM]: attemptId });
+function getTryoutAttemptTarget(
+  publicPath: string,
+  attemptId: string,
+  locale?: Locale | undefined
+) {
+  return setOrSectionTarget(
+    publicPath,
+    { [ATTEMPT_ID_PARAM]: attemptId },
+    locale
+  );
 }
 
 /** The search value that opens a set's or a section's practice in place of its try-out (ADR 0044). */
@@ -188,14 +208,16 @@ export type TryoutPageAddress = typeof TryoutPageAddressSchema.Type;
 /** The typed target of a try-out page address, or none when the address names no page. */
 export function getTryoutPageTarget({
   attemptId,
+  locale,
   publicPath,
 }: {
   readonly attemptId?: string | undefined;
+  readonly locale?: Locale | undefined;
   readonly publicPath: string;
 }): Option.Option<LinkTarget> {
   return attemptId === undefined
-    ? getTryoutPublicPathTarget(publicPath)
-    : getTryoutAttemptTarget(publicPath, attemptId);
+    ? getTryoutPublicPathTarget(publicPath, locale)
+    : getTryoutAttemptTarget(publicPath, attemptId, locale);
 }
 
 /**

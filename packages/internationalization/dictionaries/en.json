@@ -4075,6 +4075,8 @@
     "badge-sections-hint": "{count} of {next} try-out sections",
     "badge-sets-hint": "{count} of {next} try-out sets",
     "leaders-title": "Leaderboard",
+    "leaders-empty-title": "No leaders yet",
+    "leaders-empty-description": "Finish a lesson or try-out to earn your first Stars and take the lead.",
     "you": "{name} (you)"
   },
   "Faq": {

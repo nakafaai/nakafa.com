@@ -1,6 +1,7 @@
 import type { NotificationsDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { ObjectRef } from "@repo/backend/confect/access/catalog";
+import { appLocaleValidator } from "@repo/backend/confect/contentRelease/spec";
 import { SubjectView } from "@repo/backend/confect/journal/schema";
 import { TenantProfile } from "@repo/backend/confect/tenancy/schema";
 import { UserPicture } from "@repo/backend/confect/users/picture";
@@ -283,10 +284,8 @@ const ReminderNotificationView = Schema.Struct({
   readAt: Schema.optionalKey(Schema.Finite),
   set: Schema.NullOr(
     Schema.Struct({
-      countryKey: Schema.String,
-      examKey: Schema.String,
-      setKey: Schema.String,
-      trackKey: Schema.String,
+      locale: appLocaleValidator,
+      publicPath: Schema.String,
     })
   ),
 });
