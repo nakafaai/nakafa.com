@@ -8,6 +8,7 @@ import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Array as Arr, Effect, HashSet, Schema } from "effect";
 import { animalMarkup, drawnAnimal, sidebarAvatar } from "@/e2e/support/avatar";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
+import { waitForLoadsSettled } from "@/e2e/support/quiet";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -159,6 +160,7 @@ test("a learner takes a new username in settings: a taken or invalid name says w
         const old = await page.request.get(`${origin}/en/@${learner.username}`);
         expect(old.status()).toBe(404);
 
+        await waitForLoadsSettled(page);
         await page.goto(appRoutes.settings);
         const address = `${MAIN_DOMAIN}/@${renamed}`;
         await expect(
@@ -254,6 +256,7 @@ test("a learner writes a bio in settings, the profile shows it, and clearing it 
           timeout: readinessTimeoutMilliseconds,
         });
 
+        await waitForLoadsSettled(page);
         await page.goto(appRoutes.settings);
         await bioField(page).fill("");
         await save.click();
