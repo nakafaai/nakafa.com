@@ -1,6 +1,16 @@
 import { useFrame, useThree } from "@react-three/fiber";
+import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
+import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
+import { ColumnTower } from "@repo/design-system/components/contents/chemistry/fraction/column";
+import {
+  benchTrayY,
+  FurnaceUnit,
+  fractionHex,
+  RIG_Z,
+} from "@repo/design-system/components/contents/chemistry/fraction/furnace";
 import type { PetroleumFraction } from "@repo/design-system/components/contents/chemistry/fraction/model";
 import { evaluatePetroleumFraction } from "@repo/design-system/components/contents/chemistry/fraction/model";
+import { OutletRack } from "@repo/design-system/components/contents/chemistry/fraction/outlets";
 import {
   SimulationTicker,
   simulationStep,
@@ -9,18 +19,39 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { ORGANIC_COLORS } from "@repo/design-system/lib/material/organic";
-import { Array as Arr, Match } from "effect";
+import { Array as Arr } from "effect";
 import { useRef } from "react";
 import type { Group } from "three";
 
-const ALL_FRACTIONS: readonly PetroleumFraction[] = [
-  "refineryGas",
-  "petrol",
-  "kerosene",
-  "diesel",
-  "bitumen",
-];
+const WISP_INDICES = Arr.range(0, 9);
+
+/** Coordinates of one rising hydrocarbon vapour wisp along the active path at `u` in [0, 1]. */
+function wispCoords(
+  u: number,
+  targetY: number,
+  index: number
+): readonly [number, number, number] {
+  if (u < 0.22) {
+    const s = u / 0.22;
+    return [
+      -0.17 + s * 0.17,
+      0.125 - s * 0.01,
+      RIG_Z + Math.sin(s * Math.PI) * 0.01,
+    ];
+  }
+  if (u < 0.78) {
+    const s = (u - 0.22) / 0.56;
+    const angle = s * Math.PI * 3.5 + index * 0.7;
+    const radius = 0.022 + 0.012 * Math.sin(s * Math.PI);
+    return [
+      Math.cos(angle) * radius,
+      0.115 + s * (targetY - 0.115),
+      RIG_Z + Math.sin(angle) * radius,
+    ];
+  }
+  const s = (u - 0.78) / 0.22;
+  return [0.04 + s * 0.175, targetY - s * 0.018, RIG_Z + 0.008 * (1 - s)];
+}
 
 function FractionCamera() {
   const narrow = isNarrowThreeScene(
@@ -29,23 +60,77 @@ function FractionCamera() {
   );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0, 1.55, 3.45] : [0, 1.32, 2.8]}
-      cameraTarget={[0, 0.66, 0]}
+      cameraPosition={narrow ? [0.01, 0.36, 1.38] : [0.01, 0.32, 1.08]}
+      cameraTarget={[0.01, 0.26, RIG_Z]}
       fov={38}
-      maxDistance={5.8}
-      minDistance={1.4}
+      maxDistance={2.4}
+      minDistance={0.35}
     />
   );
 }
 
-function fractionHex(fraction: PetroleumFraction): string {
-  return Match.value(fraction).pipe(
-    Match.when("refineryGas", () => ORGANIC_COLORS.refineryCyan),
-    Match.when("petrol", () => ORGANIC_COLORS.petrolYellow),
-    Match.when("kerosene", () => ORGANIC_COLORS.keroseneOrange),
-    Match.when("diesel", () => ORGANIC_COLORS.dieselAmber),
-    Match.when("bitumen", () => ORGANIC_COLORS.bitumenBlack),
-    Match.exhaustive
+function VaporStream({
+  color,
+  playing,
+  targetY,
+}: {
+  readonly color: string;
+  readonly playing: boolean;
+  readonly targetY: number;
+}) {
+  const groupRef = useRef<Group>(null);
+  const phaseRef = useRef(0);
+
+  useFrame((_, delta) => {
+    const container = groupRef.current;
+    if (container === null) {
+      return;
+    }
+    if (playing) {
+      phaseRef.current = (phaseRef.current + simulationStep(delta) * 0.42) % 1;
+    }
+    for (const index of WISP_INDICES) {
+      const child = container.children[index];
+      if (child !== undefined) {
+        const u = (phaseRef.current + index / WISP_INDICES.length) % 1;
+        const [x, y, z] = wispCoords(u, targetY, index);
+        child.position.set(x, y, z);
+      }
+    }
+  });
+
+  return (
+    <group ref={groupRef}>
+      {Arr.map(WISP_INDICES, (index) => {
+        const u = index / WISP_INDICES.length;
+        const [x, y, z] = wispCoords(u, targetY, index);
+        return (
+          <group key={index} position={[x, y, z]}>
+            <mesh>
+              <sphereGeometry args={[0.007, 12, 10]} />
+              <meshStandardMaterial
+                color={color}
+                emissive={color}
+                emissiveIntensity={0.85}
+                roughness={0.2}
+              />
+            </mesh>
+            <mesh>
+              <sphereGeometry args={[0.012, 12, 10]} />
+              <meshStandardMaterial
+                color={color}
+                depthWrite={false}
+                emissive={color}
+                emissiveIntensity={0.35}
+                opacity={0.32}
+                roughness={0.3}
+                transparent
+              />
+            </mesh>
+          </group>
+        );
+      })}
+    </group>
   );
 }
 
@@ -62,115 +147,60 @@ export function FractionalDistillationScene({
   >;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
-  const vaporRef = useRef<Group>(null);
-  const phaseRef = useRef(0);
+  const labelInk = useLabelInk();
   const selected = evaluatePetroleumFraction(fraction);
-
-  useFrame((_, delta) => {
-    if (!playing || vaporRef.current === null) {
-      return;
-    }
-    phaseRef.current += simulationStep(delta) * 1.1;
-    const t = phaseRef.current % 1;
-    vaporRef.current.position.set(0, 0.22 + t * (selected.trayY - 0.16), 0.16);
-  });
+  const activeTrayY = benchTrayY(selected.trayY);
+  const activeColor = fractionHex(fraction);
 
   return (
     <group>
       <SimulationTicker running={playing} />
       <FractionCamera />
-      {/* Pre-heating crude oil furnace on left */}
-      <mesh castShadow position={[-0.78, 0.24, 0]}>
-        <boxGeometry args={[0.42, 0.36, 0.4]} />
-        <meshStandardMaterial
-          color={ORGANIC_COLORS.furnaceRed}
-          roughness={0.6}
-        />
-      </mesh>
-      <mesh position={[-0.4, 0.26, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[0.048, 0.048, 0.42, 12]} />
-        <meshStandardMaterial color={ORGANIC_COLORS.carbonDark} />
-      </mesh>
-      {/* Tall fractionating tower */}
-      <mesh position={[0, 0.66, 0]}>
-        <cylinderGeometry args={[0.28, 0.3, 1.14, 22, 1, true]} />
-        <meshStandardMaterial
-          color={ORGANIC_COLORS.condenserGlass}
-          opacity={0.34}
-          side={2}
-          transparent
-        />
-      </mesh>
-      {/* Horizontal bubble-cap trays + side outlet pipes */}
-      {Arr.map(ALL_FRACTIONS, (id) => {
-        const level = evaluatePetroleumFraction(id);
-        const active = id === fraction;
-        return (
-          <group key={id} position={[0, level.trayY, 0]}>
-            <mesh>
-              <cylinderGeometry args={[0.26, 0.26, 0.036, 20]} />
-              <meshStandardMaterial
-                color={fractionHex(id)}
-                opacity={active ? 1 : 0.42}
-                transparent={!active}
-              />
-            </mesh>
-            <mesh position={[0.42, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-              <cylinderGeometry
-                args={[
-                  active ? 0.044 : 0.026,
-                  active ? 0.044 : 0.026,
-                  0.34,
-                  10,
-                ]}
-              />
-              <meshStandardMaterial color={fractionHex(id)} />
-            </mesh>
-          </group>
-        );
-      })}
-      {/* Rising hydrocarbon vapour bead */}
-      <group position={[0, 0.56, 0.16]} ref={vaporRef}>
-        <mesh>
-          <sphereGeometry args={[0.048, 12, 10]} />
-          <meshStandardMaterial color={fractionHex(fraction)} />
-        </mesh>
-      </group>
-      {/* Labels */}
+      <LabBench width={2.8} />
+      <FurnaceUnit />
+      <ColumnTower activeFraction={fraction} />
+      <OutletRack activeFraction={fraction} />
+      <VaporStream
+        color={activeColor}
+        playing={playing}
+        targetY={activeTrayY}
+      />
       <ThreeLabel
-        color={ORGANIC_COLORS.labelInk}
+        color={labelInk}
         fontSize="compact"
-        position={[-0.84, 0.54, 0]}
+        position={[-0.28, 0.305, RIG_Z]}
       >
         <span>{parts.furnace}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={ORGANIC_COLORS.labelInk}
+        color={labelInk}
         fontSize="compact"
-        position={[0, 1.32, 0]}
+        position={[0, 0.585, RIG_Z]}
       >
         <span>{parts.column}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={ORGANIC_COLORS.labelInk}
+        anchorX="right"
+        color={labelInk}
         fontSize="compact"
-        position={[-0.72, 0.88, 0]}
+        position={[-0.11, 0.445, RIG_Z + 0.04]}
       >
         <span>{parts.bubbleCap}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={ORGANIC_COLORS.labelInk}
+        anchorX="left"
+        color={labelInk}
         fontSize="compact"
-        position={[0.88, selected.trayY, 0]}
+        position={[0.255, Math.max(0.205, activeTrayY), RIG_Z + 0.02]}
       >
         <span>
           {parts.outletPipe} ({selected.chainLength})
         </span>
       </ThreeLabel>
       <ThreeLabel
-        color={ORGANIC_COLORS.labelInk}
+        color={labelInk}
         fontSize="compact"
-        position={[0.72, 0.14, 0.28]}
+        position={[0, 0.036, RIG_Z + 0.13]}
       >
         <span>{parts.vaporStream}</span>
       </ThreeLabel>

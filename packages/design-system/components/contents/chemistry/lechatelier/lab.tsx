@@ -194,7 +194,7 @@ export function LeChatelierLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.3} setting="lab">
+        <ScienceStage floor={0} reach={1.1} setting="lab">
           <Suspense fallback={null}>
             <LeChatelierScene
               catalystLabel={labels.catalyst}

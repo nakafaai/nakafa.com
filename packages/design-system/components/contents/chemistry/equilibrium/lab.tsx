@@ -176,12 +176,15 @@ export function DynamicEquilibriumLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.3} setting="lab">
+        <ScienceStage floor={0} reach={0.85} setting="lab">
           <Suspense fallback={null}>
             <DynamicEquilibriumScene
               balanced={snapshot.state === "balanced"}
               elapsed={elapsed}
               forwardRate={snapshot.forwardRate}
+              initial={initial}
+              initialMax={initialRange.max}
+              initialMin={initialRange.min}
               onElapsed={setElapsed}
               productLabel={systemWords?.product ?? "B"}
               productShare={productShare}
