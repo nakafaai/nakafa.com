@@ -1,6 +1,5 @@
 import { useMutation } from "@confect/react";
 import { Delete02Icon } from "@hugeicons/core-free-icons";
-import { useDisclosure } from "@mantine/hooks";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -22,7 +21,6 @@ import {
   getTryoutPublicPathHref,
 } from "@/components/tryout/route/path";
 import { TryoutClock } from "@/components/tryout/runtime/countdown";
-import { canDiscardTryoutAttempt } from "@/components/tryout/runtime/state";
 import { TryoutAttemptPicker } from "@/components/tryout/score/history";
 import { DISCARD_ERROR } from "@/components/tryout/set/copy";
 import { keepActionName } from "@/components/tryout/set/kept";
@@ -67,25 +65,28 @@ function AttemptPart({
   );
 }
 
-/** Allows leaving an active attempt before any section has started. */
-function DiscardAttemptControl({
+/** Confirms leaving an active attempt before any section has started. */
+export function DiscardAttemptDialog({
   attemptId,
+  open,
+  setOpen,
 }: {
   readonly attemptId: Id<"tryoutAttempts">;
+  readonly open: boolean;
+  readonly setOpen: (open: boolean) => void;
 }) {
   const t = useTranslations("Tryouts");
   const { view } = useSetPane();
   const navigate = useNavigate();
   const convex = useConvex();
   const discard = useMutation(tryouts.mutations.attempts.discardAttempt);
-  const [dialogOpen, dialog] = useDisclosure(false);
   const [busy, setBusy] = useState(false);
 
   function onConfirm() {
     if (busy) {
       return;
     }
-    dialog.close();
+    setOpen(false);
     setBusy(true);
     const setAddress = `/${view.route.locale}${getTryoutPublicPathHref(view.page.set.publicPath)}`;
     const program = discardAttemptProgram({
@@ -119,81 +120,50 @@ function DiscardAttemptControl({
   }
 
   return (
-    <>
-      <Button
-        inert={busy}
-        onClick={dialog.open}
-        size="sm"
-        type="button"
-        variant="outline"
-      >
-        <Spinner icon={Delete02Icon} isLoading={busy} />
-        {t("discard-cta")}
-      </Button>
-      <ResponsiveDialog
-        action={
-          <Button
-            data-agent-confirm=""
-            inert={busy}
-            onClick={onConfirm}
-            type="button"
-            variant="destructive"
-          >
-            <Spinner icon={Delete02Icon} isLoading={busy} />
-            {t("discard-confirm-cta")}
-          </Button>
-        }
-        description={t("discard-dialog-description")}
-        open={dialogOpen}
-        setOpen={(open) => (open ? dialog.open() : dialog.close())}
-        title={t("discard-dialog-title")}
-      >
-        <p className="text-muted-foreground text-sm">{view.page.set.title}</p>
-      </ResponsiveDialog>
-    </>
+    <ResponsiveDialog
+      action={
+        <Button
+          data-agent-confirm=""
+          inert={busy}
+          onClick={onConfirm}
+          type="button"
+          variant="destructive"
+        >
+          <Spinner icon={Delete02Icon} isLoading={busy} />
+          {t("discard-confirm-cta")}
+        </Button>
+      }
+      description={t("discard-dialog-description")}
+      open={open}
+      setOpen={setOpen}
+      title={t("discard-dialog-title")}
+    >
+      <p className="text-muted-foreground text-sm">{view.page.set.title}</p>
+    </ResponsiveDialog>
   );
 }
 
-/** A running attempt's facts: the time it has left, ticking, how many parts it finished, and lobby actions. */
+/** A running attempt's facts: the time it has left, ticking, and how many parts it finished. */
 function RunningFacts({
   attempt,
 }: {
-  attempt: Pick<
-    CurrentAttempt,
-    | "activeSectionKey"
-    | "attemptId"
-    | "completedSectionKeys"
-    | "expiresAt"
-    | "startedSectionCount"
-    | "status"
-  >;
+  attempt: Pick<CurrentAttempt, "completedSectionKeys" | "expiresAt">;
 }) {
   const t = useTranslations("Tryouts");
   const tCommon = useTranslations("Common");
   const { sections } = useSetPane();
-  const discardable = canDiscardTryoutAttempt(attempt);
   return (
-    <>
-      <PaneFacts layout="grid">
-        <PaneFact label={t("remaining-time-label")}>
-          <TryoutClock expiresAt={attempt.expiresAt} />
-        </PaneFact>
-        <PaneFact label={t("parts-done-label")}>
-          {tCommon("count-of", {
-            count: attempt.completedSectionKeys.length,
-            total: sections.length,
-          })}
-        </PaneFact>
-      </PaneFacts>
-      {attempt.activeSectionKey === null ? (
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-muted-foreground text-xs">{t("lobby-hint")}</p>
-          {discardable ? (
-            <DiscardAttemptControl attemptId={attempt.attemptId} />
-          ) : null}
-        </div>
-      ) : null}
-    </>
+    <PaneFacts layout="grid">
+      <PaneFact label={t("remaining-time-label")}>
+        <TryoutClock expiresAt={attempt.expiresAt} />
+      </PaneFact>
+      <PaneFact label={t("parts-done-label")}>
+        {tCommon("count-of", {
+          count: attempt.completedSectionKeys.length,
+          total: sections.length,
+        })}
+      </PaneFact>
+    </PaneFacts>
   );
 }
 

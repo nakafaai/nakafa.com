@@ -5,7 +5,6 @@ import { getTileLooks } from "@repo/design-system/lib/look";
 import { rowLineVariants } from "@repo/design-system/lib/row";
 import { Array as Arr, Option, Tuple } from "effect";
 import { useTranslations } from "use-intl";
-import { PaneSection } from "@/components/progress/section";
 import { getTryoutSubjectIcons } from "@/components/tryout/catalog/icons";
 import { useSetPane } from "@/components/tryout/pane/context";
 import { partPracticeSummary } from "@/components/tryout/pane/model";
@@ -28,11 +27,11 @@ export function SetPractice() {
   const entered = view.entrySection?.visibility === "internal-entry";
 
   return (
-    <PaneSection title={entered ? tCommon("questions") : t("parts-title")}>
-      <p className="text-muted-foreground text-sm">
-        {t("practice-mode-description")}
-      </p>
-      <ol className="flex flex-col gap-2">
+    <section
+      aria-label={entered ? tCommon("questions") : t("parts-title")}
+      className="-mx-(--pane-end,1rem) flex flex-col border-b px-(--pane-end,1rem) py-4 first:pt-0 last:border-b-0 last:pb-0"
+    >
+      <ol className="-my-2 flex flex-col gap-1">
         {Arr.map(Arr.zip(sections, looks), ([section, look]) => {
           const summary = partPracticeSummary(practice, section.sectionKey);
           const target = getTryoutPracticeTarget(
@@ -50,7 +49,7 @@ export function SetPractice() {
           return (
             <li key={section.sectionKey}>
               <TargetLink
-                className="hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring flex min-w-0 items-center gap-3 rounded-lg p-2 text-start transition-colors ease-out outline-none focus-visible:ring-3"
+                className="hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring -mx-2 flex min-w-0 items-center gap-3 rounded-lg p-2 text-start transition-colors ease-out outline-none focus-visible:ring-3"
                 target={target.value}
               >
                 <Tile className="size-10" seed={look.seed} shift={look.shift}>
@@ -89,6 +88,6 @@ export function SetPractice() {
           );
         })}
       </ol>
-    </PaneSection>
+    </section>
   );
 }

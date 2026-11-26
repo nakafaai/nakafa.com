@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
+import { pressInPopup } from "@/e2e/support/popup";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   desktopViewport,
@@ -98,12 +99,6 @@ test.describe("The set pane beside a track's table", () => {
     ).toBeVisible();
     // The set's parts stand as one path, each step a press that takes the set's start as its footer does, and
     // what the set gives under them.
-    await expect(
-      pane.getByRole("heading", {
-        exact: true,
-        name: en.Tryouts["parts-title"],
-      })
-    ).toBeVisible();
     await expect(pane.locator("ol").getByRole("button").first()).toBeVisible();
     await expect(
       pane.getByRole("heading", {
@@ -206,9 +201,15 @@ test.describe("The set sheet on a phone", () => {
     const footer = page.locator(
       '[data-slot="drawer-content"] [data-slot="drawer-footer"]'
     );
-    const share = footer.getByRole("button", { name: en.Common.share });
-    await waitUntilTakenOver(share);
-    await share.tap();
+    const more = footer.getByRole("button", {
+      name: en.Common["more-actions"],
+    });
+    await waitUntilTakenOver(more);
+    await more.tap();
+    await pressInPopup(
+      page.getByRole("menuitem", { name: en.Common.share }),
+      true
+    );
 
     const toast = page.getByRole("listitem").filter({
       hasText: en.Toast["link-copied"].title,

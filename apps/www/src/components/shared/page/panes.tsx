@@ -303,10 +303,10 @@ export function PanesList({
 }
 
 /**
- * The phone's sheet of a detail: as tall as what it holds, or, for a detail that scrolls inside itself such as a
- * chat's thread, as tall as a drawer may be, so its list has a height to scroll in.
+ * The phone's sheet of a detail: matches the drawer's 16 px gutter (`--pane-end: 1rem`) so header, tabs, body, and
+ * footer share one vertical edge; as tall as what it holds, or as tall as a drawer may be when `fill` is true.
  */
-const paneSheetVariants = cva("", {
+const paneSheetVariants = cva("[--pane-end:1rem]", {
   defaultVariants: { fill: false },
   variants: {
     fill: {

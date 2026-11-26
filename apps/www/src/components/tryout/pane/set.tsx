@@ -1,14 +1,27 @@
 import { QueryResult, useQuery } from "@confect/react";
 import {
+  Delete02Icon,
   Link01Icon,
+  MoreHorizontalIcon,
   Rocket01Icon,
   Target02Icon,
 } from "@hugeicons/core-free-icons";
-import { useClipboard } from "@mantine/hooks";
+import { useClipboard, useDisclosure } from "@mantine/hooks";
 import practice from "@repo/backend/confect/_generated/refs/practice";
 import progress from "@repo/backend/confect/_generated/refs/progress";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  ButtonGroup,
+  ButtonGroupSeparator,
+} from "@repo/design-system/components/ui/button-group";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Tabs,
@@ -34,7 +47,10 @@ import {
   PaneHeader,
 } from "@/components/shared/page/pane";
 import { TryoutLevel } from "@/components/tryout/level";
-import { SetAttempt } from "@/components/tryout/pane/attempt";
+import {
+  DiscardAttemptDialog,
+  SetAttempt,
+} from "@/components/tryout/pane/attempt";
 import { SetBoard } from "@/components/tryout/pane/board";
 import {
   SetPaneContext,
@@ -56,6 +72,7 @@ import {
   getTryoutPracticeTarget,
   getTryoutPublicPathHref,
 } from "@/components/tryout/route/path";
+import { canDiscardTryoutAttempt } from "@/components/tryout/runtime/state";
 import { TryoutSetAction } from "@/components/tryout/set/action";
 import type {
   CurrentAttempt,
@@ -321,39 +338,20 @@ function SetPaneHeader({ read }: { read: "pending" | undefined }) {
   );
 }
 
-/** Copies the set's own address, which opens this pane for whoever it is sent to. */
-function SetShare() {
-  const tCommon = useTranslations("Common");
-  const clipboard = useClipboard({ timeout: 1000 });
-  const { view } = useSetPane();
-  return (
-    <Button
-      onClick={() => {
-        clipboard.copy(
-          new URL(
-            `/${view.route.locale}${getTryoutPublicPathHref(view.page.set.publicPath)}`,
-            SITE_ORIGIN
-          ).toString()
-        );
-        toast.success(
-          { title: "link-copied.title" },
-          { position: "bottom-center" }
-        );
-      }}
-      size="icon"
-      tooltip={tCommon("share")}
-      type="button"
-      variant="outline"
-    >
-      <HugeIcons icon={Link01Icon} />
-    </Button>
-  );
-}
-
-/** The pane's footer on one row: the set's level at its start, then its link and its one primary action. */
+/**
+ * The pane's footer on one row: the set's level at its start, then one split primary button group
+ * pairing the dynamic primary action with a More menu (Share, and destructive Leave session while
+ * the attempt lobby has zero started sections).
+ */
 function SetPaneFooter() {
   const t = useTranslations("Tryouts");
+  const tCommon = useTranslations("Common");
+  const clipboard = useClipboard({ timeout: 1000 });
+  const [discardOpen, discardDialog] = useDisclosure(false);
   const { mode, practice: summaries, sections, view } = useSetPane();
+  const activeAttempt = view.activeAttempt;
+  const discardable =
+    activeAttempt !== null && canDiscardTryoutAttempt(activeAttempt);
   const practiceTarget = getTryoutPracticeTarget(
     selectPracticePath({
       sections,
@@ -361,32 +359,88 @@ function SetPaneFooter() {
       summaries,
     })
   );
+
+  function copyLink() {
+    clipboard.copy(
+      new URL(
+        `/${view.route.locale}${getTryoutPublicPathHref(view.page.set.publicPath)}`,
+        SITE_ORIGIN
+      ).toString()
+    );
+    toast.success(
+      { title: "link-copied.title" },
+      { position: "bottom-center" }
+    );
+  }
+
   return (
     <PaneFooter>
       <span className="me-auto">
         <TryoutLevel level={view.page.set.level} />
       </span>
-      <SetShare />
-      {mode === "practice" && Option.isSome(practiceTarget) ? (
-        <TargetLink className={buttonVariants()} target={practiceTarget.value}>
-          <HugeIcons data-icon="inline-start" icon={Target02Icon} />
-          {t("practice-start-cta")}
-        </TargetLink>
-      ) : (
-        <TryoutSetAction
-          value={{
-            activeAttempt: view.activeAttempt,
-            currentPath: view.currentPath,
-            ...(view.actionAttempt === undefined
-              ? {}
-              : { currentAttempt: view.actionAttempt }),
-            destination: view.start.destination,
-            entrySection: view.start.entrySection,
-            locale: view.route.locale,
-            set: view.start.set,
-          }}
-        />
-      )}
+      <ButtonGroup variant="default">
+        {mode === "practice" && Option.isSome(practiceTarget) ? (
+          <TargetLink
+            className={buttonVariants({ variant: "default" })}
+            target={practiceTarget.value}
+          >
+            <HugeIcons data-icon="inline-start" icon={Target02Icon} />
+            {t("practice-start-cta")}
+          </TargetLink>
+        ) : (
+          <TryoutSetAction
+            value={{
+              activeAttempt: view.activeAttempt,
+              currentPath: view.currentPath,
+              ...(view.actionAttempt === undefined
+                ? {}
+                : { currentAttempt: view.actionAttempt }),
+              destination: view.start.destination,
+              entrySection: view.start.entrySection,
+              locale: view.route.locale,
+              set: view.start.set,
+            }}
+          />
+        )}
+        <ButtonGroupSeparator />
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button size="icon" tooltip={tCommon("more-actions")}>
+                <HugeIcons icon={MoreHorizontalIcon} />
+              </Button>
+            }
+          />
+          <DropdownMenuContent align="end" label={tCommon("menu-actions")}>
+            <DropdownMenuItem icon={Link01Icon} onSelect={copyLink}>
+              {tCommon("share")}
+            </DropdownMenuItem>
+            {discardable ? (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  icon={Delete02Icon}
+                  onSelect={discardDialog.open}
+                  variant="destructive"
+                >
+                  {t("discard-cta")}
+                </DropdownMenuItem>
+              </>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </ButtonGroup>
+      {discardable ? (
+        <ConvexIsland fallback={null}>
+          <DiscardAttemptDialog
+            attemptId={activeAttempt.attemptId}
+            open={discardOpen}
+            setOpen={(open) =>
+              open ? discardDialog.open() : discardDialog.close()
+            }
+          />
+        </ConvexIsland>
+      ) : null}
     </PaneFooter>
   );
 }

@@ -12,7 +12,6 @@ import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Tuple } from "effect";
 import type { ReactNode } from "react";
 import { useFormatter, useTranslations } from "use-intl";
-import { PaneSection } from "@/components/progress/section";
 import { getTryoutSubjectIcons } from "@/components/tryout/catalog/icons";
 import { useSetPane } from "@/components/tryout/pane/context";
 import type { PartStep } from "@/components/tryout/pane/model";
@@ -55,7 +54,7 @@ const lineVariants = cva(
 
 /** A step's card: the part the attempt resumes at stands out, and a part a press opens lights up under the pointer. */
 const cardVariants = cva(
-  "flex min-w-0 flex-1 items-center gap-3 rounded-lg p-2 text-start",
+  "-me-2 flex min-w-0 flex-1 items-center gap-3 rounded-lg p-2 text-start",
   {
     variants: {
       dimmed: { false: "", true: "opacity-60" },
@@ -321,8 +320,11 @@ export function SetPath() {
   const tier = Math.max(1, tierOf(tally.sets + (claims.set ? 0 : 1)));
 
   return (
-    <PaneSection title={entered ? tCommon("questions") : t("parts-title")}>
-      <ol className="flex flex-col gap-2">
+    <section
+      aria-label={entered ? tCommon("questions") : t("parts-title")}
+      className="-mx-(--pane-end,1rem) flex flex-col border-b px-(--pane-end,1rem) py-4 first:pt-0 last:border-b-0 last:pb-0"
+    >
+      <ol className="-my-2 flex flex-col gap-2">
         {Arr.map(Arr.zip(sections, looks), ([section, look], index) => {
           const step = partStep(attempt, section.sectionKey);
           const score = partScore(attempt, section.sectionKey);
@@ -422,6 +424,6 @@ export function SetPath() {
           </div>
         </PathStep>
       </ol>
-    </PaneSection>
+    </section>
   );
 }

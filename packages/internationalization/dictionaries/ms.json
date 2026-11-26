@@ -2559,10 +2559,8 @@
     "discard-dialog-title": "Tinggalkan sesi ini?",
     "discard-dialog-description": "Belum ada bahagian yang dimulakan, jadi sesi ini dibuang tanpa merekodkan skor.",
     "discard-confirm-cta": "Ya, tinggalkan",
-    "lobby-hint": "Pilih mana-mana bahagian apabila kamu bersedia.",
     "part-running-label": "Sedang berjalan",
     "part-waiting-label": "Selesaikan bahagian aktif dulu",
-    "practice-mode-description": "Pilih mana-mana bahagian untuk latihan tanpa pemasa dan semak jawapan serta-merta.",
     "practice-part-facts": "{count, number} soalan, tiada pemasa"
   },
   "Player": {

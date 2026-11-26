@@ -2559,10 +2559,8 @@
     "discard-dialog-title": "Leave this session?",
     "discard-dialog-description": "No part has started yet, so leaving removes this session without recording a score.",
     "discard-confirm-cta": "Leave session",
-    "lobby-hint": "Pick any part when you are ready.",
     "part-running-label": "In progress",
     "part-waiting-label": "Finish active part first",
-    "practice-mode-description": "Pick any part to practise without a timer and check each answer right away.",
     "practice-part-facts": "{count, number} questions, no timer"
   },
   "Player": {

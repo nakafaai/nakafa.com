@@ -2559,10 +2559,8 @@
     "discard-dialog-title": "Batalkan sesi ini?",
     "discard-dialog-description": "Belum ada bagian yang dimulai, jadi sesi ini dihapus tanpa mencatat nilai.",
     "discard-confirm-cta": "Ya, batalkan",
-    "lobby-hint": "Pilih bagian mana saja saat kamu siap.",
     "part-running-label": "Sedang berjalan",
     "part-waiting-label": "Selesaikan bagian aktif dulu",
-    "practice-mode-description": "Pilih bagian mana saja untuk latihan tanpa batas waktu dan cek jawaban langsung.",
     "practice-part-facts": "{count, number} soal, tanpa waktu"
   },
   "Player": {

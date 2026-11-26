@@ -5,6 +5,7 @@ import { renderElement } from "@ui-sdk/react/primitive";
 import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
+import { use } from "react";
 
 /**
  * One joined frame: the first part rounds its start, the last rounds its end, and the parts between stand square on one
@@ -127,10 +128,12 @@ function ButtonGroupSeparator({
   orientation = "vertical",
   ...props
 }: React.ComponentProps<typeof Separator>) {
+  const variant = use(ButtonGroupVariant);
   return (
     <Separator
       className={cn(
-        "bg-input relative m-0! self-stretch data-[orientation=vertical]:h-auto",
+        variant === "default" ? "bg-primary-foreground/20" : "bg-input",
+        "relative m-0! self-stretch data-[orientation=vertical]:h-auto",
         className
       )}
       orientation={orientation}

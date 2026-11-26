@@ -472,7 +472,10 @@ function ResumeTryoutLink({
       state.status === "pending" && state.location.pathname === pathname,
   });
   return (
-    <TryoutPageLink className={buttonVariants()} {...request.destination}>
+    <TryoutPageLink
+      className={buttonVariants({ variant: "default" })}
+      {...request.destination}
+    >
       <Spinner icon={Rocket01Icon} isLoading={navigating} />
       <TryoutActionName name="continue-cta" />
     </TryoutPageLink>

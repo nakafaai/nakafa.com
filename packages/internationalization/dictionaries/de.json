@@ -2559,10 +2559,8 @@
     "discard-dialog-title": "Diese Sitzung verlassen?",
     "discard-dialog-description": "Es hat noch kein Teil begonnen, daher wird diese Sitzung ohne Punktzahl entfernt.",
     "discard-confirm-cta": "Sitzung verlassen",
-    "lobby-hint": "Wähle einen beliebigen Teil, sobald du bereit bist.",
     "part-running-label": "Läuft",
     "part-waiting-label": "Erst aktiven Teil beenden",
-    "practice-mode-description": "Wähle einen beliebigen Teil zum Üben ohne Timer und prüfe jede Antwort sofort.",
     "practice-part-facts": "{count, number} Fragen, ohne Timer"
   },
   "Player": {
