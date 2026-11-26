@@ -9,9 +9,13 @@ const MACINTOSH_REGEX = /Macintosh/iu;
 const SOFTWARE_RENDERER_REGEX =
   /SwiftShader|llvmpipe|softpipe|Software|Basic Render Driver/iu;
 
-/** Maximum CPU core count or memory in GB considered a low-end device. */
-const LOW_END_CORE_LIMIT = 4;
-const LOW_END_MEMORY_LIMIT = 4;
+/** Maximum CPU core count or memory in GB considered a truly constrained low-end device. */
+const LOW_END_CORE_LIMIT = 2;
+const LOW_END_MEMORY_LIMIT = 2;
+
+/** Minimum desktop CPU cores and memory threshold for high-performance GPU preference. */
+const HIGH_PERFORMANCE_CORE_LIMIT = 4;
+const HIGH_PERFORMANCE_MEMORY_THRESHOLD = 4;
 
 /** Maximum concurrent WebGL contexts allowed per page by device class. */
 export const MOBILE_WEBGL_CONTEXT_LIMIT = 2;
@@ -52,8 +56,10 @@ export function isMobileDevice(): boolean {
 }
 
 /**
- * Checks if the current device is hardware-constrained (4 or fewer CPU cores
- * or 4 GB or less reported device memory).
+ * Checks if the current device is hardware-constrained (2 or fewer CPU cores
+ * or 2 GB or less reported device memory). iOS Safari privacy-caps
+ * `hardwareConcurrency` at 4 on flagship iPhones and iPads, so 4-core devices
+ * are treated as capable rather than low-end.
  *
  * @returns true if the device is low-end, false otherwise
  */
@@ -81,45 +87,37 @@ export function getPowerPreference(): "default" | "high-performance" {
   }
 
   const memory = readDeviceMemory();
-  if (memory !== undefined && memory <= LOW_END_MEMORY_LIMIT) {
+  if (memory !== undefined && memory <= HIGH_PERFORMANCE_MEMORY_THRESHOLD) {
     return "default";
   }
 
-  const cores = readHardwareConcurrency() ?? LOW_END_CORE_LIMIT;
+  const cores = readHardwareConcurrency() ?? HIGH_PERFORMANCE_CORE_LIMIT;
 
-  return cores >= LOW_END_CORE_LIMIT ? "high-performance" : "default";
+  return cores >= HIGH_PERFORMANCE_CORE_LIMIT ? "high-performance" : "default";
 }
 
 /**
- * Chooses a stable device-pixel-ratio cap for WebGL canvases. Keeping the cap
- * bounded avoids framebuffer bloat while cutting fragment fill cost on phones
- * and low-end hardware.
+ * Chooses a sharp, bounded device-pixel-ratio cap for WebGL canvases.
+ * Capable mobile, tablet, and desktop displays render at full 2x HD Retina
+ * clarity while avoiding wasteful 3x fill-rate bloat; only truly constrained
+ * low-end hardware steps down to 1.5x.
  *
- * @returns `[1, 1.25]` on low-end devices, `[1, 1.5]` on mobile, and `[1, 2]` on desktop
+ * @returns `[1, 1.5]` on low-end devices and `[1, 2]` on capable mobile and desktop devices
  */
 export function getCanvasDpr(): [number, number] {
-  if (isLowEndDevice()) {
-    return [1, 1.25];
-  }
-  return isMobileDevice() ? [1, 1.5] : [1, 2];
+  return isLowEndDevice() ? [1, 1.5] : [1, 2];
 }
 
 /**
- * Chooses whether to enable WebGL MSAA antialiasing. Disabling MSAA on low-end
- * devices and Retina mobile displays (DPR > 1) cuts framebuffer VRAM and
- * resolve bandwidth while high pixel density keeps edges crisp.
+ * Chooses whether to enable WebGL MSAA antialiasing. Hardware MSAA stays on
+ * for all capable desktop, iOS, and Android GPUs (where tile-based renderers
+ * resolve MSAA inside on-chip tile memory at low cost) so 3D edges stay crisp
+ * on mobile, and disables only on truly constrained low-end devices.
  *
  * @returns true when MSAA should be enabled, false otherwise
  */
 export function shouldEnableAntialias(): boolean {
-  if (isLowEndDevice()) {
-    return false;
-  }
-  if (isMobileDevice()) {
-    const dpr: unknown = Reflect.get(globalThis, "devicePixelRatio");
-    return !(Predicate.isNumber(dpr) && dpr > 1);
-  }
-  return true;
+  return !isLowEndDevice();
 }
 
 /**

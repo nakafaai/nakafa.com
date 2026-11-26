@@ -157,17 +157,26 @@ describe("isMobileDevice", () => {
 });
 
 describe("isLowEndDevice", () => {
-  it("flags devices with 4 or fewer CPU cores", () => {
-    setDeviceProfile({ cores: 4, memory: 8 });
+  it("flags devices with 2 or fewer CPU cores", () => {
+    setDeviceProfile({ cores: 2, memory: 8 });
     expect(isLowEndDevice()).toBe(true);
   });
 
-  it("flags devices with 4 GB or less device memory", () => {
-    setDeviceProfile({ cores: 8, memory: 4 });
+  it("flags devices with 2 GB or less device memory", () => {
+    setDeviceProfile({ cores: 8, memory: 2 });
     expect(isLowEndDevice()).toBe(true);
   });
 
-  it("leaves capable devices with >4 cores and >4 GB memory alone", () => {
+  it("does not misclassify 4-core iOS privacy-capped devices as low-end", () => {
+    setDeviceProfile({
+      cores: 4,
+      memory: undefined,
+      userAgent: IPHONE_USER_AGENT,
+    });
+    expect(isLowEndDevice()).toBe(false);
+  });
+
+  it("leaves capable devices with >2 cores and >2 GB memory alone", () => {
     setDeviceProfile({ cores: 8, memory: 8 });
     expect(isLowEndDevice()).toBe(false);
   });
@@ -244,14 +253,14 @@ describe("getPowerPreference", () => {
 });
 
 describe("getCanvasDpr", () => {
-  it("caps low-end canvases at 1.25x pixel ratio", () => {
-    setDeviceProfile({ cores: 4, userAgent: IPHONE_USER_AGENT });
-    expect(getCanvasDpr()).toEqual([1, 1.25]);
+  it("caps truly low-end canvases at 1.5x pixel ratio", () => {
+    setDeviceProfile({ cores: 2, userAgent: IPHONE_USER_AGENT });
+    expect(getCanvasDpr()).toEqual([1, 1.5]);
   });
 
-  it("caps capable mobile canvases at 1.5x pixel ratio", () => {
-    setDeviceProfile({ cores: 6, userAgent: IPHONE_USER_AGENT });
-    expect(getCanvasDpr()).toEqual([1, 1.5]);
+  it("keeps capable mobile canvases at full 2x HD pixel ratio", () => {
+    setDeviceProfile({ cores: 4, userAgent: IPHONE_USER_AGENT });
+    expect(getCanvasDpr()).toEqual([1, 2]);
   });
 
   it("caps capable desktop canvases at 2x pixel ratio", () => {
@@ -261,14 +270,14 @@ describe("getCanvasDpr", () => {
 });
 
 describe("shouldEnableAntialias", () => {
-  it("disables antialias on low-end hardware", () => {
-    setDeviceProfile({ cores: 4, dpr: 1, userAgent: MAC_USER_AGENT });
+  it("disables antialias on truly low-end hardware", () => {
+    setDeviceProfile({ cores: 2, dpr: 1, userAgent: MAC_USER_AGENT });
     expect(shouldEnableAntialias()).toBe(false);
   });
 
-  it("disables antialias on mobile Retina displays", () => {
-    setDeviceProfile({ cores: 6, dpr: 3, userAgent: IPHONE_USER_AGENT });
-    expect(shouldEnableAntialias()).toBe(false);
+  it("keeps MSAA antialias enabled on capable mobile Retina displays", () => {
+    setDeviceProfile({ cores: 4, dpr: 3, userAgent: IPHONE_USER_AGENT });
+    expect(shouldEnableAntialias()).toBe(true);
   });
 
   it("keeps antialias on non-Retina capable mobile displays", () => {
@@ -289,7 +298,7 @@ describe("getMaxWebGLContexts", () => {
   });
 
   it("caps low-end desktops at 2 contexts", () => {
-    setDeviceProfile({ cores: 4, userAgent: WINDOWS_USER_AGENT });
+    setDeviceProfile({ cores: 2, userAgent: WINDOWS_USER_AGENT });
     expect(getMaxWebGLContexts()).toBe(MOBILE_WEBGL_CONTEXT_LIMIT);
   });
 

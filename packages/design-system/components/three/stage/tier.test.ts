@@ -85,30 +85,30 @@ describe("resolveStageProfile", () => {
     });
   });
 
-  it("uses direct rendering, 1024 shadows, and phone HDRI on light mobile tier", () => {
+  it("uses direct rendering, 2048 shadows, and desktop HDRI on light mobile tier", () => {
     expect(resolveStageProfile("light", true)).toEqual({
+      environmentDirectory: "desktop",
+      postprocessing: false,
+      shadowMapSize: 2048,
+      shadowRadius: 3,
+      useExrEnvironment: true,
+    });
+  });
+
+  it("uses direct rendering and 1024 shadows on low and plain tiers", () => {
+    expect(resolveStageProfile("low", true)).toEqual({
       environmentDirectory: "phone",
       postprocessing: false,
       shadowMapSize: 1024,
       shadowRadius: 2,
       useExrEnvironment: true,
     });
-  });
-
-  it("uses direct rendering and 512 shadows on low and plain tiers", () => {
-    expect(resolveStageProfile("low", true)).toEqual({
-      environmentDirectory: "phone",
-      postprocessing: false,
-      shadowMapSize: 512,
-      shadowRadius: 1,
-      useExrEnvironment: true,
-    });
 
     expect(resolveStageProfile("plain", false)).toEqual({
       environmentDirectory: "phone",
       postprocessing: false,
-      shadowMapSize: 512,
-      shadowRadius: 1,
+      shadowMapSize: 1024,
+      shadowRadius: 2,
       useExrEnvironment: false,
     });
   });

@@ -16,11 +16,11 @@ type MonitorConfig = typeof MonitorConfigSchema.Type;
 /** Smoothing factor for the exponential moving average of active frame times. */
 const EMA_ALPHA = 0.15;
 
-/** Frame times above this threshold (50 fps) count toward a quality step-down. */
-const SLOW_FRAME_MS = 20;
+/** Frame times above this threshold (~28.5 fps) count toward a quality step-down without penalizing 30 fps battery-saver modes. */
+const SLOW_FRAME_MS = 35;
 
-/** Frame times at or below 60 fps clear the consecutive slow-frame counter. */
-const HEALTHY_FRAME_MS = 16.7;
+/** Frame times at or below 50 fps clear the consecutive slow-frame counter. */
+const HEALTHY_FRAME_MS = 20;
 
 /** Gaps longer than this come from idle pauses or tab switches, not slow GPU frames. */
 const MAX_SAMPLE_MS = 120;
