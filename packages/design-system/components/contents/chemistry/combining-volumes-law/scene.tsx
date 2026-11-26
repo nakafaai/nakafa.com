@@ -1,5 +1,5 @@
-import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import type {
   CombiningVolumesElement,
   CombiningVolumesGasModel,
@@ -19,24 +19,34 @@ import {
   ChemistryParticleLabel,
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/label";
+import { useSimulationClock } from "@repo/design-system/components/contents/simulation/clock";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { ArrowHelper } from "@repo/design-system/components/three/arrow";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { GlassMaterial } from "@repo/design-system/components/three/physical";
+import {
+  GlassMaterial,
+  MetalMaterial,
+} from "@repo/design-system/components/three/physical";
 import { useRequired } from "@repo/design-system/hooks/required";
+import { getColor } from "@repo/design-system/lib/color";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { Array as Arr, HashMap, Option, Schema } from "effect";
 import type { ReactNode } from "react";
-import { createContext, useRef } from "react";
+import { createContext, useMemo, useRef } from "react";
 import type { Group } from "three";
+import { Quaternion, Vector3 } from "three";
 
-const REACTANTS_X = -1.05;
-const PRODUCTS_X = 1.05;
-const SCENE_SCALE = 1.68;
+const REACTANTS_X = -1.08;
+const PRODUCTS_X = 1.08;
+const SCENE_SCALE = 1.62;
 const TUBE_RADIUS = 0.22;
 const VOLUME_UNIT_HEIGHT = 0.42;
+const TUBE_BASE_Y = -0.56;
 const COLUMN_GAP = 0.62;
-const BOND_LINE_WIDTH = 2.1;
+const BOND_STICK_RADIUS = 0.015;
+const UP_AXIS = new Vector3(0, 1, 0);
 
 const MoleculeAtomSchema = Schema.Struct({
   element: CombiningVolumesElementSchema,
@@ -116,23 +126,39 @@ export function CombiningVolumesScene({
     <CombiningVolumesSceneContext
       value={{ colors, volumeUnit: labels.volumeUnit }}
     >
-      <group position={[0, 0.12, 0]} scale={SCENE_SCALE}>
+      <group position={[0, 0.08, 0]} scale={SCENE_SCALE}>
+        <CameraBounds exclude>
+          <group
+            position={[0, TUBE_BASE_Y - 0.036, 0.34]}
+            scale={[2.6, 2.4, 3.8]}
+          >
+            <LabBench width={2.8} />
+          </group>
+        </CameraBounds>
         <ThreeLabel
+          anchorY="bottom"
           color={colors.text}
           fontSize="compact"
-          position={[REACTANTS_X, 0.94, 0.16]}
+          position={[REACTANTS_X, 0.88, 0]}
         >
           {labels.reactants}
         </ThreeLabel>
         <ThreeLabel
+          anchorY="bottom"
           color={colors.text}
           fontSize="compact"
-          position={[PRODUCTS_X, 0.94, 0.16]}
+          position={[PRODUCTS_X, 0.88, 0]}
         >
           {labels.products}
         </ThreeLabel>
         <GasSet gases={model.reactants} x={REACTANTS_X} />
-
+        <ArrowHelper
+          arrowSize={0.18}
+          color={getColor("WHITE")}
+          from={[-0.24, -0.06, 0]}
+          lineWidth={3}
+          to={[0.24, -0.06, 0]}
+        />
         <GasSet gases={model.products} x={PRODUCTS_X} />
       </group>
     </CombiningVolumesSceneContext>
@@ -164,18 +190,25 @@ function GasSet({
 function GasColumn({ gas, x }: { gas: CombiningVolumesGasModel; x: number }) {
   const { colors, volumeUnit } = useCombiningVolumesScene();
   const height = gas.volumeUnits * VOLUME_UNIT_HEIGHT;
-  const volumeUnits = Array.from(
-    { length: gas.volumeUnits },
-    (_, zeroBased) => ({
+  const columnCenterY = TUBE_BASE_Y + height / 2;
+  const volumeUnits = Arr.map(
+    Arr.range(0, gas.volumeUnits - 1),
+    (zeroBased) => ({
       id: `${gas.id}-volume-${zeroBased + 1}`,
       phase: zeroBased * 0.7,
-      y: getUnitCenter(zeroBased, gas.volumeUnits),
+      y: TUBE_BASE_Y + (zeroBased + 0.5) * VOLUME_UNIT_HEIGHT,
     })
   );
 
   return (
     <group position={[x, 0, 0]}>
-      <VolumeTube colors={colors} height={height} />
+      <group position={[0, columnCenterY, 0]}>
+        <VolumeTube
+          colors={colors}
+          height={height}
+          volumeUnits={gas.volumeUnits}
+        />
+      </group>
 
       {Arr.map(volumeUnits, (unit) => (
         <group key={unit.id} position={[0, unit.y, 0]}>
@@ -187,9 +220,10 @@ function GasColumn({ gas, x }: { gas: CombiningVolumesGasModel; x: number }) {
       ))}
 
       <ThreeLabel
+        anchorY="top"
         color={colors.text}
         fontSize="compact"
-        position={[0, -height / 2 - 0.24, 0.24]}
+        position={[0, TUBE_BASE_Y - 0.14, 0.24]}
       >
         <span className="block">
           <InlineMath math={gas.formulaLabel} />
@@ -205,10 +239,20 @@ function GasColumn({ gas, x }: { gas: CombiningVolumesGasModel; x: number }) {
 function VolumeTube({
   colors,
   height,
+  volumeUnits,
 }: {
   colors: CombiningVolumesSceneColors;
   height: number;
+  volumeUnits: number;
 }) {
+  const dividers =
+    volumeUnits > 1
+      ? Arr.map(
+          Arr.range(1, volumeUnits - 1),
+          (unit) => -height / 2 + unit * VOLUME_UNIT_HEIGHT
+        )
+      : [];
+
   return (
     <group>
       <mesh castShadow receiveShadow>
@@ -218,10 +262,36 @@ function VolumeTube({
         <GlassMaterial color={colors.glass} opacity={0.18} />
       </mesh>
 
+      <mesh castShadow position={[0, -height / 2 - 0.018, 0]} receiveShadow>
+        <cylinderGeometry
+          args={[TUBE_RADIUS * 1.18, TUBE_RADIUS * 1.28, 0.036, 48]}
+        />
+        <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.32} />
+      </mesh>
+
+      <mesh castShadow position={[0, height / 2 + 0.018, 0]} receiveShadow>
+        <cylinderGeometry
+          args={[TUBE_RADIUS * 0.86, TUBE_RADIUS * 0.94, 0.044, 36]}
+        />
+        <meshStandardMaterial color={BENCH_COLORS.bottleCap} roughness={0.74} />
+      </mesh>
+
       {Arr.map([-height / 2, height / 2], (y) => (
         <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[TUBE_RADIUS, 0.012, 12, 48]} />
-          <GlassMaterial color={colors.glass} opacity={0.48} />
+          <GlassMaterial color={colors.glass} opacity={0.58} />
+        </mesh>
+      ))}
+
+      {Arr.map(dividers, (y) => (
+        <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[TUBE_RADIUS + 0.002, 0.004, 8, 48]} />
+          <meshBasicMaterial
+            color={colors.text}
+            depthWrite={false}
+            opacity={0.32}
+            transparent
+          />
         </mesh>
       ))}
     </group>
@@ -233,16 +303,17 @@ function VolumeBand({ color }: { color: string }) {
     <mesh>
       <cylinderGeometry
         args={[
-          TUBE_RADIUS * 0.78,
-          TUBE_RADIUS * 0.78,
-          VOLUME_UNIT_HEIGHT * 0.72,
+          TUBE_RADIUS * 0.82,
+          TUBE_RADIUS * 0.82,
+          VOLUME_UNIT_HEIGHT * 0.78,
           42,
         ]}
       />
       <meshStandardMaterial
         color={color}
         depthWrite={false}
-        opacity={0.2}
+        opacity={0.22}
+        roughness={0.3}
         transparent
       />
     </mesh>
@@ -257,13 +328,14 @@ function FloatingMolecule({
   phase: number;
 }) {
   const groupRef = useRef<Group>(null);
+  const { advance } = useSimulationClock(0);
 
-  useFrame(({ clock }) => {
+  useFrame((_, delta) => {
     if (!groupRef.current) {
       return;
     }
 
-    groupRef.current.rotation.y = phase + clock.elapsedTime * 0.28;
+    groupRef.current.rotation.y = phase + advance(delta) * 0.32;
   });
 
   return (
@@ -272,6 +344,43 @@ function FloatingMolecule({
         {children}
       </CameraBounds>
     </group>
+  );
+}
+
+function BondStick({
+  color,
+  end,
+  start,
+}: {
+  color: string;
+  end: CombiningVolumesScenePoint;
+  start: CombiningVolumesScenePoint;
+}) {
+  const transform = useMemo(() => {
+    const from = new Vector3(...start);
+    const to = new Vector3(...end);
+    const delta = new Vector3().subVectors(to, from);
+    const span = delta.length();
+    const midpoint = new Vector3().addVectors(from, to).multiplyScalar(0.5);
+    const quaternion = new Quaternion().setFromUnitVectors(
+      UP_AXIS,
+      delta.normalize()
+    );
+    return { midpoint, quaternion, span };
+  }, [end, start]);
+
+  return (
+    <mesh
+      castShadow
+      position={transform.midpoint}
+      quaternion={transform.quaternion}
+      receiveShadow
+    >
+      <cylinderGeometry
+        args={[BOND_STICK_RADIUS, BOND_STICK_RADIUS, transform.span, 18]}
+      />
+      <meshPhysicalMaterial clearcoat={0.55} color={color} roughness={0.26} />
+    </mesh>
   );
 }
 
@@ -293,12 +402,11 @@ function Molecule({ kind }: { kind: CombiningVolumesMoleculeKind }) {
         }
 
         return (
-          <Line
+          <BondStick
             color={colors.bond}
+            end={end.value.position}
             key={`${startId}-${endId}`}
-            lineWidth={BOND_LINE_WIDTH}
-            points={[start.value.position, end.value.position]}
-            toneMapped={false}
+            start={start.value.position}
           />
         );
       })}
@@ -316,9 +424,14 @@ function AtomParticle({ atomData }: { atomData: MoleculeAtom }) {
 
   return (
     <group position={atomData.position}>
-      <mesh castShadow>
-        <sphereGeometry args={[style.radius, 32, 20]} />
-        <meshStandardMaterial color={colors[style.color]} roughness={0.34} />
+      <mesh castShadow receiveShadow>
+        <sphereGeometry args={[style.radius, 36, 24]} />
+        <meshPhysicalMaterial
+          clearcoat={0.65}
+          clearcoatRoughness={0.1}
+          color={colors[style.color]}
+          roughness={0.24}
+        />
       </mesh>
       <ChemistryParticleLabel
         color={colors.sphereText}
@@ -331,10 +444,6 @@ function AtomParticle({ atomData }: { atomData: MoleculeAtom }) {
       </ChemistryParticleLabel>
     </group>
   );
-}
-
-function getUnitCenter(index: number, total: number) {
-  return (index - (total - 1) / 2) * VOLUME_UNIT_HEIGHT;
 }
 
 function atom(

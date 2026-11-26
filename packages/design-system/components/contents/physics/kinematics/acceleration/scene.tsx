@@ -1,4 +1,4 @@
-import { useGLTF } from "@react-three/drei";
+import { Line, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import {
   SpaceBackground,
@@ -19,10 +19,15 @@ import {
   getAccelerationPositionSample,
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import { RocketShip } from "@repo/design-system/components/contents/physics/kinematics/acceleration/rocket";
+import { useSimulationClock } from "@repo/design-system/components/contents/simulation/clock";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { Array as Arr, Effect } from "effect";
+import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr, Effect, Option } from "effect";
 import { useMemo, useRef } from "react";
 import type { Group } from "three";
+
+const GATE_PYLON_ANGLES = [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2] as const;
 
 /** The time gates and the rocket share one stationary, finite reference frame. */
 export function SpaceFlightScene({
@@ -42,18 +47,18 @@ export function SpaceFlightScene({
     [scene, motion]
   );
   const rocketRef = useRef<Group>(null);
-  const startRef = useRef<number | null>(null);
-  const caseRef = useRef<AccelerationCaseId | null>(null);
+  const { advance, time: simTime } = useSimulationClock(0);
+  const caseRef = useRef<AccelerationCaseId>(motion.scenario.id);
 
-  useFrame((state) => {
+  useFrame((_, delta) => {
     if (!rocketRef.current) {
       return;
     }
-    if (startRef.current === null || caseRef.current !== motion.scenario.id) {
+    if (caseRef.current !== motion.scenario.id) {
       caseRef.current = motion.scenario.id;
-      startRef.current = state.clock.elapsedTime;
+      simTime.current = 0;
     }
-    const elapsed = state.clock.elapsedTime - startRef.current;
+    const elapsed = advance(delta);
     const time = getAccelerationLoopTime(motion, elapsed);
     const sample = getAccelerationPositionSample(
       motion.scenario,
@@ -93,24 +98,64 @@ export function SpaceFlightScene({
 }
 
 function TimeGates({ motion }: { motion: AccelerationMotionState }) {
+  const firstX = Option.match(Arr.head(motion.samples), {
+    onNone: () => motion.startX,
+    onSome: (sample) => sample.x,
+  });
+  const lastX = Option.match(Arr.last(motion.samples), {
+    onNone: () => motion.startX + motion.worldDisplacement,
+    onSome: (sample) => sample.x,
+  });
+  const radius = ACCELERATION_LAB_SCENE.gateRadius;
+
   return (
     <group>
+      <Line
+        color={motion.scenario.color}
+        dashed
+        dashSize={0.18}
+        gapSize={0.14}
+        lineWidth={1.6}
+        opacity={0.42}
+        points={[
+          [firstX, -radius - 0.14, 0],
+          [lastX, -radius - 0.14, 0],
+        ]}
+        transparent
+      />
       {Arr.map(motion.samples, (sample) => (
-        <mesh
-          key={sample.time}
-          position={[sample.x, 0, 0]}
-          rotation={[0, Math.PI / 2, 0]}
-        >
-          <torusGeometry
-            args={[ACCELERATION_LAB_SCENE.gateRadius, 0.035, 10, 64]}
-          />
-          <meshBasicMaterial
-            color={motion.scenario.color}
-            opacity={0.8}
-            toneMapped={false}
-            transparent
-          />
-        </mesh>
+        <group key={sample.time} position={[sample.x, 0, 0]}>
+          {/* Brushed titanium outer beacon frame */}
+          <mesh rotation={[0, Math.PI / 2, 0]}>
+            <torusGeometry args={[radius + 0.03, 0.022, 16, 64]} />
+            <MetalMaterial color={getColor("SLATE", 300)} roughness={0.3} />
+          </mesh>
+          {/* Luminous inner timing ring */}
+          <mesh rotation={[0, Math.PI / 2, 0]}>
+            <torusGeometry args={[radius - 0.006, 0.014, 14, 64]} />
+            <meshStandardMaterial
+              color={motion.scenario.color}
+              emissive={motion.scenario.color}
+              emissiveIntensity={1.6}
+              roughness={0.2}
+            />
+          </mesh>
+          {/* Radial sensor pods around each timing gate */}
+          {Arr.map(GATE_PYLON_ANGLES, (angle) => (
+            <mesh
+              key={angle}
+              position={[
+                0,
+                Math.cos(angle) * (radius + 0.048),
+                Math.sin(angle) * (radius + 0.048),
+              ]}
+              rotation={[angle, 0, 0]}
+            >
+              <cylinderGeometry args={[0.02, 0.026, 0.075, 12]} />
+              <MetalMaterial color={getColor("SLATE", 400)} roughness={0.26} />
+            </mesh>
+          ))}
+        </group>
       ))}
     </group>
   );

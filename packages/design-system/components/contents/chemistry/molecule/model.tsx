@@ -121,16 +121,24 @@ export function AtomBall({
   const radius = atomRadius(element, style);
 
   return (
-    <mesh castShadow position={position} ref={ref ?? null} scale={radius}>
-      <sphereGeometry args={[1, 48, 32]} />
+    <mesh
+      castShadow
+      position={position}
+      receiveShadow
+      ref={ref ?? null}
+      scale={radius}
+    >
+      <sphereGeometry args={[1, 56, 36]} />
       <meshPhysicalMaterial
-        clearcoat={0.5}
-        clearcoatRoughness={0.12}
+        clearcoat={0.72}
+        clearcoatRoughness={0.08}
         color={ELEMENTS[element].color}
         depthWrite={opacity === 1}
-        metalness={0}
+        envMapIntensity={1.25}
+        ior={1.5}
+        metalness={0.02}
         opacity={opacity}
-        roughness={0.3}
+        roughness={0.22}
         transparent={opacity < 1}
       />
     </mesh>
@@ -172,16 +180,23 @@ export function BondSticks({
       {Arr.map(stickOffsets(order), (offset) => (
         <group key={offset} position={[offset, 0, 0]}>
           {Arr.map([0, 1] as const, (half) => (
-            <mesh castShadow key={half} position={[0, 0.25 + half * 0.5, 0]}>
-              <cylinderGeometry args={[STICK, STICK, 0.5, 24, 1]} />
+            <mesh
+              castShadow
+              key={half}
+              position={[0, 0.25 + half * 0.5, 0]}
+              receiveShadow
+            >
+              <cylinderGeometry args={[STICK, STICK, 0.5, 32, 1]} />
               <meshPhysicalMaterial
-                clearcoat={0.5}
-                clearcoatRoughness={0.12}
+                clearcoat={0.72}
+                clearcoatRoughness={0.08}
                 color={ELEMENTS[elements[half]].color}
                 depthWrite={opacity === 1}
-                metalness={0}
+                envMapIntensity={1.25}
+                ior={1.5}
+                metalness={0.02}
                 opacity={opacity}
-                roughness={0.3}
+                roughness={0.22}
                 transparent={opacity < 1}
               />
             </mesh>

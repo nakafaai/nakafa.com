@@ -114,7 +114,12 @@ export function CombiningVolumesLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always" setting="lab">
+        <ScienceStage
+          floor={-0.86}
+          frameloop="always"
+          reach={4.2}
+          setting="lab"
+        >
           <Suspense>
             <CombiningVolumesCameraControls />
             <CombiningVolumesScene

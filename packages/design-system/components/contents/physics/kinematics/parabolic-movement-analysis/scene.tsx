@@ -1,4 +1,4 @@
-import { useGLTF } from "@react-three/drei";
+import { Line, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import type {
   ProjectileMotionState,
@@ -11,20 +11,44 @@ import {
   PROJECTILE_SCENE,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
 import { Ocean } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/ocean";
+import { useSimulationClock } from "@repo/design-system/components/contents/simulation/clock";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Record as Rec } from "effect";
 import { useMemo, useRef } from "react";
 import type { Group, MeshBasicMaterial, PointLight } from "three";
-import { CatmullRomCurve3, Mesh, Vector3 } from "three";
+import { CatmullRomCurve3, Mesh, Vector2, Vector3 } from "three";
 
 const PIRATE_COLORS = {
   flashCore: PLOT_COLORS.amber,
-  flashOuter: PLOT_COLORS.amber,
+  flashOuter: PLOT_COLORS.orange,
   ghostHalo: getColor("WHITE"),
   smoke: getColor("SLATE", 200),
 } as const;
+
+const BLAST_OUTER_PROFILE = Arr.map(
+  [
+    [0.001, 0],
+    [0.14, 0.04],
+    [0.21, 0.14],
+    [0.17, 0.3],
+    [0.08, 0.44],
+    [0.001, 0.52],
+  ] as const,
+  ([r, y]) => new Vector2(r, y)
+);
+
+const BLAST_CORE_PROFILE = Arr.map(
+  [
+    [0.001, 0],
+    [0.08, 0.03],
+    [0.11, 0.1],
+    [0.08, 0.2],
+    [0.001, 0.29],
+  ] as const,
+  ([r, y]) => new Vector2(r, y)
+);
 
 const SMOKE_COUNT = 16;
 const SMOKE_PUFFS = Array.from({ length: SMOKE_COUNT }, (_, index) => ({
@@ -133,16 +157,37 @@ function Trajectory({ motion }: { motion: ProjectileMotionState }) {
     return new CatmullRomCurve3(points);
   }, [motion]);
 
+  const peakPoint = getProjectilePoint(motion, motion.peakTime);
+
   return (
-    <mesh>
-      <tubeGeometry args={[curve, 70, 0.03, 10, false]} />
-      <meshBasicMaterial
+    <group>
+      <mesh>
+        <tubeGeometry args={[curve, 80, 0.032, 16, false]} />
+        <meshPhysicalMaterial
+          clearcoat={0.7}
+          color={motion.scenario.color}
+          emissive={motion.scenario.color}
+          emissiveIntensity={0.45}
+          opacity={0.86}
+          roughness={0.22}
+          transparent
+        />
+      </mesh>
+      {/* Vertical apex height guide */}
+      <Line
         color={motion.scenario.color}
-        opacity={0.82}
-        toneMapped={false}
+        dashed
+        dashSize={0.18}
+        gapSize={0.12}
+        lineWidth={2}
+        opacity={0.55}
+        points={[
+          toSceneTuple(peakPoint.x, 0, 0),
+          toSceneTuple(peakPoint.x, peakPoint.y, 0),
+        ]}
         transparent
       />
-    </mesh>
+    </group>
   );
 }
 
@@ -152,27 +197,29 @@ function GhostBalls({ motion }: { motion: ProjectileMotionState }) {
       {Arr.map(motion.ghostTimes, (time) => {
         const point = getProjectilePoint(motion, time);
         const progress = time / motion.flightTime;
-        const markerScale = 0.62 + progress * 0.24;
+        const markerScale = 0.42 + progress * 0.14;
 
         return (
           <group key={time} position={toSceneTuple(point.x, point.y, 0)}>
-            <mesh scale={markerScale}>
-              <sphereGeometry args={[PROJECTILE_SCENE.ballScale, 24, 16]} />
-              <meshBasicMaterial
-                color={PIRATE_COLORS.ghostHalo}
-                depthWrite={false}
-                opacity={0.48}
-                toneMapped={false}
-                transparent
+            <mesh castShadow scale={markerScale}>
+              <sphereGeometry args={[PROJECTILE_SCENE.ballScale, 28, 20]} />
+              <meshPhysicalMaterial
+                clearcoat={0.9}
+                clearcoatRoughness={0.08}
+                color={motion.scenario.color}
+                emissive={motion.scenario.color}
+                emissiveIntensity={0.25}
+                roughness={0.2}
               />
             </mesh>
-            <mesh scale={markerScale * 0.62}>
-              <sphereGeometry args={[PROJECTILE_SCENE.ballScale, 20, 14]} />
-              <meshBasicMaterial
-                color={motion.scenario.color}
+            <mesh scale={markerScale * 1.28}>
+              <sphereGeometry args={[PROJECTILE_SCENE.ballScale, 24, 16]} />
+              <meshPhysicalMaterial
+                clearcoat={1}
+                color={PIRATE_COLORS.ghostHalo}
                 depthWrite={false}
-                opacity={0.95}
-                toneMapped={false}
+                opacity={0.24}
+                roughness={0.08}
                 transparent
               />
             </mesh>
@@ -185,26 +232,20 @@ function GhostBalls({ motion }: { motion: ProjectileMotionState }) {
 
 function AnimatedCannonBall({ motion }: { motion: ProjectileMotionState }) {
   const ballRef = useRef<Group>(null);
-  const startRef = useRef<number | null>(null);
-  const scenarioRef = useRef<ProjectileScenarioId | null>(null);
+  const { advance, time: simTime } = useSimulationClock(0);
+  const scenarioRef = useRef<ProjectileScenarioId>(motion.scenario.id);
 
-  useFrame(({ clock }) => {
+  useFrame((_, delta) => {
     if (!ballRef.current) {
       return;
     }
 
-    if (
-      startRef.current === null ||
-      scenarioRef.current !== motion.scenario.id
-    ) {
+    if (scenarioRef.current !== motion.scenario.id) {
       scenarioRef.current = motion.scenario.id;
-      startRef.current = clock.elapsedTime;
+      simTime.current = 0;
     }
 
-    const sample = getProjectileLoopSample(
-      motion,
-      clock.elapsedTime - startRef.current
-    );
+    const sample = getProjectileLoopSample(motion, advance(delta));
     const position = toSceneTuple(sample.point.x, sample.point.y, 0);
 
     ballRef.current.position.set(...position);
@@ -244,33 +285,27 @@ function MuzzleBlast({ motion }: { motion: ProjectileMotionState }) {
   const outerRef = useRef<MeshBasicMaterial>(null);
   const coreRef = useRef<MeshBasicMaterial>(null);
   const lightRef = useRef<PointLight>(null);
-  const startRef = useRef<number | null>(null);
-  const scenarioRef = useRef<ProjectileScenarioId | null>(null);
+  const { advance, time: simTime } = useSimulationClock(0);
+  const scenarioRef = useRef<ProjectileScenarioId>(motion.scenario.id);
 
-  useFrame(({ clock }) => {
-    if (
-      startRef.current === null ||
-      scenarioRef.current !== motion.scenario.id
-    ) {
+  useFrame((_, delta) => {
+    if (scenarioRef.current !== motion.scenario.id) {
       scenarioRef.current = motion.scenario.id;
-      startRef.current = clock.elapsedTime;
+      simTime.current = 0;
     }
 
-    const { flashPower } = getProjectileLoopSample(
-      motion,
-      clock.elapsedTime - startRef.current
-    );
+    const { flashPower } = getProjectileLoopSample(motion, advance(delta));
 
     if (outerRef.current) {
       outerRef.current.opacity = flashPower * 0.68;
     }
 
     if (coreRef.current) {
-      coreRef.current.opacity = flashPower * 0.9;
+      coreRef.current.opacity = flashPower * 0.92;
     }
 
     if (lightRef.current) {
-      lightRef.current.intensity = flashPower * 1.4;
+      lightRef.current.intensity = flashPower * 1.6;
     }
   });
 
@@ -282,8 +317,8 @@ function MuzzleBlast({ motion }: { motion: ProjectileMotionState }) {
         intensity={0}
         ref={lightRef}
       />
-      <mesh position={[0.25, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
-        <coneGeometry args={[0.22, 0.5, 28]} />
+      <mesh rotation={[0, 0, -Math.PI / 2]}>
+        <latheGeometry args={[BLAST_OUTER_PROFILE, 28]} />
         <meshBasicMaterial
           color={PIRATE_COLORS.flashOuter}
           depthWrite={false}
@@ -292,8 +327,8 @@ function MuzzleBlast({ motion }: { motion: ProjectileMotionState }) {
           transparent
         />
       </mesh>
-      <mesh position={[0.15, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
-        <coneGeometry args={[0.11, 0.28, 24]} />
+      <mesh rotation={[0, 0, -Math.PI / 2]}>
+        <latheGeometry args={[BLAST_CORE_PROFILE, 24]} />
         <meshBasicMaterial
           color={PIRATE_COLORS.flashCore}
           depthWrite={false}
@@ -320,24 +355,20 @@ function SmokePuff({
 }) {
   const puffRef = useRef<Mesh>(null);
   const materialRef = useRef<MeshBasicMaterial>(null);
-  const startRef = useRef<number | null>(null);
-  const scenarioRef = useRef<ProjectileScenarioId | null>(null);
+  const { advance, time: simTime } = useSimulationClock(0);
+  const scenarioRef = useRef<ProjectileScenarioId>(motion.scenario.id);
 
-  useFrame(({ clock }) => {
+  useFrame((_, delta) => {
     if (!(puffRef.current && materialRef.current)) {
       return;
     }
 
-    if (
-      startRef.current === null ||
-      scenarioRef.current !== motion.scenario.id
-    ) {
+    if (scenarioRef.current !== motion.scenario.id) {
       scenarioRef.current = motion.scenario.id;
-      startRef.current = clock.elapsedTime;
+      simTime.current = 0;
     }
 
-    const phase =
-      ((clock.elapsedTime - startRef.current) * 0.95 + index / SMOKE_COUNT) % 1;
+    const phase = (advance(delta) * 0.95 + index / SMOKE_COUNT) % 1;
     const drift = phase * 0.95;
     const spread = Math.sin(index * 1.9) * phase * 0.28;
 

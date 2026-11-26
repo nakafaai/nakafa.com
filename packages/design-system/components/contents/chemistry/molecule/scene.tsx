@@ -130,20 +130,47 @@ export function MoleculeScene({
             />
           ))
         : null}
-      {Arr.map(molecule.atoms, (atom) => (
-        <ThreeLabel
-          anchorY="bottom"
-          color={colors.text}
-          fontSize="compact"
-          gap={atomRadius(atom.element, style) + 0.06}
-          key={`label-${atom.element}-${atom.position[0]},${atom.position[1]},${atom.position[2]}`}
-          position={atom.position}
-        >
-          <InlineMath math={`\\mathrm{${atom.element}}`} />
-        </ThreeLabel>
-      ))}
+      {Arr.map(molecule.atoms, (atom) => {
+        const radius = atomRadius(atom.element, style);
+        const placement = atomLabelPosition(atom.position, radius);
+        return (
+          <ThreeLabel
+            anchorY={placement.anchorY}
+            color={colors.text}
+            fontSize="compact"
+            key={`label-${atom.element}-${atom.position[0]},${atom.position[1]},${atom.position[2]}`}
+            position={placement.position}
+          >
+            <InlineMath math={`\\mathrm{${atom.element}}`} />
+          </ThreeLabel>
+        );
+      })}
     </group>
   );
+}
+
+/**
+ * Places an atom's label radially outside the molecule so lower atoms never
+ * push their label upward onto a bond stick, while a centered atom sits above.
+ */
+function atomLabelPosition(position: Point, radius: number) {
+  const reach = length(position);
+  const clearance = radius + 0.14;
+  if (reach < 0.15) {
+    return {
+      anchorY: "bottom" as const,
+      position: [position[0], position[1] + clearance, position[2]] as const,
+    };
+  }
+  const outward = scale(position, clearance / reach);
+  return {
+    anchorY: "middle" as const,
+    position: [
+      position[0] + outward[0],
+      position[1] + outward[1],
+      position[2] + outward[2],
+    ] as const,
+  };
 }
 
 /**

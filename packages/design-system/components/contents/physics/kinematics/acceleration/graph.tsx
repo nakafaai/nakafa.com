@@ -15,6 +15,7 @@ import {
   ChartTooltipContent,
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import { Array as Arr } from "effect";
+import { ReferenceLine } from "recharts";
 
 interface AccelerationGraphProps {
   selectedCase: AccelerationCase;
@@ -70,11 +71,11 @@ export function AccelerationGraph({ selectedCase }: AccelerationGraphProps) {
       <XAxis
         dataKey="time"
         domain={[0, MAX_TIME]}
-        height={56}
+        height={48}
         label={{
           value: labels.timeAxis,
-          position: "insideBottomRight",
-          offset: 8,
+          position: "insideBottom",
+          offset: 2,
         }}
         tickMargin={8}
         ticks={TIME_TICKS}
@@ -95,6 +96,24 @@ export function AccelerationGraph({ selectedCase }: AccelerationGraphProps) {
       <ChartTooltip
         content={<ChartTooltipContent labelFormatter={formatTooltipTime} />}
       />
+      <ReferenceLine
+        segment={[
+          { x: selectedCase.t0, y: 0 },
+          { x: selectedCase.t0, y: selectedCase.v0 },
+        ]}
+        stroke={selectedCase.color}
+        strokeDasharray="4 4"
+        strokeOpacity={0.45}
+      />
+      <ReferenceLine
+        segment={[
+          { x: selectedCase.t1, y: 0 },
+          { x: selectedCase.t1, y: selectedCase.v1 },
+        ]}
+        stroke={selectedCase.color}
+        strokeDasharray="4 4"
+        strokeOpacity={0.45}
+      />
       <Line
         dataKey="motion"
         lineProps={{
@@ -113,10 +132,10 @@ export function AccelerationGraph({ selectedCase }: AccelerationGraphProps) {
         key={selectedCase.id}
         lineProps={{
           data: selectedData,
-          dot: { r: 3.5 },
+          dot: { r: 4.5, strokeWidth: 2 },
           name: labels.scenarioNames[selectedCase.id],
           strokeLinecap: "round",
-          strokeWidth: 3,
+          strokeWidth: 3.25,
         }}
       />
     </EvilLineChart>

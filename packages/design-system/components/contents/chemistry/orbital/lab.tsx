@@ -1,4 +1,4 @@
-import { Line, PointMaterial, Points } from "@react-three/drei";
+import { PointMaterial, Points } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import type { OrbitalId } from "@repo/design-system/components/contents/chemistry/orbital/wave";
 import {
@@ -10,11 +10,13 @@ import {
   sampleCloud,
   waveGrid,
 } from "@repo/design-system/components/contents/chemistry/orbital/wave";
+import { useInvalidateOnChange } from "@repo/design-system/components/contents/simulation/clock";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { Axes } from "@repo/design-system/components/three/axes";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
-import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import { Origin } from "@repo/design-system/components/three/origin";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -34,6 +36,8 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { getColor } from "@repo/design-system/lib/color";
 import { isMobileDevice } from "@repo/design-system/lib/device";
 import { AXIS_COLORS, PLOT_COLORS } from "@repo/design-system/lib/plot";
+import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr, Option, Schema } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useEffect, useMemo, useState } from "react";
@@ -46,17 +50,17 @@ const BOHR = 0.17;
 /** How many candidate points the faint cloud inside the surface is sampled from, by device. */
 const CANDIDATES = { desktop: 160_000, phone: 60_000 } as const;
 
-/** How much brighter than white a cloud's points glow, so the finish's bloom catches them. */
-const GLOW = 1.4;
+/** How much brighter than base color a cloud's points glow in each theme. */
+const GLOW = { dark: 1.35, light: 0.92 } as const;
 
 /** The share of the electron's probability the drawn surface holds, as chemistry books draw an orbital. */
 const BOUNDARY_SHARE = 0.9;
 
 /** How many grid cells a side the boundary surface is traced through, by device. */
-const SURFACE_CELLS = { desktop: 64, phone: 44 } as const;
+const SURFACE_CELLS = { desktop: 72, phone: 48 } as const;
 
 /** The most triangles one lobe's surface may take, enough for a d lobe at the finest grid. */
-const SURFACE_TRIANGLES = 80_000;
+const SURFACE_TRIANGLES = 120_000;
 
 /** The words an orbital lab reads from its lesson. */
 interface OrbitalLabels {
@@ -149,7 +153,7 @@ export function OrbitalCloudLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage reach={widest + 0.5} setting="space">
+        <ScienceStage reach={widest + 0.8} setting="studio">
           <Suspense>
             <OrbitalCamera reach={widest} />
             <OrbitalCloud id={shown} />
@@ -192,6 +196,9 @@ export function OrbitalCloudLab({
  * nucleus.
  */
 function OrbitalCloud({ id }: { readonly id: OrbitalId }) {
+  useInvalidateOnChange(id);
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
+  const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
   const phone = isMobileDevice();
   const cells = phone ? SURFACE_CELLS.phone : SURFACE_CELLS.desktop;
   const surface = useMemo(() => {
@@ -211,13 +218,14 @@ function OrbitalCloud({ id }: { readonly id: OrbitalId }) {
       })
     );
   }, [cells, id]);
+  const glow = isDarkTheme ? GLOW.dark : GLOW.light;
   const geometry = useMemo(() => {
     const cloud = sampleCloud(
       id,
       phone ? CANDIDATES.phone : CANDIDATES.desktop
     );
-    const plus = new Color(PLOT_COLORS.amber).multiplyScalar(GLOW);
-    const minus = new Color(PLOT_COLORS.violet).multiplyScalar(GLOW);
+    const plus = new Color(PLOT_COLORS.amber).multiplyScalar(glow);
+    const minus = new Color(PLOT_COLORS.violet).multiplyScalar(glow);
     return {
       colors: Float32Array.from(
         Arr.flatMap(cloud, (point) =>
@@ -230,7 +238,7 @@ function OrbitalCloud({ id }: { readonly id: OrbitalId }) {
         )
       ),
     };
-  }, [id, phone]);
+  }, [glow, id, phone]);
 
   return (
     <group>
@@ -247,8 +255,8 @@ function OrbitalCloud({ id }: { readonly id: OrbitalId }) {
       <Points colors={geometry.colors} key={id} positions={geometry.positions}>
         <PointMaterial
           depthWrite={false}
-          opacity={0.35}
-          size={0.018}
+          opacity={isDarkTheme ? 0.42 : 0.48}
+          size={0.02}
           sizeAttenuation
           toneMapped={false}
           transparent
@@ -256,11 +264,12 @@ function OrbitalCloud({ id }: { readonly id: OrbitalId }) {
         />
       </Points>
       <mesh>
-        <sphereGeometry args={[0.035, 24, 16]} />
+        <sphereGeometry args={[0.045, 28, 20]} />
         <meshStandardMaterial
-          color={getColor("WHITE")}
-          emissive={getColor("WHITE")}
-          emissiveIntensity={3}
+          color={isDarkTheme ? getColor("WHITE") : getColor("SLATE", 800)}
+          emissive={isDarkTheme ? getColor("WHITE") : PLOT_COLORS.amber}
+          emissiveIntensity={isDarkTheme ? 2.4 : 0.6}
+          roughness={0.2}
         />
       </mesh>
     </group>
@@ -290,11 +299,13 @@ function OrbitalLobe({
       cells,
       new MeshPhysicalMaterial({
         clearcoat: 1,
-        clearcoatRoughness: 0.08,
+        clearcoatRoughness: 0.06,
         color,
         depthWrite: false,
-        opacity: 0.5,
-        roughness: 0.18,
+        envMapIntensity: 1.35,
+        metalness: 0.04,
+        opacity: 0.6,
+        roughness: 0.14,
         side: DoubleSide,
         transparent: true,
       }),
@@ -319,40 +330,60 @@ function OrbitalLobe({
   return <primitive object={shell} scale={size} />;
 }
 
-/** Three faint axes through the nucleus, x red, y green, z blue, to read a lobe's direction. */
+/**
+ * Shared Cartesian coordinate axes through the nucleus (`Axes`), with
+ * directional cones at the orbital's outer reach and a faint equatorial ring
+ * so nodal planes and lobe alignment read clearly from any angle.
+ */
 function OrbitalAxes({ reach }: { readonly reach: number }) {
-  const axes = [
-    { color: AXIS_COLORS.x, end: [reach, 0, 0], name: "x" },
-    { color: AXIS_COLORS.y, end: [0, reach, 0], name: "y" },
-    { color: AXIS_COLORS.z, end: [0, 0, reach], name: "z" },
+  const tipDistance = reach * 0.96;
+  const coneRadius = Math.max(0.032, reach * 0.018);
+  const coneHeight = coneRadius * 3.1;
+  const tips = [
+    {
+      color: AXIS_COLORS.x,
+      name: "x",
+      position: [tipDistance, 0, 0] as const,
+      rotation: [0, 0, -Math.PI / 2] as const,
+    },
+    {
+      color: AXIS_COLORS.y,
+      name: "y",
+      position: [0, tipDistance, 0] as const,
+      rotation: [0, 0, 0] as const,
+    },
+    {
+      color: AXIS_COLORS.z,
+      name: "z",
+      position: [0, 0, tipDistance] as const,
+      rotation: [Math.PI / 2, 0, 0] as const,
+    },
   ] as const;
 
   return (
-    <group>
-      {Arr.map(axes, (axis) => (
-        <group key={axis.name}>
-          <Line
-            color={axis.color}
-            lineWidth={0.8}
-            opacity={0.3}
-            points={[
-              [-axis.end[0], -axis.end[1], -axis.end[2]],
-              [axis.end[0], axis.end[1], axis.end[2]],
-            ]}
-            transparent
+    <CameraBounds exclude>
+      <Axes reach={Math.max(reach * 1.25, 3.2)} showLabels showZAxis />
+      <Origin color={PLOT_COLORS.slate} size={0.05} />
+      {Arr.map(tips, (tip) => (
+        <mesh key={tip.name} position={tip.position} rotation={tip.rotation}>
+          <coneGeometry args={[coneRadius, coneHeight, 20]} />
+          <meshStandardMaterial
+            color={tip.color}
+            roughness={0.32}
+            toneMapped={false}
           />
-          <ThreeLabel
-            color={axis.color}
-            fontSize="compact"
-            outlineColor={ORIGIN_COLOR.DARK}
-            outlineWidth={0.03}
-            position={axis.end}
-          >
-            <InlineMath math={axis.name} />
-          </ThreeLabel>
-        </group>
+        </mesh>
       ))}
-    </group>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[reach * 0.85, 0.006, 12, 96]} />
+        <meshBasicMaterial
+          color={PLOT_COLORS.slate}
+          depthWrite={false}
+          opacity={0.18}
+          transparent
+        />
+      </mesh>
+    </CameraBounds>
   );
 }
 
@@ -360,14 +391,15 @@ function OrbitalAxes({ reach }: { readonly reach: number }) {
 function OrbitalCamera({ reach }: { readonly reach: number }) {
   const size = useThree((state) => state.size);
   const narrow = size.width < size.height * 1.2;
-  const distance = reach * (narrow ? 3.4 : 2.7);
+  const distance = reach * (narrow ? 3.6 : 2.95);
   return (
     <CameraControls
-      cameraPosition={[distance * 0.55, distance * 0.35, distance * 0.76]}
+      cameraPosition={[distance * 0.56, distance * 0.36, distance * 0.74]}
       cameraTarget={[0, 0, 0]}
       fov={40}
-      maxDistance={distance * 2}
-      minDistance={reach * 0.6}
+      maxDistance={distance * 2.2}
+      minDistance={reach * 0.65}
+      orbitOnPlay
     />
   );
 }
