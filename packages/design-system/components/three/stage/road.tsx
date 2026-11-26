@@ -7,7 +7,10 @@ import {
 import {
   GROUND_REACHES,
   groundTexture,
+  HORIZON_FADE_INNER,
+  HORIZON_FADE_OUTER,
   useGround,
+  useHorizonFade,
 } from "@repo/design-system/components/three/stage/terrain";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
@@ -73,6 +76,10 @@ export function Road({
   );
 
   const paint = getColor("ZINC", 100);
+  const horizonFade = useHorizonFade(
+    HORIZON_FADE_INNER * reach,
+    HORIZON_FADE_OUTER * reach
+  );
 
   return (
     <CameraBounds exclude>
@@ -82,6 +89,7 @@ export function Road({
             key={side}
             position={[0, side * width * 0.675, LAYER]}
             receiveShadow
+            renderOrder={-8}
           >
             <planeGeometry args={[length, width * 0.35]} />
             <meshStandardMaterial
@@ -90,28 +98,34 @@ export function Road({
               bumpScale={0.8}
               depthWrite={false}
               map={shoulder.map}
+              ref={horizonFade}
               roughness={0.96}
               transparent
             />
           </mesh>
         ))}
-        <mesh position={[0, 0, LAYER * 2]} receiveShadow>
+        <mesh position={[0, 0, LAYER * 2]} receiveShadow renderOrder={-7}>
           <planeGeometry args={[length, width]} />
           <meshStandardMaterial
             aoMap={asphalt.patches}
             aoMapIntensity={0.8}
             bumpMap={asphalt.bump}
             bumpScale={0.35}
+            depthWrite
             map={asphalt.map}
+            ref={horizonFade}
             roughness={0.86}
+            transparent
           />
         </mesh>
-        <mesh position={[0, 0, LAYER * 3]} receiveShadow>
+        <mesh position={[0, 0, LAYER * 3]} receiveShadow renderOrder={-6}>
           <planeGeometry args={[length, LINE_WIDTH]} />
           <meshStandardMaterial
             alphaMap={marks.dashes}
             alphaTest={0.5}
             color={paint}
+            depthWrite={false}
+            ref={horizonFade}
             roughness={0.7}
             transparent
           />
@@ -119,16 +133,30 @@ export function Road({
         <mesh
           position={[0, width / 2 - LINE_WIDTH * 1.6, LAYER * 3]}
           receiveShadow
+          renderOrder={-6}
         >
           <planeGeometry args={[length, LINE_WIDTH]} />
-          <meshStandardMaterial color={paint} roughness={0.7} />
+          <meshStandardMaterial
+            color={paint}
+            depthWrite={false}
+            ref={horizonFade}
+            roughness={0.7}
+            transparent
+          />
         </mesh>
         <mesh
           position={[0, -width / 2 + LINE_WIDTH * 1.6, LAYER * 3]}
           receiveShadow
+          renderOrder={-6}
         >
           <planeGeometry args={[length, LINE_WIDTH]} />
-          <meshStandardMaterial color={paint} roughness={0.7} />
+          <meshStandardMaterial
+            color={paint}
+            depthWrite={false}
+            ref={horizonFade}
+            roughness={0.7}
+            transparent
+          />
         </mesh>
       </group>
     </CameraBounds>

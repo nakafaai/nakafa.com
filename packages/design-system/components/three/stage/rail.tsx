@@ -7,7 +7,10 @@ import {
 import {
   GROUND_REACHES,
   groundTexture,
+  HORIZON_FADE_INNER,
+  HORIZON_FADE_OUTER,
   useGround,
+  useHorizonFade,
 } from "@repo/design-system/components/three/stage/terrain";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
@@ -61,11 +64,16 @@ export function Rail({
     [marks]
   );
 
+  const horizonFade = useHorizonFade(
+    HORIZON_FADE_INNER * reach,
+    HORIZON_FADE_OUTER * reach
+  );
+
   return (
     <CameraBounds exclude>
       <group position={[0, floor, 0]}>
         <group rotation={[-Math.PI / 2, 0, 0]}>
-          <mesh position={[0, 0, LAYER]} receiveShadow>
+          <mesh position={[0, 0, LAYER]} receiveShadow renderOrder={-8}>
             <planeGeometry args={[length, bed]} />
             <meshStandardMaterial
               alphaMap={marks.verge}
@@ -73,16 +81,19 @@ export function Rail({
               bumpScale={0.9}
               depthWrite={false}
               map={ballast.map}
+              ref={horizonFade}
               roughness={0.97}
               transparent
             />
           </mesh>
-          <mesh position={[0, 0, LAYER * 2]} receiveShadow>
+          <mesh position={[0, 0, LAYER * 2]} receiveShadow renderOrder={-7}>
             <planeGeometry args={[length, gauge * 1.9]} />
             <meshStandardMaterial
               alphaMap={marks.sleepers}
               alphaTest={0.5}
               color={getColor("STONE", 600)}
+              depthWrite={false}
+              ref={horizonFade}
               roughness={0.9}
               transparent
             />
@@ -94,14 +105,18 @@ export function Rail({
             key={side}
             position={[0, (gauge * RAIL_HEIGHT) / 2, (side * gauge) / 2]}
             receiveShadow
+            renderOrder={-6}
           >
             <boxGeometry
               args={[length, gauge * RAIL_HEIGHT, gauge * RAIL_WIDTH]}
             />
             <meshStandardMaterial
               color={getColor("SLATE", 400)}
+              depthWrite
               metalness={0.6}
+              ref={horizonFade}
               roughness={0.32}
+              transparent
             />
           </mesh>
         ))}

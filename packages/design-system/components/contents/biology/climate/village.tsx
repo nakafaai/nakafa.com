@@ -7,6 +7,7 @@ import type { Placement } from "@repo/design-system/components/contents/biology/
 import { Instances } from "@repo/design-system/components/contents/biology/instances";
 import { useBumpySphere } from "@repo/design-system/components/contents/biology/surface";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
+import { useHorizonFade } from "@repo/design-system/components/three/stage/terrain";
 import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
@@ -212,10 +213,12 @@ export function Sea({
   readonly reach?: number | undefined;
 }) {
   const seaward = -340;
+  const horizonFade = useHorizonFade(85, 220);
   return (
     <mesh
       position={[(seaward + reach) / 2, level, 0]}
       receiveShadow
+      renderOrder={-10}
       rotation={[-Math.PI / 2, 0, 0]}
     >
       <planeGeometry args={[reach - seaward, COAST]} />
@@ -223,7 +226,9 @@ export function Sea({
         clearcoat={1}
         clearcoatRoughness={0.1}
         color={ECOLOGY_COLORS.seawater}
+        depthWrite
         opacity={0.9}
+        ref={horizonFade}
         roughness={0.12}
         transparent
       />

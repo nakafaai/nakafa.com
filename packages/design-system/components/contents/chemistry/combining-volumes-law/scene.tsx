@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import type {
   CombiningVolumesElement,
   CombiningVolumesGasModel,
@@ -19,6 +18,7 @@ import {
   ChemistryParticleLabel,
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/label";
+import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { useSimulationClock } from "@repo/design-system/components/contents/simulation/clock";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow";
@@ -128,12 +128,7 @@ export function CombiningVolumesScene({
     >
       <group position={[0, 0.08, 0]} scale={SCENE_SCALE}>
         <CameraBounds exclude>
-          <group
-            position={[0, TUBE_BASE_Y - 0.036, 0.34]}
-            scale={[2.6, 2.4, 3.8]}
-          >
-            <LabBench width={2.8} />
-          </group>
+          <SeamlessBenchSurface radius={20} y={TUBE_BASE_Y - 0.036} />
         </CameraBounds>
         <ThreeLabel
           anchorY="bottom"
