@@ -370,7 +370,7 @@ function ThreeCanvasComponent({
           className={cn("size-full", !drawn && "pointer-events-none opacity-0")}
         >
           <CanvasQualityProvider degraded={postprocessingDegraded}>
-            <SceneOverlayProvider>
+            <SceneOverlayProvider key={mountKey}>
               <ErrorBoundary
                 fallbackRender={() => null}
                 key={mountKey}

@@ -1,9 +1,13 @@
+import { captureException } from "@repo/analytics/posthog/capture";
+import { SceneFailure } from "@repo/design-system/components/three/failure";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { VisualCardNoteProvider } from "@repo/design-system/components/visual/card";
 import { untilNearScreen } from "@repo/design-system/lib/screen";
 import { useHydrated } from "@tanstack/react-router";
 import { Deferred, Effect, Exit, Fiber, Option } from "effect";
 import type { ComponentType, ReactNode } from "react";
 import { Activity, Suspense, use, useEffect, useRef, useState } from "react";
+import { isStaleChunkError } from "@/lib/chunks/stale";
 import { SETTLED_RENDERER } from "@/lib/static/settle";
 
 /** How far past the screen a visual of a served lesson starts to hydrate, as a share of the screen. */
@@ -36,6 +40,29 @@ function UntilNearScreen({
     use(wait.value.reached);
   }
   return children;
+}
+
+/**
+ * Isolates a failing interactive visual inside its own card frame so one
+ * broken 3D scene, sketch, or chart never crashes the surrounding lesson into
+ * a full-page error screen. Stale deploy chunks re-throw so the route boundary
+ * reloads once onto the active deploy.
+ */
+function VisualBoundaryFallback({
+  error,
+  resetErrorBoundary,
+}: {
+  readonly error: unknown;
+  readonly resetErrorBoundary: () => void;
+}) {
+  if (isStaleChunkError(error)) {
+    throw error;
+  }
+  return (
+    <div className="bg-card relative my-6 min-h-64 w-full overflow-hidden rounded-xl border">
+      <SceneFailure onRestart={resetErrorBoundary} />
+    </div>
+  );
 }
 
 /**
@@ -101,13 +128,26 @@ export function withHydrationBoundary<P extends object>(
     return (
       <VisualCardNoteProvider note={props.footer}>
         <div ref={box}>
-          <Activity mode="visible">
-            <Suspense fallback={null}>
-              <UntilNearScreen wait={wait}>
-                <Renderer {...props} />
-              </UntilNearScreen>
-            </Suspense>
-          </Activity>
+          <ErrorBoundary
+            FallbackComponent={VisualBoundaryFallback}
+            onError={(error, info) => {
+              if (!isStaleChunkError(error)) {
+                captureException(error, {
+                  component_stack: info.componentStack,
+                  source: "visual-hydration-boundary",
+                });
+              }
+            }}
+            report={false}
+          >
+            <Activity mode="visible">
+              <Suspense fallback={null}>
+                <UntilNearScreen wait={wait}>
+                  <Renderer {...props} />
+                </UntilNearScreen>
+              </Suspense>
+            </Activity>
+          </ErrorBoundary>
         </div>
       </VisualCardNoteProvider>
     );

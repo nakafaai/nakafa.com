@@ -9,6 +9,55 @@ const SCRATCH_CAMERA_DIR = new Vector3();
 const SCRATCH_OFFSET = new Vector3();
 
 /**
+ * Whether a canvas has a positive finite box that can project 3D world anchors
+ * into overlay coordinates. A zero-sized frame before layout settles would
+ * project every anchor onto the top-left corner `(0, 0)`.
+ */
+export function hasRenderableOverlaySize(
+  size: Pick<Size, "height" | "width">
+): boolean {
+  return (
+    Number.isFinite(size.width) &&
+    Number.isFinite(size.height) &&
+    size.width > 0 &&
+    size.height > 0
+  );
+}
+
+/**
+ * Whether an overlay label needs a fresh DOM style write, either because its
+ * DOM frame has never been placed yet or because its projected position,
+ * visibility, scale, or camera zoom changed past `tolerance`.
+ */
+export function hasOverlayPlacementChanged(
+  last: {
+    readonly scale: number;
+    readonly visible: boolean;
+    readonly x: number;
+    readonly y: number;
+    readonly zoom: number;
+  },
+  next: {
+    readonly scale: number;
+    readonly visible: boolean;
+    readonly wasPlaced: boolean;
+    readonly x: number;
+    readonly y: number;
+    readonly zoom: number;
+  },
+  tolerance: number
+): boolean {
+  return (
+    !next.wasPlaced ||
+    last.visible !== next.visible ||
+    Math.abs(last.zoom - next.zoom) > tolerance ||
+    Math.abs(last.scale - next.scale) > tolerance ||
+    Math.abs(last.x - next.x) > tolerance ||
+    Math.abs(last.y - next.y) > tolerance
+  );
+}
+
+/**
  * Projects a world point to CSS pixels with the origin at the top left of the
  * canvas. Points behind a perspective camera project to mirrored positions,
  * and the caller hides them with `isBehindCamera`.

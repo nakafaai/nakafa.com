@@ -1,6 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Size } from "@react-three/fiber";
 import {
+  hasOverlayPlacementChanged,
+  hasRenderableOverlaySize,
   isBehindCamera,
   isNearerThanHit,
   objectScale,
@@ -196,5 +198,77 @@ describe("isNearerThanHit", () => {
 
   it("hides a label at the same distance as the hit", () => {
     expect(isNearerThanHit(5, 5)).toBe(false);
+  });
+});
+
+describe("hasRenderableOverlaySize", () => {
+  it("accepts positive finite dimensions", () => {
+    expect(hasRenderableOverlaySize({ height: 358, width: 358 })).toBe(true);
+  });
+
+  it("rejects zero, negative, or non-finite dimensions", () => {
+    expect(hasRenderableOverlaySize({ height: 358, width: 0 })).toBe(false);
+    expect(hasRenderableOverlaySize({ height: 0, width: 358 })).toBe(false);
+    expect(hasRenderableOverlaySize({ height: -10, width: 358 })).toBe(false);
+    expect(hasRenderableOverlaySize({ height: 358, width: Number.NaN })).toBe(
+      false
+    );
+    expect(
+      hasRenderableOverlaySize({ height: Number.POSITIVE_INFINITY, width: 358 })
+    ).toBe(false);
+  });
+});
+
+describe("hasOverlayPlacementChanged", () => {
+  const base = { scale: 1, visible: true, x: 100, y: 50, zoom: 1 };
+
+  it("always writes when the DOM frame has not been placed yet", () => {
+    expect(
+      hasOverlayPlacementChanged(base, { ...base, wasPlaced: false }, 0.001)
+    ).toBe(true);
+  });
+
+  it("skips writes when every field stays within tolerance", () => {
+    expect(
+      hasOverlayPlacementChanged(base, { ...base, wasPlaced: true }, 0.001)
+    ).toBe(false);
+  });
+
+  it("writes when visibility, zoom, scale, x, or y changes past tolerance", () => {
+    expect(
+      hasOverlayPlacementChanged(
+        base,
+        { ...base, visible: false, wasPlaced: true },
+        0.001
+      )
+    ).toBe(true);
+    expect(
+      hasOverlayPlacementChanged(
+        base,
+        { ...base, wasPlaced: true, zoom: 1.01 },
+        0.001
+      )
+    ).toBe(true);
+    expect(
+      hasOverlayPlacementChanged(
+        base,
+        { ...base, scale: 0.5, wasPlaced: true },
+        0.001
+      )
+    ).toBe(true);
+    expect(
+      hasOverlayPlacementChanged(
+        base,
+        { ...base, wasPlaced: true, x: 101 },
+        0.001
+      )
+    ).toBe(true);
+    expect(
+      hasOverlayPlacementChanged(
+        base,
+        { ...base, wasPlaced: true, y: 51 },
+        0.001
+      )
+    ).toBe(true);
   });
 });

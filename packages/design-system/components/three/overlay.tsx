@@ -1,6 +1,8 @@
 import type { Size } from "@react-three/fiber";
 import { useFrame, useThree } from "@react-three/fiber";
 import {
+  hasOverlayPlacementChanged,
+  hasRenderableOverlaySize,
   isBehindCamera,
   isNearerThanHit,
   objectScale,
@@ -128,7 +130,13 @@ function OverlayLabel({ item }: { item: OverlayItem }) {
   return (
     <div
       ref={attachFrame}
-      style={{ position: "absolute", top: 0, left: 0, transformOrigin: "0 0" }}
+      style={{
+        left: 0,
+        position: "absolute",
+        top: 0,
+        transformOrigin: "0 0",
+        visibility: "hidden",
+      }}
     >
       <div ref={ref} style={{ position: "absolute", ...style }}>
         {children}
@@ -208,6 +216,7 @@ function isUnobstructed(
 function writeOverlayPlacement(
   element: HTMLElement,
   last: {
+    scale: number;
     visible: boolean;
     x: number;
     y: number;
@@ -217,20 +226,26 @@ function writeOverlayPlacement(
   next: {
     scale: number;
     visible: boolean;
+    wasPlaced: boolean;
     x: number;
     y: number;
     zIndex: number | undefined;
     zoom: number;
   }
 ) {
-  if (next.visible !== last.visible) {
+  if (!next.wasPlaced || next.visible !== last.visible) {
     element.style.display = next.visible ? "block" : "none";
+    element.style.visibility = next.visible ? "visible" : "hidden";
   }
-  if (next.zIndex !== undefined && next.zIndex !== last.zIndex) {
+  if (
+    next.zIndex !== undefined &&
+    (!next.wasPlaced || next.zIndex !== last.zIndex)
+  ) {
     element.style.zIndex = `${next.zIndex}`;
   }
   element.style.transform = `translate3d(${next.x}px, ${next.y}px, 0) scale(${next.scale})`;
   return {
+    scale: next.scale,
     visible: next.visible,
     x: next.x,
     y: next.y,
@@ -256,14 +271,17 @@ export function SceneHtml({
 }: SceneHtmlProps) {
   const store = useSceneOverlayStore();
   const invalidate = useThree((state) => state.invalidate);
+  const canvasWidth = useThree((state) => state.size.width);
+  const canvasHeight = useThree((state) => state.size.height);
   const anchor = useRef<Group>(null);
-  // The placement the frame loop last wrote. drei caches the same four values.
+  // The placement the frame loop last wrote.
   const placement = useRef({
-    visible: true,
-    x: 0,
-    y: 0,
+    scale: Number.NaN,
+    visible: false,
+    x: Number.NaN,
+    y: Number.NaN,
     zIndex: Number.NaN,
-    zoom: 0,
+    zoom: Number.NaN,
   });
   const point = useMemo(() => new Vector3(), []);
 
@@ -293,11 +311,19 @@ export function SceneHtml({
     invalidate();
   }, [children, invalidate, ref, store, style]);
 
+  // Mobile browser chrome resizes and orientation changes shift projected
+  // screen coordinates; wake demand-rendered scenes so labels re-project.
+  useLayoutEffect(() => {
+    if (canvasWidth > 0 && canvasHeight > 0) {
+      invalidate();
+    }
+  }, [canvasHeight, canvasWidth, invalidate]);
+
   // Runs at the default priority, after the frame of a label that sets its
   // anchor's position at a negative priority.
   useFrame(({ camera, raycaster, scene, size }) => {
     const group = anchor.current;
-    if (!group) {
+    if (!(group && hasRenderableOverlaySize(size))) {
       return;
     }
     const element = Option.getOrUndefined(
@@ -311,28 +337,35 @@ export function SceneHtml({
     const [x, y] = calculatePosition
       ? calculatePosition(group, camera, size)
       : projectToOverlay(point, camera, size);
-    const wasPlaced = MutableHashSet.has(store.getState().placed, group.id);
-    // A non-finite x or y fails this test, so only a zoom change writes it, as in drei.
-    const last = placement.current;
-    const moved =
-      !wasPlaced ||
-      Math.abs(last.zoom - camera.zoom) > PLACEMENT_TOLERANCE ||
-      Math.abs(last.x - x) > PLACEMENT_TOLERANCE ||
-      Math.abs(last.y - y) > PLACEMENT_TOLERANCE;
-    if (!moved) {
+    if (!(Number.isFinite(x) && Number.isFinite(y))) {
       return;
     }
+    const wasPlaced = MutableHashSet.has(store.getState().placed, group.id);
     const visible =
       !isBehindCamera(point, camera) &&
       (!occlude || isUnobstructed(point, camera, raycaster, scene));
-    const zIndex = objectZIndex(point, camera, LABEL_Z_INDEX_RANGE);
     const scale =
       distanceFactor === undefined
         ? 1
         : objectScale(point, camera) * distanceFactor;
+    if (!Number.isFinite(scale)) {
+      return;
+    }
+    const last = placement.current;
+    if (
+      !hasOverlayPlacementChanged(
+        last,
+        { scale, visible, wasPlaced, x, y, zoom: camera.zoom },
+        PLACEMENT_TOLERANCE
+      )
+    ) {
+      return;
+    }
+    const zIndex = objectZIndex(point, camera, LABEL_Z_INDEX_RANGE);
     placement.current = writeOverlayPlacement(element, last, {
       scale,
       visible,
+      wasPlaced,
       x,
       y,
       zIndex,

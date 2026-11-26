@@ -95,7 +95,11 @@ export function P5Sketch<State>({
     keepPlaying(sketch);
     startPlaying();
     const resize = new ResizeObserver(([entry]) => {
-      if (entry) {
+      if (
+        entry &&
+        entry.contentRect.width > 0 &&
+        entry.contentRect.height > 0
+      ) {
         sketch.pixelDensity(resolveSketchPixelDensity());
         sketch.resizeCanvas(entry.contentRect.width, entry.contentRect.height);
         sketch.redraw();
