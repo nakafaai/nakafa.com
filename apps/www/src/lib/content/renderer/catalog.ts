@@ -3,8 +3,10 @@ import { Array as Arr } from "effect";
 import { baseRenderers } from "@/lib/content/renderer/registry/base";
 import { biologyRenderers } from "@/lib/content/renderer/registry/biology";
 import { botanyRenderers } from "@/lib/content/renderer/registry/botany";
+import { calculusRenderers } from "@/lib/content/renderer/registry/calculus";
 import { chemistryRenderers } from "@/lib/content/renderer/registry/chemistry";
 import { circuitRenderers } from "@/lib/content/renderer/registry/circuit";
+import { ecologyRenderers } from "@/lib/content/renderer/registry/ecology";
 import { electronicsRenderers } from "@/lib/content/renderer/registry/electronics";
 import { fieldRenderers } from "@/lib/content/renderer/registry/field";
 import { fluidRenderers } from "@/lib/content/renderer/registry/fluid";
@@ -32,10 +34,12 @@ export const catalogRenderers = [
   ...baseRenderers,
   ...biologyRenderers,
   ...botanyRenderers,
+  ...ecologyRenderers,
   ...geneticsRenderers,
   ...chemistryRenderers,
   ...synthesisRenderers,
   ...mathematicsRenderers,
+  ...calculusRenderers,
   ...physicsRenderers,
   ...circuitRenderers,
   ...electronicsRenderers,

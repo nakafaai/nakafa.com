@@ -1,0 +1,20 @@
+/** Physical palette for 3D linear methods, calculus, and vector labs. */
+export const CALCULUS_COLORS = {
+  amberAccent: "#f59e0b",
+  axisGray: "#64748b",
+  baseSlate: "#cbd5e1",
+  boxCraft: "#d97706",
+  cobaltCurve: "#2563eb",
+  cyanPlane: "#06b6d4",
+  emeraldSlope: "#10b981",
+  gridMuted: "#94a3b8",
+  indigoPrism: "#4f46e5",
+  labelInk: "#1e293b",
+  lightGround: "#e2e8f0",
+  lightSky: "#ffffff",
+  limeEnvelope: "#65a30d",
+  orangeCut: "#ea580c",
+  roseAlert: "#e11d48",
+  tealVector: "#0d9488",
+  violetNormal: "#7c3aed",
+} as const;
