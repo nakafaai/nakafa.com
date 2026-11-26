@@ -41,9 +41,11 @@ const TAKEN = { day: "numeric", month: "short", year: "numeric" } as const;
 function AttemptPart({
   children,
   className,
+  waiting,
 }: {
   children: ReactNode;
   className?: string;
+  waiting?: boolean;
 }) {
   const { view } = useSetPane();
   return (
@@ -52,6 +54,7 @@ function AttemptPart({
         "-mx-(--pane-end,1rem) flex flex-col gap-4 border-b px-(--pane-end,1rem) py-4 first:pt-0 last:border-b-0 last:pb-0",
         className
       )}
+      data-attempt-waiting={waiting ? "" : undefined}
     >
       <TryoutAttemptPicker
         attempt={view.actionAttempt}
@@ -209,7 +212,10 @@ function WaitingAttempt() {
     tCommon("date"),
   ];
   return (
-    <AttemptPart className="hidden has-[[data-attempt-picker]:not([hidden])]:flex">
+    <AttemptPart
+      className="hidden has-[[data-attempt-picker]:not([hidden])]:flex"
+      waiting
+    >
       <PaneFacts layout="grid">
         {Arr.map(labels, (label) => (
           <PaneFact key={label} label={label}>

@@ -279,6 +279,16 @@
 }
 
 /*
+ * While the waiting attempt section stays hidden (visitors and sets without a
+ * kept picker), the section right after it is the pane's first visible section
+ * and drops its top padding so logged-out and logged-in panes share one top rhythm.
+ */
+[data-attempt-waiting]:not(:has([data-attempt-picker]:not([hidden])))
+  + section {
+  padding-top: 0;
+}
+
+/*
  * A try-out track's first rows are the ones every visitor reads, so they can hold
  * no learner's progress. Under a signed-in hint their progress marks keep their
  * room and stay hidden until the learner's own rows replace them.

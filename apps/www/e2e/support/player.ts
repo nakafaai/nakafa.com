@@ -190,12 +190,13 @@ export const runFirstSection = Effect.fn("NakafaE2E.runFirstSection")(
       expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
     );
     yield* activate(
-      page.getByRole("complementary").locator("ol").getByRole("button").first(),
+      page.locator("ol button[data-part-step]").first(),
       hasTouch
     );
     yield* activate(
       page
         .getByRole("dialog")
+        .last()
         .getByRole("button", { exact: true, name: "Start" }),
       hasTouch
     );

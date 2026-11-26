@@ -158,9 +158,9 @@ const verifyOnePress = Effect.fn("NakafaE2E.verifyOnePressStart")(function* (
     expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
   );
   yield* Effect.promise(() => waitUntilTakenOver(start));
-  yield* activate(page.locator("ol").getByRole("button").first(), hasTouch);
+  yield* activate(page.locator("ol button[data-part-step]").first(), hasTouch);
   yield* activate(
-    page.getByRole("dialog").getByRole("button", {
+    page.getByRole("dialog").last().getByRole("button", {
       exact: true,
       name: target.messages.Tryouts.action["start-cta"],
     }),
@@ -450,9 +450,10 @@ test("a press while the learner read is pending resumes the running section it b
             timeout: readinessTimeoutMilliseconds,
           });
           await waitUntilTakenOver(start);
-          await page.locator("ol").getByRole("button").first().click();
+          await page.locator("ol button[data-part-step]").first().click();
           await page
             .getByRole("dialog")
+            .last()
             .getByRole("button", {
               exact: true,
               name: messages.action["start-cta"],

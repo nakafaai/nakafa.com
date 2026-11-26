@@ -75,17 +75,16 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
   // the order they were sent, so it stores this choice first.
   yield* openTrack(page, hasTouch);
 
-  // Starting from the public set locks the shell only with the attempt's first
-  // section, which the start opens running. A set nobody has started opens
-  // beside the track's table, where the player suites press its Start, so this
-  // walk opens the set's own page by its address.
+  // Starting from the public set's footer opens the unlocked 24-hour Attempt
+  // Lobby on the set page with zero running section clocks, so the learner can
+  // pick which part to start and when.
   const start = page.getByRole("button", { exact: true, name: "Start" });
   yield* Effect.promise(() => page.goto(setHref, { waitUntil: "commit" }));
   yield* arrive(page, onPath(setHref), start);
   yield* Effect.promise(() => waitForQuiet(page));
   yield* observeStep(
     page,
-    [false, true],
+    [false],
     Effect.gen(function* () {
       yield* Effect.promise(() =>
         expect(start).toBeEnabled({ timeout: readinessTimeoutMilliseconds })
@@ -93,6 +92,31 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
       yield* activate(start, hasTouch);
       yield* activate(
         page.getByRole("dialog").getByRole("button", { name: "Start free" }),
+        hasTouch
+      );
+      yield* arrive(
+        page,
+        (url) => isSet(url.pathname) && url.searchParams.has("attemptId"),
+        page.locator('ol button[data-part-step="next"]').first()
+      );
+    })
+  );
+
+  // Starting a chosen part from the lobby locks the shell while its timed
+  // section runs in the player.
+  yield* observeStep(
+    page,
+    [false, true],
+    Effect.gen(function* () {
+      yield* activate(
+        page.locator('ol button[data-part-step="next"]').first(),
+        hasTouch
+      );
+      yield* activate(
+        page.getByRole("dialog").getByRole("button", {
+          exact: true,
+          name: "Start",
+        }),
         hasTouch
       );
       yield* arriveLocked(page, isSection);
@@ -124,8 +148,9 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     expect(reloaded.marked).toBe(false);
   });
 
-  // Finishing the section returns to the attempt's set, still locked.
-  yield* observeStep(page, [true], finishSection(page, hasTouch));
+  // Finishing the section returns to the attempt's set lobby and unlocks the
+  // shell so the learner can breathe or navigate freely between parts.
+  yield* observeStep(page, [true, false], finishSection(page, hasTouch));
   const attemptSearch = new URL(page.url()).search;
 
   // A completed part of an in-progress attempt opens its info dialog right in the pane (never a card-only page),
@@ -156,7 +181,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
   });
   yield* observeStep(
     page,
-    [true],
+    [false],
     Effect.gen(function* () {
       yield* pressPart("done", (dialog) =>
         expect(
@@ -171,16 +196,16 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     })
   );
 
-  // Closing the set's pane leaves for the track, which unlocks the shell together with the new page: a press on
-  // the open set's row beside the table, or Escape, which closes the drawer a phone shows the pane in.
-  // The running set's row in the table: every row links the set's own address, which moves to the attempt's.
+  // Closing the set's pane leaves for the track while keeping the shell
+  // unlocked: a press on the open set's row beside the table, or Escape,
+  // which closes the drawer a phone shows the pane in.
   const runningRow = page
     .getByRole("table")
     .locator(`a[href="${setHref}"], a[href^="${setHref}?"]`)
     .first();
   yield* observeStep(
     page,
-    [true, false],
+    [false],
     Effect.gen(function* () {
       if (hasTouch) {
         yield* Effect.promise(() => page.keyboard.press("Escape"));
@@ -194,14 +219,17 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     })
   );
 
-  // The running set's row opens the attempt: the track stays on screen until
-  // the locked set is ready, at the attempt's address.
+  // The running set's row reopens the unlocked lobby at the attempt's address.
   const reopened = yield* observeStep(
     page,
-    [false, true],
+    [false],
     Effect.gen(function* () {
       yield* activate(runningRow, hasTouch);
-      yield* arriveLocked(page, isSet);
+      yield* arrive(
+        page,
+        (url) => isSet(url.pathname) && url.searchParams.has("attemptId"),
+        page.locator('ol button[data-part-step="next"]').first()
+      );
     })
   );
   yield* Effect.sync(() => {
@@ -209,28 +237,35 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     expect(new URL(page.url()).searchParams.has("attemptId")).toBe(true);
   });
 
-  // Visiting a completed section's URL directly while its set still runs redirects straight back to the set pane.
+  // Visiting a completed section's URL directly while its set still runs redirects straight back to the set lobby.
   yield* Effect.promise(async () => {
     await waitForLoadsSettled(page);
     await page.goto(`${startedSection}${attemptSearch}`, {
       waitUntil: "commit",
     });
   });
-  yield* arriveLocked(page, isSet);
+  yield* arrive(
+    page,
+    (url) => isSet(url.pathname) && url.searchParams.has("attemptId"),
+    page.locator('ol button[data-part-step="next"]').first()
+  );
   yield* Effect.sync(() => {
     expect(new URL(page.url()).searchParams.has("attemptId")).toBe(true);
   });
 
-  // The public set URL of a running attempt moves to the attempt's address,
-  // with its heading in every frame and one change to the locked shell.
+  // The public set URL of an attempt in its lobby moves to the attempt's
+  // address with its heading in every frame and the shell unlocked.
   yield* Effect.promise(async () => {
     await waitForLoadsSettled(page);
     await page.goto(setHref, { waitUntil: "commit" });
   });
+  yield* arrive(
+    page,
+    (url) => isSet(url.pathname) && url.searchParams.has("attemptId"),
+    page.locator('ol button[data-part-step="next"]').first()
+  );
   yield* Effect.promise(() =>
-    expect(page.locator(LOCKED_SHELL)).toBeAttached({
-      timeout: readinessTimeoutMilliseconds,
-    })
+    expect(page.locator(LOCKED_SHELL)).toHaveCount(0)
   );
   yield* Effect.promise(() => waitForQuiet(page));
   const direct = yield* readShellObservation(page, 0);
@@ -240,8 +275,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     expect(direct.shells).toBe(1);
     expect(direct.layoutShifts).toEqual([]);
     expect(direct.marked).toBe(false);
-    // Locked from the first painted frame, or after the catalog view once.
-    expect([[true], [false, true]]).toContainEqual(direct.locks);
+    expect(direct.locks).toEqual([false]);
   });
 });
 
