@@ -53,10 +53,11 @@ export function readAnatomy(page: Page) {
       if (child === header || child.contains(header)) {
         return true;
       }
+      const tablist = child.querySelector('[role="tablist"]');
       return (
-        child.querySelector('[role="tablist"]') !== null &&
+        tablist !== null &&
         Math.abs(
-          child.getBoundingClientRect().top -
+          tablist.getBoundingClientRect().top -
             header.getBoundingClientRect().bottom
         ) <= tolerance
       );

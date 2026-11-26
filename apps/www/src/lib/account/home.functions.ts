@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { Schema } from "effect";
-import { ChatInput, LocaleInput } from "@/lib/account/input";
+import { ChatInput } from "@/lib/account/input";
 
 /** The chat sidebar that every chat page shows. */
 export const chatSidebarScreenFn = createServerFn({ method: "GET" }).handler(
@@ -18,14 +18,4 @@ export const chatScreenFn = createServerFn({ method: "GET" })
   .handler(async (options) => {
     const { chatScreenHandler } = await import("@/lib/account/home.server");
     return chatScreenHandler(options);
-  });
-
-/** Notifications: the first page of the inbox and the inbox head. */
-export const notificationsScreenFn = createServerFn({ method: "GET" })
-  .validator(Schema.toStandardSchemaV1(LocaleInput))
-  .handler(async (options) => {
-    const { notificationsScreenHandler } = await import(
-      "@/lib/account/home.server"
-    );
-    return notificationsScreenHandler(options);
   });

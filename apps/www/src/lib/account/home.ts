@@ -6,69 +6,18 @@ import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import progress from "@repo/backend/confect/_generated/refs/progress";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Locale } from "@repo/internationalization/src/locale";
-import { ConvexHttpClient } from "convex/browser";
 import { Array as Arr, Clock, Effect, Option } from "effect";
 import { createTranslator } from "use-intl/core";
 import { progressSummary } from "@/components/progress/level";
-import { clientEnv } from "@/env.public";
+import {
+  readAccountOptional,
+  resolveAccountClient,
+} from "@/lib/account/client";
 import type { ScreenSeo } from "@/lib/account/head";
 import type { TryoutStart } from "@/lib/account/start";
-import { reportClientException } from "@/lib/analytics/client";
-import { readBrowserSession } from "@/lib/auth/token";
-import { readMadeClient } from "@/lib/convex/client";
-import { failAtGateway } from "@/lib/convex/http";
 import type { QueryClient } from "@/lib/convex/read";
 import { readQueryOn } from "@/lib/convex/read";
 import { readRenderedRouteMessages } from "@/lib/i18n/rendered";
-
-/** Whether a failed read is a transport or decoding failure rather than a typed query refusal. */
-const isQueryReadFailed = (error: { readonly _tag: string }): boolean =>
-  error._tag === "QueryReadFailed";
-
-/**
- * Reads one optional home section. A typed refusal leaves the section empty,
- * and an unexpected read failure is reported and leaves the section empty so
- * one failing widget never blocks the whole home screen.
- */
-const readOptional = Effect.fn("www.home.readOptional")(function* <
-  Query extends Ref.AnyPublicQuery,
->(client: QueryClient, ref: Query, args: Ref.Args<Query>) {
-  return yield* readQueryOn(client, ref, args).pipe(
-    Effect.catch((error) =>
-      isQueryReadFailed(error)
-        ? reportClientException(error, {
-            operation: ref.convexFunctionName,
-            source: "home.readOptional",
-          }).pipe(Effect.as(undefined))
-        : Effect.undefined
-    )
-  );
-});
-
-/**
- * Resolves the Convex client for one home screen read. On SPA navigation inside
- * the app shell, the page's authenticated WebSocket client is already live, so
- * every query runs over that open socket with no Worker request and no token
- * refresh (ADR 0038 D2). On a cold page load before the shell mounts, the
- * browser refreshes its token once and reads Convex directly over HTTP.
- */
-const resolveHomeClient = Effect.fn("www.home.resolveClient")(function* (
-  origin: string
-) {
-  const live = readMadeClient();
-  if (Option.isSome(live)) {
-    return Option.some<QueryClient>(live.value);
-  }
-  const session = yield* readBrowserSession(origin);
-  if (session === null) {
-    return Option.none<QueryClient>();
-  }
-  const http = new ConvexHttpClient(clientEnv.VITE_CONVEX_URL, {
-    fetch: failAtGateway(fetch),
-  });
-  http.setAuth(session.accessToken);
-  return Option.some<QueryClient>(http);
-});
 
 /** The try-out country a learner last picked, or none. */
 type TryoutPreference =
@@ -93,10 +42,11 @@ const readTryoutStart = Effect.fn("www.home.readTryoutStart")(function* (
 ): Effect.fn.Return<TryoutStart> {
   const country = preference?.country;
   if (country !== undefined) {
-    const page = yield* readOptional(
+    const page = yield* readAccountOptional(
       client,
       tryouts.queries.catalog.getCountryPage,
-      { appLocale: locale, publicPath: country.publicPath }
+      { appLocale: locale, publicPath: country.publicPath },
+      "home.readOptional"
     );
     if (page) {
       return {
@@ -129,10 +79,9 @@ const readTryoutStart = Effect.fn("www.home.readTryoutStart")(function* (
  * over the browser's Convex client with no Worker server function.
  */
 export const readHomeScreen = Effect.fn("www.home.read")(function* (
-  locale: Locale,
-  origin: string
+  locale: Locale
 ) {
-  const clientOption = yield* resolveHomeClient(origin);
+  const clientOption = yield* resolveAccountClient();
   if (Option.isNone(clientOption)) {
     return { _tag: "SignedOut" as const };
   }
@@ -156,21 +105,54 @@ export const readHomeScreen = Effect.fn("www.home.read")(function* (
       Effect.promise(() =>
         readRenderedRouteMessages({ locale, namespaces: ["Metadata"] })
       ),
-      readOptional(client, auth.queries.getCurrentUser, {}),
-      readOptional(client, contents.queries.recent.getRecentlyViewed, {
-        limit: 3,
-        locale,
-      }),
-      readOptional(client, progress.queries.growth, {}),
-      readOptional(client, progress.queries.week, {}),
-      readOptional(client, progress.queries.leaders, {}),
-      readOptional(client, tryouts.queries.history.recent, { locale }),
-      readOptional(client, learningPreferences.queries.getCurrentTryout, {
-        locale,
-      }),
-      readOptional(client, tryouts.queries.catalog.getHubPage, {
-        appLocale: locale,
-      }),
+      readAccountOptional(
+        client,
+        auth.queries.getCurrentUser,
+        {},
+        "home.readOptional"
+      ),
+      readAccountOptional(
+        client,
+        contents.queries.recent.getRecentlyViewed,
+        { limit: 3, locale },
+        "home.readOptional"
+      ),
+      readAccountOptional(
+        client,
+        progress.queries.growth,
+        {},
+        "home.readOptional"
+      ),
+      readAccountOptional(
+        client,
+        progress.queries.week,
+        {},
+        "home.readOptional"
+      ),
+      readAccountOptional(
+        client,
+        progress.queries.leaders,
+        {},
+        "home.readOptional"
+      ),
+      readAccountOptional(
+        client,
+        tryouts.queries.history.recent,
+        { locale },
+        "home.readOptional"
+      ),
+      readAccountOptional(
+        client,
+        learningPreferences.queries.getCurrentTryout,
+        { locale },
+        "home.readOptional"
+      ),
+      readAccountOptional(
+        client,
+        tryouts.queries.catalog.getHubPage,
+        { appLocale: locale },
+        "home.readOptional"
+      ),
       Effect.promise(() => import("@/components/home/look")),
       Clock.currentTimeMillis,
     ],

@@ -2,11 +2,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import users from "@repo/backend/confect/_generated/refs/users";
-import { isNotFound, isRedirect } from "@tanstack/react-router";
+import { isNotFound } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option } from "effect";
 import {
   accountHandler,
-  admitAccount,
   messagesFor,
   readProfileOrNotFound,
   readToken,
@@ -93,19 +92,6 @@ describe("readToken", () => {
   it("reads no token for a visitor", async () => {
     sessionWith(Option.none());
     await expect(runServerEffect(readToken())).resolves.toBeUndefined();
-  });
-});
-
-describe("admitAccount", () => {
-  it("admits a signed-in visitor with the Convex token", async () => {
-    sessionWith(Option.some("token"));
-    await expect(runServerEffect(admitAccount("en"))).resolves.toBe("token");
-  });
-
-  it("sends a visitor to sign-in with a redirect", async () => {
-    sessionWith(Option.none());
-    const cause = await failureOf(admitAccount("en").pipe(runServerEffect));
-    expect(isRedirect(cause)).toBe(true);
   });
 });
 

@@ -38,6 +38,7 @@ const barsVariants = cva("flex shrink-0 items-end gap-0.5", {
 });
 
 const barVariants = cva("rounded-[1px]", {
+  defaultVariants: { size: "cell" },
   variants: {
     height: { 1: "h-1.5", 2: "h-2", 3: "h-2.5", 4: "h-3.5" },
     size: { cell: "w-1", icon: "w-0.5" },

@@ -1,6 +1,6 @@
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
-import { createFileRoute } from "@tanstack/react-router";
-import { Option, Schema } from "effect";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { Effect, Match, Option, Schema } from "effect";
 import { AccountPreferences } from "@/components/notifications/account";
 import { NotificationsClockContext } from "@/components/notifications/clock";
 import { NotificationsHeader } from "@/components/notifications/header";
@@ -16,7 +16,6 @@ import { PageStack } from "@/components/shared/page/body";
 import { Page } from "@/components/shared/page/frame";
 import { useAgeClock } from "@/components/user/ages";
 import { privateHead } from "@/lib/account/head";
-import { notificationsScreenFn } from "@/lib/account/home.functions";
 
 /** The tab the address names, All without one. */
 const NotificationsSearch = Schema.Struct({
@@ -27,8 +26,26 @@ export const Route = createFileRoute(
   "/$locale/_main/_app/_account/notifications"
 )({
   validateSearch: Schema.toStandardSchemaV1(NotificationsSearch),
-  loader: ({ params }) =>
-    notificationsScreenFn({ data: { locale: params.locale } }),
+  loader: async ({ params }) => {
+    const { readNotificationsScreen } = await import(
+      "@/lib/account/notifications"
+    );
+    const outcome = await Effect.runPromise(
+      readNotificationsScreen(params.locale)
+    );
+    return Match.value(outcome).pipe(
+      Match.tagsExhaustive({
+        Ready: ({ screen }) => screen,
+        SignedOut: () => {
+          throw redirect({
+            params: { locale: params.locale },
+            statusCode: 307,
+            to: "/$locale/auth",
+          });
+        },
+      })
+    );
+  },
   head: ({ loaderData }) =>
     loaderData === undefined ? {} : privateHead(loaderData.seo),
   component: NotificationsPage,

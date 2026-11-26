@@ -94,6 +94,7 @@ test("a running try-out leads the home with its part, its clock and Continue, fr
 
           await page.locator('main a[href*="attemptId="]').first().click();
           await page.waitForURL(ATTEMPT_ADDRESS);
+          await waitForLoadsSettled(page);
 
           // Navigating back to Home from inside the app reads Convex over the
           // browser's open client and sends no Worker server function request.

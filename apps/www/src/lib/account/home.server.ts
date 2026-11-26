@@ -1,19 +1,10 @@
 import { CHAT_LIST_PAGE_SIZE } from "@repo/backend/client/chats/list";
-import { INBOX_PAGE_SIZE } from "@repo/backend/client/notifications/list";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import chats from "@repo/backend/confect/_generated/refs/chats";
-import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import { notFound } from "@tanstack/react-router";
-import { Clock, Effect, Schema } from "effect";
-import { createTranslator } from "use-intl/core";
-import {
-  accountHandler,
-  admitAccount,
-  messagesFor,
-  readToken,
-} from "@/lib/account/access.server";
-import type { ScreenSeo } from "@/lib/account/head";
-import type { ChatInput, LocaleInput } from "@/lib/account/input";
+import { Effect, Schema } from "effect";
+import { accountHandler, readToken } from "@/lib/account/access.server";
+import type { ChatInput } from "@/lib/account/input";
 import { readOptional } from "@/lib/data/read.server";
 
 /**
@@ -59,44 +50,5 @@ export const chatScreenHandler = accountHandler(
         id
       ).pipe(Effect.orDie);
       return { chatId, title: chat?.title ?? undefined };
-    })
-);
-
-/**
- * Notifications: the first page of the inbox and the inbox title, with the robots
- * rule the reference sets (noindex).
- */
-export const notificationsScreenHandler = accountHandler(
-  ({ locale }: typeof LocaleInput.Type) =>
-    Effect.gen(function* () {
-      const token = yield* admitAccount(locale);
-      const first = yield* readOptional(
-        notifications.inbox.list,
-        {
-          paginationOpts: { cursor: null, numItems: INBOX_PAGE_SIZE },
-          personal: true,
-        },
-        token
-      );
-      const now = yield* Clock.currentTimeMillis;
-      const messages = yield* messagesFor(locale);
-      const tCommon = createTranslator({
-        locale,
-        messages,
-        namespace: "Common",
-      });
-      const meta = createTranslator({
-        locale,
-        messages,
-        namespace: "Metadata",
-      });
-      const seo: ScreenSeo = {
-        canonicalPath: `/${locale}`,
-        description: meta("description"),
-        indexable: false,
-        locale,
-        title: tCommon("notifications"),
-      };
-      return { first, now, seo };
     })
 );

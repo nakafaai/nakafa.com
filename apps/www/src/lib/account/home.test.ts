@@ -7,18 +7,28 @@ import progress from "@repo/backend/confect/_generated/refs/progress";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { EMPTY_TALLY } from "@repo/backend/confect/progress/schema";
 import { Array as Arr, Deferred, Effect, Option, Schema } from "effect";
+import { Base64Url } from "effect/encoding";
 import { readHomeScreen } from "@/lib/account/home";
 import { TryoutStart } from "@/lib/account/start";
 import { QueryReadFailed } from "@/lib/convex/read";
 
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+const COLD_TOKEN = `head.${Base64Url.encode(encodeJson({ exp: 4_102_444_800, sub: "session-1" }))}.sig`;
+
 const mocks = vi.hoisted(() => ({
+  fetchAccessToken:
+    vi.fn<(opts: { forceRefreshToken: boolean }) => Promise<string | null>>(),
+  getAccessToken: vi.fn<() => string | null>(),
   httpQuery: vi.fn(),
   httpSetAuth: vi.fn<(token: string) => void>(),
-  readBrowserSession:
+  readAuthClient:
     vi.fn<
-      (
-        origin: string
-      ) => Effect.Effect<{ accessToken: string; userId: string } | null>
+      () => Effect.Effect<{
+        fetchAccessToken: (opts: {
+          forceRefreshToken: boolean;
+        }) => Promise<string | null>;
+        getAccessToken: () => string | null;
+      }>
     >(),
   readMadeClient: vi.fn<() => Option.Option<{ query: typeof vi.fn }>>(),
   readQueryOn:
@@ -42,6 +52,7 @@ vi.mock("convex/browser", () => ({
 }));
 
 vi.mock("@/lib/convex/client", () => ({
+  readConvexClient: vi.fn(),
   readMadeClient: mocks.readMadeClient,
 }));
 
@@ -53,8 +64,8 @@ vi.mock("@/lib/convex/read", async (importOriginal) => {
   };
 });
 
-vi.mock("@/lib/auth/token", () => ({
-  readBrowserSession: mocks.readBrowserSession,
+vi.mock("@/lib/auth/client", () => ({
+  readAuthClient: mocks.readAuthClient,
 }));
 
 vi.mock("@/lib/analytics/client", () => ({
@@ -117,8 +128,6 @@ const INDONESIA = {
   sourceRevision: null,
 };
 
-const ORIGIN = "https://nakafa.com";
-
 function answerQueries(answers: ReadonlyArray<readonly [unknown, unknown]>) {
   mocks.readQueryOn.mockImplementation((_client, ref) =>
     Option.match(
@@ -134,6 +143,14 @@ function answerQueries(answers: ReadonlyArray<readonly [unknown, unknown]>) {
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.readMadeClient.mockReturnValue(Option.some(liveClient));
+  mocks.getAccessToken.mockReturnValue(null);
+  mocks.fetchAccessToken.mockResolvedValue(null);
+  mocks.readAuthClient.mockReturnValue(
+    Effect.succeed({
+      fetchAccessToken: mocks.fetchAccessToken,
+      getAccessToken: mocks.getAccessToken,
+    })
+  );
   mocks.reportClientException.mockReturnValue(Effect.void);
   mocks.readRenderedRouteMessages.mockResolvedValue({
     Metadata: {
@@ -149,8 +166,8 @@ describe("readHomeScreen", () => {
     () =>
       Effect.gen(function* () {
         mocks.readMadeClient.mockReturnValue(Option.none());
-        mocks.readBrowserSession.mockReturnValue(Effect.succeed(null));
-        const outcome = yield* readHomeScreen("en", ORIGIN);
+        mocks.fetchAccessToken.mockResolvedValue(null);
+        const outcome = yield* readHomeScreen("en");
         expect(outcome).toEqual({ _tag: "SignedOut" });
         expect(mocks.readQueryOn).not.toHaveBeenCalled();
       })
@@ -161,9 +178,7 @@ describe("readHomeScreen", () => {
     () =>
       Effect.gen(function* () {
         mocks.readMadeClient.mockReturnValue(Option.none());
-        mocks.readBrowserSession.mockReturnValue(
-          Effect.succeed({ accessToken: "cold-token", userId: "users-1" })
-        );
+        mocks.getAccessToken.mockReturnValue(COLD_TOKEN);
         answerQueries([
           [
             onboarding.queries.getStatus,
@@ -178,8 +193,8 @@ describe("readHomeScreen", () => {
           [learningPreferences.queries.getCurrentTryout, null],
           [tryouts.queries.catalog.getHubPage, HUB],
         ]);
-        const outcome = yield* readHomeScreen("en", ORIGIN);
-        expect(mocks.httpSetAuth).toHaveBeenCalledExactlyOnceWith("cold-token");
+        const outcome = yield* readHomeScreen("en");
+        expect(mocks.httpSetAuth).toHaveBeenCalledExactlyOnceWith(COLD_TOKEN);
         expect(outcome._tag).toBe("Ready");
       })
   );
@@ -200,9 +215,9 @@ describe("readHomeScreen", () => {
         [learningPreferences.queries.getCurrentTryout, null],
         [tryouts.queries.catalog.getHubPage, HUB],
       ]);
-      const outcome = yield* readHomeScreen("en", ORIGIN);
+      const outcome = yield* readHomeScreen("en");
       expect(outcome).toEqual({ _tag: "SignedOut" });
-      expect(mocks.readBrowserSession).not.toHaveBeenCalled();
+      expect(mocks.readAuthClient).not.toHaveBeenCalled();
     })
   );
 
@@ -222,7 +237,7 @@ describe("readHomeScreen", () => {
         [learningPreferences.queries.getCurrentTryout, null],
         [tryouts.queries.catalog.getHubPage, HUB],
       ]);
-      const outcome = yield* readHomeScreen("en", ORIGIN);
+      const outcome = yield* readHomeScreen("en");
       expect(outcome).toEqual({ _tag: "Onboarding" });
     })
   );
@@ -269,7 +284,7 @@ describe("readHomeScreen", () => {
           [learningPreferences.queries.getCurrentTryout, null],
           [tryouts.queries.catalog.getHubPage, HUB],
         ]);
-        const outcome = yield* readHomeScreen("en", ORIGIN);
+        const outcome = yield* readHomeScreen("en");
         expect(outcome._tag).toBe("Ready");
         if (outcome._tag !== "Ready") {
           return expect.unreachable("expected Ready");
@@ -315,7 +330,7 @@ describe("readHomeScreen", () => {
             Effect.as(ref === auth.queries.getCurrentUser ? account : [])
           );
         });
-        const outcome = yield* readHomeScreen("en", ORIGIN);
+        const outcome = yield* readHomeScreen("en");
         expect(outcome._tag).toBe("Ready");
         if (outcome._tag !== "Ready") {
           return expect.unreachable("expected Ready");
@@ -354,7 +369,7 @@ describe("readHomeScreen", () => {
           [tryouts.queries.catalog.getHubPage, HUB],
           [tryouts.queries.catalog.getCountryPage, INDONESIA],
         ]);
-        const outcome = yield* readHomeScreen("en", ORIGIN);
+        const outcome = yield* readHomeScreen("en");
         expect(outcome._tag).toBe("Ready");
         if (outcome._tag !== "Ready") {
           return expect.unreachable("expected Ready");
@@ -405,7 +420,7 @@ describe("readHomeScreen", () => {
           [tryouts.queries.catalog.getHubPage, HUB],
           [tryouts.queries.catalog.getCountryPage, null],
         ]);
-        const outcome = yield* readHomeScreen("en", ORIGIN);
+        const outcome = yield* readHomeScreen("en");
         expect(outcome._tag).toBe("Ready");
         if (outcome._tag !== "Ready") {
           return expect.unreachable("expected Ready");
@@ -446,7 +461,7 @@ describe("readHomeScreen", () => {
             ref === auth.queries.getCurrentUser ? account : null
           );
         });
-        const outcome = yield* readHomeScreen("en", ORIGIN);
+        const outcome = yield* readHomeScreen("en");
         expect(outcome._tag).toBe("Ready");
         if (outcome._tag !== "Ready") {
           return expect.unreachable("expected Ready");
