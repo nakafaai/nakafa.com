@@ -1,25 +1,35 @@
+import { useFrame } from "@react-three/fiber";
+import { VelocityArrow } from "@repo/design-system/components/contents/physics/kinematics/arrow";
 import {
-  arrow,
-  createBackdrop,
-  fade,
-  vignette,
-} from "@repo/design-system/components/contents/physics/canvas/paint";
-import type { Road } from "@repo/design-system/components/contents/physics/canvas/scene";
-import {
-  paintCar,
-  paintLandscape,
-  paintRoad,
-} from "@repo/design-system/components/contents/physics/canvas/scene";
-import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
+  FollowCamera,
+  useSight,
+} from "@repo/design-system/components/contents/physics/kinematics/follow";
 import { apparentRain } from "@repo/design-system/components/contents/physics/kinematics/rain/drops";
-import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
+import { carAlong } from "@repo/design-system/components/contents/physics/kinematics/rain/fall";
+import type { RainRig } from "@repo/design-system/components/contents/physics/kinematics/rain/streaks";
+import { Rain } from "@repo/design-system/components/contents/physics/kinematics/rain/streaks";
+import {
+  ROAD,
+  Road,
+} from "@repo/design-system/components/contents/physics/kinematics/road";
+import type { SedanRig } from "@repo/design-system/components/contents/physics/kinematics/sedan";
+import {
+  SEDAN,
+  Sedan,
+} from "@repo/design-system/components/contents/physics/kinematics/sedan";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
+import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
+  useVisualScene,
+  useVisualStop,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -29,128 +39,46 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { P5Sketch } from "@repo/design-system/components/visual/sketch";
+import { VisualSlider } from "@repo/design-system/components/visual/slider";
 import { getColor } from "@repo/design-system/lib/color";
-import { SKY_COLORS } from "@repo/design-system/lib/material/sky";
-import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
-import type p5 from "p5";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { Suspense, useCallback, useMemo, useRef, useState } from "react";
+import type { Group } from "three";
 
 /** The two observers a learner can watch the rain from. */
 const FrameSchema = Schema.Literals(["ground", "car"]);
 type Frame = typeof FrameSchema.Type;
 
-/** How many drops fall in view, and the metres of scene the canvas spans across. */
-const DROPS = 160;
-const SPAN = 24;
-
-/** What the sketch reads on every frame. */
-const RainFrameSchema = Schema.Struct({
-  car: Schema.Finite,
-  frame: FrameSchema,
-  rain: Schema.Finite,
-});
-type RainFrame = typeof RainFrameSchema.Type;
-
-/** The road band, its metres mapped so the car stands in the middle. */
-function rainRoad(sketch: p5): Road {
-  return {
-    height: sketch.height * 0.62,
-    origin: sketch.width * 0.5,
-    scale: sketch.width / SPAN,
-    surface: sketch.height * 0.62,
-    top: 0,
-  };
-}
+/** Simulated seconds per wall second: the rain is slowed so single drops can be followed. */
+const PLAY_RATE = 0.35;
 
 /**
- * Draws the rain as one observer sees it. From the ground the drops fall
- * straight and the car drives through them; from the car the car stands
- * still and the drops come at it on a slant. The velocity triangle sits in
- * the corner: rain down, the car's velocity reversed, and their sum.
+ * The loop of road the car drives, in metres. Watched from the roadside it
+ * is short, so the car comes past every few seconds. Followed by the camera
+ * it is as long as the road's dashes, trees and lamps take to repeat
+ * together, so the road never jumps under the car.
  */
-function rainProgram(sketch: p5, read: () => RainFrame) {
-  let clock = 0;
-  const backdrop = createBackdrop();
-  sketch.setup = () => {
-    sketch.createCanvas(1, 1);
-  };
-  sketch.draw = () => {
-    const { car, frame, rain } = read();
-    if (sketch.isLooping()) {
-      clock += Math.min(sketch.deltaTime / 1000, 0.1) * 0.35;
-    }
-    const road = rainRoad(sketch);
-    backdrop(sketch, "rain", (layer) => {
-      paintLandscape(layer, road);
-      paintRoad(layer, road, { length: SPAN, start: -SPAN, step: 4 });
-    });
-    sketch.fill(fade(SKY_COLORS.skyHaze, 0.25));
-    sketch.noStroke();
-    sketch.rect(0, 0, sketch.width, road.surface);
-    const carLength = sketch.width * 0.22;
-    const drift = frame === "car" ? car : 0;
-    const carShift = frame === "car" ? 0 : ((clock * car) % SPAN) * road.scale;
-    const rear =
-      road.origin -
-      carLength / 2 +
-      carShift -
-      (carShift > sketch.width / 2 + carLength ? sketch.width + carLength : 0);
-    paintCar(sketch, road, {
-      color: PLOT_COLORS.teal,
-      length: carLength,
-      rear,
-    });
-    const fall = road.surface * 1.1;
-    sketch.stroke(fade(TOWN_COLORS.waterGlint, 0.75));
-    sketch.strokeWeight(1.4);
-    const streak = 0.05;
-    for (let index = 0; index < DROPS; index += 1) {
-      const x0 = hashUnit(index, 1) * (sketch.width + fall) - fall * 0.5;
-      const y =
-        ((hashUnit(index, 2) * fall + clock * rain * road.scale) % fall) -
-        fall * 0.05;
-      const x =
-        ((((x0 - drift * road.scale * clock) % (sketch.width + fall)) +
-          sketch.width +
-          fall) %
-          (sketch.width + fall)) -
-        fall * 0.25;
-      sketch.line(
-        x,
-        y,
-        x + drift * road.scale * streak,
-        y - rain * road.scale * streak
-      );
-    }
-    sketch.noStroke();
-    const unit = sketch.height * 0.022;
-    const corner = { x: sketch.width * 0.86, y: sketch.height * 0.1 };
-    const down = { x: corner.x, y: corner.y + rain * unit };
-    arrow(sketch, corner, down, {
-      color: PLOT_COLORS.violet,
-      head: 10,
-      weight: 3,
-    });
-    if (frame === "car" && car > 0) {
-      const back = { x: down.x - car * unit, y: down.y };
-      arrow(sketch, down, back, {
-        color: PLOT_COLORS.amber,
-        head: 10,
-        weight: 3,
-      });
-      arrow(sketch, corner, back, {
-        color: getColor("WHITE"),
-        head: 10,
-        weight: 3,
-      });
-    }
-    vignette(sketch, 0.3);
-  };
-}
+const LOOP = { car: 544, ground: 44 } satisfies Record<Frame, number>;
+
+/**
+ * The way the camera looks at the car: from ahead of it on the near verge,
+ * down by 27 degrees, through an angle of view of 40 degrees. It looks down
+ * more steeply than half its angle of view, so its frame holds the wet road
+ * and its verges and never the horizon.
+ */
+const LINE = [-0.42, -0.55, -1] as const;
+const VIEW = 40;
+
+/**
+ * Where the rain's own arrow ends, on the car's roof ahead of its middle,
+ * and how long one m/s is drawn, in metres: the triangle of the three
+ * velocities stands on the car, taller than the car and, at the fastest
+ * car, half as long again.
+ */
+const TRIANGLE = [0.3, 1.5, 0] as const;
+const UNIT = 0.3;
 
 interface RainDriveRelativeVelocityLabProps {
   /** The car's speed the card starts at, in m/s. */
@@ -173,7 +101,7 @@ interface RainDriveRelativeVelocityLabProps {
 
 /**
  * Rain falling straight down on a still day, watched from the roadside or
- * from inside a moving car. The faster the car, the more the rain slants
+ * from beside a moving car. The faster the car, the more the rain slants
  * toward the windscreen and the faster it seems to come: its velocity
  * relative to the car is its own velocity minus the car's.
  */
@@ -216,35 +144,55 @@ export function RainDriveRelativeVelocityLab({
           </ToggleGroupItem>
           <ToggleGroupItem value="car">{labels.frames.car}</ToggleGroupItem>
         </ToggleGroup>
-        <LabSlider
-          label={labels.carSpeed}
+        <VisualSlider
+          heading={labels.carSpeed}
+          label={labels.carSpeedName}
           max={25}
           min={0}
-          name={labels.carSpeedName}
           onValueChange={setCar}
-          readout={<InlineMath math={quantity(car, "\\text{ m/s}", 0)} />}
+          readout={
+            <span style={{ color: PLOT_COLORS.amber }}>
+              <InlineMath math={quantity(car, "\\text{ m/s}", 0)} />
+            </span>
+          }
           step={1}
           value={car}
         />
       </VisualCardToolbar>
-      <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
-        <P5Sketch
-          label={labels.viewLabel}
-          program={rainProgram}
-          state={{ car, frame, rain }}
-        />
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ScienceStage
+          floor={-0.015}
+          frameloop="always"
+          ground="grass"
+          reach={30}
+          setting="field"
+        >
+          <Suspense fallback={null}>
+            <RainScene car={car} frame={frame} rain={rain} />
+          </Suspense>
+        </ScienceStage>
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>
         <VisualCardFacts>
           <VisualFactTabular
             label={labels.rainSpeed}
-            value={<InlineMath math={quantity(rain, "\\text{ m/s}", 1)} />}
+            value={
+              <span style={{ color: PLOT_COLORS.violet }}>
+                <InlineMath math={quantity(rain, "\\text{ m/s}", 1)} />
+              </span>
+            }
           />
           <VisualFactTabular
             label={labels.apparentSpeed}
             value={
-              <InlineMath math={quantity(seen.speed, "\\text{ m/s}", 1)} />
+              <span style={{ color: PLOT_COLORS.fuchsia }}>
+                <InlineMath math={quantity(seen.speed, "\\text{ m/s}", 1)} />
+              </span>
             }
           />
           <VisualFactTabular
@@ -256,3 +204,176 @@ export function RainDriveRelativeVelocityLab({
     </VisualCard>
   );
 }
+
+/**
+ * A wet road in the rain with the car driving along it. From the roadside
+ * the camera stands still, the car comes past and the rain hangs straight
+ * down; from the car the camera rides beside it, and the same rain leans
+ * toward the car. Over the roof stands the velocity triangle: the rain's own
+ * velocity down, the car's velocity reversed, and their sum, the rain as
+ * the car meets it.
+ */
+function RainScene({
+  car,
+  frame,
+  rain,
+}: {
+  readonly car: number;
+  readonly frame: Frame;
+  readonly rain: number;
+}) {
+  const playing = useVisualScene((card) => card.playing, false);
+  const quantity = useQuantity();
+  const sedan = useRef<SedanRig>(null);
+  const shower = useRef<RainRig>(null);
+  const triangle = useRef<Group>(null);
+  const clock = useRef({ driven: 0, fallen: 0, x: 0 });
+  const riding = frame === "car";
+  const seen = apparentRain(rain, riding ? car : 0);
+  const down = useMemo(() => [0, -rain * UNIT, 0] as const, [rain]);
+  const back = useMemo(
+    () => [-car * UNIT, -rain * UNIT, 0] as const,
+    [car, rain]
+  );
+
+  // The frame holds the car and the whole triangle that stands on it.
+  const held = useMemo(
+    () =>
+      [
+        [-SEDAN.length / 2 - 0.4, 0, ROAD.lane + SEDAN.width / 2],
+        [SEDAN.length / 2 + 0.4, 0, ROAD.lane + SEDAN.width / 2],
+        [SEDAN.length / 2 + 0.4, 0, ROAD.lane - SEDAN.width / 2],
+        [TRIANGLE[0] + 1.6, TRIANGLE[1] + rain * UNIT + 0.5, ROAD.lane],
+        [TRIANGLE[0] - car * UNIT - 1.2, TRIANGLE[1] - 0.4, ROAD.lane],
+        [TRIANGLE[0] - car * UNIT - 1.2, TRIANGLE[1] + rain * UNIT, ROAD.lane],
+      ] as const,
+    [car, rain]
+  );
+  const sight = useSight(held, LINE, VIEW);
+  const offset = useMemo(
+    () =>
+      [
+        sight.position[0],
+        sight.position[1],
+        sight.position[2] - ROAD.lane,
+      ] as const,
+    [sight]
+  );
+  const aim = useMemo(
+    () =>
+      [sight.target[0], sight.target[1], sight.target[2] - ROAD.lane] as const,
+    [sight]
+  );
+
+  useVisualStop(() => {
+    clock.current.driven = 0;
+    clock.current.fallen = 0;
+  });
+
+  // The scene moves before the camera that follows it reads where it is.
+  useFrame((_, delta) => {
+    const state = clock.current;
+    if (playing) {
+      const step = simulationStep(delta) * PLAY_RATE;
+      state.driven += car * step;
+      state.fallen += rain * step;
+    }
+    state.x = carAlong(state.driven, LOOP[frame]);
+    sedan.current?.place(state.x, false);
+    triangle.current?.position.set(
+      state.x + TRIANGLE[0],
+      TRIANGLE[1] + rain * UNIT,
+      ROAD.lane + TRIANGLE[2]
+    );
+    shower.current?.fall(
+      riding ? state.x : 0,
+      state.fallen,
+      seen.speed,
+      (seen.angle * Math.PI) / 180
+    );
+    shower.current?.spray(state.x, playing ? car : 0, state.fallen);
+  }, -1);
+
+  const beside = useCallback(() => clock.current.x, []);
+  const roadside = useCallback(() => 0, []);
+
+  return (
+    <>
+      <FollowCamera
+        aim={aim}
+        depth={ROAD.lane}
+        follow={riding ? beside : roadside}
+        fov={VIEW}
+        maxDistance={60}
+        minDistance={6}
+        offset={offset}
+      />
+      <Road from={-340} surface="wet" to={340} />
+      <Rain ref={shower} />
+      <group position={[0, 0, ROAD.lane]}>
+        <Sedan color={PLOT_COLORS.teal} ref={sedan} />
+      </group>
+      <group ref={triangle}>
+        <VelocityArrow
+          color={PLOT_COLORS.violet}
+          from={ORIGIN}
+          thick={0.05}
+          to={down}
+        />
+        <ThreeLabel
+          anchorX="left"
+          color={PLOT_COLORS.violet}
+          fontSize="compact"
+          gap={0.12}
+          outlineColor={getColor("SLATE", 50)}
+          outlineWidth={0.05}
+          position={[0, down[1] / 2, 0]}
+        >
+          <InlineMath math={quantity(rain, "\\text{ m/s}", 1)} />
+        </ThreeLabel>
+        {riding && car > 0 ? (
+          <>
+            <VelocityArrow
+              color={PLOT_COLORS.amber}
+              from={down}
+              thick={0.05}
+              to={back}
+            />
+            <ThreeLabel
+              anchorY="top"
+              color={PLOT_COLORS.amber}
+              fontSize="compact"
+              gap={0.12}
+              outlineColor={getColor("SLATE", 50)}
+              outlineWidth={0.05}
+              position={[back[0] / 2, back[1], 0]}
+            >
+              <InlineMath math={quantity(car, "\\text{ m/s}", 0)} />
+            </ThreeLabel>
+            <VelocityArrow
+              color={PLOT_COLORS.fuchsia}
+              from={ORIGIN}
+              thick={0.065}
+              to={back}
+            />
+            <ThreeLabel
+              anchorX="right"
+              anchorY="bottom"
+              color={PLOT_COLORS.fuchsia}
+              fontSize="compact"
+              gap={0.12}
+              outlineColor={getColor("SLATE", 50)}
+              outlineWidth={0.05}
+              position={[back[0] / 2, back[1] / 2, 0]}
+            >
+              <InlineMath math={quantity(seen.speed, "\\text{ m/s}", 1)} />
+            </ThreeLabel>
+          </>
+        ) : null}
+      </group>
+    </>
+  );
+}
+
+/** The start of the velocity triangle in its own frame. */
+const ORIGIN = [0, 0, 0] as const;

@@ -1,3 +1,7 @@
+import {
+  bend,
+  converge,
+} from "@repo/design-system/components/three/optic/trace";
 import { Array as Arr, Option, Schema } from "effect";
 
 /**
@@ -14,7 +18,7 @@ import { Array as Arr, Option, Schema } from "effect";
 const DEGREE = Math.PI / 180;
 
 /** The refractive index of air, taken as exactly one. */
-export const AIR_INDEX = 1;
+const AIR_INDEX = 1;
 
 /** The sine of an angle given in degrees. */
 function sine(degrees: number) {
@@ -120,6 +124,62 @@ export function traceBlock(block: Block, entry: number, incidence: number) {
   };
 }
 
+/** The inward normal of each face of the block a ray can leave through, in the block's frame. */
+const FACE_NORMALS = {
+  bottom: [0, 1],
+  left: [1, 0],
+  right: [-1, 0],
+} as const;
+
+/**
+ * The whole path of the ray of `traceBlock` in the block's frame, for a ray
+ * box that stands `reach` from the point of entry: from its slit to the top
+ * face, through every face the ray meets inside the glass, and `reach` on
+ * into the air once it refracts out, bent there by Snell's law. `mirror` is
+ * where the weak part the top face reflects ends, as far from the entry as
+ * the slit is.
+ */
+export function blockPath(
+  block: Block,
+  entry: number,
+  incidence: number,
+  reach: number
+) {
+  const { hits, refraction } = traceBlock(block, entry, incidence);
+  const lean = sine(incidence) * reach;
+  const rise = Math.cos(incidence * DEGREE) * reach;
+  const top: Spot = { x: entry, y: block.height };
+  const inside = [top, ...Arr.map(hits, (hit) => hit.at)];
+  const leaves = Option.flatMap(
+    Arr.last(Arr.zip(inside, hits)),
+    ([before, hit]) => {
+      const long = Math.hypot(hit.at.x - before.x, hit.at.y - before.y);
+      return Option.map(
+        bend(
+          [(hit.at.x - before.x) / long, (hit.at.y - before.y) / long],
+          FACE_NORMALS[hit.face],
+          block.index,
+          AIR_INDEX
+        ),
+        ([x, y]): Spot => ({
+          x: hit.at.x + x * reach,
+          y: hit.at.y + y * reach,
+        })
+      );
+    }
+  );
+  return {
+    hits,
+    mirror: { x: entry + lean, y: block.height + rise },
+    path: [
+      { x: entry - lean, y: block.height + rise },
+      ...inside,
+      ...Option.toArray(leaves),
+    ],
+    refraction,
+  };
+}
+
 /** One layer of liquid in a container: its thickness in centimetres and its refractive index. */
 const LayerSchema = Schema.Struct({
   index: Schema.Finite,
@@ -189,6 +249,82 @@ export function thinLens(focal: number, object: number) {
     magnification: -distance / object,
     real: distance > 0,
   });
+}
+
+/**
+ * How far either side of a thin lens a reader must see to read its ray
+ * diagram, in centimetres: as far as the object, the 2F mark on each side,
+ * and the image wherever it forms. An image farther than `farthest` on its
+ * side is off the bench, so the reading stops at the end of the bench there.
+ */
+export function lensReach(
+  focal: number,
+  object: number,
+  farthest: { readonly left: number; readonly right: number }
+) {
+  const image = Option.match(thinLens(focal, object), {
+    onNone: () => 0,
+    onSome: (found) => found.distance,
+  });
+  return {
+    left: Math.min(Math.max(object, 2 * focal, -image), farthest.left),
+    right: Math.min(Math.max(2 * focal, image), farthest.right),
+  };
+}
+
+/**
+ * How far past a lens a ray runs that leaves it `height` above the axis with
+ * the slope `slope`: as far as `limit`, or only until it has fallen `drop`
+ * below the axis, where the bench stops it.
+ */
+export function rayRun(
+  height: number,
+  slope: number,
+  drop: number,
+  limit: number
+) {
+  return slope < 0 ? Math.min(limit, (-drop - height) / slope) : limit;
+}
+
+/**
+ * The three principal rays from the tip of an object `tall` high that stands
+ * `object` in front of a thin lens of focal length `focal`: where each meets
+ * the lens above the axis, and its slope once the lens has bent it. The ray
+ * parallel to the axis leaves through the far focal point, the ray through
+ * the centre goes straight on, and the ray through the near focal point
+ * leaves parallel, which no ray does when the object stands at that point.
+ */
+export function principalRays(focal: number, object: number, tall: number) {
+  return [
+    { height: tall, slope: converge(tall, 0, focal) },
+    { height: 0, slope: -tall / object },
+    ...(object === focal
+      ? []
+      : [{ height: (tall * focal) / (focal - object), slope: 0 }]),
+  ];
+}
+
+/**
+ * A ray from a distant star that meets the objective of a telescope in
+ * normal adjustment `height` above the axis, with the slope `tilt`: where it
+ * crosses the shared focal plane and the eyepiece, and its slope as it
+ * leaves. Every such ray crosses the focal plane at one height, where the
+ * objective forms the image of the star, and leaves at one slope, steeper
+ * than it came by the ratio of the focal lengths.
+ */
+export function starRay(
+  height: number,
+  tilt: number,
+  lenses: { readonly eyepiece: number; readonly objective: number }
+) {
+  const inside = converge(height, tilt, lenses.objective);
+  const image = height + inside * lenses.objective;
+  const atEyepiece = image + inside * lenses.eyepiece;
+  return {
+    atEyepiece,
+    image,
+    out: converge(atEyepiece, inside, lenses.eyepiece),
+  };
 }
 
 /**

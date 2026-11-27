@@ -115,6 +115,7 @@ export function ElectrolysisLab({
               }
               cameraTarget={[0, 0.085, 0.14]}
               fov={34}
+              framing="content"
               maxDistance={1.6}
               minDistance={0.2}
             />

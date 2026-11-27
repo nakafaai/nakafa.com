@@ -63,6 +63,9 @@ const LEAD_IN = 1.6;
 /** The camera rides 5.5 m behind, 2.1 m up and 8.5 m beside the car. */
 const CAMERA_OFFSET = [-5.5, 2.1, 8.5] as const;
 
+/** The camera looks 2 m ahead of the car, 0.8 m up. */
+const AHEAD = [2, 0.8, 0] as const;
+
 /** The colour and strength of the marks locked tyres leave. */
 const SkidLookSchema = Schema.Struct({
   color: Schema.String,
@@ -224,9 +227,9 @@ function SurfaceScene({
     <>
       <SimulationTicker running={playing} />
       <FollowCamera
+        aim={AHEAD}
         depth={ROAD.lane}
         follow={follow}
-        lookAhead={2}
         maxDistance={60}
         minDistance={6}
         offset={CAMERA_OFFSET}

@@ -1,9 +1,9 @@
 import { useFrame } from "@react-three/fiber";
 import { useSimulationClock } from "@repo/design-system/components/contents/simulation/clock";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { NewtonMeter } from "@repo/design-system/components/three/apparatus/balance";
 import { Block } from "@repo/design-system/components/three/apparatus/block";
 import { Force } from "@repo/design-system/components/three/apparatus/force";
-import { NewtonMeter } from "@repo/design-system/components/three/apparatus/meter";
 import {
   meterReach,
   NEWTON_METER,
