@@ -1,10 +1,10 @@
-import { profile } from "@repo/design-system/components/contents/biology/equipment/glass";
 import {
   BENCH,
   BENCH_TOP,
   WALLS,
 } from "@repo/design-system/components/contents/biology/equipment/places";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { LABORATORY_COLORS } from "@repo/design-system/lib/material/laboratory";
@@ -220,15 +220,15 @@ export function Room() {
 }
 
 /** A 250 mL reagent bottle's outline, 70 mm across: body, shoulder and neck. */
-const BOTTLE = profile([
-  [0.001, 0],
+const BOTTLE = [
+  [0, 0],
   [0.033, 0],
   [0.035, 0.004],
   [0.035, 0.1],
   [0.03, 0.115],
   [0.014, 0.126],
   [0.0125, 0.14],
-]);
+] as const;
 
 /** The shelf over the bench, its height above the floor and its span along the back wall, in metres. */
 const SHELF = { from: -0.5, height: 1.55, to: 0.55 } as const;
@@ -261,7 +261,7 @@ function Shelf() {
           position={[bottle.x - (SHELF.from + SHELF.to) / 2, 0, 0.11]}
         >
           <mesh castShadow>
-            <latheGeometry args={[BOTTLE, 32]} />
+            <Turn profile={BOTTLE} wall={0.003} />
             <meshPhysicalMaterial
               clearcoat={1}
               color={bottle.color}

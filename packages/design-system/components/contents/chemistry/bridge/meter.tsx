@@ -4,6 +4,8 @@ import {
   CATHODE_X,
   CLIP_Y,
 } from "@repo/design-system/components/contents/chemistry/bridge/apparatus";
+import { Sweep } from "@repo/design-system/components/three/form/part";
+import type { Path } from "@repo/design-system/components/three/form/path";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -22,13 +24,7 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
-import {
-  CatmullRomCurve3,
-  ExtrudeGeometry,
-  Shape,
-  TubeGeometry,
-  Vector3,
-} from "three";
+import { ExtrudeGeometry, Shape } from "three";
 
 export const METER_Z = -0.105;
 const TERMINAL_Y = 0.259;
@@ -77,25 +73,21 @@ function createMeterBodyGeometry() {
   return geo;
 }
 
-/** Curved black test lead from anode clip up to the voltmeter negative terminal. */
-export function createLeftLeadCurve() {
-  return new CatmullRomCurve3([
-    new Vector3(ANODE_X, CLIP_Y + 0.012, BEAKER_Z),
-    new Vector3(ANODE_X - 0.016, 0.218, BEAKER_Z - 0.01),
-    new Vector3(-0.12, 0.268, -0.028),
-    new Vector3(-TERMINAL_X, TERMINAL_Y, TERMINAL_Z),
-  ]);
-}
+/** The black test lead from the anode clip up to the voltmeter's negative terminal. */
+export const LEFT_LEAD: Path = [
+  [ANODE_X, CLIP_Y + 0.012, BEAKER_Z],
+  [ANODE_X - 0.016, 0.218, BEAKER_Z - 0.01],
+  [-0.12, 0.268, -0.028],
+  [-TERMINAL_X, TERMINAL_Y, TERMINAL_Z],
+];
 
-/** Curved red test lead from the voltmeter positive terminal down to the cathode clip. */
-export function createRightLeadCurve() {
-  return new CatmullRomCurve3([
-    new Vector3(TERMINAL_X, TERMINAL_Y, TERMINAL_Z),
-    new Vector3(0.12, 0.268, -0.028),
-    new Vector3(CATHODE_X + 0.016, 0.218, BEAKER_Z - 0.01),
-    new Vector3(CATHODE_X, CLIP_Y + 0.012, BEAKER_Z),
-  ]);
-}
+/** The red test lead from the voltmeter's positive terminal down to the cathode clip. */
+export const RIGHT_LEAD: Path = [
+  [TERMINAL_X, TERMINAL_Y, TERMINAL_Z],
+  [0.12, 0.268, -0.028],
+  [CATHODE_X + 0.016, 0.218, BEAKER_Z - 0.01],
+  [CATHODE_X, CLIP_Y + 0.012, BEAKER_Z],
+];
 
 /** Sloped benchtop laboratory voltmeter with circular analog dial, brass bezel, ticks, and live needle. */
 export function BenchVoltmeter({ emfVolts }: { readonly emfVolts: number }) {
@@ -226,22 +218,14 @@ export function BenchVoltmeter({ emfVolts }: { readonly emfVolts: number }) {
 
 /** Curved insulated black and red 4 mm test leads linking electrodes to the voltmeter. */
 export function CurvedTestLeads() {
-  const { leftGeo, rightGeo } = useMemo(
-    () => ({
-      leftGeo: new TubeGeometry(createLeftLeadCurve(), 48, 0.0032, 12, false),
-      rightGeo: new TubeGeometry(createRightLeadCurve(), 48, 0.0032, 12, false),
-    }),
-    []
-  );
-  useEffect(() => () => leftGeo.dispose(), [leftGeo]);
-  useEffect(() => () => rightGeo.dispose(), [rightGeo]);
-
   return (
     <group>
-      <mesh castShadow geometry={leftGeo}>
+      <mesh castShadow>
+        <Sweep path={LEFT_LEAD} radius={0.0032} />
         <meshStandardMaterial color={BENCH_COLORS.leadBlack} roughness={0.52} />
       </mesh>
-      <mesh castShadow geometry={rightGeo}>
+      <mesh castShadow>
+        <Sweep path={RIGHT_LEAD} radius={0.0032} />
         <meshStandardMaterial color={BENCH_COLORS.leadRed} roughness={0.48} />
       </mesh>
     </group>

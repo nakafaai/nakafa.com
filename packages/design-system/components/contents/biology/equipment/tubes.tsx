@@ -1,5 +1,6 @@
-import { profile } from "@repo/design-system/components/contents/biology/equipment/glass";
 import { PLACES } from "@repo/design-system/components/contents/biology/equipment/places";
+import { bowl } from "@repo/design-system/components/three/form/outline";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   LiquidMaterial,
@@ -10,35 +11,11 @@ import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
 import { ExtrudeGeometry, Path, Shape } from "three";
 
-/** A test tube's outline with its round bottom: 16 by 150 mm, or 25 by 150 mm for a boiling tube. */
-function tubeOutline(radius: number, height: number) {
-  return profile([
-    ...Arr.map(Arr.range(0, 8), (step) => {
-      const angle = (step / 8) * (Math.PI / 2);
-      return [
-        Math.max(radius * Math.sin(angle), 0.0005),
-        radius - radius * Math.cos(angle),
-      ] as const;
-    }),
-    [radius, height - 0.002],
-    [radius + 0.0007, height],
-  ]);
-}
+/** How thick a tube's glass is at its wall and at its round bottom, in metres. */
+const TUBE_WALL = [0.0012, 0.0008] as const;
 
-/** The liquid in a tube of inner radius `radius`, its round bottom filled and its surface flat at `level` metres. */
-function liquidOutline(radius: number, level: number) {
-  return profile([
-    ...Arr.map(Arr.range(0, 8), (step) => {
-      const angle = (step / 8) * (Math.PI / 2);
-      return [
-        Math.max(radius * Math.sin(angle), 0.0005),
-        0.0008 + radius - radius * Math.cos(angle),
-      ] as const;
-    }),
-    [radius, level],
-    [0.0005, level],
-  ]);
-}
+/** How tall a tube stands, in metres. */
+const TUBE_HEIGHT = 0.15;
 
 /** A glass tube standing at the origin, with liquid up to `level` metres when it holds some. */
 function Tube({
@@ -50,21 +27,29 @@ function Tube({
   readonly level?: number;
   readonly radius: number;
 }) {
-  const points = useMemo(() => tubeOutline(radius, 0.15), [radius]);
-  const liquid = useMemo(
-    () =>
-      level === undefined ? undefined : liquidOutline(radius - 0.0012, level),
-    [level, radius]
-  );
+  const inside = radius - TUBE_WALL[0];
   return (
     <group>
       <mesh castShadow>
-        <latheGeometry args={[points, 40]} />
+        <Turn
+          profile={[
+            ...bowl(radius, radius),
+            [radius, TUBE_HEIGHT - 0.002],
+            [radius + 0.0007, TUBE_HEIGHT],
+          ]}
+          wall={TUBE_WALL}
+        />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.28} />
       </mesh>
-      {color !== undefined && liquid !== undefined && (
-        <mesh>
-          <latheGeometry args={[liquid, 32]} />
+      {color !== undefined && level !== undefined && (
+        <mesh position={[0, TUBE_WALL[1], 0]}>
+          <Turn
+            profile={[
+              ...bowl(inside, inside),
+              [inside, level - TUBE_WALL[1]],
+              [0, level - TUBE_WALL[1]],
+            ]}
+          />
           <LiquidMaterial color={color} opacity={0.62} />
         </mesh>
       )}
@@ -181,13 +166,11 @@ const TEAT = [
   [0.0068, 0.008],
   [0.0068, 0.022],
   [0.0045, 0.03],
-  [0.0005, 0.031],
+  [0, 0.031],
 ] as const;
 
 /** The dropper lying on the bench, tilted so its teat and its tip both rest on the worktop. */
 export function Dropper() {
-  const glass = useMemo(() => profile(DROPPER), []);
-  const teat = useMemo(() => profile(TEAT), []);
   const { base } = PLACES.dropper;
   return (
     <group
@@ -195,11 +178,11 @@ export function Dropper() {
       rotation={[0, 0, -Math.PI / 2 + Math.asin(0.0056 / 0.1)]}
     >
       <mesh castShadow>
-        <latheGeometry args={[glass, 24]} />
+        <Turn profile={DROPPER} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.35} />
       </mesh>
       <mesh castShadow position={[0, 0.07, 0]}>
-        <latheGeometry args={[teat, 24]} />
+        <Turn profile={TEAT} />
         <meshPhysicalMaterial
           clearcoat={0.3}
           color={LABORATORY_COLORS.teat}

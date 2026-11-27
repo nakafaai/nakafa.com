@@ -1,5 +1,4 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
 import type { QuotientDirection } from "@repo/design-system/components/contents/chemistry/quotient/model";
 import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import {
@@ -9,6 +8,7 @@ import {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   GlassMaterial,
@@ -24,7 +24,7 @@ import { useMemo, useRef } from "react";
 import type { Group } from "three";
 
 /** A bell jar's glass in section: a ground foot, a straight wall, a dome, and the knob it is lifted by. */
-const BELL_JAR = latheProfile([
+const BELL_JAR = [
   [0.56, 0.08],
   [0.56, 0.1],
   [0.5, 0.115],
@@ -37,23 +37,23 @@ const BELL_JAR = latheProfile([
   [0.075, 1.225],
   [0.09, 1.26],
   [0.06, 1.295],
-  [0.001, 1.3],
-]);
+  [0, 1.3],
+] as const;
 
 /** The jar's turned hardwood base, with a groove the jar's foot seats in. */
-const JAR_BASE = latheProfile([
-  [0.001, 0],
+const JAR_BASE = [
+  [0, 0],
   [0.64, 0],
   [0.665, 0.012],
   [0.665, 0.05],
   [0.64, 0.075],
   [0.6, 0.082],
-  [0.001, 0.082],
-]);
+  [0, 0.082],
+] as const;
 
 /** The balance's turned brass column, from its foot to the fork that carries the beam. */
-const COLUMN = latheProfile([
-  [0.001, 0.08],
+const COLUMN = [
+  [0, 0.08],
   [0.11, 0.08],
   [0.115, 0.1],
   [0.075, 0.125],
@@ -65,24 +65,24 @@ const COLUMN = latheProfile([
   [0.034, 0.8],
   [0.05, 0.83],
   [0.05, 0.86],
-  [0.001, 0.87],
-]);
+  [0, 0.87],
+] as const;
 
 /** A balance pan in section: a shallow spun brass dish with a rolled rim. */
-const PAN = latheProfile([
-  [0.001, 0],
+const PAN = [
+  [0, 0],
   [0.16, 0.002],
   [0.205, 0.022],
   [0.215, 0.034],
   [0.208, 0.04],
   [0.19, 0.024],
   [0.15, 0.012],
-  [0.001, 0.01],
-]);
+  [0, 0.01],
+] as const;
 
 /** A turned brass weight with a knob, standing on a pan. */
-const WEIGHT = latheProfile([
-  [0.001, 0],
+const WEIGHT = [
+  [0, 0],
   [0.07, 0],
   [0.075, 0.008],
   [0.075, 0.085],
@@ -91,8 +91,8 @@ const WEIGHT = latheProfile([
   [0.022, 0.115],
   [0.036, 0.135],
   [0.03, 0.155],
-  [0.001, 0.16],
-]);
+  [0, 0.16],
+] as const;
 
 /** The polished brass of the balance. */
 function Brass() {
@@ -203,7 +203,7 @@ export function QuotientBalanceScene({
       {/* The sealed reaction vessel: a bell jar on its base, holding the gas mixture. */}
       <group position={[-0.92, 0, 0]}>
         <mesh castShadow receiveShadow>
-          <latheGeometry args={[JAR_BASE, 72]} />
+          <Turn profile={JAR_BASE} />
           <SurfaceMaterial
             bump={0.02}
             coat={0.6}
@@ -244,7 +244,7 @@ export function QuotientBalanceScene({
           </mesh>
         ))}
         <mesh castShadow renderOrder={2}>
-          <latheGeometry args={[BELL_JAR, 96]} />
+          <Turn profile={BELL_JAR} />
           <GlassMaterial color={EQUILIBRIUM_COLORS.vesselGlass} opacity={0.2} />
         </mesh>
         <ThreeLabel
@@ -283,7 +283,7 @@ export function QuotientBalanceScene({
           />
         </mesh>
         <mesh castShadow>
-          <latheGeometry args={[COLUMN, 48]} />
+          <Turn profile={COLUMN} />
           <Brass />
         </mesh>
         <group position={[0, 0.9, 0]} ref={beamRef}>
@@ -338,11 +338,11 @@ export function QuotientBalanceScene({
               })}
               <group position={[0, -DROP - 0.03, 0]}>
                 <mesh castShadow receiveShadow>
-                  <latheGeometry args={[PAN, 64]} />
+                  <Turn profile={PAN} />
                   <Brass />
                 </mesh>
                 <mesh castShadow position={[0, 0.012, 0]}>
-                  <latheGeometry args={[WEIGHT, 48]} />
+                  <Turn profile={WEIGHT} />
                   <meshPhysicalMaterial
                     clearcoat={0.9}
                     clearcoatRoughness={0.12}

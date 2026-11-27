@@ -5,19 +5,19 @@ import {
   ANODE_X,
   BEAKER_Z,
   CATHODE_X,
-  createSaltBridgeCurve,
   ElectrodeAssembly,
   HalfCellBeaker,
   InvertedUTubeBridge,
   LEFT_BEAKER_X,
   RIGHT_BEAKER_X,
+  SALT_BRIDGE,
 } from "@repo/design-system/components/contents/chemistry/bridge/apparatus";
 import {
   BenchVoltmeter,
   CurvedTestLeads,
-  createLeftLeadCurve,
-  createRightLeadCurve,
+  LEFT_LEAD,
   METER_Z,
+  RIGHT_LEAD,
 } from "@repo/design-system/components/contents/chemistry/bridge/meter";
 import type { GalvanicCell } from "@repo/design-system/components/contents/chemistry/bridge/model";
 import { evaluateGalvanicCell } from "@repo/design-system/components/contents/chemistry/bridge/model";
@@ -26,6 +26,11 @@ import {
   simulationStep,
 } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import {
+  placeOn,
+  pointOn,
+  trackOf,
+} from "@repo/design-system/components/three/form/path";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import {
@@ -39,6 +44,11 @@ import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr, Match } from "effect";
 import { useMemo, useRef } from "react";
 import type { Mesh } from "three";
+
+/** The salt bridge and the two test leads as measured tracks the ions and electrons ride. */
+const BRIDGE_TRACK = trackOf(SALT_BRIDGE);
+const LEFT_TRACK = trackOf(LEFT_LEAD);
+const RIGHT_TRACK = trackOf(RIGHT_LEAD);
 
 const ION_COUNT = 3;
 const ELECTRON_PER_LEAD = 3;
@@ -119,10 +129,6 @@ export function SaltBridgeScene({
   const spec = evaluateGalvanicCell(cell);
   const visuals = cellVisuals(cell);
 
-  const bridgeCurve = useMemo(createSaltBridgeCurve, []);
-  const leftLeadCurve = useMemo(createLeftLeadCurve, []);
-  const rightLeadCurve = useMemo(createRightLeadCurve, []);
-
   const ionSlots = useMemo(() => Arr.makeBy(ION_COUNT, (idx) => idx), []);
   const electronSlots = useMemo(
     () => Arr.makeBy(ELECTRON_PER_LEAD, (idx) => idx),
@@ -134,27 +140,29 @@ export function SaltBridgeScene({
       const t = (phase * 0.55 + (i + 0.5) / ELECTRON_PER_LEAD) % 1;
       const leftMesh = leftElectronRefs.current[i];
       if (leftMesh !== null && leftMesh !== undefined) {
-        const pt = leftLeadCurve.getPointAt(t);
-        leftMesh.position.set(pt.x, pt.y, pt.z + 0.005);
+        placeOn(LEFT_TRACK, t, leftMesh.position);
+        leftMesh.position.z += 0.005;
       }
       const rightMesh = rightElectronRefs.current[i];
       if (rightMesh !== null && rightMesh !== undefined) {
-        const pt = rightLeadCurve.getPointAt(t);
-        rightMesh.position.set(pt.x, pt.y, pt.z + 0.005);
+        placeOn(RIGHT_TRACK, t, rightMesh.position);
+        rightMesh.position.z += 0.005;
       }
     }
     for (let i = 0; i < ION_COUNT; i += 1) {
       const cationT = (phase * 0.36 + (i + 0.5) / ION_COUNT) % 1;
       const cationMesh = cationRefs.current[i];
       if (cationMesh !== null && cationMesh !== undefined) {
-        const pt = bridgeCurve.getPointAt(cationT);
-        cationMesh.position.set(pt.x, pt.y + 0.002, pt.z + 0.003);
+        placeOn(BRIDGE_TRACK, cationT, cationMesh.position);
+        cationMesh.position.y += 0.002;
+        cationMesh.position.z += 0.003;
       }
       const anionT = 1 - ((phase * 0.36 + (i + 0.2) / ION_COUNT) % 1);
       const anionMesh = anionRefs.current[i];
       if (anionMesh !== null && anionMesh !== undefined) {
-        const pt = bridgeCurve.getPointAt(anionT);
-        anionMesh.position.set(pt.x, pt.y - 0.002, pt.z - 0.003);
+        placeOn(BRIDGE_TRACK, anionT, anionMesh.position);
+        anionMesh.position.y -= 0.002;
+        anionMesh.position.z -= 0.003;
       }
     }
   };
@@ -213,12 +221,12 @@ export function SaltBridgeScene({
       {/* Glowing golden electrons streaming anode -> voltmeter -> cathode */}
       {Arr.map(electronSlots, (idx) => {
         const t = (idx + 0.5) / ELECTRON_PER_LEAD;
-        const leftPt = leftLeadCurve.getPointAt(t);
-        const rightPt = rightLeadCurve.getPointAt(t);
+        const leftPt = pointOn(LEFT_TRACK, t);
+        const rightPt = pointOn(RIGHT_TRACK, t);
         return (
           <group key={`e-${idx}`}>
             <mesh
-              position={[leftPt.x, leftPt.y, leftPt.z + 0.005]}
+              position={[leftPt[0], leftPt[1], leftPt[2] + 0.005]}
               ref={(el) => {
                 leftElectronRefs.current[idx] = el;
               }}
@@ -231,7 +239,7 @@ export function SaltBridgeScene({
               />
             </mesh>
             <mesh
-              position={[rightPt.x, rightPt.y, rightPt.z + 0.005]}
+              position={[rightPt[0], rightPt[1], rightPt[2] + 0.005]}
               ref={(el) => {
                 rightElectronRefs.current[idx] = el;
               }}
@@ -249,12 +257,12 @@ export function SaltBridgeScene({
 
       {/* Glowing green cations migrating right & amber anions migrating left inside U-tube */}
       {Arr.map(ionSlots, (idx) => {
-        const cationPt = bridgeCurve.getPointAt((idx + 0.5) / ION_COUNT);
-        const anionPt = bridgeCurve.getPointAt(1 - (idx + 0.2) / ION_COUNT);
+        const cationPt = pointOn(BRIDGE_TRACK, (idx + 0.5) / ION_COUNT);
+        const anionPt = pointOn(BRIDGE_TRACK, 1 - (idx + 0.2) / ION_COUNT);
         return (
           <group key={`ion-${idx}`}>
             <mesh
-              position={[cationPt.x, cationPt.y + 0.002, cationPt.z + 0.003]}
+              position={[cationPt[0], cationPt[1] + 0.002, cationPt[2] + 0.003]}
               ref={(el) => {
                 cationRefs.current[idx] = el;
               }}
@@ -267,7 +275,7 @@ export function SaltBridgeScene({
               />
             </mesh>
             <mesh
-              position={[anionPt.x, anionPt.y - 0.002, anionPt.z - 0.003]}
+              position={[anionPt[0], anionPt[1] - 0.002, anionPt[2] - 0.003]}
               ref={(el) => {
                 anionRefs.current[idx] = el;
               }}

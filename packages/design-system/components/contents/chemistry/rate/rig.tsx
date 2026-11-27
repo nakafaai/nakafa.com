@@ -1,13 +1,11 @@
 import { GLASS_WALL } from "@repo/design-system/components/contents/chemistry/bench";
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
+import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
 import {
   MetalMaterial,
   VesselGlassMaterial,
 } from "@repo/design-system/components/three/physical";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { Array as Arr } from "effect";
-import { useEffect, useMemo } from "react";
-import { CatmullRomCurve3, TubeGeometry, Vector3 } from "three";
 
 /** The gas syringe: how high its axis lies, its barrel's length and radius, and how far it starts from the flask. */
 export const SYRINGE = {
@@ -18,14 +16,14 @@ export const SYRINGE = {
 } as const;
 
 /** A rubber bung, tapered to seat in a flask's neck, with its rim rounded. */
-const BUNG = latheProfile([
+const BUNG = [
   [0.0012, 0],
   [0.0152, 0],
   [0.0162, 0.0014],
   [0.0186, 0.0206],
   [0.0176, 0.022],
   [0.0012, 0.022],
-]);
+] as const;
 
 /** The scale marks printed along the barrel: how many, and every which one is long. */
 const MARKS = { count: 11, long: 5 } as const;
@@ -34,7 +32,7 @@ const MARKS = { count: 11, long: 5 } as const;
 export function Bung() {
   return (
     <mesh castShadow>
-      <latheGeometry args={[BUNG, 40]} />
+      <Turn profile={BUNG} />
       <meshStandardMaterial color={BENCH_COLORS.stopper} roughness={0.82} />
     </mesh>
   );
@@ -52,28 +50,21 @@ export function DeliveryTube({
   readonly reach: number;
   readonly rise: number;
 }) {
-  const tube = useMemo(() => {
-    const bend = 0.018;
-    const turn = Math.sign(reach);
-    const path = new CatmullRomCurve3(
-      [
-        new Vector3(0, -0.012, 0),
-        new Vector3(0, rise - bend, 0),
-        new Vector3(turn * bend * 0.3, rise - bend * 0.3, 0),
-        new Vector3(turn * bend, rise, 0),
-        new Vector3(reach, rise, 0),
-      ],
-      false,
-      "catmullrom",
-      0.2
-    );
-    return new TubeGeometry(path, 96, 0.0032, 20, false);
-  }, [reach, rise]);
-
-  useEffect(() => () => tube.dispose(), [tube]);
-
   return (
-    <mesh castShadow geometry={tube} renderOrder={2}>
+    <mesh castShadow renderOrder={2}>
+      <Sweep
+        ends="open"
+        path={{
+          bend: 0.018,
+          kind: "route",
+          points: [
+            [0, -0.012, 0],
+            [0, rise, 0],
+            [reach, rise, 0],
+          ],
+        }}
+        radius={0.0032}
+      />
       <VesselGlassMaterial
         color={BENCH_COLORS.glass}
         thickness={GLASS_WALL}

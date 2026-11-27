@@ -1,4 +1,4 @@
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   LiquidMaterial,
@@ -154,19 +154,19 @@ export function Column({
 }) {
   const points = useMemo(() => {
     const rise = radius * (convex ? -0.3 : 0.3);
-    return latheProfile([
+    return [
       [0.0005, bottom],
       [radius, bottom],
       [radius, level + rise],
       [radius * 0.82, level + rise * 0.4],
       [radius * 0.5, level + rise * 0.1],
       [0.0005, level],
-    ]);
+    ] as const;
   }, [bottom, convex, level, radius]);
 
   return (
     <mesh renderOrder={1}>
-      <latheGeometry args={[points, 36]} />
+      <Turn profile={points} />
       <LiquidMaterial color={color} opacity={opacity} />
     </mesh>
   );

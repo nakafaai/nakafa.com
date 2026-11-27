@@ -8,12 +8,10 @@ import {
   TERMINAL_OFFSET,
 } from "@repo/design-system/components/contents/chemistry/electrolysis/circuit";
 import type { ElectrolysisColors } from "@repo/design-system/components/contents/chemistry/electrolysis/color";
-import {
-  createBeakerMarkingsTexture,
-  latheProfile,
-} from "@repo/design-system/components/contents/chemistry/glassware";
+import { createBeakerMarkingsTexture } from "@repo/design-system/components/contents/chemistry/glassware";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   GlassMaterial,
@@ -56,8 +54,8 @@ const BASE = 0.03;
  * rounded heel, a straight wall, a rim that flares and rolls over, and the
  * inner wall back down, so the glass has a real thickness to catch the light.
  */
-const BEAKER_PROFILE = latheProfile([
-  [0.001, 0],
+const BEAKER_PROFILE = [
+  [0, 0],
   [BEAKER_RADIUS - 0.03, 0],
   [BEAKER_RADIUS + WALL - 0.008, 0.008],
   [BEAKER_RADIUS + WALL, 0.035],
@@ -70,7 +68,7 @@ const BEAKER_PROFILE = latheProfile([
   [BEAKER_RADIUS, BASE + 0.025],
   [BEAKER_RADIUS - 0.025, BASE],
   [0.001, BASE],
-]);
+] as const;
 
 /**
  * A borosilicate Griffin beaker with a pouring spout and its printed scale,
@@ -83,7 +81,7 @@ export function Beaker({ colors }: { readonly colors: ElectrolysisColors }) {
   return (
     <group>
       <mesh castShadow renderOrder={2}>
-        <latheGeometry args={[BEAKER_PROFILE, 96]} />
+        <Turn profile={BEAKER_PROFILE} />
         <GlassMaterial color={colors.glass} opacity={0.26} />
       </mesh>
       <mesh
