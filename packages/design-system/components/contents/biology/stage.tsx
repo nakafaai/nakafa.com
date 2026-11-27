@@ -12,8 +12,16 @@ import { ScienceStage } from "@repo/design-system/components/three/stage";
 import type { Place } from "@repo/design-system/components/three/stage/place";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import type { ReactNode } from "react";
+import { createContext, use } from "react";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.3;
+
+/**
+ * How the camera of the surrounding biology stage frames its scene:
+ * `content` fits every subject the scene declares, whatever the card's
+ * shape; without it the camera keeps the lab's authored pose.
+ */
+const FramingContext = createContext<"content" | undefined>(undefined);
 
 /**
  * The three-dimensional stage of a biology lab: its lights, the camera of its
@@ -21,16 +29,21 @@ const NARROW_CANVAS_ASPECT_RATIO = 1.3;
  * so the card can hold its frame before the stage has loaded. The provider sits
  * inside the canvas, which renders only in the browser, so a theme change never
  * reaches streamed server HTML.
+ *
+ * @param setting - The place the lab's subject belongs in
+ * @param framing - `content` to fit the camera to the scene's subjects
  */
 export function BiologyStage({
   children,
   colors,
+  framing,
   setting,
   store,
   view,
 }: {
   children: ReactNode;
   colors: BiologySceneColors;
+  framing: "content" | undefined;
   setting: Place;
   store: BiologyItemStore;
   view: NarrowCameraPose;
@@ -38,8 +51,10 @@ export function BiologyStage({
   return (
     <ScienceStage setting={setting}>
       <BiologyLabProvider colors={colors} store={store} view={view}>
-        <BiologyCamera />
-        {children}
+        <FramingContext value={framing}>
+          <BiologyCamera />
+          {children}
+        </FramingContext>
       </BiologyLabProvider>
     </ScienceStage>
   );
@@ -65,6 +80,7 @@ function ResponsiveBiologyCamera({
 }) {
   const size = useThree((state) => state.size);
   const view = useBiologyView();
+  const framing = use(FramingContext);
   const cameraPosition = isNarrowThreeScene(size, NARROW_CANVAS_ASPECT_RATIO)
     ? view.narrowCameraPosition
     : view.cameraPosition;
@@ -74,6 +90,7 @@ function ResponsiveBiologyCamera({
       cameraPosition={cameraPosition}
       cameraTarget={view.cameraTarget}
       fov={45}
+      framing={framing}
       orbitOnPlay
       resetKey={selectedIndex}
     />
