@@ -1,3 +1,4 @@
+import { SceneFailure } from "@repo/design-system/components/three/failure";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   useStartVisualScene,
@@ -15,7 +16,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { useTranslations } from "use-intl";
 
 /** Caps p5 pixel density so 2D sketches stay Retina-sharp on phones and desktops without runaway backing buffers. */
 function resolveSketchPixelDensity(): number {
@@ -48,11 +48,12 @@ export function P5Sketch<State>({
   readonly program: P5Program<State>;
   readonly state: State;
 }) {
-  const t = useTranslations("Error");
   const playing = useVisualScene((card) => card.playing, false);
   const stopCount = useVisualScene((card) => card.stopCount, 0);
   const view = useVisualScene((card) => card.view, 0);
   const [loaded, setLoaded] = useState<Exit.Exit<typeof p5, SketchLoadError>>();
+  const [runtimeFailed, setRuntimeFailed] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [node, setNode] = useState<HTMLDivElement | null>(null);
   const start = useStartVisualScene();
   const instance = useRef<p5>(undefined);
@@ -61,7 +62,14 @@ export function P5Sketch<State>({
 
   useLayoutEffect(() => {
     latest.current = state;
-    instance.current?.redraw();
+    const redrawn = Effect.runSyncExit(
+      Effect.try(() => {
+        instance.current?.redraw();
+      })
+    );
+    if (Exit.isFailure(redrawn)) {
+      setRuntimeFailed(true);
+    }
   }, [state]);
 
   const load = useEffectEvent(() => {
@@ -72,6 +80,17 @@ export function P5Sketch<State>({
       startTransition(() => setLoaded(exit))
     );
   });
+
+  const retry = () => {
+    setRuntimeFailed(false);
+    setRetryCount((count) => count + 1);
+    if (!loaded || Exit.isFailure(loaded)) {
+      setLoaded(undefined);
+      Effect.runPromiseExit(loadP5()).then((exit) =>
+        startTransition(() => setLoaded(exit))
+      );
+    }
+  };
 
   const keepPlaying = useEffectEvent((sketch: p5) => {
     if (playing) {
@@ -92,17 +111,27 @@ export function P5Sketch<State>({
   });
 
   useEffect(() => {
-    if (!(loaded && Exit.isSuccess(loaded) && node)) {
+    if (!(loaded && Exit.isSuccess(loaded) && node) || runtimeFailed) {
       return;
     }
-    const sketch = new loaded.value((each) => {
-      program(each, () => latest.current);
-      const setup = each.setup;
-      each.setup = () => {
-        setup?.();
-        each.pixelDensity(resolveSketchPixelDensity());
-      };
-    }, node);
+    const mounted = Effect.runSyncExit(
+      Effect.try(
+        () =>
+          new loaded.value((each) => {
+            program(each, () => latest.current);
+            const setup = each.setup;
+            each.setup = () => {
+              setup?.();
+              each.pixelDensity(resolveSketchPixelDensity());
+            };
+          }, node)
+      )
+    );
+    if (Exit.isFailure(mounted)) {
+      setRuntimeFailed(true);
+      return;
+    }
+    const sketch = mounted.value;
     instance.current = sketch;
     keepPlaying(sketch);
     startPlaying();
@@ -113,9 +142,16 @@ export function P5Sketch<State>({
         entry.contentRect.height > 0 &&
         sketch.drawingContext
       ) {
-        sketch.pixelDensity(resolveSketchPixelDensity());
-        sketch.resizeCanvas(entry.contentRect.width, entry.contentRect.height);
-        sketch.redraw();
+        Effect.runSyncExit(
+          Effect.try(() => {
+            sketch.pixelDensity(resolveSketchPixelDensity());
+            sketch.resizeCanvas(
+              entry.contentRect.width,
+              entry.contentRect.height
+            );
+            sketch.redraw();
+          })
+        );
       }
     });
     resize.observe(node);
@@ -124,7 +160,7 @@ export function P5Sketch<State>({
       sketch.remove();
       instance.current = undefined;
     };
-  }, [loaded, node, program]);
+  }, [loaded, node, program, runtimeFailed]);
 
   useEffect(() => {
     const sketch = instance.current;
@@ -138,13 +174,10 @@ export function P5Sketch<State>({
     }
   }, [playing]);
 
-  if (loaded && Exit.isFailure(loaded)) {
+  if (runtimeFailed || (loaded && Exit.isFailure(loaded))) {
     return (
-      <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 p-4 text-center">
-        <p className="font-medium tracking-tight">{t("title")}</p>
-        <p className="text-muted-foreground max-w-md text-sm">
-          {String(loaded.cause)}
-        </p>
+      <div className="bg-card relative aspect-square w-full overflow-hidden sm:aspect-video">
+        <SceneFailure onRestart={retry} />
       </div>
     );
   }
@@ -152,8 +185,8 @@ export function P5Sketch<State>({
     <Intersection
       aria-label={label}
       className="relative aspect-square w-full overflow-hidden sm:aspect-video"
-      // A stop or view reset mounts a fresh canvas at frame 0.
-      key={`${view}-${stopCount}`}
+      // A stop, view reset, or manual retry mounts a fresh canvas at frame 0.
+      key={`${view}-${stopCount}-${retryCount}`}
       once
       onIntersect={load}
       ref={setNode}

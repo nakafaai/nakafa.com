@@ -289,14 +289,14 @@ function ThreeCanvasComponent({
     cancelRetry();
     disposeRenderer();
     pool.releaseOffscreen(canvasId);
+    if (nearViewport && !behindInert && !documentHidden) {
+      pool.acquire(canvasId, handleEvicted);
+    }
     setRetrying(false);
     setStage("loading");
     setAttempt(1);
     setMountKey((key) => key + 1);
     notifyLoading?.();
-    if (observedNear && !behindInert && !documentHidden) {
-      pool.acquire(canvasId, handleEvicted);
-    }
   };
 
   const handleContextLost = useEffectEvent(() => {
@@ -375,6 +375,7 @@ function ThreeCanvasComponent({
                 fallbackRender={() => null}
                 key={mountKey}
                 onError={handleBoundaryError}
+                report={attempt >= SCENE_STARTS}
               >
                 <Canvas
                   className={cn(

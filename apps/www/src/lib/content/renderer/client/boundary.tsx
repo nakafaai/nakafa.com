@@ -58,7 +58,7 @@ function VisualBoundaryFallback({
     throw error;
   }
   return (
-    <div className="bg-card relative my-6 min-h-64 w-full overflow-hidden rounded-xl border">
+    <div className="bg-card relative my-6 aspect-square w-full overflow-hidden rounded-xl border sm:aspect-[1.43/1]">
       <SceneFailure onRestart={resetErrorBoundary} />
     </div>
   );

@@ -9,6 +9,7 @@ import {
   cameraFitKey,
   DEFAULT_CAMERA_POSITION,
   DEFAULT_CAMERA_TARGET,
+  resolveSafeCameraFit,
 } from "@repo/design-system/components/three/camera/fit";
 import { useCameraFraming } from "@repo/design-system/components/three/camera/framing";
 import { useCameraPlay } from "@repo/design-system/components/three/camera/play";
@@ -21,7 +22,6 @@ import {
 } from "@repo/design-system/lib/geometry/camera";
 import { measureCameraBounds } from "@repo/design-system/lib/geometry/camera/bounds";
 import {
-  resolveCameraFit,
   resolveCameraPanOffset,
   resolveCameraRefit,
 } from "@repo/design-system/lib/geometry/camera/fit";
@@ -243,6 +243,10 @@ export function CameraControls(props: CameraControlsProps) {
       return unsubscribe;
     }
 
+    if (viewportWidth <= 0 || viewportHeight <= 0) {
+      return;
+    }
+
     // Sampling and imperative Three.js updates run only at this React boundary.
     // The registry batches geometry, font, and viewport changes into one frame.
     const fit = () => {
@@ -290,19 +294,17 @@ export function CameraControls(props: CameraControlsProps) {
         return;
       }
 
-      const fitted = Effect.runSync(
-        resolveCameraFit({
-          bounds,
-          fov: projectionFov,
-          height: viewportHeight,
-          labels,
-          minimumViewHeight: projectionHeight,
-          position: authoredPosition,
-          projection: projection.kind,
-          target: authoredTarget,
-          width: viewportWidth,
-        })
-      );
+      const fitted = resolveSafeCameraFit({
+        bounds,
+        fov: projectionFov,
+        height: viewportHeight,
+        labels,
+        minimumViewHeight: projectionHeight,
+        position: authoredPosition,
+        projection: projection.kind,
+        target: authoredTarget,
+        width: viewportWidth,
+      });
       const limits = resolveCameraDistanceLimits({
         maxDistance,
         minDistance,
