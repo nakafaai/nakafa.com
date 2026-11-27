@@ -1,5 +1,6 @@
 /** The look of a dry surface: nothing passes through it and nothing lies over it but its own coat. */
 const DRY = {
+  attenuationDistance: Number.POSITIVE_INFINITY,
   ior: 1.5,
   opacity: 1,
   sheen: 0,
@@ -17,6 +18,8 @@ const DRY = {
  * pass (`deep`), light also passes through it and takes its colour on the
  * way, bent as water bends it. Elsewhere it lets a little of what lies
  * behind it show instead, which still reads as wet and costs nothing more.
+ * `smooth` scales the surface's roughness and `varnish` is the least clear
+ * coat it carries; every other entry is a property of a physical material.
  *
  * @param wet - Whether the surface is wet tissue at all
  * @param deep - Whether light is traced through the surface
@@ -26,6 +29,7 @@ export function wetLook(wet: boolean, deep: boolean) {
     return DRY;
   }
   return {
+    attenuationDistance: deep ? 0.6 : Number.POSITIVE_INFINITY,
     ior: 1.36,
     opacity: deep ? 1 : 0.86,
     sheen: 0.5,

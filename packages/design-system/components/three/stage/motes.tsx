@@ -112,7 +112,7 @@ export function Motes({
   readonly blur?: number;
   readonly distant?: boolean;
   readonly drift?: number;
-  readonly from: string;
+  readonly from: number;
   readonly hollow?: number;
   readonly lit?: boolean;
   readonly opacity: number;
@@ -121,7 +121,7 @@ export function Motes({
   readonly share?: number;
   readonly size: number;
   readonly spread?: number;
-  readonly to: string;
+  readonly to: number;
 }) {
   const { profile, reach } = useStage();
   const count = Math.round(profile.motes * share);

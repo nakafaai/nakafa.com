@@ -1,7 +1,4 @@
-import {
-  GlassMaterial,
-  MetalMaterial,
-} from "@repo/design-system/components/three/physical";
+import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { GENETICS_COLORS } from "@repo/design-system/lib/material/genetics";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";

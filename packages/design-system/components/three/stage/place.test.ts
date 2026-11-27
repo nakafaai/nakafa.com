@@ -1,5 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
-import { standsOn } from "@repo/design-system/components/three/stage/place";
+import {
+  standsOn,
+  toneColor,
+} from "@repo/design-system/components/three/stage/place";
 
 describe("standsOn", () => {
   it("keeps the ground a lab names", () => {
@@ -23,5 +26,13 @@ describe("standsOn", () => {
   it("gives a lab without a floor no ground, whatever it names", () => {
     expect(standsOn("lab", undefined, undefined)).toBeUndefined();
     expect(standsOn("field", undefined, "grass")).toBeUndefined();
+  });
+});
+
+describe("toneColor", () => {
+  it("packs red, green and blue into one colour number", () => {
+    expect(toneColor([0, 0, 0])).toBe(0);
+    expect(toneColor([255, 255, 255])).toBe(16_777_215);
+    expect(toneColor([18, 52, 86])).toBe(1_193_046);
   });
 });

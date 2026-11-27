@@ -103,33 +103,29 @@ export function SurfaceMaterial({
   readonly wet?: boolean;
 }) {
   const maps = useSurfaceMaps(surface, repeat[0], repeat[1]);
-  const look = wetLook(wet, useDeepLight());
+  const { smooth, varnish, ...passing } = wetLook(wet, useDeepLight());
 
   return (
     <meshPhysicalMaterial
       aoMap={maps.finish}
       attach={attach}
-      attenuationColor={color}
-      attenuationDistance={look.thickness === 0 ? Number.POSITIVE_INFINITY : 0.6}
-      clearcoat={Math.max(coat, look.varnish)}
+      clearcoat={Math.max(coat, varnish)}
       clearcoatRoughness={wet ? 0.06 : 0.14}
       color={color}
-      emissive={glow ?? "#000000"}
+      emissive={glow ?? color}
       emissiveIntensity={glow === undefined ? 0 : shine}
-      emissiveMap={glow === undefined ? null : maps.tone}
-      ior={look.ior}
       map={maps.tone}
       metalness={metalness}
       normalMap={maps.normal}
       normalScale={[bump * RELIEF, bump * RELIEF]}
-      opacity={look.opacity}
-      roughness={roughness * look.smooth}
+      roughness={roughness * smooth}
       roughnessMap={maps.finish}
-      sheen={look.sheen}
       side={side}
-      thickness={look.thickness}
-      transmission={look.transmission}
-      transparent={look.transparent}
+      {...passing}
+      {...{
+        attenuationColor: color,
+        emissiveMap: glow === undefined ? null : maps.tone,
+      }}
     />
   );
 }

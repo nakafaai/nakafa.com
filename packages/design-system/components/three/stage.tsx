@@ -19,8 +19,7 @@ import {
   SpaceSetting,
   StudioSetting,
 } from "@repo/design-system/components/three/stage/settings";
-import type { ComponentType } from "react";
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { NeutralToneMapping } from "three";
 
 /** How far a lab reaches from its middle when it names no reach, in scene units. */

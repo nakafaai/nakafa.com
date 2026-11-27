@@ -17,6 +17,7 @@ describe("wetLook", () => {
     const look = wetLook(true, true);
     expect(look.transmission).toBeGreaterThan(0);
     expect(look.thickness).toBeGreaterThan(0);
+    expect(look.attenuationDistance).toBeLessThan(1);
     expect(look.transparent).toBe(false);
     expect(look.opacity).toBe(1);
   });

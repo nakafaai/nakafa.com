@@ -100,9 +100,9 @@ export function Field({
   dim,
   rim,
 }: {
-  readonly core: string;
+  readonly core: number;
   readonly dim: number;
-  readonly rim: string;
+  readonly rim: number;
 }) {
   const light = useMemo(
     () =>

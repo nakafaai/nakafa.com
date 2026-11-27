@@ -4,6 +4,7 @@ import { useStage } from "@repo/design-system/components/three/stage/context";
 import { horizonColor } from "@repo/design-system/components/three/stage/horizon";
 import { Motes } from "@repo/design-system/components/three/stage/motes";
 import type { Place } from "@repo/design-system/components/three/stage/place";
+import { toneColor } from "@repo/design-system/components/three/stage/place";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
@@ -370,7 +371,7 @@ export function StudioSetting() {
 }
 
 /** The tone of open space between the stars, the same in both themes. */
-const VOID = "#04050a";
+const VOID = toneColor([4, 5, 10]);
 
 /**
  * Open space: one hard sun, standing in the sky as a disc with its glare,
@@ -386,19 +387,19 @@ export function SpaceSetting() {
         band={0.05}
         body={VOID}
         disc={1}
-        glow="#aebcff"
-        high="#05060d"
+        glow={toneColor([174, 188, 255])}
+        high={toneColor([5, 6, 13])}
         low={VOID}
       />
       <Motes
         distant
-        from="#ffd2a8"
+        from={toneColor([255, 210, 168])}
         lit
         opacity={1}
         pace={0.6}
         seed={61}
         size={2.6}
-        to="#bcd0ff"
+        to={toneColor([188, 208, 255])}
       />
       <Softboxes ambient={0.22} exposure={0.15} hemisphere={0} />
       <Sun direction={STUDIO_SUN} intensity={3.2} />
@@ -434,7 +435,7 @@ export function DarkSetting() {
       <Motes
         blur={1.4}
         drift={0.02}
-        from="#8fa3c4"
+        from={toneColor([143, 163, 196])}
         hollow={0.2}
         lit
         opacity={0.1}
@@ -443,7 +444,7 @@ export function DarkSetting() {
         share={0.5}
         size={0.016}
         spread={3}
-        to="#d6dff0"
+        to={toneColor([214, 223, 240])}
       />
     </>
   );

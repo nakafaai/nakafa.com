@@ -130,14 +130,14 @@ export function Backdrop({
   shafts = 0,
 }: {
   readonly band?: number;
-  readonly body: string;
+  readonly body: number;
   readonly crowd?: number;
   readonly dim?: number;
   readonly disc?: number;
-  readonly glow: string;
+  readonly glow: number;
   readonly grain?: number;
-  readonly high: string;
-  readonly low: string;
+  readonly high: number;
+  readonly low: number;
   readonly ripple?: number;
   readonly shafts?: number;
 }) {

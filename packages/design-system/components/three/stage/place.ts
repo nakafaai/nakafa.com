@@ -54,3 +54,16 @@ export function standsOn(
   }
   return ground ?? STANDS[place];
 }
+
+/**
+ * Packs a tone, its red, green and blue from 0 to 255, into the one number
+ * a colour is read from, so a place states the tones of its light, depth
+ * and drifting matter as the numbers they are.
+ */
+export function toneColor([red, green, blue]: readonly [
+  red: number,
+  green: number,
+  blue: number,
+]) {
+  return red * 65_536 + green * 256 + blue;
+}
