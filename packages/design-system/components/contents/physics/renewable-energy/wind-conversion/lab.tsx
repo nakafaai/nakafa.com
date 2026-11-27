@@ -1,7 +1,5 @@
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { Airflow } from "@repo/design-system/components/three/energy/airflow";
 import { Turbine } from "@repo/design-system/components/three/energy/turbine";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
@@ -120,8 +118,7 @@ export function WindEnergyConversionLab({
 
 /**
  * The turbine in the wind the slider sets: the rotor turns at the rate that
- * wind gives an 80 m rotor, and smoke streaks show the air slowing as it
- * hands its energy to the blades.
+ * wind gives an 80 m rotor, so a stronger wind is seen in faster blades.
  */
 function WindConversionScene({
   onReset,
@@ -133,11 +130,6 @@ function WindConversionScene({
   useVisualReset(onReset);
 
   return (
-    <group>
-      <Turbine metres={ROTOR_METRES} radius={ROTOR_RADIUS} wind={windSpeed} />
-      <CameraBounds exclude>
-        <Airflow metres={ROTOR_METRES} radius={ROTOR_RADIUS} wind={windSpeed} />
-      </CameraBounds>
-    </group>
+    <Turbine metres={ROTOR_METRES} radius={ROTOR_RADIUS} wind={windSpeed} />
   );
 }
