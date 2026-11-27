@@ -10,6 +10,7 @@ import type { GroundSchema } from "@repo/design-system/components/three/stage/la
 import { GroundMaterial } from "@repo/design-system/components/three/stage/terrain";
 import { BOAT_COLORS } from "@repo/design-system/lib/material/boat";
 import { Array as Arr } from "effect";
+import type { ReactNode } from "react";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import type { InstancedMesh } from "three";
 import {
@@ -78,11 +79,14 @@ function Layer({
 const LANDING = 5;
 
 /**
- * The reeds of both banks: one clump drawn at every bed, greener at the root
- * than at the tip. No reeds stand where a boat puts off from the near bank
+ * The reeds in the shallows of both banks, one clump at every bed, as a
+ * child of `Banks`. No reeds stand where a boat puts off from the near bank
  * or comes in on the far one.
+ *
+ * @param half - Half the river's width from waterline to waterline, in metres
+ * @param landings - Where a boat puts off from the near bank and comes in on the far one, along the river, in metres
  */
-function Reeds({
+export function Reeds({
   half,
   landings,
 }: {
@@ -148,14 +152,14 @@ function Reeds({
  * fades into the horizon. The river runs along x and each waterline wanders
  * as a natural bank does.
  *
- * @param landings - Where a boat puts off from the near bank and comes in on the far one, along the river, in metres
+ * @param children - What grows in the shallows, such as `Reeds`
  * @param width - The river's width from waterline to waterline, in metres
  */
 export function Banks({
-  landings,
+  children,
   width,
 }: {
-  readonly landings: readonly [number, number];
+  readonly children?: ReactNode;
   readonly width: number;
 }) {
   return (
@@ -178,7 +182,7 @@ export function Banks({
           />
         </group>
       ))}
-      <Reeds half={width / 2} landings={landings} />
+      {children}
     </CameraBounds>
   );
 }

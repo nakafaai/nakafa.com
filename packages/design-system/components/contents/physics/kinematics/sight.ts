@@ -1,17 +1,17 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 /** A place in a scene, or a direction in it: along x, up y and along z. */
 type Place = readonly [x: number, y: number, z: number];
 
 /** The frame a camera draws into and how much of it the subject may take. */
-interface Frame {
+const FrameSchema = Schema.Struct({
   /** The share of the frame the subject may span, from 0 to 1: the rest is the margin around it. */
-  readonly fill: number;
+  fill: Schema.Finite,
   /** The camera's vertical angle of view, in degrees. */
-  readonly fov: number;
+  fov: Schema.Finite,
   /** The frame's width over its height. */
-  readonly shape: number;
-}
+  shape: Schema.Finite,
+});
 
 /** How far a place lies along a direction. */
 function along(place: Place, direction: Place) {
@@ -38,7 +38,7 @@ function along(place: Place, direction: Place) {
 export function sightOver(
   points: readonly Place[],
   toward: Place,
-  frame: Frame
+  frame: typeof FrameSchema.Type
 ) {
   const length = Math.hypot(toward[0], toward[1], toward[2]);
   const ahead = [

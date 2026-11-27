@@ -2,7 +2,10 @@ import { Line } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { VelocityArrow } from "@repo/design-system/components/contents/physics/kinematics/arrow";
 import { useSight } from "@repo/design-system/components/contents/physics/kinematics/follow";
-import { Banks } from "@repo/design-system/components/contents/physics/kinematics/river/bank";
+import {
+  Banks,
+  Reeds,
+} from "@repo/design-system/components/contents/physics/kinematics/river/bank";
 import type { River } from "@repo/design-system/components/contents/physics/kinematics/river/crossing";
 import {
   RiverSchema,
@@ -309,7 +312,9 @@ function RiverScene({
         resetKey={heading}
       />
       <Sea level={0} swell={0.8} />
-      <Banks landings={landings} width={river.width + 2 * BERTH} />
+      <Banks width={river.width + 2 * BERTH}>
+        <Reeds half={half + BERTH} landings={landings} />
+      </Banks>
       <Flotsam current={river.current} width={river.width} />
       <Line
         color={getColor("WHITE")}

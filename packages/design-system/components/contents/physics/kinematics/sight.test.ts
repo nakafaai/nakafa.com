@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { sightOver } from "@repo/design-system/components/contents/physics/kinematics/sight";
+import { Array as Arr } from "effect";
 
 /** A square frame with a right angle of view, filled to its edges: it sees as far to a side as it stands away. */
 const SQUARE = { fill: 1, fov: 90, shape: 1 } as const;
@@ -76,7 +77,7 @@ describe("sightOver", () => {
     ] as const;
     const far = Math.hypot(look[0], look[1], look[2]);
     const tall = Math.tan((frame.fov * Math.PI) / 360);
-    const shares = points.map((point) => {
+    const shares = Arr.map(points, (point) => {
       const from = [
         point[0] - position[0],
         point[1] - position[1],
@@ -97,8 +98,8 @@ describe("sightOver", () => {
         rise / (deep * tall),
       ] as const;
     });
-    const widest = Math.max(...shares.map(([side]) => Math.abs(side)));
-    const tallest = Math.max(...shares.map(([, rise]) => rise));
+    const widest = Math.max(...Arr.map(shares, ([side]) => Math.abs(side)));
+    const tallest = Math.max(...Arr.map(shares, ([, rise]) => rise));
 
     expect(position[1]).toBeGreaterThan(0);
     expect(widest).toBeLessThanOrEqual(0.9 + 1e-9);
