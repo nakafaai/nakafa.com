@@ -5,14 +5,8 @@ import {
   SHORE_EXTENT,
 } from "@repo/design-system/components/contents/physics/kinematics/river/shore";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { useStage } from "@repo/design-system/components/three/stage/context";
-import type { GroundSchema } from "@repo/design-system/components/three/stage/grain";
-import {
-  HORIZON_FADE_INNER,
-  HORIZON_FADE_OUTER,
-  useGround,
-  useHorizonFade,
-} from "@repo/design-system/components/three/stage/terrain";
+import type { GroundSchema } from "@repo/design-system/components/three/stage/land";
+import { GroundMaterial } from "@repo/design-system/components/three/stage/terrain";
 import { BOAT_COLORS } from "@repo/design-system/lib/material/boat";
 import { Array as Arr } from "effect";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
@@ -70,26 +64,12 @@ function Layer({
   readonly metres: number;
   readonly side: 1 | -1;
 }) {
-  const { reach } = useStage();
   const geometry = useSheet(side, half, backs);
   const tiles = (2 * SHORE_EXTENT) / metres;
-  const { bump, map, patches } = useGround(kind, [tiles, tiles]);
-  const fade = useHorizonFade(
-    HORIZON_FADE_INNER * reach,
-    HORIZON_FADE_OUTER * reach
-  );
 
   return (
     <mesh geometry={geometry} receiveShadow>
-      <meshStandardMaterial
-        aoMap={patches}
-        bumpMap={bump}
-        bumpScale={0.6}
-        map={map}
-        ref={fade}
-        roughness={kind === "soil" ? 0.7 : 0.94}
-        transparent
-      />
+      <GroundMaterial kind={kind} repeat={[tiles, tiles]} />
     </mesh>
   );
 }

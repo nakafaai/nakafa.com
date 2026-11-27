@@ -1,6 +1,11 @@
 import { RoundedBox } from "@react-three/drei";
 import { ROAD } from "@repo/design-system/components/contents/physics/kinematics/road";
+import {
+  ball,
+  dome,
+} from "@repo/design-system/components/contents/physics/kinematics/round";
 import { SEDAN } from "@repo/design-system/components/contents/physics/kinematics/sedan";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { Strake } from "@repo/design-system/components/three/vessel/strake";
 import { GATE_COLORS } from "@repo/design-system/lib/material/gate";
@@ -29,6 +34,34 @@ export interface GateRig {
   /** Cuts the beam at the car's flank while the car stands in it, and lights the beacon. */
   readonly trip: (broken: boolean) => void;
 }
+
+/**
+ * The parts of a post, as outlines turned about its axis: the tube, the
+ * hazard band round it, the hood over the lens, the lens, the glass of the
+ * beacon, and one metre of the beam.
+ */
+const TUBE = [
+  [0, 0],
+  [0.024, 0],
+  [0.024, BEAM - 0.1],
+  [0, BEAM - 0.1],
+] as const;
+const BAND = [
+  [0.0255, -0.045],
+  [0.0255, 0.045],
+] as const;
+const HOOD = [
+  [0.036, -0.035],
+  [0.04, 0.035],
+] as const;
+const LENS = ball(0.032);
+const BEACON = dome(0.034, 0.034);
+const RAY = [
+  [0, -0.5],
+  [0.011, -0.5],
+  [0.011, 0.5],
+  [0, 0.5],
+] as const;
 
 /** The cable that feeds a post's head: down the tube and away along the ground. */
 const CABLE = [
@@ -68,8 +101,8 @@ function Post({
           surface="concrete"
         />
       </RoundedBox>
-      <mesh castShadow position={[0, 0.1 + (BEAM - 0.1) / 2, 0]}>
-        <cylinderGeometry args={[0.024, 0.024, BEAM - 0.1, 20]} />
+      <mesh castShadow position={[0, 0.1, 0]}>
+        <Turn profile={TUBE} />
         <SurfaceMaterial
           color={GATE_COLORS.steel}
           metalness={0.85}
@@ -79,7 +112,7 @@ function Post({
         />
       </mesh>
       <mesh position={[0, 0.22, 0]}>
-        <cylinderGeometry args={[0.0255, 0.0255, 0.09, 20]} />
+        <Turn profile={BAND} />
         <SurfaceMaterial
           color={GATE_COLORS.hazard}
           repeat={[1, 1]}
@@ -102,8 +135,13 @@ function Post({
         />
       </RoundedBox>
       {Arr.map([1, -1] as const, (side) => (
-        <mesh key={side} position={[side * 0.066, BEAM, 0]}>
-          <boxGeometry args={[0.004, 0.11, 0.09]} />
+        <RoundedBox
+          args={[0.004, 0.11, 0.09]}
+          key={side}
+          position={[side * 0.066, BEAM, 0]}
+          radius={0.0015}
+          smoothness={2}
+        >
           <SurfaceMaterial
             color={GATE_COLORS.steel}
             metalness={0.8}
@@ -111,7 +149,7 @@ function Post({
             roughness={0.4}
             surface="brushed"
           />
-        </mesh>
+        </RoundedBox>
       ))}
       <group position={[0, BEAM, 0]}>{children}</group>
       <Strake
@@ -132,7 +170,7 @@ function Lens({ toward }: { readonly toward: 1 | -1 }) {
       rotation={[(toward * Math.PI) / 2, 0, 0]}
     >
       <mesh castShadow position={[0, 0.03, 0]}>
-        <cylinderGeometry args={[0.04, 0.036, 0.07, 28, 1, true]} />
+        <Turn profile={HOOD} />
         <SurfaceMaterial
           color={GATE_COLORS.housing}
           repeat={[2, 1]}
@@ -141,8 +179,8 @@ function Lens({ toward }: { readonly toward: 1 | -1 }) {
           surface="plastic"
         />
       </mesh>
-      <mesh position={[0, 0.004, 0]} scale={[1, 0.45, 1]}>
-        <sphereGeometry args={[0.032, 28, 16]} />
+      <mesh position={[0, 0.004 - 0.032 * 0.45, 0]} scale={[1, 0.45, 1]}>
+        <Turn profile={LENS} />
         <meshPhysicalMaterial
           clearcoat={1}
           color={GATE_COLORS.lens}
@@ -194,9 +232,7 @@ export function LightGate({
       <Post z={RECEIVER}>
         <Lens toward={1} />
         <mesh position={[0, 0.085, 0]}>
-          <sphereGeometry
-            args={[0.034, 24, 14, 0, Math.PI * 2, 0, Math.PI / 2]}
-          />
+          <Turn profile={BEACON} />
           <meshStandardMaterial
             color={GATE_COLORS.beaconLens}
             emissive={GATE_COLORS.beaconGlow}
@@ -207,7 +243,7 @@ export function LightGate({
         </mesh>
       </Post>
       <mesh ref={beam} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.011, 0.011, 1, 10]} />
+        <Turn profile={RAY} />
         <meshBasicMaterial
           color={GATE_COLORS.beam}
           opacity={0.7}

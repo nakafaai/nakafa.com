@@ -1,5 +1,6 @@
 import { RoundedBox } from "@react-three/drei";
 import { ROAD } from "@repo/design-system/components/contents/physics/kinematics/road";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { GATE_COLORS } from "@repo/design-system/lib/material/gate";
@@ -8,6 +9,20 @@ import type { ReactNode } from "react";
 /** The height of the board's middle over the pavement, and its size, in metres. */
 const HEIGHT = 2.5;
 const SIZE = [1.9, 1.05] as const;
+
+/** The post the board stands on and its footing, as outlines turned about the post's axis. */
+const POST = [
+  [0, 0],
+  [0.05, 0],
+  [0.045, HEIGHT - SIZE[1] / 2],
+  [0, HEIGHT - SIZE[1] / 2],
+] as const;
+const FOOTING = [
+  [0, 0],
+  [0.18, 0],
+  [0.16, 0.06],
+  [0, 0.06],
+] as const;
 
 /**
  * The speed board on the pavement past a trap, the kind that shows drivers
@@ -30,8 +45,8 @@ export function SpeedBoard({
 }) {
   return (
     <group position={[at, 0, -(ROAD.halfWidth + 1.25)]} rotation={[0, 0.5, 0]}>
-      <mesh castShadow position={[0, (HEIGHT - SIZE[1] / 2) / 2, -0.07]}>
-        <cylinderGeometry args={[0.045, 0.05, HEIGHT - SIZE[1] / 2, 20]} />
+      <mesh castShadow position={[0, 0, -0.07]}>
+        <Turn profile={POST} />
         <SurfaceMaterial
           color={GATE_COLORS.steel}
           metalness={0.85}
@@ -40,8 +55,8 @@ export function SpeedBoard({
           surface="brushed"
         />
       </mesh>
-      <mesh castShadow position={[0, 0.03, -0.07]} receiveShadow>
-        <cylinderGeometry args={[0.16, 0.18, 0.06, 28]} />
+      <mesh castShadow position={[0, 0, -0.07]} receiveShadow>
+        <Turn profile={FOOTING} />
         <SurfaceMaterial
           color={GATE_COLORS.footing}
           repeat={[1, 1]}
@@ -63,17 +78,27 @@ export function SpeedBoard({
           surface="brushed"
         />
       </RoundedBox>
-      <mesh position={[0, HEIGHT, 0.052]}>
-        <planeGeometry args={[SIZE[0], SIZE[1]]} />
-        <meshPhysicalMaterial
-          clearcoat={1}
-          clearcoatRoughness={0.25}
+      <RoundedBox
+        args={[SIZE[0], SIZE[1], 0.006]}
+        position={[0, HEIGHT, 0.05]}
+        radius={0.002}
+        smoothness={2}
+      >
+        <SurfaceMaterial
+          coat={1}
           color={GATE_COLORS.board}
+          repeat={[2, 1]}
           roughness={0.5}
+          surface="plastic"
         />
-      </mesh>
-      <mesh castShadow position={[0, HEIGHT + SIZE[1] / 2 + 0.09, 0.09]}>
-        <boxGeometry args={[SIZE[0] + 0.16, 0.025, 0.3]} />
+      </RoundedBox>
+      <RoundedBox
+        args={[SIZE[0] + 0.16, 0.025, 0.3]}
+        castShadow
+        position={[0, HEIGHT + SIZE[1] / 2 + 0.09, 0.09]}
+        radius={0.008}
+        smoothness={3}
+      >
         <SurfaceMaterial
           color={GATE_COLORS.boardFrame}
           metalness={0.6}
@@ -81,7 +106,7 @@ export function SpeedBoard({
           roughness={0.5}
           surface="brushed"
         />
-      </mesh>
+      </RoundedBox>
       <ThreeLabel
         color={GATE_COLORS.boardText}
         fontSize="compact"

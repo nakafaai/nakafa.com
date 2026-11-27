@@ -15,6 +15,7 @@ import { simulationStep } from "@repo/design-system/components/contents/simulati
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import { Sweep } from "@repo/design-system/components/three/form/part";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
@@ -322,8 +323,8 @@ function RiverScene({
       />
       <Sea level={0} swell={0.8} />
       <CameraBounds exclude>
-        <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[4000, river.width + 2 * BERTH + 8]} />
+        <mesh>
+          <Sweep flat={SHEET} path={silt} radius={half + BERTH + 4} />
           <meshBasicMaterial
             color={BOAT_COLORS.silt}
             depthWrite={false}
@@ -406,6 +407,17 @@ function RiverScene({
     </>
   );
 }
+
+/**
+ * The silt a lowland river carries, as a sheet of tint that lies on the
+ * water from bank to bank along the whole river: a ribbon thin as a film,
+ * its broad face up.
+ */
+const SHEET = [0.0001, [0, 1, 0]] as const;
+const silt = [
+  [-2000, 0.02, 0],
+  [2000, 0.02, 0],
+] as const;
 
 /** Where the boat's arrows start, on the plane its velocity triangle is drawn in. */
 const START = [0, 0] as const;

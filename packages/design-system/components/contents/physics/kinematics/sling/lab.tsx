@@ -22,6 +22,7 @@ import { useTimeline } from "@repo/design-system/components/contents/simulation/
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
@@ -73,6 +74,22 @@ const SPEED_UNIT = 0.11;
 
 /** How many places around the circle the frame is fitted to. */
 const AROUND = 16;
+
+/**
+ * The stake the string turns on, as an outline turned about its axis: a
+ * plate frozen into the ice, the pin, and the ball on its top that keeps the
+ * loop of the string on.
+ */
+const STAKE = [
+  [0, 0],
+  [0.052, 0],
+  [0.045, 0.012],
+  [0.013, 0.012],
+  [0.011, STONE.eye + 0.008],
+  [0.017, STONE.eye + 0.022],
+  [0.012, STONE.eye + 0.036],
+  [0, STONE.eye + 0.039],
+] as const;
 
 /** How high over the ice the arrows are drawn, in metres. */
 const ARROWS = 0.3;
@@ -328,6 +345,23 @@ function WhirlScene({
     [motion.speed, radius]
   );
   const pullArrow = useMemo(() => [radius * 0.6, 0, 0] as const, [radius]);
+  const rope = useMemo(
+    () =>
+      [
+        [0, 0, 0],
+        [radius, 0, 0],
+      ] as const,
+    [radius]
+  );
+  // The circle scribed into the ice, as a flat band turned about the stake.
+  const scribe = useMemo(
+    () =>
+      [
+        [radius * 1.018, 0],
+        [radius * 0.982, 0],
+      ] as const,
+    [radius]
+  );
   const tangent = useMemo(
     () =>
       [
@@ -370,13 +404,13 @@ function WhirlScene({
     <>
       <SimulationTicker running={playing} />
       <Ice radius={radius} />
-      <mesh position={[0, 0.003, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[radius * 0.982, radius * 1.018, 160]} />
-        <meshStandardMaterial
+      <mesh position={[0, 0.003, 0]} receiveShadow>
+        <Turn profile={scribe} />
+        <SurfaceMaterial
           color={RINK_COLORS.scribe}
-          opacity={0.95}
+          repeat={[40, 1]}
           roughness={0.7}
-          transparent
+          surface="paint"
         />
       </mesh>
       <CameraBounds exclude>
@@ -391,43 +425,19 @@ function WhirlScene({
           transparent
         />
       </CameraBounds>
-      <mesh castShadow position={[0, 0.006, 0]} receiveShadow>
-        <cylinderGeometry args={[0.045, 0.052, 0.012, 32]} />
-        <SurfaceMaterial
-          color={RINK_COLORS.steel}
-          metalness={0.85}
-          repeat={[1, 1]}
-          roughness={0.4}
-          surface="brushed"
-        />
-      </mesh>
-      <mesh castShadow position={[0, (STONE.eye + 0.02) / 2, 0]}>
-        <cylinderGeometry args={[0.011, 0.013, STONE.eye + 0.02, 20]} />
+      <mesh castShadow receiveShadow>
+        <Turn profile={STAKE} />
         <SurfaceMaterial
           color={RINK_COLORS.steel}
           metalness={0.85}
           repeat={[1, 2]}
-          roughness={0.35}
-          surface="brushed"
-        />
-      </mesh>
-      <mesh castShadow position={[0, STONE.eye + 0.022, 0]}>
-        <sphereGeometry args={[0.017, 20, 14]} />
-        <SurfaceMaterial
-          color={RINK_COLORS.steel}
-          metalness={0.9}
-          repeat={[1, 1]}
-          roughness={0.25}
+          roughness={0.38}
           surface="brushed"
         />
       </mesh>
       <group ref={string}>
-        <mesh
-          castShadow
-          position={[radius / 2, 0, 0]}
-          rotation={[0, 0, Math.PI / 2]}
-        >
-          <cylinderGeometry args={[0.011, 0.011, radius, 10]} />
+        <mesh castShadow>
+          <Sweep path={rope} radius={0.011} />
           <SurfaceMaterial
             color={RINK_COLORS.rope}
             repeat={[1, 30]}

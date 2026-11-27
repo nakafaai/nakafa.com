@@ -1,9 +1,23 @@
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { useMemo } from "react";
 import { Quaternion, Vector3 } from "three";
 
 type Place = readonly [number, number, number];
 
 const UP = new Vector3(0, 1, 0);
+
+/** A shaft and a head one unit thick and one unit long, as outlines turned about the arrow's line: each arrow scales them to its own size. */
+const SHAFT = [
+  [0, 0],
+  [1, 0],
+  [1, 1],
+  [0, 1],
+] as const;
+const HEAD = [
+  [0, 0],
+  [1, 0],
+  [0, 1],
+] as const;
 
 /**
  * A velocity drawn in the world as a solid arrow from `from` to `to`, in
@@ -42,8 +56,8 @@ export function VelocityArrow({
 
   return (
     <group position={from} quaternion={turn}>
-      <mesh castShadow position={[0, (length - head) / 2, 0]}>
-        <cylinderGeometry args={[thick, thick, length - head, 20]} />
+      <mesh castShadow scale={[thick, length - head, thick]}>
+        <Turn profile={SHAFT} />
         <meshStandardMaterial
           color={color}
           emissive={color}
@@ -51,8 +65,12 @@ export function VelocityArrow({
           roughness={0.4}
         />
       </mesh>
-      <mesh castShadow position={[0, length - head / 2, 0]}>
-        <coneGeometry args={[thick * 2.6, head, 28]} />
+      <mesh
+        castShadow
+        position={[0, length - head, 0]}
+        scale={[thick * 2.6, head, thick * 2.6]}
+      >
+        <Turn profile={HEAD} />
         <meshStandardMaterial
           color={color}
           emissive={color}

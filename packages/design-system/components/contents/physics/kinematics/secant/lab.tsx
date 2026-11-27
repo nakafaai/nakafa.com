@@ -4,7 +4,6 @@ import { MotionPlot } from "@repo/design-system/components/contents/physics/kine
 import {
   DistancePosts,
   ROAD,
-  Road,
 } from "@repo/design-system/components/contents/physics/kinematics/road";
 import { MarkerFlag } from "@repo/design-system/components/contents/physics/kinematics/secant/flag";
 import type {
@@ -28,6 +27,7 @@ import { useTimeline } from "@repo/design-system/components/contents/simulation/
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
+import { Road } from "@repo/design-system/components/three/stage/road";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -150,7 +150,7 @@ export function CarTripSecantSlopeLab({
         render={<section />}
       >
         <ScienceStage
-          floor={-0.015}
+          floor={0}
           frameloop="always"
           ground="grass"
           reach={40}
@@ -262,7 +262,11 @@ function TripScene({
         resetKey={`${ends[0]}:${ends[1]}`}
         to={ends[1]}
       />
-      <Road from={reach.lowest - 200} surface="dry" to={reach.highest + 300} />
+      <Road
+        dash={ROAD.dash}
+        spacing={ROAD.spacing}
+        width={2 * ROAD.halfWidth}
+      />
       <DistancePosts
         posts={Arr.map(
           Arr.range(

@@ -3,9 +3,11 @@ import {
   dropHeight,
 } from "@repo/design-system/components/contents/physics/kinematics/rain/fall";
 import { ROAD } from "@repo/design-system/components/contents/physics/kinematics/road";
+import { ball } from "@repo/design-system/components/contents/physics/kinematics/round";
 import { SEDAN } from "@repo/design-system/components/contents/physics/kinematics/sedan";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { chanceAt } from "@repo/design-system/components/three/field/noise";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { WEATHER_COLORS } from "@repo/design-system/lib/material/weather";
 import { Array as Arr } from "effect";
 import type { Ref } from "react";
@@ -44,6 +46,16 @@ const SHUTTER = 0.075;
 /** How far a ring spreads before it is gone, in metres, and how many rings a metre of fallen rain starts. */
 const RING_REACH = 0.2;
 const RING_PACE = 0.32;
+
+/**
+ * One streak a metre long, thinner where the drop has just been than where
+ * it is, and one mote of spray, as outlines turned about their axes.
+ */
+const STREAK = [
+  [0.0012, -0.5],
+  [0.0035, 0.5],
+] as const;
+const MOTE = ball(0.16);
 
 /** What a simulation drives on the rain every frame. */
 export interface RainRig {
@@ -202,7 +214,7 @@ export function Rain({ ref }: { readonly ref: Ref<RainRig> }) {
         frustumCulled={false}
         ref={streaks}
       >
-        <cylinderGeometry args={[0.0035, 0.0012, 1, 4]} />
+        <Turn profile={STREAK} />
         <meshBasicMaterial
           blending={AdditiveBlending}
           depthWrite={false}
@@ -228,7 +240,7 @@ export function Rain({ ref }: { readonly ref: Ref<RainRig> }) {
         frustumCulled={false}
         ref={mist}
       >
-        <icosahedronGeometry args={[0.16, 1]} />
+        <Turn profile={MOTE} />
         <meshBasicMaterial
           blending={AdditiveBlending}
           color={WEATHER_COLORS.spray}

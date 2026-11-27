@@ -1,10 +1,12 @@
 import { useFrame } from "@react-three/fiber";
 import { ROAD } from "@repo/design-system/components/contents/physics/kinematics/road";
+import { ball } from "@repo/design-system/components/contents/physics/kinematics/round";
 import {
   pennantSheet,
   rippleAt,
 } from "@repo/design-system/components/contents/physics/kinematics/secant/pennant";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { getColor } from "@repo/design-system/lib/color";
@@ -15,6 +17,21 @@ import { BufferGeometry, DoubleSide, Float32BufferAttribute } from "three";
 
 /** The height of the pole and the size of its pennant, in metres. */
 const POLE = 2.6;
+
+/** The weighted base, the staff and the ball on its top, as outlines turned about the pole's axis. */
+const BASE = [
+  [0, 0],
+  [0.24, 0],
+  [0.2, 0.08],
+  [0, 0.08],
+] as const;
+const STAFF = [
+  [0, 0],
+  [0.02, 0],
+  [0.016, POLE],
+  [0, POLE],
+] as const;
+const FINIAL = ball(0.035);
 const FLY = 0.95;
 const HOIST = 0.55;
 
@@ -66,8 +83,8 @@ export function MarkerFlag({
 
   return (
     <group position={[at, 0, side * (ROAD.halfWidth + 0.4)]}>
-      <mesh castShadow position={[0, 0.04, 0]} receiveShadow>
-        <cylinderGeometry args={[0.2, 0.24, 0.08, 32]} />
+      <mesh castShadow receiveShadow>
+        <Turn profile={BASE} />
         <SurfaceMaterial
           color={GATE_COLORS.housing}
           repeat={[2, 1]}
@@ -75,8 +92,8 @@ export function MarkerFlag({
           surface="rubber"
         />
       </mesh>
-      <mesh castShadow position={[0, POLE / 2 + 0.08, 0]}>
-        <cylinderGeometry args={[0.016, 0.02, POLE, 16]} />
+      <mesh castShadow position={[0, 0.08, 0]}>
+        <Turn profile={STAFF} />
         <SurfaceMaterial
           coat={0.4}
           color={getColor("SLATE", 50)}
@@ -85,8 +102,8 @@ export function MarkerFlag({
           surface="paint"
         />
       </mesh>
-      <mesh castShadow position={[0, POLE + 0.1, 0]}>
-        <sphereGeometry args={[0.035, 20, 14]} />
+      <mesh castShadow position={[0, POLE + 0.065, 0]}>
+        <Turn profile={FINIAL} />
         <SurfaceMaterial
           color={GATE_COLORS.steel}
           metalness={0.9}

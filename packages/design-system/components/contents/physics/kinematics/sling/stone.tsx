@@ -1,3 +1,4 @@
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { Strake } from "@repo/design-system/components/three/vessel/strake";
 import { RINK_COLORS } from "@repo/design-system/lib/material/rink";
@@ -54,6 +55,14 @@ const NECK = [
   [0.085, 0.163, 0],
 ] as const;
 
+/** The head of the bolt that holds the handle, as an outline turned about its axis. */
+const BOLT = [
+  [0, 0],
+  [0.011, 0],
+  [0.011, 0.008],
+  [0, 0.008],
+] as const;
+
 /**
  * A curling stone: a body of polished speckled granite turned to its true
  * outline, riding on its narrow running band, with a moulded handle on a
@@ -88,8 +97,8 @@ export function CurlingStone() {
         radius={0.013}
         surface="plastic"
       />
-      <mesh castShadow position={[0, 0.131, 0]}>
-        <cylinderGeometry args={[0.011, 0.011, 0.008, 6]} />
+      <mesh castShadow position={[0, 0.127, 0]}>
+        <Turn profile={BOLT} />
         <SurfaceMaterial
           color={RINK_COLORS.bolt}
           metalness={0.9}

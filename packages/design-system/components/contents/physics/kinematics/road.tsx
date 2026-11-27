@@ -4,7 +4,7 @@ import { grainTexture } from "@repo/design-system/components/contents/physics/ki
 import type { Surface } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/friction";
 import { roomyLabels } from "@repo/design-system/components/contents/physics/kinematics/ticks";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { paintVerge } from "@repo/design-system/components/three/stage/grain";
+import { paintVerge } from "@repo/design-system/components/three/stage/marks";
 import { groundTexture } from "@repo/design-system/components/three/stage/terrain";
 import { getColor } from "@repo/design-system/lib/color";
 import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
@@ -33,10 +33,12 @@ import { SRGBColorSpace, Vector3 } from "three";
  * screen.
  */
 export const ROAD = {
+  dash: 3,
   edge: 3.35,
   lane: -1.75,
   halfWidth: 3.5,
   side: -1,
+  spacing: 8,
 } as const;
 
 /** How wide the gravel verge is on each side of the road, in metres. */
@@ -73,8 +75,8 @@ const SURFACE_LOOK = {
 const GRAIN_TILE = 4;
 
 /** Dashes of the centre line: 3 m of paint, then 5 m of road. */
-const DASH = 3;
-const DASH_GAP = 5;
+const DASH = ROAD.dash;
+const DASH_GAP = ROAD.spacing - ROAD.dash;
 
 /** The grain texture of `surface`, repeated over the road and disposed after. */
 function useGrain(surface: Surface, length: number) {
