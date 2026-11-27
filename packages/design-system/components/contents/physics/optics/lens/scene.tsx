@@ -174,7 +174,9 @@ export function LensScene({
         <Rail length={length} unit={unit} />
       </group>
       <Rider at={-object * unit} drop={0.2 - TALL / 2} height={AXIS}>
-        <Lamp color={PLOT_COLORS.teal} tall={TALL} />
+        <Lamp tall={TALL}>
+          <Arrow color={PLOT_COLORS.teal} tall={TALL} />
+        </Lamp>
       </Rider>
       <Rider at={0} drop={cellDrop(glass)} height={AXIS}>
         <Lens focal={glass.focal} half={HALF} thin={glass.thin} />

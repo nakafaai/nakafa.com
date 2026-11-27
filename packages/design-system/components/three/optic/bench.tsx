@@ -317,13 +317,13 @@ export function Screen({
       </mesh>
       {Arr.map(
         [
-          { at: [0, tall / 2 + 0.008, 0], size: [wide + 0.032, 0.016, 0.03] },
-          { at: [0, -tall / 2 - 0.008, 0], size: [wide + 0.032, 0.016, 0.03] },
-          { at: [wide / 2 + 0.008, 0, 0], size: [0.016, tall, 0.03] },
-          { at: [-wide / 2 - 0.008, 0, 0], size: [0.016, tall, 0.03] },
+          { at: [0, tall / 2 + 0.008, 0], key: "top", size: [wide + 0.032, 0.016, 0.03] },
+          { at: [0, -tall / 2 - 0.008, 0], key: "bottom", size: [wide + 0.032, 0.016, 0.03] },
+          { at: [wide / 2 + 0.008, 0, 0], key: "right", size: [0.016, tall, 0.03] },
+          { at: [-wide / 2 - 0.008, 0, 0], key: "left", size: [0.016, tall, 0.03] },
         ] as const,
         (edge) => (
-          <mesh castShadow key={edge.at.join(" ")} position={edge.at}>
+          <mesh castShadow key={edge.key} position={edge.at}>
             <boxGeometry args={edge.size} />
             <SurfaceMaterial
               color={INSTRUMENT_COLORS.anodised}
@@ -372,23 +372,19 @@ export function Backboard({
       </mesh>
       {Arr.map(
         [
-          { at: [0, tall + 0.08, 0], size: [wide + 0.08, 0.04, 0.06] },
-          { at: [0, 0.04, 0], size: [wide + 0.08, 0.04, 0.06] },
-          {
-            at: [wide / 2 + 0.02, tall / 2 + 0.06, 0],
-            size: [0.04, tall, 0.06],
+          { at: [0, tall + 0.08, 0], key: "top", size: [wide + 0.08, 0.04, 0.06] },
+          { at: [0, 0.04, 0], key: "bottom", size: [wide + 0.08, 0.04, 0.06] },
+          { at: [wide / 2 + 0.02, tall / 2 + 0.06, 0], key: "right", size: [0.04, tall, 0.06],
           },
-          {
-            at: [-wide / 2 - 0.02, tall / 2 + 0.06, 0],
-            size: [0.04, tall, 0.06],
+          { at: [-wide / 2 - 0.02, tall / 2 + 0.06, 0], key: "left", size: [0.04, tall, 0.06],
           },
-          { at: [wide / 2 - 0.3, 0.02, 0], size: [0.08, 0.04, 0.5] },
-          { at: [-wide / 2 + 0.3, 0.02, 0], size: [0.08, 0.04, 0.5] },
+          { at: [wide / 2 - 0.3, 0.02, 0], key: "rightFoot", size: [0.08, 0.04, 0.5] },
+          { at: [-wide / 2 + 0.3, 0.02, 0], key: "leftFoot", size: [0.08, 0.04, 0.5] },
         ] as const,
         (beam) => (
           <mesh
             castShadow
-            key={beam.at.join(" ")}
+            key={beam.key}
             position={beam.at}
             receiveShadow
           >

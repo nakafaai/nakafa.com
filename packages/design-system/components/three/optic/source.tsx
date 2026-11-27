@@ -3,6 +3,7 @@ import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr } from "effect";
+import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { CatmullRomCurve3, DoubleSide, Shape, Vector2, Vector3 } from "three";
 
@@ -231,18 +232,17 @@ const LAMP_PROFILE = Arr.map(
 
 /**
  * An illuminated object for an optical bench: a lamp house on the axis
- * whose window carries an arrow slide, lit from behind. The arrow stands in
- * the plane of the group's origin, from the axis up to `tall`, and faces
- * along +x toward the lens.
+ * whose window carries a slide, lit from behind. The slide is the lamp's
+ * children, such as an `Arrow`: it stands in the plane of the group's
+ * origin, from the axis up to `tall`, and faces along +x toward the lens.
  *
- * @param color - The colour the slide lets through
- * @param tall - How tall the arrow on the slide is
+ * @param tall - How tall the slide in the window is
  */
 export function Lamp({
-  color,
+  children,
   tall,
 }: {
-  readonly color: string;
+  readonly children: ReactNode;
   readonly tall: number;
 }) {
   return (
@@ -270,8 +270,127 @@ export function Lamp({
         <MetalMaterial color={INSTRUMENT_COLORS.silver} roughness={0.24} />
       </mesh>
       <group position={[0.006, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <Arrow color={color} tall={tall} />
+        {children}
       </group>
+    </group>
+  );
+}
+
+/** How long a laser's housing is, and how far below its axis its clamp reaches, which a carrier's post takes. */
+const LASER_LONG = 0.62;
+export const LASER_DROP = 0.13;
+
+/** The turned outline of a laser's housing, its aperture at the origin and its body behind it. */
+const LASER_PROFILE = Arr.map(
+  [
+    [0.0004, -0.012],
+    [0.016, -0.012],
+    [0.016, 0],
+    [0.046, 0],
+    [0.05, -0.004],
+    [0.05, -0.05],
+    [0.058, -0.054],
+    [0.058, -LASER_LONG + 0.03],
+    [0.052, -LASER_LONG + 0.024],
+    [0.052, -LASER_LONG + 0.006],
+    [0.046, -LASER_LONG],
+    [0.0004, -LASER_LONG],
+  ] as const,
+  ([radius, along]) => new Vector2(radius, along)
+);
+
+/** The lead of a laser, sagging from its back down toward the bench and away. */
+function leadCurve() {
+  return new CatmullRomCurve3([
+    new Vector3(-LASER_LONG, 0, 0),
+    new Vector3(-LASER_LONG - 0.1, -0.01, 0),
+    new Vector3(-LASER_LONG - 0.2, -0.16, 0.03),
+    new Vector3(-LASER_LONG - 0.24, -0.5, 0.1),
+    new Vector3(-LASER_LONG - 0.26, -0.9, 0.2),
+  ]);
+}
+
+/**
+ * A laser on the optical axis: a black anodised tube with a knurled focus
+ * ring at its front and a split clamp round its middle, its lead trailing
+ * from its back. Its aperture is at the origin of its group and its beam
+ * leaves along +x, in its `color`, which glows in the aperture.
+ *
+ * @param color - The colour of its light
+ */
+export function Laser({ color }: { readonly color: string }) {
+  const lead = useMemo(leadCurve, []);
+
+  return (
+    <group>
+      <mesh castShadow rotation={[0, 0, -Math.PI / 2]}>
+        <latheGeometry args={[LASER_PROFILE, 64]} />
+        <SurfaceMaterial
+          color={INSTRUMENT_COLORS.anodised}
+          metalness={1}
+          repeat={[10, 2]}
+          roughness={0.4}
+          surface="brushed"
+        />
+      </mesh>
+      <mesh castShadow position={[-0.027, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.053, 0.053, 0.04, 48]} />
+        <SurfaceMaterial
+          color={INSTRUMENT_COLORS.aluminium}
+          metalness={1}
+          repeat={[14, 1]}
+          roughness={0.28}
+          surface="knurl"
+        />
+      </mesh>
+      <group position={[-LASER_LONG / 2, 0, 0]}>
+        <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.066, 0.066, 0.07, 48]} />
+          <SurfaceMaterial
+            color={INSTRUMENT_COLORS.aluminium}
+            metalness={1}
+            repeat={[8, 1]}
+            roughness={0.34}
+            surface="brushed"
+          />
+        </mesh>
+        <mesh castShadow position={[0, -0.095, 0]}>
+          <cylinderGeometry args={[0.02, 0.02, 0.07, 24]} />
+          <SurfaceMaterial
+            color={INSTRUMENT_COLORS.aluminium}
+            metalness={1}
+            repeat={[2, 1]}
+            roughness={0.34}
+            surface="brushed"
+          />
+        </mesh>
+        <mesh castShadow position={[0, 0.02, 0.07]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.014, 0.014, 0.03, 20]} />
+          <SurfaceMaterial
+            color={INSTRUMENT_COLORS.aluminium}
+            metalness={1}
+            repeat={[5, 1]}
+            roughness={0.28}
+            surface="knurl"
+          />
+        </mesh>
+      </group>
+      <mesh position={[0.001, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <circleGeometry args={[0.012, 24]} />
+        <meshBasicMaterial color={color} side={DoubleSide} toneMapped={false} />
+      </mesh>
+      <group position={[0.003, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <Glow color={color} size={0.16} strength={0.9} />
+      </group>
+      <mesh castShadow>
+        <tubeGeometry args={[lead, 40, 0.011, 10]} />
+        <SurfaceMaterial
+          color={INSTRUMENT_COLORS.graphite}
+          repeat={[1, 24]}
+          roughness={0.8}
+          surface="rubber"
+        />
+      </mesh>
     </group>
   );
 }

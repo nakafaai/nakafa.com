@@ -18,7 +18,7 @@ import { Array as Arr, Option, Schema } from "effect";
 const DEGREE = Math.PI / 180;
 
 /** The refractive index of air, taken as exactly one. */
-export const AIR_INDEX = 1;
+const AIR_INDEX = 1;
 
 /** The sine of an angle given in degrees. */
 function sine(degrees: number) {
