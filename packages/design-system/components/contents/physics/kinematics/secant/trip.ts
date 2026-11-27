@@ -94,7 +94,7 @@ export function tripIntervals(trip: Trip) {
 }
 
 /** The graphs a trip can draw: position against time, or velocity against time. */
-export const TripGraphSchema = Schema.Literals(["position", "velocity"]);
+const TripGraphSchema = Schema.Literals(["position", "velocity"]);
 export type TripGraph = typeof TripGraphSchema.Type;
 
 /** The quantity a graph plots at `time`. */

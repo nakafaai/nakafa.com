@@ -1,23 +1,11 @@
+import { Line } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
+import { VelocityArrow } from "@repo/design-system/components/contents/physics/kinematics/arrow";
+import { useSight } from "@repo/design-system/components/contents/physics/kinematics/follow";
 import {
-  advanceRun,
-  shownTime,
-} from "@repo/design-system/components/contents/physics/canvas/clock";
-import {
-  arrow,
-  createBackdrop,
-  dashed,
-  fade,
-  gradientRect,
-  litBall,
-  mix,
-  vignette,
-} from "@repo/design-system/components/contents/physics/canvas/paint";
-import type { Plan } from "@repo/design-system/components/contents/physics/canvas/town";
-import {
-  fitPlan,
-  paintWalker,
-  planPoint,
-} from "@repo/design-system/components/contents/physics/canvas/town";
+  CurlingStone,
+  STONE,
+} from "@repo/design-system/components/contents/physics/kinematics/sling/stone";
 import type { ReleasePoint } from "@repo/design-system/components/contents/physics/kinematics/sling/whirl";
 import {
   RELEASE_ANGLES,
@@ -27,7 +15,17 @@ import {
   whirl,
 } from "@repo/design-system/components/contents/physics/kinematics/sling/whirl";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
+import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
+import { useTimeline } from "@repo/design-system/components/contents/simulation/timeline";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { Matter } from "@repo/design-system/components/three/matter/material";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -42,135 +40,52 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
-import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
+import { RINK_COLORS } from "@repo/design-system/lib/material/rink";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
-import type p5 from "p5";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
+import type { Group } from "three";
 
-/** How far past the release the ball flies before the run starts again, in seconds. */
-const FLIGHT_SECONDS = 0.5;
+/** How far the freed stone is followed after release, in string lengths: it stays in view. */
+const FLIGHT = 0.3;
 
-/** Simulated seconds per wall second, so the whirl can be followed. */
+/** Simulated seconds per wall second: the whirl is slowed so the release can be seen. */
 const PLAY_RATE = 0.4;
 
-/** How long the finished throw rests, in wall seconds. */
-const HOLD_SECONDS = 1;
+/**
+ * The way the camera looks at the rink: down on it by 48 degrees from the
+ * side the learner stands on, a little from the right, through an angle of
+ * view of 36 degrees.
+ */
+const LINE = [-0.09, -0.743, -0.669] as const;
+const VIEW = 36;
 
-/** What the sketch reads on every frame. */
-const SlingFrameSchema = Schema.Struct({
-  period: Schema.Finite,
-  radius: Schema.Finite,
-  release: ReleasePointSchema,
-});
-type SlingFrame = typeof SlingFrameSchema.Type;
+/** How long one m/s of the stone's speed is drawn, in string lengths. */
+const SPEED_UNIT = 0.11;
+
+/** How many places around the circle the frame is fitted to. */
+const AROUND = 16;
 
 /**
- * Draws one moment of the throw from above, on a court: the thrower at the
- * centre, the string to the ball, the ball's velocity tangent to the circle
- * and its acceleration to the centre, and after release the straight path
- * of the free ball.
+ * The stake the string turns on, as an outline turned about its axis: a
+ * plate frozen into the ice, the pin, and the ball on its top that keeps the
+ * loop of the string on.
  */
-function slingProgram(sketch: p5, read: () => SlingFrame) {
-  let time = Number.POSITIVE_INFINITY;
-  const backdrop = createBackdrop();
-  sketch.setup = () => {
-    sketch.createCanvas(1, 1);
-  };
-  sketch.draw = () => {
-    const { period, radius, release } = read();
-    const end = releaseTime(period, release) + FLIGHT_SECONDS;
-    if (sketch.isLooping()) {
-      time = advanceRun(Math.min(time, end * 2), sketch.deltaTime / 1000, {
-        duration: end,
-        hold: HOLD_SECONDS,
-        rate: PLAY_RATE,
-      });
-    }
-    const now = shownTime(time, end);
-    const reach = radius * 2.4;
-    const plan: Plan = fitPlan(
-      sketch,
-      { east: [-reach, reach], north: [-reach, reach] },
-      sketch.width * 0.03
-    );
-    backdrop(sketch, `${radius}:${period}:${release}`, (layer) => {
-      gradientRect(
-        layer,
-        { height: layer.height, width: layer.width, x: 0, y: 0 },
-        [
-          [0, mix(ROAD_COLORS.pavement, getColor("WHITE"), 0.15)],
-          [1, mix(ROAD_COLORS.pavement, getColor("BLACK"), 0.25)],
-        ]
-      );
-      const centre = planPoint(plan, { east: 0, north: 0 });
-      layer.noFill();
-      layer.stroke(fade(ROAD_COLORS.roadPaint, 0.9));
-      layer.strokeWeight(3);
-      layer.circle(centre.x, centre.y, radius * 2 * plan.scale);
-      const angle = RELEASE_ANGLES[release];
-      const from = planPoint(plan, {
-        east: radius * Math.cos(angle),
-        north: radius * Math.sin(angle),
-      });
-      const to = planPoint(plan, {
-        east: radius * Math.cos(angle) - reach * 2 * Math.sin(angle),
-        north: radius * Math.sin(angle) + reach * 2 * Math.cos(angle),
-      });
-      dashed(layer, from, to, {
-        color: fade(PLOT_COLORS.teal, 0.6),
-        dash: 8,
-        weight: 2,
-      });
-    });
-    const centre = planPoint(plan, { east: 0, north: 0 });
-    const place = slingPlace(radius, period, release, now);
-    const ball = planPoint(plan, { east: place.x, north: place.y });
-    const motion = whirl(radius, period);
-    if (!place.released) {
-      sketch.stroke(getColor("ZINC", 900));
-      sketch.strokeWeight(2);
-      sketch.line(centre.x, centre.y, ball.x, ball.y);
-      sketch.noStroke();
-    }
-    paintWalker(sketch, centre, plan.scale * 0.32, PLOT_COLORS.pink);
-    const scale = plan.scale * radius * 0.11;
-    const angle = Math.atan2(place.y, place.x);
-    const tangent = place.released ? RELEASE_ANGLES[release] : angle;
-    arrow(
-      sketch,
-      ball,
-      {
-        x: ball.x - Math.sin(tangent) * motion.speed * scale,
-        y: ball.y - Math.cos(tangent) * motion.speed * scale,
-      },
-      { color: PLOT_COLORS.teal, head: 12, weight: 3.5 }
-    );
-    if (!place.released) {
-      const pull = plan.scale * radius * 0.6;
-      arrow(
-        sketch,
-        ball,
-        {
-          x: ball.x - Math.cos(angle) * pull,
-          y: ball.y + Math.sin(angle) * pull,
-        },
-        { color: PLOT_COLORS.fuchsia, head: 12, weight: 3.5 }
-      );
-    }
-    sketch.noStroke();
-    sketch.fill(fade(getColor("BLACK"), 0.35));
-    sketch.circle(ball.x + 4, ball.y + 4, Math.max(14, plan.scale * 0.12));
-    litBall(sketch, ball, Math.max(7, plan.scale * 0.06), {
-      dark: mix(PLOT_COLORS.orange, getColor("BLACK"), 0.45),
-      light: mix(PLOT_COLORS.orange, getColor("WHITE"), 0.4),
-    });
-    vignette(sketch, 0.3);
-  };
-}
+const STAKE = [
+  [0, 0],
+  [0.052, 0],
+  [0.045, 0.012],
+  [0.013, 0.012],
+  [0.011, STONE.eye + 0.008],
+  [0.017, STONE.eye + 0.022],
+  [0.012, STONE.eye + 0.036],
+  [0, STONE.eye + 0.039],
+] as const;
+
+/** How high over the ice the arrows are drawn, in metres. */
+const ARROWS = 0.3;
 
 interface StringWhirlReleaseLabProps {
   description: NonNullable<ReactNode>;
@@ -191,10 +106,10 @@ interface StringWhirlReleaseLabProps {
 }
 
 /**
- * A ball whirled on a string, seen from above, let go at a point the
+ * A stone whirled on a string over smooth ice, let go at a point the
  * learner picks. While it turns, its velocity (teal) stays tangent and its
  * acceleration (fuchsia) points to the centre; once let go, nothing pulls it
- * in, so it flies straight along the tangent of the point of release.
+ * in, so it slides straight along the tangent of the point of release.
  */
 export function StringWhirlReleaseLab({
   description,
@@ -235,12 +150,23 @@ export function StringWhirlReleaseLab({
           ))}
         </ToggleGroup>
       </VisualCardToolbar>
-      <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
-        <P5Sketch
-          label={labels.viewLabel}
-          program={slingProgram}
-          state={{ period, radius, release }}
-        />
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ScienceStage
+          floor={0}
+          frameloop="always"
+          ground="snow"
+          reach={radius * 5}
+          setting="field"
+        >
+          <Suspense fallback={null}>
+            <RinkCamera period={period} radius={radius} release={release} />
+            <WhirlScene period={period} radius={radius} release={release} />
+          </Suspense>
+        </ScienceStage>
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>
@@ -256,15 +182,21 @@ export function StringWhirlReleaseLab({
           <VisualFactTabular
             label={labels.speed}
             value={
-              <InlineMath math={quantity(motion.speed, "\\text{ m/s}", 2)} />
+              <span style={{ color: PLOT_COLORS.teal }}>
+                <InlineMath
+                  math={`v=${quantity(motion.speed, "\\text{ m/s}", 2)}`}
+                />
+              </span>
             }
           />
           <VisualFactTabular
             label={labels.acceleration}
             value={
-              <InlineMath
-                math={quantity(motion.acceleration, "\\text{ m/s}^2", 1)}
-              />
+              <span style={{ color: PLOT_COLORS.fuchsia }}>
+                <InlineMath
+                  math={`a=${quantity(motion.acceleration, "\\text{ m/s}^2", 1)}`}
+                />
+              </span>
             }
           />
         </VisualCardFacts>
@@ -272,3 +204,252 @@ export function StringWhirlReleaseLab({
     </VisualCard>
   );
 }
+
+/**
+ * The frozen pond the stone slides on, lying in the snow that the stage
+ * spreads around it and reaching far past the frame.
+ */
+function Ice({ radius }: { readonly radius: number }) {
+  const pond = useMemo(
+    () =>
+      [
+        [radius * 60, 0],
+        [0, 0],
+      ] as const,
+    [radius]
+  );
+
+  return (
+    <CameraBounds exclude>
+      <mesh position={[0, 0.001, 0]} receiveShadow>
+        <Turn profile={pond} />
+        <Matter color={RINK_COLORS.ice} of="ice" />
+      </mesh>
+    </CameraBounds>
+  );
+}
+
+/**
+ * The camera over the rink: it looks down on the circle from the side the
+ * learner stands on, from as near as the frame allows while it holds the
+ * whole circle and the freed stone with its arrow, as far as the stone is
+ * followed along the tangent of the point of release.
+ */
+function RinkCamera({
+  period,
+  radius,
+  release,
+}: {
+  readonly period: number;
+  readonly radius: number;
+  readonly release: ReleasePoint;
+}) {
+  const points = useMemo(() => {
+    const letGo = RELEASE_ANGLES[release];
+    const flown =
+      (FLIGHT + whirl(radius, period).speed * SPEED_UNIT + 0.22) * radius;
+    return Arr.append(
+      Arr.makeBy(AROUND, (index) => {
+        const around = (index / AROUND) * 2 * Math.PI;
+        return [
+          radius * 1.08 * Math.cos(around),
+          0,
+          radius * 1.08 * Math.sin(around),
+        ] as const;
+      }),
+      [
+        radius * Math.cos(letGo) - flown * Math.sin(letGo),
+        ARROWS,
+        -radius * Math.sin(letGo) - flown * Math.cos(letGo),
+      ] as const
+    );
+  }, [period, radius, release]);
+  const sight = useSight(points, LINE, VIEW);
+
+  return (
+    <CameraControls
+      cameraPosition={sight.position}
+      cameraTarget={sight.target}
+      fov={VIEW}
+      maxPolarAngle={Math.PI / 2 - 0.1}
+      resetKey={release}
+    />
+  );
+}
+
+/**
+ * The ice with the stake the string turns on, the circle the stone keeps to
+ * scribed into it, the tangent at the point of release, and the stone on
+ * its string with its velocity and its acceleration. East is +x and north
+ * runs away from the camera.
+ */
+function WhirlScene({
+  period,
+  radius,
+  release,
+}: {
+  readonly period: number;
+  readonly radius: number;
+  readonly release: ReleasePoint;
+}) {
+  const stone = useRef<Group>(null);
+  const string = useRef<Group>(null);
+  const velocity = useRef<Group>(null);
+  const pull = useRef<Group>(null);
+  const freed = useRef(true);
+  const [released, setReleased] = useState(true);
+  const motion = whirl(radius, period);
+  const end = releaseTime(period, release) + (FLIGHT * radius) / motion.speed;
+  const { advance, playing } = useTimeline(0, end / PLAY_RATE);
+  const letGo = RELEASE_ANGLES[release];
+  const speedArrow = useMemo(
+    () => [motion.speed * radius * SPEED_UNIT, 0, 0] as const,
+    [motion.speed, radius]
+  );
+  const pullArrow = useMemo(() => [radius * 0.6, 0, 0] as const, [radius]);
+  const rope = useMemo(
+    () =>
+      [
+        [0, 0, 0],
+        [radius, 0, 0],
+      ] as const,
+    [radius]
+  );
+  // The circle scribed into the ice, as a flat band turned about the stake.
+  const scribe = useMemo(
+    () =>
+      [
+        [radius * 1.018, 0],
+        [radius * 0.982, 0],
+      ] as const,
+    [radius]
+  );
+  const tangent = useMemo(
+    () =>
+      [
+        [radius * Math.cos(letGo), 0.004, -radius * Math.sin(letGo)],
+        [
+          radius * Math.cos(letGo) - radius * 5 * Math.sin(letGo),
+          0.004,
+          -radius * Math.sin(letGo) - radius * 5 * Math.cos(letGo),
+        ],
+      ] as const,
+    [letGo, radius]
+  );
+
+  useFrame((_, delta) => {
+    const run = advance(delta) * PLAY_RATE;
+    // A card that stands still shows the last moment before the stone is let go.
+    const now =
+      !playing && run >= end - 1e-6 ? releaseTime(period, release) - 1e-4 : run;
+    const place = slingPlace(radius, period, release, now);
+    const around = place.released ? letGo : Math.atan2(place.y, place.x);
+    stone.current?.position.set(place.x, 0, -place.y);
+    stone.current?.rotation.set(0, around + Math.PI, 0);
+    string.current?.position.set(place.x, STONE.eye, -place.y);
+    string.current?.rotation.set(
+      0,
+      place.released ? letGo - Math.PI / 2 : around + Math.PI,
+      place.released ? -Math.asin((STONE.eye - 0.01) / radius) : 0
+    );
+    velocity.current?.position.set(place.x, ARROWS, -place.y);
+    velocity.current?.rotation.set(0, around + Math.PI / 2, 0);
+    pull.current?.position.set(place.x, ARROWS, -place.y);
+    pull.current?.rotation.set(0, around + Math.PI, 0);
+    if (freed.current !== place.released) {
+      freed.current = place.released;
+      setReleased(place.released);
+    }
+  });
+
+  return (
+    <>
+      <SimulationTicker running={playing} />
+      <Ice radius={radius} />
+      <mesh position={[0, 0.003, 0]} receiveShadow>
+        <Turn profile={scribe} />
+        <SurfaceMaterial
+          color={RINK_COLORS.scribe}
+          repeat={[40, 1]}
+          roughness={0.7}
+          surface="paint"
+        />
+      </mesh>
+      <CameraBounds exclude>
+        <Line
+          color={PLOT_COLORS.teal}
+          dashed
+          dashSize={radius * 0.09}
+          gapSize={radius * 0.07}
+          lineWidth={2.5}
+          opacity={0.85}
+          points={tangent}
+          transparent
+        />
+      </CameraBounds>
+      <mesh castShadow receiveShadow>
+        <Turn profile={STAKE} />
+        <SurfaceMaterial
+          color={RINK_COLORS.steel}
+          metalness={0.85}
+          repeat={[1, 2]}
+          roughness={0.38}
+          surface="brushed"
+        />
+      </mesh>
+      <group ref={string}>
+        <mesh castShadow>
+          <Sweep path={rope} radius={0.011} />
+          <SurfaceMaterial
+            color={RINK_COLORS.rope}
+            repeat={[1, 30]}
+            roughness={0.9}
+            surface="cloth"
+          />
+        </mesh>
+      </group>
+      <group ref={stone}>
+        <CurlingStone />
+      </group>
+      <group ref={velocity}>
+        <VelocityArrow
+          color={PLOT_COLORS.teal}
+          from={ORIGIN}
+          thick={radius * 0.016}
+          to={speedArrow}
+        />
+        <ThreeLabel
+          color={PLOT_COLORS.teal}
+          fontSize="compact"
+          outlineColor={getColor("SLATE", 50)}
+          outlineWidth={0.05}
+          position={[speedArrow[0] + radius * 0.14, 0.02, 0]}
+        >
+          <InlineMath math="v" />
+        </ThreeLabel>
+      </group>
+      <group ref={pull} visible={!released}>
+        <VelocityArrow
+          color={PLOT_COLORS.fuchsia}
+          from={ORIGIN}
+          thick={radius * 0.016}
+          to={pullArrow}
+        />
+        {released ? null : (
+          <ThreeLabel
+            color={PLOT_COLORS.fuchsia}
+            fontSize="compact"
+            outlineColor={getColor("SLATE", 50)}
+            outlineWidth={0.05}
+            position={[pullArrow[0] * 0.92, 0.02, -radius * 0.2]}
+          >
+            <InlineMath math="a" />
+          </ThreeLabel>
+        )}
+      </group>
+    </>
+  );
+}
+
+/** The foot of an arrow in its own frame. */
+const ORIGIN = [0, 0, 0] as const;
