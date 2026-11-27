@@ -1,18 +1,13 @@
 import { useFrame } from "@react-three/fiber";
-import {
-  ColumnLiquid,
-  LabBench,
-} from "@repo/design-system/components/contents/chemistry/bench";
+import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import {
   Battery,
   BEAKER_RADIUS,
   Beaker,
   Bubbles,
-  ELECTRODE_BOTTOM,
-  ELECTRODE_THICKNESS,
-  ELECTRODE_WIDTH,
-  Lead,
-  LIQUID_HEIGHT,
+  Circuit,
+  Deposit,
+  Plate,
 } from "@repo/design-system/components/contents/chemistry/electrolysis/apparatus";
 import type {
   Cell,
@@ -30,31 +25,42 @@ import {
   tintOf,
 } from "@repo/design-system/components/contents/chemistry/electrolysis/cell";
 import {
+  BENCH,
   cellCentres,
-  circuitLeads,
   ELECTRODE_OFFSET,
-  ELECTRODE_TOP,
 } from "@repo/design-system/components/contents/chemistry/electrolysis/circuit";
 import type { ElectrolysisColors } from "@repo/design-system/components/contents/chemistry/electrolysis/color";
+import {
+  BENCH_LABEL,
+  BENCH_LABEL_OUTLINE,
+} from "@repo/design-system/components/contents/chemistry/label";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { Mote } from "@repo/design-system/components/three/apparatus/mote";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { Array as Arr, Schema } from "effect";
 import { createContext, useRef } from "react";
-import type { Mesh, MeshStandardMaterial } from "three";
+import type { Group } from "three";
 
 /**
- * Metres per scene unit: the cell stands at bench scale, a beaker about
- * 84 mm across with its electrodes 40 mm apart, on the lab bench at y = 0.
+ * What the camera frames, in scene units: the upright face of the row of
+ * cells, from what is written under them to the top of the leads over them, wider for every
+ * cell in the row. The battery stands behind that face and inside it as
+ * the camera sees it.
  */
-const SCENE_SCALE = 0.1;
+function frameOf(count: number) {
+  const half = 0.45 + (count - 1) * 0.8;
+  return {
+    x: { max: half, min: -half },
+    y: { max: 2.1, min: -0.7 },
+    z: { max: 0.4, min: -0.4 },
+  };
+}
 
 /** The particles drawn for each kind of ion, and their radius. */
 const IONS_PER_KIND = 2;
-const ION_RADIUS = 0.034;
+const ION_RADIUS = 0.05;
 
 /** The words a scene draws beside its apparatus. */
 const SceneLabelsSchema = Schema.Struct({
@@ -100,28 +106,39 @@ export function ElectrolysisScene({
 
   return (
     <ElectrolysisSceneContext value={{ colors, labels, showProducts }}>
-      <LabBench width={3} />
-      <group position={[0, 0, 0.14]} scale={SCENE_SCALE}>
-        {Arr.map(Arr.zip(cells, centres), ([cell, x], index) => (
-          <group
-            key={`${cell.electrolyte}-${String(index)}`}
-            position={[x, 0, 0]}
-          >
-            <CellModel cell={cell} />
-          </group>
-        ))}
-        <Battery colors={colors} label={labels.battery} />
-        {Arr.map(circuitLeads(cells.length), (lead, index) => (
-          <Lead
-            colors={colors}
-            key={String(index)}
-            lead={lead}
-            sheath={index === 0 ? BENCH_COLORS.leadRed : BENCH_COLORS.leadBlack}
-          />
-        ))}
+      <CameraBounds exclude>
+        <LabBench shelf={false} width={3} />
+      </CameraBounds>
+      <group position={[0, 0, 0.14]} scale={BENCH}>
+        <CameraBounds bounds={frameOf(cells.length)}>
+          {Arr.map(Arr.zip(cells, centres), ([cell, x], index) => (
+            <group
+              key={`${cell.electrolyte}-${String(index)}`}
+              position={[x, 0, 0]}
+            >
+              <CellModel cell={cell} />
+            </group>
+          ))}
+          <Battery colors={colors} label={labels.battery} />
+          <Circuit colors={colors} count={cells.length} />
+        </CameraBounds>
       </group>
     </ElectrolysisSceneContext>
   );
+}
+
+/**
+ * What is written under a cell, as one block of maths: the sign of each
+ * electrode under that electrode, what forms at it under its sign once the
+ * products show, and the electrolyte. One block in the clear space before
+ * the beaker keeps every word off the apparatus and off its neighbours,
+ * however many cells stand in the row and however narrow the frame is.
+ */
+function captionOf(cell: Cell, showProducts: boolean) {
+  const products = showProducts
+    ? `\\\\${PRODUCT_FORMULA[anodeOf(cell).product]}&${PRODUCT_FORMULA[cathodeOf(cell).product]}`
+    : "";
+  return `\\begin{gathered}\\begin{array}{cc}(+)&(-)${products}\\end{array}\\\\${ELECTROLYTE_FORMULA[cell.electrolyte]}\\end{gathered}`;
 }
 
 /** One cell: a beaker of electrolyte, its two electrodes, and what happens at them. */
@@ -133,47 +150,21 @@ function CellModel({ cell }: { readonly cell: Cell }) {
 
   return (
     <group>
-      <Beaker colors={colors} />
-      <ColumnLiquid
-        bottom={0.01}
+      <Beaker
         color={tinted ? colors.tintedLiquid : colors.clearLiquid}
-        level={LIQUID_HEIGHT + 0.01}
-        opacity={tinted ? 0.5 : 0.28}
-        radius={BEAKER_RADIUS - 0.012}
+        strength={tinted ? 20 : 3}
       />
       <Electrode cell={cell} reaction={anode} x={-ELECTRODE_OFFSET} />
       <Electrode cell={cell} reaction={cathode} x={ELECTRODE_OFFSET} />
       <ThreeLabel
-        anchorX="right"
-        color={colors.text}
-        fontSize="compact"
-        gap={0.004}
-        outlineColor={colors.halo}
-        outlineWidth={0.006}
-        position={[-ELECTRODE_OFFSET - 0.06, ELECTRODE_TOP - 0.02, 0.1]}
-      >
-        <InlineMath math="(+)" />
-      </ThreeLabel>
-      <ThreeLabel
-        anchorX="left"
-        color={colors.text}
-        fontSize="compact"
-        gap={0.004}
-        outlineColor={colors.halo}
-        outlineWidth={0.006}
-        position={[ELECTRODE_OFFSET + 0.06, ELECTRODE_TOP - 0.02, 0.1]}
-      >
-        <InlineMath math="(-)" />
-      </ThreeLabel>
-      <ThreeLabel
         anchorY="top"
         color={colors.text}
-        fontSize="compact"
+        {...BENCH_LABEL}
         outlineColor={colors.halo}
-        outlineWidth={0.006}
+        outlineWidth={BENCH_LABEL_OUTLINE}
         position={[0, -0.06, BEAKER_RADIUS]}
       >
-        <InlineMath math={ELECTROLYTE_FORMULA[cell.electrolyte]} />
+        <InlineMath math={captionOf(cell, showProducts)} />
       </ThreeLabel>
       {showProducts ? (
         <Ions
@@ -191,7 +182,7 @@ function CellModel({ cell }: { readonly cell: Cell }) {
  * One electrode plate. A carbon plate is dull graphite and the others are
  * metal. When the products show, a deposit coats the part in the
  * electrolyte, a dissolving anode wears thin there, and a gas electrode
- * gives off a stream of bubbles labelled with the gas.
+ * gives off a stream of bubbles.
  */
 function Electrode({
   cell,
@@ -203,53 +194,21 @@ function Electrode({
   readonly x: number;
 }) {
   const { colors, showProducts } = useElectrolysisScene();
-  const height = ELECTRODE_TOP - ELECTRODE_BOTTOM;
   const color = colors.electrode[cell.electrode];
   const wears = showProducts && reaction.change === "dissolves";
-  const submerged = LIQUID_HEIGHT - ELECTRODE_BOTTOM;
 
   return (
     <group position={[x, 0, 0]}>
-      <mesh
-        castShadow
-        position={[0, ELECTRODE_BOTTOM + height / 2, 0]}
-        scale={[wears ? 0.55 : 1, 1, 1]}
-      >
-        <boxGeometry args={[ELECTRODE_THICKNESS, height, ELECTRODE_WIDTH]} />
-        {cell.electrode === "carbon" ? (
-          <meshStandardMaterial color={color} roughness={0.85} />
-        ) : (
-          <MetalMaterial color={color} />
-        )}
-      </mesh>
+      <Plate
+        color={color}
+        graphite={cell.electrode === "carbon"}
+        wear={wears ? 0.55 : 1}
+      />
       {showProducts && reaction.change === "deposit" ? (
-        <mesh position={[0, ELECTRODE_BOTTOM + submerged / 2, 0]}>
-          <boxGeometry
-            args={[
-              ELECTRODE_THICKNESS + 0.03,
-              submerged,
-              ELECTRODE_WIDTH + 0.03,
-            ]}
-          />
-          <MetalMaterial
-            color={colors.metal[reaction.product]}
-            roughness={0.6}
-          />
-        </mesh>
+        <Deposit color={colors.metal[reaction.product]} />
       ) : null}
       {showProducts && reaction.change === "gas" ? (
         <Bubbles color={colors.metal[reaction.product]} />
-      ) : null}
-      {showProducts ? (
-        <ThreeLabel
-          color={colors.text}
-          fontSize="compact"
-          outlineColor={colors.halo}
-          outlineWidth={0.006}
-          position={[0, LIQUID_HEIGHT + 0.08, BEAKER_RADIUS * 0.7]}
-        >
-          <InlineMath math={PRODUCT_FORMULA[reaction.product]} />
-        </ThreeLabel>
       ) : null}
     </group>
   );
@@ -257,7 +216,7 @@ function Electrode({
 
 /**
  * The ions of a cell drifting to the electrode of opposite charge. An ion
- * that electrode discharges fades as it arrives; one it leaves alone turns
+ * that electrode discharges shrinks to nothing as it arrives; one it leaves alone turns
  * back short of the plate.
  */
 function Ions({
@@ -320,31 +279,30 @@ function IonParticle({
   readonly y: number;
   readonly z: number;
 }) {
-  const mesh = useRef<Mesh>(null);
-  const material = useRef<MeshStandardMaterial>(null);
+  const mote = useRef<Group>(null);
   const start = -target * 0.9;
 
   useFrame(({ clock }) => {
-    if (mesh.current === null || material.current === null) {
+    if (mote.current === null) {
       return;
     }
     const progress = (clock.elapsedTime * 0.12 + phase) % 1;
     const travel = discharged
       ? progress
       : 0.75 * (1 - Math.abs(1 - 2 * progress));
-    mesh.current.position.set(start + (target - start) * travel, y, z);
-    material.current.opacity = discharged ? Math.min(1, (1 - progress) * 6) : 1;
+    mote.current.position.set(start + (target - start) * travel, y, z);
+    mote.current.scale.setScalar(
+      discharged ? Math.min(1, (1 - progress) * 6) : 1
+    );
   });
 
   return (
-    <mesh position={[start, y, z]} ref={mesh}>
-      <sphereGeometry args={[ION_RADIUS, 16, 12]} />
-      <meshStandardMaterial
-        color={color}
-        ref={material}
-        roughness={0.35}
-        transparent
-      />
-    </mesh>
+    <Mote
+      color={color}
+      core={0.55}
+      position={[start, y, z]}
+      radius={ION_RADIUS}
+      ref={mote}
+    />
   );
 }

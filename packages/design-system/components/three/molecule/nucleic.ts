@@ -37,7 +37,7 @@ export const NamedSchema = Schema.Tuple([
 export type Named = typeof NamedSchema.Type;
 
 /** One bond of a residue between two named atoms, single or double. */
-const LinkSchema = Schema.Tuple([
+export const LinkSchema = Schema.Tuple([
   Schema.String,
   Schema.String,
   Schema.Literals([1, 2]),

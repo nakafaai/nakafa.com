@@ -9,10 +9,13 @@ import {
   cameraFitKey,
   DEFAULT_CAMERA_POSITION,
   DEFAULT_CAMERA_TARGET,
-  resolveSafeCameraFit,
+  resolveContentFit,
+  resolvePanOffset,
 } from "@repo/design-system/components/three/camera/fit";
 import { useCameraFraming } from "@repo/design-system/components/three/camera/framing";
 import { useCameraPlay } from "@repo/design-system/components/three/camera/play";
+import { resolveCameraRefit } from "@repo/design-system/components/three/camera/refit";
+import { measureContent } from "@repo/design-system/components/three/camera/silhouette";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import type { CameraProjection } from "@repo/design-system/lib/geometry/camera";
 import {
@@ -20,16 +23,15 @@ import {
   resolveCameraDistanceLimits,
   resolveOrthographicZoom,
 } from "@repo/design-system/lib/geometry/camera";
-import { measureCameraBounds } from "@repo/design-system/lib/geometry/camera/bounds";
-import {
-  resolveCameraPanOffset,
-  resolveCameraRefit,
-} from "@repo/design-system/lib/geometry/camera/fit";
-import { Effect, HashMap, Option } from "effect";
+
+import { Effect } from "effect";
 import type { ComponentRef } from "react";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import type { Box3, PerspectiveCamera as ThreePerspectiveCamera } from "three";
 import { OrthographicCamera as ThreeOrthographicCamera, Vector3 } from "three";
+
+/** The pan correction of the drag in hand, written in place on every change. */
+const PAN = new Vector3();
 
 /**
  * Owns the scene camera, finite-content framing, and OrbitControls together.
@@ -261,24 +263,21 @@ export function CameraControls(props: CameraControlsProps) {
         pendingFit.current = true;
         return;
       }
-      const measurement = Effect.runSync(
-        measureCameraBounds({
-          labels: HashMap.fromIterable(framing.labels),
+      const { labels, silhouettes } = Effect.runSync(
+        measureContent({
+          ...framing,
           position: authoredPosition,
           root: scene,
-          subjects: HashMap.fromIterable(framing.subjects),
           target: authoredTarget,
         })
       );
-      if (Option.isNone(measurement)) {
+      if (silhouettes.length === 0) {
         initializePose(controls, authoredPosition, authoredTarget);
         return;
       }
-      const { bounds, labels } = measurement.value;
       const key = cameraFitKey({
         authoredPosition,
         authoredTarget,
-        bounds,
         labels,
         maxDistance,
         minDistance,
@@ -286,6 +285,7 @@ export function CameraControls(props: CameraControlsProps) {
         projectionFov,
         projectionHeight,
         projectionNear,
+        silhouettes,
         viewportHeight,
         viewportWidth,
       });
@@ -294,14 +294,14 @@ export function CameraControls(props: CameraControlsProps) {
         return;
       }
 
-      const fitted = resolveSafeCameraFit({
-        bounds,
+      const fitted = resolveContentFit({
         fov: projectionFov,
         height: viewportHeight,
         labels,
         minimumViewHeight: projectionHeight,
         position: authoredPosition,
         projection: projection.kind,
+        silhouettes,
         target: authoredTarget,
         width: viewportWidth,
       });
@@ -341,7 +341,7 @@ export function CameraControls(props: CameraControlsProps) {
       }
       object.updateProjectionMatrix();
       lastFit.current = {
-        bounds: bounds.clone().expandByPoint(fitted.target),
+        bounds: fitted.bounds.expandByPoint(fitted.target),
         camera: object,
         distance: fitted.distance,
         key,
@@ -426,7 +426,7 @@ export function CameraControls(props: CameraControlsProps) {
     const controls = controlsRef.current;
     const fitted = lastFit.current;
     if (controls && fitted?.camera === controls.object) {
-      const offset = resolveCameraPanOffset(fitted.bounds, controls.target);
+      const offset = resolvePanOffset(fitted.bounds, controls.target, PAN);
       controls.target.add(offset);
       controls.object.position.add(offset);
     }

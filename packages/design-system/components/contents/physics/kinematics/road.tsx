@@ -1,37 +1,48 @@
 import { Instance, Instances } from "@react-three/drei";
+import { useFrame, useThree } from "@react-three/fiber";
+import { grainTexture } from "@repo/design-system/components/contents/physics/kinematics/grain";
 import type { Surface } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/friction";
-import {
-  grainField,
-  hashUnit,
-} from "@repo/design-system/components/contents/simulation/grain";
+import { roomyLabels } from "@repo/design-system/components/contents/physics/kinematics/ticks";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { paintVerge } from "@repo/design-system/components/three/stage/marks";
+import { groundTexture } from "@repo/design-system/components/three/stage/terrain";
 import { getColor } from "@repo/design-system/lib/color";
 import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Array as Arr, Schema } from "effect";
 import type { ReactNode, Ref } from "react";
-import { useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import {
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { Group } from "three";
-import { DataTexture, RepeatWrapping, SRGBColorSpace } from "three";
+import { SRGBColorSpace, Vector3 } from "three";
 
 /**
- * A two-lane road at real scale, in metres: lanes of 3.5 m, a kerb, a
- * pavement, lamp posts and a row of trees on the left (−z), and white distance
- * posts every 10 m from the line where the hazard appears. The road lies on
- * the `field` setting's own grass: a lab passes `floor={0}` to its stage, so
- * an unseen ground catches the shadows and no second grass meets the photo. Traffic keeps left, as in Indonesia and Malaysia: the car
- * drives in the left lane toward +x, and the camera watches from the verge
- * across the empty right lane, so the car moves left to right on screen with
- * the pavement and trees behind it.
+ * A two-lane country road at real scale, in metres: lanes of 3.5 m, painted
+ * edge lines, and on both sides a gravel verge the asphalt ends flush in and
+ * the grass grows up to. Nothing of it stands above the ground: it has no
+ * kerb and no raised pavement, as a road outside a town has none. White
+ * distance posts stand in the verge on the left (−z). The road lies on the
+ * stage's own ground: a lab asks its stage for grass and sets the floor a
+ * hair under the asphalt. Traffic keeps left, as in Indonesia and Malaysia:
+ * the car drives in the left lane toward +x, and the camera watches from the
+ * right verge across the empty lane, so the car moves left to right on
+ * screen.
  */
 export const ROAD = {
+  dash: 3,
   edge: 3.35,
   lane: -1.75,
   halfWidth: 3.5,
-  kerb: 0.15,
-  pavement: 2.2,
   side: -1,
+  spacing: 8,
 } as const;
+
+/** How wide the gravel verge is on each side of the road, in metres. */
+const VERGE = 1.5;
 
 /** How a road surface looks: its gloss, its base colour, its grain and its roughness. */
 const SurfaceLookSchema = Schema.Struct({
@@ -60,40 +71,17 @@ const SURFACE_LOOK = {
   },
 } satisfies Record<Surface, typeof SurfaceLookSchema.Type>;
 
-/** Grain texels per side; one tile of grain covers four metres of road. */
-const GRAIN_SIZE = 256;
+/** One tile of grain covers four metres of road. */
 const GRAIN_TILE = 4;
 
 /** Dashes of the centre line: 3 m of paint, then 5 m of road. */
-const DASH = 3;
-const DASH_GAP = 5;
-
-/**
- * Builds the grain texture of one surface: a brightness that varies around
- * one, so the material's own colour stays the mean colour of the road.
- */
-function createGrainTexture(contrast: number) {
-  const field = grainField(GRAIN_SIZE);
-  const data = new Uint8Array(GRAIN_SIZE * GRAIN_SIZE * 4);
-  for (let index = 0; index < field.length; index += 1) {
-    const value = 1 + (field[index] - 0.5) * contrast;
-    const byte = Math.max(0, Math.min(255, Math.round(value * 200)));
-    data[index * 4] = byte;
-    data[index * 4 + 1] = byte;
-    data[index * 4 + 2] = byte;
-    data[index * 4 + 3] = 255;
-  }
-  const texture = new DataTexture(data, GRAIN_SIZE, GRAIN_SIZE);
-  texture.wrapS = RepeatWrapping;
-  texture.wrapT = RepeatWrapping;
-  texture.needsUpdate = true;
-  return texture;
-}
+const DASH = ROAD.dash;
+const DASH_GAP = ROAD.spacing - ROAD.dash;
 
 /** The grain texture of `surface`, repeated over the road and disposed after. */
 function useGrain(surface: Surface, length: number) {
   const grain = useMemo(
-    () => createGrainTexture(SURFACE_LOOK[surface].grain),
+    () => grainTexture(SURFACE_LOOK[surface].grain),
     [surface]
   );
   const color = useMemo(() => {
@@ -120,8 +108,33 @@ function useGrain(surface: Surface, length: number) {
 }
 
 /**
- * The road, its markings, its kerb and pavement, and the roadside, from
- * `from` to `to` metres along it. A lab adds its own `DistancePosts`.
+ * The soft edges of the two verges: each is solid where it meets the
+ * asphalt and thins out into the grass, so no verge ends in a cut line.
+ */
+function useVergeEdges() {
+  const edges = useMemo(() => {
+    const far = groundTexture(paintVerge(64, 0.5), 1, 64, [1, 0.5]);
+    far.offset.set(0, 0.5);
+    return {
+      far,
+      near: groundTexture(paintVerge(64, 0.5), 1, 64, [1, 0.5]),
+    };
+  }, []);
+
+  useEffect(
+    () => () => {
+      edges.far.dispose();
+      edges.near.dispose();
+    },
+    [edges]
+  );
+
+  return edges;
+}
+
+/**
+ * The road, its markings and its two gravel verges, from `from` to `to`
+ * metres along it. A lab adds its own `DistancePosts`.
  */
 export function Road({
   from,
@@ -136,19 +149,11 @@ export function Road({
   const middle = (from + to) / 2;
   const look = SURFACE_LOOK[surface];
   const { color, grain } = useGrain(surface, length);
+  const edges = useVergeEdges();
   const dashes = Arr.map(
     Arr.range(0, Math.floor(length / (DASH + DASH_GAP))),
     (index) => from + index * (DASH + DASH_GAP) + DASH / 2
   );
-  const trees = Arr.map(
-    Arr.range(0, Math.floor(length / 17)),
-    (index) => from + 6 + index * 17
-  );
-  const lamps = Arr.map(
-    Arr.range(0, Math.floor(length / 32)),
-    (index) => from + 14 + index * 32
-  );
-
   return (
     <group>
       <mesh
@@ -186,31 +191,24 @@ export function Road({
       {Arr.map([1, -1] as const, (side) => (
         <mesh
           key={side}
-          position={[middle, ROAD.kerb / 2, side * (ROAD.halfWidth + 0.08)]}
+          position={[middle, 0.002, side * (ROAD.halfWidth + VERGE / 2 - 0.1)]}
           receiveShadow
+          renderOrder={-8}
+          rotation={[-Math.PI / 2, 0, 0]}
         >
-          <boxGeometry args={[length, ROAD.kerb, 0.16]} />
-          <meshStandardMaterial color={ROAD_COLORS.kerb} roughness={0.9} />
+          <planeGeometry args={[length, VERGE + 0.2]} />
+          <meshStandardMaterial
+            alphaMap={side === 1 ? edges.near : edges.far}
+            bumpMap={grain}
+            bumpScale={2.4}
+            color={ROAD_COLORS.gravel}
+            depthWrite={false}
+            map={color}
+            roughness={1}
+            transparent
+          />
         </mesh>
       ))}
-      <mesh
-        position={[
-          middle,
-          ROAD.kerb - 0.02,
-          ROAD.side * (ROAD.halfWidth + 0.16 + ROAD.pavement / 2),
-        ]}
-        receiveShadow
-      >
-        <boxGeometry args={[length, 0.04, ROAD.pavement]} />
-        <meshStandardMaterial
-          color={ROAD_COLORS.pavement}
-          map={color}
-          roughness={0.95}
-        />
-      </mesh>
-
-      <Trees positions={trees} />
-      <Lamps positions={lamps} />
     </group>
   );
 }
@@ -232,125 +230,47 @@ function RoadPaint({
   );
 }
 
-/** How many leafy lumps make up one crown. */
-const CROWN_LUMPS = 11;
-
-/** Leaf greens of a tropical roadside tree, sunlit to shaded. */
-const LEAVES = [
-  ROAD_COLORS.foliageShade,
-  ROAD_COLORS.foliage,
-  ROAD_COLORS.foliageDark,
-  ROAD_COLORS.foliageLight,
-] as const;
+/** The least room between two post labels across the screen, in pixels. */
+const LABEL_ROOM = 62;
 
 /**
- * The lumps of one crown: a broad, flattened dome of leafy clusters, as a
- * tropical shade tree such as an angsana spreads over a road. Every tree
- * draws its own lumps from the grain hash, so no two trees match.
+ * Distance posts in the verge, labelled with their distance from the hazard.
+ * A label keeps its size on screen while the posts shrink with distance, so
+ * a post carries its label only where the label has room: the labels of a
+ * row that runs away from the camera never run into each other.
  */
-function crownOf(x: number, tree: number) {
-  return Arr.map(Arr.range(0, CROWN_LUMPS - 1), (lump) => {
-    const angle = (lump / CROWN_LUMPS) * Math.PI * 2 + hashUnit(tree, lump);
-    const spread = lump === 0 ? 0 : 0.9 + 1.7 * hashUnit(lump, tree + 7);
-    return {
-      color: LEAVES[(tree + lump) % LEAVES.length],
-      key: `${x}-${lump}`,
-      position: [
-        x + Math.cos(angle) * spread,
-        4.1 + 0.9 * hashUnit(tree + 3, lump) - spread * 0.25,
-        ROAD.side * 10 + Math.sin(angle) * spread,
-      ] as const,
-      scale: 0.85 + 0.6 * hashUnit(lump + 11, tree),
-    };
-  });
-}
-
-/**
- * Roadside trees beyond the pavement: furrowed trunks and broad crowns of
- * rounded leaf masses, mottled by a grain that breaks each mass into leaves.
- */
-function Trees({ positions }: { readonly positions: readonly number[] }) {
-  const leaves = useMemo(() => {
-    const grain = createGrainTexture(1.5);
-    grain.repeat.set(5, 3);
-    return grain;
-  }, []);
-  useEffect(() => () => leaves.dispose(), [leaves]);
-
-  return (
-    <group>
-      <Instances castShadow limit={Math.max(1, positions.length)}>
-        <cylinderGeometry args={[0.14, 0.3, 4, 14]} />
-        <SurfaceMaterial
-          color={ROAD_COLORS.bark}
-          repeat={[2, 3]}
-          surface="bark"
-        />
-        {Arr.map(positions, (x) => (
-          <Instance key={x} position={[x, 2, ROAD.side * 10]} />
-        ))}
-      </Instances>
-      <Instances castShadow limit={Math.max(1, positions.length) * CROWN_LUMPS}>
-        <icosahedronGeometry args={[1, 3]} />
-        <meshStandardMaterial
-          bumpMap={leaves}
-          bumpScale={6}
-          map={leaves}
-          roughness={0.9}
-        />
-        {Arr.flatMap(positions, (x, tree) =>
-          Arr.map(crownOf(x, tree), (lump) => (
-            <Instance
-              color={lump.color}
-              key={lump.key}
-              position={lump.position}
-              scale={[lump.scale, lump.scale * 0.72, lump.scale]}
-            />
-          ))
-        )}
-      </Instances>
-    </group>
-  );
-}
-
-/** Street lamps on the pavement, a slim pole with an arm over the road. */
-function Lamps({ positions }: { readonly positions: readonly number[] }) {
-  const z = ROAD.side * (ROAD.halfWidth + 0.5);
-  return (
-    <group>
-      <Instances castShadow limit={Math.max(1, positions.length)}>
-        <cylinderGeometry args={[0.06, 0.09, 7, 10]} />
-        <meshStandardMaterial
-          color={ROAD_COLORS.lampPost}
-          metalness={0.8}
-          roughness={0.4}
-        />
-        {Arr.map(positions, (x) => (
-          <Instance key={x} position={[x, 3.5, z]} />
-        ))}
-      </Instances>
-      <Instances castShadow limit={Math.max(1, positions.length)}>
-        <boxGeometry args={[0.12, 0.08, 1.6]} />
-        <meshStandardMaterial
-          color={ROAD_COLORS.lampPost}
-          metalness={0.8}
-          roughness={0.4}
-        />
-        {Arr.map(positions, (x) => (
-          <Instance key={x} position={[x, 6.95, z - ROAD.side * 0.75]} />
-        ))}
-      </Instances>
-    </group>
-  );
-}
-
-/** Distance posts at the kerb, each labelled with its distance from the hazard. */
 export function DistancePosts({
   posts,
 }: {
   readonly posts: readonly number[];
 }) {
   const z = ROAD.side * (ROAD.halfWidth + 0.35);
+  const width = useThree((state) => state.size.width);
+  const [roomy, setRoomy] = useState(0);
+  const sight = useMemo(
+    () => ({
+      across: new Float32Array(posts.length),
+      roomy: 0,
+      spot: new Vector3(),
+    }),
+    [posts.length]
+  );
+
+  useFrame(({ camera }) => {
+    for (let index = 0; index < posts.length; index += 1) {
+      sight.spot.set(Number(posts[index]), 1.35, z).project(camera);
+      sight.across[index] =
+        Math.abs(sight.spot.x) > 1 || sight.spot.z > 1
+          ? Number.NaN
+          : (sight.spot.x * width) / 2;
+    }
+    const next = roomyLabels(sight.across, LABEL_ROOM);
+    if (next !== sight.roomy) {
+      sight.roomy = next;
+      setRoomy(next);
+    }
+  });
+
   return (
     <group>
       <Instances castShadow limit={Math.max(1, posts.length)}>
@@ -363,18 +283,24 @@ export function DistancePosts({
           <Instance key={x} position={[x, 0.5, z]} />
         ))}
       </Instances>
-      {Arr.map(posts, (x) => (
-        <ThreeLabel
-          color={getColor("GRAY", 800)}
-          fontSize="compact"
-          key={x}
-          outlineColor={getColor("SLATE", 50)}
-          outlineWidth={0.06}
-          position={[x, 1.35, z]}
-        >
-          {`${x} m`}
-        </ThreeLabel>
-      ))}
+      {Arr.map(
+        Arr.filter(
+          posts,
+          (_, index) => Math.floor(roomy / 2 ** index) % 2 === 1
+        ),
+        (x) => (
+          <ThreeLabel
+            color={getColor("GRAY", 800)}
+            fontSize="compact"
+            key={x}
+            outlineColor={getColor("SLATE", 50)}
+            outlineWidth={0.06}
+            position={[x, 1.35, z]}
+          >
+            {`${x} m`}
+          </ThreeLabel>
+        )
+      )}
     </group>
   );
 }

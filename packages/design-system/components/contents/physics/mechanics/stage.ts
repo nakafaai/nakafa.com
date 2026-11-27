@@ -7,10 +7,10 @@ import {
   spotlight,
   withShadow,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
-import type { Point } from "@repo/design-system/components/contents/physics/optics/light";
 import { getColor } from "@repo/design-system/lib/color";
 import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { Schema } from "effect";
 import type p5 from "p5";
 
 /**
@@ -18,6 +18,10 @@ import type p5 from "p5";
  * polished floor, wooden blocks and crates that cast shadows, and force
  * arrows with their symbols at the tip.
  */
+
+/** A point on the canvas, in pixels. */
+const PointSchema = Schema.Struct({ x: Schema.Finite, y: Schema.Finite });
+type Point = typeof PointSchema.Type;
 
 /** The wall and the floor, with the floor's top edge at `floor`. */
 export function paintRoom(sketch: p5, floor: number) {

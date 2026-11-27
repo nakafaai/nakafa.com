@@ -1,8 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   apparentDepth,
+  blockPath,
   criticalAngle,
+  lensReach,
+  principalRays,
+  rayRun,
   refract,
+  starRay,
   telescope,
   thinLens,
   traceBlock,
@@ -53,6 +58,46 @@ describe("traceBlock", () => {
       "left",
     ]);
     expect(Arr.every(hits, (hit) => hit.event === "reflected")).toBe(true);
+  });
+});
+
+describe("blockPath", () => {
+  const block = { height: 1, index: 1.5, width: 1.6 };
+
+  it("leaves the bottom face parallel to the ray that entered the top", () => {
+    const { mirror, path } = blockPath(block, 1, 30, 2);
+    const [source, entry, bottom, end] = path;
+    expect(path).toHaveLength(4);
+    expect(entry).toEqual({ x: 1, y: 1 });
+    expect(source?.x).toBeCloseTo(0, 9);
+    expect(source?.y).toBeCloseTo(1 + Math.sqrt(3), 9);
+    expect(mirror.x).toBeCloseTo(2, 9);
+    expect(mirror.y).toBeCloseTo(1 + Math.sqrt(3), 9);
+    expect((end?.x ?? 0) - (bottom?.x ?? 0)).toBeCloseTo(1, 9);
+    expect((end?.y ?? 0) - (bottom?.y ?? 0)).toBeCloseTo(-Math.sqrt(3), 9);
+  });
+
+  it("follows the SPM ray off the side face and out through the bottom", () => {
+    const { hits, path, refraction } = blockPath(block, 1, 60, 1);
+    expect(refraction).toBeCloseTo(35.26, 2);
+    expect(Arr.map(hits, (hit) => hit.face)).toEqual(["right", "bottom"]);
+    expect(path).toHaveLength(5);
+    expect(path[2]?.x).toBe(1.6);
+    expect(path[3]?.y).toBe(0);
+    expect((path[4]?.x ?? 0) - (path[3]?.x ?? 0)).toBeCloseTo(
+      -Math.sin(Math.PI / 3),
+      9
+    );
+  });
+
+  it("ends inside the glass when the ray never gets out", () => {
+    const { path } = blockPath(
+      { height: 20, index: 1.5, width: 0.2 },
+      0.1,
+      60,
+      1
+    );
+    expect(path).toHaveLength(6);
   });
 });
 
@@ -108,6 +153,42 @@ describe("thinLens", () => {
   });
 });
 
+describe("lensReach", () => {
+  const farthest = { left: 63, right: 64.5 };
+
+  it("reaches the 2F mark on each side when the object and its real image stand there", () => {
+    expect(lensReach(15, 30, farthest)).toEqual({ left: 30, right: 30 });
+  });
+
+  it("reaches back to a virtual image behind the object", () => {
+    const reach = lensReach(15, 10, farthest);
+    expect(reach.left).toBeCloseTo(30, 9);
+    expect(reach.right).toBe(30);
+  });
+
+  it("reaches out to a far object and stops at the end of the bench for an image beyond it", () => {
+    expect(lensReach(15, 60, farthest).left).toBe(60);
+    expect(lensReach(15, 18, farthest).right).toBe(64.5);
+    expect(lensReach(15, 14, farthest).left).toBe(63);
+  });
+
+  it("keeps to the 2F marks when the object at the focal point has no image", () => {
+    expect(lensReach(15, 15, farthest)).toEqual({ left: 30, right: 30 });
+  });
+});
+
+describe("rayRun", () => {
+  it("stops a falling ray where it reaches the bench", () => {
+    expect(rayRun(0.36, -0.5, 1.2, 10)).toBeCloseTo(3.12, 9);
+  });
+
+  it("lets a ray run to the limit when it falls too slowly to reach the bench, or rises", () => {
+    expect(rayRun(0.36, -0.1, 1.2, 5)).toBe(5);
+    expect(rayRun(-0.2, 0, 1.2, 5)).toBe(5);
+    expect(rayRun(0, 0.3, 1.2, 5)).toBe(5);
+  });
+});
+
 describe("telescope", () => {
   it("spaces lenses of +1.0 D and +20 D 105 cm apart and magnifies 20 times", () => {
     expect(telescope(1, 20)).toEqual({
@@ -116,5 +197,52 @@ describe("telescope", () => {
       magnification: 20,
       objective: 100,
     });
+  });
+});
+
+describe("principalRays", () => {
+  it("sends all three rays from the tip through the tip of the real image", () => {
+    const image = Option.getOrThrow(thinLens(15, 20));
+    const rays = principalRays(15, 20, 2);
+
+    expect(rays).toHaveLength(3);
+    for (const ray of rays) {
+      expect(ray.height + ray.slope * image.distance).toBeCloseTo(
+        2 * image.magnification,
+        10
+      );
+    }
+  });
+
+  it("makes the rays of a near object seem to come from the tip of the virtual image", () => {
+    const image = Option.getOrThrow(thinLens(15, 10));
+    const rays = principalRays(15, 10, 2);
+
+    expect(Arr.map(rays, (ray) => ray.height)).toStrictEqual([2, 0, 6]);
+    for (const ray of rays) {
+      expect(ray.height + ray.slope * image.distance).toBeCloseTo(
+        2 * image.magnification,
+        10
+      );
+    }
+  });
+
+  it("has no ray through the near focal point when the object stands there", () => {
+    expect(principalRays(15, 15, 2)).toHaveLength(2);
+  });
+});
+
+describe("starRay", () => {
+  it("brings every ray from the star to one point of the focal plane and out at one steeper slope", () => {
+    const lenses = { eyepiece: 5, objective: 100 };
+    const tilt = Math.tan((1.2 * Math.PI) / 180);
+    const high = starRay(4.8, tilt, lenses);
+    const low = starRay(-4.8, tilt, lenses);
+
+    expect(high.image).toBeCloseTo(100 * tilt, 10);
+    expect(low.image).toBeCloseTo(high.image, 10);
+    expect(high.out).toBeCloseTo(-20 * tilt, 10);
+    expect(low.out).toBeCloseTo(high.out, 10);
+    expect(high.atEyepiece).toBeCloseTo(100 * tilt + (tilt - 0.048) * 5, 10);
   });
 });
