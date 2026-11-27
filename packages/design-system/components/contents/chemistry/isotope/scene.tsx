@@ -24,6 +24,13 @@ import type { Group } from "three";
 /** The radius of one nucleon, in scene units. */
 const NUCLEON = 0.5;
 
+/**
+ * The half side of the cube the camera frames, as a share of the nucleus's
+ * radius: the camera fits a box by its corners, which stand well outside
+ * the ball inside it, so a smaller cube lets the nucleus fill the card.
+ */
+const CUBE = 0.74;
+
 /** The dark of open space behind the nucleus, which outlines its labels, and how wide that outline is. */
 const BACKDROP = getColor("ZINC", 950);
 const OUTLINE = 0.012;
@@ -74,9 +81,9 @@ export function NuclideScene({
       />
       <CameraBounds
         bounds={{
-          x: { min: -reach, max: reach },
-          y: { min: -reach, max: reach },
-          z: { min: -reach, max: reach },
+          x: { min: -reach * CUBE, max: reach * CUBE },
+          y: { min: -reach * CUBE, max: reach * CUBE },
+          z: { min: -reach * CUBE, max: reach * CUBE },
         }}
       >
         <group />

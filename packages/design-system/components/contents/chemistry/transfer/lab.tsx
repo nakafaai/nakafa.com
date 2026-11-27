@@ -71,6 +71,9 @@ const NUCLEON = 0.026;
 /** How wide the glow of an electron on its way across is drawn, in scene units. */
 const SPARK = 0.5;
 
+/** How far below the larger atom the two symbols are written, in scene units. */
+const LABEL_DROP = 0.3;
+
 /** The dark of open space behind the atoms, which outlines their labels, and how wide that outline is. */
 const BACKDROP = getColor("ZINC", 950);
 const OUTLINE = 0.012;
@@ -292,6 +295,10 @@ function TransferScene({
     value: progress,
   });
   const [ions, setIons] = useState(false);
+  const metalReach = Math.max(pair.metal.atomic, pair.metal.ionic) / PICOMETRES;
+  const nonmetalReach =
+    Math.max(pair.nonmetal.atomic, pair.nonmetal.ionic) / PICOMETRES;
+  const tallest = Math.max(metalReach, nonmetalReach);
   const metalOuter = shellRadius(pair.metal, pair.metal.shells.length);
   const nonmetalOuter = shellRadius(pair.nonmetal, pair.nonmetal.shells.length);
 
@@ -327,8 +334,8 @@ function TransferScene({
   return (
     <CameraBounds
       bounds={{
-        x: { min: -APART - 2.3, max: APART + 1.9 },
-        y: { min: -2.5, max: 2.3 },
+        x: { min: -APART - metalReach, max: APART + nonmetalReach },
+        y: { min: -tallest - LABEL_DROP, max: tallest },
         z: { min: -0.4, max: 0.4 },
       }}
     >
@@ -360,10 +367,10 @@ function TransferScene({
       ))}
       <ThreeLabel
         color={QUANTUM_COLORS.spaceLabel}
-        fontSize="compact"
+        fontSize="reading"
         outlineColor={BACKDROP}
         outlineWidth={OUTLINE}
-        position={[-APART, -2.3, 0]}
+        position={[-APART, -tallest - LABEL_DROP, 0]}
       >
         <InlineMath
           math={
@@ -375,10 +382,10 @@ function TransferScene({
       </ThreeLabel>
       <ThreeLabel
         color={QUANTUM_COLORS.spaceLabel}
-        fontSize="compact"
+        fontSize="reading"
         outlineColor={BACKDROP}
         outlineWidth={OUTLINE}
-        position={[APART, -2.3, 0]}
+        position={[APART, -tallest - LABEL_DROP, 0]}
       >
         <InlineMath
           math={

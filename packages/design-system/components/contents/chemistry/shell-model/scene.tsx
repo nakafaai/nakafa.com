@@ -29,7 +29,7 @@ const NUCLEON = 0.078;
  * corners of this square lie just outside the round orbit, so the orbit
  * itself fills the card.
  */
-const SQUARE = 0.86;
+const SQUARE = 0.88;
 
 /** The dark of open space behind the atom, which outlines its labels, and how wide that outline is. */
 const BACKDROP = getColor("ZINC", 950);
