@@ -9,7 +9,7 @@ const PackedSchema = Schema.Struct({
   at: Schema.Tuple([Schema.Finite, Schema.Finite, Schema.Finite]),
   kind: NucleonSchema,
 });
-export type Packed = typeof PackedSchema.Type;
+type Packed = typeof PackedSchema.Type;
 
 /** The share of space randomly close-packed equal spheres fill (Jaeger and Nagel 1992). */
 const DENSITY = 0.64;

@@ -6,12 +6,13 @@ import {
   orbitsOf,
   TRAIL,
 } from "@repo/design-system/components/three/atom/shell";
+import { Array as Arr } from "effect";
 
 describe("orbitsOf", () => {
   it("draws an even ladder of shells that turn more slowly outward", () => {
     const orbits = orbitsOf([2, 8, 1.9, -4], 1, 0.5);
-    expect(orbits.map((orbit) => orbit.radius)).toEqual([1, 1.5, 2, 2.5]);
-    expect(orbits.map((orbit) => orbit.electrons)).toEqual([2, 8, 1, 0]);
+    expect(Arr.map(orbits, (orbit) => orbit.radius)).toEqual([1, 1.5, 2, 2.5]);
+    expect(Arr.map(orbits, (orbit) => orbit.electrons)).toEqual([2, 8, 1, 0]);
     expect(orbits[0]?.pace).toBeGreaterThan(Number(orbits[1]?.pace));
     expect(orbits[1]?.pace).toBeGreaterThan(Number(orbits[2]?.pace));
     expect(electronsOf(orbits)).toBe(11);
