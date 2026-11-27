@@ -4,6 +4,7 @@ import { Motes } from "@repo/design-system/components/three/stage/motes";
 import { toneColor } from "@repo/design-system/components/three/stage/place";
 import { Field } from "@repo/design-system/components/three/stage/scope";
 import {
+  ProceduralFillFallback,
   SETTING_SUNS,
   Softboxes,
   Sun,
@@ -58,7 +59,9 @@ export function WaterSetting() {
         shafts={0.16}
       />
       <fog args={[depth, DEPTH_NEAR * reach, DEPTH_FAR * reach]} attach="fog" />
-      <Softboxes ambient={0.45} exposure={0.85} hemisphere={0.8} />
+      <Softboxes exposure={0.85}>
+        <ProceduralFillFallback ambient={0.45} hemisphere={0.8} />
+      </Softboxes>
       <hemisphereLight
         args={[toneColor([191, 239, 255]), toneColor([13, 71, 96]), 0.9]}
       />
@@ -118,7 +121,9 @@ export function CellSetting() {
         shafts={0.08}
       />
       <fog args={[depth, DEPTH_NEAR * reach, DEPTH_FAR * reach]} attach="fog" />
-      <Softboxes ambient={0.5} exposure={0.9} hemisphere={0.8} />
+      <Softboxes exposure={0.9}>
+        <ProceduralFillFallback ambient={0.5} hemisphere={0.8} />
+      </Softboxes>
       <hemisphereLight
         args={[toneColor([255, 233, 224]), toneColor([90, 63, 119]), 0.8]}
       />
@@ -169,7 +174,9 @@ export function MicroscopeSetting() {
         dim={dark ? 0.62 : 1}
         rim={toneColor([230, 217, 189])}
       />
-      <Softboxes ambient={0.6} exposure={1.05} hemisphere={0.9} />
+      <Softboxes exposure={1.05}>
+        <ProceduralFillFallback ambient={0.6} hemisphere={0.9} />
+      </Softboxes>
       <hemisphereLight
         args={[toneColor([255, 250, 240]), toneColor([233, 220, 192]), 0.7]}
       />

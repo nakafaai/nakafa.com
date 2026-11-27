@@ -10,6 +10,7 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
+import type { ReactNode } from "react";
 import { useMemo } from "react";
 import type { ColorRepresentation } from "three";
 import { DataTexture } from "three";
@@ -103,8 +104,8 @@ function ProceduralPhotoFallback({
   );
 }
 
-/** Procedural fill lighting for studio and space settings when EXR is unavailable. */
-function ProceduralFillFallback({
+/** Procedural fill lighting for a place lit by softboxes when their photo is unavailable. */
+export function ProceduralFillFallback({
   ambient,
   hemisphere,
 }: {
@@ -125,35 +126,27 @@ function ProceduralFillFallback({
 
 /**
  * The light of a photo studio's softboxes on the lab, without the studio
- * behind it, for a place that draws its own backdrop. Procedural fill light
- * takes over, without failing the lab, when the photo cannot load.
+ * behind it, for a place that draws its own backdrop. Its children are the
+ * procedural fill light that takes over, without failing the lab, when the
+ * photo cannot load.
  *
- * @param ambient - The fill light from everywhere when the photo is missing
  * @param exposure - How brightly the softboxes light the lab
- * @param hemisphere - The fill light from above when the photo is missing
  */
 export function Softboxes({
-  ambient,
+  children,
   exposure,
-  hemisphere,
 }: {
-  readonly ambient: number;
+  readonly children: ReactNode;
   readonly exposure: number;
-  readonly hemisphere: number;
 }) {
   const { profile } = useStage();
 
   if (!profile.useExrEnvironment) {
-    return <ProceduralFillFallback ambient={ambient} hemisphere={hemisphere} />;
+    return children;
   }
 
   return (
-    <ErrorBoundary
-      fallbackRender={() => (
-        <ProceduralFillFallback ambient={ambient} hemisphere={hemisphere} />
-      )}
-      report={false}
-    >
+    <ErrorBoundary fallbackRender={() => children} report={false}>
       <Environment
         environmentIntensity={exposure}
         environmentRotation={[0, STUDIO_TURN, 0]}
@@ -375,7 +368,9 @@ export function StudioSetting() {
   return (
     <>
       <color args={[backdrop]} attach="background" />
-      <Softboxes ambient={0.4} exposure={1} hemisphere={0.9} />
+      <Softboxes exposure={1}>
+        <ProceduralFillFallback ambient={0.4} hemisphere={0.9} />
+      </Softboxes>
       <Sun direction={STUDIO_SUN} intensity={1.4} />
       <Haze color={backdrop} />
     </>
@@ -413,7 +408,9 @@ export function SpaceSetting() {
         size={2.6}
         to={toneColor([188, 208, 255])}
       />
-      <Softboxes ambient={0.22} exposure={0.15} hemisphere={0} />
+      <Softboxes exposure={0.15}>
+        <ProceduralFillFallback ambient={0.22} hemisphere={0} />
+      </Softboxes>
       <Sun direction={STUDIO_SUN} intensity={3.2} />
     </>
   );
