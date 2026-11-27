@@ -7,7 +7,7 @@ import {
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadStaged } from "@repo/backend/confect/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
-import { hasProofTransactionHeadroom } from "@repo/backend/confect/contentRelease/proof/budget";
+import { hasVerifyHeadroom } from "@repo/backend/confect/contentRelease/proof/budget";
 import {
   PROOF_PAGE_BYTES,
   PROOF_PAGE_LIMIT,
@@ -115,7 +115,7 @@ export const verifyProgram = Effect.fn("contentRelease.verifyItems")(function* (
     const metrics = yield* Effect.promise(() =>
       ctx.meta.getTransactionMetrics()
     );
-    if (!hasProofTransactionHeadroom(metrics)) {
+    if (!hasVerifyHeadroom(metrics)) {
       break;
     }
   }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { hasProofTransactionHeadroom } from "@repo/backend/confect/contentRelease/proof/budget";
+import { hasVerifyHeadroom } from "@repo/backend/confect/contentRelease/proof/budget";
 import {
   PROOF_PAGE_LIMIT,
   RELEASE_PAGE_LIMIT,
@@ -161,9 +161,7 @@ describe("contentRelease/verify", () => {
   it("persists a continuation when proof headroom is exhausted", async () => {
     const t = convexTest(schema, convexModules);
     await stagePagedFixture(t);
-    const headroom = vi
-      .mocked(hasProofTransactionHeadroom)
-      .mockReturnValueOnce(false);
+    const headroom = vi.mocked(hasVerifyHeadroom).mockReturnValueOnce(false);
     const first = await t.mutation(verifyItems, {
       afterIndex: -1,
       releaseId: TEST_RELEASE_ID,
