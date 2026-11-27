@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
+  atomFacets,
   facetsOf,
   seamProfile,
 } from "@repo/design-system/components/three/molecule/ball";
@@ -29,5 +30,13 @@ describe("facetsOf", () => {
     expect(facetsOf("full").rings).toBeGreaterThan(facetsOf("light").rings);
     expect(facetsOf("light").sides).toBeGreaterThan(facetsOf("low").sides);
     expect(facetsOf("plain")).toEqual(facetsOf("low"));
+  });
+});
+
+describe("atomFacets", () => {
+  it("draws a small model as the tier asks and a crowd coarser than any tier", () => {
+    expect(atomFacets("full", 500)).toEqual(facetsOf("full"));
+    expect(atomFacets("full", 2000).sides).toBeLessThan(facetsOf("low").sides);
+    expect(atomFacets("low", 2000)).toEqual(atomFacets("full", 2000));
   });
 });

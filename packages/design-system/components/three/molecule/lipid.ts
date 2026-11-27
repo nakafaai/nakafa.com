@@ -1,3 +1,4 @@
+import { chanceAt } from "@repo/design-system/components/three/field/noise";
 import { ElementSchema } from "@repo/design-system/components/three/molecule/element";
 import type {
   Link,
@@ -6,6 +7,8 @@ import type {
 import {
   add,
   grown,
+  ORIGIN,
+  PointSchema,
   scale,
 } from "@repo/design-system/components/three/molecule/point";
 import type { Molecule } from "@repo/design-system/components/three/molecule/shape";
@@ -54,9 +57,6 @@ type Hang = typeof HangSchema.Type;
 /** A fatty acid of the lesson has eighteen carbons: stearic acid, or oleic acid with its cis double bond after carbon nine. */
 const CARBONS = 18;
 const CIS = 9;
-
-/** How far the last carbon of a tail stays from the middle of a bilayer, in angstrom. */
-const GAP = 1.9;
 
 /** How far the bonds beside the cis double bond are turned out of its plane, in degrees. */
 const SKEW = 120;
@@ -286,36 +286,188 @@ export function lipidOf(kind: Kind, unsaturated: boolean) {
 }
 
 /**
- * A stretch of bilayer as its lipids' heavy atoms, in angstrom: `count`
- * phospholipids in each leaflet side by side along x, `spacing` apart, heads
- * out and tails in, the lower leaflet turned over. Their hydrogens and bonds
- * are left out, since a space-filling model of a membrane shows neither.
+ * Where one lipid of a crowd stands: the place of its glycerol end, its turn
+ * about its long axis and its lean from upright in radians, and whether it
+ * is turned over so its tails point up.
  */
-export function bilayerOf(
-  unsaturated: boolean,
-  count: number,
-  spacing: number
-): Molecule {
-  const lipid = lipidOf("phospholipid", unsaturated).molecule;
+const SeatSchema = Schema.Struct({
+  at: PointSchema,
+  lean: Schema.Finite,
+  over: Schema.Boolean,
+  spin: Schema.Finite,
+});
+type Seat = typeof SeatSchema.Type;
+
+/**
+ * Many copies of one lipid as their heavy atoms, one at each seat. The lipid
+ * is first moved so its long axis runs down from the origin through the
+ * middle of its tails. Hydrogens and bonds are left out, since a
+ * space-filling model of a crowd shows neither.
+ */
+function crowdOf(lipid: Molecule, seats: readonly Seat[]): Molecule {
   const heavy = Arr.filter(lipid.atoms, (atom) => atom.element !== "H");
-  const reach = Arr.reduce(heavy, 0, (low, atom) => Math.min(low, atom.at[1]));
+  const tails = Arr.filter(heavy, (atom) => atom.part >= 1 && atom.part <= 3);
+  const middle = scale(
+    Arr.reduce(tails, ORIGIN, (sum, atom) => add(sum, atom.at)),
+    1 / tails.length
+  );
   return {
-    atoms: Arr.flatMap([1, -1] as const, (leaflet) =>
-      Arr.flatMap(Arr.range(0, count - 1), (index) => {
-        const x = (index - (count - 1) / 2) * spacing;
-        const turned = (index % 2) * 2 - 1;
-        return Arr.map(heavy, (atom) => ({
+    atoms: Arr.flatMap(seats, (seat) => {
+      const flip = seat.over ? -1 : 1;
+      return Arr.map(heavy, (atom) => {
+        const x = atom.at[0] - middle[0];
+        const z = atom.at[2] - middle[2];
+        const across = x * Math.cos(seat.spin) + z * Math.sin(seat.spin);
+        const along = atom.at[1];
+        return {
           ...atom,
-          at: [
-            x + atom.at[0] * leaflet * turned,
-            (atom.at[1] - reach + GAP) * leaflet,
-            atom.at[2] * turned,
-          ] as const,
-        }));
-      })
-    ),
+          at: add(seat.at, [
+            (across * Math.cos(seat.lean) - along * Math.sin(seat.lean)) * flip,
+            (across * Math.sin(seat.lean) + along * Math.cos(seat.lean)) * flip,
+            z * Math.cos(seat.spin) - x * Math.sin(seat.spin),
+          ]),
+        };
+      });
+    }),
     bonds: [],
     ties: [],
     traces: [],
   };
+}
+
+/**
+ * How the lipids of a crowd stand: how far apart across and along their
+ * rows in angstrom, every other row shifted half a place so the tails of
+ * one fill the gaps of the next, how far the tail ends stay from the middle
+ * where two layers meet, how far the lower layer is moved aside so the
+ * uneven tails of a fat reach past it into the gaps of the upper one, and
+ * how far each lipid strays from its seat.
+ * Straight saturated tails let the lipids stand close and in order, with no
+ * two atoms of neighbours nearer than 3.5 angstrom; a kinked tail takes more
+ * room, and its lipids turn, lean and ride up and down as in a liquid.
+ */
+function packingOf(kind: Kind, unsaturated: boolean) {
+  const fat = kind === "triglyceride";
+  return unsaturated
+    ? {
+        across: fat ? 19.6 : 15.4,
+        along: fat ? 8.6 : 6.2,
+        gap: fat ? -3.4 : 0.8,
+        lean: 0.05,
+        offset: fat ? ([2.8, 0] as const) : ([0, 0] as const),
+        ride: 1,
+        spin: 0.12,
+      }
+    : {
+        across: fat ? 12.6 : 19.4,
+        along: fat ? 6.6 : 3.6,
+        gap: fat ? -0.4 : 0.8,
+        lean: 0,
+        offset: fat ? ([2.1, 3.3] as const) : ([0, 0] as const),
+        ride: 0,
+        spin: 0,
+      };
+}
+
+/**
+ * Where the lipid in `column` and `row` of one layer of a crowd stands, the
+ * layer above the middle for a `layer` of 1 and turned over below it for -1.
+ * `index` tells the lipids of a crowd apart and `reach` is how far the tails
+ * hang below glycerol.
+ */
+function seatOf(
+  packing: ReturnType<typeof packingOf>,
+  [column, row, layer]: readonly [number, number, number],
+  index: number,
+  reach: number
+): Seat {
+  const aside = layer === -1 ? packing.offset : NONE;
+  return {
+    at: [
+      (column + (Math.abs(row) % 2) / 2 - 0.25) * packing.across + aside[0],
+      (packing.gap + reach + strayOf(index, 1) * packing.ride) * layer,
+      row * packing.along + aside[1],
+    ],
+    lean: strayOf(index, 2) * packing.lean,
+    over: layer === -1,
+    spin: strayOf(index, 3) * packing.spin,
+  };
+}
+
+/** How far the lowest heavy atom of a lipid hangs below its glycerol, in angstrom. */
+function reachOf(lipid: Molecule) {
+  return -Arr.reduce(lipid.atoms, 0, (low, atom) =>
+    atom.element === "H" ? low : Math.min(low, atom.at[1])
+  );
+}
+
+/** The offset of a layer that is not moved aside. */
+const NONE = [0, 0] as const;
+
+/** A number from -1 to 1 that seat `index` of a crowd always gets for its `trait`. */
+function strayOf(index: number, trait: number) {
+  return chanceAt(index, trait, 11) * 2 - 1;
+}
+
+/**
+ * A patch of bilayer as its lipids' heavy atoms, in angstrom: two leaflets of
+ * `columns` by `rows` phospholipids, heads out toward the water and tails in,
+ * the lower leaflet turned over, each standing as its tails let it.
+ */
+export function bilayerOf(
+  unsaturated: boolean,
+  columns: number,
+  rows: number
+): Molecule {
+  const lipid = lipidOf("phospholipid", unsaturated).molecule;
+  const packing = packingOf("phospholipid", unsaturated);
+  const reach = reachOf(lipid);
+  return crowdOf(
+    lipid,
+    Arr.flatMap([1, -1] as const, (layer) =>
+      Arr.flatMap(Arr.range(0, rows - 1), (row) =>
+        Arr.map(Arr.range(0, columns - 1), (column) =>
+          seatOf(
+            packing,
+            [column - (columns - 1) / 2, row - Math.floor(rows / 2), layer],
+            (layer + 1) * 500 + row * columns + column,
+            reach
+          )
+        )
+      )
+    )
+  );
+}
+
+/** How far the columns and rows of a fat droplet reach from its middle, in places. */
+const DROPLET = [1, 2] as const;
+
+/**
+ * A droplet of fat in water as its triglycerides' heavy atoms, in angstrom:
+ * the molecules that fit an oval clump, in two layers that meet tail to
+ * tail, so nothing but glycerol and ester oxygens faces the water. A
+ * saturated fat stacks into the ordered clump of a solid; the kinked tails
+ * of an unsaturated one hold the molecules apart and askew, as in an oil.
+ */
+export function dropletOf(unsaturated: boolean): Molecule {
+  const lipid = lipidOf("triglyceride", unsaturated).molecule;
+  const packing = packingOf("triglyceride", unsaturated);
+  const reach = reachOf(lipid);
+  const [columns, rows] = DROPLET;
+  const places = Arr.flatMap([1, -1] as const, (layer) =>
+    Arr.flatMap(Arr.range(-columns, columns), (column) =>
+      Arr.map(Arr.range(-rows, rows), (row) => [column, row, layer] as const)
+    )
+  );
+  return crowdOf(
+    lipid,
+    Arr.map(
+      Arr.filter(
+        places,
+        ([column, row]) =>
+          (column / (columns + 0.4)) ** 2 + (row / (rows + 0.4)) ** 2 <= 1
+      ),
+      (place, index) => seatOf(packing, place, index, reach)
+    )
+  );
 }
