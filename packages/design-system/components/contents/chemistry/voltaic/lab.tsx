@@ -107,12 +107,14 @@ export function ChemicalCellLab({
               cameraPosition={[0.05, 0.25, 0.78]}
               cameraTarget={[0, 0.085, 0.14]}
               fov={34}
+              framing="content"
               maxDistance={1.6}
               minDistance={0.2}
             />
             <ChemicalCellScene
               reading={reading}
               showProducts={showProducts}
+              voltage={cell.voltage}
               voltmeter={labels.voltmeter}
             >
               <HalfCell

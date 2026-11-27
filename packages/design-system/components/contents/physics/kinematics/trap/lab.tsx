@@ -1,29 +1,18 @@
+import { useFrame } from "@react-three/fiber";
+import { RoadsideCamera } from "@repo/design-system/components/contents/physics/kinematics/follow";
+import { MotionPlot } from "@repo/design-system/components/contents/physics/kinematics/plot";
 import {
-  advanceRun,
-  shownTime,
-} from "@repo/design-system/components/contents/physics/canvas/clock";
+  DistancePosts,
+  ROAD,
+} from "@repo/design-system/components/contents/physics/kinematics/road";
+import type { SedanRig } from "@repo/design-system/components/contents/physics/kinematics/sedan";
 import {
-  fade,
-  mix,
-  spotlight,
-  vignette,
-} from "@repo/design-system/components/contents/physics/canvas/paint";
-import type { Graph } from "@repo/design-system/components/contents/physics/canvas/plot";
-import {
-  graphX,
-  graphY,
-  paintCurve,
-  paintGraph,
-  paintGraphDot,
-  paintSlopeLine,
-} from "@repo/design-system/components/contents/physics/canvas/plot";
-import type { Road } from "@repo/design-system/components/contents/physics/canvas/scene";
-import {
-  paintCar,
-  paintLandscape,
-  paintRoad,
-  roadX,
-} from "@repo/design-system/components/contents/physics/canvas/scene";
+  SEDAN,
+  Sedan,
+} from "@repo/design-system/components/contents/physics/kinematics/sedan";
+import { curvePoints } from "@repo/design-system/components/contents/physics/kinematics/ticks";
+import type { GateRig } from "@repo/design-system/components/contents/physics/kinematics/trap/beam";
+import { LightGate } from "@repo/design-system/components/contents/physics/kinematics/trap/beam";
 import type { TrapGap } from "@repo/design-system/components/contents/physics/kinematics/trap/gates";
 import {
   TRAP_ACCELERATION,
@@ -34,12 +23,19 @@ import {
   trapReading,
 } from "@repo/design-system/components/contents/physics/kinematics/trap/gates";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
+import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
+import { Road } from "@repo/design-system/components/three/stage/road";
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
+  useVisualScene,
+  useVisualStop,
   VisualCard,
   VisualCardBody,
   VisualCardFacts,
@@ -49,13 +45,11 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
-import type p5 from "p5";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { Suspense, useRef, useState } from "react";
 
 /** How far the track runs, in metres: past the widest trap. */
 const TRACK = 80;
@@ -69,158 +63,12 @@ const PLAY_RATE = 0.6;
 /** How long the finished run rests before it starts again, in wall seconds. */
 const HOLD_SECONDS = 1.5;
 
-/** What the sketch reads on every frame: the gap between the two gates. */
-const TrapFrameSchema = Schema.Struct({
-  gap: TrapGapSchema,
-});
-type TrapFrame = typeof TrapFrameSchema.Type;
+/** How far the car's nose is ahead of its origin between the axles, in metres. */
+const NOSE = SEDAN.length / 2 + (SEDAN.frontAxle + SEDAN.rearAxle) / 2;
 
-/** The road band above and the graph below, for one canvas size. */
-function layout(sketch: p5) {
-  const { height, width } = sketch;
-  const margin = width * 0.07;
-  const road: Road = {
-    height: height * 0.46,
-    origin: margin,
-    scale: (width - 2 * margin) / TRACK,
-    surface: height * 0.4,
-    top: 0,
-  };
-  const graph: Graph = {
-    box: {
-      height: height * 0.42,
-      width: width - 2 * margin,
-      x: margin,
-      y: height * 0.53,
-    },
-    time: [0, Math.ceil(DURATION)],
-    value: [-4, TRACK + 4],
-  };
-  return { graph, road };
-}
-
-/** One gate: a post with a lens at bumper height that glows while the car blocks its beam. */
-function paintGate(sketch: p5, road: Road, metres: number, broken: boolean) {
-  const x = roadX(road, metres);
-  const tall = road.height * 0.42;
-  sketch.push();
-  sketch.noStroke();
-  sketch.fill(getColor("ZINC", 900));
-  sketch.rect(x - 4, road.surface - tall, 8, tall);
-  sketch.fill(getColor("SLATE", 600));
-  sketch.rect(x - 7, road.surface - tall, 14, tall * 0.14, 3);
-  const lens = { x, y: road.surface - road.height * 0.12 };
-  if (broken) {
-    spotlight(sketch, lens, road.height * 0.22, {
-      color: PLOT_COLORS.amber,
-      strength: 0.85,
-    });
-  }
-  sketch.fill(
-    broken
-      ? PLOT_COLORS.amber
-      : mix(PLOT_COLORS.amber, getColor("ZINC", 900), 0.6)
-  );
-  sketch.circle(lens.x, lens.y, 9);
-  sketch.pop();
-}
-
-/**
- * Draws one moment of the run: the car speeds up through the trap, each
- * gate glowing while the car crosses its beam, and the position-time graph
- * below with the secant across the gap and the tangent at the centre.
- */
-function trapProgram(sketch: p5, read: () => TrapFrame) {
-  let time = DURATION;
-  sketch.setup = () => {
-    sketch.createCanvas(1, 1);
-  };
-  sketch.draw = () => {
-    const { gap } = read();
-    if (sketch.isLooping()) {
-      time = advanceRun(time, sketch.deltaTime / 1000, {
-        duration: DURATION,
-        hold: HOLD_SECONDS,
-        rate: PLAY_RATE,
-      });
-    }
-    const now = shownTime(time, DURATION);
-    const { graph, road } = layout(sketch);
-    const reading = trapReading(gap);
-    const position = trapPosition(now);
-    sketch.background(getColor("ZINC", 950));
-    paintLandscape(sketch, road);
-    paintRoad(sketch, road, { length: TRACK, step: 10 });
-    sketch.push();
-    sketch.noStroke();
-    sketch.fill(fade(PLOT_COLORS.amber, 0.14));
-    sketch.rect(
-      roadX(road, TRAP_CENTRE - gap / 2),
-      road.surface - road.height * 0.05,
-      gap * road.scale,
-      road.height * 0.25
-    );
-    sketch.pop();
-    const carLength = Math.min(road.height * 0.5, sketch.width * 0.13);
-    const front = roadX(road, position);
-    paintGate(
-      sketch,
-      road,
-      TRAP_CENTRE - gap / 2,
-      now >= reading.enter &&
-        front - carLength <= roadX(road, TRAP_CENTRE - gap / 2)
-    );
-    paintGate(
-      sketch,
-      road,
-      TRAP_CENTRE + gap / 2,
-      now >= reading.leave &&
-        front - carLength <= roadX(road, TRAP_CENTRE + gap / 2)
-    );
-    paintCar(sketch, road, {
-      color: PLOT_COLORS.pink,
-      length: carLength,
-      rear: front - carLength,
-    });
-
-    paintGraph(sketch, graph, { time: 1, value: 10 });
-    paintCurve(sketch, graph, trapPosition, {
-      color: fade(getColor("SLATE", 300), 0.35),
-      until: DURATION,
-      weight: 2,
-    });
-    paintCurve(sketch, graph, trapPosition, {
-      color: PLOT_COLORS.pink,
-      until: now,
-      weight: 3,
-    });
-    const centre = { time: trapArrival(TRAP_CENTRE), value: TRAP_CENTRE };
-    paintSlopeLine(sketch, graph, centre, reading.instant, {
-      color: fade(getColor("ZINC", 100), 0.65),
-      weight: 1.5,
-    });
-    const enter = { time: reading.enter, value: TRAP_CENTRE - gap / 2 };
-    const leave = { time: reading.leave, value: TRAP_CENTRE + gap / 2 };
-    sketch.push();
-    sketch.stroke(PLOT_COLORS.amber);
-    sketch.strokeWeight(3);
-    sketch.line(
-      graphX(graph, enter.time),
-      graphY(graph, enter.value),
-      graphX(graph, leave.time),
-      graphY(graph, leave.value)
-    );
-    sketch.pop();
-    paintGraphDot(sketch, graph, enter, PLOT_COLORS.amber);
-    paintGraphDot(sketch, graph, leave, PLOT_COLORS.amber);
-    paintGraphDot(
-      sketch,
-      graph,
-      { time: now, value: position },
-      PLOT_COLORS.pink
-    );
-    vignette(sketch, 0.3);
-  };
+/** The moment a paused card shows for a gap: the car's tail has just cleared the second gate. */
+function stillTime(gap: TrapGap) {
+  return trapArrival(TRAP_CENTRE + gap / 2 + SEDAN.length + 1.5);
 }
 
 interface SpeedTrapInstantSpeedLabProps {
@@ -237,7 +85,7 @@ interface SpeedTrapInstantSpeedLabProps {
 }
 
 /**
- * A speed trap of two light gates around one spot of a test track, which a
+ * A speed trap of two light gates around one spot of a test road, which a
  * car crosses while speeding up from rest at 4 m/s². The trap reads the
  * average speed across its gap; shrinking the gap brings that reading to
  * the car's instantaneous speed at the centre, 20 m/s, and on the graph the
@@ -252,6 +100,7 @@ export function SpeedTrapInstantSpeedLab({
   const measure = useQuantity();
   const reading = trapReading(gap);
   const isGap = Schema.is(TrapGapSchema);
+  const centre = trapArrival(TRAP_CENTRE);
 
   return (
     <VisualCard
@@ -281,15 +130,61 @@ export function SpeedTrapInstantSpeedLab({
           ))}
         </ToggleGroup>
       </VisualCardToolbar>
-      <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
-        <P5Sketch
-          label={labels.viewLabel}
-          program={trapProgram}
-          state={{ gap }}
-        />
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ScienceStage
+          floor={0}
+          frameloop="always"
+          ground="grass"
+          reach={gap + 20}
+          setting="field"
+        >
+          <Suspense fallback={null}>
+            <RoadsideCamera
+              from={TRAP_CENTRE - gap / 2}
+              past={SEDAN.length + 3.5}
+              resetKey={gap}
+              to={TRAP_CENTRE + gap / 2}
+            />
+            <TrapScene gap={gap} />
+          </Suspense>
+        </ScienceStage>
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>
+        <MotionPlot
+          curve={{
+            color: PLOT_COLORS.pink,
+            label: <InlineMath math="x(t)" />,
+            points: curvePoints(0, DURATION, 48, trapPosition),
+          }}
+          end={{
+            color: PLOT_COLORS.amber,
+            label: <InlineMath math="t_2" />,
+            point: { x: reading.leave, y: TRAP_CENTRE + gap / 2 },
+          }}
+          secant={<InlineMath math="\bar{v}" />}
+          start={{
+            color: PLOT_COLORS.amber,
+            label: <InlineMath math="t_1" />,
+            point: { x: reading.enter, y: TRAP_CENTRE - gap / 2 },
+          }}
+          tangent={{
+            label: <InlineMath math="v" />,
+            points: [
+              { x: centre - TRAP_CENTRE / reading.instant, y: 0 },
+              {
+                x: DURATION,
+                y: TRAP_CENTRE + reading.instant * (DURATION - centre),
+              },
+            ],
+          }}
+          x={{ caption: "t\\ (\\text{s})", domain: [0, Math.ceil(DURATION)] }}
+          y={{ caption: "x\\ (\\text{m})", domain: [0, TRACK] }}
+        />
         <VisualCardFacts>
           <VisualFactTabular
             label={labels.gap}
@@ -322,5 +217,71 @@ export function SpeedTrapInstantSpeedLab({
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
+  );
+}
+
+/**
+ * The test road with its distance posts, the two gates of the trap and
+ * the car that speeds up through them. What the trap reads is the card's,
+ * in its readout and on its chart.
+ */
+function TrapScene({ gap }: { readonly gap: TrapGap }) {
+  const playing = useVisualScene((card) => card.playing, false);
+  const measure = useQuantity();
+  const car = useRef<SedanRig>(null);
+  const enter = useRef<GateRig>(null);
+  const leave = useRef<GateRig>(null);
+  const run = useRef({ gap, time: stillTime(gap) });
+  const from = TRAP_CENTRE - gap / 2;
+  const to = TRAP_CENTRE + gap / 2;
+  useVisualStop(() => {
+    run.current.time = 0;
+  });
+
+  useFrame((_, delta) => {
+    const state = run.current;
+    if (state.gap !== gap) {
+      state.gap = gap;
+      state.time = playing ? 0 : stillTime(gap);
+    }
+    if (playing) {
+      const next = state.time + simulationStep(delta) * PLAY_RATE;
+      state.time = next > DURATION + HOLD_SECONDS * PLAY_RATE ? 0 : next;
+    }
+    const front = trapPosition(Math.min(state.time, DURATION));
+    const tail = front - SEDAN.length;
+    car.current?.place(front - NOSE, false);
+    enter.current?.trip(front >= from && tail <= from);
+    leave.current?.trip(front >= to && tail <= to);
+  });
+
+  return (
+    <>
+      <Road
+        dash={ROAD.dash}
+        spacing={ROAD.spacing}
+        width={2 * ROAD.halfWidth}
+      />
+      <DistancePosts
+        posts={Arr.filter(
+          Arr.map(Arr.range(1, TRACK / 10), (index) => index * 10),
+          (post) => post <= to - 8
+        )}
+      />
+      <ThreeLabel
+        color={PLOT_COLORS.amber}
+        fontSize="compact"
+        outlineColor={getColor("SLATE", 50)}
+        outlineWidth={0.05}
+        position={[TRAP_CENTRE, 0.3, 1.4]}
+      >
+        <InlineMath math={`d=${measure(gap, "\\text{ m}", 0)}`} />
+      </ThreeLabel>
+      <LightGate at={from} ref={enter} />
+      <LightGate at={to} ref={leave} />
+      <group position={[0, 0, ROAD.lane]}>
+        <Sedan color={PLOT_COLORS.pink} ref={car} />
+      </group>
+    </>
   );
 }

@@ -21,6 +21,7 @@ import {
 } from "@repo/design-system/components/three/molecule/point";
 import { saturate } from "@repo/design-system/components/three/molecule/saturate";
 import type { Molecule } from "@repo/design-system/components/three/molecule/shape";
+import { glycanOf } from "@repo/design-system/components/three/molecule/sugar";
 import { WATER } from "@repo/design-system/components/three/molecule/water";
 import { Array as Arr, Match, Schema } from "effect";
 
@@ -35,10 +36,9 @@ const SmallSchema = Schema.Literals([
 ]);
 export type Small = typeof SmallSchema.Type;
 
-/** Bond lengths in angstrom: phosphorus to oxygen, and carbon to oxygen, nitrogen and carbon. */
+/** Bond lengths in angstrom: phosphorus to oxygen, and carbon to carbon. */
 const P_O = 1.6;
 const P_O_END = 1.5;
-const C_O = 1.43;
 const C_C = 1.52;
 
 /** The P-O-P angle of a phosphoanhydride is 130 degrees, so each phosphate turns 50 degrees from the last; a phosphate ester's C-O-P angle is 120. */
@@ -276,59 +276,6 @@ function nadphOf(): Molecule {
   );
 }
 
-/** The six atoms of a pyranose ring in order, and whether each stands above or below the ring's mean plane in the chair. */
-const RING = ["C1", "C2", "C3", "C4", "C5", "O5"] as const;
-
-/**
- * Glucose as it is in water and in starch: beta-D-glucopyranose in its 4C1
- * chair, the ring numbered clockwise seen from above with carbon 4 up and
- * carbon 1 down, and every hydroxyl and the sixth carbon equatorial. The
- * chair is the ideal one, every ring bond 1.52 angstrom.
- */
-function glucoseOf(): Molecule {
-  const radius = Math.sqrt(C_C ** 2 - 0.5 ** 2);
-  const seat = (index: number) => {
-    const angle = (-index / 6) * Math.PI * 2;
-    const up = index % 2 === 0 ? -1 : 1;
-    return {
-      out: unit([Math.cos(angle), Math.sin(angle), -up * 0.34]),
-      place: [
-        Math.cos(angle) * radius,
-        Math.sin(angle) * radius,
-        up * 0.25,
-      ] as const,
-    };
-  };
-  const ring = Arr.map(RING, (name, index) => ({ name, ...seat(index) }));
-  const c6 = add(seat(4).place, scale(seat(4).out, C_C));
-  return built(
-    [
-      ...Arr.map(ring, (atom) =>
-        named(atom.name, atom.name === "O5" ? "O" : "C", atom.place)
-      ),
-      ...Arr.makeBy(4, (index) =>
-        named(
-          `O${index + 1}`,
-          "O",
-          add(seat(index).place, scale(seat(index).out, C_O))
-        )
-      ),
-      named("C6", "C", c6),
-      named("O6", "O", add(c6, scale(unit([0.2, -0.5, 0.84]), C_O))),
-    ],
-    [
-      ...Arr.map(
-        Arr.zip(RING, [...Arr.drop(RING, 1), RING[0]]),
-        ([from, to]): Link => [from, to, 1]
-      ),
-      ...Arr.makeBy(4, (index): Link => [`C${index + 1}`, `O${index + 1}`, 1]),
-      ["C5", "C6", 1],
-      ["C6", "O6", 1],
-    ],
-    () => 0
-  );
-}
-
 /** A molecule of three atoms or fewer, given as its atoms and the order of the bonds from the first atom to each other one. */
 function simple(atoms: readonly Named[], order: 1 | 2): Molecule {
   return {
@@ -351,7 +298,8 @@ function simple(atoms: readonly Named[], order: 1 | 2): Molecule {
 /**
  * The small molecule called `name` as its real atoms and bonds, hydrogens
  * included: water, oxygen (O=O, 1.208 angstrom), carbon dioxide (O=C=O,
- * 1.163 angstrom), glucose, ATP and NADPH.
+ * 1.163 angstrom), glucose as it is in water and in starch, the chair of
+ * beta-D-glucopyranose, ATP and NADPH.
  */
 export function smallOf(name: Small): Molecule {
   return Match.value(name).pipe(
@@ -379,7 +327,10 @@ export function smallOf(name: Small): Molecule {
         2
       )
     ),
-    Match.when("glucose", glucoseOf),
+    Match.when(
+      "glucose",
+      () => glycanOf({ anomer: "beta", unit: "glucose" }, []).molecule
+    ),
     Match.when("atp", atpOf),
     Match.when("nadph", nadphOf),
     Match.exhaustive

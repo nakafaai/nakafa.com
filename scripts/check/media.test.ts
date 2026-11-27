@@ -5,7 +5,7 @@ import { parseSources } from "#scripts/check/source";
 
 const LAB = "packages/design-system/components/contents/biology/taxon/lab.tsx";
 const PLANET =
-  "packages/design-system/components/contents/biology/climate/planet.tsx";
+  "packages/design-system/components/contents/biology/climate/observation.tsx";
 const ASSETS = "packages/design-system/components/contents/biology/assets.ts";
 const MEDIA_RULE =
   "raw 2D raster photos, image planes, and raster texture loaders are banned in 3D and p5 visuals. Build real 3D geometry or load an open-source .glb/.gltf model instead (web photos are reference only).";
