@@ -1,13 +1,16 @@
 import { ColumnLiquid } from "@repo/design-system/components/contents/chemistry/bench";
 import {
   BROMINE_ORIGIN,
-  buildMolecularRig,
+  ANGSTROM,
   createBromineTubeGeometry,
   createDropperGeometry,
   createPlinthGeometry,
+  MODEL_HEIGHT,
   MODEL_ORIGIN,
 } from "@repo/design-system/components/contents/chemistry/isomer/geometry";
 import type { IsomerCompound } from "@repo/design-system/components/contents/chemistry/isomer/model";
+import { moleculeOf } from "@repo/design-system/components/contents/chemistry/isomer/model";
+import { MoleculeModel } from "@repo/design-system/components/three/molecule/kit";
 import {
   GlassMaterial,
   LiquidMaterial,
@@ -19,6 +22,9 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { ORGANIC_COLORS } from "@repo/design-system/lib/material/organic";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
+
+/** The height of the plinth's brass turret, where the model's stem starts. */
+const STEM_FOOT = 0.033;
 
 /** Dark anodised rectangular specimen plinth with brass swivel base and nameplate. */
 export function SpecimenPlinth() {
@@ -54,108 +60,29 @@ export function SpecimenPlinth() {
   );
 }
 
-/** Genuine 3D ball-and-stick C4 hydrocarbon molecule mounted on twin brass support forks. */
-export function MoleculeModel({
+/**
+ * One C4 isomer as a ball and stick model kit on its stand: black carbons
+ * and white hydrogens at their real bond lengths and angles, the double
+ * bond two rods side by side, held up by a brass stem.
+ */
+export function IsomerModel({
   compound,
 }: {
   readonly compound: IsomerCompound;
 }) {
-  const rig = useMemo(() => buildMolecularRig(compound), [compound]);
+  const molecule = useMemo(() => moleculeOf(compound), [compound]);
 
   return (
     <group>
-      {/* Twin brushed brass support forks cradling the molecular backbone */}
-      {Arr.map(rig.supports, (fork) => (
-        <mesh
-          castShadow
-          key={fork.id}
-          position={fork.midpoint}
-          quaternion={fork.quaternion}
-        >
-          <cylinderGeometry args={[0.0024, 0.0028, fork.length, 12]} />
-          <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.26} />
-        </mesh>
-      ))}
-
-      {/* Carbon backbone spheres */}
-      {Arr.map(rig.carbons, (carbon) => (
-        <mesh
-          castShadow
-          key={carbon.id}
-          position={[carbon.pos.x, carbon.pos.y, carbon.pos.z]}
-        >
-          <sphereGeometry args={[0.0185, 24, 18]} />
-          <meshPhysicalMaterial
-            clearcoat={0.62}
-            clearcoatRoughness={0.16}
-            color={ORGANIC_COLORS.carbonDark}
-            roughness={0.26}
-          />
-        </mesh>
-      ))}
-
-      {/* C-C single bonds and twin parallel golden C=C double bonds */}
-      {Arr.map(rig.ccBonds, (bond) =>
-        bond.isDouble ? (
-          <group key={bond.id}>
-            {Arr.map([-1, 1] as const, (sign) => (
-              <mesh
-                castShadow
-                key={`${bond.id}-${sign}`}
-                position={[
-                  bond.midpoint[0] + bond.perpOffset[0] * sign,
-                  bond.midpoint[1] + bond.perpOffset[1] * sign,
-                  bond.midpoint[2] + bond.perpOffset[2] * sign,
-                ]}
-                quaternion={bond.quaternion}
-              >
-                <cylinderGeometry args={[0.0038, 0.0038, bond.length, 14]} />
-                <meshPhysicalMaterial
-                  clearcoat={0.6}
-                  color={ORGANIC_COLORS.doubleBondGold}
-                  emissive={ORGANIC_COLORS.doubleBondGold}
-                  emissiveIntensity={0.42}
-                  metalness={0.5}
-                  roughness={0.22}
-                />
-              </mesh>
-            ))}
-          </group>
-        ) : (
-          <mesh
-            castShadow
-            key={bond.id}
-            position={bond.midpoint}
-            quaternion={bond.quaternion}
-          >
-            <cylinderGeometry args={[0.0044, 0.0044, bond.length, 14]} />
-            <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.28} />
-          </mesh>
-        )
-      )}
-
-      {/* C-H bond cylinders and glossy white hydrogen spheres */}
-      {Arr.map(rig.hydrogens, (hAtom) => (
-        <group key={hAtom.id}>
-          <mesh
-            castShadow
-            position={hAtom.bondMidpoint}
-            quaternion={hAtom.bondQuaternion}
-          >
-            <cylinderGeometry args={[0.0026, 0.0026, hAtom.bondLength, 10]} />
-            <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.3} />
-          </mesh>
-          <mesh castShadow position={hAtom.position}>
-            <sphereGeometry args={[0.011, 16, 14]} />
-            <meshPhysicalMaterial
-              clearcoat={0.55}
-              clearcoatRoughness={0.18}
-              color={ORGANIC_COLORS.hydrogenWhite}
-              roughness={0.2}
-            />
-          </mesh>
-        </group>
-      ))}
+      <mesh castShadow position={[0, (MODEL_HEIGHT + STEM_FOOT) / 2, 0]}>
+        <cylinderGeometry
+          args={[0.0022, 0.0028, MODEL_HEIGHT - STEM_FOOT, 16]}
+        />
+        <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.26} />
+      </mesh>
+      <group position={[0, MODEL_HEIGHT, 0]} scale={ANGSTROM}>
+        <MoleculeModel molecule={molecule} style="sticks" />
+      </group>
     </group>
   );
 }
