@@ -11,6 +11,7 @@ import {
   simulationStep,
 } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import {
@@ -23,20 +24,31 @@ import { Array as Arr } from "effect";
 import { useCallback, useRef } from "react";
 import type { Group } from "three";
 
-const AUXIN_DROPS = [0, 0.25, 0.5, 0.75] as const;
+/** Where along its way down the shaded flank each auxin marker starts, as a share of the way. */
+const AUXIN_DROPS = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9] as const;
+
+/** What the lab shows, for the camera to fill the frame with: the pot, the shoot at its greatest bend and the lamp. */
+const SUBJECT = {
+  x: { max: 1.15, min: -0.42 },
+  y: { max: 1.45, min: 0 },
+  z: { max: 0.05, min: -0.05 },
+} as const;
+
+/** Whether the lab is shown on a narrow screen, where a label that would touch its subject is left out. */
+function useNarrow() {
+  return isNarrowThreeScene(
+    useThree((state) => state.size),
+    1.2
+  );
+}
 
 function AuxinCamera() {
-  const narrow = isNarrowThreeScene(
-    useThree((state) => state.size),
-    1.25
-  );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0.15, 1.52, 3.45] : [0.18, 1.28, 2.85]}
+      cameraPosition={[0.18, 1.28, 2.85]}
       cameraTarget={[0.16, 0.72, 0]}
       fov={38}
-      maxDistance={5.8}
-      minDistance={1.4}
+      framing="content"
     />
   );
 }
@@ -55,6 +67,7 @@ export function AuxinAgarBendScene({
 }) {
   const playing = useVisualScene((card) => card.playing, false);
   const ink = useLabelInk();
+  const narrow = useNarrow();
   const dotsRef = useRef<Group>(null);
   const phaseRef = useRef(0);
   const reading = evaluateAuxinBend(auxinLevel);
@@ -78,9 +91,9 @@ export function AuxinAgarBendScene({
       const offset = AUXIN_DROPS[idx] ?? 0;
       const frac = 1 - ((phaseRef.current + offset) % 1);
       const theta = bendRad * frac * frac;
-      const x = Math.sin(theta) * 0.52 * frac - 0.12;
-      const y = 0.38 + frac * 0.82 * Math.cos(theta * 0.55);
-      child.position.set(x, y, 0.13);
+      const x = Math.sin(theta) * 0.52 * frac - 0.055;
+      const y = 0.32 + frac * 0.9 * Math.cos(theta * 0.55);
+      child.position.set(x, y, 0.075);
     });
   });
 
@@ -88,30 +101,35 @@ export function AuxinAgarBendScene({
     <group>
       <SimulationTicker running={playing} />
       <AuxinCamera />
-      <TerracottaPot position={[0, 0, 0]} scale={1.08} />
-      <ColeoptileCutaway bendRad={bendRad} />
-      <DirectionalBrassLamp position={[0.98, 0, -0.08]} />
+      <CameraBounds bounds={SUBJECT}>
+        <TerracottaPot position={[0, 0, 0]} scale={1.08} />
+        <DirectionalBrassLamp position={[0.98, 0, -0.08]} />
+        <ColeoptileCutaway
+          bendRad={bendRad}
+          skew={((reading.elongationPercent - 100) / 65) * 0.42}
+        />
 
-      {/* Diffusing IAA auxin molecules migrating down the shaded flank */}
-      <group ref={dotsRef}>
-        {Arr.map(AUXIN_DROPS, (offset) => {
-          const frac = 1 - offset;
-          const theta = bendRad * frac * frac;
-          const x = Math.sin(theta) * 0.52 * frac - 0.12;
-          const y = 0.38 + frac * 0.82 * Math.cos(theta * 0.55);
-          return (
-            <mesh key={offset} position={[x, y, 0.13]}>
-              <sphereGeometry args={[0.028, 12, 10]} />
-              <meshStandardMaterial
-                color={BOTANY_COLORS.auxinDot}
-                emissive={BOTANY_COLORS.agarGlow}
-                emissiveIntensity={0.45}
-                roughness={0.22}
-              />
-            </mesh>
-          );
-        })}
-      </group>
+        {/* Diffusing IAA auxin molecules migrating down the shaded flank */}
+        <group ref={dotsRef}>
+          {Arr.map(AUXIN_DROPS, (offset) => {
+            const frac = 1 - offset;
+            const theta = bendRad * frac * frac;
+            const x = Math.sin(theta) * 0.52 * frac - 0.055;
+            const y = 0.32 + frac * 0.9 * Math.cos(theta * 0.55);
+            return (
+              <mesh key={offset} position={[x, y, 0.075]}>
+                <icosahedronGeometry args={[0.011, 2]} />
+                <meshStandardMaterial
+                  color={BOTANY_COLORS.auxinDot}
+                  emissive={BOTANY_COLORS.agarGlow}
+                  emissiveIntensity={1.4}
+                  roughness={0.22}
+                />
+              </mesh>
+            );
+          })}
+        </group>
+      </CameraBounds>
 
       {/* Clean non-overlapping theme-aware labels */}
       <ThreeLabel
@@ -119,6 +137,7 @@ export function AuxinAgarBendScene({
         color={ink}
         fontSize="compact"
         position={[-0.22, 1.38, 0]}
+        visible={!narrow}
       >
         <span>{parts.agarBlock}</span>
       </ThreeLabel>
@@ -127,6 +146,7 @@ export function AuxinAgarBendScene({
         color={ink}
         fontSize="compact"
         position={[-0.4, 0.96, 0]}
+        visible={!narrow}
       >
         <span>{parts.shadedSide}</span>
       </ThreeLabel>
@@ -135,6 +155,7 @@ export function AuxinAgarBendScene({
         color={ink}
         fontSize="compact"
         position={[-0.4, 0.56, 0]}
+        visible={!narrow}
       >
         <span>{parts.auxinDot}</span>
       </ThreeLabel>
@@ -142,7 +163,7 @@ export function AuxinAgarBendScene({
         anchorX="left"
         color={ink}
         fontSize="compact"
-        position={[0.38, 1.12, 0]}
+        position={[0.42, 0.9, 0]}
       >
         <span>{parts.litSide}</span>
       </ThreeLabel>
@@ -150,7 +171,8 @@ export function AuxinAgarBendScene({
         anchorX="left"
         color={ink}
         fontSize="compact"
-        position={[0.42, 0.5, 0]}
+        position={[0.46, 0.44, 0]}
+        visible={!narrow}
       >
         <span>{parts.coleoptile}</span>
       </ThreeLabel>

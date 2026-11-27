@@ -1,8 +1,11 @@
 import { leafSurface } from "@repo/design-system/components/contents/biology/leaf";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
+import { Soil } from "@repo/design-system/components/three/flora/soil";
 import { Turn } from "@repo/design-system/components/three/form/part";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { getColor } from "@repo/design-system/lib/color";
 import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
+import { FLORA_COLORS } from "@repo/design-system/lib/material/flora";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
 import {
@@ -12,7 +15,6 @@ import {
   DoubleSide,
   Float32BufferAttribute,
   RepeatWrapping,
-  SphereGeometry,
   SRGBColorSpace,
   TubeGeometry,
   Vector3,
@@ -270,18 +272,35 @@ export function BotanicalLeaf({
   );
 }
 
+/** The wall of a clay flowerpot: a foot ring, a tapered side, a thick rolled rim and the inside down to the soil. */
 const POT_PROFILE = [
-  [0, 0],
-  [0.24, 0],
-  [0.26, 0.02],
-  [0.32, 0.28],
-  [0.365, 0.295],
-  [0.365, 0.355],
-  [0.325, 0.355],
-  [0.31, 0.3],
+  [0, 0.012],
+  [0.05, 0.012],
+  [0.052, 0.004],
+  [0.2, 0],
+  [0.238, 0.004],
+  [0.248, 0.018],
+  [0.262, 0.07],
+  [0.29, 0.17],
+  [0.316, 0.268],
+  [0.322, 0.279],
+  [0.352, 0.283],
+  [0.362, 0.292],
+  [0.366, 0.31],
+  [0.366, 0.342],
+  [0.36, 0.354],
+  [0.345, 0.358],
+  [0.33, 0.354],
+  [0.324, 0.342],
+  [0.318, 0.3],
+  [0.3, 0.2],
 ] as const;
 
-/** Lathed terracotta ceramic pot with rolled lip and bumpy granular peat-soil mound. */
+/**
+ * A clay flowerpot filled with moist soil: thrown terracotta with a rolled
+ * rim, the pitted, unglazed surface of fired clay, and a heaped bed of
+ * crumbly soil inside it.
+ */
 export function TerracottaPot({
   position = [0, 0, 0],
   scale = 1,
@@ -289,51 +308,22 @@ export function TerracottaPot({
   readonly position?: readonly [number, number, number];
   readonly scale?: number;
 }) {
-  const soilTex = useMemo(() => createSoilTexture(), []);
-  useEffect(() => () => soilTex?.dispose(), [soilTex]);
-
-  const soilMound = useMemo(() => {
-    const mound = new SphereGeometry(
-      0.32,
-      28,
-      14,
-      0,
-      Math.PI * 2,
-      0,
-      Math.PI * 0.48
-    );
-    const pos = mound.getAttribute("position");
-    for (let i = 0; i < pos.count; i += 1) {
-      const vx = pos.getX(i);
-      const vy = pos.getY(i);
-      const vz = pos.getZ(i);
-      const rough = 1 + (hashUnit(i, 7) - 0.5) * 0.08;
-      pos.setXYZ(i, vx * 0.96, vy * 0.24 * rough, vz * 0.96);
-    }
-    mound.computeVertexNormals();
-    return mound;
-  }, []);
-  useEffect(() => () => soilMound.dispose(), [soilMound]);
-
   return (
     <group position={position} scale={scale}>
       <mesh castShadow receiveShadow>
         <Turn profile={POT_PROFILE} />
-        <meshStandardMaterial
-          color={BOTANY_COLORS.terracotta}
-          roughness={0.82}
+        <SurfaceMaterial
+          bump={0.9}
+          color={FLORA_COLORS.potClay}
+          repeat={[7, 2]}
+          roughness={0.92}
           side={DoubleSide}
+          surface="concrete"
         />
       </mesh>
-      <mesh geometry={soilMound} position={[0, 0.305, 0]} receiveShadow>
-        <meshStandardMaterial
-          bumpMap={soilTex}
-          bumpScale={0.02}
-          color={BOTANY_COLORS.soilDark}
-          map={soilTex}
-          roughness={0.95}
-        />
-      </mesh>
+      <group position={[0, 0.292, 0]}>
+        <Soil count={700} heap={0.035} radius={0.318} seed={7} />
+      </group>
     </group>
   );
 }

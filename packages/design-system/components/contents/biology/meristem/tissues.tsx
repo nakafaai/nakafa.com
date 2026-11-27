@@ -1,314 +1,385 @@
-import { BotanicalLeaf } from "@repo/design-system/components/contents/biology/seedling";
+import { chanceAt } from "@repo/design-system/components/three/field/noise";
+import { Cells } from "@repo/design-system/components/three/flora/cells";
+import {
+  joinMeshes,
+  limbMesh,
+  smoothPath,
+} from "@repo/design-system/components/three/flora/limb";
+import { solidOf } from "@repo/design-system/components/three/flora/solid";
+import type { Section } from "@repo/design-system/components/three/flora/tissue";
+import {
+  sectionCells,
+  sectionWidth,
+} from "@repo/design-system/components/three/flora/tissue";
+import { paintDisc } from "@repo/design-system/components/three/flora/wood";
 import { Turn } from "@repo/design-system/components/three/form/part";
-import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
-import { FOLIAGE_COLORS } from "@repo/design-system/lib/material/foliage";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { FLORA_COLORS } from "@repo/design-system/lib/material/flora";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
 import {
-  CanvasTexture,
   CatmullRomCurve3,
+  Color,
+  DataTexture,
   DoubleSide,
+  LinearFilter,
+  LinearMipmapLinearFilter,
   SRGBColorSpace,
   TubeGeometry,
   Vector3,
 } from "three";
 
-const ROOT_CAP_PROFILE = [
-  [0, 0],
-  [0.095, 0.03],
-  [0.185, 0.11],
-  [0.245, 0.24],
-  [0.265, 0.34],
-  [0.245, 0.36],
+/** How far the cells stand out of the face an organ is cut along. */
+const DEPTH = 0.034;
+
+/** A root tip cut along its length: cap, dividing cells, growing cells, grown cells. */
+const ROOT: Section = {
+  apex: 0.4,
+  cap: 0.15,
+  division: 0.56,
+  elongation: 0.94,
+  files: 14,
+  length: 1.42,
+  radius: 0.26,
+  seed: 7,
+  short: 0.036,
+  skew: 0,
+  tall: 0.17,
+};
+
+/** A shoot tip cut along its length: a dome of dividing cells with no cap over it. */
+const SHOOT: Section = {
+  apex: 0.3,
+  cap: 0,
+  division: 0.46,
+  elongation: 0.84,
+  files: 14,
+  length: 1.32,
+  radius: 0.26,
+  seed: 11,
+  short: 0.034,
+  skew: 0,
+  tall: 0.14,
+};
+
+const ROOT_TONES = [
+  FLORA_COLORS.rootCap,
+  FLORA_COLORS.rootDivision,
+  FLORA_COLORS.rootGrowing,
+  FLORA_COLORS.rootMature,
 ] as const;
 
-const MERISTEM_CELLS = Arr.flatMap([-0.085, 0, 0.085] as const, (x) =>
-  Arr.map([0.34, 0.43, 0.52] as const, (y) => ({
-    id: `mc-${x}-${y}`,
-    x,
-    y,
-  }))
-);
-
-const ELONGATION_CELLS = Arr.flatMap([-0.1, 0, 0.1] as const, (x) =>
-  Arr.map([0.74, 0.94] as const, (y) => ({
-    id: `ec-${x}-${y}`,
-    x,
-    y,
-  }))
-);
-
-const ROOT_HAIR_SPECS = [
-  { droop: -0.06, id: "rh1", len: 0.42, side: -1, y: 1.08, z: 0.04 },
-  { droop: 0.04, id: "rh2", len: 0.48, side: 1, y: 1.15, z: -0.03 },
-  { droop: -0.05, id: "rh3", len: 0.44, side: -1, y: 1.24, z: -0.04 },
-  { droop: 0.02, id: "rh4", len: 0.38, side: 1, y: 1.32, z: 0.05 },
+const SHOOT_TONES = [
+  FLORA_COLORS.shootDivision,
+  FLORA_COLORS.shootDivision,
+  FLORA_COLORS.shootGrowing,
+  FLORA_COLORS.shootMature,
 ] as const;
 
-/** Procedural wood cross-section texture with annual earlywood/latewood rings and medullary rays. */
-function createWoodRingTexture(ringCount: number): CanvasTexture | null {
-  if (typeof document === "undefined") {
-    return null;
-  }
-  const size = 512;
-  const cx = size / 2;
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return null;
-  }
-  ctx.fillStyle = FOLIAGE_COLORS.annualEarly;
-  ctx.fillRect(0, 0, size, size);
-
-  const maxR = size * 0.48;
-  for (let r = 1; r <= ringCount; r += 1) {
-    const rad = (r / (ringCount + 0.4)) * maxR;
-    ctx.strokeStyle = FOLIAGE_COLORS.annualLate;
-    ctx.lineWidth = 7;
-    ctx.beginPath();
-    ctx.arc(cx, cx, rad, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.strokeStyle = FOLIAGE_COLORS.stemWood;
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.arc(cx, cx, rad + 4, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
-  // Fine radial medullary vascular rays
-  ctx.strokeStyle = FOLIAGE_COLORS.annualLate;
-  ctx.lineWidth = 1.6;
-  for (let i = 0; i < 36; i += 1) {
-    const ang = (i / 36) * Math.PI * 2;
-    ctx.beginPath();
-    ctx.moveTo(cx, cx);
-    ctx.lineTo(cx + Math.cos(ang) * maxR, cx + Math.sin(ang) * maxR);
-    ctx.stroke();
-  }
-
-  const tex = new CanvasTexture(canvas);
-  tex.colorSpace = SRGBColorSpace;
-  tex.needsUpdate = true;
-  return tex;
+/** The outline of a cut organ from its tip to its far end, for the skin turned around its axis. */
+function outline(section: Section) {
+  return Arr.makeBy(48, (step) => {
+    const along = (step / 47) ** 1.6 * section.length;
+    return [sectionWidth(section, along), along] as const;
+  });
 }
 
-/** Longitudinal cutaway of root apical meristem: mucilage cap, mitotic dome, vacuolating elongation cells, root hairs & spiral xylem. */
-export function RootApexCutaway() {
-  const { hairs, xylemSpiral } = useMemo(() => {
-    const spiralPts = Arr.makeBy(36, (i) => {
-      const t = i / 35;
-      const ang = t * Math.PI * 10;
-      return new Vector3(
-        Math.cos(ang) * 0.048,
-        0.92 + t * 0.52,
-        Math.sin(ang) * 0.048
-      );
-    });
-    const spiralGeo = new TubeGeometry(
-      new CatmullRomCurve3(spiralPts),
-      44,
-      0.0085,
-      6,
-      false
-    );
-    const hairGeos = Arr.map(ROOT_HAIR_SPECS, (spec) => {
-      const curve = new CatmullRomCurve3([
-        new Vector3(spec.side * 0.22, spec.y, -0.02 + spec.z),
-        new Vector3(
-          spec.side * (0.22 + spec.len * 0.45),
-          spec.y + spec.droop * 0.4,
-          0.02 + spec.z
-        ),
-        new Vector3(
-          spec.side * (0.22 + spec.len),
-          spec.y + spec.droop * 1.4,
-          -0.01 + spec.z
-        ),
-      ]);
-      return {
-        geo: new TubeGeometry(curve, 14, 0.013, 8, false),
-        id: spec.id,
-      };
-    });
-    return { hairs: hairGeos, xylemSpiral: spiralGeo };
-  }, []);
+/** The half of an organ's skin that is left behind the cut, turned from its outline. */
+function Skin({
+  color,
+  section,
+}: {
+  readonly color: string;
+  readonly section: Section;
+}) {
+  const profile = useMemo(() => outline(section), [section]);
+  return (
+    <mesh castShadow receiveShadow>
+      <Turn arc={[Math.PI / 2, Math.PI]} profile={profile} />
+      <SurfaceMaterial
+        bump={0.5}
+        color={color}
+        repeat={[6, 8]}
+        roughness={0.62}
+        side={DoubleSide}
+        surface="tissue"
+      />
+    </mesh>
+  );
+}
 
+/** The root hairs of the grown zone: each one cell of the skin, drawn out into the soil, longer the older it is. */
+function useRootHairs() {
+  const hairs = useMemo(
+    () =>
+      solidOf(
+        joinMeshes(
+          Arr.makeBy(90, (hair) => {
+            const along = ROOT.elongation + 0.03 + chanceAt(hair, 1, 3) * 0.42;
+            const turn = Math.PI * (0.5 + chanceAt(hair, 2, 3));
+            const age = (along - ROOT.elongation) / 0.45;
+            const reach =
+              (0.07 + 0.34 * age) * (0.55 + 0.9 * chanceAt(hair, 3, 3));
+            const out = [Math.sin(turn), Math.cos(turn)] as const;
+            const path = smoothPath(
+              Arr.makeBy(5, (knot) => {
+                const far = ROOT.radius - 0.004 + (reach * knot) / 4;
+                const wave = (chanceAt(hair, 10 + knot, 3) - 0.5) * 0.05 * knot;
+                return [
+                  out[0] * far - out[1] * wave,
+                  along + wave * 0.7 - 0.012 * knot * knot * age,
+                  out[1] * far + out[0] * wave,
+                ] as const;
+              }),
+              10
+            );
+            return limbMesh({
+              arc: 1,
+              base: 0.0075,
+              flare: 0.5,
+              furrow: 0,
+              path,
+              seed: hair,
+              sides: 6,
+              tip: 0.0035,
+            });
+          })
+        )
+      ),
+    []
+  );
+  useEffect(() => () => hairs.dispose(), [hairs]);
+  return hairs;
+}
+
+/** A water vessel of the root's core seen through the cut: a dead, hollow tube held open by a spiral of lignin. */
+function Vessel({
+  from,
+  turns,
+  x,
+}: {
+  readonly from: number;
+  readonly turns: number;
+  readonly x: number;
+}) {
+  const { spiral, tube } = useMemo(() => {
+    const rise = ROOT.length - from;
+    const coil = new CatmullRomCurve3(
+      Arr.makeBy(turns * 12 + 1, (step) => {
+        const angle = (step / 12) * 2 * Math.PI;
+        return new Vector3(
+          Math.cos(angle) * 0.024,
+          from + (rise * step) / (turns * 12),
+          Math.sin(angle) * 0.024
+        );
+      })
+    );
+    return {
+      spiral: new TubeGeometry(coil, turns * 36, 0.0055, 6, false),
+      tube: solidOf(
+        limbMesh({
+          arc: 1,
+          base: 0.023,
+          flare: 0,
+          furrow: 0,
+          path: [
+            [0, from, 0],
+            [0, from + rise / 2, 0],
+            [0, ROOT.length, 0],
+          ],
+          seed: turns,
+          sides: 16,
+          tip: 0.023,
+        })
+      ),
+    };
+  }, [from, turns]);
   useEffect(
     () => () => {
-      xylemSpiral.dispose();
-      Arr.forEach(hairs, (h) => h.geo.dispose());
+      spiral.dispose();
+      tube.dispose();
     },
-    [hairs, xylemSpiral]
+    [spiral, tube]
   );
 
   return (
-    <group>
-      {/* Back half-cylinder cortex & epidermis cutaway (open cleanly toward +Z camera) */}
-      <mesh castShadow position={[0, 0.88, 0]} receiveShadow>
-        <cylinderGeometry
-          args={[0.27, 0.24, 1.18, 36, 1, false, Math.PI * 0.5, Math.PI]}
-        />
+    <group position={[x, 0, DEPTH + 0.012]}>
+      <mesh geometry={tube}>
         <meshPhysicalMaterial
-          clearcoat={0.28}
-          color={FOLIAGE_COLORS.epidermis}
-          roughness={0.54}
-          side={DoubleSide}
-        />
-      </mesh>
-      {/* Translucent mucilaginous root cap thimble wrapping the lower apex */}
-      <mesh castShadow position={[0, 0.04, 0]}>
-        <Turn
-          arc={[Math.PI * 0.48, Math.PI * 1.04]}
-          profile={ROOT_CAP_PROFILE}
-        />
-        <meshPhysicalMaterial
-          clearcoat={0.65}
-          color={FOLIAGE_COLORS.rootCap}
-          opacity={0.86}
-          roughness={0.44}
-          side={DoubleSide}
+          clearcoat={0.6}
+          color={FLORA_COLORS.vesselWall}
+          opacity={0.72}
+          roughness={0.3}
           transparent
         />
       </mesh>
-      {/* Dividing meristematic cells with visible purple mitotic chromatin */}
-      {Arr.map(MERISTEM_CELLS, (cell) => (
-        <group key={cell.id} position={[cell.x, cell.y, 0.04]}>
-          <mesh castShadow>
-            <boxGeometry args={[0.072, 0.072, 0.075]} />
-            <meshPhysicalMaterial
-              clearcoat={0.35}
-              color={FOLIAGE_COLORS.meristemCell}
-              opacity={0.88}
-              roughness={0.36}
-              transparent
-            />
-          </mesh>
-          <mesh position={[0, 0, 0.02]}>
-            <sphereGeometry args={[0.022, 12, 10]} />
-            <meshStandardMaterial
-              color={FOLIAGE_COLORS.mitoticChromatin}
-              roughness={0.42}
-            />
-          </mesh>
-        </group>
-      ))}
-      {/* Elongation zone stretched parenchyma cells with expanding translucent vacuoles */}
-      {Arr.map(ELONGATION_CELLS, (cell) => (
-        <group key={cell.id} position={[cell.x, cell.y, 0.04]}>
-          <mesh castShadow>
-            <boxGeometry args={[0.082, 0.175, 0.08]} />
-            <meshPhysicalMaterial
-              color={FOLIAGE_COLORS.parenchyma}
-              opacity={0.52}
-              roughness={0.4}
-              transparent
-            />
-          </mesh>
-          <mesh position={[0, 0, 0.015]}>
-            <capsuleGeometry args={[0.028, 0.09, 8, 12]} />
-            <meshPhysicalMaterial
-              clearcoat={0.8}
-              color={FOLIAGE_COLORS.vacuole}
-              opacity={0.86}
-              roughness={0.18}
-              transparent
-            />
-          </mesh>
-        </group>
-      ))}
-      {/* Central spiral lignified xylem vessel in differentiation zone */}
-      <mesh castShadow geometry={xylemSpiral}>
-        <meshStandardMaterial
-          color={BOTANY_COLORS.ligninBrown}
-          roughness={0.52}
+      <mesh castShadow geometry={spiral}>
+        <SurfaceMaterial
+          bump={0.4}
+          color={FLORA_COLORS.ligninRing}
+          repeat={[1, 40]}
+          roughness={0.6}
+          surface="wood"
         />
       </mesh>
-      {/* Curved epidermal root hairs */}
-      {Arr.map(hairs, (hair) => (
-        <mesh castShadow geometry={hair.geo} key={hair.id}>
-          <meshPhysicalMaterial
-            clearcoat={0.5}
-            color={FOLIAGE_COLORS.rootHair}
-            opacity={0.88}
-            roughness={0.32}
-            transparent
-          />
-        </mesh>
-      ))}
     </group>
   );
 }
 
-/** Longitudinal cutaway of shoot apical meristem with curving veined leaf primordia. */
-export function ShootApexCutaway() {
+/**
+ * A root tip cut along its length, as a section under the microscope shows
+ * it: the cap of loose cells over the tip, the dense dividing cells behind it
+ * (some caught with their chromosomes in a plate), the cells that lengthen as
+ * their vacuoles swell, and the grown zone with its vessels and root hairs.
+ */
+export function RootApexCutaway() {
+  const cells = useMemo(() => sectionCells(ROOT), []);
+  const hairs = useRootHairs();
+
   return (
     <group>
-      <mesh castShadow position={[0, 0.78, 0]} receiveShadow>
-        <cylinderGeometry
-          args={[0.26, 0.28, 1.18, 36, 1, false, Math.PI * 0.5, Math.PI]}
-        />
+      <Skin color={FLORA_COLORS.rootSkin} section={ROOT} />
+      <Cells cells={cells} depth={DEPTH} tones={ROOT_TONES} />
+      <Vessel from={0.78} turns={9} x={-0.028} />
+      <Vessel from={0.98} turns={16} x={0.028} />
+      <mesh castShadow geometry={hairs}>
         <meshPhysicalMaterial
-          clearcoat={0.3}
-          color={FOLIAGE_COLORS.palisade}
-          roughness={0.48}
-          side={DoubleSide}
+          clearcoat={0.6}
+          color={FLORA_COLORS.rootHair}
+          roughness={0.35}
         />
       </mesh>
-      {/* Apical meristematic dome */}
-      <mesh castShadow position={[0, 1.36, 0]}>
-        <sphereGeometry
-          args={[0.22, 28, 18, 0, Math.PI * 2, 0, Math.PI * 0.55]}
-        />
-        <meshPhysicalMaterial
-          clearcoat={0.45}
-          color={FOLIAGE_COLORS.meristemCell}
-          roughness={0.36}
-        />
-      </mesh>
-      {/* Flanking curving veined leaf primordia */}
-      {Arr.map([-1, 1] as const, (side) => (
-        <group key={`lp-${side}`}>
-          <BotanicalLeaf
-            baseColor={FOLIAGE_COLORS.spongy}
-            droop={0.28}
-            length={0.44}
-            position={[side * 0.16, 1.24, 0.04]}
-            rotation={[0, side === 1 ? 0 : Math.PI, 1.05]}
-            veinColor={BOTANY_COLORS.healthyLeafVein}
-            width={0.46}
-          />
-          <BotanicalLeaf
-            baseColor={BOTANY_COLORS.healthyLeafDeep}
-            droop={0.24}
-            length={0.52}
-            position={[side * 0.24, 1.02, 0.02]}
-            rotation={[0, side === 1 ? 0.2 : Math.PI - 0.2, 0.72]}
-            veinColor={BOTANY_COLORS.healthyLeafVein}
-            width={0.52}
-          />
-        </group>
-      ))}
-      {/* Elongating vacuoles below the shoot dome */}
-      {Arr.map(ELONGATION_CELLS, (cell) => (
-        <mesh key={cell.id} position={[cell.x, cell.y - 0.05, 0.05]}>
-          <capsuleGeometry args={[0.032, 0.1, 8, 12]} />
-          <meshPhysicalMaterial
-            clearcoat={0.75}
-            color={FOLIAGE_COLORS.vacuole}
-            opacity={0.84}
-            roughness={0.22}
-            transparent
-          />
-        </mesh>
-      ))}
     </group>
   );
 }
 
-/** Realistic woody dicot stem cross-section with furrowed bark, cambium rings, and annual wood grain. */
+/** The young leaves that arch over a shoot tip, the youngest nearest the dome. */
+const PRIMORDIA = [
+  { base: 0.085, foot: 0.5, reach: 0.45, rise: 0.56, side: -1 },
+  { base: 0.085, foot: 0.54, reach: 0.4, rise: 0.62, side: 1 },
+  { base: 0.05, foot: 0.24, reach: 0.3, rise: 0.25, side: -1 },
+  { base: 0.045, foot: 0.18, reach: 0.25, rise: 0.19, side: 1 },
+] as const;
+
+/** The leaf primordia of a shoot tip as one solid: horns that rise from the flank and curve in over the dome. */
+function usePrimordia() {
+  const horns = useMemo(
+    () =>
+      solidOf(
+        joinMeshes(
+          Arr.map(PRIMORDIA, (horn, index) =>
+            limbMesh({
+              arc: 1,
+              base: horn.base,
+              flare: 0.25,
+              furrow: 0.05,
+              path: smoothPath(
+                [
+                  [
+                    horn.side * (sectionWidth(SHOOT, horn.foot) - 0.02),
+                    horn.foot,
+                    -0.03,
+                  ],
+                  [
+                    horn.side * (sectionWidth(SHOOT, horn.foot) + 0.04),
+                    horn.foot - horn.rise * 0.45,
+                    -0.03,
+                  ],
+                  [
+                    horn.side * (sectionWidth(SHOOT, horn.foot) - 0.03),
+                    horn.foot - horn.rise * 0.85,
+                    -0.03,
+                  ],
+                  [
+                    horn.side * sectionWidth(SHOOT, horn.foot) * horn.reach,
+                    horn.foot - horn.rise * 1.06,
+                    -0.03,
+                  ],
+                ],
+                18
+              ),
+              seed: index,
+              sides: 16,
+              tip: 0.022,
+            })
+          )
+        )
+      ),
+    []
+  );
+  useEffect(() => () => horns.dispose(), [horns]);
+  return horns;
+}
+
+/**
+ * A shoot tip cut along its length: the dome of small dividing cells at the
+ * very top, the leaf primordia it has just made arching over it, and below
+ * it the cells that lengthen and push the tip upward.
+ */
+export function ShootApexCutaway() {
+  const cells = useMemo(() => sectionCells(SHOOT), []);
+  const horns = usePrimordia();
+
+  return (
+    <group position={[0, 1.42, 0]} rotation={[0, 0, Math.PI]}>
+      <Skin color={FLORA_COLORS.shootSkin} section={SHOOT} />
+      <Cells cells={cells} depth={DEPTH} tones={SHOOT_TONES} />
+      <mesh castShadow geometry={horns} receiveShadow scale={[1, 1, 0.55]}>
+        <SurfaceMaterial
+          bump={0.5}
+          color={FLORA_COLORS.primordium}
+          repeat={[2, 6]}
+          roughness={0.6}
+          surface="leaf"
+        />
+      </mesh>
+    </group>
+  );
+}
+
+/** The colour of one palette entry as red, green and blue from 0 to 255, in the space an image is stored in. */
+function inkOf(color: string) {
+  const { b, g, r } = new Color(color).convertLinearToSRGB();
+  return [r * 255, g * 255, b * 255] as const;
+}
+
+const DISC_INKS = {
+  cambium: inkOf(FLORA_COLORS.cambiumWet),
+  cork: inkOf(FLORA_COLORS.corkOuter),
+  early: inkOf(FLORA_COLORS.woodEarly),
+  heart: inkOf(FLORA_COLORS.woodHeart),
+  late: inkOf(FLORA_COLORS.woodLate),
+  phloem: inkOf(FLORA_COLORS.phloemInner),
+  pith: inkOf(FLORA_COLORS.woodPith),
+};
+
+/** The sawn face of a stem of `ringCount` years as a texture, painted once per age. */
+function useDiscFace(ringCount: number, wood: number) {
+  const face = useMemo(() => {
+    const size = 448;
+    const texture = new DataTexture(
+      paintDisc({ inks: DISC_INKS, rings: ringCount, seed: 5, size, wood }),
+      size,
+      size
+    );
+    texture.colorSpace = SRGBColorSpace;
+    texture.magFilter = LinearFilter;
+    texture.minFilter = LinearMipmapLinearFilter;
+    texture.generateMipmaps = true;
+    texture.anisotropy = 8;
+    texture.needsUpdate = true;
+    return texture;
+  }, [ringCount, wood]);
+  useEffect(() => () => face.dispose(), [face]);
+  return face;
+}
+
+/**
+ * A length of woody stem sawn across: furrowed bark around it, and on its
+ * face the rings its vascular cambium laid down, one a year, pale spring wood
+ * darkening into a dense band, with rays running out from the pith, the wet
+ * line of the cambium, the inner bark and the cork.
+ */
 export function SecondaryWoodCrossSection({
   outerRadius,
   ringCount,
@@ -318,47 +389,47 @@ export function SecondaryWoodCrossSection({
   readonly ringCount: number;
   readonly xylemRadius: number;
 }) {
-  const ringTex = useMemo(() => createWoodRingTexture(ringCount), [ringCount]);
-  useEffect(() => () => ringTex?.dispose(), [ringTex]);
+  const face = useDiscFace(ringCount, xylemRadius / outerRadius);
+  const bark = useMemo(
+    () =>
+      solidOf(
+        limbMesh({
+          arc: 1,
+          base: outerRadius,
+          flare: 0.04,
+          furrow: 0.09,
+          path: Arr.makeBy(9, (step) => [0, (step / 8) * 0.56, 0] as const),
+          seed: 3,
+          sides: 72,
+          tip: outerRadius * 0.97,
+        })
+      ),
+    [outerRadius]
+  );
+  useEffect(() => () => bark.dispose(), [bark]);
 
   return (
-    <group position={[0, 0.42, 0]}>
-      {/* Furrowed outer bark sheath */}
-      <mesh castShadow receiveShadow>
-        <cylinderGeometry args={[outerRadius, outerRadius * 1.04, 0.56, 40]} />
-        <meshStandardMaterial
-          color={BOTANY_COLORS.barkBrown}
-          roughness={0.92}
+    <group>
+      <mesh castShadow geometry={bark} receiveShadow>
+        <SurfaceMaterial
+          bump={1}
+          color={FLORA_COLORS.barkGrey}
+          repeat={[6, 1]}
+          roughness={0.95}
+          surface="bark"
         />
       </mesh>
-      {/* Cork cambium & secondary phloem collar */}
-      <mesh position={[0, 0.035, 0]}>
-        <cylinderGeometry
-          args={[outerRadius - 0.045, outerRadius - 0.045, 0.56, 40]}
-        />
-        <meshStandardMaterial color={FOLIAGE_COLORS.phloem} roughness={0.62} />
-      </mesh>
-      {/* Active green vascular cambium ring */}
-      <mesh position={[0, 0.058, 0]}>
-        <cylinderGeometry
-          args={[xylemRadius + 0.028, xylemRadius + 0.028, 0.56, 40]}
-        />
-        <meshStandardMaterial color={FOLIAGE_COLORS.cambium} roughness={0.44} />
-      </mesh>
-      {/* Secondary xylem wood cylinder with textured annual growth rings */}
-      <mesh position={[0, 0.072, 0]}>
-        <cylinderGeometry args={[xylemRadius, xylemRadius, 0.56, 44]} />
-        <meshStandardMaterial
-          color={FOLIAGE_COLORS.annualEarly}
-          roughness={0.66}
-        />
-      </mesh>
-      <mesh position={[0, 0.354, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[xylemRadius, 48]} />
-        <meshStandardMaterial
-          color={FOLIAGE_COLORS.annualEarly}
-          map={ringTex}
-          roughness={0.62}
+      <mesh
+        position={[0, 0.556, 0]}
+        receiveShadow
+        rotation={[-Math.PI / 2, 0, 0]}
+      >
+        <circleGeometry args={[outerRadius * 0.985, 96]} />
+        <meshPhysicalMaterial
+          bumpMap={face}
+          bumpScale={0.6}
+          map={face}
+          roughness={0.72}
         />
       </mesh>
     </group>
