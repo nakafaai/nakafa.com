@@ -7,64 +7,138 @@ import {
   LiquidMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
+import {
+  PrintFace,
+  PrintSleeve,
+} from "@repo/design-system/components/three/print/layer";
+import { usePrintNumber } from "@repo/design-system/components/three/print/number";
+import { ruleMarks } from "@repo/design-system/components/three/print/rule";
+import type { ScaleSchema } from "@repo/design-system/components/three/print/scale";
+import type { Sheet } from "@repo/design-system/components/three/print/sheet";
+import { words } from "@repo/design-system/components/three/print/sheet";
 import { getColor } from "@repo/design-system/lib/color";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
-import { useEffect, useMemo } from "react";
-import { CanvasTexture, SRGBColorSpace } from "three";
+import { useMemo } from "react";
 
-/** Printed laboratory jar/bottle/plaque paper label with formula, subtitle, and stripe. */
-export function createPrintedLabelTexture({
+/**
+ * A laboratory paper label as printed: the title as large as the label
+ * allows, a line of detail under it, and a badge on the coloured stripe
+ * along its foot.
+ */
+function labelSheet(
+  label: {
+    readonly accentColor: string;
+    readonly badge: string;
+    readonly subtitle: string;
+    readonly title: string;
+  },
+  width: number,
+  height: number
+): Sheet {
+  return {
+    ground: BOTANY_COLORS.labelPaper,
+    height,
+    marks: [
+      {
+        at: [0, height * -0.345],
+        height: height * 0.22,
+        ink: label.accentColor,
+        kind: "band",
+        radius: 0,
+        width: width * 0.953,
+      },
+      {
+        at: [0, 0],
+        height: height * 0.906,
+        ink: BOTANY_COLORS.labelBorder,
+        kind: "frame",
+        line: height * 0.023,
+        radius: 0,
+        width: width * 0.953,
+      },
+      words({
+        at: [0, height * 0.2],
+        box: {
+          height: height * 0.3,
+          leading: 1,
+          smallest: height * 0.1,
+          width: width * 0.86,
+        },
+        ink: BOTANY_COLORS.labelInk,
+        size: height * 0.2,
+        text: label.title,
+      }),
+      words({
+        at: [0, height * -0.055],
+        box: {
+          height: height * 0.16,
+          leading: 1,
+          smallest: height * 0.06,
+          width: width * 0.86,
+        },
+        face: "mono",
+        ink: BOTANY_COLORS.labelInk,
+        size: height * 0.11,
+        text: label.subtitle,
+        weight: 600,
+      }),
+      words({
+        at: [0, height * -0.345],
+        box: {
+          height: height * 0.18,
+          leading: 1,
+          smallest: height * 0.06,
+          width: width * 0.86,
+        },
+        ink: getColor("WHITE"),
+        size: height * 0.094,
+        text: label.badge,
+      }),
+    ],
+    width,
+  };
+}
+
+/**
+ * A printed paper label wrapped round a jar or a bottle: its middle faces
+ * the front, at the origin's height.
+ *
+ * @param arc - How far round the vessel the label wraps, in radians
+ * @param height - The label's height, in metres
+ * @param radius - The radius of the vessel the label lies on
+ */
+export function WrappedLabel({
   accentColor,
-  background = BOTANY_COLORS.labelPaper,
+  arc,
   badge,
-  inkColor = BOTANY_COLORS.labelInk,
+  height,
+  radius,
   subtitle,
   title,
 }: {
   readonly accentColor: string;
-  readonly background?: string;
+  readonly arc: number;
   readonly badge: string;
-  readonly inkColor?: string;
+  readonly height: number;
+  readonly radius: number;
   readonly subtitle: string;
   readonly title: string;
-}): CanvasTexture | null {
-  if (typeof document === "undefined") {
-    return null;
-  }
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 256;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return null;
-  }
-  ctx.fillStyle = background;
-  ctx.fillRect(0, 0, 512, 256);
-  ctx.strokeStyle = BOTANY_COLORS.labelBorder;
-  ctx.lineWidth = 6;
-  ctx.strokeRect(12, 12, 488, 232);
-  ctx.fillStyle = accentColor;
-  ctx.fillRect(12, 188, 488, 56);
+}) {
+  const sheet = useMemo(
+    () =>
+      labelSheet({ accentColor, badge, subtitle, title }, radius * arc, height),
+    [accentColor, arc, badge, height, radius, subtitle, title]
+  );
 
-  ctx.fillStyle = inkColor;
-  ctx.textAlign = "center";
-  const fontSize = title.length > 16 ? 38 : 50;
-  ctx.font = `700 ${fontSize}px ui-sans-serif, system-ui, sans-serif`;
-  ctx.fillText(title, 256, 98);
-
-  ctx.font = "600 28px ui-monospace, monospace";
-  ctx.fillText(subtitle, 256, 152);
-
-  ctx.fillStyle = getColor("WHITE");
-  ctx.font = "700 24px ui-sans-serif, system-ui, sans-serif";
-  ctx.fillText(badge, 256, 224);
-
-  const tex = new CanvasTexture(canvas);
-  tex.colorSpace = SRGBColorSpace;
-  tex.needsUpdate = true;
-  return tex;
+  return <PrintSleeve radius={radius} sheet={sheet} stock="paper" />;
 }
+
+/**
+ * The label of a vessel as shares of the vessel: how far round it wraps, in
+ * radians, its height, and how far out of the glass it lies.
+ */
+const LABEL = { arc: Math.PI * 0.9, height: 0.38, reach: 1.015 } as const;
 
 /** Lathed borosilicate glass beaker/jar with concave meniscus and crisp printed label. */
 export function LabeledVessel({
@@ -110,18 +184,15 @@ export function LabeledVessel({
       ]),
     [height, liquidLevel, radius]
   );
-  const labelTex = useMemo(
+  const label = useMemo(
     () =>
-      createPrintedLabelTexture({
-        accentColor,
-        badge,
-        subtitle,
-        title,
-      }),
-    [accentColor, badge, subtitle, title]
+      labelSheet(
+        { accentColor, badge, subtitle, title },
+        radius * LABEL.reach * LABEL.arc,
+        height * LABEL.height
+      ),
+    [accentColor, badge, height, radius, subtitle, title]
   );
-  useEffect(() => () => labelTex?.dispose(), [labelTex]);
-
   return (
     <group position={position}>
       <mesh>
@@ -132,33 +203,73 @@ export function LabeledVessel({
         <latheGeometry args={[glassPoints, 40]} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.28} />
       </mesh>
-      {labelTex === null ? null : (
-        <mesh
-          position={[0, height * 0.46, 0]}
-          rotation={[0, -Math.PI * 0.45, 0]}
-        >
-          <cylinderGeometry
-            args={[
-              radius * 1.015,
-              radius * 1.015,
-              height * 0.38,
-              24,
-              1,
-              true,
-              0,
-              Math.PI * 0.9,
-            ]}
-          />
-          <meshStandardMaterial
-            map={labelTex}
-            polygonOffset
-            polygonOffsetFactor={-1}
-            roughness={0.82}
-          />
-        </mesh>
-      )}
+      <group position={[0, height * 0.46, 0]}>
+        <PrintSleeve
+          radius={radius * LABEL.reach}
+          sheet={label}
+          stock="paper"
+        />
+      </group>
     </group>
   );
+}
+
+/** The engraved face of a brass plaque: its width and height, in metres. */
+const PLAQUE = { height: 0.12, width: 0.39 } as const;
+
+/**
+ * A brass plaque as engraved: the name as large as the plaque allows, a
+ * rule under it, and a line of detail below, inside a border.
+ */
+function plaqueSheet(title: string, subtitle: string): Sheet {
+  const { height, width } = PLAQUE;
+  return {
+    height,
+    marks: [
+      {
+        at: [0, 0],
+        height: height * 0.88,
+        ink: BOTANY_COLORS.labelInk,
+        kind: "frame",
+        line: height * 0.02,
+        radius: height * 0.04,
+        width: width * 0.96,
+      },
+      words({
+        at: [0, height * 0.14],
+        box: {
+          height: height * 0.4,
+          leading: 1,
+          smallest: height * 0.14,
+          width: width * 0.86,
+        },
+        ink: BOTANY_COLORS.labelInk,
+        size: height * 0.3,
+        text: title,
+      }),
+      {
+        from: [width * -0.3, height * -0.1],
+        ink: BOTANY_COLORS.labelInk,
+        kind: "line",
+        to: [width * 0.3, height * -0.1],
+        width: height * 0.014,
+      },
+      words({
+        at: [0, height * -0.26],
+        box: {
+          height: height * 0.2,
+          leading: 1,
+          smallest: height * 0.08,
+          width: width * 0.86,
+        },
+        ink: BOTANY_COLORS.labelInk,
+        size: height * 0.15,
+        text: subtitle,
+        weight: 600,
+      }),
+    ],
+    width,
+  };
 }
 
 /** Engraved antique brass nameplate plaque for museum/botanical specimens. */
@@ -175,23 +286,7 @@ export function BrassPlaque({
   readonly subtitle: string;
   readonly title: string;
 }) {
-  const tex = useMemo(
-    () =>
-      createPrintedLabelTexture({
-        accentColor: highlight
-          ? BOTANY_COLORS.brassHighlight
-          : BOTANY_COLORS.brassDark,
-        background: highlight
-          ? BOTANY_COLORS.brassHighlight
-          : BOTANY_COLORS.brassGold,
-        badge: subtitle,
-        inkColor: BOTANY_COLORS.labelInk,
-        subtitle: "",
-        title,
-      }),
-    [highlight, subtitle, title]
-  );
-  useEffect(() => () => tex?.dispose(), [tex]);
+  const sheet = useMemo(() => plaqueSheet(title, subtitle), [subtitle, title]);
 
   return (
     <group position={position} rotation={rotation}>
@@ -203,76 +298,71 @@ export function BrassPlaque({
           }
           roughness={0.32}
         />
+        <group position={[0, 0, 0.0092]}>
+          <PrintFace sheet={sheet} stock="engraving" />
+        </group>
       </mesh>
-      {tex === null ? null : (
-        <mesh position={[0, 0, 0.01]}>
-          <planeGeometry args={[0.39, 0.12]} />
-          <meshStandardMaterial map={tex} metalness={0.35} roughness={0.42} />
-        </mesh>
-      )}
     </group>
   );
 }
 
-/** Graduated boxwood botanical scale ruler with printed centimetre ticks. */
+/**
+ * Graduated boxwood scale ruler: its scale is engraved along its whole
+ * length, so its far end reads the scale's last value.
+ *
+ * @param scale - What the ruler reads from its foot to its far end
+ * @param turn - How far its numbers are turned, so they read upright from where the ruler is seen
+ */
 export function GraduatedRuler({
   height = 1.2,
   position = [0, 0, 0],
   rotation = [0, 0, 0],
+  scale,
+  turn,
   width = 0.085,
 }: {
   readonly height?: number;
   readonly position?: readonly [number, number, number];
   readonly rotation?: readonly [number, number, number];
+  readonly scale: typeof ScaleSchema.Type;
+  readonly turn: number;
   readonly width?: number;
 }) {
-  const tex = useMemo(() => {
-    if (typeof document === "undefined") {
-      return null;
-    }
-    const canvas = document.createElement("canvas");
-    canvas.width = 128;
-    canvas.height = 512;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      return null;
-    }
-    ctx.fillStyle = BOTANY_COLORS.woodRule;
-    ctx.fillRect(0, 0, 128, 512);
-    ctx.strokeStyle = BOTANY_COLORS.labelInk;
-    ctx.fillStyle = BOTANY_COLORS.labelInk;
-    ctx.font = "700 20px ui-monospace, monospace";
-    for (let i = 0; i <= 40; i += 1) {
-      const y = 496 - i * 12;
-      const major = i % 5 === 0;
-      ctx.lineWidth = major ? 3 : 1.5;
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(major ? 56 : 30, y);
-      ctx.stroke();
-      if (major && i > 0) {
-        ctx.fillText(`${i}`, 64, y + 7);
-      }
-    }
-    const texture = new CanvasTexture(canvas);
-    texture.colorSpace = SRGBColorSpace;
-    texture.needsUpdate = true;
-    return texture;
-  }, []);
-  useEffect(() => () => tex?.dispose(), [tex]);
+  const format = usePrintNumber();
+  const sheet = useMemo((): Sheet => {
+    const margin = height * 0.025;
+    return {
+      height,
+      marks: ruleMarks(
+        {
+          from: [-width / 2, -height / 2 + margin],
+          scale,
+          side: -1,
+          to: [-width / 2, height / 2 - margin],
+        },
+        format,
+        {
+          ink: BOTANY_COLORS.labelInk,
+          major: width * 0.42,
+          minor: width * 0.22,
+          size: width * 0.2,
+          turn,
+          width: width * 0.02,
+        }
+      ),
+      width,
+    };
+  }, [format, height, scale, turn, width]);
 
   return (
     <group position={position} rotation={rotation}>
       <mesh castShadow receiveShadow>
         <boxGeometry args={[width, height, 0.016]} />
         <meshStandardMaterial color={BOTANY_COLORS.woodRule} roughness={0.68} />
+        <group position={[0, 0, 0.0082]}>
+          <PrintFace sheet={sheet} stock="engraving" />
+        </group>
       </mesh>
-      {tex === null ? null : (
-        <mesh position={[0, 0, 0.0085]}>
-          <planeGeometry args={[width * 0.96, height * 0.96]} />
-          <meshStandardMaterial map={tex} roughness={0.65} />
-        </mesh>
-      )}
     </group>
   );
 }

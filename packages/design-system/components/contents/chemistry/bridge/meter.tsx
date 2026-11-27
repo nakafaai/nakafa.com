@@ -8,6 +8,14 @@ import {
   GlassMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
+import {
+  dialAngle,
+  dialMarks,
+} from "@repo/design-system/components/three/print/dial";
+import { PrintDisc } from "@repo/design-system/components/three/print/layer";
+import { usePrintNumber } from "@repo/design-system/components/three/print/number";
+import type { Sheet } from "@repo/design-system/components/three/print/sheet";
+import { words } from "@repo/design-system/components/three/print/sheet";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
@@ -34,7 +42,20 @@ const METER_FEET = [
   [0.062, 0.042],
 ] as const;
 
-const DIAL_TICKS = Arr.makeBy(13, (step) => 1.15 - (step / 12) * 2.3);
+/**
+ * The voltmeter's dial: 0 to 3 V over a sweep of 2.3 rad about straight
+ * up, turning about a pivot below the middle of the face. The needle reads
+ * its angle from this dial, so it points at the cell's own EMF.
+ */
+const VOLT_DIAL = {
+  centre: [0, -0.006],
+  radius: 0.037,
+  scale: { from: 0, major: 1, minor: 0.25, to: 3 },
+  sweep: { from: Math.PI / 2 + 1.15, to: Math.PI / 2 - 1.15 },
+} as const;
+
+/** The radius of the dial's white face, in metres. */
+const FACE_RADIUS = 0.044;
 
 function createMeterBodyGeometry() {
   const side = new Shape();
@@ -81,8 +102,36 @@ export function BenchVoltmeter({ emfVolts }: { readonly emfVolts: number }) {
   const bodyGeo = useMemo(createMeterBodyGeometry, []);
   useEffect(() => () => bodyGeo.dispose(), [bodyGeo]);
 
-  const normEmf = Math.min(1, Math.max(0, emfVolts / 3));
-  const needleAngle = 1.15 - normEmf * 2.3;
+  const format = usePrintNumber();
+  const face = useMemo(
+    (): Sheet => ({
+      height: FACE_RADIUS * 2,
+      marks: [
+        {
+          at: VOLT_DIAL.centre,
+          from: VOLT_DIAL.sweep.from,
+          ink: PROCESS_COLORS.catalystTeal,
+          kind: "arc",
+          radius: VOLT_DIAL.radius + 0.0024,
+          to: VOLT_DIAL.sweep.to,
+          width: 0.0018,
+        },
+        ...dialMarks(VOLT_DIAL, format, {
+          ink: INSTRUMENT_COLORS.graphite,
+          numbered: true,
+        }),
+        words({
+          at: [0, -0.026],
+          ink: INSTRUMENT_COLORS.graphite,
+          size: 0.0064,
+          text: "V",
+        }),
+      ],
+      width: FACE_RADIUS * 2,
+    }),
+    [format]
+  );
+  const needleAngle = dialAngle(VOLT_DIAL, emfVolts) - Math.PI / 2;
 
   return (
     <group position={[0, 0, METER_Z]}>
@@ -119,40 +168,17 @@ export function BenchVoltmeter({ emfVolts }: { readonly emfVolts: number }) {
           <torusGeometry args={[0.047, 0.0036, 12, 40]} />
           <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.22} />
         </mesh>
-        {/* Crisp white analog dial face */}
+        {/* White dial face with its printed volt scale */}
         <mesh position={[0, 0, 0.0066]}>
-          <circleGeometry args={[0.044, 36]} />
+          <circleGeometry args={[FACE_RADIUS, 36]} />
           <meshStandardMaterial
             color={INSTRUMENT_COLORS.dialFace}
             roughness={0.42}
           />
+          <group position={[0, 0, 0.0003]}>
+            <PrintDisc sheet={face} stock="ink" />
+          </group>
         </mesh>
-        {/* Colored voltage scale arc */}
-        <mesh position={[0, -0.006, 0.0072]} rotation={[0, 0, 0.42]}>
-          <ringGeometry args={[0.032, 0.0355, 24, 1, 0, 2.3]} />
-          <meshBasicMaterial color={PROCESS_COLORS.catalystTeal} />
-        </mesh>
-        {/* Dial graduation ticks */}
-        {Arr.map(DIAL_TICKS, (ang, idx) => (
-          <mesh
-            key={ang}
-            position={[
-              Math.sin(-ang) * 0.032,
-              -0.006 + Math.cos(-ang) * 0.032,
-              0.0076,
-            ]}
-            rotation={[0, 0, ang]}
-          >
-            <boxGeometry
-              args={[
-                idx % 4 === 0 ? 0.0022 : 0.0014,
-                idx % 4 === 0 ? 0.0072 : 0.0046,
-                0.0005,
-              ]}
-            />
-            <meshBasicMaterial color={INSTRUMENT_COLORS.graphite} />
-          </mesh>
-        ))}
         {/* Live crimson analog needle deflecting with emfVolts */}
         <group position={[0, -0.006, 0.0086]} rotation={[0, 0, needleAngle]}>
           <mesh position={[0, 0.016, 0]}>

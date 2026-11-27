@@ -1,4 +1,14 @@
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import {
+  PrintFace,
+  PrintSleeve,
+} from "@repo/design-system/components/three/print/layer";
+import { ruleMarks } from "@repo/design-system/components/three/print/rule";
+import { graduate } from "@repo/design-system/components/three/print/scale";
+import type {
+  Mark,
+  Sheet,
+} from "@repo/design-system/components/three/print/sheet";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
@@ -42,8 +52,63 @@ const BASE_FEET = [
   [0.295, 0.095],
 ] as const;
 
-const AXIS_TICKS = Arr.range(0, 6);
-const SCALE_TICKS = Arr.range(0, 10);
+/** The brass rule along the front of the baseplate: its length and width, in metres. */
+const RULE = { length: 0.56, width: 0.016 } as const;
+
+/**
+ * The reaction coordinate engraved on the brass rule: ten even divisions,
+ * every other one long. The coordinate has no unit, so none is numbered.
+ */
+const RULE_SHEET: Sheet = {
+  height: RULE.width,
+  marks: ruleMarks(
+    {
+      from: [-0.25, -0.006],
+      scale: { from: 0, major: 2, minor: 1, to: 9 },
+      side: 1,
+      to: [0.2, -0.006],
+    },
+    () => "",
+    {
+      ink: CAR_COLORS.dashboard,
+      major: 0.012,
+      minor: 0.007,
+      size: 0,
+      width: 0.002,
+    }
+  ),
+  width: RULE.length,
+};
+
+/** The energy stanchion where it is graduated: its widest radius there, and the span of its marks. */
+const AXIS = { from: 0.075, radius: 0.0064, to: 0.35 } as const;
+
+/** The energy stanchion's levels: six even ones, with a half level between each two. */
+const AXIS_SCALE = { from: 0, major: 1, minor: 0.5, to: 5 } as const;
+
+/**
+ * The energy axis engraved round the stanchion: a full ring at each of six
+ * even levels and a short stroke across its front between. The lab's
+ * energies are drawn to no scale a number could name, so the rings carry none.
+ */
+const AXIS_SHEET: Sheet = {
+  height: AXIS.to - AXIS.from + 0.02,
+  marks: Arr.map(
+    graduate(AXIS_SCALE, () => ""),
+    (tick): Mark => {
+      const reach = Math.PI * AXIS.radius * (tick.major ? 1 : 0.3);
+      const y = (tick.share - 0.5) * (AXIS.to - AXIS.from);
+      return {
+        from: [-reach, y],
+        ink: CAR_COLORS.dashboard,
+        kind: "line",
+        to: [reach, y],
+        width: 0.0022,
+      };
+    }
+  ),
+  width: Math.PI * 2 * AXIS.radius,
+};
 
 /** Chamfered dark anodised aluminium instrument baseplate. */
 function buildBaseplateGeometry(): ExtrudeGeometry {
@@ -93,31 +158,27 @@ export function EnergyAxisFrame() {
         <MetalMaterial color={CAR_COLORS.dashboard} roughness={0.42} />
       </mesh>
       <mesh position={[0, 0.029, 0.106]}>
-        <boxGeometry args={[0.56, 0.002, 0.016]} />
+        <boxGeometry args={[RULE.length, 0.002, RULE.width]} />
         <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.32} />
+        <group position={[0, 0.001_05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <PrintFace sheet={RULE_SHEET} stock="engraving" />
+        </group>
       </mesh>
-      {Arr.map(SCALE_TICKS, (index) => (
-        <mesh key={index} position={[-0.25 + index * 0.05, 0.0305, 0.106]}>
-          <boxGeometry
-            args={[0.002, 0.0015, index % 2 === 0 ? 0.012 : 0.007]}
-          />
-          <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.6} />
-        </mesh>
-      ))}
       <mesh castShadow position={[-0.3, 0.232, 0]}>
         <cylinderGeometry args={[0.0055, 0.0065, 0.408, 18]} />
         <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.26} />
+        <group position={[0, (AXIS.from + AXIS.to) / 2 - 0.232, 0]}>
+          <PrintSleeve
+            radius={AXIS.radius}
+            sheet={AXIS_SHEET}
+            stock="engraving"
+          />
+        </group>
       </mesh>
       <mesh position={[-0.3, 0.442, 0]}>
         <coneGeometry args={[0.011, 0.022, 18]} />
         <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.28} />
       </mesh>
-      {Arr.map(AXIS_TICKS, (index) => (
-        <mesh key={index} position={[-0.292, 0.075 + index * 0.055, 0]}>
-          <boxGeometry args={[0.016, 0.0024, 0.0024]} />
-          <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.3} />
-        </mesh>
-      ))}
       <mesh position={[0, 0.048, 0]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.0042, 0.0042, 0.6, 14]} />
         <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.28} />

@@ -1,6 +1,6 @@
 import {
-  createPrintedLabelTexture,
   LabeledVessel,
+  WrappedLabel,
 } from "@repo/design-system/components/contents/biology/fixtures";
 import type { CultureSolution } from "@repo/design-system/components/contents/biology/mineral/model";
 import { evaluateCultureGrowth } from "@repo/design-system/components/contents/biology/mineral/model";
@@ -19,7 +19,7 @@ import {
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
 import { Array as Arr, Match } from "effect";
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { CatmullRomCurve3, DoubleSide, Vector3 } from "three";
 
 const JAR_PROFILE = latheProfile([
@@ -138,18 +138,6 @@ export function KnopCultureJar({
   const labelSpec = solutionLabelSpec(solution);
   const leafStyle = leafAppearance(solution);
 
-  const labelTex = useMemo(
-    () =>
-      createPrintedLabelTexture({
-        accentColor: labelSpec.accent,
-        badge: labelSpec.badge,
-        subtitle: labelSpec.subtitle,
-        title: labelSpec.title,
-      }),
-    [labelSpec.accent, labelSpec.badge, labelSpec.subtitle, labelSpec.title]
-  );
-  useEffect(() => () => labelTex?.dispose(), [labelTex]);
-
   const stemH = 0.56 * growth.stemHeight;
   const stemCurve = useMemo(
     () =>
@@ -197,19 +185,17 @@ export function KnopCultureJar({
         />
       </mesh>
       {/* Printed formula label wrapped across front lower band */}
-      {labelTex === null ? null : (
-        <mesh position={[0, 0.19, 0]} rotation={[0, -Math.PI * 0.38, 0]}>
-          <cylinderGeometry
-            args={[0.379, 0.379, 0.2, 28, 1, true, 0, Math.PI * 0.76]}
-          />
-          <meshStandardMaterial
-            map={labelTex}
-            polygonOffset
-            polygonOffsetFactor={-1}
-            roughness={0.82}
-          />
-        </mesh>
-      )}
+      <group position={[0, 0.19, 0]}>
+        <WrappedLabel
+          accentColor={labelSpec.accent}
+          arc={Math.PI * 0.76}
+          badge={labelSpec.badge}
+          height={0.2}
+          radius={0.379}
+          subtitle={labelSpec.subtitle}
+          title={labelSpec.title}
+        />
+      </group>
       {/* Sculpted fibrous cotton-wool neck stopper */}
       <mesh castShadow position={[0, 0.77, 0]}>
         <cylinderGeometry args={[0.225, 0.205, 0.11, 24]} />

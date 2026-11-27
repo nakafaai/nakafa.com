@@ -1,13 +1,13 @@
 import { Array as Arr, Option, Schema, String as Str } from "effect";
 
 /**
- * Sets the claim in lines on its printed card: the largest type at which the
- * whole claim fits the card's text box, broken between words. A measure
- * gives the width of a text at a font size of 1, as a canvas measures it
- * scaled down, since type grows in proportion to its size.
+ * Sets a text in lines inside a box of its print: the largest type at which
+ * the whole text fits, broken between words. A measure gives the width of a
+ * text at a font size of 1, as a canvas measures it scaled down, since type
+ * grows in proportion to its size.
  */
 
-/** The claim set in lines at one font size. */
+/** A text set in lines at one font size. */
 const SettingSchema = Schema.Struct({
   lines: Schema.Array(Schema.String),
   size: Schema.Finite,
