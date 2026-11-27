@@ -104,8 +104,6 @@ export function loftBody(loft: Loft): Form {
   const color = new Float32Array(rings * columns * 3);
   const uv = new Float32Array(rings * columns * 2);
   const index = new Uint32Array(loft.along * loft.around * 6);
-  const tips: number[][] = [];
-  const seams: number[][] = [];
   const up = new Vector3(...loft.up).normalize();
   const tangent = new Vector3();
   const side = new Vector3();
@@ -125,11 +123,6 @@ export function loftBody(loft: Loft): Form {
       .normalize();
     up.addScaledVector(tangent, -up.dot(tangent)).normalize();
     side.crossVectors(tangent, up);
-    const tip = here.wide + here.tall < 1e-6;
-    if (tip) {
-      tips.push(Arr.makeBy(columns, (column) => ring * columns + column));
-    }
-    seams.push([ring * columns, ring * columns + loft.around]);
 
     for (let column = 0; column < columns; column += 1) {
       const around = column / loft.around;
@@ -165,9 +158,22 @@ export function loftBody(loft: Loft): Form {
     }
   }
 
+  const ringsAt = Arr.makeBy(rings, (ring) => ring);
   const normal = smoothNormals(position, index);
-  weldNormals(normal, seams);
-  weldNormals(normal, tips);
+  weldNormals(
+    normal,
+    Arr.map(ringsAt, (ring) => [ring * columns, ring * columns + loft.around])
+  );
+  weldNormals(
+    normal,
+    Arr.map(
+      Arr.filter(ringsAt, (ring) => {
+        const here = stationAt(loft.stations, ring / loft.along);
+        return here.wide + here.tall < 1e-6;
+      }),
+      (ring) => Arr.makeBy(columns, (column) => ring * columns + column)
+    )
+  );
   unitNormals(normal);
   return { color, index, normal, position, uv };
 }

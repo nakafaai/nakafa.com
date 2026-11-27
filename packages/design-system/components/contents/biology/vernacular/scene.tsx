@@ -1,5 +1,4 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import { AnimalModel } from "@repo/design-system/components/contents/biology/vernacular/animals";
 import type {
   SeaAnimal,
@@ -41,7 +40,6 @@ function SeaCreature({
   readonly selected: boolean;
 }) {
   const ref = useRef<Group>(null);
-  const ink = useLabelInk();
   const playing = useVisualScene((card) => card.playing, false);
   const clock = useRef(index * 1.1);
   const bed = seabedAt(position[0], position[2]);
@@ -75,8 +73,14 @@ function SeaCreature({
         </mesh>
       ) : null}
       <ThreeLabel
-        color={selected ? CLASSIFICATION_COLORS.tagHighlight : ink}
+        color={
+          selected
+            ? CLASSIFICATION_COLORS.tagHighlight
+            : CLASSIFICATION_COLORS.tagCard
+        }
         fontSize="compact"
+        outlineColor={CLASSIFICATION_COLORS.tagInk}
+        outlineWidth={0.024}
         position={[0, seaSpeciesOf(animal).tag, 0]}
       >
         <span className="flex flex-col items-center leading-tight">

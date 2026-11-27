@@ -41,7 +41,7 @@ const SEA_SPECIES: Readonly<Record<SeaAnimal, SeaSpecies>> = {
     isFish: false,
     scientific: "Dugong dugon",
     tag: 0.24,
-    x: -1.0,
+    x: -0.85,
     y: 0.36,
     z: 0.45,
   },

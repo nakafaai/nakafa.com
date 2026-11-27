@@ -17,7 +17,7 @@ const StrokeSchema = Schema.Struct({
 export type Stroke = typeof StrokeSchema.Type;
 
 /** How far a stroke moves the body at `x` on its long axis, at a `phase` in radians. */
-export function strokeAt(stroke: Stroke, x: number, phase: number) {
+function strokeAt(stroke: Stroke, x: number, phase: number) {
   const share = Math.min(
     1,
     Math.max(0, (x - stroke.from) / (stroke.to - stroke.from))

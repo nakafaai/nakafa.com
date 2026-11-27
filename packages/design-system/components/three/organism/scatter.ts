@@ -1,15 +1,22 @@
 import { chanceAt } from "@repo/design-system/components/three/field/noise";
+import { Schema } from "effect";
 import { Euler, Matrix4, Quaternion, Vector3 } from "three";
 
 /**
  * Where one of many small things stands: its place, how it leans (as turns
  * about x, y and z in radians) and its size along each axis.
  */
-export interface Sprig {
-  readonly lean: readonly [number, number, number];
-  readonly place: readonly [number, number, number];
-  readonly size: readonly [number, number, number];
-}
+const TripleSchema = Schema.Tuple([
+  Schema.Finite,
+  Schema.Finite,
+  Schema.Finite,
+]);
+const SprigSchema = Schema.Struct({
+  lean: TripleSchema,
+  place: TripleSchema,
+  size: TripleSchema,
+});
+type Sprig = typeof SprigSchema.Type;
 
 /**
  * The placements of many copies of one small thing, sixteen numbers each,

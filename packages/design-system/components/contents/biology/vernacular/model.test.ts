@@ -27,7 +27,7 @@ describe("sea name lab model", () => {
       "seaStar",
       "mackerel",
     ] as const;
-    expect(seaSlotPosition(full, "dugong")).toEqual([-1, 0.36, 0.45]);
+    expect(seaSlotPosition(full, "dugong")).toEqual([-0.85, 0.36, 0.45]);
 
     const pair = ["dugong", "mackerel"] as const;
     expect(seaSlotPosition(pair, "dugong")).toEqual([-1.2, 0.36, 0.25]);

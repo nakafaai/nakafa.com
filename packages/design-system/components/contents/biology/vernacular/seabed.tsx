@@ -16,6 +16,7 @@ import { Body, Tuft } from "@repo/design-system/components/three/organism/body";
 import type { Stroke } from "@repo/design-system/components/three/organism/life";
 import { Skin } from "@repo/design-system/components/three/organism/skin";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
+import { getColor } from "@repo/design-system/lib/color";
 import { CLASSIFICATION_COLORS } from "@repo/design-system/lib/material/classification";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
@@ -86,7 +87,7 @@ export function Seabed() {
       <group rotation={[0, 0, Math.PI / 2]}>
         <Body cast={false} shape={waterForms}>
           <meshBasicMaterial
-            color={dark ? CLASSIFICATION_COLORS.seaNight : "#ffffff"}
+            color={dark ? CLASSIFICATION_COLORS.seaNight : getColor("WHITE")}
             fog={false}
             side={BackSide}
             vertexColors
@@ -95,7 +96,7 @@ export function Seabed() {
       </group>
       <Body cast={false} shape={surfaceForms}>
         <meshBasicMaterial
-          color={dark ? CLASSIFICATION_COLORS.seaNight : "#ffffff"}
+          color={dark ? CLASSIFICATION_COLORS.seaNight : getColor("WHITE")}
           depthWrite={false}
           fog={false}
           opacity={0.6}

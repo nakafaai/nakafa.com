@@ -1,5 +1,6 @@
 import type { Surface } from "@repo/design-system/components/three/surface/detail";
 import { useSurfaceMaps } from "@repo/design-system/components/three/surface/material";
+import { getColor } from "@repo/design-system/lib/color";
 import type { Side } from "three";
 import { FrontSide } from "three";
 
@@ -18,7 +19,6 @@ const RELIEF = 1 / 0.6;
  *
  * @param surface - What the skin is
  * @param repeat - Detail tiles along and around the body
- * @param tint - A colour over the body's own, for one that is all one tone
  * @param wet - The film of water or mucus over the skin, from 0 to 1
  * @param flesh - The colour of light that has passed through the tissue
  * @param glow - How much light passes through thin tissue, from 0 to 1
@@ -31,14 +31,13 @@ const RELIEF = 1 / 0.6;
 export function Skin({
   bump = 0.6,
   clear = 0,
-  flesh = "#000000",
+  flesh,
   glow = 0,
   metalness = 0,
   repeat,
   roughness = 1,
   side = FrontSide,
   surface,
-  tint = "#ffffff",
   wet = 0,
 }: {
   readonly bump?: number;
@@ -50,19 +49,18 @@ export function Skin({
   readonly roughness?: number;
   readonly side?: Side;
   readonly surface: Surface;
-  readonly tint?: string;
   readonly wet?: number;
 }) {
   const maps = useSurfaceMaps(surface, repeat[0], repeat[1]);
+  const light = flesh ?? getColor("BLACK");
 
   return (
     <meshPhysicalMaterial
       aoMap={maps.finish}
       clearcoat={wet}
       clearcoatRoughness={0.12}
-      color={tint}
       depthWrite={clear === 0}
-      emissive={flesh}
+      emissive={light}
       emissiveIntensity={glow * 0.3}
       emissiveMap={maps.tone}
       map={maps.tone}
@@ -73,7 +71,7 @@ export function Skin({
       roughness={roughness}
       roughnessMap={maps.finish}
       sheen={glow}
-      sheenColor={flesh}
+      sheenColor={light}
       sheenRoughness={0.5}
       side={side}
       transparent={clear > 0}

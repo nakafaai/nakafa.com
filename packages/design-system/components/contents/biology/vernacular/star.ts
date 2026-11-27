@@ -27,7 +27,7 @@ function offAxis(turn: number) {
  * The outline of a horned sea star: five stout arms that taper straight
  * from a broad disc to blunt, rounded tips.
  */
-export function starRim(turn: number) {
+function starRim(turn: number) {
   const off = offAxis(turn);
   const edge =
     (TIP * NOTCH * Math.sin(HALF)) /
@@ -41,10 +41,10 @@ export function starRim(turn: number) {
  * arm, the pattern the species is named for.
  */
 const HORNS = [
-  { high: 0.062, out: 0.07, round: 0.026 },
-  { high: 0.04, out: 0.135, round: 0.02 },
-  { high: 0.028, out: 0.19, round: 0.016 },
-  { high: 0.018, out: 0.236, round: 0.012 },
+  { high: 0.034, out: 0.07, round: 0.024 },
+  { high: 0.024, out: 0.135, round: 0.019 },
+  { high: 0.017, out: 0.19, round: 0.015 },
+  { high: 0.011, out: 0.236, round: 0.011 },
 ] as const;
 
 /** How tall the horns stand at a place `reach` from the middle and `off` its arm's axis. */
@@ -53,7 +53,10 @@ function horns(reach: number, off: number) {
   const along = reach * Math.cos(off);
   return Arr.reduce(HORNS, 0, (tallest, horn) => {
     const from = Math.hypot(across, along - horn.out) / horn.round;
-    return Math.max(tallest, horn.high * Math.max(0, 1 - from) ** 0.8);
+    return Math.max(
+      tallest,
+      horn.high * (0.5 + 0.5 * Math.cos(Math.PI * Math.min(1, from))) ** 0.8
+    );
   });
 }
 
@@ -61,9 +64,9 @@ function horns(reach: number, off: number) {
  * How tall a horned sea star stands at a place: a thick disc and arms that
  * are ridged along their middle, with its horns on top.
  */
-export function starHeight(out: number, turn: number) {
+function starHeight(out: number, turn: number) {
   const reach = out * starRim(turn);
-  const body = 0.062 * (1 - out * out) ** 0.55 * (1 - 0.62 * (reach / TIP));
+  const body = 0.074 * (1 - out * out) ** 0.55 * (1 - 0.62 * (reach / TIP));
   return body + horns(reach, offAxis(turn)) * (1 - out ** 6);
 }
 
@@ -77,7 +80,7 @@ export function starForms(detail: number): readonly Form[] {
       height: starHeight,
       paint: (out, turn, color) => {
         const reach = out * starRim(turn);
-        const horn = Math.min(1, horns(reach, offAxis(turn)) * 28) ** 2;
+        const horn = Math.min(1, horns(reach, offAxis(turn)) * 60) ** 2;
         const mottle = fractalAt(turn, out, 15, 6, 71, 3);
         color
           .copy(SKIN)

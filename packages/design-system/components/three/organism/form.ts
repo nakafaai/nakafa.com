@@ -1,19 +1,19 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { BufferAttribute, BufferGeometry, Matrix4, Vector3 } from "three";
 
 /**
  * The raw mesh of one part of a living body, before it becomes a geometry:
  * three numbers a vertex for `position`, `normal` and `color`, two for `uv`
- * and three corners a triangle in `index`. A function is no data, and typed
- * arrays hold no Schema, so this is a plain shape.
+ * and three corners a triangle in `index`.
  */
-export interface Form {
-  readonly color: Float32Array;
-  readonly index: Uint32Array;
-  readonly normal: Float32Array;
-  readonly position: Float32Array;
-  readonly uv: Float32Array;
-}
+const FormSchema = Schema.Struct({
+  color: Schema.instanceOf(Float32Array),
+  index: Schema.instanceOf(Uint32Array),
+  normal: Schema.instanceOf(Float32Array),
+  position: Schema.instanceOf(Float32Array),
+  uv: Schema.instanceOf(Float32Array),
+});
+export type Form = typeof FormSchema.Type;
 
 /**
  * Smooth normals for a mesh: every vertex faces the way its triangles do on
@@ -81,39 +81,9 @@ export function unitNormals(normal: Float32Array) {
 }
 
 /**
- * One part moved to its place on the body: a fin set at its station, a limb
- * at its joint. A placement that mirrors the part turns its triangles round
- * so they still face outwards.
- */
-export function placeForm(form: Form, placement: Matrix4): Form {
-  const position = new Float32Array(form.position);
-  const normal = new Float32Array(form.normal);
-  const point = new Vector3();
-  for (let at = 0; at < position.length; at += 3) {
-    point.fromArray(position, at).applyMatrix4(placement).toArray(position, at);
-    point
-      .fromArray(normal, at)
-      .transformDirection(placement)
-      .toArray(normal, at);
-  }
-  const mirrored = placement.determinant() < 0;
-  const index = new Uint32Array(form.index);
-  if (mirrored) {
-    for (let corner = 0; corner < index.length; corner += 3) {
-      index[corner + 1] = Number(form.index[corner + 2]);
-      index[corner + 2] = Number(form.index[corner + 1]);
-    }
-    for (let at = 0; at < normal.length; at += 1) {
-      normal[at] = -Number(normal[at]);
-    }
-  }
-  return { color: form.color, index, normal, position, uv: form.uv };
-}
-
-/**
  * Sets a part on the body at `at`, its length running along `span` and its
  * leading edge facing `lead`: a flipper raked back from a shoulder, a dorsal
- * fin on a back, a lobe of a tail fluke.
+ * fin on a back, a lobe of a tail fluke, a limb at its joint.
  */
 export function attachForm(
   form: Form,
@@ -125,10 +95,23 @@ export function attachForm(
   const flat = new Vector3(...lead);
   flat.addScaledVector(along, -flat.dot(along)).normalize();
   const through = new Vector3().crossVectors(along, flat);
-  return placeForm(
-    form,
-    new Matrix4().makeBasis(along, flat, through).setPosition(...at)
-  );
+  const placement = new Matrix4()
+    .makeBasis(along, flat, through)
+    .setPosition(...at);
+  const position = new Float32Array(form.position);
+  const normal = new Float32Array(form.normal);
+  const point = new Vector3();
+  for (let vertex = 0; vertex < position.length; vertex += 3) {
+    point
+      .fromArray(position, vertex)
+      .applyMatrix4(placement)
+      .toArray(position, vertex);
+    point
+      .fromArray(normal, vertex)
+      .transformDirection(placement)
+      .toArray(normal, vertex);
+  }
+  return { color: form.color, index: form.index, normal, position, uv: form.uv };
 }
 
 /**

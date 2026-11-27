@@ -35,12 +35,10 @@ export function moundBody(mound: Mound): Form {
   const color = new Float32Array(count * 3);
   const uv = new Float32Array(count * 2);
   const index = new Uint32Array(mound.rings * mound.spokes * 6);
-  const seams: number[][] = [];
   const ink = new Color();
 
   for (let ring = 0; ring <= mound.rings; ring += 1) {
     const out = ring / mound.rings;
-    seams.push([ring * columns, ring * columns + mound.spokes]);
     for (let column = 0; column < columns; column += 1) {
       const turn = (column / mound.spokes) % 1;
       const angle = turn * 2 * Math.PI;
@@ -67,7 +65,13 @@ export function moundBody(mound: Mound): Form {
   }
 
   const normal = smoothNormals(position, index);
-  weldNormals(normal, seams);
+  weldNormals(
+    normal,
+    Arr.makeBy(mound.rings + 1, (ring) => [
+      ring * columns,
+      ring * columns + mound.spokes,
+    ])
+  );
   weldNormals(normal, [Arr.makeBy(columns, (column) => column)]);
   unitNormals(normal);
   return { color, index, normal, position, uv };

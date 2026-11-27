@@ -41,7 +41,7 @@ const SPINE: readonly Station[] = [
 
 /** How much of the throat a place lies in: 1 under the chin and chest, 0 on the back and the tail. */
 function throat(along: number, around: number) {
-  const under = Math.min(1, Math.max(0, (0.34 - Math.abs(around - 0.5)) * 9));
+  const under = Math.min(1, Math.max(0, (0.21 - Math.abs(around - 0.5)) * 14));
   const fore = Math.min(1, Math.max(0, (along - 0.42) * 8));
   const chin = Math.min(1, Math.max(0, (0.97 - along) * 20));
   return under * fore * chin;
@@ -64,7 +64,7 @@ const relief: Loft["relief"] = (along, around) => {
       ? Math.max(0, 1 - Math.abs(top) * 60) +
         Math.max(0, 1 - Math.abs(top - 0.06) * 60)
       : 0;
-  return 0.05 * ridges - 0.035 * throat(along, around) * groove(around);
+  return 0.05 * ridges - 0.022 * throat(along, around) * groove(around);
 };
 
 /**
@@ -81,7 +81,7 @@ const paint: Loft["paint"] = (along, around, color) => {
     .lerp(BACK, back)
     .multiplyScalar(
       (0.84 + 0.32 * mottle) *
-        (1 - 0.14 * throat(along, around) * groove(around)) *
+        (1 - 0.1 * throat(along, around) * groove(around)) *
         mouth
     );
 };
