@@ -110,7 +110,7 @@ export function LogicGateLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.4} setting="lab">
+        <ScienceStage floor={0} ground="epoxy" reach={2.4} setting="lab">
           <Suspense fallback={null}>
             <LogicGateScene
               readings={Arr.map(rows, (row) => {

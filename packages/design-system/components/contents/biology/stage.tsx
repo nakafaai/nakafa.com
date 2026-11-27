@@ -9,6 +9,7 @@ import type { BiologySceneColors } from "@repo/design-system/components/contents
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
+import type { Place } from "@repo/design-system/components/three/stage/place";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import type { ReactNode } from "react";
 
@@ -24,16 +25,18 @@ const NARROW_CANVAS_ASPECT_RATIO = 1.3;
 export function BiologyStage({
   children,
   colors,
+  setting,
   store,
   view,
 }: {
   children: ReactNode;
   colors: BiologySceneColors;
+  setting: Place;
   store: BiologyItemStore;
   view: NarrowCameraPose;
 }) {
   return (
-    <ScienceStage setting="studio">
+    <ScienceStage setting={setting}>
       <BiologyLabProvider colors={colors} store={store} view={view}>
         <BiologyCamera />
         {children}

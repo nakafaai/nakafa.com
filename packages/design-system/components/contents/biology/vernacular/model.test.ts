@@ -27,15 +27,15 @@ describe("sea name lab model", () => {
       "seaStar",
       "mackerel",
     ] as const;
-    expect(seaSlotPosition(full, "dugong")).toEqual([-1.55, 0.42, 0.35]);
+    expect(seaSlotPosition(full, "dugong")).toEqual([-0.85, 0.36, 0.45]);
 
     const pair = ["dugong", "mackerel"] as const;
-    expect(seaSlotPosition(pair, "dugong")).toEqual([-1.2, 0.42, 0.25]);
-    expect(seaSlotPosition(pair, "mackerel")).toEqual([1.2, 0.48, -0.25]);
+    expect(seaSlotPosition(pair, "dugong")).toEqual([-1.2, 0.36, 0.25]);
+    expect(seaSlotPosition(pair, "mackerel")).toEqual([1.2, 0.8, -0.25]);
 
     const single = ["seaStar"] as const;
     expect(seaSlotPosition(single, "seaStar")).toEqual([0, 0.08, 0.25]);
-    expect(seaSlotPosition(single, "whale")).toEqual([0, 0.78, 0.25]);
+    expect(seaSlotPosition(single, "whale")).toEqual([0, 1.06, 0.25]);
   });
 
   it("resolves common names per language and falls back to the scientific name when absent", () => {

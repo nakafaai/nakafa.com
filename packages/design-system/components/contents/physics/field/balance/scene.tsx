@@ -1,5 +1,4 @@
 import { RoundedBox } from "@react-three/drei";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import {
   SUPPLY_SOCKETS,
@@ -9,9 +8,8 @@ import { Lead } from "@repo/design-system/components/contents/physics/bench/lead
 import { Vector } from "@repo/design-system/components/contents/physics/bench/vector";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
-import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 
@@ -36,12 +34,7 @@ function Pole({ color, z }: { readonly color: string; readonly z: number }) {
       receiveShadow
       smoothness={4}
     >
-      <meshPhysicalMaterial
-        clearcoat={0.8}
-        clearcoatRoughness={0.3}
-        color={color}
-        roughness={0.55}
-      />
+      <Matter color={color} of="enamel" />
     </RoundedBox>
   );
 }
@@ -52,11 +45,11 @@ function Stand({ x }: { readonly x: number }) {
     <group position={[x, 0, -0.42]}>
       <mesh castShadow position={[0, 0.02, 0.1]} receiveShadow>
         <boxGeometry args={[0.34, 0.04, 0.5]} />
-        <MetalMaterial color={APPARATUS_COLORS.caseSteel} roughness={0.45} />
+        <Matter of="steel" />
       </mesh>
       <mesh castShadow position={[0, 0.66, 0]}>
         <cylinderGeometry args={[0.018, 0.018, 1.28, 14]} />
-        <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.25} />
+        <Matter of="nickel" />
       </mesh>
       <mesh
         castShadow
@@ -64,15 +57,11 @@ function Stand({ x }: { readonly x: number }) {
         rotation={[Math.PI / 2, 0, 0]}
       >
         <cylinderGeometry args={[0.014, 0.014, 0.46, 12]} />
-        <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.25} />
+        <Matter of="nickel" />
       </mesh>
       <mesh castShadow position={[0, 1.24, 0.42]}>
         <cylinderGeometry args={[0.03, 0.03, 0.06, 16]} />
-        <meshPhysicalMaterial
-          clearcoat={0.5}
-          color={APPARATUS_COLORS.bakelite}
-          roughness={0.4}
-        />
+        <Matter of="bakelite" />
       </mesh>
     </group>
   );
@@ -143,21 +132,16 @@ export function CurrentBalanceScene({
         target={[-0.25, 0.5, -0.1]}
         wide={[0.5, 2.5, 3.7]}
       />
-      <SeamlessBenchSurface />
       <mesh castShadow position={[0, 0.05, 0]} receiveShadow>
         <boxGeometry args={[0.84, 0.1, GAP + 0.6]} />
-        <MetalMaterial color={APPARATUS_COLORS.magnetSteel} roughness={0.4} />
+        <Matter of="steel" />
       </mesh>
       <Pole color={APPARATUS_COLORS.poleNorth} z={GAP / 2 + 0.11} />
       <Pole color={APPARATUS_COLORS.poleSouth} z={-GAP / 2 - 0.11} />
       {Arr.map(FIELD_LINES, (x) => (
         <mesh key={x} position={[x, 0.36, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.006, 0.006, GAP, 8]} />
-          <meshStandardMaterial
-            color={APPARATUS_COLORS.fluxGlow}
-            emissive={APPARATUS_COLORS.fluxGlow}
-            emissiveIntensity={1.4}
-          />
+          <Matter color={APPARATUS_COLORS.fluxGlow} glow={0.7} of="light" />
         </mesh>
       ))}
       <Vector
@@ -172,7 +156,7 @@ export function CurrentBalanceScene({
       ))}
       <mesh castShadow position={[0, height, 0]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.022, 0.022, HALF * 2, 20]} />
-        <MetalMaterial color={QUANTUM_COLORS.copper} roughness={0.25} />
+        <Matter of="copper" />
       </mesh>
       {Arr.map(hangers, (hanger) => (
         <Lead

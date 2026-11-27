@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
 import { Vector } from "@repo/design-system/components/contents/physics/bench/vector";
@@ -12,15 +11,9 @@ import { useQuantity } from "@repo/design-system/components/contents/simulation/
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { Turn } from "@repo/design-system/components/three/form/part";
-import {
-  GlassMaterial,
-  LiquidMaterial,
-  MetalMaterial,
-} from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
-import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
 import { Array as Arr } from "effect";
 import { useMemo, useRef } from "react";
 import type { Group } from "three";
@@ -131,29 +124,22 @@ export function VenturiScene({
         target={[0, 1.02, 0]}
         wide={[0, 1.5, 4.7]}
       />
-      <SeamlessBenchSurface />
       {Arr.map([-1.25, 1.25] as const, (x) => (
         <group key={x} position={[x, 0, 0]}>
           <mesh castShadow position={[0, 0.02, 0]} receiveShadow>
             <boxGeometry args={[0.4, 0.04, 0.7]} />
-            <MetalMaterial
-              color={APPARATUS_COLORS.caseSteel}
-              roughness={0.42}
-            />
+            <Matter of="steel" />
           </mesh>
           <mesh castShadow position={[0, (AXIS - WIDE) / 2, 0]}>
             <boxGeometry args={[0.1, AXIS - WIDE, 0.36]} />
-            <MetalMaterial
-              color={APPARATUS_COLORS.caseSteel}
-              roughness={0.42}
-            />
+            <Matter of="steel" />
           </mesh>
         </group>
       ))}
       <group position={[0, AXIS, 0]} rotation={[0, 0, -Math.PI / 2]}>
         <mesh renderOrder={1}>
           <Turn profile={water} />
-          <LiquidMaterial color={APPARATUS_COLORS.water} opacity={0.42} />
+          <Matter color={APPARATUS_COLORS.water} of="liquid" opacity={0.42} />
         </mesh>
         <group ref={specks}>
           {Arr.map(seeds, (seed) => (
@@ -166,22 +152,18 @@ export function VenturiScene({
               ]}
             >
               <sphereGeometry args={[0.016, 10, 8]} />
-              <meshStandardMaterial
-                color={APPARATUS_COLORS.tracer}
-                emissive={APPARATUS_COLORS.tracer}
-                emissiveIntensity={0.9}
-              />
+              <Matter color={APPARATUS_COLORS.tracer} glow={1.4} of="light" />
             </mesh>
           ))}
         </group>
         <mesh castShadow renderOrder={3}>
           <Turn profile={wall} />
-          <GlassMaterial color={BENCH_COLORS.glass} opacity={0.2} />
+          <Matter of="glass" opacity={0.2} />
         </mesh>
         {Arr.map([-HALF, HALF] as const, (end) => (
           <mesh castShadow key={end} position={[0, end, 0]}>
             <cylinderGeometry args={[WIDE + 0.07, WIDE + 0.07, 0.07, 40]} />
-            <MetalMaterial color={QUANTUM_COLORS.brass} roughness={0.28} />
+            <Matter of="brass" />
           </mesh>
         ))}
       </group>

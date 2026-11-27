@@ -9,10 +9,6 @@ import {
   NucleotideSpecimen,
 } from "@repo/design-system/components/contents/biology/chromosome/scales";
 import {
-  BiologyBenchSurface,
-  SlideStage,
-} from "@repo/design-system/components/contents/biology/workbench";
-import {
   SimulationTicker,
   simulationStep,
 } from "@repo/design-system/components/contents/simulation/ticker";
@@ -81,16 +77,17 @@ export function ChromosomeScene({
         fov={38}
       />
 
-      <BiologyBenchSurface radius={12} y={0} />
-      <SlideStage position={[0, 0, 0]} radius={0.95} />
-
       <group ref={rootRef}>
         {Match.value(level).pipe(
           Match.when("nucleotide", () => (
-            <NucleotideSpecimen ink={ink} parts={parts} />
+            <NucleotideSpecimen ink={ink} parts={parts} playing={playing} />
           )),
           Match.when("helix", () => (
-            <DoubleHelixSpecimen ink={ink} label={parts.base} />
+            <DoubleHelixSpecimen
+              ink={ink}
+              label={parts.base}
+              playing={playing}
+            />
           )),
           Match.when("nucleosome", () => (
             <NucleosomeSpecimen ink={ink} label={parts.histone} />

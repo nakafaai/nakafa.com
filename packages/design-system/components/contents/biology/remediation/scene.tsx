@@ -5,7 +5,6 @@ import { evaluatePhytoremediation } from "@repo/design-system/components/content
 import {
   HyperaccumulatorPlant,
   SubstrateCutaway,
-  WetlandHorizonFloor,
 } from "@repo/design-system/components/contents/biology/remediation/wetland";
 import {
   SimulationTicker,
@@ -101,7 +100,6 @@ export function PhytoremediationScene({
     <group>
       <SimulationTicker running={playing} />
       <RemediationCamera />
-      <WetlandHorizonFloor isAquatic={reading.isAquatic} />
       <SubstrateCutaway isAquatic={reading.isAquatic} />
       <HyperaccumulatorPlant plant={plant} />
 

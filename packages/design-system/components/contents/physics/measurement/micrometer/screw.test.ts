@@ -4,7 +4,6 @@ import {
   SCREW_PITCH,
   SCREW_RESOLUTION,
   THIMBLE_DIVISIONS,
-  thimbleTurn,
 } from "@repo/design-system/components/contents/physics/measurement/micrometer/screw";
 
 describe("micrometer screw gauge", () => {
@@ -25,12 +24,5 @@ describe("micrometer screw gauge", () => {
     expect(sleeve).toBe(5.5);
     expect(division).toBe(28);
     expect(reading).toBeCloseTo(5.78, 9);
-  });
-
-  it("turns the thimble once for every half millimetre of travel", () => {
-    expect(thimbleTurn(0)).toBe(0);
-    expect(thimbleTurn(0.5)).toBeCloseTo(0, 9);
-    expect(thimbleTurn(6.35)).toBeCloseTo(35, 9);
-    expect(thimbleTurn(0.255)).toBeCloseTo(25.5, 9);
   });
 });

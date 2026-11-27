@@ -115,8 +115,9 @@ export function CombiningVolumesLab({
         render={<section />}
       >
         <ScienceStage
-          floor={-0.86}
+          floor={-0.8272}
           frameloop="always"
+          ground="epoxy"
           reach={4.2}
           setting="lab"
         >

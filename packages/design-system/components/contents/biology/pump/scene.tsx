@@ -9,10 +9,7 @@ import {
   TransmembraneChannel,
 } from "@repo/design-system/components/contents/biology/membrane";
 import type { TransportMode } from "@repo/design-system/components/contents/biology/pump/model";
-import {
-  BiologyBenchSurface,
-  SpecimenPedestal,
-} from "@repo/design-system/components/contents/biology/workbench";
+import { SpecimenPedestal } from "@repo/design-system/components/contents/biology/workbench";
 import {
   SimulationTicker,
   simulationStep,
@@ -286,7 +283,6 @@ export function MembranePumpScene({
     <group>
       <SimulationTicker running={playing} />
       <PumpCamera />
-      <BiologyBenchSurface radius={14} y={0} />
       <SpecimenPedestal depth={0.96} height={0.055} width={2.58} />
 
       {/* Shared multi-row phospholipid bilayer cutaway */}

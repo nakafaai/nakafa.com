@@ -1,4 +1,3 @@
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { OakBoard } from "@repo/design-system/components/contents/physics/bench/board";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { DryCell } from "@repo/design-system/components/contents/physics/bench/cell";
@@ -67,7 +66,6 @@ export function InternalResistanceScene({
         target={[0.05, 0.2, 0]}
         wide={[0.1, 2, 3.45]}
       />
-      <SeamlessBenchSurface />
       <OakBoard depth={1.7} width={2.6}>
         <group position={CELL}>
           <DryCell />

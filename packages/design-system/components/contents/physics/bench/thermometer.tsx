@@ -1,8 +1,7 @@
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
 import { Turn } from "@repo/design-system/components/three/form/part";
-import { GlassMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import type { ReactNode, Ref } from "react";
 import { useEffect, useMemo } from "react";
 import type { Group } from "three";
@@ -88,38 +87,38 @@ export function Thermometer({
       </mesh>
       <mesh position={[0, 0.006, 0]}>
         <sphereGeometry args={[0.037, 20, 16]} />
-        <meshStandardMaterial
+        <Matter
           color={APPARATUS_COLORS.alcohol}
-          emissive={APPARATUS_COLORS.alcohol}
-          emissiveIntensity={0.25}
-          roughness={0.25}
+          glow={0.12}
+          of="liquid"
+          opacity={1}
         />
       </mesh>
       <mesh position={[0, NECK / 2 + 0.02, 0]}>
         <cylinderGeometry args={[0.008, 0.008, NECK - 0.03, 12]} />
-        <meshStandardMaterial
+        <Matter
           color={APPARATUS_COLORS.alcohol}
-          emissive={APPARATUS_COLORS.alcohol}
-          emissiveIntensity={0.25}
-          roughness={0.25}
+          glow={0.12}
+          of="liquid"
+          opacity={1}
         />
       </mesh>
       <group position={[0, NECK, 0]} scale={[1, span, 1]}>
         <group ref={thread} scale={[1, Math.min(1, Math.max(0.02, share)), 1]}>
           <mesh position={[0, 0.5, 0]}>
             <cylinderGeometry args={[0.008, 0.008, 1, 12]} />
-            <meshStandardMaterial
+            <Matter
               color={APPARATUS_COLORS.alcohol}
-              emissive={APPARATUS_COLORS.alcohol}
-              emissiveIntensity={0.25}
-              roughness={0.25}
+              glow={0.12}
+              of="liquid"
+              opacity={1}
             />
           </mesh>
         </group>
       </group>
       <mesh castShadow renderOrder={4}>
         <Turn profile={stem} />
-        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.26} />
+        <Matter of="glass" opacity={0.26} />
       </mesh>
       <Tag position={[0, tall + 0.16, 0]}>{children}</Tag>
     </group>

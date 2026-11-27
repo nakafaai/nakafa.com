@@ -11,7 +11,6 @@ import type {
   Tonicity,
 } from "@repo/design-system/components/contents/biology/plasmolysis/model";
 import { evaluatePlasmolysis } from "@repo/design-system/components/contents/biology/plasmolysis/model";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import {
   SimulationTicker,
   simulationStep,
@@ -112,7 +111,6 @@ export function PlasmolysisScene({
     <group>
       <SimulationTicker running={playing} />
       <PlasmolysisCamera />
-      <SeamlessBenchSurface radius={14} y={0} />
       <SucroseBenchBeakers solution={solution} />
 
       <group position={[0, 0.56, 0]}>

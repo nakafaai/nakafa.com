@@ -78,6 +78,9 @@ describe("resolveStageProfile", () => {
   it("enables postprocessing, 2048 shadows, and desktop HDRI on full tier", () => {
     expect(resolveStageProfile("full", true)).toEqual({
       environmentDirectory: "desktop",
+      landRings: 48,
+      landSpokes: 96,
+      motes: 1600,
       postprocessing: true,
       shadowMapSize: 2048,
       shadowRadius: 4,
@@ -88,6 +91,9 @@ describe("resolveStageProfile", () => {
   it("uses direct rendering, 2048 shadows, and desktop HDRI on light mobile tier", () => {
     expect(resolveStageProfile("light", true)).toEqual({
       environmentDirectory: "desktop",
+      landRings: 40,
+      landSpokes: 80,
+      motes: 1000,
       postprocessing: false,
       shadowMapSize: 2048,
       shadowRadius: 3,
@@ -98,6 +104,9 @@ describe("resolveStageProfile", () => {
   it("uses direct rendering and 1024 shadows on low and plain tiers", () => {
     expect(resolveStageProfile("low", true)).toEqual({
       environmentDirectory: "phone",
+      landRings: 28,
+      landSpokes: 64,
+      motes: 520,
       postprocessing: false,
       shadowMapSize: 1024,
       shadowRadius: 2,
@@ -106,6 +115,9 @@ describe("resolveStageProfile", () => {
 
     expect(resolveStageProfile("plain", false)).toEqual({
       environmentDirectory: "phone",
+      landRings: 20,
+      landSpokes: 48,
+      motes: 260,
       postprocessing: false,
       shadowMapSize: 1024,
       shadowRadius: 2,

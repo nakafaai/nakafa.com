@@ -9,14 +9,12 @@ import {
   getPeriodicPropertyModeColor,
   PERIODIC_PROPERTY_MODES,
 } from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
-import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
-import { TABLE_COLORS } from "@repo/design-system/lib/material/table";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { createContext, useEffect, useMemo } from "react";
@@ -97,7 +95,6 @@ export function PeriodicPropertiesScene({
     <PeriodicPropertiesSceneContext
       value={{ color: modeColor, colors, mode, range }}
     >
-      <StudioTable color={TABLE_COLORS.walnut} />
       <group position={[0, SCENE_Y_OFFSET, 0]} scale={SCENE_SCALE}>
         <TrendTrack axis="period" samples={mode.periodSamples} />
 

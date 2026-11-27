@@ -218,7 +218,7 @@ export function RouteNetworkLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={FLOOR} reach={REACH} setting="lab">
+        <ScienceStage floor={FLOOR} ground="oak" reach={REACH} setting="lab">
           <Suspense fallback={null}>
             <NetworkScene
               chosen={chosen}

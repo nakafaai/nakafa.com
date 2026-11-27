@@ -5,14 +5,8 @@
  * here, so it looks the same in every lesson.
  */
 export const BUNDLE_COLORS = {
-  // Unvarnished birch, as craft-stick packs sell it.
-  stick: "#d6b17e",
   // A classroom rubber band, dyed red.
   band: "#b8322a",
   // Brown kraft card, the plain board of a parcel box.
   box: "#b08a5c",
-  // A turned beech tray with a waxed finish.
-  tray: "#c99a63",
-  // An oiled oak desk top.
-  desk: "#9a6c42",
 } as const;

@@ -7,7 +7,6 @@ import {
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import type { DihybridFilter } from "@repo/design-system/components/contents/biology/dihybrid/model";
 import { evaluateDihybridGrid } from "@repo/design-system/components/contents/biology/dihybrid/model";
-import { BiologyBenchSurface } from "@repo/design-system/components/contents/biology/workbench";
 import {
   SimulationTicker,
   simulationStep,
@@ -170,7 +169,6 @@ export function DihybridCrossScene({
     <group>
       <SimulationTicker running={playing} />
       <DihybridCamera />
-      <BiologyBenchSurface radius={14} y={0} />
 
       <group ref={gridRef}>
         <BotanicalPunnettTray />

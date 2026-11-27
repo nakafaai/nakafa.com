@@ -117,7 +117,7 @@ export function AbacusBaseLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={FLOOR} reach={REACH} setting="lab">
+        <ScienceStage floor={FLOOR} ground="oak" reach={REACH} setting="lab">
           <Suspense fallback={null}>
             <AbacusScene base={base} onStep={setNumber} value={shown} />
           </Suspense>

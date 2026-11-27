@@ -6,8 +6,7 @@ import {
   bandPath,
   STICK,
 } from "@repo/design-system/components/contents/mathematics/bundle/layout";
-import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { BUNDLE_COLORS } from "@repo/design-system/lib/material/bundle";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -20,17 +19,6 @@ import {
   TubeGeometry,
   Vector3,
 } from "three";
-
-/** How many texture tiles cross one metre of a stick's birch, so its grain keeps its real size of about 7 cm a tile. */
-const GRAIN_PER_METRE = 14;
-
-/**
- * The oak top of a school desk: planked and oiled, each board with its own
- * tone and wandering grain, running out past the frame, its top at y = 0.
- */
-export function Desk() {
-  return <StudioTable color={BUNDLE_COLORS.desk} />;
-}
 
 /**
  * One ice-cream stick: a flat strip with round ends and softened edges,
@@ -77,54 +65,22 @@ export function useBandGeometry(base: number) {
 
 /** The birch of the sticks, its grain along each stick. */
 export function StickWood() {
-  return (
-    <SurfaceMaterial
-      bump={0.02}
-      color={BUNDLE_COLORS.stick}
-      repeat={[GRAIN_PER_METRE, GRAIN_PER_METRE]}
-      roughness={0.7}
-      surface="wood"
-    />
-  );
+  return <Matter of="maple" />;
 }
 
 /** The red rubber of a band. */
 export function BandRubber() {
-  return (
-    <SurfaceMaterial
-      bump={0.05}
-      color={BUNDLE_COLORS.band}
-      repeat={[6, 1]}
-      roughness={0.7}
-      surface="rubber"
-    />
-  );
+  return <Matter color={BUNDLE_COLORS.band} of="rubber" />;
 }
 
 /** The plain brown board of a kraft-card box. */
 export function KraftCard() {
-  return (
-    <SurfaceMaterial
-      bump={0.04}
-      color={BUNDLE_COLORS.box}
-      repeat={[2, 2]}
-      roughness={0.92}
-      surface="concrete"
-    />
-  );
+  return <Matter color={BUNDLE_COLORS.box} of="paper" />;
 }
 
 /** The waxed beech of a tray. */
 export function TrayBeech() {
-  return (
-    <SurfaceMaterial
-      bump={0.03}
-      color={BUNDLE_COLORS.tray}
-      repeat={[3, 3]}
-      roughness={0.45}
-      surface="wood"
-    />
-  );
+  return <Matter of="beech" />;
 }
 
 /**

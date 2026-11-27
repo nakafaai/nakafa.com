@@ -9,9 +9,8 @@
  * color from here, so it looks the same in every lesson.
  */
 export const COUNTEREXAMPLE_COLORS = {
-  // The felt board and its oak frame, and the oak strips between the cells.
+  // The felt board.
   felt: "#3d4249",
-  frame: "#a87a4f",
   // Maple tiles, the ink printed on them, and the paint of the shapes.
   tile: "#ead9b8",
   ink: "#24272c",

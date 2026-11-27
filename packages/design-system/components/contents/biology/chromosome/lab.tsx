@@ -106,7 +106,7 @@ export function ChromosomePackingLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={1.9} setting="studio">
+        <ScienceStage reach={1.9} setting="cell">
           <Suspense fallback={null}>
             <ChromosomeScene level={level} parts={labels.parts} />
           </Suspense>

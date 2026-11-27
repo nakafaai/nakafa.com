@@ -4,9 +4,7 @@ import {
   PEAK,
   reliefAt,
 } from "@repo/design-system/components/contents/mathematics/network/relief";
-import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { NETWORK_COLORS } from "@repo/design-system/lib/material/network";
 import { Array as Arr, Option } from "effect";
 import { useEffect, useMemo } from "react";
@@ -177,9 +175,6 @@ export function ReliefMap({
 
   return (
     <group>
-      <group position={[0, TABLE_TOP, 0]}>
-        <StudioTable color={NETWORK_COLORS.table} />
-      </group>
       {Arr.map(rails, (rail) => (
         <mesh
           castShadow
@@ -188,14 +183,7 @@ export function ReliefMap({
           receiveShadow
         >
           <boxGeometry args={[rail.size[0], tall, rail.size[1]]} />
-          <SurfaceMaterial
-            bump={0.012}
-            coat={0.4}
-            color={NETWORK_COLORS.frame}
-            repeat={[0.4, 3]}
-            roughness={0.45}
-            surface="wood"
-          />
+          <Matter of="walnut" />
         </mesh>
       ))}
       <mesh castShadow geometry={land} receiveShadow>
@@ -235,21 +223,9 @@ export function ModelRoad({
         args={[ROAD.radius, ROAD.radius, length, 20, 1, true]}
       />
       {lit === null ? (
-        <SurfaceMaterial
-          bump={0.5}
-          color={NETWORK_COLORS.road}
-          repeat={[3, length / 0.012]}
-          roughness={0.9}
-          surface="cloth"
-        />
+        <Matter color={NETWORK_COLORS.road} of="paint" />
       ) : (
-        <meshStandardMaterial
-          color={lit}
-          emissive={lit}
-          emissiveIntensity={2.6}
-          roughness={0.4}
-          toneMapped={false}
-        />
+        <Matter color={lit} glow={1.3} of="light" />
       )}
     </mesh>
   );
@@ -266,12 +242,7 @@ export function LengthPlate({
   return (
     <mesh castShadow position={[at.x, 0.0012, at.z]} rotation={[0, turn, 0]}>
       <boxGeometry args={[0.03, 0.0024, 0.016]} />
-      <meshPhysicalMaterial
-        clearcoat={0.8}
-        clearcoatRoughness={0.15}
-        color={NETWORK_COLORS.sign}
-        roughness={0.4}
-      />
+      <Matter color={NETWORK_COLORS.sign} of="enamel" />
     </mesh>
   );
 }
@@ -309,23 +280,18 @@ export function ModelTown({ flag }: { readonly flag: "start" | "end" | null }) {
     <group>
       <mesh castShadow receiveShadow>
         <latheGeometry args={[GROMMET, 48]} />
-        <MetalMaterial color={NETWORK_COLORS.brass} roughness={0.24} />
+        <Matter of="brass" />
       </mesh>
       <mesh castShadow position={[0, head / 2, 0]}>
         <cylinderGeometry args={[PIN.shaft, PIN.shaft, head, 16]} />
-        <MetalMaterial color={NETWORK_COLORS.steel} roughness={0.2} />
+        <Matter of="steel" />
       </mesh>
       <mesh castShadow position={[0, head, 0]}>
         <sphereGeometry args={[PIN.head, 40, 28]} />
         {flag === null ? (
-          <MetalMaterial color={NETWORK_COLORS.brass} roughness={0.14} />
+          <Matter of="brass" />
         ) : (
-          <meshPhysicalMaterial
-            clearcoat={1}
-            clearcoatRoughness={0.05}
-            color={NETWORK_COLORS[flag]}
-            roughness={0.2}
-          />
+          <Matter color={NETWORK_COLORS[flag]} of="enamel" />
         )}
       </mesh>
     </group>
@@ -340,15 +306,7 @@ export function RouteBead() {
   return (
     <mesh castShadow>
       <sphereGeometry args={[0.0085, 36, 24]} />
-      <meshPhysicalMaterial
-        clearcoat={1}
-        clearcoatRoughness={0.04}
-        color={NETWORK_COLORS.bead}
-        emissive={NETWORK_COLORS.bead}
-        emissiveIntensity={1.8}
-        roughness={0.12}
-        toneMapped={false}
-      />
+      <Matter color={NETWORK_COLORS.bead} glow={0.9} of="glass" opacity={1} />
     </mesh>
   );
 }

@@ -1,5 +1,4 @@
 import { useFrame, useThree } from "@react-three/fiber";
-import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import {
   hoopCentres,
   MAT,
@@ -33,7 +32,6 @@ import {
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { useTimeline } from "@repo/design-system/components/contents/simulation/timeline";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { TABLE_COLORS } from "@repo/design-system/lib/material/table";
 import { VENN_COLORS } from "@repo/design-system/lib/material/venn";
 import { Array as Arr } from "effect";
 import { useMemo, useRef } from "react";
@@ -128,7 +126,6 @@ export function VennScene({
     <group>
       <SimulationTicker running={playing} />
       <VennCamera />
-      <StudioTable color={TABLE_COLORS.walnut} />
       <Mat />
       <RegionTint centres={centres} operation={operation} />
       <Hoops centres={centres} />

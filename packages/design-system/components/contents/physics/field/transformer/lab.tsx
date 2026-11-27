@@ -67,7 +67,7 @@ export function TransformerLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={3.2} setting="lab">
+        <ScienceStage floor={0} ground="epoxy" reach={3.2} setting="lab">
           <Suspense fallback={null}>
             <TransformerScene
               efficiency={efficiency}

@@ -1,5 +1,5 @@
 import { useThree } from "@react-three/fiber";
-import type { GroundSchema } from "@repo/design-system/components/three/stage/grain";
+import type { Ground } from "@repo/design-system/components/three/stage/land";
 import type { StageBudget } from "@repo/design-system/components/three/stage/tier";
 import {
   resolveStageProfile,
@@ -12,7 +12,7 @@ import {
   supportsHalfFloatColorBuffer,
 } from "@repo/design-system/lib/device";
 import type { ReactNode } from "react";
-import { createContext, useMemo } from "react";
+import { createContext, use, useMemo } from "react";
 import type { WebGLRenderer } from "three";
 
 interface StageProviderProps {
@@ -22,7 +22,7 @@ interface StageProviderProps {
   /** The height of the floor objects stand on, when the lab has one. */
   readonly floor: number | undefined;
   /** What the ground is made of, when the lab stands on real ground. */
-  readonly ground: typeof GroundSchema.Type | undefined;
+  readonly ground: Ground | undefined;
   /** How far the lab reaches from its middle, in scene units. */
   readonly reach: number;
   /** The unit direction toward the setting's sun. */
@@ -90,4 +90,13 @@ export function StageProvider({
 /** Reads the floor, reach, tier, and profile of the surrounding stage. */
 export function useStage() {
   return useRequired(StageContext, "useStage");
+}
+
+/**
+ * Whether the surrounding stage draws on a capable desktop card, which can
+ * afford to trace light through a surface. A part drawn outside any stage
+ * gets the cheaper look.
+ */
+export function useDeepLight() {
+  return use(StageContext)?.tier === "full";
 }

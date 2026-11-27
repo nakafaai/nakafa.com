@@ -18,12 +18,10 @@ import {
   looseBeads,
   potProfile,
 } from "@repo/design-system/components/contents/mathematics/abacus/shape";
-import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { ABACUS_COLORS } from "@repo/design-system/lib/material/abacus";
 import { Array as Arr } from "effect";
 import { useLayoutEffect, useMemo } from "react";
@@ -71,16 +69,7 @@ export function useLathe(
  * the grain of the wood still runs round it and the lacquer catches the light.
  */
 export function BeadLacquer({ color }: { readonly color: string }) {
-  return (
-    <SurfaceMaterial
-      bump={0.012}
-      coat={0.9}
-      color={color}
-      repeat={[3, 0.6]}
-      roughness={0.34}
-      surface="wood"
-    />
-  );
+  return <Matter color={color} of="lacquer" />;
 }
 
 /** The turned brass collar a rod stands in: a flared foot under a flat seat. */
@@ -97,11 +86,6 @@ const COLLAR = [
 
 /** How far the plinth's foot stands out past the base all round, and how tall it is. */
 const PLINTH = { height: 0.008, margin: 0.0035 } as const;
-
-/** An oak school desk top, planked and oiled, running out past the frame at y = 0. */
-export function Desk() {
-  return <StudioTable color={ABACUS_COLORS.desk} />;
-}
 
 /**
  * The walnut base on its moulded plinth, with four polished brass rods in
@@ -127,14 +111,7 @@ export function Board({ base }: { readonly base: number }) {
         receiveShadow
         smoothness={6}
       >
-        <SurfaceMaterial
-          bump={0.02}
-          coat={0.35}
-          color={ABACUS_COLORS.plinth}
-          repeat={[1, 5]}
-          roughness={0.42}
-          surface="wood"
-        />
+        <Matter of="walnut" />
       </RoundedBox>
       <RoundedBox
         args={[BOARD.length, BOARD.height - PLINTH.height, BOARD.depth]}
@@ -144,14 +121,7 @@ export function Board({ base }: { readonly base: number }) {
         receiveShadow
         smoothness={8}
       >
-        <SurfaceMaterial
-          bump={0.02}
-          coat={0.45}
-          color={ABACUS_COLORS.base}
-          repeat={[0.5, 4]}
-          roughness={0.38}
-          surface="wood"
-        />
+        <Matter of="walnut" />
       </RoundedBox>
       {Arr.map(Arr.range(0, PLACES - 1), (place) => (
         <group key={place} position={[spikeX(place), 0, 0]}>
@@ -161,19 +131,19 @@ export function Board({ base }: { readonly base: number }) {
             position={[0, BOARD_TOP, 0]}
             receiveShadow
           >
-            <MetalMaterial color={ABACUS_COLORS.brassShade} roughness={0.22} />
+            <Matter of="brass" />
           </mesh>
           <mesh castShadow position={[0, BOARD_TOP + SPIKE.length / 2, 0]}>
             <cylinderGeometry
               args={[SPIKE.radius, SPIKE.radius, SPIKE.length, 40]}
             />
-            <MetalMaterial color={ABACUS_COLORS.brass} roughness={0.14} />
+            <Matter finish="polished" of="brass" />
           </mesh>
           <mesh castShadow position={[0, TIP, 0]}>
             <sphereGeometry
               args={[SPIKE.radius, 40, 20, 0, Math.PI * 2, 0, Math.PI / 2]}
             />
-            <MetalMaterial color={ABACUS_COLORS.brass} roughness={0.14} />
+            <Matter of="brass" />
           </mesh>
           <ThreeLabel
             color={ink}
@@ -202,7 +172,7 @@ function PlaceCard() {
     <group position={[0, CARD.thickness / 2, CARD_Z]}>
       <mesh receiveShadow>
         <boxGeometry args={[width, CARD.thickness, CARD.depth]} />
-        <meshStandardMaterial color={ABACUS_COLORS.card} roughness={0.85} />
+        <Matter color={ABACUS_COLORS.card} of="paper" />
       </mesh>
       {Arr.map(Arr.range(1, PLACES - 1), (rule) => (
         <mesh
@@ -215,10 +185,7 @@ function PlaceCard() {
           rotation={[-Math.PI / 2, 0, 0]}
         >
           <planeGeometry args={[0.0008, CARD.depth - 0.008]} />
-          <meshStandardMaterial
-            color={ABACUS_COLORS.cardRule}
-            roughness={0.9}
-          />
+          <Matter color={ABACUS_COLORS.cardRule} of="paper" />
         </mesh>
       ))}
     </group>
@@ -237,14 +204,7 @@ export function BeadPot() {
         position={[POT.x, 0, 0]}
         receiveShadow
       >
-        <SurfaceMaterial
-          bump={0.02}
-          coat={0.4}
-          color={ABACUS_COLORS.pot}
-          repeat={[4, 1]}
-          roughness={0.4}
-          surface="wood"
-        />
+        <Matter of="walnut" />
       </mesh>
       {Arr.map(looseBeads(), (bead) => (
         <mesh

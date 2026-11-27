@@ -75,7 +75,7 @@ export function HalfLifeCounterLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.8} setting="lab">
+        <ScienceStage floor={0} ground="epoxy" reach={2.8} setting="lab">
           <Suspense fallback={null}>
             <HalfLifeCounterScene
               background={background}

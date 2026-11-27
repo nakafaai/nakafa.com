@@ -7,10 +7,7 @@ import {
 } from "@repo/design-system/components/contents/biology/flora";
 import type { VariationKind } from "@repo/design-system/components/contents/biology/variation/model";
 import { evaluateVariationBars } from "@repo/design-system/components/contents/biology/variation/model";
-import {
-  BiologyBenchSurface,
-  SpecimenPedestal,
-} from "@repo/design-system/components/contents/biology/workbench";
+import { SpecimenPedestal } from "@repo/design-system/components/contents/biology/workbench";
 import {
   SimulationTicker,
   simulationStep,
@@ -194,7 +191,6 @@ export function VariationDistributionScene({
     <group>
       <SimulationTicker running={playing} />
       <VariationCamera />
-      <BiologyBenchSurface radius={14} y={0} />
 
       <group ref={stageRef}>
         <SpecimenPedestal depth={0.94} height={0.055} width={2.48} />

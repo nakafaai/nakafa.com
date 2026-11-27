@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   circlePath,
+  densePath,
   pathStrip,
   throughPath,
 } from "@repo/design-system/components/three/stage/strip";
@@ -70,6 +71,45 @@ describe("pathStrip", () => {
       6
     );
     expect(corner(strip.positions, 1)).toEqual([0.5, 0.5]);
+  });
+});
+
+describe("densePath", () => {
+  it("adds places along a long leg and leaves a short one alone", () => {
+    const path = densePath(
+      [
+        [0, 0],
+        [3, 0],
+        [3, 0.5],
+      ],
+      false,
+      1
+    );
+
+    expect(Arr.map(path, ([x, z]) => [x, z])).toEqual([
+      [0, 0],
+      [1, 0],
+      [2, 0],
+      [3, 0],
+      [3, 0.5],
+    ]);
+  });
+
+  it("carries a closed path round to its start without repeating it", () => {
+    const path = densePath(
+      [
+        [0, 0],
+        [2, 0],
+        [2, 2],
+        [0, 2],
+      ],
+      true,
+      1
+    );
+
+    expect(path).toHaveLength(8);
+    expect(path[0]).toEqual([0, 0]);
+    expect(path[7]).toEqual([0, 1]);
   });
 });
 

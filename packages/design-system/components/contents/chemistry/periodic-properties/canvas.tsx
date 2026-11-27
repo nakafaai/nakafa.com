@@ -36,6 +36,7 @@ export function PeriodicPropertiesCanvas({
       <ScienceStage
         floor={PERIODIC_PROPERTIES_FLOOR}
         frameloop="demand"
+        ground="walnut"
         setting="studio"
       >
         <Suspense>

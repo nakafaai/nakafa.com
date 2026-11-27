@@ -125,7 +125,7 @@ export function TransistorSwitchLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.7} setting="lab">
+        <ScienceStage floor={0} ground="epoxy" reach={2.7} setting="lab">
           <Suspense fallback={null}>
             <TransistorSwitchScene base={base} on={base >= threshold}>
               <Lamp light={light} />

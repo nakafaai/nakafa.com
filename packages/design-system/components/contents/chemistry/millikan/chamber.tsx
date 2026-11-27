@@ -1,5 +1,3 @@
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
-import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
@@ -71,12 +69,6 @@ export function Chamber({ gap }: { readonly gap: number }) {
   ] as const;
   return (
     <group>
-      <CameraBounds exclude>
-        <SeamlessBenchSurface
-          radius={60}
-          y={-gap / 2 - PLATE.thick - BENCH_DROP}
-        />
-      </CameraBounds>
       <mesh castShadow position={[0, gap / 2, 0]} receiveShadow>
         <Turn profile={PIERCED_PROFILE} />
         <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.24} />

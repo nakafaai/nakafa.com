@@ -30,6 +30,7 @@ export function ClimateObservationLab(props: BiologyLabProps) {
   return (
     <BiologyLabFrame
       scene={ClimateObservationScene}
+      setting="space"
       view={CLIMATE_OBSERVATION_VIEW}
       {...props}
     />

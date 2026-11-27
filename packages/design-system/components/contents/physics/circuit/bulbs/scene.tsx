@@ -1,4 +1,3 @@
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { OakBoard } from "@repo/design-system/components/contents/physics/bench/board";
 import { Bulb } from "@repo/design-system/components/contents/physics/bench/bulb";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
@@ -143,7 +142,6 @@ export function BulbNetworkScene({
         target={[0.02, 0.2, 0]}
         wide={[0, 2.1, 3.4]}
       />
-      <SeamlessBenchSurface />
       <OakBoard depth={1.7} width={2.7}>
         <group position={[CELL_X, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
           <DryCell />

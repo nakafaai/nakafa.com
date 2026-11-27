@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Lead } from "@repo/design-system/components/contents/physics/bench/lead";
 import { Stand } from "@repo/design-system/components/contents/physics/bench/stand";
@@ -10,13 +9,8 @@ import { hashUnit } from "@repo/design-system/components/contents/simulation/gra
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { Turn } from "@repo/design-system/components/three/form/part";
-import {
-  GlassMaterial,
-  LiquidMaterial,
-  MetalMaterial,
-} from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { Array as Arr } from "effect";
 import { useMemo, useRef } from "react";
 import type { Group, Mesh } from "three";
@@ -179,18 +173,14 @@ export function HeatingCurveScene({
         target={[0.25, 0.95, 0]}
         wide={[0.9, 1.6, 4.6]}
       />
-      <SeamlessBenchSurface />
       <mesh castShadow position={[0, 0.02, 0]} receiveShadow>
         <boxGeometry args={[1.5, 0.04, 1.3]} />
-        <meshStandardMaterial
-          color={APPARATUS_COLORS.caseDark}
-          roughness={0.9}
-        />
+        <Matter of="iron" />
       </mesh>
       <group position={[0, 0.04, 0]}>
         <mesh ref={pool} renderOrder={1}>
           <cylinderGeometry args={[RADIUS, RADIUS - 0.02, 1, 48]} />
-          <LiquidMaterial color={APPARATUS_COLORS.waxMelt} opacity={0.62} />
+          <Matter color={APPARATUS_COLORS.waxMelt} of="liquid" opacity={0.62} />
         </mesh>
         <group ref={solid}>
           {Arr.map(LUMPS, (lump) => (
@@ -202,12 +192,7 @@ export function HeatingCurveScene({
               scale={lump.size}
             >
               <icosahedronGeometry args={[1, 2]} />
-              <meshPhysicalMaterial
-                clearcoat={0.25}
-                clearcoatRoughness={0.6}
-                color={APPARATUS_COLORS.wax}
-                roughness={0.6}
-              />
+              <Matter of="wax" />
             </mesh>
           ))}
         </group>
@@ -215,11 +200,10 @@ export function HeatingCurveScene({
           {Arr.map(seeds, (seed) => (
             <mesh key={seed.key}>
               <sphereGeometry args={[0.012, 8, 6]} />
-              <meshStandardMaterial
+              <Matter
                 color={APPARATUS_COLORS.bubble}
+                of="liquid"
                 opacity={0.7}
-                roughness={0.1}
-                transparent
               />
             </mesh>
           ))}
@@ -231,19 +215,15 @@ export function HeatingCurveScene({
         />
         <mesh castShadow position={[-0.2, 1.42, 0]}>
           <cylinderGeometry args={[0.05, 0.04, 0.2, 20]} />
-          <meshPhysicalMaterial
-            clearcoat={0.5}
-            color={APPARATUS_COLORS.bakelite}
-            roughness={0.4}
-          />
+          <Matter of="bakelite" />
         </mesh>
         <mesh castShadow position={[-0.2, 1.3, 0]}>
           <cylinderGeometry args={[0.07, 0.07, 0.03, 24]} />
-          <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.3} />
+          <Matter of="nickel" />
         </mesh>
         <mesh castShadow renderOrder={3}>
           <Turn profile={BEAKER} />
-          <GlassMaterial color={BENCH_COLORS.glass} opacity={0.2} />
+          <Matter of="glass" opacity={0.2} />
         </mesh>
       </group>
       <Lead color={APPARATUS_COLORS.leadBlack} points={CABLE} radius={0.022} />

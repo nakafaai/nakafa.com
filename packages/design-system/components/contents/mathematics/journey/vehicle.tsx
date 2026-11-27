@@ -1,4 +1,5 @@
 import { RoundedBox } from "@react-three/drei";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { JOURNEY_COLORS } from "@repo/design-system/lib/material/journey";
 import { Array as Arr } from "effect";
 
@@ -25,23 +26,19 @@ export function Bus() {
         radius={0.003}
         smoothness={3}
       >
-        <meshPhysicalMaterial
-          clearcoat={0.6}
-          color={JOURNEY_COLORS.busPaint}
-          roughness={0.35}
-        />
+        <Matter color={JOURNEY_COLORS.busPaint} of="enamel" />
       </RoundedBox>
       <mesh position={[0, 0.0185, 0.002]}>
         <boxGeometry args={[0.0226, 0.0068, 0.048]} />
-        <meshStandardMaterial color={JOURNEY_COLORS.glass} roughness={0.2} />
+        <Matter color={JOURNEY_COLORS.glass} of="enamel" />
       </mesh>
       <mesh position={[0, 0.0175, -0.0292]}>
         <boxGeometry args={[0.018, 0.0085, 0.0008]} />
-        <meshStandardMaterial color={JOURNEY_COLORS.glass} roughness={0.15} />
+        <Matter color={JOURNEY_COLORS.glass} of="enamel" />
       </mesh>
       <mesh position={[0, 0.0248, 0.004]}>
         <boxGeometry args={[0.012, 0.0008, 0.03]} />
-        <meshStandardMaterial color={JOURNEY_COLORS.busRoof} roughness={0.5} />
+        <Matter color={JOURNEY_COLORS.busRoof} of="enamel" />
       </mesh>
       {Arr.map(BUS_WHEELS, ([x, z]) => (
         <mesh
@@ -51,7 +48,7 @@ export function Bus() {
           rotation={[0, 0, Math.PI / 2]}
         >
           <cylinderGeometry args={[0.0045, 0.0045, 0.003, 16]} />
-          <meshStandardMaterial color={JOURNEY_COLORS.tyre} roughness={0.9} />
+          <Matter of="rubber" />
         </mesh>
       ))}
     </group>
@@ -77,32 +74,28 @@ export function Motorbike() {
           rotation={[0, 0, Math.PI / 2]}
         >
           <cylinderGeometry args={[0.0055, 0.0055, 0.0024, 16]} />
-          <meshStandardMaterial color={JOURNEY_COLORS.tyre} roughness={0.9} />
+          <Matter of="rubber" />
         </mesh>
       ))}
       <mesh castShadow position={[0, 0.0105, -0.001]}>
         <boxGeometry args={[0.0062, 0.0062, 0.017]} />
-        <meshPhysicalMaterial
-          clearcoat={0.6}
-          color={JOURNEY_COLORS.bikePaint}
-          roughness={0.35}
-        />
+        <Matter color={JOURNEY_COLORS.bikePaint} of="enamel" />
       </mesh>
       <mesh position={[0, 0.0142, 0.0045]}>
         <boxGeometry args={[0.0056, 0.002, 0.009]} />
-        <meshStandardMaterial color={JOURNEY_COLORS.tyre} roughness={0.8} />
+        <Matter of="rubber" />
       </mesh>
       <mesh position={[0, 0.0168, -0.0085]}>
         <boxGeometry args={[0.013, 0.0012, 0.0015]} />
-        <meshStandardMaterial color={JOURNEY_COLORS.pole} roughness={0.5} />
+        <Matter of="steel" />
       </mesh>
       <mesh castShadow position={[0, 0.021, 0.002]}>
         <boxGeometry args={[0.0082, 0.011, 0.0055]} />
-        <meshStandardMaterial color={JOURNEY_COLORS.rider} roughness={0.8} />
+        <Matter color={JOURNEY_COLORS.rider} of="paint" />
       </mesh>
       <mesh castShadow position={[0, 0.0296, 0.0005]}>
         <sphereGeometry args={[0.0039, 16, 12]} />
-        <meshStandardMaterial color={JOURNEY_COLORS.helmet} roughness={0.4} />
+        <Matter color={JOURNEY_COLORS.helmet} of="enamel" />
       </mesh>
     </group>
   );

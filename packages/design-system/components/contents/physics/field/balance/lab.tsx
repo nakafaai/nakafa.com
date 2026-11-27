@@ -86,7 +86,7 @@ export function CurrentBalanceLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={3} setting="lab">
+        <ScienceStage floor={0} ground="epoxy" reach={3} setting="lab">
           <Suspense fallback={null}>
             <CurrentBalanceScene current={current} share={force / weight} />
           </Suspense>

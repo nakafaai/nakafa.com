@@ -14,7 +14,6 @@ import {
 } from "@repo/design-system/components/contents/mathematics/bundle/layout";
 import {
   BandRubber,
-  Desk,
   KraftCard,
   PanelSet,
   placePanels,
@@ -172,9 +171,6 @@ export function BundleScene({
     <group>
       <SimulationTicker running={playing} />
       <BundleCamera />
-      <CameraBounds exclude>
-        <Desk />
-      </CameraBounds>
       <CameraBounds bounds={frame}>
         <instancedMesh
           args={[stickGeometry, undefined, MOST_STICKS]}

@@ -3,7 +3,6 @@ import { useLabelInk } from "@repo/design-system/components/contents/biology/cel
 import type { LiftForce } from "@repo/design-system/components/contents/biology/xylem/model";
 import { evaluateXylemLift } from "@repo/design-system/components/contents/biology/xylem/model";
 import { XylemVesselCutaway } from "@repo/design-system/components/contents/biology/xylem/vessels";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import {
   SimulationTicker,
   simulationStep,
@@ -87,7 +86,6 @@ export function XylemCohesionScene({
     <group>
       <SimulationTicker running={playing} />
       <XylemCamera />
-      <SeamlessBenchSurface radius={14} y={0} />
       <XylemVesselCutaway
         columnHeight={columnHeight}
         reachesTop={lift.reachesTop}

@@ -33,7 +33,6 @@ import {
   STEPS,
 } from "@repo/design-system/components/contents/mathematics/marble/run";
 import { swirlShares } from "@repo/design-system/components/contents/mathematics/marble/swirl";
-import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { useTimeline } from "@repo/design-system/components/contents/simulation/timeline";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
@@ -193,7 +192,6 @@ export function MarbleScene({
     <group>
       <SimulationTicker running={playing} />
       <MarbleCamera />
-      <Table />
       <group position={JAR_AT}>
         <MarbleJar />
       </group>
@@ -261,11 +259,6 @@ function swirlTexture(color: string) {
   texture.generateMipmaps = true;
   texture.needsUpdate = true;
   return texture;
-}
-
-/** The oak tabletop the jar stands on, planked and oiled, its top at y = 0. */
-function Table() {
-  return <StudioTable color={MARBLE_COLORS.oak} />;
 }
 
 /** Looks at the jar, the dish and the tally board from the front and above, farther back on a narrow card. */

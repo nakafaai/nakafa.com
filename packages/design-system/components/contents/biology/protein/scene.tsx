@@ -14,11 +14,7 @@ import {
   SUBUNIT_COLORS,
   SubunitRibbon,
 } from "@repo/design-system/components/contents/biology/protein/structure";
-import {
-  BiologyBenchSurface,
-  MolecularStick,
-  SlideStage,
-} from "@repo/design-system/components/contents/biology/workbench";
+import { MolecularStick } from "@repo/design-system/components/contents/biology/workbench";
 import {
   SimulationTicker,
   simulationStep,
@@ -117,9 +113,6 @@ export function ProteinScene({
         cameraTarget={CAMERA_TARGET}
         fov={38}
       />
-
-      <BiologyBenchSurface radius={12} y={0} />
-      <SlideStage position={[0, 0, 0]} radius={0.96} />
 
       <group ref={rootRef}>
         {Arr.map(subunitChains, (chain) => (

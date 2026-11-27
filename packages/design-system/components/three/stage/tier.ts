@@ -21,9 +21,18 @@ const StageCapabilitiesSchema = Schema.Struct({
 });
 type StageCapabilities = typeof StageCapabilitiesSchema.Type;
 
-/** Concrete rendering budget derived from a stage tier and half-float capability. */
+/**
+ * Concrete rendering budget derived from a stage tier and half-float
+ * capability. Rolling ground is meshed in `landRings` rings of `landSpokes`
+ * vertices each, and whatever lies on it far from the lab bends as finely.
+ * A place with drifting matter (solutes in water, dust in a beam, stars)
+ * draws `motes` of them.
+ */
 const StageProfileSchema = Schema.Struct({
   environmentDirectory: Schema.Literals(["desktop", "phone"]),
+  landRings: Schema.Finite,
+  landSpokes: Schema.Finite,
+  motes: Schema.Finite,
   postprocessing: Schema.Boolean,
   shadowMapSize: Schema.Finite,
   shadowRadius: Schema.Finite,
@@ -64,6 +73,9 @@ export function resolveStageProfile(
   return Match.value(tier).pipe(
     Match.when("full", () => ({
       environmentDirectory: "desktop" as const,
+      landRings: 48,
+      landSpokes: 96,
+      motes: 1600,
       postprocessing: supportsHalfFloat,
       shadowMapSize: 2048,
       shadowRadius: 4,
@@ -71,6 +83,9 @@ export function resolveStageProfile(
     })),
     Match.when("light", () => ({
       environmentDirectory: "desktop" as const,
+      landRings: 40,
+      landSpokes: 80,
+      motes: 1000,
       postprocessing: false,
       shadowMapSize: 2048,
       shadowRadius: 3,
@@ -78,6 +93,9 @@ export function resolveStageProfile(
     })),
     Match.when("low", () => ({
       environmentDirectory: "phone" as const,
+      landRings: 28,
+      landSpokes: 64,
+      motes: 520,
       postprocessing: false,
       shadowMapSize: 1024,
       shadowRadius: 2,
@@ -85,6 +103,9 @@ export function resolveStageProfile(
     })),
     Match.when("plain", () => ({
       environmentDirectory: "phone" as const,
+      landRings: 20,
+      landSpokes: 48,
+      motes: 260,
       postprocessing: false,
       shadowMapSize: 1024,
       shadowRadius: 2,
