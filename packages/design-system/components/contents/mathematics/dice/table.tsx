@@ -10,20 +10,13 @@ import {
   stackX,
 } from "@repo/design-system/components/contents/mathematics/dice/stack";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { DICE_COLORS } from "@repo/design-system/lib/material/dice";
 import { Array as Arr } from "effect";
 import type { Ref } from "react";
-import { useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import { useImperativeHandle, useMemo, useRef } from "react";
 import type { InstancedMesh } from "three";
-import {
-  Color,
-  Matrix4,
-  MeshPhysicalMaterial,
-  Quaternion,
-  Vector2,
-  Vector3,
-} from "three";
+import { Color, Matrix4, Quaternion, Vector2, Vector3 } from "three";
 
 /** The outer size of the tray, wall to wall, in metres. */
 const OUTER = {
@@ -39,34 +32,7 @@ const LINING = 0.0015;
 
 /** Oiled walnut: its grain under a satin finish that keeps the wood's sheen. */
 function Walnut() {
-  return (
-    <SurfaceMaterial
-      bump={0.012}
-      coat={0.4}
-      color={DICE_COLORS.walnut}
-      repeat={[0.5, 2]}
-      roughness={0.5}
-      surface="wood"
-    />
-  );
-}
-
-/** Wool baize: matt, with the soft sheen felt shows at a low angle. */
-function Felt({ color }: { readonly color: string }) {
-  // Sheen is set on the material object itself, which JSX props cannot name.
-  const material = useMemo(
-    () =>
-      new MeshPhysicalMaterial({
-        color: new Color(color),
-        roughness: 1,
-        sheen: 1,
-        sheenColor: new Color(DICE_COLORS.feltShade),
-        sheenRoughness: 0.75,
-      }),
-    [color]
-  );
-  useEffect(() => () => material.dispose(), [material]);
-  return <primitive attach="material" object={material} />;
+  return <Matter of="walnut" />;
 }
 
 /**
@@ -128,7 +94,7 @@ export function Tray() {
       </mesh>
       <mesh position={[0, TRAY.floor + 0.0005, 0]} receiveShadow>
         <boxGeometry args={[TRAY.length, 0.001, TRAY.width]} />
-        <Felt color={DICE_COLORS.felt} />
+        <Matter color={DICE_COLORS.felt} of="felt" />
       </mesh>
       {Arr.map(walls, (wall) => (
         <RoundedBox
@@ -154,7 +120,7 @@ export function Tray() {
           receiveShadow
         >
           <boxGeometry args={lining.size} />
-          <Felt color={DICE_COLORS.feltShade} />
+          <Matter color={DICE_COLORS.feltShade} of="felt" />
         </mesh>
       ))}
     </group>
@@ -189,14 +155,7 @@ export function Rack({
         receiveShadow
         smoothness={3}
       >
-        <SurfaceMaterial
-          bump={0.012}
-          coat={0.3}
-          color={DICE_COLORS.oak}
-          repeat={[0.6, 3]}
-          roughness={0.5}
-          surface="wood"
-        />
+        <Matter of="oak" />
       </RoundedBox>
       {Arr.map(outcomes, (outcome, index) => (
         <ThreeLabel
@@ -300,12 +259,7 @@ export function Chips({
       ref={mesh}
     >
       <latheGeometry args={[CHIP_PROFILE, 40]} />
-      <meshPhysicalMaterial
-        clearcoat={0.3}
-        clearcoatRoughness={0.35}
-        color={DICE_COLORS.chip}
-        roughness={0.42}
-      />
+      <Matter color={DICE_COLORS.chip} of="plastic" />
     </instancedMesh>
   );
 }

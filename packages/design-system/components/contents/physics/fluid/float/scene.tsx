@@ -1,6 +1,5 @@
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useOakGrain } from "@repo/design-system/components/contents/physics/bench/board";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
 import {
@@ -10,11 +9,11 @@ import {
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import {
   useVisualScene,
   useVisualStop,
 } from "@repo/design-system/components/visual/card";
-import { getColor } from "@repo/design-system/lib/color";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
 import { useRef } from "react";
 import type { Group } from "three";
@@ -46,7 +45,6 @@ export function FloatingBlockScene({
 }) {
   const quantity = useQuantity();
   const playing = useVisualScene((card) => card.playing, false);
-  const { grain, relief } = useOakGrain();
   const block = useRef<Group>(null);
   const clock = useRef(0);
   const surface = FLOOR + LEVEL;
@@ -81,15 +79,7 @@ export function FloatingBlockScene({
           radius={0.015}
           smoothness={4}
         >
-          <meshPhysicalMaterial
-            bumpMap={relief}
-            bumpScale={0.08}
-            color={
-              grain === null ? APPARATUS_COLORS.beechWood : getColor("WHITE")
-            }
-            map={grain}
-            roughness={0.82}
-          />
+          <Matter of="beech" />
         </RoundedBox>
       </group>
       <TankLiquid

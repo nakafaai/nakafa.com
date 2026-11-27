@@ -2,11 +2,13 @@ import { useFrame } from "@react-three/fiber";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { useTimeline } from "@repo/design-system/components/contents/simulation/timeline";
+import { Matter } from "@repo/design-system/components/three/matter/material";
+import { Shine } from "@repo/design-system/components/three/matter/shine";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
 import { Array as Arr, HashSet, Option, Order } from "effect";
-import { useEffect, useMemo, useRef } from "react";
-import type { Group, Mesh, PointLight } from "three";
-import { AdditiveBlending, MeshBasicMaterial, Vector3 } from "three";
+import { useMemo, useRef } from "react";
+import type { Group } from "three";
+import { Mesh, MeshPhysicalMaterial, Vector3 } from "three";
 
 /** Seconds one fission plays over. */
 const PLAY_SECONDS = 6;
@@ -52,19 +54,7 @@ export function FissionScene({ released }: { readonly released: number }) {
   const cluster = useRef<Group>(null);
   const incoming = useRef<Mesh>(null);
   const flash = useRef<Group>(null);
-  const glow = useMemo(
-    () =>
-      new MeshBasicMaterial({
-        blending: AdditiveBlending,
-        color: APPARATUS_COLORS.fissionFlash,
-        depthWrite: false,
-        opacity: 0,
-        transparent: true,
-      }),
-    []
-  );
-  useEffect(() => () => glow.dispose(), [glow]);
-  const light = useRef<PointLight>(null);
+  const flare = useRef(0);
   const nucleons = useMemo(
     () =>
       Arr.makeBy(NUCLEONS, (index) => {
@@ -145,13 +135,18 @@ export function FissionScene({ released }: { readonly released: number }) {
       incoming.current.position.set(-3.4 + near * (3.4 - BALL), 0, 0);
     }
     const burst = Math.max(0, 1 - Math.abs(share - TEAR - 0.05) / 0.12);
+    flare.current = burst;
     if (flash.current !== null) {
       flash.current.visible = burst > 0.01;
       flash.current.scale.setScalar(0.5 + (1 - burst) * 1.2);
-    }
-    glow.opacity = burst * 0.09;
-    if (light.current !== null) {
-      light.current.intensity = burst * 40;
+      for (const shell of flash.current.children) {
+        if (
+          shell instanceof Mesh &&
+          shell.material instanceof MeshPhysicalMaterial
+        ) {
+          shell.material.opacity = burst * 0.12;
+        }
+      }
     }
   });
 
@@ -166,41 +161,42 @@ export function FissionScene({ released }: { readonly released: number }) {
         {Arr.map(nucleons, (nucleon) => (
           <mesh castShadow key={nucleon.key} position={nucleon.home}>
             <sphereGeometry args={[SIZE, 24, 18]} />
-            <meshPhysicalMaterial
-              clearcoat={0.7}
-              clearcoatRoughness={0.2}
+            <Matter
               color={
                 nucleon.proton
                   ? APPARATUS_COLORS.proton
                   : APPARATUS_COLORS.neutron
               }
-              roughness={0.35}
+              of="enamel"
             />
           </mesh>
         ))}
       </group>
       <mesh castShadow ref={incoming}>
         <sphereGeometry args={[SIZE, 24, 18]} />
-        <meshPhysicalMaterial
-          clearcoat={0.7}
-          color={APPARATUS_COLORS.neutronFree}
-          emissive={APPARATUS_COLORS.neutronFree}
-          emissiveIntensity={0.25}
-          roughness={0.3}
-        />
+        <Matter color={APPARATUS_COLORS.neutronFree} glow={0.12} of="enamel" />
       </mesh>
-      <group ref={flash} visible={false}>
-        {Arr.map(GLOW_SHELLS, (radius) => (
-          <mesh key={radius} material={glow} scale={radius}>
-            <sphereGeometry args={[1, 32, 24]} />
-          </mesh>
-        ))}
+      <group>
+        <group ref={flash} visible={false}>
+          {Arr.map(GLOW_SHELLS, (radius) => (
+            <mesh key={radius} scale={radius}>
+              <sphereGeometry args={[1, 32, 24]} />
+              <Matter
+                color={APPARATUS_COLORS.fissionFlash}
+                glow={0.5}
+                of="light"
+                opacity={0}
+              />
+            </mesh>
+          ))}
+        </group>
+        <Shine
+          color={APPARATUS_COLORS.fissionFlash}
+          glow={0.5}
+          level={flare}
+          of="light"
+        />
       </group>
-      <pointLight
-        color={APPARATUS_COLORS.fissionFlash}
-        intensity={0}
-        ref={light}
-      />
     </group>
   );
 }

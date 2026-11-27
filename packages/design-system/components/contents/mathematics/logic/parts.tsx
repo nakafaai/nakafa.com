@@ -5,30 +5,9 @@ import {
   PARTS,
   POST,
 } from "@repo/design-system/components/contents/mathematics/logic/rig";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { LOGIC_COLORS } from "@repo/design-system/lib/material/logic";
 import { Array as Arr } from "effect";
-
-/**
- * Lacquered brass, as on terminal posts and switch blades: a little less
- * than bare metal, so it keeps its warm yellow under the room's light instead
- * of mirroring the dark desk.
- */
-export function BrassMaterial({
-  roughness = 0.32,
-}: {
-  readonly roughness?: number;
-}) {
-  return (
-    <meshPhysicalMaterial
-      clearcoat={0.4}
-      clearcoatRoughness={0.2}
-      color={LOGIC_COLORS.brass}
-      metalness={0.75}
-      roughness={roughness}
-    />
-  );
-}
 
 /** The top face of every part's base. */
 export const BASE_TOP = BOARD_TOP + BASE_HEIGHT;
@@ -50,12 +29,7 @@ export function PartBase({
       receiveShadow
       smoothness={3}
     >
-      <meshPhysicalMaterial
-        clearcoat={0.4}
-        clearcoatRoughness={0.3}
-        color={LOGIC_COLORS.bakelite}
-        roughness={0.45}
-      />
+      <Matter of="bakelite" />
     </RoundedBox>
   );
 }
@@ -77,25 +51,24 @@ export function Post({
         <cylinderGeometry
           args={[POST.radius * 0.55, POST.radius * 0.55, POST.height, 16]}
         />
-        <BrassMaterial roughness={0.3} />
+        <Matter of="brass" />
       </mesh>
       <mesh castShadow position={[0, POST.height - 0.0018, 0]}>
         <cylinderGeometry args={[POST.radius, POST.radius, 0.0036, 18]} />
-        <BrassMaterial roughness={0.42} />
+        <Matter of="brass" />
       </mesh>
       {collar === undefined ? null : (
         <mesh castShadow position={[0, 0.0016, 0]}>
           <cylinderGeometry
             args={[POST.radius * 1.35, POST.radius * 1.45, 0.0032, 20]}
           />
-          <meshPhysicalMaterial
-            clearcoat={0.6}
+          <Matter
             color={
               collar === "red"
                 ? LOGIC_COLORS.collarRed
                 : LOGIC_COLORS.collarBlack
             }
-            roughness={0.35}
+            of="plastic"
           />
         </mesh>
       )}
@@ -119,7 +92,7 @@ export function BatteryHolder() {
       <PartBase depth={depth} length={length} />
       <mesh castShadow position={[0, BASE_TOP + 0.005, 0]} receiveShadow>
         <boxGeometry args={[trough, 0.01, CELL.radius * 2 + 0.005]} />
-        <meshStandardMaterial color={LOGIC_COLORS.holder} roughness={0.6} />
+        <Matter color={LOGIC_COLORS.holder} of="plastic" />
       </mesh>
       {Arr.map([-1, 1] as const, (side) => (
         <group
@@ -131,12 +104,7 @@ export function BatteryHolder() {
             <cylinderGeometry
               args={[CELL.radius, CELL.radius, CELL.length - 0.002, 32]}
             />
-            <meshPhysicalMaterial
-              clearcoat={0.7}
-              clearcoatRoughness={0.2}
-              color={LOGIC_COLORS.cellWrap}
-              roughness={0.35}
-            />
+            <Matter color={LOGIC_COLORS.cellWrap} of="plastic" />
           </mesh>
           <mesh position={[0, CELL.length * 0.18, 0]}>
             <cylinderGeometry
@@ -147,21 +115,17 @@ export function BatteryHolder() {
                 32,
               ]}
             />
-            <meshPhysicalMaterial
-              clearcoat={0.7}
-              color={LOGIC_COLORS.cellBand}
-              roughness={0.35}
-            />
+            <Matter color={LOGIC_COLORS.cellBand} of="plastic" />
           </mesh>
           <mesh position={[0, CELL.length / 2, 0]}>
             <cylinderGeometry args={[0.0026, 0.0026, 0.0018, 20]} />
-            <MetalMaterial color={LOGIC_COLORS.cellSteel} roughness={0.25} />
+            <Matter of="steel" />
           </mesh>
           <mesh position={[0, -CELL.length / 2 + 0.0005, 0]}>
             <cylinderGeometry
               args={[CELL.radius * 0.92, CELL.radius * 0.92, 0.001, 32]}
             />
-            <MetalMaterial color={LOGIC_COLORS.cellSteel} roughness={0.25} />
+            <Matter of="steel" />
           </mesh>
         </group>
       ))}
@@ -191,16 +155,12 @@ export function Resistor() {
       <group position={[0, height, 0]} rotation={[0, 0, Math.PI / 2]}>
         <mesh castShadow>
           <capsuleGeometry args={[0.0024, body - 0.0048, 6, 20]} />
-          <meshPhysicalMaterial
-            clearcoat={0.5}
-            color={LOGIC_COLORS.resistorBody}
-            roughness={0.45}
-          />
+          <Matter color={LOGIC_COLORS.resistorBody} of="epoxy" />
         </mesh>
         {Arr.map(BANDS, (band) => (
           <mesh key={band.at} position={[0, band.at, 0]}>
             <cylinderGeometry args={[0.0025, 0.0025, 0.0009, 20]} />
-            <meshStandardMaterial color={band.color} roughness={0.5} />
+            <Matter color={band.color} of="epoxy" />
           </mesh>
         ))}
       </group>
@@ -211,7 +171,7 @@ export function Resistor() {
           rotation={[0, 0, Math.PI / 2]}
         >
           <cylinderGeometry args={[0.0003, 0.0003, lead, 6]} />
-          <MetalMaterial color={LOGIC_COLORS.cellSteel} roughness={0.3} />
+          <Matter of="steel" />
         </mesh>
       ))}
       <Post x={-reach} />

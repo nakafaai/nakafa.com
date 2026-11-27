@@ -8,9 +8,8 @@ import { HeatingCoil } from "@repo/design-system/components/contents/physics/ben
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
-import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
 import { Array as Arr } from "effect";
 import { DoubleSide } from "three";
 
@@ -76,19 +75,11 @@ export function HeaterSupplyScene({
           <group key={side} position={[(side * SPAN) / 2, 0, 0]}>
             <mesh castShadow position={[0, 0.2, 0]} receiveShadow>
               <boxGeometry args={[0.1, 0.4, 0.36]} />
-              <meshPhysicalMaterial
-                clearcoat={0.7}
-                clearcoatRoughness={0.2}
-                color={APPARATUS_COLORS.porcelain}
-                roughness={0.32}
-              />
+              <Matter of="porcelain" />
             </mesh>
             <mesh castShadow position={[0, 0.015, 0.06]} receiveShadow>
               <boxGeometry args={[0.16, 0.03, 0.62]} />
-              <MetalMaterial
-                color={APPARATUS_COLORS.caseSteel}
-                roughness={0.4}
-              />
+              <Matter of="steel" />
             </mesh>
           </group>
         ))}
@@ -100,19 +91,11 @@ export function HeaterSupplyScene({
           <cylinderGeometry
             args={[0.19, 0.19, SPAN - 0.1, 48, 1, true, Math.PI, Math.PI]}
           />
-          <meshPhysicalMaterial
-            color={QUANTUM_COLORS.aluminium}
-            metalness={1}
-            roughness={0.12}
-            side={DoubleSide}
-          />
+          <Matter finish="polished" of="aluminium" side={DoubleSide} />
         </mesh>
         <mesh position={[0, 0.2, 0.02]} rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[0.028, 0.028, SPAN - 0.1, 20]} />
-          <meshStandardMaterial
-            color={QUANTUM_COLORS.ceramic}
-            roughness={0.7}
-          />
+          <Matter of="porcelain" />
         </mesh>
         <group position={[0, 0.2, 0.02]}>
           <HeatingCoil
@@ -129,7 +112,7 @@ export function HeaterSupplyScene({
             rotation={[0, 0, Math.PI / 2]}
           >
             <cylinderGeometry args={[0.006, 0.006, SPAN - 0.1, 8]} />
-            <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.25} />
+            <Matter of="nickel" />
           </mesh>
         ))}
         <Tag position={[-0.25, 0.66, 0]}>

@@ -13,7 +13,8 @@ import {
   TRAY,
 } from "@repo/design-system/components/contents/mathematics/argument/layout";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { Matter } from "@repo/design-system/components/three/matter/material";
+import { Shine } from "@repo/design-system/components/three/matter/shine";
 import { ARGUMENT_COLORS } from "@repo/design-system/lib/material/argument";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -52,14 +53,7 @@ export function Rail({
         receiveShadow
         smoothness={3}
       >
-        <SurfaceMaterial
-          bump={0.02}
-          coat={0.35}
-          color={ARGUMENT_COLORS.rail}
-          repeat={[width / 0.6, length / 0.075]}
-          roughness={0.5}
-          surface="wood"
-        />
+        <Matter of="oak" />
       </RoundedBox>
       {Arr.map(ROWS, (z, index) => (
         <group key={z}>
@@ -74,13 +68,7 @@ export function Rail({
                 CARD.depth + 2 * POCKET_MARGIN,
               ]}
             />
-            <SurfaceMaterial
-              bump={0.2}
-              color={ARGUMENT_COLORS.pocket}
-              repeat={[CARD.width / 0.05, CARD.depth / 0.05]}
-              roughness={0.95}
-              surface="cloth"
-            />
+            <Matter color={ARGUMENT_COLORS.pocket} of="felt" />
           </mesh>
           <mesh
             castShadow
@@ -88,13 +76,7 @@ export function Rail({
             receiveShadow
           >
             <boxGeometry args={[CARD.width - 0.012, 0.0012, PLATE - 0.006]} />
-            <meshPhysicalMaterial
-              clearcoat={0.4}
-              clearcoatRoughness={0.25}
-              color={ARGUMENT_COLORS.plate}
-              metalness={0.6}
-              roughness={0.4}
-            />
+            <Matter color={ARGUMENT_COLORS.plate} of="enamel" />
           </mesh>
           <ThreeLabel
             color={ARGUMENT_COLORS.plateInk}
@@ -111,6 +93,9 @@ export function Rail({
     </group>
   );
 }
+
+/** How brightly the lamp strip shines once the conclusion follows: a strip of lamps, far brighter than one indicator. */
+const LAMP_GLOW = 3.5;
 
 /**
  * The lamp strip round the conclusion's pocket: four bars of smoked glass,
@@ -135,23 +120,19 @@ export function Lamp({ lit }: { readonly lit: boolean }) {
           position={[bar.at[0], 0.0007, bar.at[1]]}
         >
           <boxGeometry args={[bar.size[0], 0.0014, bar.size[1]]} />
-          <meshStandardMaterial
+          <Matter
             color={lit ? ARGUMENT_COLORS.lampOn : ARGUMENT_COLORS.lampOff}
-            emissive={ARGUMENT_COLORS.lampOn}
-            emissiveIntensity={lit ? 2.4 : 0}
-            roughness={0.35}
-            toneMapped={!lit}
+            glow={lit ? LAMP_GLOW : 0}
+            of="epoxy"
           />
         </mesh>
       ))}
-      {lit ? (
-        <pointLight
-          color={ARGUMENT_COLORS.lampOn}
-          distance={0.3}
-          intensity={0.12}
-          position={[0, 0.05, 0]}
-        />
-      ) : null}
+      <Shine
+        color={ARGUMENT_COLORS.lampOn}
+        glow={lit ? LAMP_GLOW : 0}
+        of="epoxy"
+        position={[0, 0.05, 0]}
+      />
     </group>
   );
 }
@@ -168,13 +149,7 @@ export function Tray() {
       receiveShadow
       smoothness={3}
     >
-      <SurfaceMaterial
-        bump={0.25}
-        color={ARGUMENT_COLORS.tray}
-        repeat={[width / 0.06, depth / 0.06]}
-        roughness={0.95}
-        surface="cloth"
-      />
+      <Matter color={ARGUMENT_COLORS.tray} of="felt" />
     </RoundedBox>
   );
 }

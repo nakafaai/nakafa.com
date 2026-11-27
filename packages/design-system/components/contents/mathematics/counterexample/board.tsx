@@ -4,7 +4,7 @@ import type {
   Sort,
 } from "@repo/design-system/components/contents/mathematics/counterexample/layout";
 import { DIVIDER } from "@repo/design-system/components/contents/mathematics/counterexample/layout";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { COUNTEREXAMPLE_COLORS } from "@repo/design-system/lib/material/counterexample";
 import { Array as Arr } from "effect";
 
@@ -64,14 +64,7 @@ export function FeltBoard({ size }: { readonly size: Size }) {
         receiveShadow
         smoothness={6}
       >
-        <SurfaceMaterial
-          bump={0.012}
-          coat={0.35}
-          color={COUNTEREXAMPLE_COLORS.frame}
-          repeat={[0.5, 3]}
-          roughness={0.46}
-          surface="wood"
-        />
+        <Matter of="oak" />
       </RoundedBox>
       {Arr.map(rails, ({ args, at }) => (
         <mesh
@@ -81,14 +74,7 @@ export function FeltBoard({ size }: { readonly size: Size }) {
           receiveShadow
         >
           <boxGeometry args={[args[0], FRAME.lip, args[1]]} />
-          <SurfaceMaterial
-            bump={0.012}
-            coat={0.35}
-            color={COUNTEREXAMPLE_COLORS.frame}
-            repeat={[0.4, 2]}
-            roughness={0.46}
-            surface="wood"
-          />
+          <Matter of="oak" />
         </mesh>
       ))}
       <mesh
@@ -97,13 +83,7 @@ export function FeltBoard({ size }: { readonly size: Size }) {
         rotation={[-Math.PI / 2, 0, 0]}
       >
         <planeGeometry args={[size.width, size.depth]} />
-        <SurfaceMaterial
-          bump={0.2}
-          color={COUNTEREXAMPLE_COLORS.felt}
-          repeat={[size.width / 0.06, size.depth / 0.06]}
-          roughness={1}
-          surface="cloth"
-        />
+        <Matter color={COUNTEREXAMPLE_COLORS.felt} of="felt" />
       </mesh>
     </group>
   );
@@ -131,10 +111,7 @@ export function CaseCells({ sort }: { readonly sort: Sort }) {
           rotation={[-Math.PI / 2, 0, 0]}
         >
           <planeGeometry args={[sort.cell.width, sort.cell.depth]} />
-          <meshStandardMaterial
-            color={Arr.getUnsafe(CELL_FELTS, index)}
-            roughness={1}
-          />
+          <Matter color={Arr.getUnsafe(CELL_FELTS, index)} of="felt" />
         </mesh>
       ))}
       <mesh
@@ -143,10 +120,7 @@ export function CaseCells({ sort }: { readonly sort: Sort }) {
         receiveShadow
       >
         <boxGeometry args={[DIVIDER, CELL.strip, inner.depth]} />
-        <meshStandardMaterial
-          color={COUNTEREXAMPLE_COLORS.frame}
-          roughness={0.5}
-        />
+        <Matter of="oak" />
       </mesh>
       <mesh
         castShadow
@@ -154,10 +128,7 @@ export function CaseCells({ sort }: { readonly sort: Sort }) {
         receiveShadow
       >
         <boxGeometry args={[inner.width, CELL.strip, DIVIDER]} />
-        <meshStandardMaterial
-          color={COUNTEREXAMPLE_COLORS.frame}
-          roughness={0.5}
-        />
+        <Matter of="oak" />
       </mesh>
     </group>
   );

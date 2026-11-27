@@ -11,6 +11,7 @@ import {
   hashUnit,
   valueNoise,
 } from "@repo/design-system/components/contents/simulation/grain";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { JOURNEY_COLORS } from "@repo/design-system/lib/material/journey";
 import { Array as Arr } from "effect";
@@ -143,14 +144,7 @@ function Frame() {
           receiveShadow
         >
           <boxGeometry args={[rail.size[0], tall, rail.size[1]]} />
-          <SurfaceMaterial
-            bump={0.012}
-            coat={0.4}
-            color={JOURNEY_COLORS.frame}
-            repeat={[0.4, 3]}
-            roughness={0.45}
-            surface="wood"
-          />
+          <Matter of="walnut" />
         </mesh>
       ))}
     </group>
@@ -191,7 +185,7 @@ export function Roadway({
           receiveShadow
         >
           <boxGeometry args={[0.0016, 0.0002, length]} />
-          <meshStandardMaterial color={JOURNEY_COLORS.paint} roughness={0.7} />
+          <Matter color={JOURNEY_COLORS.paint} of="paint" />
         </mesh>
       ))}
       {Arr.makeBy(dashes, (index) => (
@@ -205,22 +199,22 @@ export function Roadway({
           receiveShadow
         >
           <boxGeometry args={[0.0013, 0.0002, DASH.length]} />
-          <meshStandardMaterial color={JOURNEY_COLORS.paint} roughness={0.7} />
+          <Matter color={JOURNEY_COLORS.paint} of="paint" />
         </mesh>
       ))}
       <mesh position={[0, ROAD_TOP + 0.000_15, start]} receiveShadow>
         <boxGeometry args={[BOARD.asphalt - 0.004, 0.0002, 0.0035]} />
-        <meshStandardMaterial color={JOURNEY_COLORS.paint} roughness={0.7} />
+        <Matter color={JOURNEY_COLORS.paint} of="paint" />
       </mesh>
       {Arr.map(marks, (z) => (
         <group key={z} position={[VERGE, BASE, z]}>
           <mesh castShadow position={[0, 0.006, 0]}>
             <cylinderGeometry args={[0.0017, 0.002, 0.012, 20]} />
-            <meshStandardMaterial color={JOURNEY_COLORS.post} roughness={0.5} />
+            <Matter color={JOURNEY_COLORS.post} of="paint" />
           </mesh>
           <mesh castShadow position={[0, 0.0127, 0]}>
             <cylinderGeometry args={[0.0017, 0.0017, 0.0014, 20]} />
-            <meshStandardMaterial color={JOURNEY_COLORS.tyre} roughness={0.6} />
+            <Matter of="rubber" />
           </mesh>
         </group>
       ))}
@@ -237,42 +231,25 @@ function BusStop({ z }: { readonly z: number }) {
     <group position={[-VERGE, BASE, z]}>
       <mesh castShadow position={[-0.007, 0.009, 0]}>
         <boxGeometry args={[0.0012, 0.016, 0.03]} />
-        <meshPhysicalMaterial
-          color={JOURNEY_COLORS.shelter}
-          opacity={0.55}
-          roughness={0.08}
-          transparent
-        />
+        <Matter color={JOURNEY_COLORS.shelter} of="glass" opacity={0.55} />
       </mesh>
       <mesh castShadow position={[-0.001, 0.0178, 0]}>
         <boxGeometry args={[0.017, 0.0014, 0.034]} />
-        <meshPhysicalMaterial
-          clearcoat={0.6}
-          color={JOURNEY_COLORS.roof}
-          roughness={0.4}
-        />
+        <Matter color={JOURNEY_COLORS.roof} of="enamel" />
       </mesh>
       <mesh castShadow position={[-0.004, 0.0042, 0]}>
         <boxGeometry args={[0.0046, 0.0009, 0.022]} />
-        <meshStandardMaterial color={JOURNEY_COLORS.trunk} roughness={0.7} />
+        <Matter color={JOURNEY_COLORS.trunk} of="paint" />
       </mesh>
       {Arr.map([-0.015, 0.015] as const, (along) => (
         <mesh castShadow key={along} position={[0.006, 0.0085, along]}>
           <cylinderGeometry args={[0.0007, 0.0007, 0.017, 16]} />
-          <meshStandardMaterial
-            color={JOURNEY_COLORS.pole}
-            metalness={0.8}
-            roughness={0.35}
-          />
+          <Matter of="steel" />
         </mesh>
       ))}
       <mesh castShadow position={[0.008, 0.012, -0.022]}>
         <cylinderGeometry args={[0.0006, 0.0006, 0.024, 16]} />
-        <meshStandardMaterial
-          color={JOURNEY_COLORS.pole}
-          metalness={0.8}
-          roughness={0.35}
-        />
+        <Matter of="steel" />
       </mesh>
       <mesh
         castShadow
@@ -280,11 +257,7 @@ function BusStop({ z }: { readonly z: number }) {
         rotation={[0, 0, Math.PI / 2]}
       >
         <cylinderGeometry args={[0.0042, 0.0042, 0.0009, 32]} />
-        <meshPhysicalMaterial
-          clearcoat={0.8}
-          color={JOURNEY_COLORS.sign}
-          roughness={0.35}
-        />
+        <Matter color={JOURNEY_COLORS.sign} of="enamel" />
       </mesh>
     </group>
   );
@@ -307,7 +280,7 @@ function Tree({ turn, z }: { readonly turn: number; readonly z: number }) {
     <group position={[-VERGE, BASE, z]} rotation={[0, turn * Math.PI * 2, 0]}>
       <mesh castShadow position={[0, 0.007, 0]}>
         <cylinderGeometry args={[0.0013, 0.0022, 0.014, 12]} />
-        <meshStandardMaterial color={JOURNEY_COLORS.trunk} roughness={0.9} />
+        <Matter color={JOURNEY_COLORS.trunk} of="paint" />
       </mesh>
       {Arr.map(CLUMPS, ([x, y, along, radius], index) => (
         <mesh castShadow key={radius} position={[x, y, along]}>

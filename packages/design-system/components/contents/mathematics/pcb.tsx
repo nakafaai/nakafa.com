@@ -1,7 +1,7 @@
 import { RoundedBox } from "@react-three/drei";
 import type { Placement } from "@repo/design-system/components/contents/biology/instances";
 import { Instances } from "@repo/design-system/components/contents/biology/instances";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { CIRCUIT_COLORS } from "@repo/design-system/lib/material/circuit";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -24,16 +24,9 @@ const COPPER = 0.000_14;
 /** How far a gold pad stands above the mask. */
 const PLATING = 0.0002;
 
-/** The glossy solder mask: a cured epoxy ink, smooth enough to mirror the lamps over it. */
+/** The solder mask: a cured ink baked on the board, with the soft gloss of stove enamel. */
 function Mask({ color }: { readonly color: string }) {
-  return (
-    <meshPhysicalMaterial
-      clearcoat={0.7}
-      clearcoatRoughness={0.34}
-      color={color}
-      roughness={0.6}
-    />
-  );
+  return <Matter color={color} of="enamel" />;
 }
 
 /**
@@ -76,7 +69,7 @@ export function CircuitBoard({
         receiveShadow
         smoothness={4}
       >
-        <meshStandardMaterial color={CIRCUIT_COLORS.laminate} roughness={0.7} />
+        <Matter color={CIRCUIT_COLORS.laminate} of="plastic" />
       </RoundedBox>
       <mesh
         position={[0, 0.000_03, 0]}
@@ -93,14 +86,11 @@ export function CircuitBoard({
         <group key={`${x}-${z}`} position={[x, 0, z]}>
           <mesh castShadow position={[0, 0.0009, 0]}>
             <cylinderGeometry args={[0.0026, 0.0028, 0.0014, 32]} />
-            <MetalMaterial color={CIRCUIT_COLORS.hardware} roughness={0.26} />
+            <Matter of="nickel" />
           </mesh>
           <mesh position={[0, 0.001_65, 0]} rotation={[0, Math.PI / 4, 0]}>
             <boxGeometry args={[0.0034, 0.0003, 0.0006]} />
-            <meshStandardMaterial
-              color={CIRCUIT_COLORS.drill}
-              roughness={0.6}
-            />
+            <Matter color={CIRCUIT_COLORS.drill} of="paint" />
           </mesh>
         </group>
       ))}
@@ -190,16 +180,11 @@ export function Pads({
     <group>
       <Instances placements={rings}>
         <ringGeometry args={[hole * 0.9, radius, 32]} />
-        <meshPhysicalMaterial
-          clearcoat={0.4}
-          color={CIRCUIT_COLORS.gold}
-          metalness={1}
-          roughness={0.28}
-        />
+        <Matter of="gold" />
       </Instances>
       <Instances placements={drills}>
         <circleGeometry args={[hole, 24]} />
-        <meshStandardMaterial color={CIRCUIT_COLORS.drill} roughness={0.95} />
+        <Matter color={CIRCUIT_COLORS.drill} of="paint" />
       </Instances>
     </group>
   );
