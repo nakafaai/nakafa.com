@@ -97,45 +97,6 @@ export function SpecimenPedestal({
 }
 
 /**
- * Circular brushed-brass and borosilicate glass microscope specimen stage,
- * anchoring cellular and molecular structures over the seamless benchtop.
- */
-export function SlideStage({
-  position = [0, 0, 0],
-  radius = 0.96,
-}: {
-  readonly position?: readonly [number, number, number];
-  readonly radius?: number;
-}) {
-  return (
-    <group position={position}>
-      <mesh castShadow position={[0, 0.022, 0]} receiveShadow>
-        <cylinderGeometry args={[radius, radius * 1.04, 0.044, 64]} />
-        <meshPhysicalMaterial
-          clearcoat={0.36}
-          clearcoatRoughness={0.3}
-          color={GENETICS_COLORS.slatePlinth}
-          metalness={0.54}
-          roughness={0.38}
-        />
-      </mesh>
-      <mesh position={[0, 0.046, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[radius * 0.97, 0.012, 12, 64]} />
-        <MetalMaterial color={GENETICS_COLORS.brassPolished} roughness={0.26} />
-      </mesh>
-      <mesh position={[0, 0.052, 0]} receiveShadow>
-        <cylinderGeometry args={[radius * 0.91, radius * 0.91, 0.012, 64]} />
-        <GlassMaterial color={GENETICS_COLORS.frostedGlass} opacity={0.28} />
-      </mesh>
-      <mesh position={[0, 0.058, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[radius * 0.72, 0.004, 8, 64]} />
-        <MetalMaterial color={GENETICS_COLORS.brassDark} roughness={0.34} />
-      </mesh>
-    </group>
-  );
-}
-
-/**
  * Machined covalent, hydrogen, or structural bond rod oriented cleanly between
  * two 3D points.
  */

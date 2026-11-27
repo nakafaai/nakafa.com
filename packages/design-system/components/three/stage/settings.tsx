@@ -1,6 +1,9 @@
 import { Environment, Sky, useEnvironment } from "@react-three/drei";
+import { Backdrop } from "@repo/design-system/components/three/stage/backdrop";
 import { useStage } from "@repo/design-system/components/three/stage/context";
 import { horizonColor } from "@repo/design-system/components/three/stage/horizon";
+import { Motes } from "@repo/design-system/components/three/stage/motes";
+import type { Place } from "@repo/design-system/components/three/stage/place";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
@@ -24,13 +27,23 @@ const FIELD_SUN = [0.533, 0.5, 0.682] as const;
 const SKY_SUN = [0.505, 0.574, 0.645] as const;
 const STUDIO_SUN = [0.423, 0.725, 0.544] as const;
 
+/** The light that falls into water, into a cell and up a microscope comes from nearly straight above. */
+const DEEP_SUN = [0.246, 0.916, 0.317] as const;
+
 /** Where the sun of each setting stands, which the key light and the glint on water share. */
-export const SETTING_SUNS = {
+export const SETTING_SUNS: Record<
+  Place,
+  readonly [x: number, y: number, z: number]
+> = {
+  cell: DEEP_SUN,
+  dark: LAB_SUN,
   field: FIELD_SUN,
   lab: LAB_SUN,
+  microscope: DEEP_SUN,
   sky: SKY_SUN,
   space: STUDIO_SUN,
   studio: STUDIO_SUN,
+  water: DEEP_SUN,
 };
 
 /** How far the key light stands from the lab's middle, in reaches. */
@@ -46,8 +59,8 @@ const DARK_BACKDROP = 0.4;
 const FOG_NEAR = 3;
 const FOG_FAR = 12;
 
-/** Reads whether the page shows its dark theme, which dims a photo backdrop. */
-function useDark() {
+/** Reads whether the page shows its dark theme, which dims a backdrop. */
+export function useDark() {
   const resolvedTheme = useTheme((state) => state.resolvedTheme);
   return getThemeAppearance(resolvedTheme) === "dark";
 }
@@ -101,6 +114,46 @@ function ProceduralFillFallback({
         />
       ) : null}
     </>
+  );
+}
+
+/**
+ * The light of a photo studio's softboxes on the lab, without the studio
+ * behind it, for a place that draws its own backdrop. Procedural fill light
+ * takes over, without failing the lab, when the photo cannot load.
+ *
+ * @param ambient - The fill light from everywhere when the photo is missing
+ * @param exposure - How brightly the softboxes light the lab
+ * @param hemisphere - The fill light from above when the photo is missing
+ */
+export function Softboxes({
+  ambient,
+  exposure,
+  hemisphere,
+}: {
+  readonly ambient: number;
+  readonly exposure: number;
+  readonly hemisphere: number;
+}) {
+  const { profile } = useStage();
+
+  if (!profile.useExrEnvironment) {
+    return <ProceduralFillFallback ambient={ambient} hemisphere={hemisphere} />;
+  }
+
+  return (
+    <ErrorBoundary
+      fallbackRender={() => (
+        <ProceduralFillFallback ambient={ambient} hemisphere={hemisphere} />
+      )}
+      report={false}
+    >
+      <Environment
+        environmentIntensity={exposure}
+        environmentRotation={[0, STUDIO_TURN, 0]}
+        files={`/environments/${profile.environmentDirectory}/studio.exr`}
+      />
+    </ErrorBoundary>
   );
 }
 
@@ -187,7 +240,7 @@ function Photo(props: {
  * softness scale with the device's stage profile (512 low-end, 1024 mobile,
  * 2048 desktop).
  */
-function Sun({
+export function Sun({
   direction,
   intensity,
 }: {
@@ -303,61 +356,108 @@ export function SkySetting() {
  * studio's softboxes, with non-fatal fallback to procedural studio fill light.
  */
 export function StudioSetting() {
-  const { profile } = useStage();
   const dark = useDark();
   const backdrop = dark ? getColor("NEUTRAL", 700) : getColor("ZINC", 100);
 
   return (
     <>
       <color args={[backdrop]} attach="background" />
-      {profile.useExrEnvironment ? (
-        <ErrorBoundary
-          fallbackRender={() => (
-            <ProceduralFillFallback ambient={0.4} hemisphere={0.9} />
-          )}
-          report={false}
-        >
-          <Environment
-            environmentIntensity={1}
-            environmentRotation={[0, STUDIO_TURN, 0]}
-            files={`/environments/${profile.environmentDirectory}/studio.exr`}
-          />
-        </ErrorBoundary>
-      ) : (
-        <ProceduralFillFallback ambient={0.4} hemisphere={0.9} />
-      )}
+      <Softboxes ambient={0.4} exposure={1} hemisphere={0.9} />
       <Sun direction={STUDIO_SUN} intensity={1.4} />
       <Haze color={backdrop} />
     </>
   );
 }
 
+/** The tone of open space between the stars, the same in both themes. */
+const VOID = "#04050a";
+
 /**
- * Open space: one hard sun and the faint fill of distant light against a
- * backdrop that stays dark in both themes, with non-fatal procedural fallback.
+ * Open space: one hard sun, standing in the sky as a disc with its glare,
+ * and the faint fill of distant light, against stars at every depth of
+ * brightness and the pale band of dust they gather in. It stays dark in both
+ * themes, and procedural fill light takes over without failing the lab.
  */
 export function SpaceSetting() {
+  return (
+    <>
+      <color args={[VOID]} attach="background" />
+      <Backdrop
+        band={0.05}
+        body={VOID}
+        disc={1}
+        glow="#aebcff"
+        high="#05060d"
+        low={VOID}
+      />
+      <Motes
+        distant
+        from="#ffd2a8"
+        lit
+        opacity={1}
+        pace={0.6}
+        seed={61}
+        size={2.6}
+        to="#bcd0ff"
+      />
+      <Softboxes ambient={0.22} exposure={0.15} hemisphere={0} />
+      <Sun direction={STUDIO_SUN} intensity={3.2} />
+    </>
+  );
+}
+
+/**
+ * A teaching laboratory with its lights off, for beams, glowing tubes and
+ * screens: the same room, benches and windows, a twentieth as bright, with
+ * one dim lamp overhead as its key light and dust in the air, so a beam
+ * shows along its whole length. It stays dark in both themes.
+ */
+export function DarkSetting() {
   const { profile } = useStage();
 
   return (
     <>
-      <color args={[getColor("ZINC", 950)]} attach="background" />
       {profile.useExrEnvironment ? (
-        <ErrorBoundary
-          fallbackRender={() => (
-            <ProceduralFillFallback ambient={0.22} hemisphere={0} />
-          )}
-          report={false}
-        >
-          <Environment
-            environmentIntensity={0.15}
-            files={`/environments/${profile.environmentDirectory}/studio.exr`}
+        <ErrorBoundary fallbackRender={() => <Unlit />} report={false}>
+          <PhotoEnvironment
+            backdrop={0.07}
+            blur={0.2}
+            exposure={0.16}
+            file="lab"
+            turn={LAB_TURN}
           />
         </ErrorBoundary>
       ) : (
-        <ProceduralFillFallback ambient={0.22} hemisphere={0} />
+        <Unlit />
       )}
-      <Sun direction={STUDIO_SUN} intensity={3.2} />
+      <Sun direction={LAB_SUN} intensity={0.5} />
+      <Motes
+        blur={1.4}
+        drift={0.02}
+        from="#8fa3c4"
+        hollow={0.2}
+        lit
+        opacity={0.1}
+        pace={0.25}
+        seed={71}
+        share={0.5}
+        size={0.016}
+        spread={3}
+        to="#d6dff0"
+      />
+    </>
+  );
+}
+
+/** The dark of an unlit room and the little light left in it, when its photo cannot load. */
+function Unlit() {
+  const backdrop = getColor("ZINC", 950);
+
+  return (
+    <>
+      <color args={[backdrop]} attach="background" />
+      <ProceduralFillFallback ambient={0.08} hemisphere={0.14} />
+      <Haze color={backdrop} />
     </>
   );
 }
