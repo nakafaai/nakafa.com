@@ -49,16 +49,29 @@ describe("pairLayout", () => {
     });
   });
 
-  it("names the first sugar on the left, the second on the right and the bond above", () => {
+  it("names each sugar just under its own ring and the bond just over its oxygen", () => {
     Arr.forEach(SUGARS, (sugar) => {
-      const { bounds, marks, molecule, rest, size } = pairLayout(sugar);
-      const top = Math.max(...Arr.map(molecule.atoms, (atom) => atom.at[1]));
-      const low = Math.min(...Arr.map(molecule.atoms, (atom) => atom.at[1]));
+      const { bounds, bridge, first, marks, molecule, second, size } =
+        pairLayout(sugar);
+      const height = (y: number) => MIDDLE + y * size;
+      const lowest = (atoms: typeof first.atoms) =>
+        Math.min(...Arr.map(atoms, (atom) => atom.at[1]));
       expect(marks.first[0]).toBeLessThan(-0.15);
       expect(marks.second[0]).toBeGreaterThan(0.15);
-      expect(marks.bond[1]).toBeGreaterThan(MIDDLE + top * size);
-      expect(marks.first[1]).toBeLessThan(MIDDLE + low * size);
-      expect(rest[1]).toBeLessThan(low);
+      expect(marks.first[1]).toBeCloseTo(height(lowest(first.atoms) - 0.6), 9);
+      expect(marks.second[1]).toBeCloseTo(
+        height(lowest(second.atoms) - 0.6),
+        9
+      );
+      const over = Arr.filter(
+        molecule.atoms,
+        (atom) => Math.abs(atom.at[0] - bridge[0]) < 2.4
+      );
+      Arr.forEach(over, (atom) => {
+        expect(marks.bond[1]).toBeGreaterThan(height(atom.at[1]));
+      });
+      expect(marks.bond[1]).toBeGreaterThan(height(bridge[1]));
+      expect(marks.bond[1]).toBeLessThan(height(bridge[1] + 4.5));
       expect(size * (bounds.x.max - bounds.x.min)).toBeCloseTo(1.7, 9);
     });
   });
@@ -75,7 +88,10 @@ describe("chainLayout", () => {
           expect(atom.at[1]).toBeGreaterThan(layout.bounds.y.min);
           expect(atom.at[1]).toBeLessThan(layout.bounds.y.max);
         });
-        expect(layout.mark[1]).toBeGreaterThan(layout.stand[1] - 0.6);
+        const tops = Arr.map(layout.molecule.atoms, (atom) => atom.at[1]);
+        expect(layout.mark[1]).toBeLessThan(
+          layout.stand[1] + (Math.max(...tops) + 0.61) * layout.size
+        );
         expect(
           layout.size * (layout.bounds.x.max - layout.bounds.x.min)
         ).toBeLessThan(1.71);

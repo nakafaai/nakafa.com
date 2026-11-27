@@ -34,14 +34,12 @@ const LEAN = (28 * Math.PI) / 180;
 export const GAP = 2.5;
 
 /**
- * How far past an atom's middle the atom reaches, how far a label stands
- * from the outermost atom, how far a sugar's name stands out from the
- * middle of its ring, how far below the molecule the released water rests,
- * and how near a bond an atom must be to count as above it, all in angstrom.
+ * How far past an atom's middle the atom reaches, which is also how far a
+ * label stands off the atoms it names; how far below the molecule the
+ * released water rests; and how near a label's line an atom must be to count
+ * as under or over it, all in angstrom.
  */
 const REACH = 0.6;
-const MARGIN = 1.5;
-const OUTWARD = 1.2;
 const BELOW = 1.4;
 const NEAR = 2.4;
 
@@ -93,6 +91,25 @@ function boxOf(molecule: Molecule) {
   return { x: range(0), y: range(1), z: range(2) };
 }
 
+/**
+ * The height of the highest atom of `atoms` between `from` and `to` along
+ * x, so a label set just above it over that stretch touches its part and
+ * covers no atom.
+ */
+function topOver(atoms: Molecule["atoms"], from: number, to: number) {
+  return Math.max(
+    ...Arr.map(
+      Arr.filter(atoms, (atom) => atom.at[0] > from && atom.at[0] < to),
+      (atom) => atom.at[1]
+    )
+  );
+}
+
+/** The height of the lowest atom of a molecule, so its name set just below it touches it. */
+function bottomOf(molecule: Molecule) {
+  return Math.min(...Arr.map(molecule.atoms, (atom) => atom.at[1]));
+}
+
 /** How large one angstrom is drawn so `width` angstrom span the scene, and where the origin of the molecule then stands. */
 function standOf(width: number) {
   const size = SPAN / width;
@@ -124,8 +141,10 @@ export function stageOf(phase: number) {
  * whole sugars in angstrom, lying along x with the glycosidic bond in the
  * middle; how large one angstrom is drawn; the box the camera frames, which
  * holds the sugars at their widest and the water; where the water leaves
- * from and where it rests; and, in scene units, where the names of the two
- * sugars and of the bond stand.
+ * from and where it rests; and, in scene units, where the names stand:
+ * each sugar's just under the middle of its own ring, for a name that runs
+ * outward from there, so two names stand at least the rings' distance
+ * apart; the bond's just over the atoms around its oxygen.
  */
 export function pairLayout(sugar: Sugar) {
   const pair = pairOf(sugar);
@@ -141,20 +160,26 @@ export function pairLayout(sugar: Sugar) {
     z: { max: DEPTH, min: -DEPTH },
   };
   const { place, size } = standOf(bounds.x.max - bounds.x.min);
-  const name = (center: Point, side: 1 | -1): Point =>
-    place([pose(center)[0] + side * OUTWARD, box.y.min - MARGIN, 0]);
+  const first = posed(pair.first, pose);
+  const second = posed(pair.second, pose);
+  const name = (center: Point, sugarOf: Molecule): Point =>
+    place([pose(center)[0], bottomOf(sugarOf) - REACH, 0]);
   return {
     bounds,
     bridge,
-    first: posed(pair.first, pose),
+    first,
     marks: {
-      bond: place([bridge[0], box.y.max + MARGIN / 2, 0]),
-      first: name(left, -1),
-      second: name(right, 1),
+      bond: place([
+        bridge[0],
+        topOver(molecule.atoms, bridge[0] - NEAR, bridge[0] + NEAR) + REACH,
+        bridge[2],
+      ]),
+      first: name(left, first),
+      second: name(right, second),
     },
     molecule,
     rest,
-    second: posed(pair.second, pose),
+    second,
     size,
     stand: place(ORIGIN),
   };
@@ -166,7 +191,8 @@ export function pairLayout(sugar: Sugar) {
  * between them; how large one angstrom is drawn; the box the camera frames;
  * the first part of the neighbouring chain, past the last part when there
  * is none; and, in scene units, where the name of its first glycosidic bond
- * stands, right above that bond.
+ * ends, for a name that runs back from that bond over the chain's start,
+ * just over every atom it passes.
  */
 export function chainLayout(polysaccharide: Polysaccharide, units: number) {
   const chain = chainOf(polysaccharide, units);
@@ -203,19 +229,15 @@ export function chainLayout(polysaccharide: Polysaccharide, units: number) {
   const bridge = pose(
     Arr.reduceRight(chain.bridges, start, (_, first) => first)
   );
-  const above = Math.max(
-    ...Arr.map(
-      Arr.filter(
-        molecule.atoms,
-        (atom) => Math.abs(atom.at[0] - bridge[0]) < NEAR
-      ),
-      (atom) => atom.at[1]
-    )
-  );
   return {
     beside: paired ? chain.centers.length : Number.POSITIVE_INFINITY,
     bounds: box,
-    mark: place([bridge[0], above + REACH + MARGIN / 2, bridge[2]]),
+    mark: place([
+      bridge[0],
+      topOver(molecule.atoms, Number.NEGATIVE_INFINITY, bridge[0] + NEAR) +
+        REACH,
+      bridge[2],
+    ]),
     molecule,
     size,
     stand: place(ORIGIN),

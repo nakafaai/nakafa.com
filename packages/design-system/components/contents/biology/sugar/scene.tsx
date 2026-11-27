@@ -170,6 +170,7 @@ export function PairScene({
       </ThreeLabel>
       <group ref={firstMark}>
         <ThreeLabel
+          anchorX="right"
           anchorY="top"
           color={ink}
           fontSize="compact"
@@ -180,6 +181,7 @@ export function PairScene({
       </group>
       <group ref={secondMark}>
         <ThreeLabel
+          anchorX="left"
           anchorY="top"
           color={ink}
           fontSize="compact"
@@ -249,6 +251,7 @@ export function ChainScene({
           </CameraBounds>
         </group>
         <ThreeLabel
+          anchorX="right"
           anchorY="bottom"
           color={ink}
           fontSize="compact"
