@@ -116,7 +116,7 @@ export function passageForms(detail: number): readonly Form[] {
         { centre: [-0.4, 0.63, -0.08], tall: 0.16, wide: 0.21 },
         { centre: [-0.1, 0.59, -0.08], tall: 0.15, wide: 0.2 },
         { centre: [0.2, 0.6, -0.08], tall: 0.15, wide: 0.2 },
-        { centre: [0.42, 0.62, -0.08], tall: 0.15, wide: 0.19 },
+        { centre: [0.54, 0.62, -0.075], tall: 0.15, wide: 0.19 },
       ],
       up: [0, 0, -1],
     }),

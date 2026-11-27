@@ -36,6 +36,25 @@ function vertexAt(position: Float32Array, ring: number, column: number) {
   return Arr.map([0, 1, 2], (axis) => Number(position[at + axis]));
 }
 
+/** A duct that winds through space and ends running along x, a tenth of a unit thick. */
+const WINDING: Loft = {
+  ...SPINDLE,
+  along: 40,
+  stations: Arr.map(
+    [
+      [0, 0, 0],
+      [1, 0, 0],
+      [1.6, 0, 0.8],
+      [1.6, 1, 1.2],
+      [2.4, 1.6, 1.2],
+      [3.4, 1.6, 1.2],
+      [4.4, 1.6, 1.2],
+    ] as const,
+    (centre) => ({ centre, tall: 0.1, wide: 0.1 })
+  ),
+  up: [0, 0, 1],
+};
+
 describe("dorsal", () => {
   it("is 1 on the back, 0 on the belly and a half on the flanks", () => {
     expect(dorsal(0)).toBeCloseTo(1);
@@ -66,6 +85,14 @@ describe("stationAt", () => {
 });
 
 describe("loftBody", () => {
+  it("keeps the back of a steady body facing up, where a free frame drifts round a winding spine", () => {
+    const back = (loft: Loft) =>
+      Number(loftBody(loft).position[(40 * 13) * 3 + 2]) - 1.2;
+
+    expect(back({ ...WINDING, steady: true })).toBeCloseTo(0.1);
+    expect(back(WINDING)).toBeLessThan(0.095);
+  });
+
   it("lofts a closed skin with the back up and normals that face outwards", () => {
     const body = loftBody(SPINDLE);
     const back = vertexAt(body.position, 4, 0);

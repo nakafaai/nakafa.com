@@ -1,4 +1,4 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import {
   blastomereForms,
@@ -17,6 +17,7 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Body, Tuft } from "@repo/design-system/components/three/organism/body";
 import { Skin } from "@repo/design-system/components/three/organism/skin";
+import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { LABORATORY_COLORS } from "@repo/design-system/lib/material/laboratory";
@@ -24,7 +25,6 @@ import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { useMemo, useRef } from "react";
 
-const CAMERA_POSITION: readonly [number, number, number] = [0, 0.86, 2.25];
 const CAMERA_TARGET: readonly [number, number, number] = [0, 0.52, 0];
 
 export type ImplantationPart =
@@ -39,6 +39,21 @@ export type ImplantationPart =
   | "trophoblast"
   | "cavity"
   | "hcg";
+
+/** The camera stands further back on a narrow screen, so the whole passage and its labels fit. */
+function PassageCamera() {
+  const narrow = isNarrowThreeScene(
+    useThree((state) => state.size),
+    1.25
+  );
+  return (
+    <CameraControls
+      cameraPosition={narrow ? [0, 0.95, 4.3] : [0, 0.86, 2.25]}
+      cameraTarget={CAMERA_TARGET}
+      fov={38}
+    />
+  );
+}
 
 /** The surface of one cell of the embryo, or of the clear coat round it. */
 function EmbryoSkin({ clear }: { readonly clear: number }) {
@@ -100,11 +115,7 @@ export function ImplantationScene({
 
   return (
     <group>
-      <CameraControls
-        cameraPosition={CAMERA_POSITION}
-        cameraTarget={CAMERA_TARGET}
-        fov={38}
-      />
+      <PassageCamera />
 
       <mesh position={[0, -0.02, 0]} receiveShadow>
         <boxGeometry args={[2.2, 0.04, 1.0]} />
