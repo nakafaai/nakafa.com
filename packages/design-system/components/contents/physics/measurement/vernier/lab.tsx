@@ -82,7 +82,7 @@ export function VernierCaliperLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={0.9} setting="lab">
+        <ScienceStage floor={0} ground="epoxy" reach={0.9} setting="lab">
           <Suspense fallback={null}>
             <CaliperScene line={line} main={main} width={reading} />
           </Suspense>

@@ -20,6 +20,10 @@ import {
   PLATE_TOP,
   Plate,
 } from "@repo/design-system/components/three/instrument/plate";
+import {
+  Patch,
+  Sheath,
+} from "@repo/design-system/components/three/instrument/region";
 import { Rule } from "@repo/design-system/components/three/instrument/rule";
 import { MILLIMETRE } from "@repo/design-system/components/three/instrument/scale";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
@@ -51,21 +55,6 @@ function Zinc() {
   );
 }
 
-/** A glowing, see-through mark in the lesson's colour. */
-function Tint({ color }: { readonly color: string }) {
-  return (
-    <meshStandardMaterial
-      color={color}
-      depthWrite={false}
-      emissive={color}
-      emissiveIntensity={0.4}
-      opacity={0.42}
-      roughness={0.5}
-      transparent
-    />
-  );
-}
-
 /** What the quantity in view marks on the bolt, in millimetres along its axis from under its head. */
 function Mark({ quantity }: { readonly quantity: Quantity }) {
   return Match.value(quantity).pipe(
@@ -86,20 +75,22 @@ function Mark({ quantity }: { readonly quantity: Quantity }) {
       />
     )),
     Match.when("area", () => (
-      <mesh
-        position={[SHANK_LENGTH + 0.6, 0, 0]}
-        rotation={[0, Math.PI / 2, 0]}
-      >
-        <circleGeometry args={[SHANK, 64]} />
-        <Tint color={PLOT_COLORS.fuchsia} />
-      </mesh>
+      <Patch
+        at={[SHANK_LENGTH + 0.6, 0, 0]}
+        color={PLOT_COLORS.fuchsia}
+        radius={SHANK}
+        turn={[0, Math.PI / 2, 0]}
+      />
     )),
     Match.when("mass", () => null),
     Match.orElse(() => (
-      <mesh position={[SHANK_LENGTH / 2, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[SHANK + 0.5, SHANK + 0.5, SHANK_LENGTH, 64]} />
-        <Tint color={PLOT_COLORS.violet} />
-      </mesh>
+      <Sheath
+        at={[SHANK_LENGTH / 2, 0, 0]}
+        color={PLOT_COLORS.violet}
+        long={SHANK_LENGTH}
+        radius={SHANK + 0.5}
+        turn={[0, 0, Math.PI / 2]}
+      />
     ))
   );
 }

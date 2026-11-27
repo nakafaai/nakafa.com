@@ -111,7 +111,12 @@ export function BoltDimensionsLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={weighed ? 2.4 : 0.9} setting="lab">
+        <ScienceStage
+          floor={0}
+          ground="epoxy"
+          reach={weighed ? 2.4 : 0.9}
+          setting="lab"
+        >
           <Suspense fallback={null}>
             <BoltScene quantity={quantity} />
           </Suspense>

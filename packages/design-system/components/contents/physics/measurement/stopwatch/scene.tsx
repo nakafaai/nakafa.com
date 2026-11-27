@@ -9,13 +9,12 @@ import {
 } from "@repo/design-system/components/contents/physics/measurement/stopwatch/trials";
 import { useSimulationClock } from "@repo/design-system/components/contents/simulation/clock";
 import { ReadingCamera } from "@repo/design-system/components/three/instrument/camera";
+import { Clipboard } from "@repo/design-system/components/three/instrument/clipboard";
 import { Pendulum } from "@repo/design-system/components/three/instrument/pendulum";
 import { MILLIMETRE } from "@repo/design-system/components/three/instrument/scale";
 import { Stopwatch } from "@repo/design-system/components/three/instrument/stopwatch";
-import { PrintFace } from "@repo/design-system/components/three/print/layer";
 import { usePrintNumber } from "@repo/design-system/components/three/print/number";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
-import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr, Option } from "effect";
 import { useMemo, useRef, useState } from "react";
@@ -55,7 +54,7 @@ function Block({
   );
 }
 
-/** The results board: a hardboard clipboard with its black sprung clip, holding the printed dot plot. */
+/** The results board: a clipboard holding the printed dot plot of the trials so far. */
 function Board({
   count,
   landed,
@@ -69,53 +68,7 @@ function Board({
     [count, format, landed]
   );
 
-  return (
-    <group scale={MILLIMETRE}>
-      <RoundedBox
-        args={[206, 128, 3]}
-        castShadow
-        position={[0, 64, -1.5]}
-        radius={1.2}
-        receiveShadow
-        smoothness={3}
-      >
-        <SurfaceMaterial
-          color={APPARATUS_COLORS.oakDark}
-          repeat={[3, 2]}
-          roughness={0.7}
-          surface="wood"
-        />
-      </RoundedBox>
-      <group position={[0, 56, 0.25]}>
-        <PrintFace sheet={sheet} stock="paper" />
-      </group>
-      <RoundedBox
-        args={[74, 15, 5]}
-        castShadow
-        position={[0, 117, 2.4]}
-        radius={1.6}
-        smoothness={4}
-      >
-        <SurfaceMaterial
-          coat={0.4}
-          color={INSTRUMENT_COLORS.gripPad}
-          repeat={[6, 1]}
-          roughness={0.5}
-          surface="paint"
-        />
-      </RoundedBox>
-      <mesh castShadow position={[0, 123, 4]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry args={[3.2, 3.2, 62, 24]} />
-        <SurfaceMaterial
-          coat={0.4}
-          color={INSTRUMENT_COLORS.gripPad}
-          repeat={[2, 6]}
-          roughness={0.5}
-          surface="paint"
-        />
-      </mesh>
-    </group>
-  );
+  return <Clipboard sheet={sheet} />;
 }
 
 /**
