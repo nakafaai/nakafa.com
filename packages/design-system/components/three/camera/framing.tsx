@@ -1,4 +1,7 @@
-import type { CameraRound } from "@repo/design-system/components/three/camera/silhouette";
+import type {
+  CameraRound,
+  CameraRoundEntry,
+} from "@repo/design-system/components/three/camera/silhouette";
 import { roundOf } from "@repo/design-system/components/three/camera/silhouette";
 import type { CoordinateFrame } from "@repo/design-system/components/three/frame";
 import type {
@@ -16,7 +19,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { Group, Object3D } from "three";
+import type { Group } from "three";
 import { Box3, Vector3 } from "three";
 
 function createFraming() {
@@ -26,10 +29,7 @@ function createFraming() {
   const labels = MutableHashMap.empty<number, CameraLabelBounds>();
   const subjects = MutableHashMap.empty<number, CameraSubjectBounds>();
   // A round subject keeps its object, so the fit reads where it stands now.
-  const rounds = MutableHashMap.empty<
-    number,
-    { readonly object: Object3D; readonly round: CameraRound }
-  >();
+  const rounds = MutableHashMap.empty<number, CameraRoundEntry>();
   let scheduled: number | undefined;
   let flushed = false;
   let controllers = 0;

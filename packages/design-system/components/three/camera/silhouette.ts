@@ -4,8 +4,8 @@ import type {
 } from "@repo/design-system/lib/geometry/camera/bounds";
 import { measureCameraBounds } from "@repo/design-system/lib/geometry/camera/bounds";
 import { Array as Arr, Effect, HashMap, Match, Option, Schema } from "effect";
-import type { Matrix4, Object3D } from "three";
-import { Box3, Vector3 } from "three";
+import type { Matrix4 } from "three";
+import { Box3, Object3D, Vector3 } from "three";
 
 const PointSchema = Schema.Tuple([Schema.Finite, Schema.Finite, Schema.Finite]);
 
@@ -29,6 +29,14 @@ const CameraRoundSchema = Schema.Union([
  * circle such as an orbit, a wheel rim or a dial.
  */
 export type CameraRound = typeof CameraRoundSchema.Type;
+
+const CameraRoundEntrySchema = Schema.Struct({
+  object: Schema.instanceOf(Object3D),
+  round: CameraRoundSchema,
+});
+
+/** A registered round subject with the scene object that carries it. */
+export type CameraRoundEntry = typeof CameraRoundEntrySchema.Type;
 
 const CameraSilhouetteSchema = Schema.Union([
   Schema.Struct({ box: Schema.instanceOf(Box3), kind: Schema.Literal("box") }),
@@ -106,44 +114,39 @@ function roundShown(object: Object3D): boolean {
  * drawn. The geometry is one box round everything measured.
  */
 export const measureContent = Effect.fn("camera.measureContent")(function* ({
+  labels,
   position,
-  registry,
   root,
+  rounds,
+  subjects,
   target,
 }: {
+  readonly labels: Iterable<readonly [number, CameraLabelBounds]>;
   readonly position: Vector3;
-  readonly registry: {
-    readonly labels: Iterable<readonly [number, CameraLabelBounds]>;
-    readonly rounds: Iterable<
-      readonly [
-        number,
-        { readonly object: Object3D; readonly round: CameraRound },
-      ]
-    >;
-    readonly subjects: Iterable<readonly [number, CameraSubjectBounds]>;
-  };
   readonly root: Object3D;
+  readonly rounds: Iterable<readonly [number, CameraRoundEntry]>;
+  readonly subjects: Iterable<readonly [number, CameraSubjectBounds]>;
   readonly target: Vector3;
 }) {
   const measurement = yield* measureCameraBounds({
-    labels: HashMap.fromIterable(registry.labels),
+    labels: HashMap.fromIterable(labels),
     position,
     root,
-    subjects: HashMap.fromIterable(registry.subjects),
+    subjects: HashMap.fromIterable(subjects),
     target,
   });
   // The measurement has just brought every world matrix up to date.
   const placed = Arr.map(
-    Arr.filter(Arr.fromIterable(registry.rounds), ([, { object }]) =>
+    Arr.filter(Arr.fromIterable(rounds), ([, { object }]) =>
       roundShown(object)
     ),
     ([, { object, round }]) => placeCameraRound(round, object.matrixWorld)
   );
   return Option.match(measurement, {
     onNone: () => ({ labels: [], silhouettes: placed }),
-    onSome: ({ bounds, labels }) => ({
-      labels,
-      silhouettes: [{ box: bounds, kind: "box" as const }, ...placed],
+    onSome: (measured) => ({
+      labels: measured.labels,
+      silhouettes: [{ box: measured.bounds, kind: "box" as const }, ...placed],
     }),
   });
 });

@@ -265,8 +265,8 @@ export function CameraControls(props: CameraControlsProps) {
       }
       const { labels, silhouettes } = Effect.runSync(
         measureContent({
+          ...framing,
           position: authoredPosition,
-          registry: framing,
           root: scene,
           target: authoredTarget,
         })

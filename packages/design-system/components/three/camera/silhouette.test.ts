@@ -70,19 +70,16 @@ describe("measureContent", () => {
           normal: [0, 3, 0],
           radius: 1,
         } as const;
-        const registry = {
+        const view = {
           labels: [],
+          position: new Vector3(0, 0, 5),
+          root: scene,
           rounds: [
             [1, { object: part, round: ball }],
             [2, { object: part, round: orbit }],
             [3, { object: hidden, round: ball }],
           ] as const,
           subjects: [],
-        };
-        const view = {
-          position: new Vector3(0, 0, 5),
-          registry,
-          root: scene,
           target: new Vector3(),
         };
 
