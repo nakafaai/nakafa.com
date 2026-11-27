@@ -1,5 +1,8 @@
-import { Line } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
+import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
+import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import type { ElementName } from "@repo/design-system/components/contents/chemistry/element";
+import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
 import {
   CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH,
   ChemistryParticleLabel,
@@ -13,19 +16,47 @@ import type {
   MultipleProportionsSceneColors,
 } from "@repo/design-system/components/contents/chemistry/multiple-proportions-law/data";
 import { MULTIPLE_PROPORTIONS_MODELS } from "@repo/design-system/components/contents/chemistry/multiple-proportions-law/data";
+import {
+  AtomSphere,
+  FormulaPlaque,
+  MultiBond,
+} from "@repo/design-system/components/contents/chemistry/specimen";
 import { atomSymbol } from "@repo/design-system/components/contents/chemistry/symbol";
+import { useSimulationClock } from "@repo/design-system/components/contents/simulation/clock";
+import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import {
+  GlassMaterial,
+  MetalMaterial,
+} from "@repo/design-system/components/three/physical";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { Array as Arr, HashMap, Option } from "effect";
-import type { ReactNode } from "react";
-import { createContext } from "react";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { CAR_COLORS } from "@repo/design-system/lib/material/car";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { Array as Arr, HashMap, Match, Option } from "effect";
+import type { ReactNode, RefObject } from "react";
+import { createContext, useEffect, useMemo, useRef } from "react";
+import type { Group } from "three";
+import { LatheGeometry } from "three";
 
-const FIRST_X = -0.78;
-const SECOND_X = 0.78;
-const SCENE_SCALE = 1.95;
-const BOND_LINE_WIDTH = 2.4;
+const FIRST_X = -0.175;
+const SECOND_X = 0.175;
+const STAGE_Z = 0.035;
+const MOLECULE_Y = 0.128;
+
+const WATCH_GLASS_PROFILE = latheProfile([
+  [0.001, 0.004],
+  [0.056, 0.005],
+  [0.098, 0.013],
+  [0.122, 0.026],
+  [0.125, 0.028],
+  [0.12, 0.029],
+  [0.095, 0.017],
+  [0.054, 0.009],
+  [0.001, 0.008],
+]);
 
 const MultipleProportionsSceneColorsContext =
   createContext<MultipleProportionsSceneColors | null>(null);
@@ -53,43 +84,133 @@ function useMultipleProportionsSceneColors() {
   );
 }
 
+function WatchGlassPedestal({
+  children,
+  plaqueFormula,
+  plaqueSubtitle,
+  x,
+}: {
+  readonly children: ReactNode;
+  readonly plaqueFormula: string;
+  readonly plaqueSubtitle: string;
+  readonly x: number;
+}) {
+  const dishGeo = useMemo(() => new LatheGeometry(WATCH_GLASS_PROFILE, 56), []);
+  useEffect(() => () => dishGeo.dispose(), [dishGeo]);
+
+  return (
+    <group position={[x, 0, STAGE_Z]}>
+      <mesh castShadow position={[0, 0.005, 0]} receiveShadow>
+        <cylinderGeometry args={[0.096, 0.104, 0.01, 48]} />
+        <meshPhysicalMaterial
+          clearcoat={0.35}
+          color={CAR_COLORS.dashboard}
+          metalness={0.5}
+          roughness={0.38}
+        />
+      </mesh>
+      <mesh position={[0, 0.011, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.095, 0.0024, 12, 56]} />
+        <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.26} />
+      </mesh>
+      <mesh castShadow geometry={dishGeo} position={[0, 0.009, 0]}>
+        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.34} />
+      </mesh>
+      <FormulaPlaque
+        formula={plaqueFormula}
+        position={[0, 0.025, 0.118]}
+        subtitle={plaqueSubtitle}
+        width={0.118}
+      />
+      <group position={[0, MOLECULE_Y, 0]}>{children}</group>
+    </group>
+  );
+}
+
+function RatioComparator({ ratioText }: { readonly ratioText: string }) {
+  return (
+    <group position={[0, 0, STAGE_Z - 0.01]}>
+      <mesh castShadow position={[0, 0.006, 0]} receiveShadow>
+        <cylinderGeometry args={[0.032, 0.038, 0.012, 28]} />
+        <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.28} />
+      </mesh>
+      <mesh castShadow position={[0, 0.068, 0]}>
+        <cylinderGeometry args={[0.0046, 0.0052, 0.12, 18]} />
+        <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.22} />
+      </mesh>
+      <FormulaPlaque
+        formula={ratioText}
+        position={[0, 0.128, 0.008]}
+        subtitle="O MASS RATIO"
+        width={0.094}
+      />
+    </group>
+  );
+}
+
 export function MultipleProportionsScene({
   modeId,
 }: {
   modeId: MultipleProportionsModeId;
 }) {
   const model = MULTIPLE_PROPORTIONS_MODELS[modeId];
+  const firstRef = useRef<Group>(null);
+  const secondRef = useRef<Group>(null);
+  const { advance, playing } = useSimulationClock(0);
+
+  useFrame((_, delta) => {
+    const t = advance(delta);
+    if (firstRef.current !== null) {
+      firstRef.current.rotation.y = Math.sin(t * 0.85) * 0.48;
+      firstRef.current.position.y = Math.sin(t * 1.4) * 0.004;
+    }
+    if (secondRef.current !== null) {
+      secondRef.current.rotation.y = -Math.sin(t * 0.85) * 0.48;
+      secondRef.current.position.y = Math.cos(t * 1.4) * 0.004;
+    }
+  });
 
   return (
-    <group position={[0, -0.02, 0]} scale={SCENE_SCALE}>
-      <CompoundStage model={model.first} x={FIRST_X} />
-      <CompoundStage model={model.second} x={SECOND_X} />
+    <group>
+      <SimulationTicker running={playing} />
+      <LabBench width={2.6} />
+      <RatioComparator ratioText={model.ratioText} />
+      <CompoundStage groupRef={firstRef} model={model.first} x={FIRST_X} />
+      <CompoundStage groupRef={secondRef} model={model.second} x={SECOND_X} />
     </group>
   );
 }
 
 function CompoundStage({
+  groupRef,
   model,
   x,
 }: {
-  model: MultipleProportionsCompoundModel;
-  x: number;
+  readonly groupRef: RefObject<Group | null>;
+  readonly model: MultipleProportionsCompoundModel;
+  readonly x: number;
 }) {
-  const colors = useMultipleProportionsSceneColors();
+  const labelInk = useLabelInk();
   return (
-    <group position={[x, 0, 0]}>
+    <group>
       <ThreeLabel
-        color={colors.text}
+        color={labelInk}
         fontSize="compact"
-        position={[0, 0.56, 0.32]}
+        position={[x, 0.232, STAGE_Z]}
       >
         <InlineMath math={model.formula} />
       </ThreeLabel>
-      <group position={[0, 0.02, 0]}>
-        {Arr.map(model.molecules, (molecule) => (
-          <Molecule key={molecule.id} molecule={molecule} />
-        ))}
-      </group>
+      <WatchGlassPedestal
+        plaqueFormula={model.plaqueFormula}
+        plaqueSubtitle={model.plaqueSubtitle}
+        x={x}
+      >
+        <group ref={groupRef}>
+          {Arr.map(model.molecules, (molecule) => (
+            <Molecule key={molecule.id} molecule={molecule} />
+          ))}
+        </group>
+      </WatchGlassPedestal>
     </group>
   );
 }
@@ -102,7 +223,7 @@ function Molecule({ molecule }: { molecule: MultipleProportionsMolecule }) {
 
   return (
     <group position={molecule.position}>
-      {Arr.map(molecule.bonds, ([startId, endId]) => {
+      {Arr.map(molecule.bonds, ([startId, endId, order]) => {
         const start = HashMap.get(atomsById, startId);
         const end = HashMap.get(atomsById, endId);
 
@@ -111,12 +232,14 @@ function Molecule({ molecule }: { molecule: MultipleProportionsMolecule }) {
         }
 
         return (
-          <Line
+          <MultiBond
             color={colors.bond}
+            end={end.value.position}
+            gap={0.0062}
             key={`${startId}-${endId}`}
-            lineWidth={BOND_LINE_WIDTH}
-            points={[start.value.position, end.value.position]}
-            toneMapped={false}
+            order={order}
+            radius={0.0038}
+            start={start.value.position}
           />
         );
       })}
@@ -134,13 +257,11 @@ function AtomParticle({ atomData }: { atomData: MultipleProportionsAtom }) {
 
   return (
     <group position={atomData.position}>
-      <mesh castShadow>
-        <sphereGeometry args={[radius, 32, 20]} />
-        <meshStandardMaterial
-          color={atomColor(atomData.element, colors)}
-          roughness={0.34}
-        />
-      </mesh>
+      <AtomSphere
+        color={atomColor(atomData.element, colors)}
+        position={[0, 0, 0]}
+        radius={radius}
+      />
       <ChemistryParticleLabel
         color={colors.sphereText}
         fontSize={getThreeParticleLabelFontSize(radius)}
@@ -155,32 +276,24 @@ function AtomParticle({ atomData }: { atomData: MultipleProportionsAtom }) {
 }
 
 function atomRadius(element: ElementName) {
-  if (element === "hydrogen") {
-    return 0.1;
-  }
-
-  if (element === "carbon") {
-    return 0.14;
-  }
-
-  return 0.15;
+  return Match.value(element).pipe(
+    Match.when("hydrogen", () => 0.0165),
+    Match.when("carbon", () => 0.0235),
+    Match.when("nitrogen", () => 0.0245),
+    Match.when("oxygen", () => 0.0255),
+    Match.exhaustive
+  );
 }
 
 function atomColor(
   element: ElementName,
   colors: MultipleProportionsSceneColors
 ) {
-  if (element === "carbon") {
-    return colors.carbon;
-  }
-
-  if (element === "hydrogen") {
-    return colors.hydrogen;
-  }
-
-  if (element === "nitrogen") {
-    return colors.nitrogen;
-  }
-
-  return colors.oxygen;
+  return Match.value(element).pipe(
+    Match.when("carbon", () => colors.carbon),
+    Match.when("hydrogen", () => colors.hydrogen),
+    Match.when("nitrogen", () => colors.nitrogen),
+    Match.when("oxygen", () => colors.oxygen),
+    Match.exhaustive
+  );
 }

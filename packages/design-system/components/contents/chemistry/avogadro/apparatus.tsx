@@ -1,5 +1,8 @@
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
+import {
+  drawFormulaText,
+  latheProfile,
+} from "@repo/design-system/components/contents/chemistry/glassware";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -108,8 +111,7 @@ function createVolumeScaleTexture(): CanvasTexture | null {
     ctx.stroke();
     ctx.fillText(mark.label, 184, mark.y + 8);
   });
-  ctx.font = "700 18px ui-sans-serif, system-ui, sans-serif";
-  ctx.fillText("dm3", 128, 34);
+  drawFormulaText(ctx, "dm³", 128, 36, 20, "left");
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
   texture.needsUpdate = true;
@@ -235,7 +237,7 @@ export function GasCylinder() {
         />
         <GlassMaterial color={BENCH_COLORS.glassEdge} opacity={0.14} />
       </mesh>
-      {/* Silk-screened white dm3 volumetric graduation markings */}
+      {/* Silk-screened white dm³ volumetric graduation markings */}
       {scaleTex === null ? null : (
         <mesh
           position={[0, CYL_FLOOR + height / 2, 0]}

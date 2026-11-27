@@ -85,7 +85,7 @@ export function MultipleProportionsLab({
   }
 
   return (
-    <VisualCard>
+    <VisualCard onReset={() => setSelectedModeId(WATER_PEROXIDE_MODE_ID)}>
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>
@@ -114,8 +114,8 @@ export function MultipleProportionsLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always" setting="lab">
-          <Suspense>
+        <ScienceStage floor={0} reach={1.1} setting="lab">
+          <Suspense fallback={null}>
             <MultipleProportionsCameraControls />
             <MultipleProportionsSceneColorsProvider colors={sceneColors}>
               <MultipleProportionsScene modeId={selectedModeId} />
@@ -150,8 +150,9 @@ function MultipleProportionsCameraControls() {
     <CameraControls
       cameraPosition={cameraPosition}
       cameraTarget={MULTIPLE_PROPORTIONS_SCENE_VIEW.cameraTarget}
-      fov={42}
-      framing="content"
+      fov={38}
+      maxDistance={1.75}
+      minDistance={0.35}
     />
   );
 }

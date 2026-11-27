@@ -1,3 +1,4 @@
+import { parseFormulaRuns } from "@repo/design-system/components/contents/chemistry/formula";
 import { LiquidMaterial } from "@repo/design-system/components/three/physical";
 import { getColor } from "@repo/design-system/lib/color";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
@@ -12,8 +13,10 @@ import {
   Vector2,
 } from "three";
 
-const MENISCUS_RISE = 0.0015;
-const MENISCUS_REACH = 0.004;
+const MENISCUS_RISE = 0.0018;
+const MENISCUS_REACH = 0.0046;
+const FORMULA_FONT_FAMILY =
+  "ui-sans-serif, system-ui, -apple-system, sans-serif";
 
 /** An outline turned around a vertical axis, from its radii at each height. */
 export function latheProfile(points: readonly (readonly [number, number])[]) {
@@ -34,6 +37,47 @@ export function liquidMeniscus(radius: number, level: number) {
       level + MENISCUS_RISE * (1 - share) ** 2,
     ] as const;
   });
+}
+
+/**
+ * Draws a Unicode chemical formula or unit (e.g. `AgNO₃`, `CuSO₄`, `dm³`)
+ * onto a 2D canvas with crisp baseline-shifted subscripts and superscripts.
+ */
+export function drawFormulaText(
+  ctx: CanvasRenderingContext2D,
+  formula: string,
+  anchorX: number,
+  baselineY: number,
+  fontSize: number,
+  align: "center" | "left" = "center"
+) {
+  const runs = parseFormulaRuns(formula);
+  const subSize = Math.round(fontSize * 0.68);
+  const measured = Arr.map(runs, (run) => {
+    const size = run.kind === "normal" ? fontSize : subSize;
+    ctx.font = `700 ${size}px ${FORMULA_FONT_FAMILY}`;
+    return {
+      ...run,
+      size,
+      width: ctx.measureText(run.text).width,
+    };
+  });
+  const totalWidth = Arr.reduce(measured, 0, (sum, item) => sum + item.width);
+  let cursorX = align === "center" ? anchorX - totalWidth / 2 : anchorX;
+  const previousAlign = ctx.textAlign;
+  ctx.textAlign = "left";
+  Arr.forEach(measured, (item) => {
+    ctx.font = `700 ${item.size}px ${FORMULA_FONT_FAMILY}`;
+    let dy = 0;
+    if (item.kind === "sub") {
+      dy = Math.round(fontSize * 0.22);
+    } else if (item.kind === "sup") {
+      dy = -Math.round(fontSize * 0.34);
+    }
+    ctx.fillText(item.text, cursorX, baselineY + dy);
+    cursorX += item.width;
+  });
+  ctx.textAlign = previousAlign;
 }
 
 /** Procedural matte-satin phenolic epoxy tabletop grain texture. */
@@ -70,9 +114,10 @@ export function createEpoxyTexture(): CanvasTexture | null {
   return texture;
 }
 
-/** Printed paper reagent bottle label with formula, concentration, and GHS stripe. */
-function createBottleLabelTexture(
+/** High-resolution printed paper reagent bottle label with true subscripts, chemical name, concentration, and GHS stripe. */
+export function createBottleLabelTexture(
   formula: string,
+  chemicalName: string,
   concentration: string,
   stripe: string
 ): CanvasTexture | null {
@@ -80,31 +125,42 @@ function createBottleLabelTexture(
     return null;
   }
   const canvas = document.createElement("canvas");
-  canvas.width = 256;
-  canvas.height = 160;
+  canvas.width = 512;
+  canvas.height = 320;
   const ctx = canvas.getContext("2d");
   if (!ctx) {
     return null;
   }
   ctx.fillStyle = BENCH_COLORS.bottleLabelPaper;
-  ctx.fillRect(0, 0, 256, 160);
+  ctx.fillRect(0, 0, 512, 320);
+
   ctx.strokeStyle = BENCH_COLORS.bottleLabelRule;
-  ctx.lineWidth = 4;
-  ctx.strokeRect(8, 8, 240, 144);
+  ctx.lineWidth = 6;
+  ctx.strokeRect(14, 14, 484, 292);
+
   ctx.fillStyle = stripe;
-  ctx.fillRect(8, 126, 240, 26);
+  ctx.fillRect(14, 252, 484, 54);
+
   ctx.fillStyle = BENCH_COLORS.bottleLabelInk;
-  ctx.font = `700 ${formula.length > 5 ? 28 : 38}px ui-sans-serif, system-ui, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.fillText(formula, 128, 66);
+  const formulaSize = formula.length > 6 ? 50 : 72;
+  drawFormulaText(ctx, formula, 256, 118, formulaSize, "center");
+
   ctx.fillStyle = BENCH_COLORS.bottleLabelSub;
-  ctx.font = "600 22px ui-monospace, monospace";
-  ctx.fillText(concentration, 128, 102);
+  ctx.textAlign = "center";
+  ctx.font = `600 28px ${FORMULA_FONT_FAMILY}`;
+  ctx.fillText(chemicalName, 256, 174);
+
+  ctx.fillStyle = BENCH_COLORS.bottleLabelInk;
+  ctx.font = "700 32px ui-monospace, monospace";
+  ctx.fillText(concentration, 256, 224);
+
   ctx.fillStyle = getColor("WHITE");
-  ctx.font = "700 14px ui-sans-serif, system-ui, sans-serif";
-  ctx.fillText("REAGENT GRADE", 128, 144);
+  ctx.font = `700 24px ${FORMULA_FONT_FAMILY}`;
+  ctx.fillText("REAGENT GRADE", 256, 287);
+
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
+  texture.anisotropy = 8;
   texture.needsUpdate = true;
   return texture;
 }
@@ -127,7 +183,7 @@ export function createBeakerMarkingsTexture(): CanvasTexture | null {
   ctx.strokeStyle = BENCH_COLORS.glassMarking;
   ctx.fillStyle = BENCH_COLORS.glassMarking;
   ctx.lineWidth = 4;
-  ctx.font = "700 20px ui-sans-serif, system-ui, sans-serif";
+  ctx.font = `700 20px ${FORMULA_FONT_FAMILY}`;
   const ticks = [
     { label: "100", y: 52 },
     { label: "75", y: 98 },
@@ -141,7 +197,7 @@ export function createBeakerMarkingsTexture(): CanvasTexture | null {
     ctx.stroke();
     ctx.fillText(tick.label, 276, tick.y + 7);
   });
-  ctx.font = "700 16px ui-sans-serif, system-ui, sans-serif";
+  ctx.font = `700 16px ${FORMULA_FONT_FAMILY}`;
   ctx.fillText("100 mL", 212, 28);
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
@@ -167,7 +223,7 @@ export function createFlaskMarkingsTexture(): CanvasTexture | null {
   ctx.strokeStyle = BENCH_COLORS.glassMarking;
   ctx.fillStyle = BENCH_COLORS.glassMarking;
   ctx.lineWidth = 4;
-  ctx.font = "700 20px ui-sans-serif, system-ui, sans-serif";
+  ctx.font = `700 20px ${FORMULA_FONT_FAMILY}`;
   const ticks = [
     { label: "200", y: 74 },
     { label: "150", y: 118 },
@@ -181,7 +237,7 @@ export function createFlaskMarkingsTexture(): CanvasTexture | null {
     ctx.stroke();
     ctx.fillText(tick.label, 276, tick.y + 7);
   });
-  ctx.font = "700 16px ui-sans-serif, system-ui, sans-serif";
+  ctx.font = `700 16px ${FORMULA_FONT_FAMILY}`;
   ctx.fillText("250 mL", 220, 44);
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
@@ -191,37 +247,44 @@ export function createFlaskMarkingsTexture(): CanvasTexture | null {
 
 const BOTTLE_PROFILE = latheProfile([
   [0.001, 0],
-  [0.043, 0],
-  [0.047, 0.006],
-  [0.047, 0.106],
-  [0.039, 0.128],
-  [0.02, 0.144],
-  [0.018, 0.154],
-  [0.021, 0.157],
+  [0.042, 0],
+  [0.0455, 0.003],
+  [0.047, 0.009],
+  [0.047, 0.102],
+  [0.0452, 0.114],
+  [0.04, 0.126],
+  [0.031, 0.136],
+  [0.0215, 0.143],
+  [0.0185, 0.149],
+  [0.0185, 0.155],
+  [0.0215, 0.158],
 ]);
 
 const CAP_RIBS = Arr.range(0, 11);
 
 const SHELF_BOTTLES = [
   {
+    chemicalName: "Silver Nitrate",
     concentration: "0.1 M",
     fillHeight: 0.088,
-    formula: "AgNO3",
+    formula: "AgNO₃",
     glassColor: BENCH_COLORS.bottleAmber,
-    glassOpacity: 0.54,
+    glassOpacity: 0.56,
     liquidColor: REAGENT_COLORS.solution,
     stripeColor: BENCH_COLORS.bottleStripeAmber,
   },
   {
+    chemicalName: "Sodium Chloride",
     concentration: "1.0 M",
     fillHeight: 0.094,
     formula: "NaCl",
     glassColor: BENCH_COLORS.bottleClear,
-    glassOpacity: 0.24,
+    glassOpacity: 0.25,
     liquidColor: REAGENT_COLORS.solution,
     stripeColor: BENCH_COLORS.bottleStripeSalt,
   },
   {
+    chemicalName: "Hydrochloric Acid",
     concentration: "0.5 M",
     fillHeight: 0.076,
     formula: "HCl",
@@ -231,24 +294,27 @@ const SHELF_BOTTLES = [
     stripeColor: BENCH_COLORS.bottleStripeAcid,
   },
   {
+    chemicalName: "Copper(II) Sulfate",
     concentration: "0.2 M",
     fillHeight: 0.082,
-    formula: "CuSO4",
+    formula: "CuSO₄",
     glassColor: BENCH_COLORS.bottleClear,
-    glassOpacity: 0.24,
+    glassOpacity: 0.25,
     liquidColor: REAGENT_COLORS.copperSulfate,
     stripeColor: BENCH_COLORS.bottleStripeBlue,
   },
   {
+    chemicalName: "Ethanoic Acid",
     concentration: "1.0 M",
     fillHeight: 0.072,
-    formula: "CH3COOH",
+    formula: "CH₃COOH",
     glassColor: BENCH_COLORS.bottleAmber,
-    glassOpacity: 0.54,
+    glassOpacity: 0.56,
     liquidColor: REAGENT_COLORS.vinegar,
     stripeColor: BENCH_COLORS.bottleStripeVinegar,
   },
   {
+    chemicalName: "Sodium Hydroxide",
     concentration: "0.5 M",
     fillHeight: 0.09,
     formula: "NaOH",
@@ -261,6 +327,7 @@ const SHELF_BOTTLES = [
 
 /** A single translucent borosilicate reagent bottle with meniscus, label, and GL45 cap. */
 function ReagentBottle({
+  chemicalName,
   concentration,
   fillHeight,
   formula,
@@ -270,6 +337,7 @@ function ReagentBottle({
   position,
   stripeColor,
 }: {
+  readonly chemicalName: string;
   readonly concentration: string;
   readonly fillHeight: number;
   readonly formula: string;
@@ -280,16 +348,22 @@ function ReagentBottle({
   readonly stripeColor: string;
 }) {
   const labelTex = useMemo(
-    () => createBottleLabelTexture(formula, concentration, stripeColor),
-    [concentration, formula, stripeColor]
+    () =>
+      createBottleLabelTexture(
+        formula,
+        chemicalName,
+        concentration,
+        stripeColor
+      ),
+    [chemicalName, concentration, formula, stripeColor]
   );
   useEffect(() => () => labelTex?.dispose(), [labelTex]);
 
   const liquidPoints = useMemo(
     () =>
       latheProfile([
-        [0.0005, 0.005],
-        [0.0435, 0.005],
+        [0.0005, 0.006],
+        [0.0435, 0.006],
         ...liquidMeniscus(0.0435, fillHeight),
         [0.0005, fillHeight],
       ]),
@@ -300,37 +374,52 @@ function ReagentBottle({
     <group position={position}>
       <mesh>
         <latheGeometry args={[liquidPoints, 48]} />
-        <LiquidMaterial color={liquidColor} opacity={0.72} />
+        <LiquidMaterial color={liquidColor} opacity={0.76} />
       </mesh>
-      <mesh castShadow renderOrder={2}>
-        <latheGeometry args={[BOTTLE_PROFILE, 36]} />
+      <mesh
+        position={[0, fillHeight + MENISCUS_RISE, 0]}
+        rotation={[Math.PI / 2, 0, 0]}
+      >
+        <torusGeometry args={[0.0432, 0.0008, 10, 48]} />
         <meshPhysicalMaterial
           clearcoat={1}
-          clearcoatRoughness={0.04}
+          color={BENCH_COLORS.streamGlint}
+          depthWrite={false}
+          opacity={0.48}
+          roughness={0.08}
+          transparent
+        />
+      </mesh>
+      <mesh castShadow renderOrder={2}>
+        <latheGeometry args={[BOTTLE_PROFILE, 48]} />
+        <meshPhysicalMaterial
+          clearcoat={1}
+          clearcoatRoughness={0.03}
           color={glassColor}
           depthWrite={false}
-          ior={1.5}
+          ior={1.473}
           metalness={0}
           opacity={glassOpacity}
-          roughness={0.06}
+          roughness={0.05}
           side={DoubleSide}
           transparent
         />
       </mesh>
-      <mesh position={[0, 0.003, 0]}>
-        <cylinderGeometry args={[0.044, 0.043, 0.006, 32]} />
+      <mesh position={[0, 0.004, 0]}>
+        <cylinderGeometry args={[0.0442, 0.0428, 0.008, 36]} />
         <meshPhysicalMaterial
           clearcoat={1}
           color={glassColor}
-          opacity={Math.min(0.68, glassOpacity + 0.18)}
-          roughness={0.08}
+          ior={1.473}
+          opacity={Math.min(0.72, glassOpacity + 0.2)}
+          roughness={0.07}
           transparent
         />
       </mesh>
       {labelTex === null ? null : (
         <mesh position={[0, 0.056, 0]} rotation={[0, -Math.PI * 0.44, 0]}>
           <cylinderGeometry
-            args={[0.0478, 0.0478, 0.056, 24, 1, true, 0, Math.PI * 0.88]}
+            args={[0.0478, 0.0478, 0.056, 32, 1, true, 0, Math.PI * 0.88]}
           />
           <meshStandardMaterial
             map={labelTex}
@@ -340,7 +429,7 @@ function ReagentBottle({
           />
         </mesh>
       )}
-      <group position={[0, 0.162, 0]}>
+      <group position={[0, 0.163, 0]}>
         <mesh castShadow>
           <cylinderGeometry args={[0.021, 0.021, 0.024, 24]} />
           <meshStandardMaterial
@@ -349,7 +438,7 @@ function ReagentBottle({
           />
         </mesh>
         <mesh position={[0, -0.014, 0]}>
-          <cylinderGeometry args={[0.0225, 0.0225, 0.005, 24]} />
+          <cylinderGeometry args={[0.0226, 0.0226, 0.005, 24]} />
           <meshStandardMaterial
             color={BENCH_COLORS.bottleCap}
             roughness={0.62}
@@ -387,6 +476,7 @@ export function ReagentShelf({ width }: { readonly width: number }) {
     <group>
       {Arr.map(bottles, (bottle) => (
         <ReagentBottle
+          chemicalName={bottle.chemicalName}
           concentration={bottle.concentration}
           fillHeight={bottle.fillHeight}
           formula={bottle.formula}
