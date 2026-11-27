@@ -10,6 +10,9 @@ export const INSTRUMENT_COLORS = {
   anodised: "#30343a",
   // Tungsten carbide measuring faces, darker and greyer than the steel that carries them.
   carbide: "#6f747b",
+  // The moulded case of a digital stopwatch, and the legends printed on it.
+  caseLegend: "#d7dbe0",
+  caseShell: "#23272c",
   copper: "#b46a3c",
   // The clear crystal over a dial.
   crystal: "#eef4f8",
@@ -17,6 +20,8 @@ export const INSTRUMENT_COLORS = {
   dialNeedle: "#c0262d",
   enamel: "#34495e",
   eraser: "#e08a8f",
+  // The lapped black granite of a surface plate.
+  granite: "#3b4046",
   graphite: "#2e2f31",
   // The moulded heat guard on the frame of a micrometer.
   gripPad: "#1b1d20",
@@ -25,6 +30,9 @@ export const INSTRUMENT_COLORS = {
   hammertone: "#66736f",
   iris: "#4e3423",
   lampLight: "#fff1d6",
+  // A liquid-crystal display: its grey-green ground and its dark figures.
+  lcd: "#b3bca6",
+  lcdInk: "#161a17",
   laserBeam: "#ff3b30",
   lead: "#5e6268",
   metreRule: "#e0b04a",
@@ -36,6 +44,11 @@ export const INSTRUMENT_COLORS = {
   pencilYellow: "#e5b52a",
   pine: "#d9b37c",
   platinum: "#d3d5d8",
+  // The pushers of a stopwatch: start and reset, and the stop between them.
+  pusher: "#e3b324",
+  pusherStop: "#c7372f",
+  // The off-white card a results sheet is printed on.
+  recordCard: "#cdc8b8",
   // Satin chrome over hardened steel: a micrometer barrel, a caliper slide.
   satinChrome: "#c9cdd2",
   // The black ink that fills an engraved graduation.

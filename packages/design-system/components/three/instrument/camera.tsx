@@ -15,15 +15,18 @@ type Point = readonly [number, number, number];
  * @param wide - Where the camera stands on a landscape card
  * @param narrow - Where the camera stands on a phone
  * @param back - How many times farther a reader may pull back
+ * @param surface - The height of what the instrument lies on, which lifts every point
  */
 export function ReadingCamera({
   back = 3,
   narrow,
+  surface = 0,
   target,
   wide,
 }: {
   readonly back?: number;
   readonly narrow: Point;
+  readonly surface?: number;
   readonly target: Point;
   readonly wide: Point;
 }) {
@@ -40,8 +43,8 @@ export function ReadingCamera({
 
   return (
     <CameraControls
-      cameraPosition={from}
-      cameraTarget={target}
+      cameraPosition={[from[0], from[1] + surface, from[2]]}
+      cameraTarget={[target[0], target[1] + surface, target[2]]}
       fov={36}
       maxDistance={distance * back}
       maxPolarAngle={Math.PI * 0.49}

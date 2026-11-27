@@ -22,7 +22,7 @@ const SIDES = {
 } as const;
 
 /** How far a measured extent stands off the block's edge, in millimetres. */
-const CLEAR = 5;
+const CLEAR = 6;
 
 /** What the block is cut from: planed pine, or milled aluminium or brass. */
 function Stock({ material }: { readonly material: Material }) {
@@ -39,9 +39,9 @@ function Stock({ material }: { readonly material: Material }) {
       <SurfaceMaterial
         bump={0.4}
         color={INSTRUMENT_COLORS.aluminium}
-        metalness={1}
+        metalness={0.6}
         repeat={[5, 5]}
-        roughness={0.4}
+        roughness={0.42}
         surface="brushed"
       />
     )),
@@ -69,9 +69,9 @@ export function BlockScene({ material }: { readonly material: Material }) {
   return (
     <group>
       <ReadingCamera
-        narrow={[0.7, 2, 4.5]}
-        target={[0, 0.86, 0]}
-        wide={[0.75, 1.8, 3.1]}
+        narrow={[0.6, 2, 4]}
+        target={[0, 0.9, 0]}
+        wide={[0.55, 1.8, 2.6]}
       />
       <Balance
         full={500}
@@ -93,19 +93,19 @@ export function BlockScene({ material }: { readonly material: Material }) {
           color={PLOT_COLORS.orange}
           from={[-SIDES.long / 2, SIDES.tall + CLEAR, SIDES.deep / 2]}
           to={[SIDES.long / 2, SIDES.tall + CLEAR, SIDES.deep / 2]}
-          weight={0.55}
+          weight={0.9}
         />
         <Extent
           color={PLOT_COLORS.violet}
           from={[-SIDES.long / 2 - CLEAR, 0, SIDES.deep / 2]}
           to={[-SIDES.long / 2 - CLEAR, SIDES.tall, SIDES.deep / 2]}
-          weight={0.55}
+          weight={0.9}
         />
         <Extent
           color={PLOT_COLORS.teal}
           from={[SIDES.long / 2 + CLEAR, SIDES.tall, SIDES.deep / 2]}
           to={[SIDES.long / 2 + CLEAR, SIDES.tall, -SIDES.deep / 2]}
-          weight={0.55}
+          weight={0.9}
         />
       </Balance>
     </group>

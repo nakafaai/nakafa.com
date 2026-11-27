@@ -15,6 +15,10 @@ import { Balance } from "@repo/design-system/components/three/instrument/balance
 import { ReadingCamera } from "@repo/design-system/components/three/instrument/camera";
 import { Extent } from "@repo/design-system/components/three/instrument/extent";
 import { Numeral } from "@repo/design-system/components/three/instrument/ink";
+import {
+  PLATE_TOP,
+  Plate,
+} from "@repo/design-system/components/three/instrument/plate";
 import { Rule } from "@repo/design-system/components/three/instrument/rule";
 import { MILLIMETRE } from "@repo/design-system/components/three/instrument/scale";
 import { Turned } from "@repo/design-system/components/three/instrument/turned";
@@ -164,16 +168,21 @@ export function BoltScene({ quantity }: { readonly quantity: Quantity }) {
     <group>
       <ReadingCamera
         key="rule"
-        narrow={[0.1, 1.02, 0.7]}
-        target={[0.26, 0.04, 0.1]}
-        wide={[0.06, 0.66, 0.66]}
+        surface={PLATE_TOP}
+        narrow={[-0.2, 1.02, 0.58]}
+        target={[-0.04, 0.04, -0.02]}
+        wide={[-0.24, 0.66, 0.54]}
       />
-      <group scale={MILLIMETRE}>
-        <Bolt at={[0, 0, 0]} quantity={quantity} />
-      </group>
-      <group position={[0, 0, 12 * MILLIMETRE]}>
-        <Rule length={7} />
-      </group>
+      <Plate deep={160} wide={240}>
+        <group position={[-0.3, 0, -0.12]}>
+          <group scale={MILLIMETRE}>
+            <Bolt at={[0, 0, 0]} quantity={quantity} />
+          </group>
+          <group position={[0, 0, 12 * MILLIMETRE]}>
+            <Rule length={7} />
+          </group>
+        </group>
+      </Plate>
     </group>
   );
 }

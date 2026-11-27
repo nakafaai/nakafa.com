@@ -1,5 +1,9 @@
 import { Caliper } from "@repo/design-system/components/three/instrument/caliper";
 import { ReadingCamera } from "@repo/design-system/components/three/instrument/camera";
+import {
+  PLATE_TOP,
+  Plate,
+} from "@repo/design-system/components/three/instrument/plate";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { useMemo } from "react";
@@ -37,11 +41,13 @@ export function CaliperScene({ width }: { readonly width: number }) {
   return (
     <group>
       <ReadingCamera
-        narrow={[0.07, 0.74, 0.6]}
-        target={[0.07, 0, 0.08]}
-        wide={[0.07, 0.62, 0.51]}
+        surface={PLATE_TOP}
+        narrow={[0.09, 0.7, 0.5]}
+        target={[0.09, 0, 0.03]}
+        wide={[0.1, 0.52, 0.38]}
       />
-      <Caliper hold="slide" reading={width}>
+      <Plate deep={260} wide={520}>
+        <Caliper hold="slide" reading={width}>
         <mesh
           castShadow
           position={[width / 2, -Math.max(width / 2 + 1.5, DEEP), -1]}
@@ -57,7 +63,8 @@ export function CaliperScene({ width }: { readonly width: number }) {
             surface="brushed"
           />
         </mesh>
-      </Caliper>
+        </Caliper>
+      </Plate>
     </group>
   );
 }

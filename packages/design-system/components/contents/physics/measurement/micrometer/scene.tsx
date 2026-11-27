@@ -1,5 +1,9 @@
 import { ReadingCamera } from "@repo/design-system/components/three/instrument/camera";
 import { Micrometer } from "@repo/design-system/components/three/instrument/micrometer";
+import {
+  PLATE_TOP,
+  Plate,
+} from "@repo/design-system/components/three/instrument/plate";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 
@@ -14,11 +18,14 @@ export function GaugeScene({ thickness }: { readonly thickness: number }) {
   return (
     <group>
       <ReadingCamera
-        narrow={[0.34, 1, 0.47]}
-        target={[0.34, 0.09, 0.05]}
-        wide={[0.34, 0.87, 0.41]}
+        surface={PLATE_TOP}
+        narrow={[0.18, 1, 0.33]}
+        target={[0.18, 0.09, -0.09]}
+        wide={[0.18, 0.87, 0.27]}
       />
-      <Micrometer reading={thickness}>
+      <Plate deep={200} wide={300}>
+        <group position={[-0.16, 0, -0.14]}>
+          <Micrometer reading={thickness}>
         <mesh castShadow position={[thickness / 2, 0, 0]} receiveShadow>
           <sphereGeometry args={[thickness / 2, 64, 48]} />
           <SurfaceMaterial
@@ -29,7 +36,9 @@ export function GaugeScene({ thickness }: { readonly thickness: number }) {
             surface="brushed"
           />
         </mesh>
-      </Micrometer>
+          </Micrometer>
+        </group>
+      </Plate>
     </group>
   );
 }

@@ -46,6 +46,9 @@ const FRAME = 6.4;
 /** How far the frame's low corner drops as the gauge rests on its thimble, as an angle. */
 const REST = Math.asin((THIMBLE.radius - FRAME / 2) / 74);
 
+/** How far the sleeve is turned toward the reader, in radians, so its datum line faces a camera over the bench. */
+const FACING = 0.42;
+
 /** How quickly the spindle closes on a new size, per second. */
 const GLIDE = 6;
 
@@ -195,7 +198,11 @@ export function Micrometer({
 
   useGlide(reading, GLIDE, (travel) => {
     thimble.current?.position.setX(SLEEVE.zero + travel);
-    thimble.current?.rotation.set((travel / pitch) * 2 * Math.PI, 0, 0);
+    thimble.current?.rotation.set(
+      FACING + (travel / pitch) * 2 * Math.PI,
+      0,
+      0
+    );
   });
 
   return (
@@ -251,10 +258,11 @@ export function Micrometer({
         <Turned from={SLEEVE.from} radius={SLEEVE.radius} to={SLEEVE.from + 34}>
           <Chrome />
         </Turned>
-        <Marks placements={DATUM} />
-        <Marks placements={WHOLE_MARKS} />
-        <Marks placements={HALF_MARKS} />
-        {Arr.map(SLEEVE_NUMERALS, (millimetre) => (
+        <group rotation={[FACING, 0, 0]}>
+          <Marks placements={DATUM} />
+          <Marks placements={WHOLE_MARKS} />
+          <Marks placements={HALF_MARKS} />
+          {Arr.map(SLEEVE_NUMERALS, (millimetre) => (
           <Numeral
             at={[
               SLEEVE.zero + millimetre,
@@ -266,7 +274,8 @@ export function Micrometer({
             text={`${millimetre}`}
             turn={[NUMERAL_ANGLE - Math.PI / 2, 0, 0]}
           />
-        ))}
+          ))}
+        </group>
         {children}
         <group ref={thimble}>
           <Turned from={-SLEEVE.zero + 0.9} radius={SPINDLE} to={0}>
