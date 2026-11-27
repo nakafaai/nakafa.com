@@ -1,6 +1,10 @@
-import { Environment, Sky, useEnvironment } from "@react-three/drei";
+import { Environment, useEnvironment } from "@react-three/drei";
+import { fitShadow } from "@repo/design-system/components/three/sky/shadow";
 import { Backdrop } from "@repo/design-system/components/three/stage/backdrop";
-import { useStage } from "@repo/design-system/components/three/stage/context";
+import {
+  useDark,
+  useStage,
+} from "@repo/design-system/components/three/stage/context";
 import { Distance } from "@repo/design-system/components/three/stage/distance";
 import { horizonColor } from "@repo/design-system/components/three/stage/horizon";
 import { Motes } from "@repo/design-system/components/three/stage/motes";
@@ -8,8 +12,6 @@ import type { Place } from "@repo/design-system/components/three/stage/place";
 import { toneColor } from "@repo/design-system/components/three/stage/place";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { getColor } from "@repo/design-system/lib/color";
-import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
-import { useTheme } from "@repo/design-system/providers/theme";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import type { ColorRepresentation } from "three";
@@ -21,7 +23,6 @@ import { DataTexture } from "three";
  * gives the key light the sun's elevation.
  */
 const LAB_TURN = -1.398;
-const FIELD_TURN = -0.2775;
 const STUDIO_TURN = 0.045;
 
 /** Unit directions toward each setting's sun, at the key light's azimuth. */
@@ -49,8 +50,8 @@ export const SETTING_SUNS: Record<
   water: DEEP_SUN,
 };
 
-/** How far the key light stands from the lab's middle, in reaches. */
-const SUN_DISTANCE = 1.66;
+/** The colour of a key light that a place names none for. */
+const WHITE = getColor("WHITE");
 
 /**
  * How much a photo backdrop keeps in the dark theme, so the card does not
@@ -63,41 +64,24 @@ const DARK_BACKDROP = 0.4;
  * from the camera. It has faded completely well inside the ground the stage
  * draws, so that ground never ends in view.
  */
-const FOG_NEAR = 3;
+const FOG_NEAR = 4.5;
 const FOG_FAR = 9;
 
-/** Reads whether the page shows its dark theme, which dims a backdrop. */
-export function useDark() {
-  const resolvedTheme = useTheme((state) => state.resolvedTheme);
-  return getThemeAppearance(resolvedTheme) === "dark";
-}
-
-function resolveFallbackBackdrop(file: "field" | "lab" | "sky", dark: boolean) {
-  if (file === "lab") {
-    return dark ? getColor("NEUTRAL", 800) : getColor("ZINC", 100);
-  }
-  return dark ? getColor("SLATE", 800) : getColor("SLATE", 50);
-}
-
 /**
- * Procedural backdrop and fill lighting used when EXR HDRI loading fails or
- * when the device's WebGL context lacks half-float buffer support.
+ * Procedural backdrop and fill lighting of the laboratory, used when EXR
+ * HDRI loading fails or when the device's WebGL context lacks half-float
+ * buffer support.
  */
-function ProceduralPhotoFallback({
-  file,
-}: {
-  readonly file: "field" | "lab" | "sky";
-}) {
+function ProceduralPhotoFallback() {
   const dark = useDark();
-  const backdrop = resolveFallbackBackdrop(file, dark);
-  const skyLight = file === "lab" ? getColor("WHITE") : getColor("SLATE", 200);
-  const groundLight =
-    file === "lab" ? getColor("NEUTRAL", 300) : getColor("STONE", 600);
+  const backdrop = dark ? getColor("NEUTRAL", 800) : getColor("ZINC", 100);
 
   return (
     <>
       <color args={[backdrop]} attach="background" />
-      <hemisphereLight args={[skyLight, groundLight, dark ? 0.85 : 1.15]} />
+      <hemisphereLight
+        args={[getColor("WHITE"), getColor("NEUTRAL", 300), dark ? 0.85 : 1.15]}
+      />
       <ambientLight intensity={dark ? 0.3 : 0.45} />
       <Haze color={backdrop} />
     </>
@@ -171,7 +155,7 @@ function PhotoEnvironment({
   readonly backdrop: number;
   readonly blur: number;
   readonly exposure: number;
-  readonly file: "field" | "lab";
+  readonly file: "lab";
   readonly turn: number;
 }) {
   const { profile } = useStage();
@@ -220,18 +204,18 @@ function Photo(props: {
   readonly backdrop: number;
   readonly blur: number;
   readonly exposure: number;
-  readonly file: "field" | "lab";
+  readonly file: "lab";
   readonly turn: number;
 }) {
   const { profile } = useStage();
 
   if (!profile.useExrEnvironment) {
-    return <ProceduralPhotoFallback file={props.file} />;
+    return <ProceduralPhotoFallback />;
   }
 
   return (
     <ErrorBoundary
-      fallbackRender={() => <ProceduralPhotoFallback file={props.file} />}
+      fallbackRender={() => <ProceduralPhotoFallback />}
       report={false}
     >
       <PhotoEnvironment {...props} />
@@ -240,42 +224,50 @@ function Photo(props: {
 }
 
 /**
- * The key light, standing where the setting's sun stands. Shadow map size and
- * softness scale with the device's stage profile (512 low-end, 1024 mobile,
- * 2048 desktop).
+ * The key light, standing where the setting's sun stands. Its shadow is
+ * fitted to the lab's reach, so the whole shadow map (1024 texels wide on a
+ * weak device, 2048 otherwise) lands on the lab and its edge stays crisp.
+ *
+ * @param color - The colour of the light, white when the place names none
+ * @param direction - The unit direction toward the light
+ * @param intensity - How strong the light is
  */
 export function Sun({
+  color = WHITE,
   direction,
   intensity,
 }: {
+  readonly color?: ColorRepresentation | undefined;
   readonly direction: readonly [number, number, number];
   readonly intensity: number;
 }) {
   const { profile, reach } = useStage();
   const [x, y, z] = direction;
-  const distance = SUN_DISTANCE * reach;
   const mapSize = profile.shadowMapSize;
+  const shadow = fitShadow(reach, mapSize);
 
   return (
     <directionalLight
       castShadow
+      color={color}
       intensity={intensity}
-      position={[x * distance, y * distance, z * distance]}
-      shadow-bias={-0.0006}
-      shadow-camera-bottom={-reach}
-      shadow-camera-left={-reach}
-      shadow-camera-right={reach}
-      shadow-camera-top={reach}
+      position={[x * shadow.distance, y * shadow.distance, z * shadow.distance]}
+      shadow-bias={shadow.bias}
       shadow-mapSize-height={mapSize}
       shadow-mapSize-width={mapSize}
-      shadow-normalBias={0.02}
-      shadow-radius={profile.shadowRadius}
-    />
+      shadow-normalBias={shadow.normalBias}
+      shadow-radius={shadow.radius}
+    >
+      <orthographicCamera
+        args={[-reach, reach, reach, -reach, shadow.near, shadow.far]}
+        attach="shadow-camera"
+      />
+    </directionalLight>
   );
 }
 
 /** Fades distant ground into the tone of the backdrop's horizon. */
-function Haze({ color }: { readonly color: ColorRepresentation }) {
+export function Haze({ color }: { readonly color: ColorRepresentation }) {
   const { reach } = useStage();
 
   return <fog args={[color, FOG_NEAR * reach, FOG_FAR * reach]} attach="fog" />;
@@ -293,66 +285,6 @@ export function LabSetting() {
         turn={LAB_TURN}
       />
       <Sun direction={LAB_SUN} intensity={1.5} />
-    </>
-  );
-}
-
-/** An open park field under a clear sky with a distant tree line, for anything that moves outdoors. */
-export function FieldSetting() {
-  return (
-    <>
-      <Photo
-        backdrop={4}
-        blur={0.12}
-        exposure={3.5}
-        file="field"
-        turn={FIELD_TURN}
-      />
-      <Sun direction={FIELD_SUN} intensity={2.6} />
-    </>
-  );
-}
-
-/**
- * Open sky over the sea, for flight and launches. Wrapped in a non-fatal
- * boundary so procedural lighting takes over if environment cubemap generation
- * fails on constrained hardware.
- */
-export function SkySetting() {
-  const { profile } = useStage();
-  const dark = useDark();
-  const haze = dark ? getColor("SLATE", 700) : getColor("SLATE", 200);
-
-  return (
-    <>
-      {profile.useExrEnvironment ? (
-        <ErrorBoundary
-          fallbackRender={() => <ProceduralPhotoFallback file="sky" />}
-          report={false}
-        >
-          <Environment
-            background
-            backgroundIntensity={dark ? 0.2 * DARK_BACKDROP : 0.2}
-            environmentIntensity={0.2}
-            frames={1}
-            resolution={256}
-          >
-            <Sky
-              distance={450}
-              mieCoefficient={0.006}
-              mieDirectionalG={0.72}
-              rayleigh={1.2}
-              sunPosition={SKY_SUN}
-              turbidity={4.2}
-            />
-          </Environment>
-        </ErrorBoundary>
-      ) : (
-        <ProceduralPhotoFallback file="sky" />
-      )}
-      <Sun direction={SKY_SUN} intensity={2.4} />
-      <Haze color={haze} />
-      <Distance color={haze} />
     </>
   );
 }

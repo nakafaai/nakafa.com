@@ -4,9 +4,9 @@ import { Match, Schema } from "effect";
 /**
  * Rendering tier for a science stage:
  * - `full`: capable desktop GPU with WebGL2 and half-float support (full postprocessing, 2048 shadows, desktop HDRI)
- * - `light`: capable mobile/tablet GPU (direct PBR Neutral, 2048 shadows, desktop HDRI for crisp reflections)
- * - `low`: low-end / memory-constrained device (direct PBR Neutral, 1024 shadows, phone HDRI)
- * - `plain`: CPU software rasterizer or missing WebGL2/half-float support (direct PBR Neutral, 1024 shadows)
+ * - `light`: capable mobile/tablet GPU (direct film curve, 2048 shadows, desktop HDRI for crisp reflections)
+ * - `low`: low-end / memory-constrained device (direct film curve, 1024 shadows, phone HDRI)
+ * - `plain`: CPU software rasterizer or missing WebGL2/half-float support (direct film curve, 1024 shadows)
  */
 const StageTierSchema = Schema.Literals(["full", "light", "low", "plain"]);
 type StageTier = typeof StageTierSchema.Type;
@@ -35,7 +35,6 @@ const StageProfileSchema = Schema.Struct({
   motes: Schema.Finite,
   postprocessing: Schema.Boolean,
   shadowMapSize: Schema.Finite,
-  shadowRadius: Schema.Finite,
   useExrEnvironment: Schema.Boolean,
 });
 type StageProfile = typeof StageProfileSchema.Type;
@@ -78,7 +77,6 @@ export function resolveStageProfile(
       motes: 1600,
       postprocessing: supportsHalfFloat,
       shadowMapSize: 2048,
-      shadowRadius: 4,
       useExrEnvironment: supportsHalfFloat,
     })),
     Match.when("light", () => ({
@@ -88,7 +86,6 @@ export function resolveStageProfile(
       motes: 1000,
       postprocessing: false,
       shadowMapSize: 2048,
-      shadowRadius: 3,
       useExrEnvironment: supportsHalfFloat,
     })),
     Match.when("low", () => ({
@@ -98,7 +95,6 @@ export function resolveStageProfile(
       motes: 520,
       postprocessing: false,
       shadowMapSize: 1024,
-      shadowRadius: 2,
       useExrEnvironment: supportsHalfFloat,
     })),
     Match.when("plain", () => ({
@@ -108,7 +104,6 @@ export function resolveStageProfile(
       motes: 260,
       postprocessing: false,
       shadowMapSize: 1024,
-      shadowRadius: 2,
       useExrEnvironment: supportsHalfFloat,
     })),
     Match.exhaustive

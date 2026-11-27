@@ -6,7 +6,7 @@ import type { ColorRepresentation } from "three";
 import { BackSide, Color, ShaderMaterial } from "three";
 
 /** How far above the horizon the haze still veils the backdrop, as the sine of that height. */
-const VEIL = 0.16;
+const VEIL = 0.07;
 
 /** Keeps the distance at the far end of every view, turning with the camera alone. */
 const VERTEX = `

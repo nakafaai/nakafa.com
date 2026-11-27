@@ -1,4 +1,5 @@
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
+import { OpenSetting } from "@repo/design-system/components/three/sky/open";
 import { StageProvider } from "@repo/design-system/components/three/stage/context";
 import { Finish } from "@repo/design-system/components/three/stage/finish";
 import { Ground } from "@repo/design-system/components/three/stage/ground";
@@ -14,15 +15,13 @@ import type {
 import { standsOn } from "@repo/design-system/components/three/stage/place";
 import {
   DarkSetting,
-  FieldSetting,
   LabSetting,
   SETTING_SUNS,
-  SkySetting,
   SpaceSetting,
   StudioSetting,
 } from "@repo/design-system/components/three/stage/settings";
 import type { ComponentType, ReactNode } from "react";
-import { NeutralToneMapping } from "three";
+import { ACESFilmicToneMapping } from "three";
 
 /** How far a lab reaches from its middle when it names no reach, in scene units. */
 const DEFAULT_REACH = 5;
@@ -31,10 +30,10 @@ const DEFAULT_REACH = 5;
 const SETTINGS: Record<Place, ComponentType> = {
   cell: CellSetting,
   dark: DarkSetting,
-  field: FieldSetting,
+  field: OpenSetting,
   lab: LabSetting,
   microscope: MicroscopeSetting,
-  sky: SkySetting,
+  sky: OpenSetting,
   space: SpaceSetting,
   studio: StudioSetting,
   water: WaterSetting,
@@ -49,8 +48,11 @@ const SETTINGS: Record<Place, ComponentType> = {
  * microscope, and open space. The place lights the lab, stands behind it,
  * moves slowly as it does in life, and sets where its key light and shadows
  * fall, and every lab is drawn through the same photographic finish. A lab
- * never draws a backdrop, a pedestal or a floor of its own. The canvas tone
- * maps with PBR Neutral, which the finish takes over while it draws.
+ * never draws a backdrop, a pedestal or a floor of its own. Under the open
+ * sky (a field, the sky over the sea) the stage draws the sky itself, a
+ * clear day on a light page and a moonlit dusk on a dark one, and lights
+ * the lab from it. The canvas passes every lab through one film curve, ACES
+ * filmic, at one exposure, which the finish takes over while it draws.
  * A lab with a floor names its height. It stands on the ground of its place
  * (the epoxy bench of a laboratory, the grass of a field, the maple table of
  * a studio) unless it names another: open ground, which the stage draws as
@@ -82,11 +84,12 @@ export function ScienceStage({
   const Setting = SETTINGS[setting];
 
   return (
-    <ThreeCanvas frameloop={frameloop} toneMapping={NeutralToneMapping}>
+    <ThreeCanvas frameloop={frameloop} toneMapping={ACESFilmicToneMapping}>
       <StageProvider
         animated={frameloop === "always"}
         floor={floor}
         ground={standsOn(setting, floor, ground)}
+        place={setting}
         reach={reach}
         sun={SETTING_SUNS[setting]}
       >
