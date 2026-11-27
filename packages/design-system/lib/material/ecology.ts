@@ -64,8 +64,8 @@ export const ECOLOGY_COLORS = {
   boatTrim: "#a63a2e",
 
   // GreenhouseEffectLab: the Sun's white core and its redder limb, its
-  // corona, the sunlight it sends, the warm infrared the ground gives off, the
-  // Rayleigh blue of the air at the Earth's limb, and molecular models in the
+  // corona, the sunlight it sends, the warm infrared the ground gives off,
+  // and molecular models in the
   // satin tones of a real model kit: charcoal carbon, white hydrogen and a
   // brick red oxygen.
   sunCore: "#fff5e1",
@@ -73,10 +73,15 @@ export const ECOLOGY_COLORS = {
   sunCorona: "#ffcf85",
   sunlight: "#fff2c8",
   infrared: "#ff6436",
-  atmosphereLimb: "#5f9cff",
   moleculeCarbon: "#3a3c40",
   moleculeHydrogen: "#ebe8e2",
   moleculeOxygen: "#c0392f",
+
+  // A planet from orbit: the blue the air scatters toward an eye in space,
+  // and the black of space behind the stars, a touch blue so it does not
+  // read as a missing image.
+  airScatter: "#4f8dff",
+  spaceVoid: "#020308",
 
   // A coast, a reef tank and a meadow floor.
   coralBleached: "#f4f1ea",
