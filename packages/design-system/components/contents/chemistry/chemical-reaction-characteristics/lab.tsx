@@ -176,7 +176,7 @@ function ReactionCameraControls() {
     <CameraControls
       cameraPosition={cameraPosition}
       cameraTarget={REACTION_SCENE_VIEW.cameraTarget}
-      fov={45}
+      fov={30}
     />
   );
 }

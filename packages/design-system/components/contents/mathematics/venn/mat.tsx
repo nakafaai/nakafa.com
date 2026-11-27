@@ -112,7 +112,7 @@ export function Hoops({ centres }: { readonly centres: readonly Place[] }) {
               receiveShadow
               rotation={[Math.PI / 2, 0, 0]}
             >
-              <torusGeometry args={[HOOP.radius, HOOP.tube, 16, 160]} />
+              <torusGeometry args={[HOOP.radius, HOOP.tube, 24, 240]} />
               <meshPhysicalMaterial
                 clearcoat={1}
                 clearcoatRoughness={0.12}
@@ -127,7 +127,7 @@ export function Hoops({ centres }: { readonly centres: readonly Place[] }) {
               outlineWidth={0.004}
               position={[letter.x, MAT_TOP, letter.z]}
             >
-              {LETTERS[index]}
+              <InlineMath math={LETTERS[index] ?? "A"} />
             </ThreeLabel>
           </group>
         );

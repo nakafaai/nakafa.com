@@ -1,20 +1,23 @@
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 
 /**
- * The journey graph lab's objects as a camera sees them: an oiled beech
- * table, a model road of matt asphalt on a flocked grass board with white
- * lines, kilometre posts and bus stops with blue shelters, a sheet of squared
- * graph paper printed in pale blue, an orange bus and a teal motorbike. Each
- * traveller's line on the graph takes its plot colour, which its legend in
- * the footer shares, and the vehicle is painted in a lighter tone of it. A
- * simulation that shows one of them takes its colour from here, so it looks
- * the same in every lesson.
+ * The journey graph lab's objects as a camera sees them: a walnut planning
+ * table, a road diorama in a walnut frame with flocked green hills, matt
+ * asphalt with white lines, kilometre posts and bus stops with blue shelters,
+ * an orange bus and a teal motorbike. Each traveller's line on the graph
+ * under the scene takes its plot colour, which its legend in the footer
+ * shares, and the vehicle is painted in a lighter tone of it. A simulation
+ * that shows one of them takes its colour from here, so it looks the same in
+ * every lesson.
  */
 export const JOURNEY_COLORS = {
-  // The table, and the model road's board, asphalt and paint.
-  table: "#b38a5f",
-  grass: "#6c8a4a",
-  boardEdge: "#3c3a35",
+  // The table, the diorama's frame, and its flocked land from the verge to the hilltops.
+  table: "#8d6a48",
+  frame: "#5d3d27",
+  grass: "#6f8f4a",
+  meadow: "#8a9c52",
+  hill: "#4f7437",
+  // The model road's asphalt and paint.
   asphalt: "#4b4d51",
   paint: "#f1efe6",
   // Kilometre posts, and the bus stops: a shelter, its roof and its sign.
@@ -25,11 +28,8 @@ export const JOURNEY_COLORS = {
   sign: "#1f6fb5",
   // Roadside trees.
   trunk: "#6b4a2f",
-  leaves: "#4d7a37",
-  // The graph paper: its sheet, its pale grid, and the ink of its axes.
-  paper: "#fbf8ef",
-  grid: "#bccfe0",
-  ink: "#2b2f35",
+  leaves: "#3f6a2e",
+  leavesLit: "#5b8a3c",
   // Each traveller's line on the graph, and the paint of its vehicle.
   bus: PLOT_COLORS.orange,
   busPaint: "#e58a2e",

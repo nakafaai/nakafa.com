@@ -53,7 +53,8 @@ export function Rail({
         smoothness={3}
       >
         <SurfaceMaterial
-          bump={0.04}
+          bump={0.02}
+          coat={0.35}
           color={ARGUMENT_COLORS.rail}
           repeat={[width / 0.6, length / 0.075]}
           roughness={0.5}
@@ -87,10 +88,12 @@ export function Rail({
             receiveShadow
           >
             <boxGeometry args={[CARD.width - 0.012, 0.0012, PLATE - 0.006]} />
-            <meshStandardMaterial
+            <meshPhysicalMaterial
+              clearcoat={0.4}
+              clearcoatRoughness={0.25}
               color={ARGUMENT_COLORS.plate}
-              metalness={0.75}
-              roughness={0.32}
+              metalness={0.6}
+              roughness={0.4}
             />
           </mesh>
           <ThreeLabel

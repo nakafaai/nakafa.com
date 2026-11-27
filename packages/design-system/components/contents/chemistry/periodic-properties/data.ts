@@ -1,5 +1,4 @@
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
-import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS, PlotColorSchema } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Array as Arr, Schema } from "effect";
@@ -159,7 +158,6 @@ export function getPeriodicPropertiesSceneColors(
   return {
     markerText: ORIGIN_COLOR.LIGHT,
     markerTextOutline: ORIGIN_COLOR.DARK,
-    rail: isDarkTheme ? PLOT_COLORS.slate : getColor("GRAY"),
     text: isDarkTheme ? ORIGIN_COLOR.LIGHT : ORIGIN_COLOR.DARK,
   };
 }

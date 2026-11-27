@@ -13,27 +13,28 @@ import type {
   Road,
   Town,
 } from "@repo/design-system/components/contents/mathematics/network/graph";
-import type { Spot } from "@repo/design-system/components/contents/mathematics/network/layout";
+import type { Side } from "@repo/design-system/components/contents/mathematics/network/labels";
 import {
-  placeOf,
+  nameSides,
   plateSpots,
-} from "@repo/design-system/components/contents/mathematics/network/layout";
-import { boardLots } from "@repo/design-system/components/contents/mathematics/network/lots";
+} from "@repo/design-system/components/contents/mathematics/network/labels";
+import type { Spot } from "@repo/design-system/components/contents/mathematics/network/layout";
+import { placeOf } from "@repo/design-system/components/contents/mathematics/network/layout";
 import {
-  DeliveryVan,
   LengthPlate,
   ModelRoad,
   ModelTown,
-  PlanningTable,
+  PIN_TOP,
+  ReliefMap,
   ROAD,
-  SIGN_TOP,
+  RouteBead,
 } from "@repo/design-system/components/contents/mathematics/network/model";
 import type { Route } from "@repo/design-system/components/contents/mathematics/network/paths";
+import type { Segment } from "@repo/design-system/components/contents/mathematics/network/relief";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { useTimeline } from "@repo/design-system/components/contents/simulation/timeline";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { THREE_DIAGRAM_MAXIMUM_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { NETWORK_COLORS } from "@repo/design-system/lib/material/network";
 import { Array as Arr, Option } from "effect";
@@ -49,6 +50,12 @@ const KM = "\\text{ km}";
 /** How far a road's length plate lies to the side of the road, in metres. */
 const PLATE_SIDE = 0.03;
 
+/** The largest a road's length reads, in pixels: smaller than a town's name, as the plate is smaller than the pin. */
+const PLATE_LABEL = 14;
+
+/** The largest label on a wide card, in pixels, so a name never outgrows the pin it names. */
+const WIDE_LABEL = 17;
+
 /** The largest label on a narrow card, in pixels, so the signs of two near towns stay apart. */
 const NARROW_LABEL = 16;
 
@@ -59,8 +66,8 @@ const NARROW_LABEL = 16;
  * it, and while the card plays the scene visits the towns in turn and tells
  * the card which one it is counting, handing the board back on a pause. In `route` mode each road carries a plate of its length, the trip's
  * start and end carry flags (on a narrow card the plates give the number
- * alone, the footer keeping the unit), and a delivery van drives the routes of `run`
- * while the card plays, lighting the road it follows; at rest it stands at
+ * alone, the footer keeping the unit), and a lit bead runs the routes of `run`
+ * while the card plays, lighting the road it follows; at rest it rests at
  * the end of `chosen`. The scene tells the card which route it is driving.
  */
 export function NetworkScene({
@@ -103,11 +110,16 @@ export function NetworkScene({
   const ink = useLabelInk();
   const size = useThree((state) => state.size);
   const narrow = size.width < 520;
-  const labelMax = narrow ? NARROW_LABEL : THREE_DIAGRAM_MAXIMUM_FONT_SIZE;
+  const labelMax = narrow ? NARROW_LABEL : WIDE_LABEL;
   const spotOf = useMemo(() => placeOf(towns, spots), [spots, towns]);
-  const lots = useMemo(
-    () => boardLots(towns, roads, spots),
+  const sides = useMemo(
+    () => nameSides(towns, roads, spots),
     [roads, spots, towns]
+  );
+  const segments = useMemo(
+    () =>
+      Arr.map(roads, (road): Segment => [spotOf(road.from), spotOf(road.to)]),
+    [roads, spotOf]
   );
   const plateAt = useMemo(
     () => plateSpots(towns, roads, spots, PLATE_SIDE),
@@ -126,7 +138,7 @@ export function NetworkScene({
   );
   const finish = mode === "route" ? schedule.total : towns.length * COUNT_STEP;
   const { advance, playing } = useTimeline(0, finish);
-  const van = useRef<Group>(null);
+  const runner = useRef<Group>(null);
   const reported = useRef<number | null>(null);
   const counting = useRef<string | null>(null);
   const [hovering, setHovering] = useState(false);
@@ -157,8 +169,8 @@ export function NetworkScene({
       Arr.getUnsafe(routePoints, route),
       idle ? Number.POSITIVE_INFINITY : step.distance
     );
-    van.current?.position.set(pose.x, ROAD.top, pose.z);
-    van.current?.rotation.set(0, pose.heading, 0);
+    runner.current?.position.set(pose.x, ROAD.top, pose.z);
+    runner.current?.rotation.set(0, pose.heading, 0);
     const driving = idle ? null : route;
     if (driving !== reported.current) {
       reported.current = driving;
@@ -187,7 +199,7 @@ export function NetworkScene({
     <group>
       <SimulationTicker running={playing} />
       <NetworkCamera narrow={narrow} />
-      <PlanningTable />
+      <ReliefMap segments={segments} spots={spots} />
       {Arr.map(roads, (road, index) => {
         const from = spotOf(road.from);
         const to = spotOf(road.to);
@@ -204,7 +216,7 @@ export function NetworkScene({
                 <ThreeLabel
                   color={ink}
                   fontSize="compact"
-                  maximumFontSize={labelMax}
+                  maximumFontSize={PLATE_LABEL}
                   position={[side.x, 0.004, side.z]}
                 >
                   <InlineMath
@@ -222,7 +234,6 @@ export function NetworkScene({
           <group key={town.id} position={[here.x, 0, here.z]}>
             <ModelTown
               flag={mode === "route" ? tripFlag(town.id, start, end) : null}
-              lots={Arr.getUnsafe(lots, index)}
             />
             {/* biome-ignore lint/a11y/noStaticElementInteractions: a three.js mesh takes pointer events, not focus; the toolbar's town buttons are the keyboard and screen reader control for the same town. */}
             <mesh
@@ -244,30 +255,69 @@ export function NetworkScene({
             >
               <cylinderGeometry args={[0.055, 0.055, 0.05, 16]} />
             </mesh>
-            <ThreeLabel
-              anchorY="bottom"
-              color={ink}
-              fontSize="compact"
-              gap={0.004}
-              maximumFontSize={labelMax}
-              position={[0, SIGN_TOP + 0.004, 0]}
-            >
-              <span className="flex flex-col items-center leading-tight">
-                <span className="font-medium">{town.name}</span>
-                {mode === "degrees" ? (
-                  <InlineMath math={`d = ${Arr.getUnsafe(degrees, index)}`} />
-                ) : null}
-              </span>
-            </ThreeLabel>
+            <TownName
+              degree={mode === "degrees" ? Arr.getUnsafe(degrees, index) : null}
+              ink={ink}
+              largest={labelMax}
+              name={town.name}
+              side={Arr.getUnsafe(sides, index)}
+            />
           </group>
         );
       })}
       {mode === "route" ? (
-        <group ref={van} scale={1.5}>
-          <DeliveryVan />
+        <group ref={runner}>
+          <RouteBead />
         </group>
       ) : null}
     </group>
+  );
+}
+
+/** Which edge of a name meets its pin, for each way the name may lean across. */
+const NAME_ANCHORS = { "-1": "right", "0": "center", "1": "left" } as const;
+
+/** How far beside its pin a name starts, in metres. */
+const NAME_ASIDE = 0.014;
+
+/**
+ * A town's name, and its degree when the board counts degrees, standing on
+ * the side its roads leave free: over the pin's head when it stands behind,
+ * on the map at the pin's foot when it stands in front.
+ */
+function TownName({
+  degree,
+  ink,
+  largest,
+  name,
+  side,
+}: {
+  readonly degree: number | null;
+  readonly ink: string;
+  readonly largest: number;
+  readonly name: string;
+  readonly side: Side;
+}) {
+  const behind = side.z < 0;
+  return (
+    <ThreeLabel
+      anchorX={NAME_ANCHORS[side.x]}
+      anchorY={behind ? "bottom" : "top"}
+      color={ink}
+      fontSize="compact"
+      gap={0.004}
+      maximumFontSize={largest}
+      position={[
+        side.x * NAME_ASIDE,
+        behind ? PIN_TOP : 0.004,
+        behind ? 0 : 0.022,
+      ]}
+    >
+      <span className="flex flex-col items-center leading-tight">
+        <span className="font-medium">{name}</span>
+        {degree === null ? null : <InlineMath math={`d = ${degree}`} />}
+      </span>
+    </ThreeLabel>
   );
 }
 
@@ -281,7 +331,7 @@ function tripFlag(id: string, start: string, end: string) {
 
 /** Looks down on the board from in front and above, farther back on a narrow card. */
 function NetworkCamera({ narrow }: { readonly narrow: boolean }) {
-  const distance = narrow ? 1.47 : 1.12;
+  const distance = narrow ? 1.74 : 1.2;
   const elevation = narrow ? 1.26 : 1.0;
   return (
     <CameraControls

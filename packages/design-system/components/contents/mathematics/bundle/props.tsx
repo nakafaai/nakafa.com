@@ -6,6 +6,7 @@ import {
   bandPath,
   STICK,
 } from "@repo/design-system/components/contents/mathematics/bundle/layout";
+import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { BUNDLE_COLORS } from "@repo/design-system/lib/material/bundle";
 import { Array as Arr } from "effect";
@@ -24,34 +25,11 @@ import {
 const GRAIN_PER_METRE = 14;
 
 /**
- * How far across the grain one tile of the wood texture spans on the desk,
- * in metres: wider than the desk is deep, so its soft growth rings lie more
- * than a hand apart and its finer streaks a few centimetres apart, at uneven
- * strengths, as an oak top shows them from a learner's seat.
- */
-const DESK_GRAIN_ACROSS = 2.2;
-
-/**
- * The oak top of a school desk, wider and deeper than the camera sees, its
- * top at y = 0. It is one board, so the wood texture runs its full length
- * once and never repeats or stripes the top into corduroy. Its grain shows
- * in its tone alone, so no ridge catches the low key light and lines the
- * top more strongly than the oak does.
+ * The oak top of a school desk: planked and oiled, each board with its own
+ * tone and wandering grain, running out past the frame, its top at y = 0.
  */
 export function Desk() {
-  const size = [2.4, 0.03, 2] as const;
-  return (
-    <mesh position={[0, -size[1] / 2, -0.5]} receiveShadow>
-      <boxGeometry args={size} />
-      <SurfaceMaterial
-        bump={0}
-        color={BUNDLE_COLORS.desk}
-        repeat={[1, size[2] / DESK_GRAIN_ACROSS]}
-        roughness={0.5}
-        surface="wood"
-      />
-    </mesh>
-  );
+  return <StudioTable color={BUNDLE_COLORS.desk} />;
 }
 
 /**
@@ -91,7 +69,7 @@ export function useBandGeometry(base: number) {
       Arr.map(bandPath(base, 6), ({ x, y, z }) => new Vector3(x, y, z)),
       true
     );
-    return new TubeGeometry(path, 72, 0.0009, 6, true);
+    return new TubeGeometry(path, 96, 0.0009, 12, true);
   }, [base]);
   useLayoutEffect(() => () => geometry.dispose(), [geometry]);
   return geometry;
@@ -112,12 +90,28 @@ export function StickWood() {
 
 /** The red rubber of a band. */
 export function BandRubber() {
-  return <meshStandardMaterial color={BUNDLE_COLORS.band} roughness={0.55} />;
+  return (
+    <SurfaceMaterial
+      bump={0.05}
+      color={BUNDLE_COLORS.band}
+      repeat={[6, 1]}
+      roughness={0.7}
+      surface="rubber"
+    />
+  );
 }
 
 /** The plain brown board of a kraft-card box. */
 export function KraftCard() {
-  return <meshStandardMaterial color={BUNDLE_COLORS.box} roughness={0.92} />;
+  return (
+    <SurfaceMaterial
+      bump={0.04}
+      color={BUNDLE_COLORS.box}
+      repeat={[2, 2]}
+      roughness={0.92}
+      surface="concrete"
+    />
+  );
 }
 
 /** The waxed beech of a tray. */

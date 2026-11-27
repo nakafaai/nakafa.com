@@ -20,10 +20,7 @@ import {
 } from "@repo/design-system/components/contents/mathematics/journey/trip";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import {
-  VisualCardFacts,
-  VisualCardFooter,
-} from "@repo/design-system/components/visual/card";
+import { VisualCardFacts } from "@repo/design-system/components/visual/card";
 import {
   VisualFactIndicator,
   VisualFactTabular,
@@ -72,7 +69,7 @@ function Distance({
 }
 
 /**
- * The readouts under the scene: the clock, how far from the start each
+ * The readouts under the graph: the clock, how far from the start each
  * traveller is, and where two travellers meet. Then the leg in focus, named
  * by its corners with what the bus does on it, and its speed worked out as
  * distance over time; with no leg in focus, the whole journey and its average
@@ -107,20 +104,45 @@ export function JourneyReadings({
   const stages = bus.stages;
 
   return (
-    <VisualCardFooter>
-      <VisualCardFacts>
-        <VisualFactTabular
-          label={labels.time}
-          value={
-            <InlineMath
-              math={momentTex(focus.minute, labels.units, quantity)}
-            />
-          }
-        />
-        {Option.match(second, {
-          onNone: () => (
+    <VisualCardFacts>
+      <VisualFactTabular
+        label={labels.time}
+        value={
+          <InlineMath math={momentTex(focus.minute, labels.units, quantity)} />
+        }
+      />
+      {Option.match(second, {
+        onNone: () => (
+          <VisualFactTabular
+            label={labels.distance}
+            value={
+              <Distance
+                minute={focus.minute}
+                stages={stages}
+                units={labels.units}
+              />
+            }
+          />
+        ),
+        onSome: (other) => (
+          <>
             <VisualFactTabular
-              label={labels.distance}
+              label={labels.meeting}
+              value={Option.match(
+                Option.filter(meeting, () => showMeeting),
+                {
+                  onNone: () => <Hidden />,
+                  onSome: (met) => (
+                    <InlineMath
+                      math={meetingTex(met, labels.units, quantity)}
+                    />
+                  ),
+                }
+              )}
+            />
+            <VisualFactIndicator
+              indicatorColor={JOURNEY_COLORS.bus}
+              label={bus.name}
               value={
                 <Distance
                   minute={focus.minute}
@@ -129,92 +151,63 @@ export function JourneyReadings({
                 />
               }
             />
-          ),
-          onSome: (other) => (
-            <>
-              <VisualFactTabular
-                label={labels.meeting}
-                value={Option.match(
-                  Option.filter(meeting, () => showMeeting),
-                  {
-                    onNone: () => <Hidden />,
-                    onSome: (met) => (
-                      <InlineMath
-                        math={meetingTex(met, labels.units, quantity)}
-                      />
-                    ),
-                  }
-                )}
-              />
-              <VisualFactIndicator
-                indicatorColor={JOURNEY_COLORS.bus}
-                label={bus.name}
-                value={
-                  <Distance
-                    minute={focus.minute}
-                    stages={stages}
-                    units={labels.units}
-                  />
-                }
-              />
-              <VisualFactIndicator
-                indicatorColor={JOURNEY_COLORS.bike}
-                label={other.name}
-                value={
-                  <Distance
-                    minute={focus.minute}
-                    stages={other.stages}
-                    units={labels.units}
-                  />
-                }
-              />
-            </>
-          ),
-        })}
-        {Option.match(focus.part, {
-          onNone: () => (
-            <VisualFactTabular
-              label={labels.average}
+            <VisualFactIndicator
+              indicatorColor={JOURNEY_COLORS.bike}
+              label={other.name}
               value={
-                <InlineMath
-                  math={rateTex(
-                    totalsOf(stages),
-                    labels.units,
-                    quantity,
-                    showSpeeds
-                  )}
+                <Distance
+                  minute={focus.minute}
+                  stages={other.stages}
+                  units={labels.units}
                 />
               }
             />
-          ),
-          onSome: (part) => {
-            const stage = Arr.getUnsafe(stages, part);
-            const rate = {
-              distance: lengthOf(stage),
-              minutes: stage.end - stage.start,
-              speed: speedOf(stage),
-            };
-            return (
-              <VisualFactTabular
-                label={
-                  <span>
-                    <InlineMath math={partName(part)} />:{" "}
-                    {labels.motion[motionOf(stage)]}
-                  </span>
-                }
-                value={
-                  <span>
-                    {labels.speed}{" "}
-                    <InlineMath
-                      math={`= ${rateTex(rate, labels.units, quantity, showSpeeds)}`}
-                    />
-                  </span>
-                }
+          </>
+        ),
+      })}
+      {Option.match(focus.part, {
+        onNone: () => (
+          <VisualFactTabular
+            label={labels.average}
+            value={
+              <InlineMath
+                math={rateTex(
+                  totalsOf(stages),
+                  labels.units,
+                  quantity,
+                  showSpeeds
+                )}
               />
-            );
-          },
-        })}
-      </VisualCardFacts>
-    </VisualCardFooter>
+            }
+          />
+        ),
+        onSome: (part) => {
+          const stage = Arr.getUnsafe(stages, part);
+          const rate = {
+            distance: lengthOf(stage),
+            minutes: stage.end - stage.start,
+            speed: speedOf(stage),
+          };
+          return (
+            <VisualFactTabular
+              label={
+                <span>
+                  <InlineMath math={partName(part)} />:{" "}
+                  {labels.motion[motionOf(stage)]}
+                </span>
+              }
+              value={
+                <span>
+                  {labels.speed}{" "}
+                  <InlineMath
+                    math={`= ${rateTex(rate, labels.units, quantity, showSpeeds)}`}
+                  />
+                </span>
+              }
+            />
+          );
+        },
+      })}
+    </VisualCardFacts>
   );
 }

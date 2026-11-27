@@ -8,6 +8,10 @@ import {
   TERMINAL_OFFSET,
 } from "@repo/design-system/components/contents/chemistry/electrolysis/circuit";
 import type { ElectrolysisColors } from "@repo/design-system/components/contents/chemistry/electrolysis/color";
+import {
+  createBeakerMarkingsTexture,
+  latheProfile,
+} from "@repo/design-system/components/contents/chemistry/glassware";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
@@ -18,7 +22,7 @@ import {
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { Array as Arr, Option } from "effect";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
 import { CatmullRomCurve3, Vector3 } from "three";
 
@@ -43,27 +47,79 @@ const ELECTRON_SPEED = 0.16;
 /** The bubbles a gas electrode gives off. */
 const BUBBLES = 6;
 
-/** A glass beaker, open at the top, standing on the bench at y = 0. */
+/** How thick the beaker's wall and its base are drawn, in scene units. */
+const WALL = 0.014;
+const BASE = 0.03;
+
+/**
+ * A Griffin beaker's wall in section, turned on the lathe: a thick base, a
+ * rounded heel, a straight wall, a rim that flares and rolls over, and the
+ * inner wall back down, so the glass has a real thickness to catch the light.
+ */
+const BEAKER_PROFILE = latheProfile([
+  [0.001, 0],
+  [BEAKER_RADIUS - 0.03, 0],
+  [BEAKER_RADIUS + WALL - 0.008, 0.008],
+  [BEAKER_RADIUS + WALL, 0.035],
+  [BEAKER_RADIUS + WALL, BEAKER_HEIGHT - 0.05],
+  [BEAKER_RADIUS + WALL + 0.012, BEAKER_HEIGHT - 0.02],
+  [BEAKER_RADIUS + WALL + 0.03, BEAKER_HEIGHT - 0.003],
+  [BEAKER_RADIUS + WALL + 0.03, BEAKER_HEIGHT + 0.006],
+  [BEAKER_RADIUS + WALL + 0.018, BEAKER_HEIGHT + 0.008],
+  [BEAKER_RADIUS, BEAKER_HEIGHT - 0.04],
+  [BEAKER_RADIUS, BASE + 0.025],
+  [BEAKER_RADIUS - 0.025, BASE],
+  [0.001, BASE],
+]);
+
+/**
+ * A borosilicate Griffin beaker with a pouring spout and its printed scale,
+ * open at the top, standing on the bench at y = 0.
+ */
 export function Beaker({ colors }: { readonly colors: ElectrolysisColors }) {
+  const markings = useMemo(createBeakerMarkingsTexture, []);
+  useEffect(() => () => markings?.dispose(), [markings]);
+
   return (
     <group>
-      <mesh position={[0, BEAKER_HEIGHT / 2, 0]}>
+      <mesh castShadow renderOrder={2}>
+        <latheGeometry args={[BEAKER_PROFILE, 96]} />
+        <GlassMaterial color={colors.glass} opacity={0.26} />
+      </mesh>
+      <mesh
+        position={[0, BEAKER_HEIGHT - 0.012, BEAKER_RADIUS + WALL + 0.024]}
+        rotation={[0.42, 0, 0]}
+        scale={[0.8, 0.6, 1.15]}
+      >
         <cylinderGeometry
-          args={[
-            BEAKER_RADIUS,
-            BEAKER_RADIUS * 0.97,
-            BEAKER_HEIGHT,
-            48,
-            1,
-            true,
-          ]}
+          args={[0.045, 0.07, 0.1, 24, 1, true, -1.2 - Math.PI / 2, 2.4]}
         />
-        <GlassMaterial color={colors.glass} />
+        <GlassMaterial color={colors.glass} opacity={0.5} />
       </mesh>
-      <mesh position={[0, 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[BEAKER_RADIUS * 0.97, 48]} />
-        <GlassMaterial color={colors.glass} />
-      </mesh>
+      {markings === null ? null : (
+        <mesh
+          position={[0, BEAKER_HEIGHT * 0.5, 0]}
+          renderOrder={3}
+          rotation={[0, -Math.PI * 0.72, 0]}
+        >
+          <cylinderGeometry
+            args={[
+              BEAKER_RADIUS + WALL + 0.003,
+              BEAKER_RADIUS + WALL + 0.003,
+              BEAKER_HEIGHT * 0.78,
+              64,
+              1,
+              true,
+            ]}
+          />
+          <meshBasicMaterial
+            depthWrite={false}
+            map={markings}
+            opacity={0.9}
+            transparent
+          />
+        </mesh>
+      )}
     </group>
   );
 }

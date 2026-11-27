@@ -14,6 +14,14 @@ import {
   HOLDER,
   HOLDER_HEIGHT,
 } from "@repo/design-system/components/contents/mathematics/binary/bulb";
+import {
+  CASE,
+  PanelCase,
+  PITCH,
+  ROW,
+  slotX,
+  TOP,
+} from "@repo/design-system/components/contents/mathematics/binary/case";
 import { advanceCounter } from "@repo/design-system/components/contents/mathematics/binary/counter";
 import { GLOBE_HEIGHT } from "@repo/design-system/components/contents/mathematics/binary/globe";
 import { ToggleSwitch } from "@repo/design-system/components/contents/mathematics/binary/lever";
@@ -32,21 +40,6 @@ import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useRef } from "react";
 import type { PointLight } from "three";
-
-/** The distance between neighbouring lamps, in metres. */
-const PITCH = 0.09;
-
-/** The walnut case: its height and depth, and the margin beyond the end lamps, in metres. */
-const CASE = { depth: 0.25, height: 0.05, margin: 0.05 } as const;
-
-/** The brushed aluminium faceplate on top of the case, in metres. */
-const FACE = { inset: 0.012, thickness: 0.0016 } as const;
-
-/** The height the parts on the faceplate stand on. */
-const TOP = CASE.height + FACE.thickness;
-
-/** How far back each row of parts stands on the faceplate, in metres. */
-const ROW = { bracket: 0.1, bulb: -0.07, plate: 0.05, toggle: -0.008 } as const;
 
 /** Where each group's digit stands on the bench, just in front of the case. */
 const DIGIT_ROW = CASE.depth / 2 + 0.02;
@@ -77,11 +70,6 @@ function isNarrow(size: { readonly height: number; readonly width: number }) {
   return size.width < size.height * 1.2;
 }
 
-/** The x position of a panel slot, the slots centred on the middle. */
-function slotX(slot: number, slots: number) {
-  return (slot - (slots - 1) / 2) * PITCH;
-}
-
 /** Reads the ink a label is written in, dark on a light page and light on a dark one. */
 function useInk() {
   const resolvedTheme = useTheme((state) => state.resolvedTheme);
@@ -91,8 +79,8 @@ function useInk() {
 }
 
 /**
- * A binary counting panel on a lab bench: a walnut case with a brushed
- * aluminium faceplate, a row of clear globe bulbs at the back, a toggle switch
+ * A binary counting panel on a lab bench: a walnut case carrying a green
+ * FR4 circuit board, a row of clear globe bulbs at the back, a toggle switch
  * in front of each bulb, and in front of each switch a brass plate with its
  * place value. The slots on the left that hold no lamp carry a blank cover;
  * when the row is read in pairs or threes, a painted bracket joins each group
@@ -130,7 +118,7 @@ export function BinaryScene({
       <group position={[-1, 0, 0.12]}>
         <LabBench width={4} />
       </group>
-      <PanelCase width={width} />
+      <PanelCase slots={slots} width={width} />
       <PanelLight glows={glows} lamps={lamps} slots={slots} />
       {Arr.map(Arr.range(0, slots - 1), (slot) =>
         slot < firstLamp ? (
@@ -204,53 +192,6 @@ export function PanelCounter({
     }
   }, -2);
   return <SimulationTicker running={playing} />;
-}
-
-/** The walnut case and its brushed aluminium faceplate, with a screw at each corner. */
-function PanelCase({ width }: { readonly width: number }) {
-  const plateWidth = width - FACE.inset * 2;
-  const plateDepth = CASE.depth - FACE.inset * 2;
-  return (
-    <group>
-      <RoundedBox
-        args={[width, CASE.height, CASE.depth]}
-        castShadow
-        position={[0, CASE.height / 2, 0]}
-        radius={0.006}
-        receiveShadow
-      >
-        <meshPhysicalMaterial
-          clearcoat={0.5}
-          clearcoatRoughness={0.35}
-          color={LAMP_COLORS.walnut}
-          roughness={0.55}
-        />
-      </RoundedBox>
-      <mesh position={[0, CASE.height * 0.12, 0]}>
-        <boxGeometry args={[width + 0.002, 0.004, CASE.depth + 0.002]} />
-        <meshStandardMaterial color={LAMP_COLORS.walnutEdge} roughness={0.8} />
-      </mesh>
-      <mesh position={[0, CASE.height + FACE.thickness / 2, 0]} receiveShadow>
-        <boxGeometry args={[plateWidth, FACE.thickness, plateDepth]} />
-        <MetalMaterial color={LAMP_COLORS.aluminium} roughness={0.55} />
-      </mesh>
-      {Arr.map([-1, 1] as const, (side) =>
-        Arr.map([-1, 1] as const, (end) => (
-          <mesh
-            key={`${side}${end}`}
-            position={[
-              side * (plateWidth / 2 - 0.008),
-              TOP,
-              end * (plateDepth / 2 - 0.008),
-            ]}
-          >
-            <cylinderGeometry args={[0.0028, 0.003, 0.0012, 16]} />
-            <MetalMaterial color={LAMP_COLORS.screw} roughness={0.3} />
-          </mesh>
-        ))
-      )}
-    </group>
-  );
 }
 
 /**

@@ -46,9 +46,9 @@ const REACTION_CUES = {
 } satisfies Record<ReactionCueId, typeof ReactionCueSchema.Type>;
 
 export const REACTION_SCENE_VIEW = {
-  cameraPosition: [0, 2.2, 4.2],
+  cameraPosition: [0, 2, 7],
   cameraTarget: [0, 0.05, 0],
-  narrowCameraPosition: [0, 2.65, 4.75],
+  narrowCameraPosition: [0, 2.5, 8],
 } satisfies Record<string, ReactionScenePoint>;
 
 /**

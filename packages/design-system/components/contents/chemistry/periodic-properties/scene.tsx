@@ -1,4 +1,4 @@
-import { Line } from "@react-three/drei";
+import { RoundedBox } from "@react-three/drei";
 import type {
   PeriodicPropertiesSceneColors,
   PeriodicPropertyMode,
@@ -9,14 +9,18 @@ import {
   getPeriodicPropertyModeColor,
   PERIODIC_PROPERTY_MODES,
 } from "@repo/design-system/components/contents/chemistry/periodic-properties/data";
+import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { ArrowHelper } from "@repo/design-system/components/three/arrow";
 import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { useRequired } from "@repo/design-system/hooks/required";
-import { Array as Arr, Option } from "effect";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { TABLE_COLORS } from "@repo/design-system/lib/material/table";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { createContext } from "react";
+import { createContext, useEffect, useMemo } from "react";
+import { ExtrudeGeometry, Shape } from "three";
 
 const PERIOD_Z = -1.18;
 const PERIOD_STEP = 0.78;
@@ -24,8 +28,20 @@ const GROUP_X = -2.8;
 const GROUP_START_Z = -0.46;
 const GROUP_STEP = 0.8;
 const RAIL_Y = -0.04;
-const PERIOD_RAIL_Z_OFFSET = 0.34;
-const GROUP_RAIL_X_OFFSET = 0.34;
+
+/** A display rail: how thick it is, how far it reaches past its end markers, and across. */
+const RAIL = { margin: 0.56, thick: 0.09, width: 1.12 } as const;
+
+/** How far a rail's inlaid arrow lies from its markers' line, toward the reader or the middle. */
+const ARROW_OFFSET = 0.4;
+
+/** The inlaid arrow: how wide its shaft and its head are, how long its head is, and how thick the inlay stands. */
+const ARROW = {
+  head: 0.2,
+  headWidth: 0.15,
+  shaft: 0.045,
+  thick: 0.008,
+} as const;
 const PILLAR_RADIUS = 0.17;
 const PILLAR_MIN_HEIGHT = 0.18;
 const PILLAR_MAX_HEIGHT = 1.46;
@@ -36,14 +52,16 @@ const PILLAR_LABEL_OFFSET = 0.22;
 const SCENE_SCALE = 1.12;
 const SCENE_Y_OFFSET = 0.62;
 
-/** The height of the plane the markers stand on, where their shadows fall. */
-export const PERIODIC_PROPERTIES_FLOOR = SCENE_Y_OFFSET + RAIL_Y * SCENE_SCALE;
+/** The height of the table the display rails stand on. */
+export const PERIODIC_PROPERTIES_FLOOR =
+  SCENE_Y_OFFSET + (RAIL_Y - RAIL.thick) * SCENE_SCALE;
 
 type ScenePoint = [number, number, number];
 type TrendAxis = "period" | "group";
 
 /** The colors, the mode and the value range that the parts of a periodic-properties scene read. */
 const PeriodicPropertiesSceneContext = createContext<{
+  color: string;
   colors: PeriodicPropertiesSceneColors;
   mode: PeriodicPropertyMode;
   range: PeriodicPropertyRange;
@@ -58,7 +76,11 @@ function usePeriodicPropertiesScene() {
 }
 
 /**
- * Renders the active periodic trend as two readable 3D sample tracks.
+ * The active periodic trend as a desk model: two anodised display rails on
+ * a walnut table, one across for a period and one toward the reader for a
+ * group, each carrying its elements as polished spheres or turned pillars
+ * sized by the property, with a brass arrow inlaid along it in the direction
+ * the trend is read.
  */
 export function PeriodicPropertiesScene({
   colors,
@@ -72,65 +94,78 @@ export function PeriodicPropertiesScene({
   const range = getModeRange(mode);
 
   return (
-    <PeriodicPropertiesSceneContext value={{ colors, mode, range }}>
+    <PeriodicPropertiesSceneContext
+      value={{ color: modeColor, colors, mode, range }}
+    >
+      <StudioTable color={TABLE_COLORS.walnut} />
       <group position={[0, SCENE_Y_OFFSET, 0]} scale={SCENE_SCALE}>
-        <TrendTrack
-          axis="period"
-          color={modeColor}
-          samples={mode.periodSamples}
-        />
+        <TrendTrack axis="period" samples={mode.periodSamples} />
 
-        <TrendTrack
-          axis="group"
-          color={modeColor}
-          samples={mode.groupSamples}
-        />
+        <TrendTrack axis="group" samples={mode.groupSamples} />
       </group>
     </PeriodicPropertiesSceneContext>
   );
 }
 
 /**
- * Draws one sample track and the arrow showing reading direction.
+ * One display rail with its markers and the brass arrow inlaid along it,
+ * pointing the way the trend is read.
  */
 function TrendTrack({
   axis,
-  color,
   samples,
 }: {
   axis: TrendAxis;
-  color: string;
   samples: readonly PeriodicPropertySample[];
 }) {
-  const { colors } = usePeriodicPropertiesScene();
   const markerPoints = getTrackPoints(axis, samples.length);
-  const railPoints = getRailPoints(axis, markerPoints);
-  const [startPoint] = railPoints;
-  const endPoint = Arr.last(railPoints);
-
-  if (!startPoint || Option.isNone(endPoint)) {
-    return null;
-  }
+  const span =
+    (samples.length - 1) * (axis === "period" ? PERIOD_STEP : GROUP_STEP);
+  const length = span + 2 * RAIL.margin;
+  const middle: ScenePoint =
+    axis === "period"
+      ? [0, RAIL_Y - RAIL.thick / 2, PERIOD_Z]
+      : [GROUP_X, RAIL_Y - RAIL.thick / 2, GROUP_START_Z + span / 2];
+  const arrow = useMemo(() => arrowGeometry(span + RAIL.margin), [span]);
+  useEffect(() => () => arrow.dispose(), [arrow]);
 
   return (
     <group>
-      <Line
-        color={colors.rail}
-        lineWidth={2}
-        points={railPoints}
-        toneMapped={false}
-      />
-      <ArrowHelper
-        arrowSize={0.16}
-        color={color}
-        from={startPoint}
-        lineWidth={3}
-        to={endPoint.value}
-      />
+      <RoundedBox
+        args={
+          axis === "period"
+            ? [length, RAIL.thick, RAIL.width]
+            : [RAIL.width, RAIL.thick, length]
+        }
+        castShadow
+        position={middle}
+        radius={0.028}
+        receiveShadow
+        smoothness={5}
+      >
+        <meshPhysicalMaterial
+          clearcoat={0.4}
+          clearcoatRoughness={0.3}
+          color={INSTRUMENT_COLORS.anodised}
+          metalness={0.55}
+          roughness={0.36}
+        />
+      </RoundedBox>
+      <mesh
+        castShadow
+        geometry={arrow}
+        position={
+          axis === "period"
+            ? [0, RAIL_Y, PERIOD_Z + ARROW_OFFSET]
+            : [GROUP_X + ARROW_OFFSET, RAIL_Y, GROUP_START_Z + span / 2]
+        }
+        rotation={[0, axis === "period" ? 0 : -Math.PI / 2, 0]}
+      >
+        <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.26} />
+      </mesh>
 
       {Arr.map(samples, (sample, sampleIndex) => (
         <TrendMarker
-          color={color}
           key={`${axis}-${sample.symbol}`}
           position={markerPoints[sampleIndex]}
           sample={sample}
@@ -140,19 +175,41 @@ function TrendTrack({
   );
 }
 
+/** A flat arrow `length` long, lying on y = 0 along x with its middle at the origin, pointing toward +x. */
+function arrowGeometry(length: number) {
+  const tip = length / 2;
+  const neck = tip - ARROW.head;
+  const outline = new Shape();
+  outline.moveTo(-tip, -ARROW.shaft / 2);
+  outline.lineTo(neck, -ARROW.shaft / 2);
+  outline.lineTo(neck, -ARROW.headWidth / 2);
+  outline.lineTo(tip, 0);
+  outline.lineTo(neck, ARROW.headWidth / 2);
+  outline.lineTo(neck, ARROW.shaft / 2);
+  outline.lineTo(-tip, ARROW.shaft / 2);
+  outline.closePath();
+  const geometry = new ExtrudeGeometry(outline, {
+    bevelEnabled: true,
+    bevelSegments: 2,
+    bevelSize: 0.003,
+    bevelThickness: 0.003,
+    depth: ARROW.thick,
+  });
+  geometry.rotateX(-Math.PI / 2);
+  return geometry;
+}
+
 /**
  * Renders one element marker with the symbol attached to the visible face.
  */
 function TrendMarker({
-  color,
   position,
   sample,
 }: {
-  color: string;
   position: ScenePoint;
   sample: PeriodicPropertySample;
 }) {
-  const { mode, range } = usePeriodicPropertiesScene();
+  const { color, mode, range } = usePeriodicPropertiesScene();
   if (mode.marker === "sphere") {
     const radius = scaleValue(
       sample.value,
@@ -164,13 +221,13 @@ function TrendMarker({
     return (
       <group position={position}>
         <mesh castShadow position={[0, radius, 0]}>
-          <sphereGeometry args={[radius, 48, 32]} />
+          <sphereGeometry args={[radius, 64, 48]} />
           <meshPhysicalMaterial
-            clearcoat={0.5}
-            clearcoatRoughness={0.12}
+            clearcoat={1}
+            clearcoatRoughness={0.06}
             color={color}
-            metalness={0}
-            roughness={0.3}
+            ior={1.5}
+            roughness={0.22}
           />
         </mesh>
         <MarkerLabel fontSize="compact" position={[0, radius, 0]}>
@@ -189,16 +246,22 @@ function TrendMarker({
 
   return (
     <group position={position}>
-      <mesh castShadow position={[0, height / 2, 0]} receiveShadow>
-        <cylinderGeometry args={[PILLAR_RADIUS, PILLAR_RADIUS, height, 48]} />
+      <RoundedBox
+        args={[PILLAR_RADIUS * 2, height, PILLAR_RADIUS * 2]}
+        castShadow
+        position={[0, height / 2, 0]}
+        radius={0.02}
+        receiveShadow
+        smoothness={4}
+      >
         <meshPhysicalMaterial
-          clearcoat={0.5}
-          clearcoatRoughness={0.12}
+          clearcoat={1}
+          clearcoatRoughness={0.08}
           color={color}
-          metalness={0}
-          roughness={0.3}
+          ior={1.5}
+          roughness={0.24}
         />
-      </mesh>
+      </RoundedBox>
       <MarkerLabel
         fontSize="annotation"
         position={[0, height + PILLAR_LABEL_OFFSET, 0]}
@@ -290,19 +353,6 @@ function getTrackPoints(axis: TrendAxis, sampleCount: number) {
       RAIL_Y,
       GROUP_START_Z + sampleIndex * GROUP_STEP,
     ] satisfies ScenePoint;
-  });
-}
-
-/**
- * Offsets the guide rail away from markers so direction arrows do not cut through the data.
- */
-function getRailPoints(axis: TrendAxis, markerPoints: readonly ScenePoint[]) {
-  return Arr.map(markerPoints, ([x, , z]) => {
-    if (axis === "period") {
-      return [x, RAIL_Y, z + PERIOD_RAIL_Z_OFFSET] satisfies ScenePoint;
-    }
-
-    return [x + GROUP_RAIL_X_OFFSET, RAIL_Y, z] satisfies ScenePoint;
   });
 }
 

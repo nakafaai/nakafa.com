@@ -223,6 +223,7 @@ export function GreenCatalystScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
+        maximumFontSize={14}
         position={[-0.23, 0.232, 0.02]}
       >
         <span>{parts.reactantStream}</span>
@@ -230,6 +231,7 @@ export function GreenCatalystScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
+        maximumFontSize={14}
         position={[0.015, 0.372, 0.01]}
       >
         <span>{parts.recoveryLoop}</span>
@@ -237,6 +239,7 @@ export function GreenCatalystScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
+        maximumFontSize={14}
         position={[-0.01, 0.022, 0.135]}
       >
         <span>{parts.catalystBed}</span>
@@ -244,14 +247,17 @@ export function GreenCatalystScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
-        position={[PRODUCT_FLASK_POS[0], 0.215, PRODUCT_FLASK_POS[2]]}
+        maximumFontSize={14}
+        position={[PRODUCT_FLASK_POS[0], 0.26, PRODUCT_FLASK_POS[2]]}
       >
         <span>{parts.productOut}</span>
       </ThreeLabel>
       <ThreeLabel
+        anchorX="left"
         color={labelInk}
         fontSize="compact"
-        position={[WASTE_CARBOY_POS[0], 0.215, WASTE_CARBOY_POS[2]]}
+        maximumFontSize={14}
+        position={[WASTE_CARBOY_POS[0] - 0.03, 0.2, WASTE_CARBOY_POS[2]]}
       >
         <span>{parts.wasteBin}</span>
       </ThreeLabel>

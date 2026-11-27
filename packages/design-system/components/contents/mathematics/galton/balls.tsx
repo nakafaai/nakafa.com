@@ -125,7 +125,7 @@ export function GaltonBalls({
         frustumCulled={false}
         ref={moving}
       >
-        <sphereGeometry args={[BALL_RADIUS, 18, 12]} />
+        <sphereGeometry args={[BALL_RADIUS, 28, 20]} />
         <SteelMaterial />
       </instancedMesh>
       <instancedMesh
@@ -134,7 +134,7 @@ export function GaltonBalls({
         frustumCulled={false}
         ref={waiting}
       >
-        <sphereGeometry args={[BALL_RADIUS, 18, 12]} />
+        <sphereGeometry args={[BALL_RADIUS, 28, 20]} />
         <SteelMaterial />
       </instancedMesh>
       <instancedMesh
@@ -158,10 +158,11 @@ export function GaltonBalls({
 function SteelMaterial() {
   return (
     <meshPhysicalMaterial
-      clearcoat={0.4}
+      clearcoat={0.6}
+      clearcoatRoughness={0.05}
       color={GALTON_COLORS.ball}
       metalness={1}
-      roughness={0.16}
+      roughness={0.08}
     />
   );
 }
