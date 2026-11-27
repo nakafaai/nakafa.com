@@ -81,7 +81,7 @@ export function StopwatchSpreadLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={16} setting="lab">
+        <ScienceStage floor={0} ground="epoxy" reach={16} setting="lab">
           <Suspense fallback={null}>
             <TrialScene count={count} />
           </Suspense>
