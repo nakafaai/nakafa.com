@@ -1,4 +1,17 @@
 import { useFrame, useThree } from "@react-three/fiber";
+import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
+import {
+  cargoForms,
+  cellForms,
+  golgiForms,
+  granuleForms,
+  granulePlacements,
+  nucleusForms,
+  reticulumForms,
+  ribosomeForms,
+  ribosomePlacements,
+  vesicleForms,
+} from "@repo/design-system/components/contents/biology/secretion/anatomy";
 import type { SecretionStep } from "@repo/design-system/components/contents/biology/secretion/model";
 import { waypointOf } from "@repo/design-system/components/contents/biology/secretion/model";
 import {
@@ -7,15 +20,28 @@ import {
 } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { Body, Tuft } from "@repo/design-system/components/three/organism/body";
+import { Skin } from "@repo/design-system/components/three/organism/skin";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { ENZYME_COLORS } from "@repo/design-system/lib/material/enzyme";
-import { Array as Arr } from "effect";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import type { Group } from "three";
 
-const GOLGI_STACKS = [0, 1, 2] as const;
-const RIBOSOME_DOTS = [-0.52, -0.35, -0.18] as const;
+/** The wet membrane of an organelle, lit from within by its own colour. */
+function OrganelleSkin({ flesh }: { readonly flesh: string }) {
+  return (
+    <Skin
+      bump={0.5}
+      flesh={flesh}
+      glow={0.35}
+      repeat={[6, 2]}
+      roughness={0.45}
+      surface="mucosa"
+      wet={0.55}
+    />
+  );
+}
 
 function SecretionCamera() {
   const narrow = isNarrowThreeScene(
@@ -54,9 +80,12 @@ export function SecretionScene({
   >;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
+  const ink = useLabelInk();
   const cargoRef = useRef<Group>(null);
   const timer = useRef(0);
   const target = waypointOf(activeStep);
+  const granules = useMemo(granulePlacements, []);
+  const ribosomes = useMemo(ribosomePlacements, []);
 
   useFrame((_, delta) => {
     const dt = simulationStep(delta);
@@ -81,128 +110,115 @@ export function SecretionScene({
     <group>
       <SimulationTicker running={playing} />
       <SecretionCamera />
-      {/* Cutaway acinar cell body */}
-      <mesh position={[0, 0.08, 0]} receiveShadow>
-        <boxGeometry args={[2.9, 0.14, 1.7]} />
-        <meshStandardMaterial
-          color={ENZYME_COLORS.cytoplasm}
-          roughness={0.78}
+      <Body shape={cellForms}>
+        <Skin
+          bump={0.5}
+          flesh={ENZYME_COLORS.ductWall}
+          glow={0.3}
+          repeat={[3, 3]}
+          roughness={0.6}
+          surface="cytoplasm"
+          wet={0.35}
         />
-      </mesh>
-      <mesh position={[0, 0.16, -0.82]}>
-        <boxGeometry args={[2.94, 0.34, 0.08]} />
-        <meshStandardMaterial
-          color={ENZYME_COLORS.cellShell}
-          roughness={0.65}
+      </Body>
+      <Body shape={nucleusForms}>
+        <Skin
+          bump={0.5}
+          flesh={ENZYME_COLORS.nucleus}
+          glow={0.4}
+          repeat={[5, 5]}
+          roughness={0.55}
+          surface="cytoplasm"
+          wet={0.3}
         />
-      </mesh>
-      <mesh position={[1.44, 0.16, 0]}>
-        <boxGeometry args={[0.08, 0.34, 1.7]} />
-        <meshStandardMaterial color={ENZYME_COLORS.ductWall} roughness={0.62} />
-      </mesh>
-
-      {/* Nucleus */}
-      <mesh castShadow position={[-1.05, 0.36, 0]}>
-        <sphereGeometry args={[0.32, 22, 16]} />
-        <meshStandardMaterial color={ENZYME_COLORS.nucleus} roughness={0.52} />
-      </mesh>
-
-      {/* Rough ER + ribosomes */}
-      <group position={[-0.36, 0.24, -0.14]}>
-        <mesh castShadow>
-          <boxGeometry args={[0.62, 0.14, 0.54]} />
-          <meshStandardMaterial
-            color={ENZYME_COLORS.reticulum}
-            roughness={0.55}
-          />
-        </mesh>
-        {Arr.map(RIBOSOME_DOTS, (x) => (
-          <mesh key={x} position={[x + 0.35, 0.1, 0.18]}>
-            <sphereGeometry args={[0.032, 10, 8]} />
-            <meshStandardMaterial
-              color={ENZYME_COLORS.ribosome}
-              roughness={0.45}
-            />
-          </mesh>
-        ))}
-      </group>
-
-      {/* Golgi apparatus stacks */}
-      <group position={[0.42, 0.24, -0.02]}>
-        {Arr.map(GOLGI_STACKS, (idx) => (
-          <mesh castShadow key={idx} position={[idx * 0.11 - 0.11, 0, 0]}>
-            <capsuleGeometry args={[0.042, 0.42, 8, 12]} />
-            <meshStandardMaterial
-              color={ENZYME_COLORS.golgi}
-              roughness={0.52}
-            />
-          </mesh>
-        ))}
-      </group>
+      </Body>
+      <Body shape={reticulumForms}>
+        <OrganelleSkin flesh={ENZYME_COLORS.reticulum} />
+      </Body>
+      <Body shape={golgiForms}>
+        <OrganelleSkin flesh={ENZYME_COLORS.golgi} />
+      </Body>
+      <Tuft placements={ribosomes} shape={ribosomeForms}>
+        <OrganelleSkin flesh={ENZYME_COLORS.ribosome} />
+      </Tuft>
+      <Tuft placements={granules} shape={granuleForms}>
+        <OrganelleSkin flesh={ENZYME_COLORS.vesicle} />
+      </Tuft>
 
       {/* Secretory vesicle + moving enzyme cargo */}
       <group position={[target[0], target[1], target[2]]} ref={cargoRef}>
-        <mesh castShadow>
-          <sphereGeometry args={[0.13, 18, 14]} />
-          <meshPhysicalMaterial
-            color={ENZYME_COLORS.vesicle}
-            opacity={0.45}
-            roughness={0.22}
-            transparent
-          />
-        </mesh>
-        <mesh castShadow>
-          <dodecahedronGeometry args={[0.075, 1]} />
-          <meshStandardMaterial color={ENZYME_COLORS.cargo} roughness={0.38} />
-        </mesh>
+        <group scale={0.075}>
+          <Body shape={cargoForms}>
+            <OrganelleSkin flesh={ENZYME_COLORS.cargo} />
+          </Body>
+        </group>
+        <group scale={0.13}>
+          <Body cast={false} shape={vesicleForms}>
+            <Skin
+              bump={0.3}
+              clear={0.6}
+              flesh={ENZYME_COLORS.vesicle}
+              glow={0.5}
+              repeat={[2, 2]}
+              roughness={0.2}
+              surface="cytoplasm"
+              wet={0.9}
+            />
+          </Body>
+        </group>
       </group>
 
       <ThreeLabel
-        color={ENZYME_COLORS.labelInk}
+        color={ink}
         fontSize="compact"
         position={[-1.05, 0.78, 0]}
       >
         <span>{parts.nucleus}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={ENZYME_COLORS.labelInk}
+        color={ink}
+        anchorY="top"
         fontSize="compact"
-        position={[-0.45, 0.56, 0.42]}
+        position={[-0.5, 0.16, 0.86]}
       >
         <span>{parts.ribosome}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={ENZYME_COLORS.labelInk}
+        color={ink}
         fontSize="compact"
-        position={[-0.25, 0.56, -0.48]}
+        position={[-0.15, 0.98, -0.62]}
       >
         <span>{parts.reticulum}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={ENZYME_COLORS.labelInk}
+        color={ink}
+        anchorY="top"
         fontSize="compact"
-        position={[0.42, 0.64, -0.35]}
+        position={[0.42, 0.14, 0.34]}
       >
         <span>{parts.golgi}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={ENZYME_COLORS.labelInk}
+        color={ink}
         fontSize="compact"
-        position={[0.92, 0.62, 0.28]}
+        position={[0.95, 0.5, 0.1]}
       >
         <span>{parts.vesicle}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={ENZYME_COLORS.labelInk}
+        color={ink}
+        anchorX="right"
+        anchorY="top"
         fontSize="compact"
-        position={[1.4, 0.44, 0.58]}
+        position={[1.22, 0.14, 0.92]}
       >
         <span>{parts.membrane}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={ENZYME_COLORS.labelInk}
+        color={ink}
+        anchorX="right"
         fontSize="compact"
-        position={[1.66, 0.68, -0.1]}
+        position={[1.56, 0.78, -0.7]}
       >
         <span>{parts.duct}</span>
       </ThreeLabel>
