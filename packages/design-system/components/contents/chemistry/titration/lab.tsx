@@ -139,7 +139,6 @@ export function TitrationLab({
               cameraPosition={[0.1, 0.44, 1.32]}
               cameraTarget={[-0.01, 0.37, 0.05]}
               fov={38}
-              framing="content"
               maxDistance={2.4}
               minDistance={0.3}
             />
