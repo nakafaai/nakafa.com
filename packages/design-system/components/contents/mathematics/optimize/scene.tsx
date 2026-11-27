@@ -1,174 +1,141 @@
+import { Line } from "@react-three/drei";
 import type { BoxSheet } from "@repo/design-system/components/contents/mathematics/optimize/model";
-import { evaluateOptimizationBox } from "@repo/design-system/components/contents/mathematics/optimize/model";
-import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { LineEquation } from "@repo/design-system/components/three/line";
-import { Polygon } from "@repo/design-system/components/three/polygon";
-import { Solid } from "@repo/design-system/components/three/solid";
-import { CALCULUS_COLORS } from "@repo/design-system/lib/material/calculus";
+import {
+  BOX_SHEETS,
+  evaluateOptimizationBox,
+} from "@repo/design-system/components/contents/mathematics/optimize/model";
+import { useCalculusColors } from "@repo/design-system/components/contents/mathematics/palette";
+import { ParameterSweep } from "@repo/design-system/components/contents/mathematics/sweep";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
+import { Facets } from "@repo/design-system/components/three/facets";
+import { GraphTag } from "@repo/design-system/components/three/tag";
+import { STROKE_DASH } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
+import type { ComponentProps } from "react";
 import { useMemo } from "react";
 
-const CURVE_CUTS = Arr.makeBy(28, (i) => 0.1 + i * 0.1);
+/**
+ * World units of one unit of the sheet on every axis. The lab passes the
+ * same scale to its coordinate system, so every tick reads the true length.
+ */
+export const OPTIMIZE_SCALE = { x: 0.42, y: 0.42, z: 0.42 } as const;
+const UNIT = OPTIMIZE_SCALE.x;
+/** How far the cut corners lie above the floor, so the grid under them never shows through as a flicker. */
+const LIFT = 0.004;
+/** The four corners of the sheet, as the sign of each one's X and Z. */
+const CORNERS = [
+  [1, 1],
+  [1, -1],
+  [-1, -1],
+  [-1, 1],
+] as const;
 
+/**
+ * The sheet and the open box folded from it, to scale: the outline of the
+ * flat sheet, the square cut from each of its corners, and the box whose
+ * walls stand as high as the cut is deep.
+ */
 export function OptimizationBox3DScene({
   cutout,
   parts,
   sheet,
+  sweep,
 }: {
   readonly cutout: number;
   readonly parts: Readonly<
-    Record<
-      | "basePlate"
-      | "cornerCutouts"
-      | "optimalMarker"
-      | "sideFlaps"
-      | "volumeCurve",
-      string
-    >
+    Record<"basePlate" | "cornerCutouts" | "sideFlaps", string>
   >;
   readonly sheet: BoxSheet;
+  readonly sweep: Omit<ComponentProps<typeof ParameterSweep>, "value">;
 }) {
+  const colors = useCalculusColors();
+  const quantity = useQuantity();
   const box = evaluateOptimizationBox(sheet, cutout);
-  const scale = 0.42;
-  const hw = (box.baseLength * scale) / 2;
-  const hd = (box.baseWidth * scale) / 2;
-  const h = Math.max(0.12, cutout * scale);
+  const size = BOX_SHEETS[sheet];
+  const halfLength = (size.length / 2) * UNIT;
+  const halfWidth = (size.width / 2) * UNIT;
+  const baseX = (box.baseLength / 2) * UNIT;
+  const baseZ = (box.baseWidth / 2) * UNIT;
+  const height = (size.length / 2) * UNIT - baseX;
 
-  const boxFaces = useMemo(
-    () => [
-      [
-        { x: -hw, y: 0, z: -hd },
-        { x: hw, y: 0, z: -hd },
-        { x: hw, y: 0, z: hd },
-        { x: -hw, y: 0, z: hd },
-      ],
-      [
-        { x: -hw, y: 0, z: hd },
-        { x: hw, y: 0, z: hd },
-        { x: hw, y: h, z: hd },
-        { x: -hw, y: h, z: hd },
-      ],
-      [
-        { x: -hw, y: 0, z: -hd },
-        { x: hw, y: 0, z: -hd },
-        { x: hw, y: h, z: -hd },
-        { x: -hw, y: h, z: -hd },
-      ],
-      [
-        { x: hw, y: 0, z: -hd },
-        { x: hw, y: 0, z: hd },
-        { x: hw, y: h, z: hd },
-        { x: hw, y: h, z: -hd },
-      ],
-      [
-        { x: -hw, y: 0, z: -hd },
-        { x: -hw, y: 0, z: hd },
-        { x: -hw, y: h, z: hd },
-        { x: -hw, y: h, z: -hd },
-      ],
-    ],
-    [hw, hd, h]
-  );
-
-  const cutoutCorner = useMemo(
-    () => [
-      { x: hw, y: 0.01, z: hd },
-      { x: hw + h, y: 0.01, z: hd },
-      { x: hw + h, y: 0.01, z: hd + h },
-      { x: hw, y: 0.01, z: hd + h },
-    ],
-    [hw, hd, h]
-  );
-
-  const volumeCurvePts = useMemo(
-    () =>
-      Arr.map(CURVE_CUTS, (x) => ({
-        x: -2.2 + x * 1.4,
-        y: evaluateOptimizationBox(sheet, x).volume * 0.08,
-        z: -2.0,
-      })),
-    [sheet]
-  );
-
-  const optVolume = evaluateOptimizationBox(sheet, box.optimalCut).volume;
+  const { base, cuts, walls } = useMemo(() => {
+    const floor = Arr.map(CORNERS, ([x, z]) => ({
+      x: x * baseX,
+      y: 0,
+      z: z * baseZ,
+    }));
+    const rim = Arr.map(floor, (corner) => ({ ...corner, y: height }));
+    return {
+      base: [floor],
+      cuts: Arr.map(CORNERS, ([x, z]) => [
+        { x: x * baseX, y: LIFT, z: z * baseZ },
+        { x: x * halfLength, y: LIFT, z: z * baseZ },
+        { x: x * halfLength, y: LIFT, z: z * halfWidth },
+        { x: x * baseX, y: LIFT, z: z * halfWidth },
+      ]),
+      walls: Arr.map(CORNERS, (_, index) => {
+        const next = (index + 1) % CORNERS.length;
+        return [
+          floor[index] ?? floor[0],
+          floor[next] ?? floor[0],
+          rim[next] ?? rim[0],
+          rim[index] ?? rim[0],
+        ];
+      }),
+    };
+  }, [baseX, baseZ, halfLength, halfWidth, height]);
 
   return (
     <group>
-      <hemisphereLight
-        args={[CALCULUS_COLORS.lightSky, CALCULUS_COLORS.lightGround, 1.35]}
+      <ParameterSweep {...sweep} value={cutout} />
+      {/* The flat sheet the box is folded from */}
+      <Line
+        color={colors.guide}
+        dashed
+        dashSize={STROKE_DASH.dash}
+        gapSize={STROKE_DASH.gap}
+        lineWidth={1.8}
+        points={Arr.map([...CORNERS, CORNERS[0]], ([x, z]) => [
+          x * halfLength,
+          LIFT,
+          z * halfWidth,
+        ])}
       />
-      {/* Folded open-top 3D box */}
-      <Solid color={CALCULUS_COLORS.amberAccent} faces={boxFaces} />
-      {/* Corner cutout footprint */}
-      <Polygon
-        color={CALCULUS_COLORS.roseAlert}
-        opacity={0.35}
-        vertices={cutoutCorner}
+      <Facets
+        color={colors.alert}
+        edgeWidth={1.6}
+        faces={cuts}
+        opacity={0.22}
       />
-      {/* Live volume curve V(x) in backdrop plane */}
-      <LineEquation
-        color={CALCULUS_COLORS.cobaltCurve}
-        lineWidth={3}
-        points={volumeCurvePts}
-        showPoints={false}
-        smooth
+      <Facets color={colors.curve} edgeWidth={2.2} faces={base} opacity={0.3} />
+      <Facets color={colors.accent} edgeWidth={2.2} faces={walls} />
+      <GraphTag
+        anchorX="right"
+        anchorY="top"
+        color={colors.curve}
+        gap={0.12}
+        math={`${quantity(box.baseLength, "", 2)} \\times ${quantity(box.baseWidth, "", 2)}`}
+        name={parts.basePlate}
+        position={[-halfLength, 0, halfWidth]}
       />
-      {/* Current cut marker on V(x) */}
-      <mesh position={[-2.2 + cutout * 1.4, box.volume * 0.08, -2.0]}>
-        <sphereGeometry args={[0.1, 14, 14]} />
-        <meshBasicMaterial
-          color={CALCULUS_COLORS.amberAccent}
-          toneMapped={false}
-        />
-      </mesh>
-      {/* Stationary optimal peak marker */}
-      <mesh position={[-2.2 + box.optimalCut * 1.4, optVolume * 0.08, -2.0]}>
-        <sphereGeometry args={[0.11, 14, 14]} />
-        <meshBasicMaterial
-          color={CALCULUS_COLORS.emeraldSlope}
-          toneMapped={false}
-        />
-      </mesh>
-      {/* Labels */}
-      <ThreeLabel
-        color={CALCULUS_COLORS.boxCraft}
-        fontSize="compact"
-        position={[-0.25, 0.22, 0.25]}
-      >
-        <span>{parts.basePlate}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={CALCULUS_COLORS.amberAccent}
-        fontSize="compact"
-        position={[hw + 0.32, h + 0.26, 0]}
-      >
-        <span>{parts.sideFlaps}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={CALCULUS_COLORS.roseAlert}
-        fontSize="compact"
-        position={[hw + h * 0.85, 0.16, hd + h + 0.22]}
-      >
-        <span>{parts.cornerCutouts}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={CALCULUS_COLORS.cobaltCurve}
-        fontSize="compact"
-        position={[-2.1, optVolume * 0.08 + 0.45, -2.0]}
-      >
-        <span>{parts.volumeCurve}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={CALCULUS_COLORS.emeraldSlope}
-        fontSize="compact"
-        position={[
-          -2.2 + box.optimalCut * 1.4 + 0.25,
-          optVolume * 0.08 + 0.32,
-          -2.0,
-        ]}
-      >
-        <span>{parts.optimalMarker}</span>
-      </ThreeLabel>
+      <GraphTag
+        anchorX="left"
+        anchorY="bottom"
+        color={colors.accent}
+        gap={0.12}
+        math={`x = ${quantity(cutout, "", 2)}`}
+        name={parts.sideFlaps}
+        position={[baseX, height, -baseZ]}
+      />
+      <GraphTag
+        anchorX="left"
+        anchorY="middle"
+        color={colors.alert}
+        gap={0.12}
+        math="x \times x"
+        name={parts.cornerCutouts}
+        position={[halfLength, 0, (halfWidth + baseZ) / 2]}
+      />
     </group>
   );
 }

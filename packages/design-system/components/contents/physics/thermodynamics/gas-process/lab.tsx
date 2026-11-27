@@ -1,3 +1,4 @@
+import { ProcessDiagram } from "@repo/design-system/components/contents/physics/thermodynamics/gas-process/chart";
 import { temperatureSpan } from "@repo/design-system/components/contents/physics/thermodynamics/gas-process/cylinder";
 import {
   axesFor,
@@ -89,16 +90,18 @@ function EndSlider({
 }
 
 /**
- * An ideal gas in a cylinder beside its p-V diagram, taken through one of
- * the four processes of the first law. The learner picks the process, then
- * drags the end of its path on the board, or the slider, and the end slides
- * along the process's own curve: the piston, the thermometer, the colour of
- * the gas and its molecules all follow. The band under the path is the work
- * W the gas does, and three bars give the heat Q into the gas, W, and the
- * change ΔU of its internal energy on one scale, so ΔU = Q − W shows. What
- * holds each process stands round the cylinder: a weight on the piston, pins
- * through it, a water bath, or a foam jacket. With `showValues`, the bars
- * read their numbers in joules; without them, only their signs.
+ * An ideal gas in a cylinder, taken through one of the four processes of
+ * the first law, with its p-V diagram under the scene. The scene holds the
+ * apparatus alone: the piston, the pressure gauge, the thermometer, the
+ * colour of the gas and its molecules all follow the process. The learner
+ * picks the process, then drags the end of its path on the diagram, or the
+ * slider, and the end slides along the process's own curve. The band under
+ * the path is the work W the gas does, and three bars give the heat Q into
+ * the gas, W, and the change ΔU of its internal energy on one scale, so
+ * ΔU = Q − W shows. What holds each process stands round the cylinder:
+ * weights on the piston, pins through it, a water bath, or a foam jacket.
+ * With `showValues`, the bars read their numbers in joules; without them,
+ * only their signs.
  */
 export function GasProcessLab({
   description,
@@ -136,6 +139,8 @@ export function GasProcessLab({
 }) {
   const format = useFormatter();
   const [chosen, setChosen] = useState<GasProcess>(processes[0].process);
+  // How far along its process the gas is while the card plays, as the scene tells it.
+  const [share, setShare] = useState(1);
   const [ends, setEnds] = useState(() =>
     Rec.fromEntries(
       Arr.map(processes, (setup) => [
@@ -162,8 +167,6 @@ export function GasProcessLab({
   const value = ends[setup.process] ?? rangeOf(setup).end;
   const last = endState(setup.process, first, value, gamma);
   const energy = energyOf(setup.process, first, last, gamma);
-  const tick = (amount: number) =>
-    format.number(amount, "math", { maximumFractionDigits: 2 });
   const kelvin = (temperature: number) =>
     `${format.number(temperature, "math", { maximumFractionDigits: 1, minimumFractionDigits: 1 })} K`;
   const record = (next: number) =>
@@ -218,21 +221,16 @@ export function GasProcessLab({
         <ScienceStage floor={0} reach={0.6} setting="lab">
           <Suspense fallback={null}>
             <GasProcessScene
-              axes={axes}
               end={last}
+              fullPressure={axes.pressure.maximum}
               gamma={gamma}
               kelvin={kelvin}
-              names={{
-                pressure: labels.pressureAxis,
-                volume: labels.volumeAxis,
-              }}
-              onEnd={record}
+              largest={axes.volume.maximum}
+              onShare={setShare}
               process={setup.process}
-              range={rangeOf(setup)}
               scale={scale}
               span={span}
               start={first}
-              tick={tick}
             />
           </Suspense>
         </ScienceStage>
@@ -241,6 +239,17 @@ export function GasProcessLab({
       <VisualCardSceneActions />
 
       <VisualCardFooter>
+        <ProcessDiagram
+          axes={axes}
+          end={last}
+          gamma={gamma}
+          names={{ pressure: labels.pressureAxis, volume: labels.volumeAxis }}
+          onEnd={record}
+          process={setup.process}
+          range={rangeOf(setup)}
+          share={share}
+          start={first}
+        />
         <VisualCardFacts>
           <StateFact index={1} label={labels.startState} state={first} />
           <StateFact index={2} label={labels.endState} state={last} />

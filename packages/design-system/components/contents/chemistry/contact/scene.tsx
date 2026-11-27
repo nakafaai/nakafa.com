@@ -269,6 +269,7 @@ export function ContactSulfuricScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
+        maximumFontSize={14}
         position={[BURNER_X, 0.295, PLANT_Z + 0.02]}
       >
         <span>{parts.burner}</span>
@@ -276,13 +277,15 @@ export function ContactSulfuricScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
-        position={[CONVERTER_X, 0.465, PLANT_Z]}
+        maximumFontSize={14}
+        position={[CONVERTER_X, 0.5, PLANT_Z]}
       >
         <span>{parts.vanadiumBed}</span>
       </ThreeLabel>
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
+        maximumFontSize={14}
         position={[ABSORBER_X, 0.465, PLANT_Z]}
       >
         <span>{parts.absorptionTower}</span>
@@ -290,14 +293,17 @@ export function ContactSulfuricScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
+        maximumFontSize={14}
         position={[DILUTION_X, 0.372, PLANT_Z]}
       >
         <span>{parts.oleumTank}</span>
       </ThreeLabel>
       <ThreeLabel
+        anchorX="right"
         color={labelInk}
         fontSize="compact"
-        position={[FLASK_X, 0.235, PLANT_Z + 0.04]}
+        maximumFontSize={14}
+        position={[FLASK_X + 0.05, 0.235, PLANT_Z + 0.04]}
       >
         <span>{parts.acidPipe}</span>
       </ThreeLabel>

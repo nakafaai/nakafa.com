@@ -33,6 +33,9 @@ import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
+/** The step of the angle slider, which the play action sweeps by. */
+const ANGLE_STEP = 1;
+
 export function DotProductProjection3DLab({
   angle,
   description,
@@ -124,25 +127,38 @@ export function DotProductProjection3DLab({
             min={angle.min}
             onValueChange={setDeg}
             readout={<InlineMath math={quantity(deg, "^\\circ", 0)} />}
-            step={1}
+            step={ANGLE_STEP}
             value={deg}
           />
         </VisualCardToolbar>
 
         <CoordinateSystem
           aria-label={labels.view}
-          cameraPosition={[0.4, 1.2, 6.8]}
-          cameraTarget={[0.2, 0.8, 0]}
+          cameraFraming="focus"
+          cameraPosition={[0.7, 0.5, 10]}
+          cameraProjection={{ kind: "orthographic" }}
+          cameraTarget={[0.7, 0.5, 0]}
           focus={{
-            x: { max: 2.9, min: -2.4 },
-            y: { max: 2.6, min: -0.6 },
+            x: { max: 3.2, min: -1.8 },
+            y: { max: 1.9, min: -1 },
             z: { max: 0.4, min: -0.4 },
           }}
+          playOrbit={false}
           showZAxis={false}
           ticks
         >
           <Suspense fallback={null}>
-            <DotProductProjection3DScene angle={deg} parts={labels.parts} />
+            <DotProductProjection3DScene
+              angle={deg}
+              parts={labels.parts}
+              sweep={{
+                initial: angle.value,
+                max: angle.max,
+                min: angle.min,
+                onValue: setDeg,
+                step: ANGLE_STEP,
+              }}
+            />
           </Suspense>
         </CoordinateSystem>
 

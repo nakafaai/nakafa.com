@@ -111,9 +111,9 @@ export function ElectrolysisLab({
           <Suspense fallback={null}>
             <CameraControls
               cameraPosition={
-                cells.length > 1 ? [0.1, 0.34, 0.64] : [0.06, 0.27, 0.56]
+                cells.length > 1 ? [0.05, 0.27, 0.8] : [0.04, 0.24, 0.66]
               }
-              cameraTarget={[0, 0.08, 0.14]}
+              cameraTarget={[0, 0.085, 0.14]}
               fov={34}
               maxDistance={1.6}
               minDistance={0.2}

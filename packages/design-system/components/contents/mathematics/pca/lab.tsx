@@ -30,6 +30,9 @@ import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
+/** The step of the correlation slider, which the play action sweeps by. */
+const CORRELATION_STEP = 0.02;
+
 export function PcaProjection3DLab({
   correlation,
   description,
@@ -121,19 +124,20 @@ export function PcaProjection3DLab({
             min={correlation.min}
             onValueChange={setCorr}
             readout={<InlineMath math={quantity(corr, "", 2)} />}
-            step={0.02}
+            step={CORRELATION_STEP}
             value={corr}
           />
         </VisualCardToolbar>
 
         <CoordinateSystem
           aria-label={labels.view}
-          cameraPosition={[4.8, 3.6, 5.4]}
-          cameraTarget={[0, 0.2, 0]}
+          cameraFraming="focus"
+          cameraPosition={[3.6, 3.4, 6.6]}
+          cameraTarget={[0, 0.1, 0]}
           focus={{
-            x: { max: 2.8, min: -2.8 },
-            y: { max: 1.6, min: -1.2 },
-            z: { max: 2.0, min: -2.0 },
+            x: { max: 2.9, min: -2.9 },
+            y: { max: 1.6, min: -1.3 },
+            z: { max: 1.8, min: -1.8 },
           }}
           showZAxis
           ticks
@@ -143,6 +147,13 @@ export function PcaProjection3DLab({
               correlation={corr}
               parts={labels.parts}
               subspace={active}
+              sweep={{
+                initial: correlation.value,
+                max: correlation.max,
+                min: correlation.min,
+                onValue: setCorr,
+                step: CORRELATION_STEP,
+              }}
             />
           </Suspense>
         </CoordinateSystem>

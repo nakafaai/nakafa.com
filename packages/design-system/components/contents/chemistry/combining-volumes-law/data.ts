@@ -72,9 +72,9 @@ const CombiningVolumesModeModelSchema = Schema.Struct({
 type CombiningVolumesModeModel = typeof CombiningVolumesModeModelSchema.Type;
 
 export const COMBINING_VOLUMES_SCENE_VIEW = {
-  cameraPosition: [0, 2.15, 4.35],
+  cameraPosition: [0, 1.25, 5.2],
   cameraTarget: [0, 0.02, 0],
-  narrowCameraPosition: [0, 2.62, 5.8],
+  narrowCameraPosition: [0, 1.7, 6.2],
 } satisfies Record<string, CombiningVolumesScenePoint>;
 
 export const COMBINING_VOLUMES_MODELS = {

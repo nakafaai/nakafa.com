@@ -54,6 +54,7 @@ const toggleGroupRootVariants = cva(
       gridColumns: {
         auto: "grid w-full grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(8rem,1fr))]",
         "2": "grid w-full auto-cols-[1fr] grid-flow-col",
+        "2-sm": "grid w-full grid-cols-1 sm:grid-cols-2",
         "3": "grid w-full grid-cols-1 sm:grid-cols-3",
         "4": "grid w-full grid-cols-2 sm:grid-cols-4",
         "4-lg": "grid w-full grid-cols-2 lg:grid-cols-4",

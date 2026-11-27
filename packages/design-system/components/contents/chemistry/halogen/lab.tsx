@@ -1,7 +1,6 @@
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import type { HalogenPair } from "@repo/design-system/components/contents/chemistry/halogen/model";
 import { HalogenDisplacementScene } from "@repo/design-system/components/contents/chemistry/halogen/scene";
-import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -81,13 +80,13 @@ export function HalogenDisplacementLab({
         <VisualCardToolbar>
           <ToggleGroup
             aria-label={labels.pair}
-            gridColumns={toggleColumns(pairs.length)}
             onValueChange={(next: string) => {
               Option.map(
                 Arr.findFirst(pairs, (item) => item === next),
                 setSelected
               );
             }}
+            orientation="vertical"
             type="single"
             value={active}
             variant="outline"

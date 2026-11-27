@@ -1,6 +1,6 @@
 /**
- * The marble lab's objects as a camera sees them: opaque glass marbles in
- * five glazes, a clear storage jar with a tin lid, a glazed dish, an oak
+ * The marble lab's objects as a camera sees them: swirled glass marbles in
+ * five colours, each with ribbons of white glass twisted through it, a clear storage jar with a tin lid, a glazed dish, an oak
  * tabletop and a walnut tally board with beech pegs. A simulation that shows
  * one of them takes its colour from here, so it looks the same in every
  * lesson.
@@ -12,6 +12,8 @@ export const MARBLE_COLORS = {
   red: "#ae1f2b",
   white: "#e9e7e1",
   yellow: "#e0ad16",
+  // The white glass ribbon twisted through every marble.
+  ribbon: "#f4f1ea",
   // The jar: soda-lime glass, faintly green through its thickness.
   jarGlass: "#eef4f2",
   jarTint: "#cfe5d8",

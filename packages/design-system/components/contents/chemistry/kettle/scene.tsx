@@ -86,6 +86,7 @@ export function SaponificationKettleScene({
         <ThreeLabel
           color={labelInk}
           fontSize="compact"
+          maximumFontSize={14}
           position={[0, 0.285, KETTLE_Z]}
         >
           <span>{parts.soapCurd}</span>
@@ -95,6 +96,7 @@ export function SaponificationKettleScene({
           <ThreeLabel
             color={labelInk}
             fontSize="compact"
+            maximumFontSize={14}
             position={[-0.21, 0.455, KETTLE_Z]}
           >
             <span>{parts.alkaliStream}</span>
@@ -103,15 +105,16 @@ export function SaponificationKettleScene({
             anchorX="right"
             color={labelInk}
             fontSize="compact"
+            maximumFontSize={14}
             position={[-0.17, 0.235, KETTLE_Z + 0.04]}
           >
             <span>{parts.kettle}</span>
           </ThreeLabel>
           <ThreeLabel
-            anchorX="left"
             color={labelInk}
             fontSize="compact"
-            position={[0.175, 0.315, KETTLE_Z + 0.03]}
+            maximumFontSize={14}
+            position={[0.2, 0.47, KETTLE_Z + 0.03]}
           >
             <span>{parts.soapCurd}</span>
           </ThreeLabel>
@@ -119,6 +122,7 @@ export function SaponificationKettleScene({
             anchorX="left"
             color={labelInk}
             fontSize="compact"
+            maximumFontSize={14}
             position={[0.175, 0.145, KETTLE_Z + 0.04]}
           >
             <span>{state.hasBrine ? parts.saltLayer : parts.triglyceride}</span>

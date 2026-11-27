@@ -3,6 +3,8 @@ import {
   EnergyArrow,
   FLOOR,
   Keeper,
+  needleAngle,
+  PressureGauge,
   Stand,
   Thermometer,
 } from "@repo/design-system/components/contents/physics/thermodynamics/gas-process/apparatus";
@@ -26,13 +28,27 @@ import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { GAS_COLORS } from "@repo/design-system/lib/material/gas";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
+import { Array as Arr } from "effect";
 import type { RefObject } from "react";
 import { useMemo, useRef } from "react";
 import type { Group, InstancedMesh, Mesh, MeshStandardMaterial } from "three";
 import { Color, Object3D } from "three";
 
 /** The piston's disc and the rod that rises from it to its knob, in metres. */
-const PISTON = { rod: 0.25, thickness: 0.016 } as const;
+const PISTON = { rod: 0.25, thickness: 0.022 } as const;
+
+/** The brass weights that load an isobaric piston, from the lowest up: how far each stands in from the bore, and its height. */
+const WEIGHTS = [
+  { height: 0.014, inset: 0.008 },
+  { height: 0.012, inset: 0.013 },
+  { height: 0.01, inset: 0.019 },
+] as const;
+
+/** How far apart the marks on the glass stand, in metres. */
+const GRADUATION = 0.02;
+
+/** The bearing round the glass the scale is printed at, in radians from its right side toward its front: clear of the molecules a camera sees through the middle. */
+const SCALE_BEARING = 0.62;
 
 /** How fast the molecules fly at the start temperature, in crossings a second. */
 const PACE = 0.32;
@@ -83,6 +99,7 @@ function flyMolecules(
  * process while it plays.
  */
 export function GasRig({
+  fullPressure,
   heatShown,
   kelvin,
   largest,
@@ -94,6 +111,8 @@ export function GasRig({
   startVolume,
   workShown,
 }: {
+  /** The pressure at the end of the gauge's scale. */
+  readonly fullPressure: number;
   readonly heatShown: boolean;
   readonly kelvin: (temperature: number) => string;
   readonly largest: number;
@@ -116,6 +135,7 @@ export function GasRig({
   const molecules = useRef<InstancedMesh>(null);
   const reading = useRef<HTMLSpanElement>(null);
   const work = useRef<Group>(null);
+  const needle = useRef<Group>(null);
   const heatArrow: ArrowHandle = useRef(null);
   const workArrow: ArrowHandle = useRef(null);
   const clock = useRef(0);
@@ -156,6 +176,11 @@ export function GasRig({
       FLOOR + height + PISTON.thickness / 2,
       0
     );
+    needle.current?.rotation.set(
+      0,
+      0,
+      needleAngle(state.pressure, fullPressure)
+    );
     const text = kelvin(state.temperature);
     if (reading.current !== null && reading.current.textContent !== text) {
       reading.current.textContent = text;
@@ -186,6 +211,48 @@ export function GasRig({
         />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.14} />
       </mesh>
+      {/* The fire-polished rim of the glass and the steel collar it stands in */}
+      <mesh
+        position={[0, FLOOR + CYLINDER.height, 0]}
+        rotation={[Math.PI / 2, 0, 0]}
+      >
+        <torusGeometry args={[radius + 0.002, 0.0022, 16, 72]} />
+        <GlassMaterial color={BENCH_COLORS.glassEdge} opacity={0.42} />
+      </mesh>
+      <mesh
+        castShadow
+        position={[0, FLOOR + 0.004, 0]}
+        rotation={[Math.PI / 2, 0, 0]}
+      >
+        <torusGeometry args={[radius + 0.004, 0.004, 16, 72]} />
+        <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.22} />
+      </mesh>
+      {/* The scale printed on the glass, a longer mark at every other step */}
+      {Arr.map(
+        Arr.range(1, Math.floor(CYLINDER.height / GRADUATION) - 1),
+        (step) => (
+          <mesh
+            key={step}
+            position={[0, FLOOR + step * GRADUATION, 0]}
+            rotation={[
+              Math.PI / 2,
+              0,
+              SCALE_BEARING - (step % 2 === 0 ? 0.24 : 0.13),
+            ]}
+          >
+            <torusGeometry
+              args={[
+                radius + 0.0024,
+                0.000_35,
+                6,
+                24,
+                step % 2 === 0 ? 0.48 : 0.26,
+              ]}
+            />
+            <meshBasicMaterial color={BENCH_COLORS.glassMarking} />
+          </mesh>
+        )
+      )}
       <mesh ref={gas}>
         <cylinderGeometry args={[radius - 0.0008, radius - 0.0008, 1, 40]} />
         <meshStandardMaterial
@@ -197,22 +264,17 @@ export function GasRig({
         />
       </mesh>
       <instancedMesh args={[undefined, undefined, MOLECULES]} ref={molecules}>
-        <sphereGeometry args={[0.0042, 10, 8]} />
-        <meshStandardMaterial color={GAS_COLORS.molecule} roughness={0.4} />
+        <sphereGeometry args={[0.0042, 20, 14]} />
+        <meshStandardMaterial
+          color={GAS_COLORS.molecule}
+          metalness={0.1}
+          roughness={0.28}
+        />
       </instancedMesh>
       <group ref={piston}>
         <Piston weighted={process === "isobaric"} />
       </group>
-      {process === "isochoric" ? (
-        <mesh
-          castShadow
-          position={[0, pinHeight, 0]}
-          rotation={[0, 0, Math.PI / 2]}
-        >
-          <cylinderGeometry args={[0.0035, 0.0035, 2 * radius + 0.04, 12]} />
-          <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.25} />
-        </mesh>
-      ) : null}
+      {process === "isochoric" ? <RetainingPins height={pinHeight} /> : null}
       <group
         position={[-(radius + 0.016), FLOOR + 0.035, 0]}
         rotation={[0, 0, -Math.PI / 2]}
@@ -236,44 +298,123 @@ export function GasRig({
           />
         ) : null}
       </group>
+      <PressureGauge needle={needle} />
       <Thermometer reading={reading} />
     </group>
   );
 }
 
-/** The piston: an aluminium disc sealed by a dark ring, its steel rod and black knob, and on an isobaric piston a slotted brass weight. */
+/**
+ * The two steel pins that hold an isochoric piston: they cross over it
+ * through the glass, each with a knurled brass head at either end, so the
+ * piston cannot rise and the volume stays.
+ */
+function RetainingPins({ height }: { readonly height: number }) {
+  const reach = CYLINDER.radius + 0.022;
+  return (
+    <group position={[0, height, 0]}>
+      {Arr.map([0, Math.PI / 2], (turn) => (
+        <group key={turn} rotation={[0, turn, 0]}>
+          <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.0032, 0.0032, 2 * reach, 20]} />
+            <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.2} />
+          </mesh>
+          {Arr.map([-1, 1], (side) => (
+            <mesh
+              castShadow
+              key={side}
+              position={[side * reach, 0, 0]}
+              rotation={[0, 0, Math.PI / 2]}
+            >
+              <cylinderGeometry args={[0.0068, 0.0068, 0.009, 14]} />
+              <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.42} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+    </group>
+  );
+}
+
+/**
+ * The piston: a machined steel disc with a chamfered crown, sealed against
+ * the glass by two rubber rings in their grooves, its polished rod and black
+ * knob, and on an isobaric piston a stack of slotted brass weights.
+ */
 function Piston({ weighted }: { readonly weighted: boolean }) {
   const radius = CYLINDER.radius;
+  const stack = Arr.reduce(
+    WEIGHTS,
+    {
+      placed: Arr.empty<{ at: number; height: number; inset: number }>(),
+      top: PISTON.thickness + 0.001,
+    },
+    (pile, weight) => ({
+      placed: Arr.append(pile.placed, {
+        at: pile.top + weight.height / 2,
+        height: weight.height,
+        inset: weight.inset,
+      }),
+      top: pile.top + weight.height + 0.0012,
+    })
+  ).placed;
   return (
     <group>
-      <mesh castShadow position={[0, PISTON.thickness / 2, 0]}>
+      <mesh castShadow position={[0, (PISTON.thickness - 0.003) / 2, 0]}>
         <cylinderGeometry
-          args={[radius - 0.0006, radius - 0.0006, PISTON.thickness, 48]}
+          args={[
+            radius - 0.0009,
+            radius - 0.0009,
+            PISTON.thickness - 0.003,
+            64,
+          ]}
         />
-        <MetalMaterial color={INSTRUMENT_COLORS.aluminium} roughness={0.3} />
+        <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.38} />
       </mesh>
-      <mesh position={[0, PISTON.thickness / 2, 0]}>
-        <cylinderGeometry args={[radius, radius, 0.004, 48]} />
-        <meshStandardMaterial color={BENCH_COLORS.stopper} roughness={0.6} />
+      <mesh castShadow position={[0, PISTON.thickness - 0.0015, 0]}>
+        <cylinderGeometry args={[radius - 0.004, radius - 0.0009, 0.003, 64]} />
+        <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.3} />
       </mesh>
-      <mesh castShadow position={[0, PISTON.thickness + PISTON.rod / 2, 0]}>
-        <cylinderGeometry args={[0.005, 0.005, PISTON.rod, 16]} />
-        <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.25} />
-      </mesh>
-      <mesh castShadow position={[0, PISTON.thickness + PISTON.rod, 0]}>
-        <sphereGeometry args={[0.013, 24, 16]} />
-        <meshStandardMaterial color={BENCH_COLORS.stopper} roughness={0.5} />
-      </mesh>
-      {weighted ? (
-        <mesh castShadow position={[0, PISTON.thickness + 0.015, 0]}>
-          <cylinderGeometry args={[radius - 0.01, radius - 0.01, 0.03, 40]} />
+      {Arr.map([0.3, 0.68], (share) => (
+        <mesh
+          key={share}
+          position={[0, PISTON.thickness * share, 0]}
+          rotation={[Math.PI / 2, 0, 0]}
+        >
+          <torusGeometry args={[radius - 0.0012, 0.0017, 12, 72]} />
           <meshStandardMaterial
-            color={INSTRUMENT_COLORS.brass}
-            metalness={0.55}
-            roughness={0.32}
+            color={BENCH_COLORS.leadBlack}
+            roughness={0.72}
           />
         </mesh>
-      ) : null}
+      ))}
+      <mesh castShadow position={[0, PISTON.thickness + 0.004, 0]}>
+        <cylinderGeometry args={[0.009, 0.011, 0.008, 32]} />
+        <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.3} />
+      </mesh>
+      <mesh castShadow position={[0, PISTON.thickness + PISTON.rod / 2, 0]}>
+        <cylinderGeometry args={[0.005, 0.005, PISTON.rod, 24]} />
+        <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.16} />
+      </mesh>
+      <mesh castShadow position={[0, PISTON.thickness + PISTON.rod, 0]}>
+        <sphereGeometry args={[0.013, 32, 24]} />
+        <meshStandardMaterial color={BENCH_COLORS.stopper} roughness={0.5} />
+      </mesh>
+      {weighted
+        ? Arr.map(stack, (weight) => (
+            <mesh castShadow key={weight.inset} position={[0, weight.at, 0]}>
+              <cylinderGeometry
+                args={[
+                  radius - weight.inset,
+                  radius - weight.inset,
+                  weight.height,
+                  56,
+                ]}
+              />
+              <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.3} />
+            </mesh>
+          ))
+        : null}
     </group>
   );
 }

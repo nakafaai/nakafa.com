@@ -35,9 +35,9 @@ export const ChemicalReactionTypeSceneLabelsSchema = Schema.Struct({
 });
 
 export const CHEMICAL_REACTION_TYPES_SCENE_VIEW = {
-  cameraPosition: [0, 1.8, 4],
+  cameraPosition: [0, 1.6, 6.2],
   cameraTarget: [0, 0, 0],
-  narrowCameraPosition: [0, 2.1, 4.9],
+  narrowCameraPosition: [0, 2, 7.4],
 } satisfies Record<string, ChemicalReactionTypeScenePoint>;
 
 /**

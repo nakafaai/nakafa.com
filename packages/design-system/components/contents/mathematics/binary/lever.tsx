@@ -8,6 +8,8 @@ import type { Group } from "three";
 /** A panel-mount toggle switch, in metres. */
 const SWITCH = {
   bushing: { height: 0.005, radius: 0.0031 },
+  // The knurled dress ring a finger tightens, its flats catching the light.
+  knurl: { radius: 0.0046 },
   lever: { length: 0.019, root: 0.0026, tip: 0.0017 },
   nut: { height: 0.0028, radius: 0.0068 },
   plate: { depth: 0.036, height: 0.0012, width: 0.024 },
@@ -21,7 +23,8 @@ const SNAP = 40;
 
 /**
  * A chrome bat-handle toggle switch through a brushed steel plate: the hex
- * nut that clamps it, its threaded bushing, and the lever, which leans back
+ * nut that clamps it, its knurled dress ring and threaded bushing, and the
+ * lever, which leans back
  * toward its lamp when the switch is on and toward the reader when it is
  * off. A flipped lever snaps across instead of jumping.
  */
@@ -65,6 +68,24 @@ export function ToggleSwitch({ on }: { readonly on: boolean }) {
       </mesh>
       <mesh
         castShadow
+        position={[0, SWITCH.plate.height + SWITCH.nut.height + 0.0011, 0]}
+      >
+        <cylinderGeometry
+          args={[SWITCH.knurl.radius, SWITCH.knurl.radius, 0.0022, 40]}
+        />
+        <meshPhysicalMaterial
+          args={[
+            {
+              color: LAMP_COLORS.chrome,
+              flatShading: true,
+              metalness: 1,
+              roughness: 0.3,
+            },
+          ]}
+        />
+      </mesh>
+      <mesh
+        castShadow
         position={[
           0,
           SWITCH.plate.height + SWITCH.nut.height + SWITCH.bushing.height / 2,
@@ -96,13 +117,13 @@ export function ToggleSwitch({ on }: { readonly on: boolean }) {
               SWITCH.lever.tip,
               SWITCH.lever.root,
               SWITCH.lever.length,
-              20,
+              32,
             ]}
           />
           <MetalMaterial color={LAMP_COLORS.chrome} roughness={0.12} />
         </mesh>
         <mesh castShadow position={[0, SWITCH.lever.length, 0]}>
-          <sphereGeometry args={[SWITCH.lever.tip * 1.15, 16, 12]} />
+          <sphereGeometry args={[SWITCH.lever.tip * 1.15, 28, 20]} />
           <MetalMaterial color={LAMP_COLORS.chrome} roughness={0.12} />
         </mesh>
       </group>

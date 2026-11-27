@@ -12,7 +12,7 @@ import { VisualCardBody } from "@repo/design-system/components/visual/card";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Suspense, useEffect } from "react";
 
-const CAMERA_POSITION = [0, 10, 3] satisfies [number, number, number];
+const CAMERA_POSITION = [1.6, 6.2, 7.4] satisfies [number, number, number];
 const CAMERA_TARGET = [-0.65, 0.45, 0.6] satisfies [number, number, number];
 /**
  * Renders the periodic-properties trend model in a responsive 3D canvas.
@@ -43,7 +43,7 @@ export function PeriodicPropertiesCanvas({
           <CameraControls
             cameraPosition={CAMERA_POSITION}
             cameraTarget={CAMERA_TARGET}
-            fov={44}
+            fov={30}
             framing="content"
           />
           <PeriodicPropertiesScene colors={colors} modeId={modeId} />

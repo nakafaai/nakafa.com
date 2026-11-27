@@ -70,7 +70,7 @@ const TOWN_COLUMNS: Partial<Record<number, "2" | "3" | "4" | "6">> = {
  * roads of a town light up when the learner points at it, taps it or picks it
  * in the toolbar, playing lights each town's roads in turn, and the footer
  * adds the degrees up to twice the number of roads. In the route mode the
- * learner picks a simple route from the start to the end and a delivery van
+ * learner picks a simple route from the start to the end and a lit bead
  * drives it, and the footer adds up its roads.
  * With `showShortest`, the footer also totals each route and names the
  * shortest, and playing drives every route from the longest to the shortest;

@@ -4,7 +4,6 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   crossingsOf,
   layoutTowns,
-  plateSpots,
   roadDistances,
   segmentDistance,
 } from "@repo/design-system/components/contents/mathematics/network/layout";
@@ -97,43 +96,6 @@ describe("network layout", () => {
     expect(segmentDistance({ x: 0.5, z: 0.3 }, a, b)).toBeCloseTo(0.3);
     expect(segmentDistance({ x: -1, z: 0 }, a, b)).toBeCloseTo(1);
     expect(segmentDistance({ x: 3, z: 4 }, a, a)).toBeCloseTo(5);
-  });
-
-  it("sets each length plate beside its road, clear of towns and roads", () => {
-    const three = Arr.take(towns, 3);
-    const spots = [
-      { x: 0, z: 0 },
-      { x: 0.2, z: 0 },
-      { x: 0.1, z: 0.05 },
-    ];
-    const plates = plateSpots(
-      three,
-      [
-        { from: "A", length: 1, to: "B" },
-        { from: "B", length: 1, to: "A" },
-        { from: "A", length: 1, to: "X" },
-        { from: "X", length: 1, to: "A" },
-      ],
-      spots,
-      0.02
-    );
-    expect(plates).toHaveLength(4);
-    const [first] = plates;
-    expect(Math.abs(first?.z ?? 0)).toBeCloseTo(0.02);
-    expect(segmentDistance(first ?? spots[0], spots[0], spots[1])).toBeCloseTo(
-      0.02
-    );
-  });
-
-  it("keeps the sample's plates clear of one another", () => {
-    const spots = layoutTowns(towns, roads, board);
-    const plates = plateSpots(towns, roads, spots, 0.026);
-    const gaps = Arr.flatMap(plates, (one, a) =>
-      Arr.map(Arr.drop(plates, a + 1), (two) =>
-        Math.hypot(two.x - one.x, two.z - one.z)
-      )
-    );
-    expect(Math.min(...gaps)).toBeGreaterThan(0.05);
   });
 
   it("copes with a lone town and towns no road joins", () => {

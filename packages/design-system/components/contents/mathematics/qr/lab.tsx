@@ -1,8 +1,10 @@
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import type { QrStep } from "@repo/design-system/components/contents/mathematics/qr/model";
 import { evaluateQrStep } from "@repo/design-system/components/contents/mathematics/qr/model";
-import { QrGramSchmidt3DScene } from "@repo/design-system/components/contents/mathematics/qr/scene";
-import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
+import {
+  QR_SCALE,
+  QrGramSchmidt3DScene,
+} from "@repo/design-system/components/contents/mathematics/qr/scene";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
@@ -29,6 +31,9 @@ import { VisualSlider } from "@repo/design-system/components/visual/slider";
 import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
+
+/** The step of the skew slider, which the play action sweeps by. */
+const SKEW_STEP = 0.02;
 
 export function QrGramSchmidt3DLab({
   description,
@@ -94,7 +99,7 @@ export function QrGramSchmidt3DLab({
           {steps.length > 1 ? (
             <ToggleGroup
               aria-label={labels.step}
-              gridColumns={toggleColumns(steps.length)}
+              gridColumns="2-sm"
               onValueChange={(next: string) => {
                 Option.map(
                   Arr.findFirst(steps, (item) => item === next),
@@ -120,20 +125,22 @@ export function QrGramSchmidt3DLab({
             min={skew.min}
             onValueChange={setSkewVal}
             readout={<InlineMath math={quantity(skewVal, "", 2)} />}
-            step={0.02}
+            step={SKEW_STEP}
             value={skewVal}
           />
         </VisualCardToolbar>
 
         <CoordinateSystem
           aria-label={labels.view}
-          cameraPosition={[4.6, 3.5, 5.2]}
-          cameraTarget={[0.4, 0.5, 0.4]}
+          cameraFraming="focus"
+          cameraPosition={[4.2, 3, 6.4]}
+          cameraTarget={[0.3, 0.2, 0.2]}
           focus={{
-            x: { max: 2.6, min: -2.0 },
-            y: { max: 2.2, min: -1.8 },
-            z: { max: 2.2, min: -1.8 },
+            x: { max: 2.2, min: -1.5 },
+            y: { max: 1.6, min: -1.5 },
+            z: { max: 1.5, min: -1.5 },
           }}
+          scale={QR_SCALE}
           showZAxis
           ticks
         >
@@ -142,6 +149,13 @@ export function QrGramSchmidt3DLab({
               parts={labels.parts}
               skew={skewVal}
               step={active}
+              sweep={{
+                initial: skew.value,
+                max: skew.max,
+                min: skew.min,
+                onValue: setSkewVal,
+                step: SKEW_STEP,
+              }}
             />
           </Suspense>
         </CoordinateSystem>

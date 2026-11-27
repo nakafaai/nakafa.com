@@ -30,6 +30,9 @@ import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
+/** The step of the probe slider, which the play action sweeps by. */
+const PROBE_STEP = 0.05;
+
 export function AsymptoteBehaviorLab({
   curves,
   description,
@@ -120,20 +123,23 @@ export function AsymptoteBehaviorLab({
             min={probeX.min}
             onValueChange={setXVal}
             readout={<InlineMath math={quantity(xVal, "", 2)} />}
-            step={0.05}
+            step={PROBE_STEP}
             value={xVal}
           />
         </VisualCardToolbar>
 
         <CoordinateSystem
           aria-label={labels.view}
-          cameraPosition={[0, 0.2, 7.6]}
-          cameraTarget={[0, 0, 0]}
+          cameraFraming="focus"
+          cameraPosition={[0.6, 0, 10]}
+          cameraProjection={{ kind: "orthographic" }}
+          cameraTarget={[0.6, 0, 0]}
           focus={{
-            x: { max: 3.0, min: -3.0 },
-            y: { max: 2.8, min: -2.8 },
+            x: { max: 4.2, min: -3 },
+            y: { max: 3.1, min: -3.1 },
             z: { max: 0.4, min: -0.4 },
           }}
+          playOrbit={false}
           showZAxis={false}
           ticks
         >
@@ -142,6 +148,13 @@ export function AsymptoteBehaviorLab({
               curve={active}
               parts={labels.parts}
               probeX={xVal}
+              sweep={{
+                initial: probeX.value,
+                max: probeX.max,
+                min: probeX.min,
+                onValue: setXVal,
+                step: PROBE_STEP,
+              }}
             />
           </Suspense>
         </CoordinateSystem>

@@ -7,7 +7,6 @@ import {
 import type { SurfacePreset } from "@repo/design-system/components/contents/chemistry/collision/model";
 import { evaluateCollision } from "@repo/design-system/components/contents/chemistry/collision/model";
 import {
-  BoltzmannStand,
   GraduatedBeaker,
   Hotplate,
 } from "@repo/design-system/components/contents/chemistry/collision/parts";
@@ -25,7 +24,7 @@ import { Array as Arr, Match, Schema } from "effect";
 import { useMemo, useRef } from "react";
 import type { Group, Mesh } from "three";
 
-const BEAKER_X = -0.14;
+const BEAKER_X = 0;
 const BEAKER_Z = 0.02;
 const BEAKER_BASE_Y = 0.072;
 const LIQUID_LEVEL = 0.096;
@@ -164,8 +163,8 @@ function CollisionCamera() {
   );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0.05, 0.36, 0.92] : [0.04, 0.28, 0.72]}
-      cameraTarget={[0.03, 0.125, 0.02]}
+      cameraPosition={narrow ? [0.02, 0.36, 0.8] : [0.02, 0.27, 0.62]}
+      cameraTarget={[0, 0.118, 0.02]}
       fov={38}
       maxDistance={1.65}
       minDistance={0.32}
@@ -180,12 +179,7 @@ export function CollisionVesselScene({
   temperatureK,
 }: {
   readonly concentrationM: number;
-  readonly parts: Readonly<
-    Record<
-      "activationLine" | "products" | "reactants" | "shadedArea" | "vessel",
-      string
-    >
-  >;
+  readonly parts: Readonly<Record<"products" | "reactants" | "vessel", string>>;
   readonly surface: SurfacePreset;
   readonly temperatureK: number;
 }) {
@@ -356,24 +350,21 @@ export function CollisionVesselScene({
         </group>
       </group>
 
-      {/* Right: Tabletop Maxwell-Boltzmann spectrometer display stand */}
-      <group position={[0.2, 0, 0.01]} rotation={[0, -0.18, 0]}>
-        <BoltzmannStand heatNorm={heatNorm} temperatureK={temperatureK} />
-      </group>
-
       {/* Crisp adaptive-ink labels with zero overlap */}
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
+        maximumFontSize={14}
         position={[BEAKER_X, 0.228, BEAKER_Z]}
       >
         <span>{parts.vessel}</span>
       </ThreeLabel>
       <ThreeLabel
-        anchorX="right"
+        anchorX="left"
         color={labelInk}
         fontSize="compact"
-        position={[BEAKER_X - 0.068, 0.135, BEAKER_Z + 0.02]}
+        maximumFontSize={14}
+        position={[BEAKER_X + 0.066, 0.118, BEAKER_Z + 0.03]}
       >
         <span>{parts.reactants}</span>
       </ThreeLabel>
@@ -381,23 +372,10 @@ export function CollisionVesselScene({
         anchorX="left"
         color={labelInk}
         fontSize="compact"
-        position={[BEAKER_X + 0.062, 0.172, BEAKER_Z + 0.03]}
+        maximumFontSize={14}
+        position={[BEAKER_X + 0.066, 0.166, BEAKER_Z + 0.03]}
       >
         <span>{parts.products}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={labelInk}
-        fontSize="compact"
-        position={[0.23, 0.232, 0.01]}
-      >
-        <span>{parts.activationLine}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={labelInk}
-        fontSize="compact"
-        position={[0.265, 0.092, 0.048]}
-      >
-        <span>{parts.shadedArea}</span>
       </ThreeLabel>
     </group>
   );

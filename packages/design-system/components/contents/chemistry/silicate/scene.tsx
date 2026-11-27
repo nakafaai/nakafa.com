@@ -66,11 +66,12 @@ export function GlassCeramicScene({
     ? parts.silicaTetrahedron
     : parts.clayLayer;
 
-  let secondaryLabel = parts.crystalGrain;
+  // Plain soda-lime glass has one thing to name, so its lattice carries no second label.
+  let secondaryLabel: string | null = parts.crystalGrain;
   if (profile.hasBoron) {
     secondaryLabel = parts.boronNode;
   } else if (profile.isAmorphous) {
-    secondaryLabel = parts.silicaTetrahedron;
+    secondaryLabel = null;
   }
 
   return (
@@ -105,17 +106,21 @@ export function GlassCeramicScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
+        maximumFontSize={14}
         position={[STAGE_X - 0.085, 0.048, RIG_Z + 0.118]}
       >
         <span>{primaryLabel}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={labelInk}
-        fontSize="compact"
-        position={[STAGE_X + 0.03, 0.242, RIG_Z]}
-      >
-        <span>{secondaryLabel}</span>
-      </ThreeLabel>
+      {secondaryLabel === null ? null : (
+        <ThreeLabel
+          color={labelInk}
+          fontSize="compact"
+          maximumFontSize={14}
+          position={[STAGE_X + 0.03, 0.242, RIG_Z]}
+        >
+          <span>{secondaryLabel}</span>
+        </ThreeLabel>
+      )}
     </group>
   );
 }

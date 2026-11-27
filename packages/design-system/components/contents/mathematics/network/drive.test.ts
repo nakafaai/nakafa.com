@@ -19,13 +19,13 @@ const line = [
   { x: 0.3, z: 0.4 },
 ];
 
-describe("van drive", () => {
+describe("bead drive", () => {
   it("measures a line through its points", () => {
     expect(pathLength(line)).toBeCloseTo(0.7);
     expect(pathLength([{ x: 1, z: 1 }])).toBe(0);
   });
 
-  it("places the van along the line, facing along its stretch", () => {
+  it("places the bead along the line, facing along its stretch", () => {
     expect(pointAlong(line, 0.15)).toEqual({ heading: -0, x: 0.15, z: 0 });
     const turned = pointAlong(line, 0.5);
     expect(turned.x).toBeCloseTo(0.3);

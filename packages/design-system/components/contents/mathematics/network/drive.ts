@@ -2,16 +2,16 @@ import type { Town } from "@repo/design-system/components/contents/mathematics/n
 import type { Spot } from "@repo/design-system/components/contents/mathematics/network/layout";
 import { Array as Arr, Option, Schema } from "effect";
 
-/** How fast the van drives on the board, in metres a second. */
+/** How fast the bead runs on the board, in metres a second. */
 export const VAN_SPEED = 0.16;
 
-/** How long the van waits at the end of a route before the next, in seconds. */
+/** How long the bead waits at the end of a route before the next, in seconds. */
 export const VAN_REST = 1.1;
 
 /** How long the counting tour of the degrees mode stays on each town, in seconds. */
 export const COUNT_STEP = 1.4;
 
-/** Where the van is and which way it faces: its heading turns the board's x axis toward the road. */
+/** Where the bead is and which way it heads: its heading turns the board's x axis toward the road. */
 const PoseSchema = Schema.Struct({
   heading: Schema.Finite,
   x: Schema.Finite,
@@ -35,13 +35,13 @@ export function pathLength(points: readonly Spot[]) {
   });
 }
 
-/** The heading of a step from `from` to `to`, for a van that faces along x. */
+/** The heading of a step from `from` to `to`, for a bead that heads along x. */
 function headingOf(from: Spot, to: Spot) {
   return Math.atan2(-(to.z - from.z), to.x - from.x);
 }
 
 /**
- * Where a van stands `distance` metres along the line through `points`, and
+ * Where a bead lies `distance` metres along the line through `points`, and
  * which way it faces. Before the line it waits at the first point, past it at
  * the last, facing along the nearest stretch.
  */
@@ -87,7 +87,7 @@ export function driveSchedule(lengths: readonly number[]) {
   return { drives, total };
 }
 
-/** Which drive of a run is under way at `time`, and how far along it the van is. */
+/** Which drive of a run is under way at `time`, and how far along it the bead is. */
 export function driveAt(drives: readonly Drive[], time: number) {
   const index = Math.max(
     0,

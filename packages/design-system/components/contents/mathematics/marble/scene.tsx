@@ -32,15 +32,25 @@ import {
   runMoment,
   STEPS,
 } from "@repo/design-system/components/contents/mathematics/marble/run";
+import { swirlShares } from "@repo/design-system/components/contents/mathematics/marble/swirl";
+import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { useTimeline } from "@repo/design-system/components/contents/simulation/timeline";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { MARBLE_COLORS } from "@repo/design-system/lib/material/marble";
 import { Array as Arr, Option, Record as Rec } from "effect";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { Mesh } from "three";
-import { MeshPhysicalMaterial, SphereGeometry } from "three";
+import {
+  Color,
+  DataTexture,
+  LinearFilter,
+  LinearMipmapLinearFilter,
+  MeshPhysicalMaterial,
+  RepeatWrapping,
+  SphereGeometry,
+  SRGBColorSpace,
+} from "three";
 
 /** The seed of the jar's mix, so every learner sees the same jar. */
 const MIX_SEED = 20_261_120;
@@ -86,12 +96,43 @@ export function MarbleScene({
         (_, color: MarbleColor) =>
           new MeshPhysicalMaterial({
             clearcoat: 1,
-            clearcoatRoughness: 0.04,
-            color: MARBLE_COLORS[color],
-            roughness: 0.16,
+            clearcoatRoughness: 0.02,
+            ior: 1.52,
+            map: swirlTexture(MARBLE_COLORS[color]),
+            roughness: 0.08,
+            specularIntensity: 1,
           })
       ),
     []
+  );
+  useEffect(
+    () => () => {
+      Arr.forEach(Rec.values(materials), (material) => {
+        material.map?.dispose();
+        material.dispose();
+      });
+    },
+    [materials]
+  );
+  const pegs = useMemo(
+    () =>
+      Rec.map(
+        { blue: 0, green: 0, red: 0, white: 0, yellow: 0 },
+        (_, color: MarbleColor) =>
+          new MeshPhysicalMaterial({
+            clearcoat: 0.8,
+            clearcoatRoughness: 0.15,
+            color: MARBLE_COLORS[color],
+            roughness: 0.3,
+          })
+      ),
+    []
+  );
+  useEffect(
+    () => () => {
+      Arr.forEach(Rec.values(pegs), (material) => material.dispose());
+    },
+    [pegs]
   );
   const marbles = useRef<(Mesh | null)[]>([]);
   const tally = useRef<TallyUpdate>(null);
@@ -179,27 +220,52 @@ export function MarbleScene({
           second: Arr.getUnsafe(jar, trial.second),
         }))}
         columns={TALLY_COLUMNS}
-        materials={materials}
+        materials={pegs}
         ref={tally}
       />
     </group>
   );
 }
 
-/** The oak tabletop the jar stands on, its top at y = 0. */
+/** The side of a marble's swirl image, in pixels round the marble; half as many run pole to pole. */
+const SWIRL_PIXELS = 256;
+
+/**
+ * The glass of one marble as an image wrapped round it: its own colour with
+ * ribbons of white glass, tinted a little by the colour they were twisted
+ * through, wound from pole to pole.
+ */
+function swirlTexture(color: string) {
+  const own = new Color(color);
+  const ribbon = new Color(MARBLE_COLORS.ribbon).lerp(own, 0.12);
+  const shares = swirlShares(SWIRL_PIXELS, SWIRL_PIXELS / 2);
+  const data = new Uint8Array(shares.length * 4);
+  const mixed = new Color();
+  shares.forEach((share, index) => {
+    mixed.copy(own).lerp(ribbon, share).convertLinearToSRGB();
+    data.set(
+      [
+        Math.round(mixed.r * 255),
+        Math.round(mixed.g * 255),
+        Math.round(mixed.b * 255),
+        255,
+      ],
+      index * 4
+    );
+  });
+  const texture = new DataTexture(data, SWIRL_PIXELS, SWIRL_PIXELS / 2);
+  texture.colorSpace = SRGBColorSpace;
+  texture.wrapS = RepeatWrapping;
+  texture.magFilter = LinearFilter;
+  texture.minFilter = LinearMipmapLinearFilter;
+  texture.generateMipmaps = true;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+/** The oak tabletop the jar stands on, planked and oiled, its top at y = 0. */
 function Table() {
-  return (
-    <mesh position={[0, -0.015, 0]} receiveShadow>
-      <boxGeometry args={[0.9, 0.03, 0.6]} />
-      <SurfaceMaterial
-        bump={0.04}
-        color={MARBLE_COLORS.oak}
-        repeat={[1.5, 8]}
-        roughness={0.5}
-        surface="wood"
-      />
-    </mesh>
-  );
+  return <StudioTable color={MARBLE_COLORS.oak} />;
 }
 
 /** Looks at the jar, the dish and the tally board from the front and above, farther back on a narrow card. */
