@@ -61,8 +61,9 @@ describe("the tub's walls", () => {
     );
   });
 
-  it("keep the tub and its waste clear of the chart, which starts at 46% of the width", () => {
-    expect(frame.right + frame.width * 0.007).toBeLessThan(frame.width * 0.46);
+  it("stand in the middle of the sketch with the filler and the waste inside it", () => {
+    expect(frame.left + frame.right).toBeCloseTo(frame.width);
+    expect(frame.right + frame.width * 0.007).toBeLessThan(frame.width);
     expect(frame.column).toBeGreaterThan(0);
     expect(frame.outlet[0]).toBeGreaterThan(frame.left);
     expect(frame.outlet[1]).toBeLessThan(frame.ground);

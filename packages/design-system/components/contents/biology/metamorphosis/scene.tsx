@@ -9,10 +9,7 @@ import {
   useStemTextures,
 } from "@repo/design-system/components/contents/biology/foliage";
 import type { Insect } from "@repo/design-system/components/contents/biology/metamorphosis/growth";
-import {
-  growthAt,
-  lengthCurvePoints,
-} from "@repo/design-system/components/contents/biology/metamorphosis/growth";
+import { growthAt } from "@repo/design-system/components/contents/biology/metamorphosis/growth";
 import { MetamorphosisOrganism } from "@repo/design-system/components/contents/biology/metamorphosis/stages";
 import { OrganicSoilBed } from "@repo/design-system/components/contents/biology/planter";
 import {
@@ -29,14 +26,9 @@ import {
   useVisualStop,
 } from "@repo/design-system/components/visual/card";
 import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
-import { LABORATORY_COLORS } from "@repo/design-system/lib/material/laboratory";
 import { SPECIMEN_COLORS } from "@repo/design-system/lib/material/specimen";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { Array as Arr } from "effect";
 import { useEffect, useMemo, useRef } from "react";
-import { CatmullRomCurve3, DoubleSide, TubeGeometry, Vector3 } from "three";
-
-const CHART_GRID_YS = [-0.2, -0.05, 0.1, 0.25] as const;
+import { DoubleSide, Vector3 } from "three";
 
 export type MetamorphosisPart =
   | "exoskeleton"
@@ -53,8 +45,8 @@ function MetamorphosisCamera() {
   );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0, 1.15, 3.05] : [0, 0.96, 2.55]}
-      cameraTarget={[0, 0.52, 0.04]}
+      cameraPosition={narrow ? [0, 1, 2.75] : [0, 0.82, 2.15]}
+      cameraTarget={[0, 0.3, 0.1]}
       fov={38}
       maxDistance={5.5}
       minDistance={1.4}
@@ -66,7 +58,7 @@ function MetamorphosisCamera() {
  * 3D insect metamorphosis scene: grounded organic soil bed + woody host twig
  * supporting a sculpted serrated veined milkweed/host leaf, developing insect
  * (egg -> larva/nymph -> hanging chrysalis -> winged adult), shed exuvia during
- * moults, and a grounded frosted-glass 3D stepped exoskeleton growth chart.
+ * moults. The stepped length record is the chart in the card's footer.
  */
 export function MetamorphosisScene({
   insect,
@@ -118,21 +110,8 @@ export function MetamorphosisScene({
   } else if (snap.stage === "pupa") {
     bodyScale = 0.96;
   }
-  const cursorX = -0.85 + time * 1.7;
 
-  const { curveTube, hostLeafGeo, hostTwigGeo, petioleGeo } = useMemo(() => {
-    const pts = Arr.map(
-      lengthCurvePoints(insect),
-      ([x, y, z]) => new Vector3(x, y, z)
-    );
-    const tube = new TubeGeometry(
-      new CatmullRomCurve3(pts, false, "centripetal", 0.08),
-      64,
-      0.011,
-      8,
-      false
-    );
-
+  const { hostLeafGeo, hostTwigGeo, petioleGeo } = useMemo(() => {
     // Sculpted curved, organically serrated, deeply veined milkweed/host leaf.
     const leaf = buildLaminaGeometry({
       baseTaper: 0.24,
@@ -179,21 +158,19 @@ export function MetamorphosisScene({
     );
 
     return {
-      curveTube: tube,
       hostLeafGeo: leaf,
       hostTwigGeo: twig,
       petioleGeo: petiole,
     };
-  }, [insect]);
+  }, []);
 
   useEffect(
     () => () => {
-      curveTube.dispose();
       hostLeafGeo.dispose();
       hostTwigGeo.dispose();
       petioleGeo.dispose();
     },
-    [curveTube, hostLeafGeo, hostTwigGeo, petioleGeo]
+    [hostLeafGeo, hostTwigGeo, petioleGeo]
   );
 
   return (
@@ -209,67 +186,6 @@ export function MetamorphosisScene({
         outerRadius={1.98}
         seed={43}
       />
-
-      {/* Frosted glass stepped exoskeleton growth chart on grounded anodized posts */}
-      <group position={[0, 0.88, -0.32]}>
-        <mesh castShadow receiveShadow>
-          <boxGeometry args={[1.94, 0.64, 0.024]} />
-          <meshPhysicalMaterial
-            clearcoat={0.72}
-            color={LABORATORY_COLORS.paper}
-            opacity={0.74}
-            roughness={0.22}
-            transparent
-          />
-        </mesh>
-        {Arr.map(CHART_GRID_YS, (gy) => (
-          <mesh key={`cg-${gy}`} position={[0, gy, 0.015]}>
-            <boxGeometry args={[1.78, 0.004, 0.004]} />
-            <meshStandardMaterial
-              color={LABORATORY_COLORS.plinth}
-              opacity={0.35}
-              roughness={0.5}
-              transparent
-            />
-          </mesh>
-        ))}
-        <mesh position={[0, -0.33, 0.004]}>
-          <boxGeometry args={[1.98, 0.026, 0.048]} />
-          <meshStandardMaterial
-            color={LABORATORY_COLORS.plinth}
-            metalness={0.42}
-            roughness={0.4}
-          />
-        </mesh>
-        {/* Twin grounded anodized vertical chart posts down to y = 0 */}
-        {Arr.map([-0.78, 0.78] as const, (px) => (
-          <mesh castShadow key={`post-${px}`} position={[px, -0.61, 0]}>
-            <cylinderGeometry args={[0.016, 0.022, 0.56, 14]} />
-            <meshStandardMaterial
-              color={LABORATORY_COLORS.plinth}
-              metalness={0.55}
-              roughness={0.36}
-            />
-          </mesh>
-        ))}
-      </group>
-      <mesh geometry={curveTube} position={[0, 0.06, -0.06]}>
-        <meshPhysicalMaterial
-          clearcoat={0.65}
-          color={PLOT_COLORS.teal}
-          emissive={PLOT_COLORS.teal}
-          emissiveIntensity={0.22}
-          roughness={0.24}
-        />
-      </mesh>
-      <mesh position={[cursorX, 0.88, -0.28]}>
-        <boxGeometry args={[0.014, 0.58, 0.022]} />
-        <meshPhysicalMaterial
-          clearcoat={0.78}
-          color={PLOT_COLORS.amber}
-          roughness={0.2}
-        />
-      </mesh>
 
       {/* Woody host stem twig + curved petiole + sculpted serrated veined host leaf */}
       <mesh castShadow geometry={hostTwigGeo} receiveShadow>
@@ -319,7 +235,6 @@ export function MetamorphosisScene({
         <MetamorphosisOrganism
           insect={insect}
           instar={snap.instar}
-          playing={playing}
           stage={snap.stage}
         />
       </group>

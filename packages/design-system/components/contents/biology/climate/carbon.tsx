@@ -1,3 +1,4 @@
+import { BiologyTrace } from "@repo/design-system/components/contents/biology/chart";
 import type {
   Region,
   Year,
@@ -13,10 +14,6 @@ import {
   recordRate,
   YearSchema,
 } from "@repo/design-system/components/contents/biology/climate/budget";
-import {
-  CHART_AXES,
-  ChartScale,
-} from "@repo/design-system/components/contents/biology/climate/scale";
 import { drawTub } from "@repo/design-system/components/contents/biology/climate/tub";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -39,7 +36,6 @@ import {
 } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
-import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option, Schema } from "effect";
 import type p5 from "p5";
@@ -47,14 +43,19 @@ import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 
 /** The year pathways run to. */
-const END_YEAR: number = CHART_AXES.pathway.last;
+const END_YEAR = 2100;
+
+/** The CO2 levels the chart's vertical axis spans, in ppm, for the record and for pathways. */
+const SPAN = {
+  pathway: { high: 600, low: 300 },
+  record: { high: 440, low: 300 },
+} as const;
 
 /** GtC to GtCO2. */
 const CO2_PER_C = 3.664;
 
 /** What the sketch reads from the card on every frame. */
 const TubSchema = Schema.Struct({
-  baseline: Schema.Array(YearSchema),
   pathway: Schema.Array(YearSchema),
   record: Schema.Boolean,
   year: Schema.Finite,
@@ -67,8 +68,8 @@ type Tub = typeof TubSchema.Type;
  * `record` mode a slider walks through Mauna Loa's measurements since 1960;
  * in `cooperate` mode the reader picks which regions cut their fossil CO2 to
  * zero by 2050; in `mitigate` mode two sliders cut fossil CO2 and grow
- * forests. A graph beside the tub draws the level year by year, and the
- * footer reads the outcome.
+ * forests. The footer charts the level year by year, beside the path of no
+ * action where there is one, and reads the outcome.
  */
 export function CarbonBudgetLab({
   description,
@@ -114,9 +115,24 @@ export function CarbonBudgetLab({
     []
   );
   const tub = useMemo(
-    () => ({ baseline, pathway, record: mode === "record", year }),
-    [baseline, mode, pathway, year]
+    () => ({ pathway, record: mode === "record", year }),
+    [mode, pathway, year]
   );
+  const rows = useMemo(
+    () =>
+      mode === "record"
+        ? Arr.map(Arr.range(RECORD_SPAN.first, RECORD_SPAN.last), (each) => ({
+            level: recordLevel(each),
+            x: each,
+          }))
+        : Arr.map(pathway, (each, index) => ({
+            baseline: baseline[index]?.level ?? each.level,
+            level: each.level,
+            x: each.year,
+          })),
+    [baseline, mode, pathway]
+  );
+  const span = SPAN[mode === "record" ? "record" : "pathway"];
   const last = Option.getOrElse(Arr.last(pathway), () => baseline[0]);
   const peak = Arr.reduce(pathway, 0, (high, each) =>
     Math.max(high, each.level)
@@ -192,15 +208,26 @@ export function CarbonBudgetLab({
       </VisualCardToolbar>
 
       <VisualCardBody className="bg-card">
-        <div className="relative">
-          <P5Sketch label={labels.viewLabel} program={tubProgram} state={tub} />
-          <ChartScale record={mode === "record"} />
-        </div>
+        <P5Sketch label={labels.viewLabel} program={tubProgram} state={tub} />
       </VisualCardBody>
 
       <VisualCardSceneActions />
 
       <VisualCardFooter>
+        <BiologyTrace
+          cursor={
+            mode === "record" ? { x: year, y: recordLevel(year) } : undefined
+          }
+          floor={span.low}
+          rows={rows}
+          series={[
+            ...(mode === "record"
+              ? []
+              : [{ color: PLOT_COLORS.slate, dashed: true, key: "baseline" }]),
+            { color: PLOT_COLORS.orange, key: "level", label: labels.level },
+          ]}
+          top={span.high}
+        />
         {mode === "record" ? (
           <VisualCardFacts>
             <VisualFactIndicator
@@ -305,11 +332,9 @@ function Labeled({
 }
 
 /**
- * The sketch: an enamelled bathtub on the left whose filler and waste run as
- * wide as the year's emissions and uptake, and on the right a graph of the
- * CO2 level.
- * A pathway draws itself from 2024 to 2100 while it plays, beside the path
- * of no action.
+ * The sketch: an enamelled bathtub whose filler and waste run as wide as the
+ * year's emissions and uptake, and nothing else. While it plays, a pathway
+ * fills or drains the tub from 2024 to 2100.
  */
 function tubProgram(sketch: p5, read: () => Tub) {
   let drawnTo = END_YEAR;
@@ -337,7 +362,6 @@ function tubProgram(sketch: p5, read: () => Tub) {
       ? { emitted: 0, level: recordLevel(tub.year), taken: 0 }
       : yearOf(tub.pathway, drawnTo);
     drawTub(sketch, current, tub.record);
-    drawChart(sketch, tub, drawnTo);
   };
 }
 
@@ -353,53 +377,4 @@ function yearOf(pathway: readonly Year[], year: number) {
     (BUDGET.sinks * (level - BUDGET.preindustrial)) /
     (BUDGET.start - BUDGET.preindustrial);
   return { emitted: (each?.net ?? 0) + taken, level, taken };
-}
-
-/** The CO2 level over the years, with axis ticks, beside the tub. */
-function drawChart(sketch: p5, tub: Tub, drawnTo: number) {
-  const left = sketch.width * 0.46;
-  const right = sketch.width - 16;
-  const top = sketch.height * 0.12;
-  const bottom = sketch.height * 0.86;
-  const { first, high, last, low } = tub.record
-    ? CHART_AXES.record
-    : CHART_AXES.pathway;
-  const x = (year: number) =>
-    left + ((right - left) * (year - first)) / (last - first);
-  const y = (ppm: number) =>
-    bottom - ((bottom - top) * (ppm - low)) / (high - low);
-  sketch.stroke(getColor("SLATE", 300));
-  sketch.strokeWeight(1);
-  sketch.line(left, bottom, right, bottom);
-  sketch.line(left, top, left, bottom);
-  Arr.forEach(Arr.range(0, 4), (tick) => {
-    const ppm = low + ((high - low) * tick) / 4;
-    sketch.line(left - 4, y(ppm), left, y(ppm));
-  });
-  sketch.noFill();
-  sketch.strokeWeight(2);
-  if (tub.record) {
-    sketch.stroke(PLOT_COLORS.orange);
-    sketch.beginShape();
-    Arr.forEach(Arr.range(first, Math.round(tub.year)), (year) => {
-      sketch.vertex(x(year), y(recordLevel(year)));
-    });
-    sketch.endShape();
-    return;
-  }
-  sketch.stroke(PLOT_COLORS.slate);
-  sketch.strokeWeight(1);
-  sketch.beginShape();
-  Arr.forEach(tub.baseline, (each) =>
-    sketch.vertex(x(each.year), y(each.level))
-  );
-  sketch.endShape();
-  sketch.strokeWeight(2.5);
-  sketch.stroke(PLOT_COLORS.orange);
-  sketch.beginShape();
-  Arr.forEach(
-    Arr.filter(tub.pathway, (each) => each.year <= drawnTo),
-    (each) => sketch.vertex(x(each.year), y(each.level))
-  );
-  sketch.endShape();
 }

@@ -1,3 +1,4 @@
+import { BiologyTrace } from "@repo/design-system/components/contents/biology/chart";
 import { createPaddy } from "@repo/design-system/components/contents/biology/ecosystem/paddy";
 import type { Herd } from "@repo/design-system/components/contents/biology/ecosystem/population";
 import {
@@ -53,8 +54,8 @@ type Field = Readonly<{
  * owls that hunt them, as the Lotka-Volterra model runs them over 20 years.
  * The reader sets how many owls the field starts with. With `capacity`, the
  * rice can feed only that many rats, so the swings calm toward a balance;
- * without it, rats and owls cycle for ever. A graph under the field draws
- * both populations as they go.
+ * without it, rats and owls cycle for ever. The footer charts both
+ * populations over the years, with a cursor on the year the field shows.
  */
 export function PredatorPreyLab({
   capacity,
@@ -86,6 +87,15 @@ export function PredatorPreyLab({
     [owls, rates]
   );
   const field = useMemo(() => ({ history, report: setYear }), [history]);
+  const rows = useMemo(
+    () =>
+      Arr.map(history, (herd, index) => ({
+        predators: herd.predators,
+        prey: herd.prey,
+        x: index * EVERY,
+      })),
+    [history]
+  );
   const now =
     history[Math.min(history.length - 1, Math.round(year / EVERY))] ??
     balanceOf(rates);
@@ -130,6 +140,18 @@ export function PredatorPreyLab({
       <VisualCardSceneActions />
 
       <VisualCardFooter>
+        <BiologyTrace
+          cursor={{ x: Math.min(YEARS, year) }}
+          rows={rows}
+          series={[
+            { color: HERD_COLORS.prey, key: "prey", label: labels.prey },
+            {
+              color: HERD_COLORS.predators,
+              key: "predators",
+              label: labels.predators,
+            },
+          ]}
+        />
         <VisualCardFacts>
           <VisualFactIndicator
             indicatorColor={HERD_COLORS.prey}
@@ -163,8 +185,7 @@ const HERD_COLORS = {
 
 /**
  * The sketch: a rice field seen from above, its rats scurrying between the
- * rows, owls gliding over them with their shadows, and the populations'
- * graph under the field.
+ * rows, and owls gliding over them with their shadows.
  */
 function fieldProgram(sketch: p5, read: () => Field) {
   const paddy = createPaddy();
@@ -189,9 +210,8 @@ function fieldProgram(sketch: p5, read: () => Field) {
     }
     const today = Math.min(YEARS, year);
     const herd = field.history[Math.round(today / EVERY)] ?? field.history[0];
-    const height = sketch.height * 0.7;
 
-    paddy(sketch, height);
+    paddy(sketch, sketch.height);
     if (herd) {
       wildlife(
         sketch,
@@ -199,11 +219,10 @@ function fieldProgram(sketch: p5, read: () => Field) {
           owls: Math.min(DRAWN.predators, Math.round(herd.predators)),
           rats: Math.min(DRAWN.prey, Math.round(herd.prey)),
         },
-        height,
+        sketch.height,
         year
       );
     }
-    drawHistory(sketch, field, today, height);
 
     const tenth = Math.round(today * 2) / 2;
     if (tenth !== reported) {
@@ -211,46 +230,4 @@ function fieldProgram(sketch: p5, read: () => Field) {
       field.report(tenth);
     }
   };
-}
-
-/** Both populations over the years so far, under the field. */
-function drawHistory(sketch: p5, field: Field, today: number, top: number) {
-  const bottom = sketch.height - 10;
-  const left = 12;
-  const right = sketch.width - 12;
-  const most = Arr.reduce(field.history, 1, (high, herd) =>
-    Math.max(high, herd.prey)
-  );
-  const x = (year: number) => left + ((right - left) * year) / YEARS;
-  const y = (count: number) => bottom - ((bottom - top - 12) * count) / most;
-  sketch.noFill();
-  // The whole run shows faintly across the band; the years so far draw over it.
-  Arr.forEach(["prey", "predators"] as const, (kind) => {
-    const faint = sketch.color(HERD_COLORS[kind]);
-    faint.setAlpha(70);
-    sketch.stroke(faint);
-    sketch.strokeWeight(1.5);
-    sketch.beginShape();
-    Arr.forEach(field.history, (herd, index) => {
-      sketch.vertex(x(index * EVERY), y(herd[kind]));
-    });
-    sketch.endShape();
-    sketch.stroke(HERD_COLORS[kind]);
-    sketch.strokeWeight(2.5);
-    sketch.beginShape();
-    Arr.forEach(
-      Arr.take(field.history, Math.round(today / EVERY) + 1),
-      (herd, index) => {
-        sketch.vertex(x(index * EVERY), y(herd[kind]));
-      }
-    );
-    sketch.endShape();
-    const now = field.history[Math.round(today / EVERY)];
-    if (now) {
-      sketch.noStroke();
-      sketch.fill(HERD_COLORS[kind]);
-      sketch.circle(x(today), y(now[kind]), 7);
-      sketch.noFill();
-    }
-  });
 }

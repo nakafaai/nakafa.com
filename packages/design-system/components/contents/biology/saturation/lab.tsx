@@ -1,11 +1,12 @@
+import { BiologyTrace } from "@repo/design-system/components/contents/biology/chart";
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import type { LimitingFactor } from "@repo/design-system/components/contents/biology/saturation/model";
 import {
   evaluateSaturation,
   productsAt,
+  saturationCurve,
 } from "@repo/design-system/components/contents/biology/saturation/model";
 import { SaturationScene } from "@repo/design-system/components/contents/biology/saturation/scene";
-import { SaturationTrace } from "@repo/design-system/components/contents/biology/saturation/trace";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -25,8 +26,9 @@ import {
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { VisualSlider } from "@repo/design-system/components/visual/slider";
 import { ENZYME_COLORS } from "@repo/design-system/lib/material/enzyme";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 export function EnzymeSaturationLab({
   description,
@@ -72,6 +74,14 @@ export function EnzymeSaturationLab({
   const state = evaluateSaturation(enzymeCount, substrateCount, turnover);
   const productCount = productsAt(state.rate, seconds, substrateCount);
   const maxRate = enzymeRange.max * turnover;
+  const rows = useMemo(
+    () =>
+      Arr.map(
+        saturationCurve(enzymeCount, Math.max(1, substrateRange.max), turnover),
+        (point) => ({ rate: point.rate, x: point.substrates })
+      ),
+    [enzymeCount, substrateRange.max, turnover]
+  );
 
   return (
     <VisualCard>
@@ -139,14 +149,17 @@ export function EnzymeSaturationLab({
       <VisualCardSceneActions />
 
       <VisualCardFooter>
-        <SaturationTrace
-          caption={labels.curve}
-          currentRate={state.rate}
-          currentSubstrates={substrateCount}
-          enzymes={enzymeCount}
-          maxRate={maxRate}
-          maxSubstrates={substrateRange.max}
-          turnover={turnover}
+        <BiologyTrace
+          cursor={{ x: substrateCount, y: state.rate }}
+          rows={rows}
+          series={[
+            {
+              color: ENZYME_COLORS.curveStroke,
+              key: "rate",
+              label: labels.curve,
+            },
+          ]}
+          top={Math.max(1, maxRate)}
         />
         <VisualCardFacts>
           <VisualFactTabular

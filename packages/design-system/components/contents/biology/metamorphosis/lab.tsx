@@ -1,10 +1,14 @@
 "use client";
 
+import { BiologyTrace } from "@repo/design-system/components/contents/biology/chart";
 import type {
   Insect,
   Stage,
 } from "@repo/design-system/components/contents/biology/metamorphosis/growth";
-import { growthAt } from "@repo/design-system/components/contents/biology/metamorphosis/growth";
+import {
+  growthAt,
+  growthRecord,
+} from "@repo/design-system/components/contents/biology/metamorphosis/growth";
 import type { MetamorphosisPart } from "@repo/design-system/components/contents/biology/metamorphosis/scene";
 import { MetamorphosisScene } from "@repo/design-system/components/contents/biology/metamorphosis/scene";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
@@ -29,9 +33,10 @@ import {
 } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { VisualSlider } from "@repo/design-system/components/visual/slider";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 interface MetamorphosisLabProps {
   readonly description: NonNullable<ReactNode>;
@@ -68,6 +73,7 @@ export function MetamorphosisLab({
   const quantity = useQuantity();
 
   const snap = growthAt(insect, time);
+  const record = useMemo(() => growthRecord(insect), [insect]);
 
   return (
     <VisualCard
@@ -133,6 +139,25 @@ export function MetamorphosisLab({
       <VisualCardSceneActions />
 
       <VisualCardFooter>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <BiologyTrace
+            cursor={{ x: Math.round(time * 100), y: snap.lengthMm }}
+            curve="stepAfter"
+            rows={record}
+            series={[
+              { color: PLOT_COLORS.teal, key: "length", label: labels.length },
+            ]}
+            xLabel={labels.time}
+          />
+          <BiologyTrace
+            cursor={{ x: Math.round(time * 100), y: snap.massMg }}
+            rows={record}
+            series={[
+              { color: PLOT_COLORS.amber, key: "mass", label: labels.mass },
+            ]}
+            xLabel={labels.time}
+          />
+        </div>
         <VisualCardFacts>
           <VisualFact label={labels.stage} value={labels.stages[snap.stage]} />
           <VisualFactTabular label={labels.instar} value={`${snap.instar}`} />

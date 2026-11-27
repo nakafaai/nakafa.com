@@ -1,8 +1,6 @@
+import { BiologyTrace } from "@repo/design-system/components/contents/biology/chart";
 import { createCrowd } from "@repo/design-system/components/contents/biology/epidemic/people";
-import {
-  createPlaza,
-  layoutOf,
-} from "@repo/design-system/components/contents/biology/epidemic/plaza";
+import { createPlaza } from "@repo/design-system/components/contents/biology/epidemic/plaza";
 import type {
   Day,
   Measures,
@@ -69,8 +67,9 @@ type Town = Readonly<{
  * virus spreads. The outbreak follows the SIR model day by day, and each new
  * case appears beside someone already infected. Sliders set the share of
  * people who wear masks, wash their hands, are vaccinated or stay home; the
- * footer reads the reproduction number, the peak, and the shares susceptible,
- * infected, recovered and immune on the day shown, each beside its colour.
+ * footer charts the shares susceptible, infected and recovered over the days
+ * with a cursor on the day shown, and reads the reproduction number, the
+ * peak, and each share on that day beside its colour.
  */
 export function EpidemicSpreadLab({
   description,
@@ -113,6 +112,16 @@ export function EpidemicSpreadLab({
     [values, route]
   );
   const today = outbreak[Math.min(DAYS, Math.round(day))];
+  const rows = useMemo(
+    () =>
+      Arr.map(outbreak, (each) => ({
+        infected: each.infected * 100,
+        recovered: each.recovered * 100,
+        susceptible: each.susceptible * 100,
+        x: each.day,
+      })),
+    [outbreak]
+  );
   const town = useMemo(
     () => ({ measures: values, outbreak, report: setDay }),
     [outbreak, values]
@@ -188,6 +197,28 @@ export function EpidemicSpreadLab({
       <VisualCardSceneActions />
 
       <VisualCardFooter>
+        <BiologyTrace
+          cursor={{ x: today?.day ?? DAYS }}
+          rows={rows}
+          series={[
+            {
+              color: STATE_COLORS.susceptible,
+              key: "susceptible",
+              label: labels.susceptible,
+            },
+            {
+              color: STATE_COLORS.infected,
+              key: "infected",
+              label: labels.infected,
+            },
+            {
+              color: STATE_COLORS.recovered,
+              key: "recovered",
+              label: labels.recovered,
+            },
+          ]}
+          top={100}
+        />
         <VisualCardFacts>
           <VisualFactTabular
             label={labels.reproduction}
@@ -269,7 +300,7 @@ function stateOf(
 }
 
 /**
- * The sketch: the square, its people and a graph of the outbreak under it.
+ * The sketch: the square and its people, and nothing else.
  * The outbreak's curves say how many are infected each day; the sketch
  * infects the people nearest to a case until it matches them, and lets the
  * longest infected recover first.
@@ -365,47 +396,12 @@ function townProgram(sketch: p5, read: () => Town) {
       Math.round(town.measures.masks * PEOPLE)
     );
     plaza.canopies(sketch);
-    drawGraph(sketch, town, today);
 
     if (Math.floor(today) !== reported) {
       reported = Math.floor(today);
       town.report(reported);
     }
   };
-}
-
-/** The share infected, recovered and still susceptible over the days, under the square. */
-function drawGraph(sketch: p5, town: Town, today: number) {
-  const {
-    graphBottom: bottom,
-    graphLeft: left,
-    graphTop: top,
-  } = layoutOf(sketch);
-  const right = sketch.width - 12;
-  const x = (dayIndex: number) => left + ((right - left) * dayIndex) / DAYS;
-  const y = (share: number) => bottom - (bottom - top) * share;
-  const series = [
-    ["susceptible", (each: Day) => each.susceptible],
-    ["infected", (each: Day) => each.infected],
-    ["recovered", (each: Day) => each.recovered],
-  ] as const;
-  sketch.noFill();
-  Arr.forEach(series, ([state, value]) => {
-    sketch.stroke(STATE_COLORS[state]);
-    sketch.strokeWeight(2.5);
-    sketch.beginShape();
-    Arr.forEach(Arr.take(town.outbreak, Math.floor(today) + 1), (each) => {
-      sketch.vertex(x(each.day), y(value(each)));
-    });
-    sketch.endShape();
-    const now = town.outbreak[Math.floor(today)];
-    if (now) {
-      sketch.noStroke();
-      sketch.fill(STATE_COLORS[state]);
-      sketch.circle(x(now.day), y(value(now)), 7);
-      sketch.noFill();
-    }
-  });
 }
 
 /** A share of the town written as a whole percentage. */

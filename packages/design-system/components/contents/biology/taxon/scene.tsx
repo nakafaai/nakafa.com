@@ -9,7 +9,10 @@ import {
   lineageOf,
   TAXON_RANKS,
 } from "@repo/design-system/components/contents/biology/taxon/model";
-import { TaxonSpecimenFigurine } from "@repo/design-system/components/contents/biology/taxon/specimens";
+import {
+  TAXON_SPECIMEN_HEIGHT,
+  TaxonSpecimenFigurine,
+} from "@repo/design-system/components/contents/biology/taxon/specimens";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
@@ -24,7 +27,7 @@ function TaxonCamera() {
   );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0, 3.45, 5.2] : [0, 2.85, 4.45]}
+      cameraPosition={narrow ? [0, 4.3, 6.5] : [0, 2.85, 4.45]}
       cameraTarget={[0, 0.3, 0.05]}
       fov={38}
       maxDistance={8}
@@ -132,10 +135,18 @@ export function TaxonRankScene({
   const nextStepWidth =
     sharedDepth < TAXON_RANKS.length ? 3.6 - sharedDepth * 0.44 : 0.6;
   const perchX =
-    sharedDepth >= 6 ? 0.56 : Math.min(1.52, nextStepWidth / 2 + 0.14);
+    sharedDepth >= 6 ? 0.66 : Math.min(1.5, nextStepWidth / 2 + 0.16);
   const perchZ = sharedDepth >= 5 ? 0.12 : 0.24;
   const perchY = terraceTopAt(perchX, perchZ);
   const labelSpreadX = sharedDepth >= 6 ? 0.16 : 0;
+  // On a phone a long name runs off the card, so each name starts at its own
+  // edge of the terrace and stands a line above the rank labels.
+  const narrow = isNarrowThreeScene(
+    useThree((state) => state.size),
+    1.25
+  );
+  const labelEdge = narrow ? 0.5 : 0;
+  const labelLift = narrow ? 0.66 : 0.12;
 
   return (
     <group>
@@ -156,27 +167,37 @@ export function TaxonRankScene({
         );
       })}
 
-      <group position={[-perchX, perchY, perchZ]} rotation={[0, 0.28, 0]}>
+      <group position={[-perchX, perchY, perchZ]} rotation={[0, 0.5, 0]}>
         <TaxonSpecimenFigurine organism={first} />
       </group>
       <ThreeLabel
+        anchorX={narrow ? "left" : "center"}
         color={ink}
         fontSize="compact"
-        position={[-perchX - labelSpreadX, perchY + 0.54, perchZ]}
+        position={[
+          -perchX - labelSpreadX - labelEdge,
+          perchY + TAXON_SPECIMEN_HEIGHT[first] + labelLift,
+          perchZ,
+        ]}
       >
         <span className="font-medium">{organismNames[first] ?? first}</span>
       </ThreeLabel>
 
       <group
         position={[perchX, perchY, perchZ]}
-        rotation={[0, -Math.PI + 0.28, 0]}
+        rotation={[0, -Math.PI - 0.5, 0]}
       >
         <TaxonSpecimenFigurine organism={second} />
       </group>
       <ThreeLabel
+        anchorX={narrow ? "right" : "center"}
         color={ink}
         fontSize="compact"
-        position={[perchX + labelSpreadX, perchY + 0.54, perchZ]}
+        position={[
+          perchX + labelSpreadX + labelEdge,
+          perchY + TAXON_SPECIMEN_HEIGHT[second] + labelLift,
+          perchZ,
+        ]}
       >
         <span className="font-medium">{organismNames[second] ?? second}</span>
       </ThreeLabel>

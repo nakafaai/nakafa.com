@@ -101,7 +101,7 @@ export function createWildlife() {
     });
     const owlHalf = span * 0.55;
     // Each owl circles 30 px wide around a centre kept far enough inside the
-    // field that its wings never cross onto the graph or off the canvas.
+    // field that its wings never cross off the canvas.
     const margin = 30 + owlHalf;
     const flying = Arr.map(
       Arr.range(0, Math.max(0, counts.owls - 1)),

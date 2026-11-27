@@ -1,3 +1,4 @@
+import { BiologyTrace } from "@repo/design-system/components/contents/biology/chart";
 import {
   demand,
   force,
@@ -5,14 +6,13 @@ import {
   RUN,
   repaid,
   shortfall,
+  stageAt,
+  trace,
   uptake,
 } from "@repo/design-system/components/contents/biology/muscle/debt";
+import { LacticGauge } from "@repo/design-system/components/contents/biology/muscle/gauge";
 import { PoseProvider } from "@repo/design-system/components/contents/biology/muscle/pose";
 import { MuscleScene } from "@repo/design-system/components/contents/biology/muscle/scene";
-import {
-  LacticGauge,
-  OxygenTrace,
-} from "@repo/design-system/components/contents/biology/muscle/trace";
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { HandSlider } from "@repo/design-system/components/contents/chemistry/slider";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
@@ -34,8 +34,10 @@ import {
 } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { MUSCLE_COLORS } from "@repo/design-system/lib/material/muscle";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 /** The minute of the run the card opens at: three minutes into exercise, while the shortfall still grows. */
 const OPENING = 5;
@@ -50,8 +52,8 @@ const DEMAND_STEP = 0.1;
  * climbs towards it, so the fibres cover the shortfall by lactic acid
  * fermentation: lactic acid builds in them and their contractions weaken.
  * After minute 8 the fibres rest while uptake stays high, repaying the
- * oxygen debt as blood carries the lactic acid to the liver. A trace of
- * uptake against time runs under the scene. The readouts of the whole demand
+ * oxygen debt as blood carries the lactic acid to the liver. The footer
+ * charts uptake against time, the shortfall shaded amber and the debt blue. The readouts of the whole demand
  * (`labels.need`) and of the force left (`labels.force`), and the liver's
  * callout (`labels.parts.liver`), show only when their labels are given.
  */
@@ -90,6 +92,23 @@ export function OxygenDebtLab({
 }) {
   const [work, setWork] = useState(range.value);
   const [minute, setMinute] = useState(OPENING);
+  const rows = useMemo(
+    () =>
+      Arr.map(trace(rest, work, 128), (point) => {
+        const stage = stageAt(point.minute);
+        const need = demand(point.minute, rest, work);
+        return {
+          demand: need,
+          repaying: stage === "recovery" ? point.uptake : null,
+          resting: stage === "recovery" ? rest : null,
+          short: stage === "exercise" ? point.uptake : null,
+          uptake: point.uptake,
+          wanted: stage === "exercise" ? need : null,
+          x: point.minute,
+        };
+      }),
+    [rest, work]
+  );
   const quantity = useQuantity();
   const level = lactic(minute, work, range.max);
   const rate = "\\text{ L min}^{-1}";
@@ -161,21 +180,43 @@ export function OxygenDebtLab({
       <VisualCardSceneActions />
 
       <VisualCardFooter>
-        <OxygenTrace
-          caption={
-            <>
-              {labels.uptake} <InlineMath math="(\text{L min}^{-1})" />
-            </>
-          }
-          clock={
-            <>
-              {labels.time} <InlineMath math="(\text{min})" />
-            </>
-          }
-          minute={minute}
-          most={range.max}
-          rest={rest}
-          work={work}
+        <BiologyTrace
+          bands={[
+            {
+              color: MUSCLE_COLORS.lactate,
+              high: "wanted",
+              low: "short",
+              opacity: 0.4,
+            },
+            {
+              color: MUSCLE_COLORS.oxygen,
+              high: "repaying",
+              low: "resting",
+              opacity: 0.24,
+            },
+          ]}
+          cursor={{ x: minute, y: uptake(minute, rest, work) }}
+          rows={rows}
+          series={[
+            {
+              color: MUSCLE_COLORS.oxygen,
+              key: "uptake",
+              label: (
+                <>
+                  {labels.uptake} <InlineMath math="(\text{L min}^{-1})" />
+                </>
+              ),
+            },
+            {
+              color: PLOT_COLORS.slate,
+              dashed: true,
+              key: "demand",
+              label: labels.need,
+            },
+          ]}
+          ticks={Arr.range(0, Math.ceil(rest + range.max))}
+          top={Math.ceil(rest + range.max)}
+          xLabel={`${labels.time} (min)`}
         />
         <VisualCardFacts>
           <VisualFactIndicator

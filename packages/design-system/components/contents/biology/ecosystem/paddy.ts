@@ -61,7 +61,7 @@ function paintField(sketch: p5, layer: p5, height: number) {
   if (width < bund * plots * 4 || height < bund * 4) {
     return;
   }
-  // Nothing of the field, a bund's shadow or a grass tuft, spills onto the graph.
+  // Nothing of the field, a bund's shadow or a grass tuft, spills off the canvas.
   layer.push();
   const drawing = context(layer);
   drawing?.beginPath();

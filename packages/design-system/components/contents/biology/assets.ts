@@ -208,3 +208,151 @@ export const CC0_FOX_ASSET = {
   processedWith:
     "Stripped unused skins, animations, JOINTS_0, WEIGHTS_0, then gltf-transform dedup, flatten, weld, prune",
 } as const;
+
+export const CC0_MIGRATORY_LOCUST_ASSET = {
+  path: "/models/biology/cc0-migratory-locust.glb",
+  sourceTitle:
+    "Migratory Locust, Locusta migratoria, male (ffishAsia and floraZia)",
+  sourceUrl:
+    "https://sketchfab.com/3d-models/cc0-migratory-locust-l-migratoria-b63750b883b446358265beca24b566bf",
+  license: "CC0-1.0",
+  licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
+  originalSha256:
+    "864290fdf7a9ec4a9d065290b1b0d00be053b32a3b5440b7f77a8c8f0f8c1304",
+  processedSha256:
+    "525f4c4fd55e5467e5a7e43b663676f5a5a93ef97df6cbd562e0a62abe16bcdf",
+  processedWith:
+    "gltf-transform: removed the colour-chart cube, unlit to PBR, weld, simplify (33k triangles), quantize, 1024px WebP texture",
+} as const;
+
+export const CCBY_MONARCH_BUTTERFLY_ASSET = {
+  path: "/models/biology/ccby-monarch-butterfly.glb",
+  sourceTitle:
+    "Monarch Butterfly, Virginia Tech Insect Collection VTU_ESC_000004 (Maureen Saverot)",
+  sourceUrl:
+    "https://sketchfab.com/3d-models/monarch-butterfly-3a5fc9a496cb402297ffdb6700d2ab60",
+  license: "CC-BY-4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+  originalSha256:
+    "20090f8868deddb72e958ae936938d74b8ee8fa33b8e50066bffc1658c94508d",
+  processedSha256:
+    "66010885cb30384fbcdc8327de0a6b429978f616f525d321c13f8b673130a228",
+  processedWith:
+    "gltf-transform: unlit to PBR, weld, simplify (27k triangles), quantize, 1024px WebP texture",
+} as const;
+
+export const CC0_HOUSEFLY_ASSET = {
+  path: "/models/biology/cc0-housefly.glb",
+  sourceTitle:
+    "Musca domestica, house fly (Digital Archive of Natural History, DiNArDa)",
+  sourceUrl:
+    "https://sketchfab.com/3d-models/musca-domestica-157900941156422fbd9dcdfc38a3be19",
+  license: "CC0-1.0",
+  licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
+  originalSha256:
+    "285900b41ce8b4eabb474cc049e7a3871932262e7f61c47f509911ba351ff6b9",
+  processedSha256:
+    "2b2bb524a14312290b527fc3e7a0be7359e14f962031ba51f1c8fc20f15b4149",
+  processedWith:
+    "gltf-transform: specular-glossiness to metal-rough, weld, simplify (12k triangles), quantize, 512px WebP texture",
+} as const;
+
+export const CCBY_PITCHER_PLANT_ASSET = {
+  path: "/models/biology/ccby-pitcher-plant.glb",
+  sourceTitle:
+    "White-topped Pitcher plant, Sarracenia leucophylla (Libraries of Life)",
+  sourceUrl:
+    "https://sketchfab.com/3d-models/white-topped-pitcher-plant-639d6edef0ca4f8897fe6dd994ca5d73",
+  license: "CC-BY-4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+  originalSha256:
+    "479ed1340dd7dd7d8c1b389d0a4e95289f35535950bf8c75c4875620164b3165",
+  processedSha256:
+    "13d900b59bf92194e5b104014556db3d6d3a6b59cdba6463c24591f2da17b107",
+  processedWith: "gltf-transform: weld, quantize, 1024px WebP texture",
+} as const;
+
+export const CCBY_MOTH_ORCHID_ASSET = {
+  path: "/models/biology/ccby-moth-orchid.glb",
+  sourceTitle: "Orchid, Phalaenopsis flower spike (Rigsters)",
+  sourceUrl:
+    "https://sketchfab.com/3d-models/orchid-ed453cd6b12f4dfa8d4f3dcf68c97cf1",
+  license: "CC-BY-4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+  originalSha256:
+    "d0d47671e6568ff1c4028372195e09d075187646f7942f454eaea2cd40ad027d",
+  processedSha256:
+    "585113386ce79d58ea18eba85a3cec5f77734a6879e4e477b7041ccae603380c",
+  processedWith:
+    "gltf-transform: base colour only, opaque, weld, simplify (22k triangles), quantize, 1024px WebP texture",
+} as const;
+
+export const CCBY_TIGER_ASSET = {
+  path: "/models/biology/ccby-tiger.glb",
+  sourceTitle: "tiger walk v02 (shahabahmed)",
+  sourceUrl: "https://sketchfab.com/3d-models/733afd855f5d4c378f041cc89e231770",
+  license: "CC-BY-4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+  originalSha256:
+    "4a6e97f3130d5f525e52e958cfcd687ee0ba1224eca18cff1a070b4765caec28",
+  processedSha256:
+    "dcfb64d3db9b752ff10608a3612aed17d66e7c5ff4c9e106e3b6e3951abaf506",
+  processedWith:
+    "gltf-transform: animation removed, alpha mask, weld, quantize, 1024px WebP texture",
+} as const;
+
+export const CCBY_LEOPARD_ASSET = {
+  path: "/models/biology/ccby-leopard.glb",
+  sourceTitle: "leopard (dinomaster)",
+  sourceUrl: "https://sketchfab.com/3d-models/2528ea73ca62461c9b300a1ff216521e",
+  license: "CC-BY-4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+  originalSha256:
+    "7873c9a161bc9421a5acce1126393023cf5fe2e2e6cbc6efad6e026a434a5d63",
+  processedSha256:
+    "4c0c527df59f2a2c9b46e53436cbcad2da8547e969bd6e7d792ec144278dff32",
+  processedWith:
+    "Changed: leopard coat painted in code into the base colour texture, then gltf-transform join, weld, quantize, 1024px WebP texture",
+} as const;
+
+export const CCBY_LEOPARD_CAT_ASSET = {
+  path: "/models/biology/ccby-leopard-cat.glb",
+  sourceTitle: "leopard (dinomaster)",
+  sourceUrl: "https://sketchfab.com/3d-models/2528ea73ca62461c9b300a1ff216521e",
+  license: "CC-BY-4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+  originalSha256:
+    "7873c9a161bc9421a5acce1126393023cf5fe2e2e6cbc6efad6e026a434a5d63",
+  processedSha256:
+    "dd7d9b77ec6336bce49b468b46c19426176113a5102beb8fba429ad9e9cb7bde",
+  processedWith:
+    "Changed: leopard cat coat painted in code into the base colour texture, then gltf-transform join, weld, quantize, 1024px WebP texture",
+} as const;
+
+export const CCBY_SUN_BEAR_ASSET = {
+  path: "/models/biology/ccby-sun-bear.glb",
+  sourceTitle: "Bear (Nyilonelycompany)",
+  sourceUrl: "https://sketchfab.com/3d-models/ce0d5eb86cf5459bb6bd20244cb44b27",
+  license: "CC-BY-4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+  originalSha256:
+    "f374829dac4e7160a2bed917f3abd88c33df203030af02e3108a2b01bc620d3f",
+  processedSha256:
+    "ff1251fd67044a357f947acda68c09a65c71817493655024ff33e47aee906d32",
+  processedWith:
+    "Changed: fur recoloured in code to a sun bear coat, rig baked into its standing pose and removed, then gltf-transform weld, quantize, 1024px WebP texture",
+} as const;
+
+export const CCBY_MALAYAN_TAPIR_ASSET = {
+  path: "/models/biology/ccby-malayan-tapir.glb",
+  sourceTitle: "Baby Tapir (pandalog)",
+  sourceUrl: "https://sketchfab.com/3d-models/eb47c254025943f1b234355d368f8611",
+  license: "CC-BY-4.0",
+  licenseUrl: "https://creativecommons.org/licenses/by/4.0/",
+  originalSha256:
+    "2392bfbf67dee130a1402d16451ef623fcdc2a1322c6cacd2fe9c5e615dac917",
+  processedSha256:
+    "5dbd086ac6664e419af558375a6a3901955d492ed302e896a95ae708e06c5aa0",
+  processedWith:
+    "Changed: adult Malayan tapir coat painted in code into the base colour texture, then gltf-transform join, weld, quantize, 1024px WebP texture",
+} as const;

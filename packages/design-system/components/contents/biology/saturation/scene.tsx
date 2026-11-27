@@ -1,4 +1,5 @@
 import { useFrame, useThree } from "@react-three/fiber";
+import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import {
   SimulationTicker,
   simulationStep,
@@ -49,6 +50,7 @@ export function SaturationScene({
   readonly substrateCount: number;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
+  const ink = useLabelInk();
   const swarmRef = useRef<Group>(null);
   const clock = useRef(0);
 
@@ -136,25 +138,13 @@ export function SaturationScene({
           </mesh>
         ))}
       </group>
-      <ThreeLabel
-        color={ENZYME_COLORS.labelInk}
-        fontSize="compact"
-        position={[-0.95, 0.85, 0.25]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[-0.95, 0.85, 0.25]}>
         <span>{parts.enzyme}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ENZYME_COLORS.labelInk}
-        fontSize="compact"
-        position={[0.92, 0.72, 0.25]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[0.92, 0.72, 0.25]}>
         <span>{parts.substrate}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ENZYME_COLORS.labelInk}
-        fontSize="compact"
-        position={[0.0, 1.04, 0]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[0.0, 1.04, 0]}>
         <span>{parts.product}</span>
       </ThreeLabel>
     </group>

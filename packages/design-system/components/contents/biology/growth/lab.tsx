@@ -1,10 +1,13 @@
+import { BiologyTrace } from "@repo/design-system/components/contents/biology/chart";
 import type {
   GrowthPhase,
   PlantLifeCycle,
 } from "@repo/design-system/components/contents/biology/growth/model";
-import { evaluateGrowthCurve } from "@repo/design-system/components/contents/biology/growth/model";
+import {
+  evaluateGrowthCurve,
+  sampleGrowthCurve,
+} from "@repo/design-system/components/contents/biology/growth/model";
 import { PlantSpecimenScene } from "@repo/design-system/components/contents/biology/growth/scene";
-import { PlantGrowthTrace } from "@repo/design-system/components/contents/biology/growth/trace";
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
@@ -29,9 +32,10 @@ import {
 } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { VisualSlider } from "@repo/design-system/components/visual/slider";
+import { FOLIAGE_COLORS } from "@repo/design-system/lib/material/foliage";
 import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
-import { Suspense, useCallback, useState } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
 
 export function PlantGrowthCurveLab({
   description,
@@ -66,6 +70,14 @@ export function PlantGrowthCurveLab({
     ? selectedType
     : types[0];
   const sample = evaluateGrowthCurve(activeType, time);
+  const rows = useMemo(
+    () =>
+      Arr.map(sampleGrowthCurve(activeType, 50), (point) => ({
+        dryMass: point.dryMass * 100,
+        x: point.time,
+      })),
+    [activeType]
+  );
   const phaseCopy = labels.phases[sample.phase];
 
   const handleTickTime = useCallback((delta: number) => {
@@ -136,11 +148,18 @@ export function PlantGrowthCurveLab({
       <VisualCardSceneActions />
 
       <VisualCardFooter>
-        <PlantGrowthTrace
-          dryMassLabel={labels.dryMass}
-          lifeCycle={activeType}
-          time={time}
-          timeLabel={labels.time}
+        <BiologyTrace
+          cursor={{ x: sample.time, y: sample.dryMass * 100 }}
+          rows={rows}
+          series={[
+            {
+              color: FOLIAGE_COLORS.palisade,
+              key: "dryMass",
+              label: labels.dryMass,
+            },
+          ]}
+          top={100}
+          xLabel={labels.time}
         />
         <VisualCardFacts>
           <VisualFactTabular

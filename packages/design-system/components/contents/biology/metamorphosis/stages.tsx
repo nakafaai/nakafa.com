@@ -1,7 +1,12 @@
-import { MonarchButterfly } from "@repo/design-system/components/contents/biology/butterfly";
+import { useGLTF } from "@react-three/drei";
+import {
+  CC0_MIGRATORY_LOCUST_ASSET,
+  CCBY_MONARCH_BUTTERFLY_ASSET,
+} from "@repo/design-system/components/contents/biology/assets";
 import { useCuticleTextures } from "@repo/design-system/components/contents/biology/metamorphosis/cuticle";
 import { useStageGeometries } from "@repo/design-system/components/contents/biology/metamorphosis/geometry";
 import type { Insect } from "@repo/design-system/components/contents/biology/metamorphosis/growth";
+import { LivingSpecimen } from "@repo/design-system/components/contents/biology/specimen";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { SPECIMEN_COLORS } from "@repo/design-system/lib/material/specimen";
 import { Array as Arr } from "effect";
@@ -179,12 +184,10 @@ function GrasshopperStage({
   cuticleTex,
   geos,
   hasWings,
-  isAdult,
 }: {
   readonly cuticleTex: ReturnType<typeof useCuticleTextures>;
   readonly geos: ReturnType<typeof useStageGeometries>;
   readonly hasWings: boolean;
-  readonly isAdult: boolean;
 }) {
   return (
     <group position={[0, 0.085, 0]}>
@@ -271,7 +274,7 @@ function GrasshopperStage({
               key={`ghw-${side}`}
               position={[0.12, 0.056, side * 0.038]}
               rotation={[side * 0.36, Math.PI, -0.06]}
-              scale={isAdult ? [1.05, 1, 1] : [0.42, 0.8, 0.65]}
+              scale={[0.42, 0.8, 0.65]}
             >
               <meshPhysicalMaterial
                 clearcoat={0.34}
@@ -289,19 +292,18 @@ function GrasshopperStage({
 }
 
 /**
- * Renders each sculpted photorealistic metamorphosis stage:
- * ribbed pearlescent eggs, banded caterpillar or grasshopper nymph,
- * hanging jade chrysalis on woody twig, or winged adult insect.
+ * Renders each metamorphosis stage: ribbed pearlescent eggs, the banded
+ * caterpillar or the grasshopper nymph, the hanging jade chrysalis, and the
+ * adult, which is a scan of a real insect: a monarch butterfly from the
+ * Virginia Tech Insect Collection, or a migratory locust.
  */
 export function MetamorphosisOrganism({
   insect,
   instar,
-  playing,
   stage,
 }: {
   readonly insect: Insect;
   readonly instar: number;
-  readonly playing: boolean;
   readonly stage: "adult" | "egg" | "larva" | "nymph" | "pupa";
 }) {
   const cuticleTex = useCuticleTextures(insect);
@@ -336,15 +338,35 @@ export function MetamorphosisOrganism({
     return <ChrysalisStage geos={geos} />;
   }
   if (stage === "adult" && insect === "butterfly") {
-    return <MonarchButterfly playing={playing} />;
+    return (
+      <group position={[0, 0.03, 0.05]} rotation={[-1.05, 0.5, 0]}>
+        <LivingSpecimen
+          extent={0.58}
+          heading={0}
+          path={CCBY_MONARCH_BUTTERFLY_ASSET.path}
+        />
+      </group>
+    );
   }
-  const isAdult = stage === "adult";
+  if (stage === "adult") {
+    return (
+      <group position={[0, -0.015, 0]}>
+        <LivingSpecimen
+          extent={0.5}
+          heading={Math.PI}
+          path={CC0_MIGRATORY_LOCUST_ASSET.path}
+        />
+      </group>
+    );
+  }
   return (
     <GrasshopperStage
       cuticleTex={cuticleTex}
       geos={geos}
-      hasWings={isAdult || instar >= 3}
-      isAdult={isAdult}
+      hasWings={instar >= 3}
     />
   );
 }
+
+useGLTF.preload(CCBY_MONARCH_BUTTERFLY_ASSET.path);
+useGLTF.preload(CC0_MIGRATORY_LOCUST_ASSET.path);

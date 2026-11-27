@@ -21,12 +21,12 @@ const SizeSchema = Schema.Struct({
  * so the water shows against the glazed back wall: a rolled rim, a bowl that
  * curves into the floor, short chrome feet, a floor-standing gooseneck filler
  * on the left and an exposed chrome waste under the floor on the right. It
- * keeps to the left 40% of the width, clear of the chart.
+ * stands in the middle of the sketch, across 44% of its width.
  */
 export function frameOf(size: typeof SizeSchema.Type) {
   const { height, width } = size;
-  const left = width * 0.05;
-  const right = width * 0.4;
+  const left = width * 0.28;
+  const right = width * 0.72;
   const base = height * 0.79;
   const plug = right - width * 0.1;
   const bend = width * 0.012;
