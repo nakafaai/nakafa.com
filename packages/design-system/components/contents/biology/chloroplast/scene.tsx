@@ -7,6 +7,7 @@ import type {
 import {
   ChloroplastEnvelope,
   ChloroplastInterior,
+  Thylakoids,
 } from "@repo/design-system/components/contents/biology/chloroplast/organelles";
 import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import {
@@ -15,6 +16,9 @@ import {
 } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { MoleculeModel } from "@repo/design-system/components/three/molecule/kit";
+import type { Small } from "@repo/design-system/components/three/molecule/small";
+import { smallOf } from "@repo/design-system/components/three/molecule/small";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import {
   useVisualReset,
@@ -23,11 +27,37 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { FOLIAGE_COLORS } from "@repo/design-system/lib/material/foliage";
 import { Array as Arr } from "effect";
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import type { Group } from "three";
-import { DoubleSide } from "three";
+import { AdditiveBlending, DoubleSide } from "three";
 
 const PHOTON_BEAMS = [-0.58, -0.24, 0.12] as const;
+
+/**
+ * One molecule that enters or leaves the chloroplast, as a model of its real
+ * atoms: the gases and water space filling, the larger carriers ball and
+ * stick. It is drawn far larger than life beside the organelle, as a sign of
+ * what flows where.
+ */
+function Carrier({
+  at,
+  name,
+  size,
+}: {
+  readonly at: readonly [number, number, number];
+  readonly name: Small;
+  readonly size: number;
+}) {
+  const molecule = useMemo(() => smallOf(name), [name]);
+  return (
+    <group position={at} rotation={[0.3, 0.5, 0.2]} scale={size}>
+      <MoleculeModel
+        molecule={molecule}
+        style={molecule.atoms.length > 3 ? "sticks" : "spheres"}
+      />
+    </group>
+  );
+}
 
 function ChloroplastCamera() {
   const narrow = isNarrowThreeScene(
@@ -36,7 +66,7 @@ function ChloroplastCamera() {
   );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0.45, 2.05, 3.65] : [0.35, 1.72, 3.15]}
+      cameraPosition={narrow ? [0.45, 2.3, 4.4] : [0.35, 1.72, 3.15]}
       cameraTarget={[0, 0.48, 0]}
       fov={38}
       maxDistance={6.2}
@@ -100,7 +130,9 @@ export function ChloroplastScene({
       <ChloroplastCamera />
       <SeamlessBenchSurface radius={14} y={0} />
       <ChloroplastEnvelope stromaActive={stromaActive} />
-      <ChloroplastInterior granaActive={granaActive} />
+      <ChloroplastInterior>
+        <Thylakoids granaActive={granaActive} />
+      </ChloroplastInterior>
 
       {/* Light-harvesting photon flux beams striking the grana stacks */}
       {granaActive
@@ -110,11 +142,12 @@ export function ChloroplastScene({
               position={[bx - 0.12, 0.86, -0.08]}
               rotation={[0, 0, -0.28]}
             >
-              <cylinderGeometry args={[0.045, 0.095, 0.68, 18, 1, true]} />
+              <cylinderGeometry args={[0.03, 0.11, 0.68, 24, 1, true]} />
               <meshBasicMaterial
+                blending={AdditiveBlending}
                 color={FOLIAGE_COLORS.photonGold}
                 depthWrite={false}
-                opacity={0.14 + reading.photosynthesisRate * 0.14}
+                opacity={0.07 + reading.photosynthesisRate * 0.1}
                 side={DoubleSide}
                 transparent
               />
@@ -124,113 +157,16 @@ export function ChloroplastScene({
 
       {/* Animated energy and metabolite shuttles */}
       <group ref={shuttlesRef}>
-        {/* Water molecule entering thylakoid */}
-        <group position={[-0.94, 0.62, 0.24]}>
-          <mesh>
-            <sphereGeometry args={[0.042, 16, 12]} />
-            <meshPhysicalMaterial
-              clearcoat={0.9}
-              color={FOLIAGE_COLORS.waterMolecule}
-              roughness={0.14}
-            />
-          </mesh>
-          <mesh position={[-0.036, 0.025, 0.015]}>
-            <sphereGeometry args={[0.024, 12, 10]} />
-            <meshStandardMaterial
-              color={FOLIAGE_COLORS.airSpace}
-              roughness={0.2}
-            />
-          </mesh>
-          <mesh position={[0.036, 0.025, 0.015]}>
-            <sphereGeometry args={[0.024, 12, 10]} />
-            <meshStandardMaterial
-              color={FOLIAGE_COLORS.airSpace}
-              roughness={0.2}
-            />
-          </mesh>
-        </group>
-
-        {/* Rising diatomic O2 bubble */}
-        <group
-          position={[-0.58, 0.88 + reading.photosynthesisRate * 0.12, -0.05]}
-        >
-          <mesh position={[-0.026, 0, 0]}>
-            <sphereGeometry args={[0.036, 16, 12]} />
-            <meshPhysicalMaterial
-              clearcoat={1}
-              color={FOLIAGE_COLORS.oxygenBubble}
-              opacity={0.85}
-              roughness={0.1}
-              transparent
-            />
-          </mesh>
-          <mesh position={[0.026, 0, 0]}>
-            <sphereGeometry args={[0.036, 16, 12]} />
-            <meshPhysicalMaterial
-              clearcoat={1}
-              color={FOLIAGE_COLORS.oxygenBubble}
-              opacity={0.85}
-              roughness={0.1}
-              transparent
-            />
-          </mesh>
-        </group>
-
-        {/* ATP & NADPH energy carrier complexes */}
-        <mesh position={[0.08, 0.68, 0.26]}>
-          <icosahedronGeometry args={[0.052, 1]} />
-          <meshStandardMaterial
-            color={FOLIAGE_COLORS.atpGlow}
-            emissive={FOLIAGE_COLORS.atpGlow}
-            emissiveIntensity={0.4}
-            roughness={0.25}
-          />
-        </mesh>
-        <mesh position={[0.26, 0.62, 0.34]}>
-          <icosahedronGeometry args={[0.048, 1]} />
-          <meshStandardMaterial
-            color={FOLIAGE_COLORS.nadphGlow}
-            emissive={FOLIAGE_COLORS.nadphGlow}
-            emissiveIntensity={0.35}
-            roughness={0.25}
-          />
-        </mesh>
-
-        {/* Linear CO2 molecule + hexagonal glucose ring in stroma */}
-        <group position={[0.84, 0.68, -0.14]} rotation={[0, 0.4, 0.25]}>
-          <mesh>
-            <sphereGeometry args={[0.032, 14, 10]} />
-            <meshStandardMaterial
-              color={FOLIAGE_COLORS.co2Molecule}
-              roughness={0.35}
-            />
-          </mesh>
-          <mesh position={[-0.048, 0, 0]}>
-            <sphereGeometry args={[0.026, 12, 10]} />
-            <meshStandardMaterial
-              color={FOLIAGE_COLORS.oxygenBubble}
-              roughness={0.28}
-            />
-          </mesh>
-          <mesh position={[0.048, 0, 0]}>
-            <sphereGeometry args={[0.026, 12, 10]} />
-            <meshStandardMaterial
-              color={FOLIAGE_COLORS.oxygenBubble}
-              roughness={0.28}
-            />
-          </mesh>
-        </group>
-        <mesh
-          position={[0.78, 0.48, 0.24]}
-          rotation={[Math.PI / 2 - 0.3, 0, 0]}
-        >
-          <torusGeometry args={[0.068, 0.022, 10, 6]} />
-          <meshPhysicalMaterial
-            clearcoat={0.5}
-            color={FOLIAGE_COLORS.glucoseRing}
-            roughness={0.3}
-          />
-        </mesh>
+        <Carrier at={[-0.98, 0.62, 0.3]} name="water" size={0.044} />
+        <Carrier
+          at={[-0.58, 0.92 + reading.photosynthesisRate * 0.12, -0.05]}
+          name="oxygen"
+          size={0.044}
+        />
+        <Carrier at={[-0.08, 0.8, 0.5]} name="atp" size={0.02} />
+        <Carrier at={[0.38, 0.78, 0.55]} name="nadph" size={0.017} />
+        <Carrier at={[1.02, 0.66, 0.1]} name="carbonDioxide" size={0.044} />
+        <Carrier at={[0.84, 0.44, 0.48]} name="glucose" size={0.036} />
       </group>
 
       {/* Well-spaced theme-aware labels */}
@@ -246,17 +182,17 @@ export function ChloroplastScene({
       <ThreeLabel color={ink} fontSize="compact" position={[0.68, 0.22, 0.68]}>
         <span>{parts.stroma}</span>
       </ThreeLabel>
-      <ThreeLabel color={ink} fontSize="compact" position={[-0.92, 0.78, 0.28]}>
+      <ThreeLabel color={ink} fontSize="compact" position={[-0.78, 0.8, 0.28]}>
         <span>
           {parts.water} / {parts.oxygen}
         </span>
       </ThreeLabel>
-      <ThreeLabel color={ink} fontSize="compact" position={[0.16, 0.96, 0.3]}>
+      <ThreeLabel color={ink} fontSize="compact" position={[0.06, 1.12, 0.5]}>
         <span>
           {parts.atp} / {parts.nadph}
         </span>
       </ThreeLabel>
-      <ThreeLabel color={ink} fontSize="compact" position={[0.88, 0.78, -0.02]}>
+      <ThreeLabel color={ink} fontSize="compact" position={[0.7, 0.88, 0.1]}>
         <span>
           {parts.co2} / {parts.glucose}
         </span>

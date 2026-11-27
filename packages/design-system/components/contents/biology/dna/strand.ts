@@ -49,17 +49,11 @@ export function complementOf(base: Base, nucleic: Nucleic): Base {
  * measurements of Arnott and Hukins (1972) give it: 0.34 nm between base
  * pairs, 10.5 base pairs to a full turn, 2 nm across.
  */
-export const HELIX = {
+const HELIX = {
   diameter: 2,
   perTurn: 10.5,
   rise: 0.34,
 } as const;
-
-/**
- * The second backbone trails the first by 12/34 of a turn, so the grooves
- * between them are 1.2 nm (minor) and 2.2 nm (major) wide along the axis.
- */
-const GROOVE_SHIFT = 12 / 34;
 
 /** How long a stretch of `count` base pairs is, in nanometres. */
 export function spanOf(count: number) {
@@ -69,22 +63,6 @@ export function spanOf(count: number) {
 /** How many full turns a stretch of `count` base pairs makes. */
 export function turnsOf(count: number) {
   return count / HELIX.perTurn;
-}
-
-/**
- * Where the backbone of `strand` (0 or 1) sits at base pair `index`, in
- * nanometres: up the y axis by the rise, around it by the twist, the second
- * strand a groove's shift behind.
- */
-export function backboneAt(index: number, strand: 0 | 1) {
-  const angle =
-    (index / HELIX.perTurn + (strand === 1 ? GROOVE_SHIFT : 0)) * Math.PI * 2;
-  const radius = HELIX.diameter / 2;
-  return [
-    Math.cos(angle) * radius,
-    index * HELIX.rise,
-    Math.sin(angle) * radius,
-  ] as const;
 }
 
 /** How many positions of `first` and `second` hold different bases. */

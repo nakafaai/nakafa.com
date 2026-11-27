@@ -1,5 +1,6 @@
+import { lumpAt } from "@repo/design-system/components/contents/biology/cell/lump";
+import { Lump } from "@repo/design-system/components/contents/biology/cell/organic";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { getColor } from "@repo/design-system/lib/color";
 import { GENETICS_COLORS } from "@repo/design-system/lib/material/genetics";
 import { Array as Arr } from "effect";
@@ -37,37 +38,49 @@ export function useGiemsaTexture(
     ctx.fillStyle = baseHex;
     ctx.fillRect(0, 0, 256, 512);
 
-    // Alternating cytogenetic G-bands along chromatid length
+    // G-bands of uneven width and depth, each with a ragged edge
     const bands = [
-      { h: 36, y: 24 },
-      { h: 24, y: 84 },
-      { h: 48, y: 128 },
-      { h: 28, y: 204 },
-      { h: 44, y: 274 },
-      { h: 30, y: 342 },
-      { h: 52, y: 394 },
-      { h: 26, y: 468 },
+      { h: 30, y: 26 },
+      { h: 16, y: 86 },
+      { h: 44, y: 130 },
+      { h: 20, y: 206 },
+      { h: 38, y: 276 },
+      { h: 24, y: 344 },
+      { h: 46, y: 396 },
+      { h: 18, y: 470 },
     ] as const;
 
     Arr.forEach(bands, (band, idx) => {
-      const grad = ctx.createLinearGradient(0, band.y, 0, band.y + band.h);
-      grad.addColorStop(0, baseHex);
-      grad.addColorStop(0.22, idx % 3 === 0 ? accentHex : bandHex);
-      grad.addColorStop(0.78, idx % 3 === 0 ? accentHex : bandHex);
-      grad.addColorStop(1, baseHex);
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, band.y, 256, band.h);
+      ctx.fillStyle = idx % 3 === 0 ? accentHex : bandHex;
+      for (const column of Arr.range(0, 63)) {
+        const ragged = (hashUnit(seed + idx * 64 + column, 5) - 0.5) * 12;
+        const depth = 0.2 + hashUnit(seed + idx, 13) * 0.24;
+        for (const pass of Arr.range(0, 3)) {
+          ctx.globalAlpha = depth / 4;
+          ctx.fillRect(
+            column * 4,
+            band.y + ragged - pass * 3,
+            4,
+            band.h + pass * 6
+          );
+        }
+      }
     });
 
-    // Fine coiled chromatin fibril texture lines
-    const white = getColor("WHITE");
-    ctx.globalAlpha = 0.16;
-    for (const i of Arr.range(0, 140)) {
-      const y = hashUnit(seed + i, 3) * 512;
-      const x = hashUnit(seed + i, 7) * 256;
-      const w = 18 + hashUnit(seed + i, 11) * 44;
-      ctx.fillStyle = i % 2 === 0 ? bandHex : white;
-      ctx.fillRect(x, y, w, 2);
+    // The grain of looped chromatin: fine darker specks
+    for (const i of Arr.range(0, 1800)) {
+      const size = 1.5 + hashUnit(seed + i, 11) * 3.5;
+      ctx.globalAlpha = 0.04 + hashUnit(seed + i, 17) * 0.09;
+      ctx.fillStyle = bandHex;
+      ctx.beginPath();
+      ctx.arc(
+        hashUnit(seed + i, 7) * 256,
+        hashUnit(seed + i, 3) * 512,
+        size,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
     }
     ctx.globalAlpha = 1;
 
@@ -85,34 +98,79 @@ export function useGiemsaTexture(
 }
 
 /**
- * Builds a single organic tapered chromatid arm profile (from pinched
- * centromere waist to rounded telomere tip) as a smooth LatheGeometry with
- * subtle longitudinal chromatin undulations.
+ * One chromatid arm from its pinched waist at the centromere to its rounded
+ * telomere: the chromatin fibre coiled into a condensed rod, so its gyres
+ * wind around it and its surface is knobbly with packed loops, as a scanning
+ * electron micrograph shows a metaphase chromosome. No arm is quite straight
+ * and none is a smooth tube.
  */
 function createChromatidArmGeometry(
   length: number,
   radius: number,
   seed: number
 ) {
-  const steps = 28;
+  const steps = 56;
+  const cap = Math.min(0.3, radius / length);
+  const waist = Math.min(0.3, (radius * 1.2) / length);
   const pts = Arr.map(Arr.range(0, steps), (i) => {
     const t = i / steps;
-    const y = t * length;
     let profile = 1;
-    if (t < 0.12) {
-      profile = 0.42 + (t / 0.12) * 0.58;
-    } else if (t > 0.84) {
-      const u = (t - 0.84) / 0.16;
-      profile = Math.sqrt(Math.max(0.002, 1 - u * u));
-    } else {
-      profile =
-        0.95 +
-        0.09 * Math.sin(t * Math.PI * 5 + seed) +
-        0.05 * Math.cos(t * Math.PI * 9);
+    if (t < waist) {
+      const u = t / waist;
+      profile = 0.55 + 0.45 * u * u * (3 - 2 * u);
+    } else if (t > 1 - cap) {
+      const u = (t - (1 - cap)) / cap;
+      profile = Math.sqrt(Math.max(0.0004, 1 - u * u));
     }
-    return new Vector2(Math.max(0.002, radius * profile), y);
+    return new Vector2(Math.max(0.002, radius * profile), t * length);
   });
-  return new LatheGeometry(pts, 32);
+  const arm = new LatheGeometry(pts, 48);
+  const place = arm.getAttribute("position");
+  for (let index = 0; index < place.count; index += 1) {
+    const x = place.getX(index);
+    const y = place.getY(index);
+    const z = place.getZ(index);
+    const gyre =
+      1 + 0.085 * Math.sin(Math.atan2(z, x) + (y / radius) * 4.4 + seed);
+    const swell =
+      gyre *
+      lumpAt(x / radius, (y / radius) * 0.9, z / radius, seed, 0.14) *
+      lumpAt(
+        (x / radius) * 3.1,
+        (y / radius) * 3.1,
+        (z / radius) * 3.1,
+        seed + 5,
+        0.06
+      );
+    const bend = radius * (y / length) ** 2;
+    place.setXYZ(
+      index,
+      x * swell + Math.sin(seed * 1.3) * 0.5 * bend,
+      y,
+      z * swell + Math.cos(seed * 2.1) * 0.3 * bend
+    );
+  }
+  arm.computeVertexNormals();
+  return arm;
+}
+
+/** The matt, velvety surface of condensed chromatin, with its banding and its grain in relief. */
+function ChromatinMaterial({
+  baseColor,
+  texture,
+}: {
+  readonly baseColor: string;
+  readonly texture: CanvasTexture | null;
+}) {
+  return (
+    <meshPhysicalMaterial
+      bumpMap={texture}
+      bumpScale={1}
+      color={texture === null ? baseColor : getColor("WHITE")}
+      map={texture}
+      roughness={0.86}
+    />
+  );
 }
 
 /**
@@ -123,28 +181,20 @@ export function ChromatidArm({
   accentColor = GENETICS_COLORS.giemsaMid,
   bandColor = GENETICS_COLORS.giemsaDark,
   baseColor = GENETICS_COLORS.giemsaLight,
-  emissive,
-  emissiveIntensity = 0,
   length = 0.46,
   position = [0, 0, 0],
   radius = 0.088,
   rotation = [0, 0, 0],
   seed = 1,
-  showTelomere = true,
-  telomereColor = GENETICS_COLORS.telomereCap,
 }: {
   readonly accentColor?: string;
   readonly bandColor?: string;
   readonly baseColor?: string;
-  readonly emissive?: string | undefined;
-  readonly emissiveIntensity?: number;
   readonly length?: number;
   readonly position?: readonly [number, number, number];
   readonly radius?: number;
   readonly rotation?: readonly [number, number, number];
   readonly seed?: number;
-  readonly showTelomere?: boolean;
-  readonly telomereColor?: string;
 }) {
   const armGeo = useMemo(
     () => createChromatidArmGeometry(length, radius, seed),
@@ -157,30 +207,8 @@ export function ChromatidArm({
   return (
     <group position={position} rotation={rotation}>
       <mesh castShadow geometry={armGeo} receiveShadow>
-        <meshPhysicalMaterial
-          clearcoat={0.48}
-          clearcoatRoughness={0.32}
-          color={tex === null ? baseColor : getColor("WHITE")}
-          emissive={emissive ?? baseColor}
-          emissiveIntensity={emissive === undefined ? 0 : emissiveIntensity}
-          map={tex}
-          roughness={0.44}
-        />
+        <ChromatinMaterial baseColor={baseColor} texture={tex} />
       </mesh>
-      {showTelomere ? (
-        <mesh castShadow position={[0, length - radius * 0.48, 0]}>
-          <sphereGeometry
-            args={[radius * 0.74, 22, 16, 0, Math.PI * 2, 0, Math.PI * 0.56]}
-          />
-          <meshPhysicalMaterial
-            clearcoat={0.72}
-            color={telomereColor}
-            emissive={telomereColor}
-            emissiveIntensity={0.2}
-            roughness={0.28}
-          />
-        </mesh>
-      ) : null}
     </group>
   );
 }
@@ -236,28 +264,24 @@ export function MetaphaseChromosome({
     {
       geo: pGeo,
       id: "lp",
-      len: pLength,
       pos: [-radius * 0.48, 0.02, 0] as const,
       rotZ: splay,
     },
     {
       geo: qGeo,
       id: "lq",
-      len: qLength,
       pos: [-radius * 0.48, -0.02, 0] as const,
       rotZ: Math.PI - splay,
     },
     {
       geo: pGeo,
       id: "rp",
-      len: pLength,
       pos: [radius * 0.48, 0.02, 0] as const,
       rotZ: -splay,
     },
     {
       geo: qGeo,
       id: "rq",
-      len: qLength,
       pos: [radius * 0.48, -0.02, 0] as const,
       rotZ: Math.PI + splay,
     },
@@ -268,62 +292,31 @@ export function MetaphaseChromosome({
       {Arr.map(armPlacements, (arm) => (
         <group key={arm.id} position={arm.pos} rotation={[0, 0, arm.rotZ]}>
           <mesh castShadow geometry={arm.geo} receiveShadow>
-            <meshPhysicalMaterial
-              clearcoat={0.48}
-              clearcoatRoughness={0.32}
-              color={tex === null ? baseColor : getColor("WHITE")}
-              map={tex}
-              roughness={0.44}
-            />
-          </mesh>
-          <mesh castShadow position={[0, arm.len - radius * 0.48, 0]}>
-            <sphereGeometry
-              args={[radius * 0.74, 22, 16, 0, Math.PI * 2, 0, Math.PI * 0.56]}
-            />
-            <meshPhysicalMaterial
-              clearcoat={0.72}
-              color={GENETICS_COLORS.telomereCap}
-              emissive={GENETICS_COLORS.telomereCap}
-              emissiveIntensity={0.2}
-              roughness={0.28}
-            />
+            <ChromatinMaterial baseColor={baseColor} texture={tex} />
           </mesh>
         </group>
       ))}
 
-      {/* Constricted kinetochore centromere collar & lateral protein plaques */}
-      <mesh castShadow scale={[1.28, 0.68, 0.96]}>
-        <sphereGeometry args={[radius * 0.96, 26, 20]} />
-        <meshPhysicalMaterial
-          clearcoat={0.72}
-          clearcoatRoughness={0.22}
-          color={GENETICS_COLORS.kinetochoreGold}
-          metalness={0.42}
-          roughness={0.28}
-        />
-      </mesh>
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[radius * 1.08, radius * 0.16, 12, 36]} />
-        <MetalMaterial
-          color={GENETICS_COLORS.kinetochoreGold}
-          roughness={0.24}
-        />
-      </mesh>
+      {/* The primary constriction, and a kinetochore plaque on each chromatid's outer face */}
+      <Lump
+        coat={0.05}
+        color={bandColor}
+        depth={0.16}
+        radius={radius * 0.8}
+        seed={seed + 1}
+        stretch={[1.25, 0.62, 0.92]}
+      />
       {Arr.map([-1, 1] as const, (side) => (
-        <mesh
-          castShadow
+        <Lump
+          coat={0.1}
+          color={GENETICS_COLORS.kinetochoreGold}
+          depth={0.2}
           key={side}
-          position={[side * radius * 1.18, 0, 0]}
-          rotation={[0, 0, Math.PI / 2]}
-        >
-          <cylinderGeometry
-            args={[radius * 0.42, radius * 0.48, radius * 0.24, 18]}
-          />
-          <MetalMaterial
-            color={GENETICS_COLORS.brassPolished}
-            roughness={0.26}
-          />
-        </mesh>
+          position={[side * radius * 1.02, 0, 0]}
+          radius={radius * 0.5}
+          seed={seed + 3 + side}
+          stretch={[0.42, 0.9, 0.9]}
+        />
       ))}
     </group>
   );

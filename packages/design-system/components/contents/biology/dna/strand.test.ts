@@ -2,13 +2,11 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import {
-  backboneAt,
   basesOf,
   complementOf,
   copiedCount,
   differencesOf,
   gcShareOf,
-  HELIX,
   identityOf,
   isCopied,
   isOpen,
@@ -41,14 +39,6 @@ describe("the B-DNA helix", () => {
   it("spans 7.14 nm over 21 base pairs, two full turns", () => {
     expect(spanOf(21)).toBeCloseTo(7.14);
     expect(turnsOf(21)).toBe(2);
-  });
-
-  it("puts both backbones on a 2 nm wide cylinder", () => {
-    const [x, y, z] = backboneAt(5, 0);
-    expect(Math.hypot(x, z)).toBeCloseTo(HELIX.diameter / 2);
-    expect(y).toBeCloseTo(5 * HELIX.rise);
-    const [x1, , z1] = backboneAt(0, 1);
-    expect(Math.atan2(z1, x1)).toBeCloseTo((12 / 34) * Math.PI * 2);
   });
 });
 

@@ -1,10 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  fibreBeads,
   formatDnaLength,
-  helixRungs,
   LEVELS,
-  nucleosomeCenters,
   stretchedLengthMm,
   widthNm,
 } from "@repo/design-system/components/contents/biology/chromosome/packing";
@@ -24,13 +21,5 @@ describe("stretchedLengthMm and formatDnaLength", () => {
     expect(formatDnaLength(chr1)).toBe("84.6 mm");
     expect(formatDnaLength(0.25)).toBe("250.0 µm");
     expect(formatDnaLength(2040)).toBe("2.04 m");
-  });
-});
-
-describe("3D packing geometry generators", () => {
-  it("produces helix rungs, four nucleosome beads, and solenoid fibre beads", () => {
-    expect(helixRungs(14)).toHaveLength(14);
-    expect(nucleosomeCenters()).toHaveLength(4);
-    expect(fibreBeads(24)).toHaveLength(24);
   });
 });

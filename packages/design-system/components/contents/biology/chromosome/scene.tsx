@@ -87,10 +87,14 @@ export function ChromosomeScene({
       <group ref={rootRef}>
         {Match.value(level).pipe(
           Match.when("nucleotide", () => (
-            <NucleotideSpecimen ink={ink} parts={parts} />
+            <NucleotideSpecimen ink={ink} parts={parts} playing={playing} />
           )),
           Match.when("helix", () => (
-            <DoubleHelixSpecimen ink={ink} label={parts.base} />
+            <DoubleHelixSpecimen
+              ink={ink}
+              label={parts.base}
+              playing={playing}
+            />
           )),
           Match.when("nucleosome", () => (
             <NucleosomeSpecimen ink={ink} label={parts.histone} />

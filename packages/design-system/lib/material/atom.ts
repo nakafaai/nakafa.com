@@ -21,6 +21,7 @@ export const ATOM_COLORS = {
   cpkNeon: "#b3e3f5",
   cpkNitrogen: "#3050f8",
   cpkOxygen: "#ff0d0d",
+  cpkPhosphorus: "#ff8000",
   cpkPotassium: "#8f40d4",
   cpkSilver: "#c0c0c0",
   cpkSodium: "#ab5cf2",
