@@ -1,15 +1,10 @@
-import { caption } from "@repo/design-system/components/contents/physics/canvas/caption";
-import {
-  arrow,
-  fade,
-  mix,
-  vignette,
-} from "@repo/design-system/components/contents/physics/canvas/paint";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
+import { CurrentBalanceScene } from "@repo/design-system/components/contents/physics/field/balance/scene";
 import { balancingCurrent } from "@repo/design-system/components/contents/physics/field/magnet";
-import { paintBench } from "@repo/design-system/components/contents/physics/heat/glass";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   VisualCard,
   VisualCardBody,
@@ -20,138 +15,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { P5Sketch } from "@repo/design-system/components/visual/sketch";
-import { getColor } from "@repo/design-system/lib/color";
-import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
-import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { Schema } from "effect";
-import type p5 from "p5";
 import type { ReactNode } from "react";
-import { useState } from "react";
-
-/** What the sketch reads on every frame: the magnetic force over the weight, and the current's sign along the wire. */
-const BalanceFrameSchema = Schema.Struct({
-  share: Schema.Finite,
-});
-type BalanceFrame = typeof BalanceFrameSchema.Type;
-
-/**
- * Places a point given in metres east, north and up on the canvas in an
- * isometric view, east to the lower right and north to the upper right.
- */
-function iso(sketch: p5, east: number, north: number, up: number) {
-  const unit = Math.min(sketch.width, sketch.height) * 0.36;
-  const angle = Math.PI / 6;
-  return {
-    x: sketch.width * 0.46 + (east + north) * Math.cos(angle) * unit,
-    y:
-      sketch.height * 0.6 + (east - north) * Math.sin(angle) * unit - up * unit,
-  };
-}
-
-/**
- * Draws one moment, in an isometric view: the two poles of a magnet with its
- * field pointing north between them, the wire lying east to west across the
- * gap carrying the current east, and the magnetic force up against the
- * weight down, each arrow as long as its force. The wire lifts while the
- * force beats the weight and sags while it does not.
- */
-function balanceProgram(sketch: p5, read: () => BalanceFrame) {
-  let lift = 0;
-  sketch.setup = () => {
-    sketch.createCanvas(1, 1);
-  };
-  sketch.draw = () => {
-    const frame = read();
-    const target = Math.max(-0.12, Math.min(0.12, (frame.share - 1) * 0.25));
-    lift +=
-      (target - lift) * Math.min(Math.min(sketch.deltaTime / 1000, 0.1) * 3, 1);
-    const { height } = sketch;
-    paintBench(sketch, height * 0.72);
-    const block = (north: number, color: string) => {
-      const corners = [
-        iso(sketch, -0.25, north - 0.12, 0),
-        iso(sketch, 0.25, north - 0.12, 0),
-        iso(sketch, 0.25, north - 0.12, 0.5),
-        iso(sketch, -0.25, north - 0.12, 0.5),
-      ];
-      sketch.noStroke();
-      sketch.fill(color);
-      sketch.beginShape();
-      for (const corner of corners) {
-        sketch.vertex(corner.x, corner.y);
-      }
-      sketch.endShape(sketch.CLOSE);
-    };
-    block(0.67, mix(INSTRUMENT_COLORS.trolleyPaint, getColor("BLACK"), 0.1));
-    const wireHeight = 0.25 + lift;
-    const from = iso(sketch, -0.6, 0, wireHeight);
-    const to = iso(sketch, 0.6, 0, wireHeight);
-    sketch.stroke(mix(INSTRUMENT_COLORS.copper, getColor("BLACK"), 0.3));
-    sketch.strokeWeight(6);
-    sketch.line(from.x, from.y, to.x, to.y);
-    sketch.stroke(mix(INSTRUMENT_COLORS.copper, getColor("WHITE"), 0.35));
-    sketch.strokeWeight(2);
-    sketch.line(from.x, from.y - 1.5, to.x, to.y - 1.5);
-    const centre = iso(sketch, 0, 0, wireHeight);
-    arrow(sketch, iso(sketch, 0, -0.35, 0.12), iso(sketch, 0, 0.35, 0.12), {
-      color: PLOT_COLORS.violet,
-      head: 11,
-      weight: 3,
-    });
-    arrow(
-      sketch,
-      iso(sketch, 0.25, 0, wireHeight),
-      iso(sketch, 0.55, 0, wireHeight),
-      { color: PLOT_COLORS.amber, head: 11, weight: 3 }
-    );
-    const force = 0.32 * frame.share;
-    arrow(sketch, centre, iso(sketch, 0, 0, wireHeight + force), {
-      color: PLOT_COLORS.teal,
-      head: 11,
-      weight: 3.5,
-    });
-    arrow(sketch, centre, iso(sketch, 0, 0, wireHeight - 0.32), {
-      color: PLOT_COLORS.pink,
-      head: 11,
-      weight: 3.5,
-    });
-    block(-0.55, mix(MACHINE_COLORS.signalRed, getColor("BLACK"), 0.15));
-    const pole = {
-      align: "center",
-      baseline: "middle",
-      color: getColor("WHITE"),
-      size: 15,
-    } as const;
-    // The field runs from the north pole to the south pole, so the north pole stands on the south side.
-    caption(sketch, "N", iso(sketch, 0, -0.67, 0.25), pole);
-    caption(sketch, "S", iso(sketch, 0, 0.55, 0.25), pole);
-    const axis = {
-      align: "left",
-      baseline: "middle",
-      color: fade(getColor("WHITE"), 0.85),
-      size: 12,
-    } as const;
-    caption(sketch, "B", iso(sketch, 0, 0.4, 0.12), {
-      ...axis,
-      color: PLOT_COLORS.violet,
-    });
-    caption(sketch, "I", iso(sketch, 0.6, 0, wireHeight), {
-      ...axis,
-      color: PLOT_COLORS.amber,
-    });
-    caption(sketch, "F", iso(sketch, 0.04, 0, wireHeight + force), {
-      ...axis,
-      color: PLOT_COLORS.teal,
-    });
-    caption(sketch, "W", iso(sketch, 0.04, 0, wireHeight - 0.32), {
-      ...axis,
-      color: PLOT_COLORS.pink,
-    });
-    vignette(sketch, 0.3);
-  };
-}
+import { Suspense, useState } from "react";
 
 interface CurrentBalanceLabProps {
   description: NonNullable<ReactNode>;
@@ -216,12 +81,16 @@ export function CurrentBalanceLab({
           value={current}
         />
       </VisualCardToolbar>
-      <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
-        <P5Sketch
-          label={labels.viewLabel}
-          program={balanceProgram}
-          state={{ share: force / weight }}
-        />
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ScienceStage floor={0} reach={3} setting="lab">
+          <Suspense fallback={null}>
+            <CurrentBalanceScene current={current} share={force / weight} />
+          </Suspense>
+        </ScienceStage>
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>

@@ -1,20 +1,10 @@
-import {
-  fade,
-  gradientRect,
-  mix,
-  vignette,
-} from "@repo/design-system/components/contents/physics/canvas/paint";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
-import {
-  paintBoard,
-  paintCoil,
-  paintMeter,
-  terminal,
-  wire,
-} from "@repo/design-system/components/contents/physics/circuit/board";
 import { heaterOnSupply } from "@repo/design-system/components/contents/physics/circuit/current";
+import { HeaterSupplyScene } from "@repo/design-system/components/contents/physics/circuit/heater/scene";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   VisualCard,
   VisualCardBody,
@@ -25,98 +15,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { P5Sketch } from "@repo/design-system/components/visual/sketch";
-import { getColor } from "@repo/design-system/lib/color";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
-import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
-import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
-import { Schema } from "effect";
-import type p5 from "p5";
 import type { ReactNode } from "react";
-import { useState } from "react";
-
-/** What the sketch reads on every frame. */
-const HeaterFrameSchema = Schema.Struct({
-  power: Schema.Finite,
-  rated: Schema.Finite,
-  ratedVoltage: Schema.Finite,
-  supply: Schema.Finite,
-});
-type HeaterFrame = typeof HeaterFrameSchema.Type;
-
-/**
- * Draws the heater on its board: the supply socket with a voltmeter, the
- * leads, and the heating coil inside its ceramic housing, glowing with the
- * share of its rated power it draws now.
- */
-function heaterProgram(sketch: p5, read: () => HeaterFrame) {
-  sketch.setup = () => {
-    sketch.createCanvas(1, 1);
-  };
-  sketch.draw = () => {
-    const frame = read();
-    const { height, width } = sketch;
-    const at = (x: number, y: number) => ({ x: width * x, y: height * y });
-    paintBoard(sketch);
-    gradientRect(
-      sketch,
-      {
-        height: height * 0.36,
-        width: width * 0.18,
-        x: width * 0.06,
-        y: height * 0.32,
-      },
-      [
-        [0, BENCH_COLORS.cabinet],
-        [1, mix(BENCH_COLORS.cabinet, getColor("BLACK"), 0.3)],
-      ]
-    );
-    sketch.noStroke();
-    sketch.fill(mix(BENCH_COLORS.cabinet, getColor("BLACK"), 0.12));
-    sketch.rect(width * 0.09, height * 0.36, width * 0.12, height * 0.28, 6);
-    sketch.fill(getColor("NEUTRAL", 800));
-    sketch.rect(width * 0.135, height * 0.4, width * 0.03, height * 0.06, 3);
-    sketch.rect(width * 0.135, height * 0.54, width * 0.03, height * 0.06, 3);
-    wire(
-      sketch,
-      [at(0.24, 0.42), at(0.4, 0.42), at(0.4, 0.3), at(0.5, 0.3)],
-      MACHINE_COLORS.hullRed
-    );
-    wire(
-      sketch,
-      [at(0.24, 0.58), at(0.4, 0.58), at(0.4, 0.7), at(0.5, 0.7)],
-      INSTRUMENT_COLORS.trolleyPaint
-    );
-    gradientRect(
-      sketch,
-      {
-        height: height * 0.5,
-        width: width * 0.42,
-        x: width * 0.5,
-        y: height * 0.25,
-      },
-      [
-        [0, BENCH_COLORS.ceramicTile],
-        [1, mix(BENCH_COLORS.ceramicTile, getColor("BLACK"), 0.35)],
-      ]
-    );
-    sketch.noStroke();
-    sketch.fill(fade(getColor("BLACK"), 0.55));
-    sketch.rect(width * 0.53, height * 0.3, width * 0.36, height * 0.4, 6);
-    const glow = Math.sqrt(Math.min(frame.power / frame.rated, 1.2) / 1.2);
-    for (const row of [0.38, 0.5, 0.62]) {
-      paintCoil(sketch, at(0.56, row), at(0.86, row), glow);
-    }
-    terminal(sketch, at(0.5, 0.3));
-    terminal(sketch, at(0.5, 0.7));
-    paintMeter(sketch, at(0.15, 0.18), Math.min(width, height) * 0.17, {
-      full: frame.ratedVoltage * 1.25,
-      letter: "V",
-      value: frame.supply,
-    });
-    vignette(sketch, 0.3);
-  };
-}
+import { Suspense, useState } from "react";
 
 interface HeaterSupplyLabProps {
   description: NonNullable<ReactNode>;
@@ -182,17 +82,22 @@ export function HeaterSupplyLab({
           value={supply}
         />
       </VisualCardToolbar>
-      <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
-        <P5Sketch
-          label={labels.viewLabel}
-          program={heaterProgram}
-          state={{
-            power: heater.power,
-            rated: ratedPower,
-            ratedVoltage,
-            supply,
-          }}
-        />
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ScienceStage floor={0} reach={2.6} setting="lab">
+          <Suspense fallback={null}>
+            <HeaterSupplyScene
+              current={supply / heater.resistance}
+              power={heater.power}
+              rated={ratedPower}
+              ratedVoltage={ratedVoltage}
+              supply={supply}
+            />
+          </Suspense>
+        </ScienceStage>
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>

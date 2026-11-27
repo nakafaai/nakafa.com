@@ -1,20 +1,10 @@
-import { caption } from "@repo/design-system/components/contents/physics/canvas/caption";
-import {
-  fade,
-  vignette,
-} from "@repo/design-system/components/contents/physics/canvas/paint";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
-import {
-  paintBoard,
-  paintMeter,
-  paintResistor,
-  wire,
-} from "@repo/design-system/components/contents/physics/circuit/board";
+import { TransistorBiasScene } from "@repo/design-system/components/contents/physics/electronics/bias/scene";
 import { transistorBias } from "@repo/design-system/components/contents/physics/electronics/logic";
-import { paintTransistor } from "@repo/design-system/components/contents/physics/electronics/parts";
-import type { Point } from "@repo/design-system/components/contents/physics/optics/light";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   VisualCard,
   VisualCardBody,
@@ -25,161 +15,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { P5Sketch } from "@repo/design-system/components/visual/sketch";
-import { getColor } from "@repo/design-system/lib/color";
-import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
-import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { Array as Arr, Schema } from "effect";
-import type p5 from "p5";
 import type { ReactNode } from "react";
-import { useState } from "react";
-
-/** What the sketch reads on every frame. */
-const BiasFrameSchema = Schema.Struct({
-  base: Schema.Finite,
-  collector: Schema.Finite,
-  collectorEmitter: Schema.Finite,
-  collectorSupply: Schema.Finite,
-  most: Schema.Finite,
-});
-type BiasFrame = typeof BiasFrameSchema.Type;
-
-/** Dots of charge moving along a wire from `from` to `to` at a pace that grows with `current`. */
-function flow(
-  sketch: p5,
-  points: readonly Point[],
-  current: number,
-  clock: number
-) {
-  const pairs = Arr.zip(points, Arr.drop(points, 1));
-  const lengths = Arr.map(pairs, ([a, b]) => Math.hypot(b.x - a.x, b.y - a.y));
-  const total = Arr.reduce(lengths, 0, (sum, length) => sum + length);
-  const gap = 18;
-  const offset = (clock * 60 * current) % gap;
-  sketch.noStroke();
-  sketch.fill(fade(PLOT_COLORS.amber, 0.9));
-  for (let along = offset; along < total; along += gap) {
-    let left = along;
-    for (const [[a, b], length] of Arr.zip(pairs, lengths)) {
-      if (left <= length) {
-        sketch.circle(
-          a.x + ((b.x - a.x) * left) / length,
-          a.y + ((b.y - a.y) * left) / length,
-          4
-        );
-        break;
-      }
-      left -= length;
-    }
-  }
-}
-
-/**
- * Draws the amplifier on its board: the base supply feeding the base through
- * its resistor, the collector supply feeding the collector through its
- * resistor, charge drifting along each loop at a pace set by its current,
- * and a voltmeter across the collector and emitter.
- */
-function biasProgram(sketch: p5, read: () => BiasFrame) {
-  let clock = 0;
-  sketch.setup = () => {
-    sketch.createCanvas(1, 1);
-  };
-  sketch.draw = () => {
-    const frame = read();
-    if (sketch.isLooping()) {
-      clock += Math.min(sketch.deltaTime / 1000, 0.1);
-    }
-    const { height, width } = sketch;
-    const at = (x: number, y: number) => ({ x: width * x, y: height * y });
-    paintBoard(sketch);
-    const legs = paintTransistor(
-      sketch,
-      at(0.5, 0.48),
-      Math.min(width, height) * 0.12
-    );
-    const baseWire = [at(0.06, 0.56), at(0.14, 0.56)];
-    wire(sketch, baseWire, MACHINE_COLORS.hullRed);
-    paintResistor(sketch, at(0.14, 0.56), at(0.36, 0.56), width * 0.16);
-    wire(
-      sketch,
-      [at(0.36, 0.56), { x: legs.base.x, y: height * 0.56 }, legs.base],
-      MACHINE_COLORS.hullRed
-    );
-    wire(
-      sketch,
-      [at(0.94, 0.08), at(0.62, 0.08), at(0.62, 0.14)],
-      MACHINE_COLORS.hullRed
-    );
-    paintResistor(sketch, at(0.62, 0.14), at(0.62, 0.34), height * 0.14);
-    wire(
-      sketch,
-      [
-        at(0.62, 0.34),
-        { x: legs.collector.x, y: height * 0.34 },
-        legs.collector,
-      ],
-      MACHINE_COLORS.hullRed
-    );
-    wire(
-      sketch,
-      [legs.emitter, { x: legs.emitter.x, y: height * 0.9 }, at(0.94, 0.9)],
-      INSTRUMENT_COLORS.trolleyPaint
-    );
-    flow(
-      sketch,
-      [
-        at(0.06, 0.56),
-        at(0.36, 0.56),
-        { x: legs.base.x, y: height * 0.56 },
-        legs.base,
-      ],
-      frame.base / frame.most,
-      clock
-    );
-    flow(
-      sketch,
-      [
-        at(0.94, 0.08),
-        at(0.62, 0.08),
-        at(0.62, 0.34),
-        { x: legs.collector.x, y: height * 0.34 },
-        legs.collector,
-      ],
-      frame.collector / frame.most,
-      clock
-    );
-    paintMeter(sketch, at(0.82, 0.6), Math.min(width, height) * 0.18, {
-      full: frame.collectorSupply,
-      letter: "V",
-      value: frame.collectorEmitter,
-    });
-    wire(
-      sketch,
-      [at(0.82, 0.69), at(0.82, 0.9)],
-      INSTRUMENT_COLORS.trolleyPaint
-    );
-    wire(
-      sketch,
-      [
-        at(0.82, 0.51),
-        at(0.82, 0.42),
-        { x: legs.collector.x + 6, y: height * 0.42 },
-      ],
-      MACHINE_COLORS.signalAmber
-    );
-    const mark = {
-      align: "left",
-      baseline: "middle",
-      color: fade(getColor("WHITE"), 0.9),
-      size: 13,
-    } as const;
-    caption(sketch, "Rb", { x: width * 0.2, y: height * 0.5 }, mark);
-    caption(sketch, "Rc", { x: width * 0.66, y: height * 0.24 }, mark);
-    vignette(sketch, 0.3);
-  };
-}
+import { Suspense, useState } from "react";
 
 interface TransistorBiasLabProps {
   /** The base resistor the lab starts with, in kilohms. */
@@ -236,6 +73,9 @@ export function TransistorBiasLab({
     threshold,
   });
 
+  /** The largest collector current the chart of flows is measured against: a little above what the supply drives through the collector resistor alone. */
+  const most = (collectorSupply / (collector * 1000)) * 1.2;
+
   return (
     <VisualCard
       onReset={() => {
@@ -255,18 +95,21 @@ export function TransistorBiasLab({
           value={base}
         />
       </VisualCardToolbar>
-      <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
-        <P5Sketch
-          label={labels.viewLabel}
-          program={biasProgram}
-          state={{
-            base: bias.baseCurrent * gain,
-            collector: bias.collectorCurrent,
-            collectorEmitter: bias.collectorEmitter,
-            collectorSupply,
-            most: (collectorSupply / (collector * 1000)) * 1.2,
-          }}
-        />
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ScienceStage floor={0} reach={2.8} setting="lab">
+          <Suspense fallback={null}>
+            <TransistorBiasScene
+              baseFlow={(bias.baseCurrent * gain) / most}
+              collectorEmitter={bias.collectorEmitter}
+              collectorFlow={bias.collectorCurrent / most}
+              collectorSupply={collectorSupply}
+            />
+          </Suspense>
+        </ScienceStage>
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>

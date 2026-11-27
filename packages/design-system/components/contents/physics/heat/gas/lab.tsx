@@ -1,18 +1,12 @@
-import {
-  fade,
-  gradientRect,
-  mix,
-  vignette,
-} from "@repo/design-system/components/contents/physics/canvas/paint";
-import { paintMeter } from "@repo/design-system/components/contents/physics/circuit/board";
-import { paintBench } from "@repo/design-system/components/contents/physics/heat/glass";
+import { GasPistonScene } from "@repo/design-system/components/contents/physics/heat/gas/scene";
 import {
   gasPressure,
   KELVIN,
 } from "@repo/design-system/components/contents/physics/heat/thermal";
-import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -27,146 +21,12 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { P5Sketch } from "@repo/design-system/components/visual/sketch";
-import { getColor } from "@repo/design-system/lib/color";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
-import { CAR_COLORS } from "@repo/design-system/lib/material/car";
-import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
-import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
-import type p5 from "p5";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
-/** How many molecules the cylinder holds; the mass of gas is fixed. */
-const MOLECULES = 70;
-
-/** The three states the lab steps through. */
 const StageSchema = Schema.Literals(["start", "compressed", "heated"]);
 type Stage = typeof StageSchema.Type;
-
-/** What the sketch reads on every frame. */
-const GasFrameSchema = Schema.Struct({
-  full: Schema.Finite,
-  kelvin: Schema.Finite,
-  pressure: Schema.Finite,
-  volume: Schema.Finite,
-});
-type GasFrame = typeof GasFrameSchema.Type;
-
-/**
- * Draws one moment: the cylinder with its piston at the gas's volume, the
- * molecules moving at a speed that grows with the square root of the
- * absolute temperature, and the pressure gauge on top.
- */
-function gasProgram(sketch: p5, read: () => GasFrame) {
-  let clock = 0;
-  let piston = read().volume;
-  sketch.setup = () => {
-    sketch.createCanvas(1, 1);
-  };
-  sketch.draw = () => {
-    const frame = read();
-    const step = Math.min(sketch.deltaTime / 1000, 0.1);
-    if (sketch.isLooping()) {
-      clock += step;
-    }
-    piston += (frame.volume - piston) * Math.min(step * 4, 1);
-    const { height, width } = sketch;
-    const top = height * 0.82;
-    paintBench(sketch, top);
-    const box = {
-      height: height * 0.36,
-      left: width * 0.1,
-      length: width * 0.72,
-      y: top - height * 0.42,
-    };
-    const inner = box.length * piston;
-    gradientRect(
-      sketch,
-      {
-        height: box.height + 16,
-        width: box.length + 16,
-        x: box.left - 8,
-        y: box.y - 8,
-      },
-      [
-        [0, fade(BENCH_COLORS.glass, 0.35)],
-        [1, fade(BENCH_COLORS.glass, 0.18)],
-      ]
-    );
-    gradientRect(
-      sketch,
-      { height: box.height, width: inner, x: box.left, y: box.y },
-      [
-        [
-          0,
-          fade(
-            mix(
-              REAGENT_COLORS.gasWisp,
-              PLOT_COLORS.orange,
-              (frame.kelvin - 250) / 400
-            ),
-            0.25
-          ),
-        ],
-        [1, fade(REAGENT_COLORS.gasWisp, 0.12)],
-      ]
-    );
-    gradientRect(
-      sketch,
-      {
-        height: box.height - 6,
-        width: width * 0.04,
-        x: box.left + inner,
-        y: box.y + 3,
-      },
-      [
-        [0, INSTRUMENT_COLORS.aluminium],
-        [1, mix(INSTRUMENT_COLORS.aluminium, getColor("BLACK"), 0.45)],
-      ]
-    );
-    sketch.noStroke();
-    sketch.fill(CAR_COLORS.castIron);
-    sketch.rect(
-      box.left + inner + width * 0.04,
-      box.y + box.height * 0.44,
-      box.length * 1.2 - inner,
-      box.height * 0.12
-    );
-    const speed = Math.sqrt(frame.kelvin / 300) * 0.35;
-    Arr.forEach(
-      Arr.makeBy(MOLECULES, (index) => index),
-      (index) => {
-        const bounce = (seed: number, span: number) => {
-          const travel =
-            (hashUnit(index, seed) +
-              clock * speed * (0.6 + hashUnit(index, seed + 1))) %
-            2;
-          return (travel < 1 ? travel : 2 - travel) * span;
-        };
-        sketch.fill(fade(PLOT_COLORS.teal, 0.9));
-        sketch.circle(
-          box.left + 6 + bounce(0, inner - 12),
-          box.y + 6 + bounce(2, box.height - 12),
-          6
-        );
-      }
-    );
-    paintMeter(
-      sketch,
-      { x: box.left + width * 0.08, y: box.y - height * 0.12 },
-      Math.min(width, height) * 0.16,
-      {
-        full: frame.full,
-        letter: "kPa",
-        value: frame.pressure,
-      }
-    );
-    vignette(sketch, 0.3);
-  };
-}
 
 interface GasPistonLabProps {
   description: NonNullable<ReactNode>;
@@ -248,12 +108,22 @@ export function GasPistonLab({
           ))}
         </ToggleGroup>
       </VisualCardToolbar>
-      <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
-        <P5Sketch
-          label={labels.viewLabel}
-          program={gasProgram}
-          state={{ full, kelvin: celsius + KELVIN, pressure: now, volume }}
-        />
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ScienceStage floor={0} reach={2.8} setting="lab">
+          <Suspense fallback={null}>
+            <GasPistonScene
+              full={full}
+              heated={stage === "heated"}
+              kelvin={celsius + KELVIN}
+              pressure={now}
+              volume={volume}
+            />
+          </Suspense>
+        </ScienceStage>
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>
