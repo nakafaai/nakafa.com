@@ -261,7 +261,7 @@ export function Micrometer({
               (SLEEVE.radius + 0.03) * Math.cos(NUMERAL_ANGLE),
               (SLEEVE.radius + 0.03) * Math.sin(NUMERAL_ANGLE),
             ]}
-            height={1.7}
+            height={2}
             key={millimetre}
             text={`${millimetre}`}
             turn={[NUMERAL_ANGLE - Math.PI / 2, 0, 0]}

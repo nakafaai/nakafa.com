@@ -21,6 +21,8 @@ export const INSTRUMENT_COLORS = {
   // The moulded heat guard on the frame of a micrometer.
   gripPad: "#1b1d20",
   hair: "#5b3a24",
+  // The grey-green hammertone enamel of a cast balance housing.
+  hammertone: "#66736f",
   iris: "#4e3423",
   lampLight: "#fff1d6",
   laserBeam: "#ff3b30",

@@ -40,8 +40,8 @@ const PLATE = 0.3;
 /** How quickly the slide glides to a new reading, per second. */
 const GLIDE = 7;
 
-/** One tile of brushed steel for every 36 millimetres of an extruded face. */
-const GRAIN = [1 / 36, 1 / 36] as const;
+/** One tile of ground steel for every 10 millimetres of an extruded face. */
+const GRAIN = [1 / 10, 1 / 10] as const;
 
 /** An outline through the given corners. */
 function outline(corners: readonly (readonly [number, number])[]) {
@@ -144,6 +144,7 @@ const CENTIMETRES = Arr.makeBy(RANGE / 10 + 1, (index) => index);
 function Chrome() {
   return (
     <SurfaceMaterial
+      bump={0.3}
       color={INSTRUMENT_COLORS.satinChrome}
       metalness={1}
       repeat={GRAIN}
@@ -157,10 +158,11 @@ function Chrome() {
 function Steel() {
   return (
     <SurfaceMaterial
+      bump={0.3}
       color={INSTRUMENT_COLORS.toolSteel}
       metalness={1}
       repeat={GRAIN}
-      roughness={0.3}
+      roughness={0.34}
       surface="brushed"
     />
   );

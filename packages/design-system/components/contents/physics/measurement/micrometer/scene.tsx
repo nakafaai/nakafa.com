@@ -14,9 +14,9 @@ export function GaugeScene({ thickness }: { readonly thickness: number }) {
   return (
     <group>
       <ReadingCamera
-        narrow={[0.5, 0.86, 0.2]}
-        target={[0.5, 0.09, -0.02]}
-        wide={[0.42, 0.78, 0.2]}
+        narrow={[0.34, 1, 0.47]}
+        target={[0.34, 0.09, 0.05]}
+        wide={[0.34, 0.87, 0.41]}
       />
       <Micrometer reading={thickness}>
         <mesh castShadow position={[thickness / 2, 0, 0]} receiveShadow>

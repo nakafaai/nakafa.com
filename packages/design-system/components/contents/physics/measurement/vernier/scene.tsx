@@ -37,9 +37,9 @@ export function CaliperScene({ width }: { readonly width: number }) {
   return (
     <group>
       <ReadingCamera
-        narrow={[0.1, 0.46, 0.2]}
-        target={[0.1, 0.04, -0.035]}
-        wide={[0.1, 0.4, 0.17]}
+        narrow={[0.07, 0.74, 0.6]}
+        target={[0.07, 0, 0.08]}
+        wide={[0.07, 0.62, 0.51]}
       />
       <Caliper hold="slide" reading={width}>
         <mesh

@@ -1,60 +1,23 @@
+import { PrintFace } from "@repo/design-system/components/three/print/layer";
+import { words } from "@repo/design-system/components/three/print/sheet";
 import type { Placement } from "@repo/design-system/components/three/repeat";
 import { Repeat } from "@repo/design-system/components/three/repeat";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
-import { MutableHashMap, Option } from "effect";
 import { useMemo } from "react";
-import { CanvasTexture, SRGBColorSpace } from "three";
 
 /**
  * What is engraved and inked on an instrument: its graduation marks and its
  * numerals. This file is the one seam between the instruments and how a
- * scale is printed, so the instruments never draw ink themselves.
+ * scale is printed, so the instruments never draw ink themselves. A mark is
+ * a groove of real geometry, exact at every zoom; a numeral is printed
+ * through the print module, which draws it again as sharp as it is seen.
  */
 
-/** The height one numeral is painted at, in pixels: sharp when a phone looks straight at a scale. */
-const GLYPH = 160;
+/** How wide one character is next to its height, with room to spare. */
+const ADVANCE = 0.66;
 
-/** How wide one character is next to its height. */
-const ADVANCE = 0.6;
-
-/** The numerals painted so far, shared by every instrument that shows them. */
-const PAINTED = MutableHashMap.empty<string, CanvasTexture>();
-
-/** How wide a numeral is next to its height. */
-function aspectOf(text: string) {
-  return text.length * ADVANCE + 0.1;
-}
-
-/** Paints one numeral in ink on a clear ground. */
-function paintNumeral(text: string, ink: string) {
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.round(GLYPH * aspectOf(text));
-  canvas.height = GLYPH;
-  const context = canvas.getContext("2d");
-  if (context !== null) {
-    context.fillStyle = ink;
-    context.font = `600 ${GLYPH * 0.86}px ui-sans-serif, system-ui, sans-serif`;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText(text, canvas.width / 2, GLYPH * 0.54);
-  }
-  const texture = new CanvasTexture(canvas);
-  texture.colorSpace = SRGBColorSpace;
-  texture.anisotropy = 8;
-  return texture;
-}
-
-/** The texture of one numeral in one ink, painted once and then shared. */
-function numeralTexture(text: string, ink: string) {
-  const key = `${ink} ${text}`;
-  const known = MutableHashMap.get(PAINTED, key);
-  if (Option.isSome(known)) {
-    return known.value;
-  }
-  const painted = paintNumeral(text, ink);
-  MutableHashMap.set(PAINTED, key, painted);
-  return painted;
-}
+/** How tall the type's em is next to the height of the numeral's line. */
+const EM = 0.9;
 
 /**
  * The ink-filled graduation marks of one scale, drawn in a single call. Each
@@ -80,11 +43,11 @@ export function Marks({
 }
 
 /**
- * One numeral engraved beside a scale, `height` tall, centred on `at` and
- * lying in the plane its `turn` gives.
+ * One numeral or legend engraved beside a scale, `height` tall, centred on
+ * `at` and lying in the plane its `turn` gives.
  *
  * @param at - Where the middle of the numeral stands
- * @param height - How tall the numeral is
+ * @param height - How tall the numeral's line is
  * @param ink - The colour of the ink
  * @param text - The numeral
  * @param turn - How the numeral's plane turns, as Euler angles
@@ -102,19 +65,20 @@ export function Numeral({
   readonly text: string;
   readonly turn?: readonly [number, number, number];
 }) {
-  const texture = useMemo(() => numeralTexture(text, ink), [ink, text]);
+  const sheet = useMemo(
+    () => ({
+      height,
+      marks: [
+        words({ at: [0, 0], ink, size: height * EM, text, weight: 600 }),
+      ],
+      width: height * (text.length * ADVANCE + 0.4),
+    }),
+    [height, ink, text]
+  );
 
   return (
-    <mesh position={at} rotation={turn}>
-      <planeGeometry args={[height * aspectOf(text), height]} />
-      <meshStandardMaterial
-        depthWrite={false}
-        map={texture}
-        polygonOffset
-        polygonOffsetFactor={-2}
-        roughness={0.82}
-        transparent
-      />
-    </mesh>
+    <group position={[at[0], at[1], at[2]]} rotation={[turn[0], turn[1], turn[2]]}>
+      <PrintFace sheet={sheet} stock="engraving" />
+    </group>
   );
 }
