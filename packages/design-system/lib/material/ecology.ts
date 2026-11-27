@@ -83,6 +83,15 @@ export const ECOLOGY_COLORS = {
   airScatter: "#4f8dff",
   spaceVoid: "#020308",
 
+  // ClimateObservationLab: the Terra satellite as it flies, wrapped in gold
+  // Kapton blankets, with bare aluminium trusses, a white dish, dark
+  // thruster nozzles, and the pale beam of the instrument that scans the ground.
+  satelliteFoil: "#c08a2e",
+  satelliteMetal: "#b9bdc4",
+  satelliteDish: "#e8e9ea",
+  satelliteNozzle: "#2a2b2e",
+  sensorSwath: "#9fdcff",
+
   // A coast, a reef tank and a meadow floor.
   coralBleached: "#f4f1ea",
   coralHealthy: "#6e6437",
