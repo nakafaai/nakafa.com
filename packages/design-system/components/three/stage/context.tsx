@@ -12,7 +12,7 @@ import {
   supportsHalfFloatColorBuffer,
 } from "@repo/design-system/lib/device";
 import type { ReactNode } from "react";
-import { createContext, useMemo } from "react";
+import { createContext, use, useMemo } from "react";
 import type { WebGLRenderer } from "three";
 
 interface StageProviderProps {
@@ -90,4 +90,13 @@ export function StageProvider({
 /** Reads the floor, reach, tier, and profile of the surrounding stage. */
 export function useStage() {
   return useRequired(StageContext, "useStage");
+}
+
+/**
+ * Whether the surrounding stage draws on a capable desktop card, which can
+ * afford to trace light through a surface. A part drawn outside any stage
+ * gets the cheaper look.
+ */
+export function useDeepLight() {
+  return use(StageContext)?.tier === "full";
 }
