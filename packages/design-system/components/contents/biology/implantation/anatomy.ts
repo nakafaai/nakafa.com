@@ -2,6 +2,7 @@ import {
   globe,
   organ,
 } from "@repo/design-system/components/contents/biology/gametogenesis/tissue";
+import type { Blastomere } from "@repo/design-system/components/contents/biology/implantation/cleavage";
 import {
   fractalAt,
   ridgedAt,
@@ -151,18 +152,13 @@ export function zonaForms(detail: number): readonly Form[] {
 }
 
 /** Where each cell of the embryo sits, ready for one instanced draw call. */
-export function cellPlacements(
-  cells: readonly {
-    readonly offset: readonly [number, number, number];
-    readonly radius: number;
-  }[]
-) {
+export function cellPlacements(cells: readonly Blastomere[]) {
   return scatter(cells.length, 229, (index, chance) => {
-    const cell = cells[index] ?? { offset: [0, 0, 0], radius: 0 };
+    const radius = cells[index]?.radius ?? 0;
     return {
       lean: [chance(1) * 6, chance(2) * 6, 0],
-      place: cell.offset,
-      size: [cell.radius, cell.radius, cell.radius],
+      place: cells[index]?.offset ?? [0, 0, 0],
+      size: [radius, radius, radius],
     };
   });
 }

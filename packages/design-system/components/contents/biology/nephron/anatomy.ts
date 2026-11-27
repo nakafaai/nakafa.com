@@ -99,7 +99,7 @@ function blend(value: number, edge: number) {
  * climbs back, the distal tubule, and the collecting duct that widens as it
  * gathers urine.
  */
-export function tubuleRadius(share: number) {
+function tubuleRadius(share: number) {
   const thin = blend(share, 0.36) - blend(share, 0.52);
   const duct = blend(share, 0.82);
   return 0.135 - 0.065 * thin - 0.02 * blend(share, 0.52) + 0.05 * duct * share;
@@ -205,7 +205,9 @@ export function vesselForms(detail: number): readonly Form[] {
       paint: (share, around, color) => {
         color
           .copy(tone)
-          .multiplyScalar(0.78 + 0.4 * fractalAt(share, around, 60, 4, seed, 2));
+          .multiplyScalar(
+            0.78 + 0.4 * fractalAt(share, around, 60, 4, seed, 2)
+          );
       },
       relief: () => 0,
       seed,

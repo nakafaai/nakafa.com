@@ -87,7 +87,7 @@ describe("stationAt", () => {
 describe("loftBody", () => {
   it("keeps the back of a steady body facing up, where a free frame drifts round a winding spine", () => {
     const back = (loft: Loft) =>
-      Number(loftBody(loft).position[(40 * 13) * 3 + 2]) - 1.2;
+      Number(loftBody(loft).position[40 * 13 * 3 + 2]) - 1.2;
 
     expect(back({ ...WINDING, steady: true })).toBeCloseTo(0.1);
     expect(back(WINDING)).toBeLessThan(0.095);
