@@ -1,6 +1,7 @@
 import { waveVectors } from "@repo/design-system/components/contents/physics/waves/tank/ripple";
 import { Water } from "@repo/design-system/components/contents/physics/waves/tank/water";
 import { refractWave } from "@repo/design-system/components/contents/physics/waves/wave";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { Beam } from "@repo/design-system/components/three/optic/beam";
 import { Arc } from "@repo/design-system/components/three/optic/board";
 import { Slab } from "@repo/design-system/components/three/optic/glass";
@@ -121,26 +122,14 @@ function Wall({
     <group position={[at[0], 0, at[1]]} rotation={[0, turn, 0]}>
       <mesh castShadow position={[0, WALL_TALL / 2, 0]} receiveShadow>
         <boxGeometry args={[long, WALL_TALL, WALL]} />
-        <SurfaceMaterial
-          coat={0.4}
-          color={APPARATUS_COLORS.beechWood}
-          repeat={[long * 0.6, 1]}
-          roughness={0.55}
-          surface="wood"
-        />
+        <Matter of="beech" />
       </mesh>
       <mesh
         position={[0, FLOOR + DEPTH * 0.7, WALL / 2 + 0.085]}
         rotation={[0.42, 0, 0]}
       >
         <boxGeometry args={[long - WALL * 2.4, 0.03, 0.21]} />
-        <SurfaceMaterial
-          bump={1}
-          color={APPARATUS_COLORS.foamCup}
-          repeat={[long * 4, 1]}
-          roughness={1}
-          surface="cloth"
-        />
+        <Matter of="foam" />
       </mesh>
     </group>
   );
@@ -178,11 +167,7 @@ function Tray() {
             </mesh>
             <mesh castShadow position={[0, 0.02, 0]}>
               <cylinderGeometry args={[0.04, 0.05, 0.04, 28]} />
-              <SurfaceMaterial
-                color={APPARATUS_COLORS.rubberFoot}
-                roughness={0.9}
-                surface="rubber"
-              />
+              <Matter of="rubber" />
             </mesh>
             <mesh castShadow position={[0, LEGS - 0.03, 0]}>
               <cylinderGeometry args={[0.045, 0.045, 0.06, 28]} />
@@ -237,13 +222,7 @@ function Dipper({ incidence }: { readonly incidence: number }) {
         </mesh>
         <mesh castShadow position={[0, GANTRY * 0.42, 0]}>
           <boxGeometry args={[DIPPER_LONG + 0.12, 0.05, 0.07]} />
-          <SurfaceMaterial
-            coat={0.3}
-            color={APPARATUS_COLORS.beechWood}
-            repeat={[3, 1]}
-            roughness={0.6}
-            surface="wood"
-          />
+          <Matter of="beech" />
         </mesh>
         <mesh
           castShadow
