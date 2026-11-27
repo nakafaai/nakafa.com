@@ -154,10 +154,10 @@ export function ImplantationScene({
         {parts.ampulla}
       </ThreeLabel>
       <ThreeLabel
-        anchorY="bottom"
+        anchorY="top"
         color={ink}
         gap={0.04}
-        position={[-0.14, 0.84, 0]}
+        position={[-0.1, 0.4, 0]}
       >
         {parts.tube}
       </ThreeLabel>
@@ -166,7 +166,7 @@ export function ImplantationScene({
         anchorY="bottom"
         color={ink}
         gap={0.04}
-        position={[0.68, 0.9, 0]}
+        position={[0.92, 0.9, 0]}
       >
         {parts.uterus}
       </ThreeLabel>
@@ -174,7 +174,7 @@ export function ImplantationScene({
         anchorY="top"
         color={ink}
         gap={0.04}
-        position={[0.68, 0.06, 0.1]}
+        position={[0.74, -0.05, 0.1]}
       >
         {parts.endometrium}
       </ThreeLabel>
@@ -210,20 +210,20 @@ export function ImplantationScene({
 
         {embryo.stage === "blastocyst" && (
           <ThreeLabel
-            anchorY="top"
+            anchorY="bottom"
             color={ink}
             gap={0.04}
-            position={[0, -0.2, 0]}
+            position={[0, 0.2, 0]}
           >
             {parts.trophoblast}
           </ThreeLabel>
         )}
         {embryo.hcg && (
           <ThreeLabel
-            anchorY="top"
+            anchorX="right"
             color={ink}
             gap={0.04}
-            position={[0, -0.26, 0.1]}
+            position={[-0.2, -0.18, 0.1]}
           >
             {parts.hcg}
           </ThreeLabel>
