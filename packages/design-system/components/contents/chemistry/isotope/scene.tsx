@@ -29,7 +29,7 @@ const NUCLEON = 0.5;
  * radius: the camera fits a box by its corners, which stand well outside
  * the ball inside it, so a smaller cube lets the nucleus fill the card.
  */
-const CUBE = 0.74;
+const CUBE = 0.66;
 
 /** The dark of open space behind the nucleus, which outlines its labels, and how wide that outline is. */
 const BACKDROP = getColor("ZINC", 950);
@@ -103,7 +103,7 @@ export function NuclideScene({
         fontSize={reach * 0.3}
         outlineColor={BACKDROP}
         outlineWidth={OUTLINE}
-        position={[0, reach * 1.1, 0]}
+        position={[0, reach * 1.02, 0]}
       >
         {notation}
       </ThreeLabel>
@@ -113,7 +113,7 @@ export function NuclideScene({
         fontSize={reach * 0.2}
         outlineColor={BACKDROP}
         outlineWidth={OUTLINE}
-        position={[0, -reach * 1.1, 0]}
+        position={[0, -reach * 1.02, 0]}
         visible={caption !== undefined}
       >
         {caption}
@@ -124,7 +124,7 @@ export function NuclideScene({
         fontSize={reach * 0.2}
         outlineColor={BACKDROP}
         outlineWidth={OUTLINE}
-        position={[-reach * 1.12, 0, 0]}
+        position={[-reach * 1.04, 0, 0]}
       >
         <InlineMath math={`p^+ = ${protons}`} />
       </ThreeLabel>
@@ -134,7 +134,7 @@ export function NuclideScene({
         fontSize={reach * 0.2}
         outlineColor={BACKDROP}
         outlineWidth={OUTLINE}
-        position={[reach * 1.12, 0, 0]}
+        position={[reach * 1.04, 0, 0]}
       >
         <InlineMath math={`n^0 = ${neutrons}`} />
       </ThreeLabel>

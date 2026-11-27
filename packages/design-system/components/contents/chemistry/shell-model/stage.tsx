@@ -43,7 +43,7 @@ function ResponsiveShellModelCamera() {
     <CameraControls
       cameraPosition={cameraPosition}
       cameraTarget={CAMERA_TARGET}
-      fov={45}
+      fov={28}
       framing="content"
     />
   );

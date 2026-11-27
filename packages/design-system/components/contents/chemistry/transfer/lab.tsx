@@ -71,6 +71,13 @@ const NUCLEON = 0.026;
 /** How wide the glow of an electron on its way across is drawn, in scene units. */
 const SPARK = 0.5;
 
+/**
+ * The share of each atom's radius the camera's box takes in: the camera
+ * fits the ball about its box, which reaches past the atoms' round edges,
+ * so a smaller box lets the pair fill the card.
+ */
+const FIT = 0.9;
+
 /** How far below the larger atom the two symbols are written, in scene units. */
 const LABEL_DROP = 0.3;
 
@@ -334,9 +341,12 @@ function TransferScene({
   return (
     <CameraBounds
       bounds={{
-        x: { min: -APART - metalReach, max: APART + nonmetalReach },
-        y: { min: -tallest - LABEL_DROP, max: tallest },
-        z: { min: -0.4, max: 0.4 },
+        x: {
+          min: -APART - metalReach * FIT,
+          max: APART + nonmetalReach * FIT,
+        },
+        y: { min: -tallest * FIT, max: tallest * FIT },
+        z: { min: -0.1, max: 0.1 },
       }}
     >
       <AtomShells

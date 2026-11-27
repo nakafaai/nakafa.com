@@ -29,11 +29,14 @@ const NUCLEON = 0.078;
  * corners of this square lie just outside the round orbit, so the orbit
  * itself fills the card.
  */
-const SQUARE = 0.88;
+const SQUARE = 0.75;
 
 /** The dark of open space behind the atom, which outlines its labels, and how wide that outline is. */
 const BACKDROP = getColor("ZINC", 950);
 const OUTLINE = 0.012;
+
+/** How far inside its orbit each shell's letter is written, along the diagonal away from the reader, so no letter stands outside the atom or the camera's square. */
+const LETTER = 0.2;
 
 /** How far the electrons' light reaches past their orbit, which the camera must keep in frame. */
 const MARGIN = 0.2;
@@ -76,7 +79,7 @@ export function ShellModelScene() {
   });
 
   return (
-    <group rotation={[-0.28, 0, 0]} scale={1.12}>
+    <group rotation={[-0.28, 0, 0]}>
       <SimulationTicker running={playing && !calm} />
       <CameraBounds
         bounds={{
@@ -102,7 +105,7 @@ export function ShellModelScene() {
         fontSize="reading"
         outlineColor={BACKDROP}
         outlineWidth={OUTLINE}
-        position={[0, 0.2, -0.52]}
+        position={[0, 0.1, 0.5]}
       >
         <InlineMath
           math={`\\vphantom{X}_{${sample.atomicNumber}}\\mathrm{${sample.symbol}}`}
@@ -115,7 +118,11 @@ export function ShellModelScene() {
           key={shell.key}
           outlineColor={BACKDROP}
           outlineWidth={OUTLINE}
-          position={[INNER + GAP * index + 0.2, 0.14, 0.12]}
+          position={[
+            (INNER + GAP * index - LETTER) * Math.SQRT1_2,
+            0.1,
+            -(INNER + GAP * index - LETTER) * Math.SQRT1_2,
+          ]}
         >
           <InlineMath math={`\\mathrm{${shell.key}}`} />
         </ThreeLabel>
