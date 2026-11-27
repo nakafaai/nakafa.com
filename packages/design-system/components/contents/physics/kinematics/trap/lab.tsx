@@ -13,7 +13,6 @@ import {
 import { curvePoints } from "@repo/design-system/components/contents/physics/kinematics/ticks";
 import type { GateRig } from "@repo/design-system/components/contents/physics/kinematics/trap/beam";
 import { LightGate } from "@repo/design-system/components/contents/physics/kinematics/trap/beam";
-import { SpeedBoard } from "@repo/design-system/components/contents/physics/kinematics/trap/board";
 import type { TrapGap } from "@repo/design-system/components/contents/physics/kinematics/trap/gates";
 import {
   TRAP_ACCELERATION,
@@ -222,9 +221,9 @@ export function SpeedTrapInstantSpeedLab({
 }
 
 /**
- * The test road, the two gates of the trap with the stretch they time
- * painted between them, the car that speeds up through them, and the board
- * that shows what the trap read once the car has left it.
+ * The test road with its distance posts, the two gates of the trap and
+ * the car that speeds up through them. What the trap reads is the card's,
+ * in its readout and on its chart.
  */
 function TrapScene({ gap }: { readonly gap: TrapGap }) {
   const playing = useVisualScene((card) => card.playing, false);
@@ -232,9 +231,7 @@ function TrapScene({ gap }: { readonly gap: TrapGap }) {
   const car = useRef<SedanRig>(null);
   const enter = useRef<GateRig>(null);
   const leave = useRef<GateRig>(null);
-  const run = useRef({ gap, lit: true, time: stillTime(gap) });
-  const [lit, setLit] = useState(true);
-  const reading = trapReading(gap);
+  const run = useRef({ gap, time: stillTime(gap) });
   const from = TRAP_CENTRE - gap / 2;
   const to = TRAP_CENTRE + gap / 2;
   useVisualStop(() => {
@@ -256,10 +253,6 @@ function TrapScene({ gap }: { readonly gap: TrapGap }) {
     car.current?.place(front - NOSE, false);
     enter.current?.trip(front >= from && tail <= from);
     leave.current?.trip(front >= to && tail <= to);
-    if (state.lit !== front >= to) {
-      state.lit = front >= to;
-      setLit(state.lit);
-    }
   });
 
   return (
@@ -286,16 +279,6 @@ function TrapScene({ gap }: { readonly gap: TrapGap }) {
       </ThreeLabel>
       <LightGate at={from} ref={enter} />
       <LightGate at={to} ref={leave} />
-      <SpeedBoard at={to + 2.5} lit={lit}>
-        <span className="flex flex-col items-center gap-1">
-          <InlineMath
-            math={`\\Delta t=${measure(reading.elapsed, "\\text{ s}", 3)}`}
-          />
-          <InlineMath
-            math={`\\bar{v}=${measure(reading.average, "\\text{ m/s}", 2)}`}
-          />
-        </span>
-      </SpeedBoard>
       <group position={[0, 0, ROAD.lane]}>
         <Sedan color={PLOT_COLORS.pink} ref={car} />
       </group>
