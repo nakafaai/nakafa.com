@@ -1,9 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   BOBS,
-  bobRadius,
   pendulumPeriod,
   periodPowers,
+  swingAngle,
+  swingReach,
 } from "@repo/design-system/components/contents/physics/measurement/pendulum/period";
 
 describe("a pendulum's period by dimensional analysis", () => {
@@ -31,9 +32,17 @@ describe("a pendulum's period by dimensional analysis", () => {
     );
   });
 
-  it("makes the light wooden bob the biggest ball and the brass one the smallest", () => {
-    expect(bobRadius("wood")).toBeCloseTo(0.0271, 4);
-    expect(bobRadius("brass")).toBeCloseTo(0.0178, 4);
-    expect(bobRadius("lead")).toBeCloseTo(0.0219, 4);
+  it("lets the bobs go from their widest swing and brings them back one period later", () => {
+    const period = pendulumPeriod(0.8, BOBS.brass.mass);
+
+    expect(swingAngle(0.8, 0)).toBeCloseTo(0.2, 12);
+    expect(swingAngle(0.8, period / 4)).toBeCloseTo(0, 12);
+    expect(swingAngle(0.8, period / 2)).toBeCloseTo(-0.2, 12);
+    expect(swingAngle(0.8, period)).toBeCloseTo(0.2, 12);
+  });
+
+  it("swings a longer string farther to either side", () => {
+    expect(swingReach(1.2)).toBeCloseTo(1.2 * Math.sin(0.2), 12);
+    expect(swingReach(1.2)).toBeGreaterThan(swingReach(0.2));
   });
 });
