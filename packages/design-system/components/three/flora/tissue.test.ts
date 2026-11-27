@@ -162,8 +162,7 @@ describe("sectionCells", () => {
   it("gives no two neighbouring cells of a file the same height", () => {
     const grown = Arr.filter(
       cells,
-      (cell) =>
-        cell.zone === ZONES.mature && cell.x === outermost
+      (cell) => cell.zone === ZONES.mature && cell.x === outermost
     );
 
     expect(grown.length).toBeGreaterThan(1);

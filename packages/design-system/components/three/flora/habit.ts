@@ -1,7 +1,4 @@
-import {
-  chanceAt,
-  fractalAt,
-} from "@repo/design-system/components/three/field/noise";
+import { chanceAt } from "@repo/design-system/components/three/field/noise";
 import type { Limb } from "@repo/design-system/components/three/flora/limb";
 import {
   LimbSchema,
@@ -315,52 +312,5 @@ export function growHabit(habit: Habit, seed: number): Growth {
     order: 0,
     radius: habit.girth,
     start: [0, 0, 0],
-  });
-}
-
-/**
- * A sward: `count` blades of grass over a disc `radius` wide, as
- * `LEAF_STRIDE` numbers each. The blades stand in tufts of unequal height and
- * lean every way, as a meadow does, and they shorten to nothing at the rim, so
- * the sward has no edge against the ground around it.
- */
-export function growSward({
-  blade,
-  count,
-  radius,
-  seed,
-}: {
-  readonly blade: number;
-  readonly count: number;
-  readonly radius: number;
-  readonly seed: number;
-}) {
-  return Arr.flatMap(Arr.range(0, count - 1), (index) => {
-    const turn = chanceAt(index, 1, seed) * 2 * Math.PI;
-    const far = Math.sqrt(chanceAt(index, 2, seed)) * radius;
-    const x = Math.cos(turn) * far;
-    const z = Math.sin(turn) * far;
-    const tuft = fractalAt(
-      x / radius / 2 + 0.5,
-      z / radius / 2 + 0.5,
-      9,
-      9,
-      seed
-    );
-    const lean = chanceAt(index, 3, seed) * 2 * Math.PI;
-    const tilt = 0.15 + chanceAt(index, 4, seed) * 0.5;
-    const heading = unit([Math.cos(lean) * tilt, 1, Math.sin(lean) * tilt]);
-    const face = unit(cross([-Math.sin(lean), 0, Math.cos(lean)], heading));
-    return [
-      x,
-      0,
-      z,
-      ...heading,
-      ...face,
-      blade *
-        (0.35 + 1.3 * tuft * tuft + 0.3 * chanceAt(index, 5, seed)) *
-        (1 - (far / radius) ** 3),
-      chanceAt(index, 6, seed),
-    ];
   });
 }

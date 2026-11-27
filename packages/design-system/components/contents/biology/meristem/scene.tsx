@@ -146,14 +146,14 @@ function onFace(reach: number, turn: number) {
 }
 
 /**
- * The sawn log with its labels in a column beside it. The higher a label
- * stands, the farther back on the face is the part it names, so no two
- * leaders cross and none crosses a label.
+ * The sawn log with its labels in rows above it. The top label's leader
+ * drops straight to the face between the two labels below it, and each row
+ * lower stands farther out and names a part farther out on the face, so no
+ * leader crosses a label or another leader.
  */
 function SecondaryTrunkView() {
   const { parts, years } = use(MeristemSceneContext);
   const cross = evaluateSecondaryGrowth(years);
-  const column = cross.outerRadius + 0.1;
 
   return (
     <group>
@@ -171,39 +171,39 @@ function SecondaryTrunkView() {
         />
       </CameraBounds>
       <Leader
-        anchorX="left"
-        at={[column, 0.98, 0]}
-        to={onFace(cross.xylemRadius * 0.55, -1)}
+        anchorY="bottom"
+        at={[0, 1.22, 0]}
+        to={onFace(cross.xylemRadius * 0.45, -Math.PI / 2)}
       >
         <span>{parts.annualRing}</span>
       </Leader>
       <Leader
-        anchorX="left"
-        at={[column, 0.84, 0]}
-        to={onFace(cross.xylemRadius * 0.78, -0.45)}
+        anchorX="right"
+        at={[-0.08, 1, 0]}
+        to={onFace(cross.xylemRadius * 0.7, Math.PI + 0.5)}
       >
         <span>{parts.secondaryXylem}</span>
       </Leader>
       <Leader
         anchorX="left"
-        at={[column, 0.7, 0]}
-        to={onFace(cross.xylemRadius, -0.1)}
+        at={[0.08, 1, 0]}
+        to={onFace(cross.xylemRadius, -0.5)}
       >
         <span>{parts.vascularCambium}</span>
       </Leader>
       <Leader
-        anchorX="left"
-        at={[column, 0.56, 0]}
-        to={onFace(cross.xylemRadius + 0.035, 0.3)}
+        anchorX="right"
+        at={[-0.24, 0.8, 0]}
+        to={onFace(cross.outerRadius - 0.03, Math.PI + 0.2)}
       >
-        <span>{parts.secondaryPhloem}</span>
+        <span>{parts.corkCambium}</span>
       </Leader>
       <Leader
         anchorX="left"
-        at={[column, 0.42, 0]}
-        to={onFace(cross.outerRadius - 0.03, 0.62)}
+        at={[0.24, 0.8, 0]}
+        to={onFace(cross.xylemRadius + 0.035, -0.2)}
       >
-        <span>{parts.corkCambium}</span>
+        <span>{parts.secondaryPhloem}</span>
       </Leader>
     </group>
   );

@@ -1,6 +1,5 @@
 import { leafSurface } from "@repo/design-system/components/contents/biology/leaf";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
-import { Turn } from "@repo/design-system/components/three/form/part";
 import { getColor } from "@repo/design-system/lib/color";
 import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
 import { Array as Arr } from "effect";
@@ -12,7 +11,6 @@ import {
   DoubleSide,
   Float32BufferAttribute,
   RepeatWrapping,
-  SphereGeometry,
   SRGBColorSpace,
   TubeGeometry,
   Vector3,
@@ -264,74 +262,6 @@ export function BotanicalLeaf({
           map={maps?.map ?? null}
           roughness={0.46}
           side={DoubleSide}
-        />
-      </mesh>
-    </group>
-  );
-}
-
-const POT_PROFILE = [
-  [0, 0],
-  [0.24, 0],
-  [0.26, 0.02],
-  [0.32, 0.28],
-  [0.365, 0.295],
-  [0.365, 0.355],
-  [0.325, 0.355],
-  [0.31, 0.3],
-] as const;
-
-/** Lathed terracotta ceramic pot with rolled lip and bumpy granular peat-soil mound. */
-export function TerracottaPot({
-  position = [0, 0, 0],
-  scale = 1,
-}: {
-  readonly position?: readonly [number, number, number];
-  readonly scale?: number;
-}) {
-  const soilTex = useMemo(() => createSoilTexture(), []);
-  useEffect(() => () => soilTex?.dispose(), [soilTex]);
-
-  const soilMound = useMemo(() => {
-    const mound = new SphereGeometry(
-      0.32,
-      28,
-      14,
-      0,
-      Math.PI * 2,
-      0,
-      Math.PI * 0.48
-    );
-    const pos = mound.getAttribute("position");
-    for (let i = 0; i < pos.count; i += 1) {
-      const vx = pos.getX(i);
-      const vy = pos.getY(i);
-      const vz = pos.getZ(i);
-      const rough = 1 + (hashUnit(i, 7) - 0.5) * 0.08;
-      pos.setXYZ(i, vx * 0.96, vy * 0.24 * rough, vz * 0.96);
-    }
-    mound.computeVertexNormals();
-    return mound;
-  }, []);
-  useEffect(() => () => soilMound.dispose(), [soilMound]);
-
-  return (
-    <group position={position} scale={scale}>
-      <mesh castShadow receiveShadow>
-        <Turn profile={POT_PROFILE} />
-        <meshStandardMaterial
-          color={BOTANY_COLORS.terracotta}
-          roughness={0.82}
-          side={DoubleSide}
-        />
-      </mesh>
-      <mesh geometry={soilMound} position={[0, 0.305, 0]} receiveShadow>
-        <meshStandardMaterial
-          bumpMap={soilTex}
-          bumpScale={0.02}
-          color={BOTANY_COLORS.soilDark}
-          map={soilTex}
-          roughness={0.95}
         />
       </mesh>
     </group>

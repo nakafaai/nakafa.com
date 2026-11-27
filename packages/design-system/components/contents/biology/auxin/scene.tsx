@@ -148,26 +148,26 @@ export function AuxinAgarBendScene({
       </Leader>
       <Leader
         anchorX="right"
-        at={[middle[0] - 0.24, middle[1] + 0.04, 0]}
+        at={[middle[0] - 0.32, middle[1] + 0.04, 0]}
         to={[middle[0] - 0.11, middle[1], 0.04]}
       >
         <span>{parts.shadedSide}</span>
       </Leader>
       <Leader
         anchorX="right"
-        at={[dot[0] - 0.2, dot[1] - 0.04, 0]}
+        at={[dot[0] - 0.3, dot[1] - 0.06, 0]}
         to={[dot[0] - 0.014, dot[1], 0.075]}
       >
         <span>{parts.auxinDot}</span>
       </Leader>
       <Leader
         anchorX="left"
-        at={[middle[0] + 0.24, middle[1] + 0.04, 0]}
+        at={[middle[0] + 0.32, middle[1] + 0.04, 0]}
         to={[middle[0] + 0.11, middle[1], 0.04]}
       >
         <span>{parts.litSide}</span>
       </Leader>
-      <Leader anchorX="left" at={[0.24, 0.5, 0]} to={[0.1, 0.48, 0.06]}>
+      <Leader anchorX="left" at={[0.3, 0.52, 0]} to={[0.1, 0.48, 0.06]}>
         <span>{parts.coleoptile}</span>
       </Leader>
     </group>

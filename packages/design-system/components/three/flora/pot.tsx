@@ -29,7 +29,7 @@ const POT_PROFILE = [
 ] as const;
 
 /** How high the soil in the pot lies above its foot, for a plant set into it. */
-export const POT_SOIL = 0.292;
+const POT_SOIL = 0.292;
 
 /**
  * A clay flowerpot filled with moist soil, standing on its foot at the
