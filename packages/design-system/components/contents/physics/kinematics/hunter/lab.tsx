@@ -260,7 +260,11 @@ export function FallingTargetAimLab({
   const outcome = aimOutcome(speed);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setSpeed(initialSpeed);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

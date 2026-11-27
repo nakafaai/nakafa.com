@@ -305,7 +305,11 @@ export function SolarBatteryStorageLab({
   const isSize = Schema.is(SizeSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setSize(initialSize);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

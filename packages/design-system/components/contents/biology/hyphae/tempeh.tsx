@@ -92,7 +92,14 @@ export function HyphaeDecayLab({
   const segments = stage?.segments ?? [];
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setHours(TEMPEH.hours);
+      }}
+      onStop={() => {
+        setHours(0);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>

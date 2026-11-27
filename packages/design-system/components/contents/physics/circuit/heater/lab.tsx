@@ -164,7 +164,11 @@ export function HeaterSupplyLab({
   );
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setSupply(supplyVoltage);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

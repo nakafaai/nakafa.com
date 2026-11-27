@@ -360,7 +360,11 @@ export function ParallaxReadingLab({
     `${value > 0 ? "+" : ""}${fixed(value, unit, digits)}`;
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setOffset(initialOffset);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <div className="flex w-full flex-col gap-3">

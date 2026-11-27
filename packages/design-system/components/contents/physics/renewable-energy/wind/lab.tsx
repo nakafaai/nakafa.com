@@ -261,7 +261,11 @@ export function WindRotorLab({
   const isSite = Schema.is(SiteSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setSite(initialSite);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

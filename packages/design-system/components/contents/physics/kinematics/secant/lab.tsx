@@ -301,7 +301,11 @@ export function CarTripSecantSlopeLab({
         };
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setChosen(intervals.length - 1);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

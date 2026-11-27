@@ -78,8 +78,16 @@ export function ChemotaxisLab({
   });
   const quantity = useQuantity();
 
+  const resetProgress = () => {
+    setProgress({
+      mutant: 0,
+      seconds: 0,
+      sensing: 0,
+    });
+  };
+
   return (
-    <VisualCard>
+    <VisualCard onReset={resetProgress} onStop={resetProgress}>
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardBody className="bg-card">

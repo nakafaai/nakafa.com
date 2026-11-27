@@ -297,7 +297,11 @@ export function BiogasDigesterLab({
   const measure = useQuantity();
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setDung(initialDung);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

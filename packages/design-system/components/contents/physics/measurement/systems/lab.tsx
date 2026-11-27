@@ -355,7 +355,11 @@ export function UnitSystemsLab({
   const isSystem = Schema.is(UnitSystemSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setSystem("mks");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

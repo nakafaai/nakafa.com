@@ -339,7 +339,11 @@ export function GlassBlockLab({
   const first = Arr.head(hits);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setIncidence(start);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

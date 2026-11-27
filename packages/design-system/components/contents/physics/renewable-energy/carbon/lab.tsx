@@ -295,7 +295,11 @@ export function FuelCombustionCarbonLab({
   const isFuel = Schema.is(FuelSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setFuel(initialFuel);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

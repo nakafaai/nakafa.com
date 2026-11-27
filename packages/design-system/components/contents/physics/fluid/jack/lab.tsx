@@ -214,7 +214,11 @@ export function HydraulicJackLab({
   });
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setForce(start);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

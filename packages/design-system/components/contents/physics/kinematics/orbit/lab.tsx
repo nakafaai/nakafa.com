@@ -216,7 +216,11 @@ export function SatelliteOrbitCircularLab({
   const hours = motion.period / 3600;
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setOrbit("station");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

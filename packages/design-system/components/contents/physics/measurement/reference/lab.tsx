@@ -396,7 +396,11 @@ export function CommonReferenceLab({
   const isReference = Schema.is(ReferenceSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setReference("short");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

@@ -273,7 +273,12 @@ export function TugOfWarForceLab({
   const forces = ropeForces(teams);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setLeft(startLeft);
+        setRight(startRight);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <div className="grid w-full gap-4 sm:grid-cols-2">

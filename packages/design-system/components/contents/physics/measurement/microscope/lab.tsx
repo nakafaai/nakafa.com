@@ -273,7 +273,11 @@ export function MicroscopeScaleLab({
   const isObjective = Schema.is(ObjectiveSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setObjective("medium");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

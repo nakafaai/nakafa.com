@@ -291,7 +291,11 @@ export function RiverBoatCrossingLab({
   const crossing = riverCrossing(river, heading);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setHeading(initial);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

@@ -314,7 +314,11 @@ export function KettleHeatingLab({
   const isFill = Schema.is(FillSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setFill(initialFill);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

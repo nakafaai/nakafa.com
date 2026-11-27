@@ -268,7 +268,11 @@ export function TelescopeLab({
   const scope = telescope(objectivePower, eyepiece);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setEyepiece(start);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

@@ -163,7 +163,11 @@ export function FloatingBlockLab({
   );
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setLiquid("water");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

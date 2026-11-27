@@ -201,7 +201,11 @@ export function BulbNetworkLab({
   );
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setBroken(false);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

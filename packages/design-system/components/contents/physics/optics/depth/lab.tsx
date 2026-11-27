@@ -257,7 +257,11 @@ export function ApparentDepthLab({
   const depth = apparentDepth(shown);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setTop(0);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

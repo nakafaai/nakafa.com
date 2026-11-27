@@ -345,7 +345,11 @@ export function StopwatchSpreadLab({
   const { mean, spread, uncertainty } = timingSpread(trialTimes(count));
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setCount(initialCount);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <div className="flex w-full flex-col gap-3">

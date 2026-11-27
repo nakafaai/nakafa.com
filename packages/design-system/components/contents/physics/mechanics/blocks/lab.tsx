@@ -162,7 +162,11 @@ export function ConnectedBlocksLab({
   const blocks = connectedBlocks({ back, friction, front, pull });
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setPull(start);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

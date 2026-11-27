@@ -193,7 +193,11 @@ export function ReadingSpreadLab({
     student === undefined ? undefined : readingStats(student.readings, actual);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setChosen(0);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

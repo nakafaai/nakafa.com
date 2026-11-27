@@ -199,7 +199,11 @@ export function GreenhouseLayerLab({
   const kelvin = surfaceTemperature(absorptance);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setAbsorptance(initialAbsorptance);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

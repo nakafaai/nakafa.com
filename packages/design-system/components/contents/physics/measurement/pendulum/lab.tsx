@@ -202,7 +202,11 @@ export function PendulumPeriodLab({
   const period = pendulumPeriod(length, BOBS.brass.mass);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setLength(initialLength);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <div className="flex w-full flex-col gap-3">

@@ -218,7 +218,12 @@ export function DoorHingeTorqueLab({
   const push = doorTorque(door, arm, angle);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setAngle(startAngle);
+        setArm(startArm);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <div className="grid w-full gap-4 sm:grid-cols-2">

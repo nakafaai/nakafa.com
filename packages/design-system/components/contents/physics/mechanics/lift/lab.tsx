@@ -226,7 +226,11 @@ export function LiftScaleLab({
   const normal = mass * (gravity + acceleration);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setMotion("downSlower");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

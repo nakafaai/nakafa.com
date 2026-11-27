@@ -237,7 +237,11 @@ export function TransistorBiasLab({
   });
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setBase(start);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

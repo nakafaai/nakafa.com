@@ -246,7 +246,11 @@ export function WeightLampEnergyLab({
   const isDescent = Schema.is(DescentSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setDescent(initialDescent);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

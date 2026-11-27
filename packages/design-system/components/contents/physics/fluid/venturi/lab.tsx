@@ -223,7 +223,11 @@ export function VenturiTubeLab({
   const most = venturi(wide, narrow, Math.max(1, start * 2)).drop;
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setSpeed(start);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

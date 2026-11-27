@@ -244,7 +244,11 @@ export function RunningTrackDisplacementLab({
   const time = stop / speed;
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setStop(200);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

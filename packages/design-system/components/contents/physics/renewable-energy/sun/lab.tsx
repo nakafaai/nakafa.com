@@ -202,7 +202,12 @@ export function SolarPanelAngleLab({
   const [tilt, setTilt] = useState(initialTilt);
   const measure = useQuantity();
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setSun(initialSun);
+        setTilt(initialTilt);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

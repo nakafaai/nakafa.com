@@ -198,7 +198,11 @@ export function CurrentBalanceLab({
   const weight = (mass / 1000) * gravity;
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setCurrent(Math.round(balance.current * 5) / 10);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

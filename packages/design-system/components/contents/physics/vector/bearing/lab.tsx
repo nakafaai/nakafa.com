@@ -221,7 +221,11 @@ export function ShipBearingComponentLab({
   const moved = voyageDisplacement(courses);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setBearing(decoded[lastIndex]?.bearing ?? 0);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

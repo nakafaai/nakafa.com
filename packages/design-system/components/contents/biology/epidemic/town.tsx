@@ -119,7 +119,18 @@ export function EpidemicSpreadLab({
   );
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setValues({
+          distancing: 0,
+          masks: 0,
+          vaccinated: 0,
+          washing: 0,
+        });
+        setRoute(routes[0] ?? "air");
+        setDay(DAYS);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
 
       {(measures.length > 0 || routes.length > 1) && (

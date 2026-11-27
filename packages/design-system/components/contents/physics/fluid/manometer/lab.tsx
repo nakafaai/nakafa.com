@@ -204,7 +204,11 @@ export function ManometerLab({
   const most = Math.max(start * 1.5, 10);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setDifference(start);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

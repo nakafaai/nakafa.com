@@ -187,7 +187,12 @@ export function TransistorSwitchLab({
   const switching = switchingLight(supply, threshold, resistor);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setResistor(start);
+        setLight(0.6);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <div className="flex w-full flex-col gap-4">

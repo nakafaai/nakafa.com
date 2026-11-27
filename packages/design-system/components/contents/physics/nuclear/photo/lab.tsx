@@ -201,7 +201,12 @@ export function PhotoelectricLab({
   });
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setWavelength(start);
+        setIntensity(0.5);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <div className="flex w-full flex-col gap-4">

@@ -310,7 +310,11 @@ export function SolarPanelHeatLab({
   const balance = panelBalance(irradiance);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setIrradiance(initialIrradiance);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

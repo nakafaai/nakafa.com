@@ -95,10 +95,13 @@ export function P5Sketch<State>({
     if (!(loaded && Exit.isSuccess(loaded) && node)) {
       return;
     }
-    const density = resolveSketchPixelDensity();
     const sketch = new loaded.value((each) => {
-      each.pixelDensity(density);
       program(each, () => latest.current);
+      const setup = each.setup;
+      each.setup = () => {
+        setup?.();
+        each.pixelDensity(resolveSketchPixelDensity());
+      };
     }, node);
     instance.current = sketch;
     keepPlaying(sketch);
@@ -107,7 +110,8 @@ export function P5Sketch<State>({
       if (
         entry &&
         entry.contentRect.width > 0 &&
-        entry.contentRect.height > 0
+        entry.contentRect.height > 0 &&
+        sketch.drawingContext
       ) {
         sketch.pixelDensity(resolveSketchPixelDensity());
         sketch.resizeCanvas(entry.contentRect.width, entry.contentRect.height);

@@ -177,7 +177,11 @@ export function SpeakerInterferenceLab({
   const spacing = fringeSpacing(wavelength, separation, distance);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setFrequency(start);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider
