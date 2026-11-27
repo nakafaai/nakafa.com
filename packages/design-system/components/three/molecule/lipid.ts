@@ -4,6 +4,7 @@ import type {
   Link,
   Named,
 } from "@repo/design-system/components/three/molecule/nucleic";
+import { NamedSchema } from "@repo/design-system/components/three/molecule/nucleic";
 import {
   add,
   grown,
@@ -54,6 +55,12 @@ const HangSchema = Schema.Tuple([
 ]);
 type Hang = typeof HangSchema.Type;
 
+/** How one lipid is built: where glycerol's three carbons stand and how its three arms hang. */
+const FrameSchema = Schema.Struct({
+  glycerol: Schema.Array(NamedSchema),
+  hangs: Schema.Tuple([HangSchema, HangSchema, HangSchema]),
+});
+
 /** A fatty acid of the lesson has eighteen carbons: stearic acid, or oleic acid with its cis double bond after carbon nine. */
 const CARBONS = 18;
 const CIS = 9;
@@ -93,10 +100,7 @@ const FRAMES = {
       [-60, 180, -60, -60],
     ],
   },
-} as const satisfies Record<
-  Kind,
-  { glycerol: readonly Named[]; hangs: readonly [Hang, Hang, Hang] }
->;
+} as const satisfies Record<Kind, typeof FrameSchema.Type>;
 
 /** The bond length, the angle at the carbon before and the torsion that put carbon `carbon` of a chain in place. */
 function stepOf(carbon: number, cis: boolean) {

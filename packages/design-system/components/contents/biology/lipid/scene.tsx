@@ -1,13 +1,11 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import {
-  asideOf,
-  crowdMarksOf,
+  crowdOf,
   frameOf,
+  layoutOf,
   MIDDLE,
-  marksOf,
   poolsOf,
-  standOf,
 } from "@repo/design-system/components/contents/biology/lipid/layout";
 import type {
   Chain,
@@ -18,11 +16,6 @@ import { simulationStep } from "@repo/design-system/components/contents/simulati
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { MoleculeModel } from "@repo/design-system/components/three/molecule/kit";
-import {
-  bilayerOf,
-  dropletOf,
-  lipidOf,
-} from "@repo/design-system/components/three/molecule/lipid";
 import { Solvent } from "@repo/design-system/components/three/molecule/solvent";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
@@ -48,11 +41,12 @@ function useNarrow() {
 
 /**
  * The lipid lab's scene. One molecule is a ball and stick model with every
- * atom: glycerol, the ester bonds, eighteen-carbon fatty acids that run
- * straight when saturated and kink at a cis double bond when not, and the
- * phosphate and choline head of a membrane lipid. Many molecules in water
- * are a space-filling model: a clump of fat that hides its tails from the
- * water, or a patch of bilayer with its heads out and its tails in.
+ * atom, in the water it meets: glycerol, the ester bonds, eighteen-carbon
+ * fatty acids that run straight when saturated and kink at a cis double bond
+ * when not, and the phosphate and choline head of a membrane lipid. Many
+ * molecules in water are a space-filling model of their heavy atoms: a clump
+ * of fat that hides its tails from the water, or a patch of bilayer with its
+ * heads out and its tails in.
  */
 export function LipidScene({
   chain,
@@ -66,10 +60,23 @@ export function LipidScene({
   readonly scale: Scale;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
-  const frame = frameOf(useNarrow());
+  const ink = useLabelInk();
+  const narrow = useNarrow();
   const rootRef = useRef<Group>(null);
   const clock = useRef(0);
   const unsaturated = chain === "unsaturated";
+  const one = useMemo(
+    () =>
+      scale === "molecule"
+        ? layoutOf(molecule, unsaturated, narrow)
+        : undefined,
+    [molecule, narrow, scale, unsaturated]
+  );
+  const many = useMemo(
+    () =>
+      scale === "water" ? crowdOf(molecule, unsaturated, narrow) : undefined,
+    [molecule, narrow, scale, unsaturated]
+  );
 
   useFrame((_, delta) => {
     if (!playing || rootRef.current === null) {
@@ -83,108 +90,37 @@ export function LipidScene({
   return (
     <group>
       <CameraControls
-        cameraPosition={frame.camera}
+        cameraPosition={frameOf(narrow).camera}
         cameraTarget={[0, MIDDLE, 0]}
         fov={38}
       />
       <group ref={rootRef}>
-        {scale === "molecule" ? (
-          <OneLipid kind={molecule} parts={parts} unsaturated={unsaturated} />
-        ) : (
-          <ManyLipids kind={molecule} parts={parts} unsaturated={unsaturated} />
+        {one !== undefined && (
+          <group position={one.stand} scale={one.scale}>
+            <MoleculeModel molecule={one.molecule} style="sticks" />
+            <group position={[0, -8, -32]}>
+              <Solvent count={30} inner={14} outer={24} playing={playing} />
+            </group>
+          </group>
         )}
+        {many !== undefined && (
+          <group position={many.stand} scale={many.scale}>
+            <MoleculeModel molecule={many.molecule} style="spheres" />
+            <Water kind={molecule} />
+          </group>
+        )}
+        {Arr.map(one?.marks ?? many?.marks ?? [], (mark) => (
+          <ThreeLabel
+            anchorX={mark.side === "left" ? "right" : "left"}
+            color={ink}
+            fontSize={narrow ? "compact" : "annotation"}
+            key={mark.part}
+            position={mark.at}
+          >
+            {parts[mark.part]}
+          </ThreeLabel>
+        ))}
       </group>
-    </group>
-  );
-}
-
-/** One lipid with every atom, in the water it meets, and the names of its parts. */
-function OneLipid({
-  kind,
-  parts,
-  unsaturated,
-}: {
-  readonly kind: Molecule;
-  readonly parts: Parts;
-  readonly unsaturated: boolean;
-}) {
-  const playing = useVisualScene((card) => card.playing, false);
-  const ink = useLabelInk();
-  const narrow = useNarrow();
-  const lipid = useMemo(
-    () => lipidOf(kind, unsaturated).molecule,
-    [kind, unsaturated]
-  );
-  const marks = useMemo(
-    () => marksOf(kind, unsaturated, narrow),
-    [kind, narrow, unsaturated]
-  );
-  return (
-    <group>
-      <group position={standOf(narrow)} scale={frameOf(narrow).molecule}>
-        <MoleculeModel molecule={lipid} style="sticks" />
-        <group position={[0, -8, -32]}>
-          <Solvent count={30} inner={14} outer={24} playing={playing} />
-        </group>
-      </group>
-      {Arr.map(marks, (mark) => (
-        <ThreeLabel
-          anchorX={mark.side === "left" ? "right" : "left"}
-          color={ink}
-          fontSize={narrow ? "compact" : "annotation"}
-          key={mark.part}
-          position={mark.at}
-        >
-          {parts[mark.part]}
-        </ThreeLabel>
-      ))}
-    </group>
-  );
-}
-
-/** Many lipids in water as a space-filling model of their heavy atoms: a droplet of fat or a patch of bilayer. */
-function ManyLipids({
-  kind,
-  parts,
-  unsaturated,
-}: {
-  readonly kind: Molecule;
-  readonly parts: Parts;
-  readonly unsaturated: boolean;
-}) {
-  const ink = useLabelInk();
-  const narrow = useNarrow();
-  const crowd = useMemo(
-    () =>
-      kind === "triglyceride"
-        ? dropletOf(unsaturated)
-        : bilayerOf(unsaturated, unsaturated ? 4 : 3, unsaturated ? 4 : 6),
-    [kind, unsaturated]
-  );
-  const marks = useMemo(
-    () => crowdMarksOf(kind, crowd, narrow),
-    [crowd, kind, narrow]
-  );
-  return (
-    <group>
-      <group
-        position={[asideOf(kind, narrow), MIDDLE, 0]}
-        scale={frameOf(narrow).crowd}
-      >
-        <MoleculeModel molecule={crowd} style="spheres" />
-        <Water kind={kind} />
-      </group>
-      {Arr.map(marks, (mark) => (
-        <ThreeLabel
-          anchorX="left"
-          color={ink}
-          fontSize={narrow ? "compact" : "annotation"}
-          key={mark.part}
-          position={mark.at}
-        >
-          {parts[mark.part]}
-        </ThreeLabel>
-      ))}
     </group>
   );
 }

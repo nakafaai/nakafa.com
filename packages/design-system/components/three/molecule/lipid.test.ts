@@ -116,7 +116,7 @@ describe("a lipid as its atoms", () => {
     expect(spread(kinked)).toBeGreaterThan(spread(straight) + 2);
     expect(clearanceOf(kinked)).toBeGreaterThan(2.2);
     expect(
-      Math.min(...spansOf(kinked).filter((span) => span > 1.3))
+      Math.min(...Arr.filter(spansOf(kinked), (span) => span > 1.3))
     ).toBeCloseTo(1.34, 2);
   });
 
@@ -190,12 +190,12 @@ describe("a lipid as its atoms", () => {
       return Math.max(...sides) - Math.min(...sides);
     };
     const heights = (molecule: Molecule) =>
-      new Set(
+      Arr.dedupe(
         Arr.map(
           Arr.filter(molecule.atoms, (atom) => atom.element === "P"),
           (atom) => Math.abs(atom.at[1]).toFixed(2)
         )
-      ).size;
+      ).length;
     const gel = bilayerOf(false, 2, 4);
     const fluid = bilayerOf(true, 2, 4);
     const depth = (molecule: Molecule) => {
