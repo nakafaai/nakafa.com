@@ -10,17 +10,17 @@ export const VOLUME_MODE_ID = "volume";
 export const BLOCK_WIDTH = 3;
 export const BLOCK_HEIGHT = 1.4;
 export const BLOCK_DEPTH = 1.4;
-export const CAMERA_POSITION = [3.6, 2.8, 4.4] satisfies readonly [
+export const CAMERA_POSITION = [2.3, 2.9, 5.2] satisfies readonly [
   number,
   number,
   number,
 ];
-export const NARROW_CAMERA_POSITION = [4.4, 3.3, 5.4] satisfies readonly [
+export const NARROW_CAMERA_POSITION = [2.9, 3.7, 6.7] satisfies readonly [
   number,
   number,
   number,
 ];
-export const CAMERA_TARGET = [0, 0.45, 0] satisfies readonly [
+export const CAMERA_TARGET = [0, 0.75, 0] satisfies readonly [
   number,
   number,
   number,

@@ -16,6 +16,7 @@ import {
   MASS_WEIGHT_RADIUS,
   MASS_WEIGHT_TAPER_RATIO,
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
+import { Desk } from "@repo/design-system/components/contents/physics/measurement/tools/desk";
 import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
@@ -95,9 +96,10 @@ export function MassScene({
   return (
     <group
       position={[0, 0.35, 0]}
-      rotation={[-0.15, -0.35, 0]}
+      rotation={[0, -0.35, 0]}
       scale={MASS_SCENE_SCALE}
     >
+      <Desk top={-0.325} />
       <mesh castShadow position={[0, -0.2, 0]} receiveShadow>
         <cylinderGeometry args={[1.25, 1.45, 0.25, 64]} />
         <SurfaceMaterial color={MACHINE_COLORS.carbonShell} surface="paint" />

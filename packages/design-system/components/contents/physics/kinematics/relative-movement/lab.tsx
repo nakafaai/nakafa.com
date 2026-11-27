@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car";
+import { RoadCar } from "@repo/design-system/components/contents/physics/kinematics/car";
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import { formatSignedRoundedSpeedMath } from "@repo/design-system/components/contents/physics/kinematics/math";
 import type {
@@ -11,9 +11,7 @@ import {
   isRelativeMovementCaseId,
   RELATIVE_MOVEMENT_CAMERA,
   RELATIVE_MOVEMENT_CASE_IDS,
-  RELATIVE_MOVEMENT_OBSERVER_CAR_MODEL_PATH,
   RELATIVE_MOVEMENT_SCENE,
-  RELATIVE_MOVEMENT_TARGET_CAR_MODEL_PATH,
 } from "@repo/design-system/components/contents/physics/kinematics/relative-movement/data";
 import {
   SimulationTicker,
@@ -254,11 +252,7 @@ function AnimatedCarPair({ motion }: { motion: RelativeMovementState }) {
         objectRef={observerRef}
       >
         <group position={[0, 0.025, RELATIVE_MOVEMENT_SCENE.laneOffset]}>
-          <Car
-            accentColor={OBSERVER_COLOR}
-            heading="right"
-            modelPath={RELATIVE_MOVEMENT_OBSERVER_CAR_MODEL_PATH}
-          />
+          <Car accentColor={OBSERVER_COLOR} heading="right" />
         </group>
       </CameraBounds>
       <CameraBounds
@@ -275,11 +269,7 @@ function AnimatedCarPair({ motion }: { motion: RelativeMovementState }) {
         objectRef={targetRef}
       >
         <group position={[0, 0.025, -RELATIVE_MOVEMENT_SCENE.laneOffset]}>
-          <Car
-            accentColor={TARGET_COLOR}
-            heading={motion.targetHeading}
-            modelPath={RELATIVE_MOVEMENT_TARGET_CAR_MODEL_PATH}
-          />
+          <Car accentColor={TARGET_COLOR} heading={motion.targetHeading} />
         </group>
       </CameraBounds>
     </>
@@ -289,12 +279,10 @@ function AnimatedCarPair({ motion }: { motion: RelativeMovementState }) {
 function Car({
   accentColor,
   heading,
-  modelPath,
   position,
 }: {
   accentColor: string;
   heading: "left" | "right";
-  modelPath: string;
   position?: [number, number, number];
 }) {
   const yRotation = heading === "right" ? Math.PI / 2 : -Math.PI / 2;
@@ -305,7 +293,7 @@ function Car({
       rotation={[0, yRotation, 0]}
       scale={CAR_SCALE}
     >
-      <PhysicsCarModel bodyColor={accentColor} modelPath={modelPath} />
+      <RoadCar color={accentColor} />
     </group>
   );
 }

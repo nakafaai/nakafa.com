@@ -1,5 +1,11 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
+import {
+  Generator,
+  Lead,
+  Scope,
+  Terminal,
+} from "@repo/design-system/components/contents/physics/rectifier/bench";
 import type { RectifierMode } from "@repo/design-system/components/contents/physics/rectifier/model";
 import { rectifiedOutput } from "@repo/design-system/components/contents/physics/rectifier/model";
 import {
@@ -10,6 +16,7 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import {
   useVisualScene,
   useVisualStop,
@@ -28,11 +35,18 @@ const BRIDGE_DIODES = [
 ] as const;
 
 const PCB_STANDOFFS = [
-  [-1.24, -0.54],
-  [1.24, -0.54],
-  [-1.24, 0.54],
-  [1.24, 0.54],
+  [-0.8, -0.5],
+  [0.8, -0.5],
+  [-0.8, 0.5],
+  [0.8, 0.5],
 ] as const;
+
+/** Where the leads land: the board's input pair, its output, and the instruments' posts. */
+const LEADS = {
+  ground: { from: [-1.22, 0.14, 0.37], to: [-0.7, 0.14, -0.24] },
+  live: { from: [-1.22, 0.25, 0.37], to: [-0.7, 0.14, 0.24] },
+  probe: { from: [1.02, 0.12, 0.34], to: [0.7, 0.14, 0.24] },
+} as const;
 
 const RESISTOR_BANDS = [
   { color: QUANTUM_COLORS.resistorBand1, y: -0.09 },
@@ -62,7 +76,7 @@ function RectifierCamera() {
   );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0, 2.55, 4.65] : [0, 2.1, 4.2]}
+      cameraPosition={narrow ? [0, 3.05, 5.6] : [0, 2.1, 4.2]}
       cameraTarget={[0.04, 0.34, 0]}
       fov={36}
       maxDistance={6.8}
@@ -103,7 +117,7 @@ export function RectifierScene({
   useVisualStop(() => {
     phaseRef.current = 0;
     if (pulseRef.current !== null) {
-      pulseRef.current.position.x = -0.82;
+      pulseRef.current.position.x = -0.6;
     }
   });
 
@@ -113,7 +127,7 @@ export function RectifierScene({
     }
     phaseRef.current += simulationStep(delta) * (1.8 + frequency * 0.035);
     const t = (phaseRef.current % (Math.PI * 2)) / (Math.PI * 2);
-    pulseRef.current.position.x = -0.82 + t * 1.64;
+    pulseRef.current.position.x = -0.6 + t * 1.2;
   });
 
   const bridgeDiodes =
@@ -127,10 +141,12 @@ export function RectifierScene({
 
       {/* Satin dark epoxy workbench */}
       <mesh position={[0, -0.04, 0]} receiveShadow>
-        <boxGeometry args={[3.4, 0.08, 2.0]} />
-        <meshStandardMaterial
+        <boxGeometry args={[3.6, 0.08, 2.0]} />
+        <SurfaceMaterial
           color={QUANTUM_COLORS.benchEpoxy}
+          repeat={[6, 4]}
           roughness={0.62}
+          surface="plastic"
         />
       </mesh>
 
@@ -142,7 +158,7 @@ export function RectifierScene({
         </mesh>
       ))}
       <mesh castShadow position={[0, 0.095, 0]} receiveShadow>
-        <boxGeometry args={[2.76, 0.04, 1.24]} />
+        <boxGeometry args={[1.76, 0.03, 1.14]} />
         <meshPhysicalMaterial
           clearcoat={0.45}
           clearcoatRoughness={0.28}
@@ -150,61 +166,39 @@ export function RectifierScene({
           roughness={0.38}
         />
       </mesh>
-      {/* Etched copper/solder PCB circuit rails */}
+      {/* Tinned copper rails the parts are soldered across */}
       {Arr.map([-0.24, 0.24] as const, (rz) => (
-        <mesh key={rz} position={[0, 0.117, rz]}>
-          <boxGeometry args={[2.1, 0.005, 0.024]} />
+        <mesh key={rz} position={[0, 0.112, rz]}>
+          <boxGeometry args={[1.4, 0.004, 0.024]} />
           <MetalMaterial color={QUANTUM_COLORS.pcbTrace} roughness={0.3} />
         </mesh>
       ))}
+      <Terminal position={LEADS.live.to} />
+      <Terminal position={LEADS.ground.to} />
+      <Terminal position={LEADS.probe.to} />
 
-      {/* Bench AC Function Generator with live rotating frequency dial */}
-      <group position={[-1.08, 0.3, 0]}>
-        <mesh castShadow>
-          <boxGeometry args={[0.48, 0.38, 0.56]} />
-          <MetalMaterial color={QUANTUM_COLORS.furnaceSteel} roughness={0.4} />
-        </mesh>
-        <mesh position={[0, 0.02, 0.282]}>
-          <boxGeometry args={[0.42, 0.3, 0.012]} />
-          <meshStandardMaterial
-            color={QUANTUM_COLORS.crtBezel}
-            roughness={0.45}
-          />
-        </mesh>
-        {/* Rotary frequency tuning dial */}
-        <group position={[-0.08, 0.03, 0.305]} rotation={[0, 0, knobAngle]}>
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.08, 0.085, 0.04, 24]} />
-            <MetalMaterial color={QUANTUM_COLORS.aluminium} roughness={0.28} />
-          </mesh>
-          <mesh position={[0, 0.048, 0.022]}>
-            <boxGeometry args={[0.014, 0.048, 0.01]} />
-            <meshStandardMaterial
-              color={QUANTUM_COLORS.acWave}
-              emissive={QUANTUM_COLORS.acWave}
-              emissiveIntensity={0.6}
-            />
-          </mesh>
-        </group>
-        {/* Red & black BNC/banana output jacks */}
-        <mesh position={[0.12, 0.06, 0.3]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.024, 0.024, 0.03, 16]} />
-          <meshStandardMaterial
-            color={QUANTUM_COLORS.bananaRed}
-            roughness={0.35}
-          />
-        </mesh>
-        <mesh position={[0.12, -0.05, 0.3]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.024, 0.024, 0.03, 16]} />
-          <meshStandardMaterial
-            color={QUANTUM_COLORS.bananaBlack}
-            roughness={0.4}
-          />
-        </mesh>
+      {/* The function generator, beside the board, wired to its input */}
+      <group position={[-1.35, 0, 0.1]}>
+        <Generator knob={knobAngle} />
       </group>
+      <Lead
+        color={QUANTUM_COLORS.bananaRed}
+        from={LEADS.live.from}
+        to={LEADS.live.to}
+      />
+      <Lead
+        color={QUANTUM_COLORS.bananaBlack}
+        from={LEADS.ground.from}
+        to={LEADS.ground.to}
+      />
+      <Lead
+        color={QUANTUM_COLORS.bananaBlack}
+        from={LEADS.probe.from}
+        to={LEADS.probe.to}
+      />
 
       {/* 1N4007 axial silicon rectifier diodes with silver cathode rings & wire leads */}
-      <group position={[-0.24, 0.2, 0]}>
+      <group position={[-0.36, 0.172, 0]}>
         {Arr.map(bridgeDiodes, (diode) => (
           <group
             key={diode.id}
@@ -236,7 +230,7 @@ export function RectifierScene({
       </group>
 
       {/* Vertical aluminum electrolytic smoothing capacitor */}
-      <group position={[0.38, 0.31, -0.26]}>
+      <group position={[0.2, 0.3, -0.26]}>
         <mesh castShadow>
           <cylinderGeometry args={[0.12, 0.12, 0.38, 28]} />
           <meshPhysicalMaterial
@@ -268,7 +262,7 @@ export function RectifierScene({
       </group>
 
       {/* Ceramic axial power load resistor with 4 EIA color bands */}
-      <group position={[0.42, 0.2, 0.25]} rotation={[0, 0, Math.PI / 2]}>
+      <group position={[0.26, 0.18, 0.25]} rotation={[0, 0, Math.PI / 2]}>
         <mesh castShadow>
           <cylinderGeometry args={[0.068, 0.068, 0.34, 24]} />
           <meshStandardMaterial
@@ -288,42 +282,18 @@ export function RectifierScene({
         </mesh>
       </group>
 
-      {/* Bench CRT Oscilloscope with live frequency-coupled glowing waveform trace */}
-      <group position={[1.12, 0.36, 0.04]} rotation={[0, 0.68, 0]}>
-        <mesh castShadow>
-          <boxGeometry args={[0.5, 0.48, 0.56]} />
-          <MetalMaterial color={QUANTUM_COLORS.furnaceSteel} roughness={0.42} />
-        </mesh>
-        <mesh position={[-0.252, 0.02, 0]}>
-          <boxGeometry args={[0.018, 0.34, 0.42]} />
-          <meshStandardMaterial
-            color={QUANTUM_COLORS.crtBezel}
-            roughness={0.4}
-          />
-        </mesh>
-        <mesh position={[-0.262, 0.02, 0]}>
-          <boxGeometry args={[0.008, 0.28, 0.36]} />
-          <meshStandardMaterial
-            color={QUANTUM_COLORS.screenGlow}
-            emissive={QUANTUM_COLORS.crtGrid}
-            emissiveIntensity={0.65}
-            roughness={0.2}
-          />
-        </mesh>
-        {/* Live glowing phosphor waveform trace updating immediately with mode & frequency */}
-        <mesh geometry={scopeTrace} position={[-0.27, 0.02, 0]}>
-          <meshStandardMaterial
-            color={QUANTUM_COLORS.crtTrace}
-            emissive={QUANTUM_COLORS.crtTrace}
-            emissiveIntensity={1.6}
-            roughness={0.2}
-          />
-        </mesh>
+      {/* The oscilloscope, turned toward the reader, its trace live with mode and frequency */}
+      <group position={[1.36, 0, 0]} rotation={[0, 0.68, 0]}>
+        <Scope>
+          <mesh geometry={scopeTrace}>
+            <meshBasicMaterial color={QUANTUM_COLORS.crtTrace} />
+          </mesh>
+        </Scope>
       </group>
 
       {/* Moving rectified current pulse marker */}
-      <mesh position={[-0.82, 0.145, 0.24]} ref={pulseRef}>
-        <sphereGeometry args={[0.036, 14, 12]} />
+      <mesh position={[-0.6, 0.135, 0.24]} ref={pulseRef}>
+        <sphereGeometry args={[0.024, 16, 12]} />
         <meshStandardMaterial
           color={QUANTUM_COLORS.dcWave}
           emissive={QUANTUM_COLORS.dcWave}
@@ -338,7 +308,7 @@ export function RectifierScene({
         fontSize="compact"
         maximumFontSize={12}
         minimumFontSize={10}
-        position={[-1.16, 0.82, 0]}
+        position={[-1.35, 0.56, 0.1]}
       >
         <span>{parts.acSource}</span>
       </ThreeLabel>
@@ -347,7 +317,7 @@ export function RectifierScene({
         fontSize="compact"
         maximumFontSize={12}
         minimumFontSize={10}
-        position={[-0.3, 0.42, 0.25]}
+        position={[-0.36, 0.42, 0]}
       >
         <span>{parts.diodeBridge}</span>
       </ThreeLabel>
@@ -356,7 +326,7 @@ export function RectifierScene({
         fontSize="compact"
         maximumFontSize={12}
         minimumFontSize={10}
-        position={[0.14, 1.02, -0.32]}
+        position={[0.2, 0.68, -0.26]}
       >
         <span>{parts.capacitor}</span>
       </ThreeLabel>
@@ -365,7 +335,7 @@ export function RectifierScene({
         fontSize="compact"
         maximumFontSize={12}
         minimumFontSize={10}
-        position={[0.36, 0.18, 0.64]}
+        position={[0.26, 0.12, 0.72]}
       >
         <span>{parts.loadResistor}</span>
       </ThreeLabel>
@@ -374,7 +344,7 @@ export function RectifierScene({
         fontSize="compact"
         maximumFontSize={12}
         minimumFontSize={10}
-        position={[1.18, 0.78, 0.24]}
+        position={[1.36, 0.68, 0]}
       >
         <span>{parts.oscilloscope}</span>
       </ThreeLabel>

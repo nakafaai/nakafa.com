@@ -88,9 +88,9 @@ export const MEASUREMENT_CONTROLS = {
 
 export const TOOL_VIEW_CONFIG = {
   [LENGTH_TOOL_ID]: {
-    cameraPosition: [0, 4.5, 8.5],
-    cameraTarget: [0, 0.15, 0],
-    narrowCameraPosition: [0, 5.1, 9.8],
+    cameraPosition: [0, 7.6, 5.4],
+    cameraTarget: [0, 0.15, -0.2],
+    narrowCameraPosition: [0, 9.2, 6.6],
   },
   [MASS_TOOL_ID]: {
     cameraPosition: [0, 3.1, 8],
@@ -98,9 +98,9 @@ export const TOOL_VIEW_CONFIG = {
     narrowCameraPosition: [0, 3.5, 9.2],
   },
   [TIME_TOOL_ID]: {
-    cameraPosition: [0, 1.8, 7.4],
-    cameraTarget: [0, 0.45, 0],
-    narrowCameraPosition: [0, 2.1, 8.6],
+    cameraPosition: [0, 6.6, 3.2],
+    cameraTarget: [0, 0, -0.1],
+    narrowCameraPosition: [0, 7.9, 3.9],
   },
 } satisfies Record<MeasurementToolId, NarrowCameraPose>;
 

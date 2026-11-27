@@ -2,9 +2,6 @@ import type { CameraPose } from "@repo/design-system/lib/geometry/camera";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
 
-export const INSTANTANEOUS_SPEED_CAR_MODEL_PATH =
-  "/models/physics/kinematics/kenney-car-kit/suv-luxury.glb";
-
 export const INSTANTANEOUS_SPEED_CASES = [
   {
     direction: 1,

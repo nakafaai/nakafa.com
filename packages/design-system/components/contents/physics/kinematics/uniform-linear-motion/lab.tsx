@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car";
+import { RoadCar } from "@repo/design-system/components/contents/physics/kinematics/car";
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import {
   formatRoundedMeterMath,
@@ -14,7 +14,6 @@ import {
   getUniformLinearMotionState,
   isUniformLinearMotionSpeed,
   UNIFORM_LINEAR_MOTION_CAMERA,
-  UNIFORM_LINEAR_MOTION_CAR_MODEL_PATH,
   UNIFORM_LINEAR_MOTION_COLORS,
   UNIFORM_LINEAR_MOTION_SCENE,
   UNIFORM_LINEAR_MOTION_SPEEDS,
@@ -256,10 +255,7 @@ function AnimatedCar({ motion }: { motion: UniformLinearMotionState }) {
         objectRef={groupRef}
       >
         <group rotation={[0, Math.PI / 2, 0]} scale={0.66}>
-          <PhysicsCarModel
-            bodyColor={UNIFORM_LINEAR_MOTION_COLORS.car}
-            modelPath={UNIFORM_LINEAR_MOTION_CAR_MODEL_PATH}
-          />
+          <RoadCar color={UNIFORM_LINEAR_MOTION_COLORS.car} />
         </group>
       </CameraBounds>
     </>

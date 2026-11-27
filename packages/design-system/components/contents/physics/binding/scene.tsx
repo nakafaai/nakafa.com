@@ -13,136 +13,211 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import {
   useVisualScene,
   useVisualStop,
 } from "@repo/design-system/components/visual/card";
 import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
-import { Array as Arr } from "effect";
-import { useMemo, useRef } from "react";
+import { Array as Arr, Order } from "effect";
+import { useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
-import { AdditiveBlending } from "three";
+import { MeshPhysicalMaterial, SphereGeometry } from "three";
 
-function computeLobeShift(
-  process: NuclearProcess,
-  nuclide: NuclideId,
-  rawX: number
-): number {
-  const sign = rawX >= 0 ? 1 : -1;
-  if (process === "fission") {
-    return sign * 0.14;
+/** The most balls the model shows; a heavier nucleus is drawn at this size. */
+const CAP = 72;
+
+/** The height of the model's centre above the table. */
+const CENTRE = 0.64;
+
+/** How far the lattice reaches from its centre, in lattice steps. */
+const REACH = 6;
+
+/** The golden ratio, whose multiples scatter evenly over a unit interval. */
+const GOLDEN = (1 + Math.sqrt(5)) / 2;
+
+/** The share of a close packing that the balls themselves fill. */
+const PACKING = 0.74;
+
+/** The radius of one ball, smaller for the models that hold more of them. */
+function ballRadius(count: number) {
+  if (count > 40) {
+    return 0.066;
   }
-  if (nuclide === "iron56") {
-    return 0;
-  }
-  return sign * 0.09;
+  return count > 4 ? 0.085 : 0.105;
 }
 
-function buildNucleonLayout(
-  displayCount: number,
-  protonTarget: number,
-  nuclide: NuclideId,
-  process: NuclearProcess
-) {
-  return Arr.makeBy(displayCount, (index) => {
-    const isLeft = index % 2 === 0;
-    const isProton = index < protonTarget;
-    if (displayCount === 2) {
-      const offset = process === "fusion" ? 0.24 : 0.11;
-      return {
-        id: `n-${index}`,
-        isProton,
-        x: isLeft ? -offset : offset,
-        y: 0,
-        z: 0,
-      };
-    }
-    const phi = Math.acos(1 - (2 * (index + 0.5)) / displayCount);
-    const theta = Math.PI * (1 + Math.sqrt(5)) * index;
-    const shell = index < displayCount * 0.35 ? 0.56 : 1;
-    const baseR = (0.16 + Math.cbrt(displayCount) * 0.088) * shell;
-    const rawX = baseR * Math.sin(phi) * Math.cos(theta);
-    const rawY = baseR * Math.cos(phi);
-    const rawZ = baseR * Math.sin(phi) * Math.sin(theta);
+/** The radius of the ball cluster that `count` close-packed balls make. */
+function clusterRadius(count: number, radius: number) {
+  return radius * Math.cbrt(count / PACKING);
+}
 
-    const lobeShift = computeLobeShift(process, nuclide, rawX);
-    const pinch =
-      process === "fission" ? 1 - Math.exp(-rawX * rawX * 18) * 0.32 : 1;
+/**
+ * Packs `count` touching balls the way a classroom nucleus model is glued:
+ * the sites of a face-centred cubic lattice, taken outward from one of its
+ * tetrahedral holes, so two balls touch, four make a tetrahedron, and more
+ * fill a ball. A splitting nucleus takes its sites around two centres
+ * instead, which necks the cluster into two lobes. Protons are spread evenly
+ * through the order the sites are taken in.
+ */
+function packNucleons(count: number, protons: number, splitting: boolean) {
+  const radius = ballRadius(count);
+  const step = radius * Math.SQRT2;
+  const split = splitting ? clusterRadius(count / 2, radius) * 0.82 : 0;
+  const steps = Arr.range(-REACH, REACH);
+  const sites = Arr.flatMap(steps, (i) =>
+    Arr.flatMap(steps, (j) =>
+      Arr.map(
+        Arr.filter(steps, (k) => (i + j + k) % 2 === 0),
+        (k) => {
+          const x = (i - 0.5) * step;
+          const y = (j - 0.5) * step;
+          const z = (k - 0.5) * step;
+          const rank = Math.min(
+            Math.hypot(x - split, y, z),
+            Math.hypot(x + split, y, z)
+          );
+          // The index breaks ties, so equal distances keep one fixed order.
+          return { rank: rank + (i * 169 + j * 13 + k) * 1e-7, x, y, z };
+        }
+      )
+    )
+  );
+  const taken = Arr.take(
+    Arr.sort(
+      sites,
+      Order.mapInput(Order.Number, (site: (typeof sites)[number]) => site.rank)
+    ),
+    count
+  );
+  const middle = Arr.reduce(taken, { x: 0, y: 0, z: 0 }, (sum, site) => ({
+    x: sum.x + site.x / count,
+    y: sum.y + site.y / count,
+    z: sum.z + site.z / count,
+  }));
+  // The balls that are protons, scattered through the cluster by the golden
+  // ratio so the two colours mix instead of settling into layers.
+  const scattered = Arr.sort(
+    Arr.range(0, count - 1),
+    Order.mapInput(Order.Number, (index: number) => (index * GOLDEN) % 1)
+  );
+  const painted = Arr.take(scattered, protons);
+  return Arr.map(taken, (site, index) => ({
+    id: `n-${index}`,
+    proton: Arr.contains(painted, index),
+    x: site.x - middle.x,
+    y: site.y - middle.y,
+    z: site.z - middle.z,
+  }));
+}
 
-    return {
-      id: `n-${index}`,
-      isProton,
-      x: rawX + lobeShift,
-      y: rawY * pinch,
-      z: rawZ * pinch,
-    };
+/** A lacquered ball: paint under a hard clear coat, as a model's balls are. */
+function lacquer(color: string) {
+  return new MeshPhysicalMaterial({
+    clearcoat: 1,
+    clearcoatRoughness: 0.12,
+    color,
+    metalness: 0,
+    roughness: 0.42,
   });
 }
 
-function resolveAuraColor(
-  isIronPeak: boolean,
-  process: NuclearProcess
-): string {
-  if (isIronPeak) {
-    return QUANTUM_COLORS.ironPeak;
-  }
-  return process === "fusion"
-    ? QUANTUM_COLORS.fusionZone
-    : QUANTUM_COLORS.fissionZone;
+function createProtonPaint() {
+  return lacquer(QUANTUM_COLORS.proton);
 }
 
-function ProcessCue({
-  isIronPeak,
-  process,
+function createNeutronPaint() {
+  return lacquer(QUANTUM_COLORS.neutron);
+}
+
+function createBall() {
+  return new SphereGeometry(1, 32, 24);
+}
+
+/** A legend entry: a dot in the ball's colour beside the particle's name. */
+function Legend({
+  color,
+  name,
 }: {
-  readonly isIronPeak: boolean;
-  readonly process: NuclearProcess;
+  readonly color: string;
+  readonly name: string;
 }) {
-  if (isIronPeak) {
-    return (
-      <mesh rotation={[Math.PI / 2.2, 0.25, 0]}>
-        <torusGeometry args={[0.64, 0.016, 12, 56]} />
-        <meshStandardMaterial
-          color={QUANTUM_COLORS.ironPeak}
-          emissive={QUANTUM_COLORS.ironPeak}
-          emissiveIntensity={0.85}
-          roughness={0.2}
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span
+        className="inline-block size-2 rounded-full"
+        style={{ backgroundColor: color }}
+      />
+      {name}
+    </span>
+  );
+}
+
+/**
+ * The display stand: a turned base, a collar and a polished stem that runs up
+ * into the middle of the model.
+ */
+function Stand() {
+  return (
+    <group>
+      <mesh castShadow position={[0, 0.02, 0]} receiveShadow>
+        <cylinderGeometry args={[0.3, 0.33, 0.04, 64]} />
+        <SurfaceMaterial
+          color={QUANTUM_COLORS.benchEpoxy}
+          repeat={[3, 1]}
+          roughness={0.5}
+          surface="plastic"
         />
       </mesh>
-    );
-  }
-  if (process === "fission") {
-    return (
-      <group position={[-0.78, 0.04, 0]}>
-        <mesh castShadow>
-          <sphereGeometry args={[0.075, 20, 16]} />
-          <meshStandardMaterial
-            color={QUANTUM_COLORS.fissionZone}
-            emissive={QUANTUM_COLORS.fissionZone}
-            emissiveIntensity={0.7}
-            roughness={0.25}
-          />
-        </mesh>
-        <mesh position={[0.18, 0, 0]} rotation={[0, 0, -Math.PI / 2]}>
-          <cylinderGeometry args={[0.01, 0.01, 0.26, 10]} />
-          <meshStandardMaterial
-            color={QUANTUM_COLORS.fissionZone}
-            emissive={QUANTUM_COLORS.fissionZone}
-            emissiveIntensity={0.65}
-          />
-        </mesh>
-      </group>
-    );
-  }
+      <mesh castShadow position={[0, 0.055, 0]}>
+        <cylinderGeometry args={[0.03, 0.06, 0.03, 32]} />
+        <MetalMaterial color={QUANTUM_COLORS.aluminium} roughness={0.2} />
+      </mesh>
+      <mesh castShadow position={[0, CENTRE / 2 + 0.02, 0]}>
+        <cylinderGeometry args={[0.011, 0.011, CENTRE - 0.04, 16]} />
+        <MetalMaterial color={QUANTUM_COLORS.aluminium} roughness={0.15} />
+      </mesh>
+    </group>
+  );
+}
+
+/**
+ * The free neutron that starts a fission, as a model shows it: one more grey
+ * ball on a stem of its own, level with the nucleus it is about to strike.
+ */
+function FreeNeutron({
+  radius,
+  reach,
+}: {
+  readonly radius: number;
+  readonly reach: number;
+}) {
+  const paint = useMemo(createNeutronPaint, []);
+  useEffect(() => () => paint.dispose(), [paint]);
+
   return (
-    <mesh rotation={[0, 0, Math.PI / 2]}>
-      <cylinderGeometry args={[0.025, 0.025, 0.34, 14]} />
-      <meshStandardMaterial
-        color={QUANTUM_COLORS.fusionZone}
-        emissive={QUANTUM_COLORS.fusionZone}
-        emissiveIntensity={0.9}
-      />
-    </mesh>
+    <group position={[-reach, 0, 0]}>
+      <mesh castShadow position={[0, 0.012, 0]} receiveShadow>
+        <cylinderGeometry args={[0.07, 0.08, 0.024, 32]} />
+        <SurfaceMaterial
+          color={QUANTUM_COLORS.benchEpoxy}
+          roughness={0.5}
+          surface="plastic"
+        />
+      </mesh>
+      <mesh castShadow position={[0, CENTRE / 2, 0]}>
+        <cylinderGeometry args={[0.007, 0.007, CENTRE, 12]} />
+        <MetalMaterial color={QUANTUM_COLORS.aluminium} roughness={0.15} />
+      </mesh>
+      <mesh
+        castShadow
+        material={paint}
+        position={[0, CENTRE, 0]}
+        scale={radius}
+      >
+        <sphereGeometry args={[1, 32, 24]} />
+      </mesh>
+    </group>
   );
 }
 
@@ -153,8 +228,8 @@ function BindingCamera() {
   );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0, 1.4, 3.0] : [0, 1.12, 2.38]}
-      cameraTarget={[0, 0.58, 0]}
+      cameraPosition={narrow ? [0, 1.42, 3.3] : [0, 1.08, 2.4]}
+      cameraTarget={[0, 0.54, 0]}
       fov={36}
       maxDistance={5.8}
       minDistance={1.3}
@@ -181,16 +256,31 @@ export function NuclearBindingScene({
   const clusterRef = useRef<Group>(null);
   const phaseRef = useRef(0);
   const spec = nuclideSpec(nuclide);
-  const displayCount = Math.min(32, spec.massNumber);
-  const protonTarget = Math.max(
+  const count = Math.min(CAP, spec.massNumber);
+  const protons = Math.max(
     1,
-    Math.round((spec.protons / spec.massNumber) * displayCount)
+    Math.round((spec.protons / spec.massNumber) * count)
   );
+  const isIronPeak = nuclide === "iron56";
+  // Only a heavy nucleus splits: a light one has no two lobes to neck into.
+  const splitting = process === "fission" && !isIronPeak && count > 12;
+  const radius = ballRadius(count);
+  const reach = clusterRadius(count, radius) * (splitting ? 1.75 : 1);
 
-  // Close-packed multi-shell nucleon cluster responding to both nuclide and process
   const nucleons = useMemo(
-    () => buildNucleonLayout(displayCount, protonTarget, nuclide, process),
-    [displayCount, nuclide, process, protonTarget]
+    () => packNucleons(count, protons, splitting),
+    [count, protons, splitting]
+  );
+  const ball = useMemo(createBall, []);
+  const protonPaint = useMemo(createProtonPaint, []);
+  const neutronPaint = useMemo(createNeutronPaint, []);
+  useEffect(
+    () => () => {
+      ball.dispose();
+      protonPaint.dispose();
+      neutronPaint.dispose();
+    },
+    [ball, neutronPaint, protonPaint]
   );
 
   useVisualStop(() => {
@@ -207,86 +297,66 @@ export function NuclearBindingScene({
     }
     phaseRef.current += simulationStep(delta) * 0.95;
     clusterRef.current.rotation.y = phaseRef.current;
-    const pulse =
-      process === "fission"
-        ? 1 + Math.sin(phaseRef.current * 2.4) * 0.06
-        : 1 - Math.abs(Math.sin(phaseRef.current * 1.8)) * 0.05;
+    // A splitting nucleus stretches and recovers along the axis it necks on.
+    const pulse = splitting ? 1 + Math.sin(phaseRef.current * 2.4) * 0.05 : 1;
     clusterRef.current.scale.set(pulse, 1, 1);
   });
 
-  const isIronPeak = nuclide === "iron56";
   const zoneText = isIronPeak
     ? parts.ironPeak
     : parts[process === "fusion" ? "fusionZone" : "fissionZone"];
-  const auraColor = resolveAuraColor(isIronPeak, process);
+  const crown = CENTRE + clusterRadius(count, radius) + 0.12;
 
   return (
     <group>
       <SimulationTicker running={playing} />
       <BindingCamera />
+      <Stand />
+      {splitting ? <FreeNeutron radius={radius} reach={reach + 0.2} /> : null}
 
-      <group position={[0, 0.58, 0]} ref={clusterRef}>
-        {/* Packed glossy protons and brushed metallic neutrons */}
+      <group position={[0, CENTRE, 0]} ref={clusterRef}>
         {Arr.map(nucleons, (item) => (
-          <mesh castShadow key={item.id} position={[item.x, item.y, item.z]}>
-            <sphereGeometry args={[0.105, 24, 18]} />
-            {item.isProton ? (
-              <meshPhysicalMaterial
-                clearcoat={0.9}
-                clearcoatRoughness={0.14}
-                color={QUANTUM_COLORS.proton}
-                metalness={0.08}
-                roughness={0.22}
-              />
-            ) : (
-              <MetalMaterial color={QUANTUM_COLORS.neutron} roughness={0.28} />
-            )}
-          </mesh>
+          <mesh
+            castShadow
+            geometry={ball}
+            key={item.id}
+            material={item.proton ? protonPaint : neutronPaint}
+            position={[item.x, item.y, item.z]}
+            receiveShadow
+            scale={radius}
+          />
         ))}
-
-        {/* Strong-nuclear-force binding aura shell */}
-        <mesh scale={[process === "fission" ? 1.32 : 1.08, 1, 1]}>
-          <sphereGeometry
-            args={[0.24 + Math.cbrt(displayCount) * 0.105, 28, 22]}
-          />
-          <meshBasicMaterial
-            blending={AdditiveBlending}
-            color={auraColor}
-            depthWrite={false}
-            opacity={0.14}
-            transparent
-          />
-        </mesh>
-
-        {/* Equatorial stability ring on Iron-56 or process energy bridge */}
-        <ProcessCue isIronPeak={isIronPeak} process={process} />
       </group>
 
-      {/* Crisp compact non-overlapping labels */}
       <ThreeLabel
+        anchorX="right"
+        anchorY="bottom"
         color={ink}
         fontSize="compact"
         maximumFontSize={13}
         minimumFontSize={11}
-        position={[-0.86, 0.92, 0]}
+        position={[-0.08, crown, 0]}
       >
-        <span>{parts.proton}</span>
+        <Legend color={QUANTUM_COLORS.proton} name={parts.proton} />
       </ThreeLabel>
       <ThreeLabel
+        anchorX="left"
+        anchorY="bottom"
         color={ink}
         fontSize="compact"
         maximumFontSize={13}
         minimumFontSize={11}
-        position={[0.86, 0.92, 0]}
+        position={[0.08, crown, 0]}
       >
-        <span>{parts.neutron}</span>
+        <Legend color={QUANTUM_COLORS.neutron} name={parts.neutron} />
       </ThreeLabel>
       <ThreeLabel
+        anchorY="bottom"
         color={ink}
         fontSize="compact"
         maximumFontSize={13}
         minimumFontSize={11}
-        position={[0, 1.24, 0]}
+        position={[0, crown + 0.13, 0]}
       >
         <span>{zoneText}</span>
       </ThreeLabel>

@@ -21,8 +21,10 @@ import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { useRef } from "react";
+import { Array as Arr } from "effect";
+import { useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
+import { ExtrudeGeometry, Path, Shape } from "three";
 
 /** The length of the plank, in metres. */
 const PLANK = 0.8;
@@ -55,6 +57,75 @@ function onPlank(angle: number, along: number, off: number) {
   ] satisfies CoordinateTuple;
 }
 
+/** The brass quadrant at the hinge: its outer radius, the width of its scale, and its thickness. */
+const QUADRANT = { band: 0.045, radius: 0.19, thick: 0.0025 } as const;
+
+/** A quarter-circle plate with a window cut out, leaving two arms and the scale's band. */
+function quadrantGeometry() {
+  const plate = new Shape();
+  plate.moveTo(0, 0);
+  plate.absarc(0, 0, QUADRANT.radius, 0, Math.PI / 2, false);
+  plate.closePath();
+  const inner = QUADRANT.radius - QUADRANT.band;
+  const arm = 0.022;
+  const lean = Math.asin(arm / inner);
+  const cut = new Path();
+  cut.moveTo(arm * 1.6, arm);
+  cut.absarc(0, 0, inner, lean, Math.PI / 2 - lean, false);
+  cut.lineTo(arm, arm * 1.6);
+  cut.closePath();
+  plate.holes = [cut];
+  return new ExtrudeGeometry(plate, {
+    bevelEnabled: false,
+    curveSegments: 48,
+    depth: QUADRANT.thick,
+  });
+}
+
+/**
+ * The brass quadrant protractor screwed to the bench behind the hinge, in the
+ * plank's plane of swing: its scale is engraved every 5 degrees, with a longer
+ * line every 10, and the plank's edge reads the ramp angle against it.
+ */
+function Quadrant() {
+  const plate = useMemo(quadrantGeometry, []);
+  useEffect(() => () => plate.dispose(), [plate]);
+
+  return (
+    <group position={[HINGE[0], HINGE[1], -0.108]}>
+      <mesh castShadow geometry={plate}>
+        <SurfaceMaterial
+          bump={0.2}
+          color={INSTRUMENT_COLORS.brass}
+          metalness={0.55}
+          repeat={[2, 2]}
+          roughness={0.5}
+          surface="brushed"
+        />
+      </mesh>
+      {Arr.map(Arr.range(0, 18), (step) => {
+        const turn = (step * 5 * Math.PI) / 180;
+        const long = step % 2 === 0 ? 0.022 : 0.012;
+        const reach = QUADRANT.radius - 0.004 - long / 2;
+        return (
+          <mesh
+            key={step}
+            position={[
+              Math.cos(turn) * reach,
+              Math.sin(turn) * reach,
+              QUADRANT.thick + 0.0004,
+            ]}
+            rotation={[0, 0, turn]}
+          >
+            <planeGeometry args={[long, step % 2 === 0 ? 0.0022 : 0.0014]} />
+            <meshBasicMaterial color={INSTRUMENT_COLORS.graphite} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
 /**
  * The hinged plywood plank on the bench, its brass hinge at the foot, and
  * the retort stand that props up its far end: a painted cast-iron base, a
@@ -67,14 +138,33 @@ function Ramp({ angle }: { readonly angle: number }) {
   return (
     <group>
       <Bench />
-      <mesh castShadow position={middle} receiveShadow rotation={[0, 0, turn]}>
-        <boxGeometry args={[PLANK, THICK, 0.2]} />
+      <Quadrant />
+      <RoundedBox
+        args={[PLANK, THICK, 0.2]}
+        castShadow
+        position={middle}
+        radius={0.003}
+        receiveShadow
+        rotation={[0, 0, turn]}
+        smoothness={2}
+      >
         <SurfaceMaterial
           color={INSTRUMENT_COLORS.pine}
-          repeat={[3, 1]}
+          repeat={[4, 1]}
           surface="wood"
         />
-      </mesh>
+      </RoundedBox>
+      {Arr.map([0.07, -0.07], (z) => (
+        <mesh castShadow key={z} position={[HINGE[0] + 0.02, 0.0015, z]}>
+          <boxGeometry args={[0.07, 0.003, 0.035]} />
+          <SurfaceMaterial
+            color={INSTRUMENT_COLORS.brass}
+            metalness={1}
+            roughness={0.35}
+            surface="brushed"
+          />
+        </mesh>
+      ))}
       <mesh position={[HINGE[0], 0.006, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.008, 0.008, 0.22, 16]} />
         <SurfaceMaterial
@@ -153,8 +243,8 @@ function Force({
       />
       <ThreeLabel
         color={color}
-        fontSize="reading"
-        position={[vector[0] * 1.18, vector[1] * 1.18 - 0.01, 0.05]}
+        fontSize={0.034}
+        position={[vector[0] * 1.14, vector[1] * 1.14 - 0.008, 0.05]}
       >
         <InlineMath math={math} />
       </ThreeLabel>
@@ -229,7 +319,11 @@ export function RampScene({
           rotation={[0, 0, turn]}
           smoothness={2}
         >
-          <SurfaceMaterial color={INSTRUMENT_COLORS.oak} surface="wood" />
+          <SurfaceMaterial
+            color={INSTRUMENT_COLORS.oak}
+            repeat={[1, 1]}
+            surface="wood"
+          />
         </RoundedBox>
         <Force
           color={PLOT_COLORS.violet}

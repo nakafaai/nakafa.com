@@ -73,11 +73,12 @@ function Module() {
       >
         <planeGeometry args={[SIZE[0] - FRAME * 2, SIZE[1] - FRAME * 2]} />
         <meshPhysicalMaterial
-          clearcoat={0.5}
-          clearcoatRoughness={0.12}
+          clearcoat={0.7}
+          clearcoatRoughness={0.04}
+          envMapIntensity={0.3}
           map={cells}
-          metalness={0.1}
-          roughness={0.32}
+          metalness={0}
+          roughness={0.55}
         />
       </mesh>
       <mesh castShadow receiveShadow>
@@ -313,8 +314,8 @@ export function SolarPanelFluxLab({
         <ScienceStage floor={0} ground="grass" reach={2.2} setting="field">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[0.6, 1.6, 3.6]}
-              cameraTarget={[0.3, 1.1, 0]}
+              cameraPosition={[1.1, 2.7, 3.2]}
+              cameraTarget={[0.25, 1.05, 0]}
               fov={38}
               maxDistance={7}
               minDistance={1.4}

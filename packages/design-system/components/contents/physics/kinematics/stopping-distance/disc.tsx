@@ -2,10 +2,6 @@ import { TemperatureIcon } from "@hugeicons/core-free-icons";
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import {
-  SEDAN,
-  TYRE_PROFILE,
-} from "@repo/design-system/components/contents/physics/kinematics/sedan";
-import {
   discTemperature,
   kineticEnergy,
   START_TEMPERATURE,
@@ -18,6 +14,11 @@ import {
   stopSpeed,
 } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/motion";
 import {
+  BrakeCaliper,
+  WHEEL,
+  WheelRotor,
+} from "@repo/design-system/components/contents/physics/kinematics/tyre";
+import {
   UNIT,
   useQuantity,
 } from "@repo/design-system/components/contents/simulation/quantity";
@@ -28,6 +29,7 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -50,23 +52,13 @@ import { Array as Arr, Option, Record as Rec } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
-import {
-  BackSide,
-  DataTexture,
-  MeshBasicMaterial,
-  MeshStandardMaterial,
-  RepeatWrapping,
-  SRGBColorSpace,
-} from "three";
+import { BackSide, MeshBasicMaterial, SRGBColorSpace } from "three";
 
 /** The speeds the learner can brake from, as in the lesson's table. */
 const SPEEDS = [10, 20, 30] as const;
 
 /** The car brakes as hard as the lesson's car: 5 m/s². */
 const DECELERATION = 5;
-
-/** The disc sits inside the rim: 330 mm across, 28 mm thick. */
-const DISC = { radius: 0.165, thickness: 0.028 } as const;
 
 /** The hub turns 0.6 m above the workshop floor, on the test stand's axle. */
 const HUB_HEIGHT = 0.6;
@@ -149,8 +141,8 @@ export function BrakeHeatLab({
         <ScienceStage floor={0} reach={1.5} setting="studio">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[0.75, HUB_HEIGHT + 0.42, 1.05]}
-              cameraTarget={[0, HUB_HEIGHT, 0]}
+              cameraPosition={[0.62, HUB_HEIGHT + 0.22, 1.25]}
+              cameraTarget={[0, HUB_HEIGHT - 0.06, 0]}
               fov={36}
               maxDistance={2.6}
               minDistance={0.6}
@@ -194,125 +186,78 @@ export function BrakeHeatLab({
   );
 }
 
-/** The parts the thermal camera paints, with their daylight look. */
-const PARTS = {
-  caliper: {
-    color: CAR_COLORS.caliper,
-    metalness: 0.2,
-    roughness: 0.35,
-    warming: 0.35,
-  },
-  disc: {
-    color: CAR_COLORS.castIron,
-    metalness: 0.9,
-    roughness: 0.42,
-    warming: 1,
-  },
-  rim: {
-    color: CAR_COLORS.rimBright,
-    metalness: 1,
-    roughness: 0.2,
-    warming: 0.12,
-  },
-  tyre: {
-    color: CAR_COLORS.tyre,
-    metalness: 0,
-    roughness: 0.92,
-    warming: 0.04,
-  },
-} as const;
+/** How much of the disc's warming each part the thermal camera paints shares. */
+const WARMING = { caliper: 0.35, disc: 1, rim: 0.12, tyre: 0.04 } as const;
 
 /**
- * Two materials per part, made once. In daylight a part keeps its own
- * colour and gloss. Through the thermal camera it is one flat colour from
- * the camera's palette, untouched by light or tone mapping, as a thermal
- * image is: the camera sees only the heat a surface gives off.
+ * One flat material per part for the thermal camera: a colour from the
+ * camera's palette, untouched by light or tone mapping, as a thermal image
+ * is, because the camera sees only the heat a surface gives off.
  */
-function usePartMaterials(thermal: boolean) {
-  const tread = useMemo(createTread, []);
-  const daylight = useMemo(
-    () =>
-      Rec.map(
-        PARTS,
-        (part, name) =>
-          new MeshStandardMaterial({
-            bumpMap: name === "tyre" ? tread : null,
-            bumpScale: 3,
-            color: part.color,
-            metalness: part.metalness,
-            roughness: part.roughness,
-          })
-      ),
-    [tread]
-  );
+function useThermalPaint() {
   const heat = useMemo(
-    () => Rec.map(PARTS, () => new MeshBasicMaterial({ toneMapped: false })),
+    () => Rec.map(WARMING, () => new MeshBasicMaterial({ toneMapped: false })),
     []
   );
 
   useEffect(
     () => () => {
-      tread.dispose();
-      Arr.forEach(
-        Arr.appendAll(Rec.values(daylight), Rec.values(heat)),
-        (material) => material.dispose()
-      );
+      Arr.forEach(Rec.values(heat), (material) => material.dispose());
     },
-    [daylight, heat, tread]
+    [heat]
   );
 
-  return { heat, shown: thermal ? heat : daylight };
+  return heat;
 }
 
 /**
- * The tread's relief as a bump map on the turned tyre: the lathe's texture
- * runs once around the tyre and once across its profile, whose middle third
- * is the tread. Four grooves run round it and a sipe crosses each of the 72
- * blocks; the shoulders and sidewalls stay smooth.
- */
-function createTread() {
-  const across = 64;
-  const around = 8;
-  const data = new Uint8Array(across * around * 4);
-  for (let row = 0; row < across; row += 1) {
-    const v = (row + 0.5) / across;
-    const tread = v > 0.43 && v < 0.57;
-    const groove =
-      tread &&
-      Math.abs(((v - 0.43) / 0.14) * 5 - Math.round(((v - 0.43) / 0.14) * 5)) <
-        0.12;
-    for (let column = 0; column < around; column += 1) {
-      const sipe = tread && column === 0;
-      const value = groove || sipe ? 0 : 255;
-      data.set([value, value, value, 255], (row * around + column) * 4);
-    }
-  }
-  const texture = new DataTexture(data, around, across);
-  texture.wrapS = RepeatWrapping;
-  texture.repeat.set(72, 1);
-  texture.needsUpdate = true;
-  return texture;
-}
-
-/**
- * The workshop's brake test stand the wheel turns on: a steel floor plate, a
- * column behind the wheel and the axle stub that carries the hub, with the
- * knuckle plate the caliper bolts to.
+ * The workshop's brake test stand the wheel turns on: a bolted steel floor
+ * plate, a column behind the wheel, the axle stub that carries the hub, and
+ * the knuckle the caliper bolts to.
  */
 function TestStand() {
   return (
     <group>
       <RoundedBox
-        args={[0.56, 0.03, 0.42]}
+        args={[0.62, 0.03, 0.46]}
         castShadow
         position={[0, 0.015, STAND_DEPTH]}
         radius={0.008}
         receiveShadow
       >
-        <MetalMaterial color={CAR_COLORS.hub} roughness={0.55} />
+        <SurfaceMaterial
+          color={CAR_COLORS.hub}
+          metalness={1}
+          repeat={[3, 2]}
+          roughness={0.55}
+          surface="brushed"
+        />
       </RoundedBox>
+      {Arr.map(
+        [
+          [0.27, 0.19],
+          [0.27, -0.19],
+          [-0.27, 0.19],
+          [-0.27, -0.19],
+        ] as const,
+        ([x, z]) => (
+          <mesh key={`${x}:${z}`} position={[x, 0.036, STAND_DEPTH + z]}>
+            <cylinderGeometry args={[0.014, 0.014, 0.012, 6]} />
+            <MetalMaterial color={CAR_COLORS.chrome} roughness={0.3} />
+          </mesh>
+        )
+      )}
       <mesh castShadow position={[0, HUB_HEIGHT / 2, STAND_DEPTH]}>
-        <cylinderGeometry args={[0.045, 0.055, HUB_HEIGHT, 28]} />
+        <cylinderGeometry args={[0.05, 0.06, HUB_HEIGHT, 32]} />
+        <SurfaceMaterial
+          color={CAR_COLORS.carPaintDark}
+          repeat={[2, 2]}
+          roughness={0.5}
+          surface="paint"
+        />
+      </mesh>
+      <mesh castShadow position={[0, 0.045, STAND_DEPTH]}>
+        <cylinderGeometry args={[0.095, 0.105, 0.03, 32]} />
         <MetalMaterial color={CAR_COLORS.hub} roughness={0.5} />
       </mesh>
       <mesh
@@ -320,14 +265,22 @@ function TestStand() {
         position={[0, HUB_HEIGHT, STAND_DEPTH / 2]}
         rotation={[Math.PI / 2, 0, 0]}
       >
-        <cylinderGeometry args={[0.03, 0.03, -STAND_DEPTH, 20]} />
-        <MetalMaterial color={CAR_COLORS.chrome} roughness={0.3} />
+        <cylinderGeometry args={[0.032, 0.032, -STAND_DEPTH + 0.1, 24]} />
+        <MetalMaterial color={CAR_COLORS.chrome} roughness={0.28} />
+      </mesh>
+      <mesh
+        castShadow
+        position={[0, HUB_HEIGHT, STAND_DEPTH]}
+        rotation={[Math.PI / 2, 0, 0]}
+      >
+        <cylinderGeometry args={[0.085, 0.085, 0.12, 32]} />
+        <MetalMaterial color={CAR_COLORS.hub} roughness={0.45} />
       </mesh>
       <RoundedBox
-        args={[0.16, 0.22, 0.02]}
+        args={[0.2, 0.22, 0.024]}
         castShadow
-        position={[-0.05, HUB_HEIGHT + 0.04, -0.035]}
-        radius={0.006}
+        position={[-0.09, HUB_HEIGHT + 0.07, -0.06]}
+        radius={0.008}
       >
         <MetalMaterial color={CAR_COLORS.hub} roughness={0.6} />
       </RoundedBox>
@@ -367,7 +320,8 @@ function WheelScene({
 }) {
   const wheel = useRef<Group>(null);
   const turned = useRef(0);
-  const { heat: palette, shown: materials } = usePartMaterials(thermal);
+  const heat = useThermalPaint();
+  const paint = thermal ? heat : undefined;
   const stop = useMemo<Stop>(
     () => ({ deceleration: DECELERATION, reaction: 0, speed }),
     [speed]
@@ -377,17 +331,17 @@ function WheelScene({
   useFrame((_, delta) => {
     const time = advance(delta);
     const current = time < 0 ? speed : stopSpeed(stop, time);
-    turned.current -= (current / SEDAN.wheelRadius) * SPIN_SHOWN * delta;
+    turned.current -= (current / WHEEL.radius) * SPIN_SHOWN * delta;
     wheel.current?.rotation.set(0, 0, turned.current);
     if (!thermal) {
       return;
     }
-    const heat =
+    const warmth =
       discTemperature(speed, Math.max(0, time) / brakingTime(stop)) -
       START_TEMPERATURE;
-    Arr.forEach(Rec.toEntries(palette), ([name, material]) => {
+    Arr.forEach(Rec.toEntries(heat), ([name, material]) => {
       const [red, green, blue] = thermalColor(
-        START_TEMPERATURE + heat * PARTS[name].warming
+        START_TEMPERATURE + warmth * WARMING[name]
       );
       material.color.setRGB(red, green, blue, SRGBColorSpace);
     });
@@ -399,40 +353,9 @@ function WheelScene({
       {thermal ? <ThermalSurround /> : <TestStand />}
       <group position={[0, HUB_HEIGHT, 0]}>
         <group ref={wheel}>
-          <mesh material={materials.disc} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry
-              args={[DISC.radius, DISC.radius, DISC.thickness, 64]}
-            />
-          </mesh>
-          <mesh position={[0, 0, 0.03]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.09, 0.09, 0.05, 40]} />
-            <MetalMaterial color={CAR_COLORS.hub} roughness={0.5} />
-          </mesh>
-          <mesh
-            material={materials.tyre}
-            position={[0, 0, 0.09]}
-            rotation={[Math.PI / 2, 0, 0]}
-          >
-            <latheGeometry args={[TYRE_PROFILE, 64]} />
-          </mesh>
-          <mesh material={materials.rim} position={[0, 0, 0.09]}>
-            <torusGeometry args={[0.205, 0.016, 12, 72]} />
-          </mesh>
-          {Arr.map(Arr.range(0, 4), (spoke) => (
-            <group key={spoke} rotation={[0, 0, (spoke * 2 * Math.PI) / 5]}>
-              <mesh material={materials.rim} position={[0.11, 0, 0.12]}>
-                <boxGeometry args={[0.19, 0.032, 0.02]} />
-              </mesh>
-            </group>
-          ))}
+          <WheelRotor paint={paint} />
         </group>
-        <RoundedBox
-          args={[0.11, 0.07, 0.07]}
-          material={materials.caliper}
-          position={[-0.11, 0.11, 0]}
-          radius={0.012}
-          rotation={[0, 0, Math.PI / 4]}
-        />
+        <BrakeCaliper paint={paint} />
       </group>
     </>
   );

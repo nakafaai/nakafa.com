@@ -2,9 +2,6 @@ import type { DecimalSeparator } from "@repo/design-system/components/contents/p
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 
-export const UNIFORM_CIRCULAR_MOTION_CAR_MODEL_PATH =
-  "/models/physics/kinematics/kenney-car-kit/race.glb";
-
 export const UNIFORM_CIRCULAR_MOTION_COLORS = {
   carBody: PLOT_COLORS.orange,
 } as const;

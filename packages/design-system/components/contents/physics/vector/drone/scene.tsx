@@ -262,7 +262,7 @@ export function DroneScene({
   const duration = length / FLIGHT_SPEED;
   const corners = Arr.map(hopCorners(hops), scenePoint);
   // A real drone would be a speck over a flight this long, so it is drawn larger than life, by a share of the path.
-  const legible = Math.max(4, length / 5);
+  const legible = Math.max(4, length / 3.2);
 
   useVisualStop(() => {
     time.current = 0;

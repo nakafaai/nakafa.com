@@ -1,4 +1,4 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import {
   formatAccelerationMath,
   formatTrimmedMeterMath,
@@ -13,13 +13,15 @@ import {
   GLBB_COLORS,
   GLBB_SCENARIOS,
   GLBB_SCENE,
-  GLBB_TRAIN_MODEL_PATH,
   getGlbbLoopTime,
   getGlbbMotionState,
   getGlbbPositionSample,
   isGlbbScenarioId,
 } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
-import { PhysicsTrainModel } from "@repo/design-system/components/contents/physics/kinematics/train";
+import {
+  RAILCAR,
+  Railcar,
+} from "@repo/design-system/components/contents/physics/kinematics/train";
 import {
   SimulationTicker,
   simulationStep,
@@ -27,7 +29,10 @@ import {
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Rail } from "@repo/design-system/components/three/stage/rail";
 import {
@@ -68,6 +73,29 @@ interface GlbbLabProps {
     viewLabel: string;
   };
   title: NonNullable<ReactNode>;
+}
+
+/**
+ * Frames the run of track the railcar covers. A narrow frame is as wide as it
+ * is tall, so its camera stands further back to keep the railcar's start in.
+ */
+function RailCamera() {
+  const narrow = isNarrowThreeScene(
+    useThree((state) => state.size),
+    1.2
+  );
+  return (
+    <CameraControls
+      cameraPosition={
+        narrow ? GLBB_SCENE.narrowCameraPosition : GLBB_SCENE.cameraPosition
+      }
+      cameraTarget={GLBB_SCENE.cameraTarget}
+      enablePan
+      enableRotate
+      enableZoom
+      fov={GLBB_SCENE.cameraFov}
+    />
+  );
 }
 
 export function NonUniformLinearMotionLab({
@@ -123,14 +151,7 @@ export function NonUniformLinearMotionLab({
           setting="field"
         >
           <Suspense>
-            <CameraControls
-              cameraPosition={GLBB_SCENE.cameraPosition}
-              cameraTarget={GLBB_SCENE.cameraTarget}
-              enablePan
-              enableRotate
-              enableZoom
-              fov={GLBB_SCENE.cameraFov}
-            />
+            <RailCamera />
             <Rail
               gauge={GLBB_SCENE.railGap}
               sleeper={GLBB_SCENE.sleeperWidth}
@@ -240,11 +261,8 @@ function AnimatedTrain({ motion }: { motion: GlbbMotionState }) {
         }}
         objectRef={groupRef}
       >
-        <group rotation={[0, Math.PI / 2, 0]} scale={GLBB_SCENE.trainScale}>
-          <PhysicsTrainModel
-            bodyColor={GLBB_COLORS.trainBody}
-            modelPath={GLBB_TRAIN_MODEL_PATH}
-          />
+        <group scale={GLBB_SCENE.railGap / RAILCAR.gauge}>
+          <Railcar color={GLBB_COLORS.trainBody} />
         </group>
       </CameraBounds>
     </>

@@ -1,5 +1,6 @@
 import { lerp } from "@repo/design-system/components/contents/physics/kinematics/lerp";
 import { getColor } from "@repo/design-system/lib/color";
+import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
@@ -70,9 +71,9 @@ type RouteConfig = DetourRouteConfig | ReturnRouteConfig | StraightRouteConfig;
 export const AVERAGE_VELOCITY_SPEED_SCENE = {
   ballRadius: 0.22,
   ghostCount: 7,
-  railOffset: 0.34,
-  railRadius: 0.035,
-  routeRadius: 0.075,
+  railOffset: 0.13,
+  railRadius: 0.026,
+  routeRadius: 0.07,
   routeSampleCount: 128,
   worldScale: 0.46,
 } as const;
@@ -84,12 +85,12 @@ export const AVERAGE_VELOCITY_SPEED_CAMERA = {
 } as const;
 
 export const AVERAGE_VELOCITY_SPEED_COLORS = {
-  ball: PLOT_COLORS.pink,
-  ballBand: getColor("SLATE", 800),
+  ball: INSTRUMENT_COLORS.bowlingResin,
+  ballBand: INSTRUMENT_COLORS.paper,
   distance: PLOT_COLORS.teal,
   displacement: PLOT_COLORS.violet,
   ghost: getColor("WHITE"),
-  rail: getColor("SLATE", 600),
+  rail: INSTRUMENT_COLORS.silver,
   route: PLOT_COLORS.teal,
   start: PLOT_COLORS.amber,
 } as const;

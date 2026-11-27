@@ -2,6 +2,7 @@ import type { Hop } from "@repo/design-system/components/contents/physics/vector
 import {
   displacement,
   HopsSchema,
+  hopCorners,
   pathLength,
   scaleHops,
 } from "@repo/design-system/components/contents/physics/vector/drone/flight";
@@ -56,6 +57,53 @@ interface DroneDisplacementLabProps {
  * components, and the longer path the drone actually flew. With factors,
  * the learner multiplies the whole plan by a number.
  */
+/** The direction the camera looks back along, from the flight toward the viewer. */
+const VIEW = [-0.36, 0.2, 0.91] as const;
+
+/** The room kept round the flight for the pad, the unit vectors and the drone, in metres. */
+const MARGIN = { ground: 1.9, sky: 1.4 } as const;
+
+/**
+ * The camera that shows the whole flight: it looks at the middle of the box
+ * round every corner of the path, the pad and the drone, from far enough
+ * back for the box's tallest or widest side to fit.
+ */
+function flightView(hops: readonly [Hop, ...Hop[]]) {
+  const corners = hopCorners(hops);
+  const range = (read: (corner: Hop) => number) => {
+    const values = Arr.map(corners, read);
+    return {
+      max: Math.max(MARGIN.ground, ...values),
+      min: Math.min(-MARGIN.ground, ...values),
+    };
+  };
+  const east = range((corner) => corner.east);
+  const north = range((corner) => corner.north);
+  const up = {
+    max: Math.max(0, ...Arr.map(corners, (corner) => corner.up)) + MARGIN.sky,
+    min: Math.min(0, ...Arr.map(corners, (corner) => corner.up)) - 0.5,
+  };
+  const span = Math.max(
+    up.max - up.min,
+    (east.max - east.min) * 0.75,
+    (north.max - north.min) * 0.5
+  );
+  const target = [
+    (east.min + east.max) / 2,
+    (up.min + up.max) / 2,
+    -(north.min + north.max) / 2,
+  ] as const;
+  const distance = span * 1.5;
+  return {
+    position: [
+      target[0] + VIEW[0] * distance,
+      target[1] + VIEW[1] * distance,
+      target[2] + VIEW[2] * distance,
+    ],
+    target,
+  } as const;
+}
+
 export function DroneDisplacementLab({
   description,
   factors = [],
@@ -70,6 +118,7 @@ export function DroneDisplacementLab({
   const hops = scaleHops(decoded, factor);
   const moved = displacement(hops);
   const reach = Math.max(moved.size, 6);
+  const view = flightView(hops);
 
   return (
     <VisualCard>
@@ -100,16 +149,8 @@ export function DroneDisplacementLab({
         <ScienceStage floor={0} ground="grass" reach={reach} setting="field">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[
-                moved.east * 0.5 - reach * 0.6,
-                moved.up * 0.5 + reach * 0.32,
-                -moved.north * 0.5 + reach * 1.5,
-              ]}
-              cameraTarget={[
-                moved.east * 0.5,
-                moved.up * 0.5,
-                -moved.north * 0.5,
-              ]}
+              cameraPosition={view.position}
+              cameraTarget={view.target}
               fov={40}
               maxDistance={reach * 4}
               minDistance={reach * 0.4}

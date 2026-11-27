@@ -1,5 +1,11 @@
 import { RoundedBox } from "@react-three/drei";
+import { useThree } from "@react-three/fiber";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
+import {
+  BrakeCaliper,
+  WHEEL,
+  WheelRotor,
+} from "@repo/design-system/components/contents/physics/kinematics/tyre";
 import { FixedArrow } from "@repo/design-system/components/contents/physics/vector/solid/arrow";
 import type { Grip } from "@repo/design-system/components/contents/physics/vector/wrench/torque";
 import {
@@ -11,9 +17,10 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import type { CoordinateTuple } from "@repo/design-system/components/three/frame";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import type { Placement } from "@repo/design-system/components/three/repeat";
-import { Repeat } from "@repo/design-system/components/three/repeat";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import {
@@ -28,15 +35,13 @@ import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
-import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
-import { Suspense, useEffect, useMemo, useState } from "react";
-import { DoubleSide, LatheGeometry, Vector2 } from "three";
+import { Suspense, useMemo, useState } from "react";
 
 /** The height of the wheel's hub above the floor, in metres. */
-const HUB = 0.34;
+const HUB = WHEEL.radius;
 
 /** Metres of arrow per newton of force. */
 const FORCE_SCALE = 0.0011;
@@ -44,153 +49,101 @@ const FORCE_SCALE = 0.0011;
 /** Metres of arrow per N·m of torque. */
 const TORQUE_SCALE = 0.0035;
 
-/** A tyre's section from bead to bead: the sidewalls bulge out to rounded shoulders and a flat tread, in metres from the axle. */
-const TYRE_SECTION = [
-  [0.214, -0.085],
-  [0.24, -0.098],
-  [0.29, -0.102],
-  [0.326, -0.094],
-  [0.342, -0.074],
-  [0.346, -0.04],
-  [0.346, 0.04],
-  [0.342, 0.074],
-  [0.326, 0.094],
-  [0.29, 0.102],
-  [0.24, 0.098],
-  [0.214, 0.085],
-] as const;
+/** Where the breaker bar runs, clear of the tyre's sidewall, in metres from the wheel's middle. */
+const BAR = WHEEL.width / 2 + 0.03;
 
-/** The three circumferential grooves cut round the tread. */
-const GROOVES = [-0.045, 0, 0.045] as const;
-
-/** The alloy rim's five spokes, from the hub out to the lip. */
-const SPOKES: readonly Placement[] = Arr.makeBy(5, (index) => {
-  const turn = (index / 5) * Math.PI * 2 + Math.PI / 2;
-  return {
-    position: [Math.cos(turn) * 0.135, Math.sin(turn) * 0.135, 0.062],
-    rotation: [0, 0, turn],
-  };
-});
-
-/** The five hexagon lug nuts round the hub. */
-const LUGS: readonly Placement[] = Arr.makeBy(5, (index) => {
-  const turn = (index / 5) * Math.PI * 2 + Math.PI / 2 + Math.PI / 5;
-  return {
-    position: [Math.cos(turn) * 0.1, Math.sin(turn) * 0.1, 0.082],
-    rotation: [Math.PI / 2, 0, 0],
-  };
-});
+/** The nut the socket sits on: the top one of the five, on the wheel's face. */
+const NUT = [0, HUB + WHEEL.lugCircle, WHEEL.face + 0.02] as const;
 
 /**
- * A car wheel facing +z: a tyre lathed from its section with three grooves
- * round its tread, a five-spoke alloy rim with its lip and the barrel
- * behind, the brake disc and red caliper seen between the spokes, the
- * centre cap, and five hexagon lug nuts.
+ * A car wheel facing +z, standing on the floor: the shared road wheel with
+ * its brake behind the spokes, turned so one of its five nuts is at the top.
  */
 function Wheel() {
-  const tyre = useMemo(
-    () =>
-      new LatheGeometry(
-        Arr.map(TYRE_SECTION, ([radius, depth]) => new Vector2(radius, depth)),
-        96
-      ),
-    []
-  );
-  useEffect(() => () => tyre.dispose(), [tyre]);
-
   return (
     <group position={[0, HUB, 0]}>
+      <group rotation={[0, 0, -Math.PI / 5]}>
+        <WheelRotor />
+      </group>
+      <BrakeCaliper />
+    </group>
+  );
+}
+
+/** Drop-forged chrome-vanadium steel, satin on the forging and bright where it is machined. */
+function ChromeVanadium({ roughness }: { readonly roughness: number }) {
+  return (
+    <SurfaceMaterial
+      bump={0.2}
+      color={CAR_COLORS.chrome}
+      metalness={1}
+      repeat={[1, 6]}
+      roughness={roughness}
+      surface="brushed"
+    />
+  );
+}
+
+/**
+ * A breaker bar on the top nut: a deep six-point socket that reaches past the
+ * tyre's sidewall, the forged head it pivots in, the bar out to a grip of
+ * `arm` metres, and the ribbed handle the hand pushes on.
+ */
+function BreakerBar({ arm }: { readonly arm: number }) {
+  return (
+    <group position={[NUT[0], NUT[1], 0]}>
       <mesh
         castShadow
-        geometry={tyre}
-        receiveShadow
+        position={[0, 0, (NUT[2] + BAR) / 2 - 0.006]}
         rotation={[Math.PI / 2, 0, 0]}
       >
+        <cylinderGeometry args={[0.0165, 0.0175, BAR - NUT[2] + 0.012, 24]} />
+        <ChromeVanadium roughness={0.3} />
+      </mesh>
+      <mesh castShadow position={[0, 0, BAR]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.024, 0.024, 0.024, 32]} />
+        <ChromeVanadium roughness={0.22} />
+      </mesh>
+      <RoundedBox
+        args={[0.07, 0.03, 0.02]}
+        castShadow
+        position={[0.03, 0, BAR]}
+        radius={0.008}
+        smoothness={3}
+      >
+        <ChromeVanadium roughness={0.3} />
+      </RoundedBox>
+      <mesh
+        castShadow
+        position={[arm / 2 + 0.01, 0, BAR]}
+        rotation={[0, 0, Math.PI / 2]}
+      >
+        <cylinderGeometry args={[0.0075, 0.0095, arm - 0.1, 20]} />
+        <ChromeVanadium roughness={0.2} />
+      </mesh>
+      <mesh
+        castShadow
+        position={[arm + 0.005, 0, BAR]}
+        rotation={[0, 0, Math.PI / 2]}
+      >
+        <capsuleGeometry args={[0.0145, 0.11, 8, 20]} />
         <SurfaceMaterial
-          color={CAR_COLORS.tyre}
-          repeat={[24, 1]}
+          bump={1}
+          color={MACHINE_COLORS.gripRed}
+          repeat={[2, 6]}
           surface="rubber"
         />
       </mesh>
-      {Arr.map(GROOVES, (depth) => (
-        <mesh key={depth} position={[0, 0, depth]}>
-          <torusGeometry args={[0.3462, 0.0045, 6, 96]} />
-          <meshStandardMaterial color={ROAD_COLORS.skidRubber} roughness={1} />
+      {Arr.map(Arr.range(0, 5), (rib) => (
+        <mesh
+          key={rib}
+          position={[arm - 0.04 + rib * 0.018, 0, BAR]}
+          rotation={[0, Math.PI / 2, 0]}
+        >
+          <torusGeometry args={[0.0148, 0.0018, 6, 20]} />
+          <meshStandardMaterial color={CAR_COLORS.tyre} roughness={0.9} />
         </mesh>
       ))}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.212, 0.212, 0.17, 64, 1, true]} />
-        <SurfaceMaterial
-          color={CAR_COLORS.hub}
-          metalness={1}
-          roughness={0.6}
-          side={DoubleSide}
-          surface="brushed"
-        />
-      </mesh>
-      <mesh position={[0, 0, 0.068]}>
-        <torusGeometry args={[0.206, 0.012, 12, 96]} />
-        <SurfaceMaterial
-          color={CAR_COLORS.rimBright}
-          metalness={1}
-          roughness={0.35}
-          surface="brushed"
-        />
-      </mesh>
-      <Repeat placements={SPOKES}>
-        <boxGeometry args={[0.15, 0.034, 0.02]} />
-        <SurfaceMaterial
-          color={CAR_COLORS.rimBright}
-          metalness={1}
-          roughness={0.55}
-          surface="brushed"
-        />
-      </Repeat>
-      <mesh position={[0, 0, 0.066]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.075, 0.08, 0.025, 48]} />
-        <SurfaceMaterial
-          color={CAR_COLORS.rimBright}
-          metalness={1}
-          roughness={0.35}
-          surface="brushed"
-        />
-      </mesh>
-      <mesh position={[0, 0, 0.082]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.03, 0.032, 0.012, 32]} />
-        <SurfaceMaterial
-          color={CAR_COLORS.hub}
-          metalness={1}
-          roughness={0.4}
-          surface="brushed"
-        />
-      </mesh>
-      <mesh position={[0, 0, -0.01]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.165, 0.165, 0.022, 64]} />
-        <SurfaceMaterial
-          color={CAR_COLORS.castIron}
-          metalness={1}
-          roughness={0.55}
-          surface="brushed"
-        />
-      </mesh>
-      <RoundedBox
-        args={[0.09, 0.07, 0.05]}
-        position={[0.12, -0.08, 0.005]}
-        radius={0.01}
-        rotation={[0, 0, 0.6]}
-        smoothness={2}
-      >
-        <SurfaceMaterial color={CAR_COLORS.caliper} surface="paint" />
-      </RoundedBox>
-      <Repeat placements={LUGS}>
-        <cylinderGeometry args={[0.014, 0.014, 0.022, 6]} />
-        <SurfaceMaterial
-          color={CAR_COLORS.chrome}
-          metalness={1}
-          roughness={0.3}
-          surface="brushed"
-        />
-      </Repeat>
     </group>
   );
 }
@@ -204,8 +157,12 @@ function WrenchScene({
   readonly grip: Grip;
 }) {
   const turn = (angle * Math.PI) / 180;
-  const nut = [0, HUB + 0.1, 0.1] satisfies CoordinateTuple;
-  const hand = [nut[0] + grip.arm, nut[1], 0.13] satisfies CoordinateTuple;
+  const nut = NUT;
+  const hand = [
+    nut[0] + grip.arm,
+    nut[1],
+    BAR + 0.02,
+  ] satisfies CoordinateTuple;
   const parts = wrenchTorque(grip, angle);
   const force = [
     Math.cos(turn) * grip.force * FORCE_SCALE,
@@ -216,54 +173,10 @@ function WrenchScene({
   return (
     <group>
       <Wheel />
-      <mesh castShadow position={[nut[0], nut[1], 0.112]}>
-        <torusGeometry args={[0.026, 0.009, 12, 24]} />
-        <SurfaceMaterial
-          color={CAR_COLORS.chrome}
-          metalness={1}
-          roughness={0.25}
-          surface="brushed"
-        />
-      </mesh>
-      <mesh
-        castShadow
-        position={[nut[0], nut[1], 0.1]}
-        rotation={[Math.PI / 2, 0, 0]}
-      >
-        <cylinderGeometry args={[0.017, 0.017, 0.03, 6]} />
-        <SurfaceMaterial
-          color={CAR_COLORS.chrome}
-          metalness={1}
-          roughness={0.3}
-          surface="brushed"
-        />
-      </mesh>
-      <RoundedBox
-        args={[grip.arm + 0.1, 0.022, 0.012]}
-        castShadow
-        position={[nut[0] + grip.arm / 2 + 0.06, nut[1], 0.112]}
-        radius={0.005}
-        smoothness={3}
-      >
-        <SurfaceMaterial
-          color={CAR_COLORS.chrome}
-          metalness={1}
-          roughness={0.25}
-          surface="brushed"
-        />
-      </RoundedBox>
-      <RoundedBox
-        args={[0.13, 0.034, 0.026]}
-        castShadow
-        position={[nut[0] + grip.arm + 0.04, nut[1], 0.112]}
-        radius={0.012}
-        smoothness={3}
-      >
-        <SurfaceMaterial color={MACHINE_COLORS.gripRed} surface="rubber" />
-      </RoundedBox>
+      <BreakerBar arm={grip.arm} />
       <FixedArrow
         color={PLOT_COLORS.slate}
-        from={[nut[0], nut[1], 0.16]}
+        from={[nut[0], nut[1], BAR + 0.035]}
         head={0.03}
         thickness={0.004}
         vector={[grip.arm, 0, 0]}
@@ -277,14 +190,14 @@ function WrenchScene({
       />
       <FixedArrow
         color={PLOT_COLORS.teal}
-        from={[hand[0], hand[1], 0.14]}
+        from={[hand[0], hand[1], BAR + 0.03]}
         head={0.03}
         thickness={0.004}
         vector={[0, force[1], 0]}
       />
       <FixedArrow
         color={PLOT_COLORS.violet}
-        from={[nut[0], nut[1], 0.14]}
+        from={[nut[0], nut[1], BAR + 0.02]}
         head={0.04}
         thickness={0.007}
         vector={[0, 0, parts.torque * TORQUE_SCALE]}
@@ -292,14 +205,18 @@ function WrenchScene({
       <ThreeLabel
         color={PLOT_COLORS.slate}
         fontSize="reading"
-        position={[nut[0] + grip.arm / 2, nut[1] - 0.05, 0.16]}
+        position={[nut[0] + grip.arm / 2, nut[1] - 0.05, BAR + 0.035]}
       >
         <InlineMath math="\vec r" />
       </ThreeLabel>
       <ThreeLabel
         color={PLOT_COLORS.amber}
         fontSize="reading"
-        position={[hand[0] + force[0] * 1.15, hand[1] + force[1] * 1.15, 0.13]}
+        position={[
+          hand[0] + force[0] * 1.15,
+          hand[1] + force[1] * 1.15,
+          BAR + 0.02,
+        ]}
       >
         <InlineMath math="\vec F" />
       </ThreeLabel>
@@ -309,7 +226,7 @@ function WrenchScene({
         position={[
           nut[0] - 0.05,
           nut[1] + 0.04,
-          0.14 + parts.torque * TORQUE_SCALE,
+          BAR + 0.02 + parts.torque * TORQUE_SCALE,
         ]}
       >
         <InlineMath math="\vec\tau" />
@@ -342,6 +259,26 @@ interface WrenchTorqueLabProps {
  * force, r F sin θ along the nut's axis, largest square to the handle and
  * zero along it, and it flips direction when the force crosses the handle.
  */
+/**
+ * Frames the wheel and the bar. A narrow frame is as wide as it is tall, so
+ * its camera stands further back to keep the whole tyre in.
+ */
+function WrenchCamera() {
+  const narrow = isNarrowThreeScene(
+    useThree((state) => state.size),
+    1.2
+  );
+  return (
+    <CameraControls
+      cameraPosition={narrow ? [0.74, 0.95, 1.85] : [0.55, 0.75, 1.25]}
+      cameraTarget={[0.22, HUB + 0.08, 0.05]}
+      fov={36}
+      maxDistance={3.2}
+      minDistance={0.5}
+    />
+  );
+}
+
 export function WrenchTorqueLab({
   angle: start,
   arm,
@@ -380,13 +317,7 @@ export function WrenchTorqueLab({
       >
         <ScienceStage floor={0} reach={0.9} setting="studio">
           <Suspense fallback={null}>
-            <CameraControls
-              cameraPosition={[0.55, 0.75, 1.25]}
-              cameraTarget={[0.22, HUB + 0.08, 0.05]}
-              fov={36}
-              maxDistance={2.4}
-              minDistance={0.5}
-            />
+            <WrenchCamera />
             <WrenchScene angle={angle} grip={grip} />
           </Suspense>
         </ScienceStage>

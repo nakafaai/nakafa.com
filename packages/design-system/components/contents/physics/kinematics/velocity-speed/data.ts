@@ -14,9 +14,6 @@ import {
   Schema,
 } from "effect";
 
-export const VELOCITY_SPEED_CAR_MODEL_PATH =
-  "/models/physics/kinematics/poly-pizza-dodge-charger/dodge-charger.glb";
-
 export const VELOCITY_SPEED_CASE_IDS = [
   "forward",
   "partialReturn",
@@ -41,7 +38,7 @@ const MotionSegmentSchema = Schema.Struct({
 type MotionSegment = typeof MotionSegmentSchema.Type;
 
 export const VELOCITY_SPEED_SCENE = {
-  carScale: 0.36,
+  carScale: 0.62,
   laneLength: 94,
   laneWidth: 1.82,
   motionCenterRatio: 0,
