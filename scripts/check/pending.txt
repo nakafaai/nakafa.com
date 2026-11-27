@@ -22,7 +22,6 @@ packages/design-system/components/contents/biology/fertilisation
 packages/design-system/components/contents/biology/flower
 packages/design-system/components/contents/biology/fruit
 packages/design-system/components/contents/biology/glucose
-packages/design-system/components/contents/biology/growth
 packages/design-system/components/contents/biology/heart
 packages/design-system/components/contents/biology/hormone
 packages/design-system/components/contents/biology/implantation
@@ -66,7 +65,6 @@ packages/design-system/components/contents/biology/skin
 packages/design-system/components/contents/biology/spill
 packages/design-system/components/contents/biology/stomata
 packages/design-system/components/contents/biology/succession
-packages/design-system/components/contents/biology/sugar
 packages/design-system/components/contents/biology/synapse
 packages/design-system/components/contents/biology/taxon
 packages/design-system/components/contents/biology/thorax
@@ -135,7 +133,6 @@ packages/design-system/components/contents/chemistry/subatomic-particles
 packages/design-system/components/contents/chemistry/subatomic-particles-properties
 packages/design-system/components/contents/chemistry/titration
 packages/design-system/components/contents/chemistry/tracks
-packages/design-system/components/contents/chemistry/voltaic
 packages/design-system/components/contents/mathematics
 packages/design-system/components/contents/mathematics/abacus
 packages/design-system/components/contents/mathematics/argument
@@ -193,7 +190,12 @@ packages/design-system/components/contents/physics/kinematics/instantaneous-velo
 packages/design-system/components/contents/physics/kinematics/non-uniform-linear-motion
 packages/design-system/components/contents/physics/kinematics/parabolic-movement
 packages/design-system/components/contents/physics/kinematics/parabolic-movement-analysis
+packages/design-system/components/contents/physics/kinematics/rain
+packages/design-system/components/contents/physics/kinematics/river
+packages/design-system/components/contents/physics/kinematics/secant
+packages/design-system/components/contents/physics/kinematics/sling
 packages/design-system/components/contents/physics/kinematics/stopping-distance
+packages/design-system/components/contents/physics/kinematics/trap
 packages/design-system/components/contents/physics/kinematics/uniform-linear-motion
 packages/design-system/components/contents/physics/kinematics/vacuum
 packages/design-system/components/contents/physics/kinematics/velocity-speed
@@ -213,7 +215,6 @@ packages/design-system/components/contents/physics/planck
 packages/design-system/components/contents/physics/rectifier
 packages/design-system/components/contents/physics/renewable-energy/geothermal
 packages/design-system/components/contents/physics/renewable-energy/pendulum
-packages/design-system/components/contents/physics/renewable-energy/wind-conversion
 packages/design-system/components/contents/physics/renewable-energy/world
 packages/design-system/components/contents/physics/solid
 packages/design-system/components/contents/physics/thermodynamics/gas-process
