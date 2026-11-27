@@ -12,9 +12,7 @@ describe("packOf", () => {
     expect(
       Arr.filter(calcium, (nucleon) => nucleon.kind === "proton")
     ).toHaveLength(20);
-    expect(packOf(1, 0)).toEqual([
-      { at: expect.any(Array), kind: "proton" },
-    ]);
+    expect(packOf(1, 0)).toEqual([{ at: expect.any(Array), kind: "proton" }]);
     expect(packOf(0, 1)[0]?.kind).toBe("neutron");
   });
 
@@ -35,7 +33,11 @@ describe("packOf", () => {
 
   it("is a ball about the origin whose radius grows with the cube root of the mass", () => {
     const uranium = packOf(92, 146);
-    const middle = Arr.reduce(uranium, 0, (sum, nucleon) => sum + nucleon.at[0]);
+    const middle = Arr.reduce(
+      uranium,
+      0,
+      (sum, nucleon) => sum + nucleon.at[0]
+    );
     expect(Math.abs(middle / uranium.length)).toBeLessThan(0.1);
     const ratio = (reachOf(uranium) - 1) / (reachOf(packOf(13, 14)) - 1);
     expect(ratio).toBeGreaterThan(1.7);

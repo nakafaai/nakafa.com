@@ -10,9 +10,9 @@ import {
 import { facetsOf } from "@repo/design-system/components/three/molecule/ball";
 import { useStage } from "@repo/design-system/components/three/stage/context";
 import { PARTICLE_COLORS } from "@repo/design-system/lib/material/particle";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import type { RefObject } from "react";
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { createContext, use, useLayoutEffect, useMemo, useRef } from "react";
 import type { BufferAttribute, Points } from "three";
 import { AdditiveBlending, Color } from "three";
 
@@ -28,6 +28,9 @@ const HAZE = 3.4;
 
 /** How far past the bloom threshold an electron and a valence path shine. */
 const SHINE = 3.2;
+
+/** The model's time in seconds, which its electrons read each frame; zero outside a model. */
+const Clock = createContext<RefObject<number>>({ current: 0 });
 
 /**
  * The shells of a Bohr model as light: each orbit a thin luminous path in
@@ -47,9 +50,10 @@ export function BohrShells({
   readonly orbits: readonly Orbit[];
   readonly valence: number;
 }) {
-  const unit = Arr.head(orbits).pipe((first) =>
-    first._tag === "Some" ? first.value.radius : 1
-  );
+  const unit = Option.match(Arr.head(orbits), {
+    onNone: () => 1,
+    onSome: (first) => first.radius,
+  });
   const glow = useGlow();
   const outer = Arr.reduce(orbits, unit, (far, orbit) =>
     Math.max(far, orbit.radius)
@@ -75,16 +79,17 @@ export function BohrShells({
           warm={index === valence}
         />
       ))}
-      <Electrons
-        clock={clock}
-        key={Arr.join(
-          Arr.map(orbits, (orbit) => orbit.electrons),
-          "-"
-        )}
-        orbits={orbits}
-        unit={unit}
-        valence={valence}
-      />
+      <Clock value={clock}>
+        <Electrons
+          key={Arr.join(
+            Arr.map(orbits, (orbit) => orbit.electrons),
+            "-"
+          )}
+          orbits={orbits}
+          unit={unit}
+          valence={valence}
+        />
+      </Clock>
     </group>
   );
 }
@@ -102,14 +107,17 @@ function Path({
   const { tier } = useStage();
   const sides = facetsOf(tier).sides * 5;
   const color = warm ? PARTICLE_COLORS.valenceShell : PARTICLE_COLORS.shell;
+  const line = useMemo(
+    () => new Color(color).multiplyScalar(warm ? SHINE : 1.4),
+    [color, warm]
+  );
   return (
     <group rotation={[Math.PI / 2, 0, 0]}>
       <mesh>
-        <torusGeometry args={[radius, unit * LINE * (warm ? 1.6 : 1), 8, sides]} />
-        <meshBasicMaterial
-          color={new Color(color).multiplyScalar(warm ? SHINE : 1.4)}
-          toneMapped={false}
+        <torusGeometry
+          args={[radius, unit * LINE * (warm ? 1.6 : 1), 8, sides]}
         />
+        <meshBasicMaterial color={line} toneMapped={false} />
       </mesh>
       <mesh scale={[1, 1, 0.2]}>
         <torusGeometry args={[radius, unit * HALO, 8, sides]} />
@@ -128,17 +136,16 @@ function Path({
 
 /** Every electron and its trail as one cloud of glowing points. */
 function Electrons({
-  clock,
   orbits,
   unit,
   valence,
 }: {
-  readonly clock: RefObject<number>;
   readonly orbits: readonly Orbit[];
   readonly unit: number;
   readonly valence: number;
 }) {
   const glow = useGlow();
+  const clock = use(Clock);
   const points = useRef<Points>(null);
   const place = useRef<BufferAttribute>(null);
   const { colors, places } = useMemo(() => {
@@ -147,7 +154,8 @@ function Electrons({
     const tone = new Color();
     let point = 0;
     Arr.forEach(orbits, (orbit, index) => {
-      const base = index === valence ? PARTICLE_COLORS.valence : PARTICLE_COLORS.electron;
+      const base =
+        index === valence ? PARTICLE_COLORS.valence : PARTICLE_COLORS.electron;
       for (let step = 0; step < orbit.electrons * TRAIL; step += 1) {
         tone.set(base).multiplyScalar(Number(fades[point]) * SHINE);
         tones[point * 3] = tone.r;
@@ -182,7 +190,11 @@ function Electrons({
   return (
     <points frustumCulled={false} ref={points}>
       <bufferGeometry>
-        <bufferAttribute args={[places, 3]} attach="attributes-position" ref={place} />
+        <bufferAttribute
+          args={[places, 3]}
+          attach="attributes-position"
+          ref={place}
+        />
         <bufferAttribute args={[colors, 3]} attach="attributes-color" />
       </bufferGeometry>
       <pointsMaterial
@@ -191,7 +203,6 @@ function Electrons({
         depthWrite={false}
         map={glow}
         size={unit * SPARK}
-        sizeAttenuation
         toneMapped={false}
         transparent
         vertexColors

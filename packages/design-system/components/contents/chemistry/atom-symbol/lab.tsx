@@ -7,6 +7,8 @@ import {
 } from "@repo/design-system/components/contents/chemistry/atom-symbol/data";
 import { NuclideScene } from "@repo/design-system/components/contents/chemistry/isotope/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -19,8 +21,6 @@ import {
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
-import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";

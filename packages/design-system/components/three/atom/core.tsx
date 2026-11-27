@@ -73,7 +73,9 @@ export function AtomNucleus({
       target.setColorAt(
         index,
         color.set(
-          packed.kind === "proton" ? PARTICLE_COLORS.proton : PARTICLE_COLORS.neutron
+          packed.kind === "proton"
+            ? PARTICLE_COLORS.proton
+            : PARTICLE_COLORS.neutron
         )
       );
     });
