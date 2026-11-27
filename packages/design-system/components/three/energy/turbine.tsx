@@ -332,7 +332,7 @@ function Rotor({ rate }: { readonly rate: number }) {
 const ENVELOPE = {
   x: { max: 1, min: -1 },
   y: { max: ROTOR.hub + 1, min: 0 },
-  z: { max: 0.35, min: -0.35 },
+  z: { max: 0.22, min: -0.3 },
 } as const;
 
 export function Turbine({
