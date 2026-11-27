@@ -29,7 +29,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { Array as Arr } from "effect";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
 /** The one water molecule a glycosidic bond gives up or takes. */
@@ -85,37 +85,40 @@ export function PairScene({
   const end = reaction === "condensation" ? 1 : 0;
   const [bonded, setBonded] = useState(end === 1);
 
-  const show = (phase: number) => {
-    const stage = stageOf(phase);
-    const shift = (stage.apart * GAP) / 2;
-    joined.current?.position.set(0, 0, 0);
-    first.current?.position.set(-shift, 0, 0);
-    second.current?.position.set(shift, 0, 0);
-    firstMark.current?.position.set(-shift * layout.size, 0, 0);
-    secondMark.current?.position.set(shift * layout.size, 0, 0);
-    water.current?.position.set(
-      layout.bridge[0] + (layout.rest[0] - layout.bridge[0]) * stage.drift,
-      layout.bridge[1] + (layout.rest[1] - layout.bridge[1]) * stage.drift,
-      layout.bridge[2] + (layout.rest[2] - layout.bridge[2]) * stage.drift
-    );
-    setBonded(stage.bonded);
-    Arr.forEach([joined, water], (part) => {
-      if (part.current !== null) {
-        part.current.visible = stage.bonded;
-      }
-    });
-    Arr.forEach([first, second], (part) => {
-      if (part.current !== null) {
-        part.current.visible = !stage.bonded;
-      }
-    });
-    invalidate();
-  };
+  const show = useCallback(
+    (phase: number) => {
+      const stage = stageOf(phase);
+      const shift = (stage.apart * GAP) / 2;
+      joined.current?.position.set(0, 0, 0);
+      first.current?.position.set(-shift, 0, 0);
+      second.current?.position.set(shift, 0, 0);
+      firstMark.current?.position.set(-shift * layout.size, 0, 0);
+      secondMark.current?.position.set(shift * layout.size, 0, 0);
+      water.current?.position.set(
+        layout.bridge[0] + (layout.rest[0] - layout.bridge[0]) * stage.drift,
+        layout.bridge[1] + (layout.rest[1] - layout.bridge[1]) * stage.drift,
+        layout.bridge[2] + (layout.rest[2] - layout.bridge[2]) * stage.drift
+      );
+      setBonded(stage.bonded);
+      Arr.forEach([joined, water], (part) => {
+        if (part.current !== null) {
+          part.current.visible = stage.bonded;
+        }
+      });
+      Arr.forEach([first, second], (part) => {
+        if (part.current !== null) {
+          part.current.visible = !stage.bonded;
+        }
+      });
+      invalidate();
+    },
+    [invalidate, layout]
+  );
 
   useLayoutEffect(() => {
     clock.current = 0;
     show(end);
-  });
+  }, [end, show]);
 
   useVisualStop(() => {
     clock.current = 0;
