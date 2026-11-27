@@ -22,7 +22,7 @@ import type { Molecule } from "@repo/design-system/components/three/molecule/sha
 import { Array as Arr, Option, Schema } from "effect";
 
 /** The sugar units a carbohydrate of the lessons is built from. */
-export const UnitSchema = Schema.Literals(["fructose", "galactose", "glucose"]);
+const UnitSchema = Schema.Literals(["fructose", "galactose", "glucose"]);
 export type Unit = typeof UnitSchema.Type;
 
 /** Which way the hydroxyl of a sugar's anomeric carbon points: alpha below the ring of a D sugar, beta above. */
@@ -43,7 +43,7 @@ type Host = typeof HostSchema.Type;
  * next ring atom down (carbon 3 at oxygen 4, carbon 5 at oxygen 6, the ring
  * oxygen at a fructose's oxygen 2).
  */
-export const JoinSchema = Schema.Struct({
+const JoinSchema = Schema.Struct({
   anomer: AnomerSchema,
   host: Schema.Finite,
   oxygen: HostSchema,
@@ -68,6 +68,13 @@ const PUCKER = 0.22;
 
 /** The share of a furanose substituent's bond that points out of the ring, and up or down from it. */
 const LEAN = [0.55, 0.835] as const;
+
+/** A glycosidic bond as the two atoms it joins, by their places in the molecule. */
+const BridgeSchema = Schema.Struct({
+  from: Schema.Finite,
+  to: Schema.Finite,
+});
+type Bridge = typeof BridgeSchema.Type;
 
 /** The names of the carbons a ring can hold. */
 const RING = /^C[1-5]$/u;
@@ -290,7 +297,7 @@ function joined(residues: readonly Residue[], join: Join): Residue {
 /** The atoms and bonds of residues as one molecule with every hydrogen, the atoms of residue `n` as part `first + n`. */
 function builtOf(
   residues: readonly Residue[],
-  bridges: readonly Readonly<{ from: number; to: number }>[],
+  bridges: readonly Bridge[],
   first: number
 ): Molecule {
   return saturate({

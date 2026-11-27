@@ -146,7 +146,7 @@ export function joinsOf(
   }
   return Arr.reduce(
     Arr.range(1, count - 1),
-    { before: 0, joins: [] as readonly Join[], tip: 0 },
+    { before: 0, joins: Arr.empty<Join>(), tip: 0 },
     (grown, index) => {
       if (index > 2 && index % 4 === 0) {
         return {
