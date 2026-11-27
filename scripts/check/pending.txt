@@ -135,7 +135,6 @@ packages/design-system/components/contents/chemistry/subatomic-particles
 packages/design-system/components/contents/chemistry/subatomic-particles-properties
 packages/design-system/components/contents/chemistry/titration
 packages/design-system/components/contents/chemistry/tracks
-packages/design-system/components/contents/chemistry/transfer
 packages/design-system/components/contents/chemistry/voltaic
 packages/design-system/components/contents/mathematics
 packages/design-system/components/contents/mathematics/abacus
