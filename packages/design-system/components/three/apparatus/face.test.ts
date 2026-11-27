@@ -4,12 +4,8 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   cardOf,
   displayOf,
-  KNOB,
-  knobOf,
   needleOf,
-  PANEL,
   PIVOT,
-  panelOf,
   WINDOW,
 } from "@repo/design-system/components/three/apparatus/face";
 import { Array as Arr, Option } from "effect";
@@ -77,32 +73,5 @@ describe("the display of a digital meter", () => {
 
   it("is blank while it reads nothing", () => {
     expect(displayOf(undefined, "V", inks).marks).toEqual([]);
-  });
-});
-
-describe("the front panel of a power pack", () => {
-  const panel = panelOf(inks, plain);
-  const texts = Arr.filter(panel.marks, (mark) => mark.kind === "text");
-
-  it("names the pack, what it supplies and its switch", () => {
-    expect(Arr.map(texts, (mark) => mark.text)).toEqual([
-      "0 - 12 V",
-      "DC POWER SUPPLY",
-      "12 V  5 A MAX",
-      "POWER",
-    ]);
-    expect(panel.width).toBe(PANEL.width);
-  });
-
-  it("prints a tick at every 2 V about the knob", () => {
-    const ticks = Arr.filter(panel.marks, (mark) => mark.kind === "line");
-    expect(ticks).toHaveLength(7);
-    expect(ticks[3]?.to[0]).toBeCloseTo(KNOB.at[0]);
-  });
-
-  it("turns the knob with the voltage, upright at half its range", () => {
-    expect(knobOf(6)).toBeCloseTo(0);
-    expect(knobOf(0)).toBeCloseTo(Math.PI * 0.75);
-    expect(knobOf(12)).toBeCloseTo(-Math.PI * 0.75);
   });
 });

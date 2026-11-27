@@ -39,9 +39,9 @@ export const LABWARE_COLORS = {
   leadRed: "#b8322c",
   // The needle of a moving-coil meter, a blackened aluminium blade.
   needle: "#141414",
-  // The light grey stove enamel of a power pack's steel case and its dark panel.
-  packCase: "#b9bdb9",
-  packPanel: "#22262b",
+  // The printed paper jacket of a lantern battery and its black moulded top.
+  jacket: "#1d3f8f",
+  jacketTop: "#141517",
   // The white PTFE of a burette's stopcock key.
   ptfe: "#f1f0ea",
   // The pale agar jelly of a salt bridge and the cotton wool that plugs it.

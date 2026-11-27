@@ -46,7 +46,7 @@ import type { Group } from "three";
 /**
  * What the camera frames, in scene units: the upright face of the row of
  * cells, from what is written under them to the top of the leads over them, wider for every
- * cell in the row. The power pack stands behind that face and inside it as
+ * cell in the row. The battery stands behind that face and inside it as
  * the camera sees it.
  */
 function frameOf(count: number) {
@@ -107,7 +107,7 @@ export function ElectrolysisScene({
   return (
     <ElectrolysisSceneContext value={{ colors, labels, showProducts }}>
       <CameraBounds exclude>
-        <LabBench width={3} />
+        <LabBench shelf={false} width={3} />
       </CameraBounds>
       <group position={[0, 0, 0.14]} scale={BENCH}>
         <CameraBounds bounds={frameOf(cells.length)}>

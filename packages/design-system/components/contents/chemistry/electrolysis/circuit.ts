@@ -16,10 +16,10 @@ export const ELECTRODE_TOP = 1.07;
 /** How far apart neighbouring cells stand, middle to middle, in scene units. */
 const CELL_SPACING = 1.6;
 
-/** How far a lead's middle stands above its ends, in metres: to the power pack, and from cell to cell. */
+/** How far a lead's middle stands above its ends, in metres: to the battery, and from cell to cell. */
 const LIFT = { link: 0.02, pack: 0.05 } as const;
 
-/** The x of each cell's middle, the row centred on the power pack, in scene units. */
+/** The x of each cell's middle, the row centred on the battery, in scene units. */
 export function cellCentres(count: number) {
   return Arr.makeBy(count, (index) => centreOf(index, count));
 }
@@ -27,12 +27,12 @@ export function cellCentres(count: number) {
 /**
  * The leads of a circuit of cells in series, in metres, each written in the
  * direction electrons travel along it: out of the first anode's clip to the
- * power pack's positive post, from each anode across to the cathode of the
+ * battery's positive terminal, from each anode across to the cathode of the
  * cell before it, and from the negative post into the last cathode's clip.
  * Each cell's anode is its left electrode.
  *
  * @param count - How many cells stand in the row
- * @param posts - Where the power pack's positive and negative posts are, in metres
+ * @param posts - Where the battery's positive and negative terminals are, in metres
  */
 export function circuitLeads(
   count: number,

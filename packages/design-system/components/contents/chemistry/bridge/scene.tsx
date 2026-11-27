@@ -48,6 +48,16 @@ const BRIDGE_TRACK = trackOf(SALT_BRIDGE);
 const LEFT_TRACK = trackOf(LEFT_LEAD);
 const RIGHT_TRACK = trackOf(RIGHT_LEAD);
 
+/** Where the electron wire's label stands: at the middle of the lead from the voltmeter to the cathode. */
+const WIRE = pointOn(RIGHT_TRACK, 0.5);
+
+/** How far in front of a beaker's axis its tile's front edge is, and its glass's front, in metres. */
+const TILE_FRONT = 0.063;
+const GLASS_FRONT = 0.043;
+
+/** How far in front of the voltmeter's middle its plinth's front edge is, in metres. */
+const METER_FRONT = 0.072;
+
 /**
  * What the camera frames, in metres: the upright face of the cell, from
  * tile to tile and from the bench to the names over its leads. The voltmeter
@@ -192,7 +202,7 @@ export function SaltBridgeScene({
       <SimulationTicker running={playing} />
       <BridgeCamera />
       <CameraBounds exclude>
-        <LabBench width={2.8} />
+        <LabBench shelf={false} width={2.8} />
       </CameraBounds>
 
       <CameraBounds bounds={FRAME}>
@@ -279,42 +289,33 @@ export function SaltBridgeScene({
           );
         })}
 
-        {/* Adaptive labels */}
+        {/* Each label stands at the part it names */}
         <ThreeLabel
+          anchorY="top"
           color={labelInk}
           {...BENCH_LABEL}
-          position={[0.16, 0.02, METER_Z + 0.09]}
-        >
-          <span>
-            {parts.voltmeter}
-            <br />
-            {spec.emfVolts.toFixed(2)} V
-          </span>
-        </ThreeLabel>
-        <ThreeLabel
-          color={labelInk}
-          {...BENCH_LABEL}
-          position={[0, 0.265, 0.1]}
-        >
-          <span>{parts.electronWire}</span>
-        </ThreeLabel>
-        <ThreeLabel
-          color={labelInk}
-          {...BENCH_LABEL}
-          position={[-0.2, 0.265, BEAKER_Z]}
+          position={[LEFT_BEAKER_X, 0, BEAKER_Z + TILE_FRONT]}
         >
           <span>
             {parts.anode} ({spec.anodeSymbol})
           </span>
         </ThreeLabel>
         <ThreeLabel
+          anchorY="top"
           color={labelInk}
           {...BENCH_LABEL}
-          position={[0.2, 0.265, BEAKER_Z]}
+          position={[RIGHT_BEAKER_X, 0, BEAKER_Z + TILE_FRONT]}
         >
           <span>
             {parts.cathode} ({spec.cathodeSymbol})
           </span>
+        </ThreeLabel>
+        <ThreeLabel
+          color={labelInk}
+          {...BENCH_LABEL}
+          position={[LEFT_BEAKER_X, 0.03, BEAKER_Z + GLASS_FRONT]}
+        >
+          <span>{parts.electrolyte}</span>
         </ThreeLabel>
         <ThreeLabel
           color={labelInk}
@@ -324,11 +325,23 @@ export function SaltBridgeScene({
           <span>{parts.saltBridge}</span>
         </ThreeLabel>
         <ThreeLabel
+          anchorX="left"
           color={labelInk}
           {...BENCH_LABEL}
-          position={[-0.16, 0.02, METER_Z + 0.09]}
+          gap={0.006}
+          position={WIRE}
         >
-          <span>{parts.electrolyte}</span>
+          <span>{parts.electronWire}</span>
+        </ThreeLabel>
+        <ThreeLabel
+          anchorY="top"
+          color={labelInk}
+          {...BENCH_LABEL}
+          position={[0, 0, METER_Z + METER_FRONT]}
+        >
+          <span>
+            {parts.voltmeter} {spec.emfVolts.toFixed(2)} V
+          </span>
         </ThreeLabel>
       </CameraBounds>
     </group>

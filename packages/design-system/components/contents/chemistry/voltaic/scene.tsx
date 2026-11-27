@@ -132,7 +132,7 @@ export function ChemicalCellScene({
   return (
     <group>
       <CameraBounds exclude>
-        <LabBench width={3} />
+        <LabBench shelf={false} width={3} />
       </CameraBounds>
       <group position={[0, 0, -0.02]}>
         <CameraBounds bounds={FRAME}>

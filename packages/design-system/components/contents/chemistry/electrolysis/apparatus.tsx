@@ -11,19 +11,20 @@ import {
   BENCH_LABEL_OUTLINE,
 } from "@repo/design-system/components/contents/chemistry/label";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { LanternBattery } from "@repo/design-system/components/three/apparatus/battery";
 import { Bubble } from "@repo/design-system/components/three/apparatus/bubble";
 import {
   boreAt,
   levelOf,
 } from "@repo/design-system/components/three/apparatus/glass";
+import {
+  LANTERN,
+  LANTERN_POSTS,
+} from "@repo/design-system/components/three/apparatus/lantern";
 import { Lead } from "@repo/design-system/components/three/apparatus/lead";
 import { Mote } from "@repo/design-system/components/three/apparatus/mote";
 import type { Lead as LeadAsk } from "@repo/design-system/components/three/apparatus/route";
 import { routeOf } from "@repo/design-system/components/three/apparatus/route";
-import {
-  SUPPLY_POSTS,
-  Supply,
-} from "@repo/design-system/components/three/apparatus/supply";
 import { Vessel } from "@repo/design-system/components/three/apparatus/vessel";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import {
@@ -61,14 +62,14 @@ const ELECTRON_SPEED = 0.16;
 /** The bubbles a gas electrode gives off: how many, and each one's size, in scene units. */
 const BUBBLES = Arr.makeBy(10, (index) => 0.009 + ((index * 7) % 5) * 0.0022);
 
-/** How far behind the cells the power pack stands, and the voltage it is set to. */
+/** How far behind the cells the battery stands, and its voltage. */
 const PACK_BACK = 0.17;
 const PACK_VOLTS = 6;
 
-/** Where the power pack's positive and negative posts are, in metres from the middle of the row of cells. */
+/** Where the battery's positive and negative terminals are, in metres from the middle of the row of cells. */
 const POSTS = [
-  [SUPPLY_POSTS[0][0], SUPPLY_POSTS[0][1], SUPPLY_POSTS[0][2] - PACK_BACK],
-  [SUPPLY_POSTS[1][0], SUPPLY_POSTS[1][1], SUPPLY_POSTS[1][2] - PACK_BACK],
+  [LANTERN_POSTS[0][0], LANTERN_POSTS[0][1], LANTERN_POSTS[0][2] - PACK_BACK],
+  [LANTERN_POSTS[1][0], LANTERN_POSTS[1][1], LANTERN_POSTS[1][2] - PACK_BACK],
 ] as const;
 
 /**
@@ -197,9 +198,9 @@ export function Bubbles({ color }: { readonly color: string }) {
 }
 
 /**
- * The low-voltage DC power pack a school lab runs electrolysis from,
- * standing on the bench behind the cells, with the signs of its two posts
- * and its name beside it.
+ * The 6 V lantern battery a school lab runs electrolysis from, standing on
+ * the bench behind the cells, with the signs of its two terminals and its
+ * name at its foot, clear of the leads.
  */
 export function Battery({
   colors,
@@ -212,7 +213,7 @@ export function Battery({
     <group>
       <group scale={1 / BENCH}>
         <group position={[0, 0, -PACK_BACK]}>
-          <Supply volts={PACK_VOLTS} />
+          <LanternBattery volts={PACK_VOLTS} />
         </group>
         <ThreeLabel
           color={colors.text}
@@ -235,9 +236,10 @@ export function Battery({
         <ThreeLabel
           color={colors.text}
           {...BENCH_LABEL}
+          anchorY="top"
           outlineColor={colors.halo}
           outlineWidth={BENCH_LABEL_OUTLINE}
-          position={[0, POSTS[0][1] + 0.085, -PACK_BACK]}
+          position={[0, 0, LANTERN.width / 2 + 0.004 - PACK_BACK]}
         >
           {label}
         </ThreeLabel>
@@ -247,7 +249,7 @@ export function Battery({
 }
 
 /**
- * The leads of the cells in series, red to the power pack's positive post
+ * The leads of the cells in series, red to the battery's positive terminal
  * and black for the rest, each with the electrons moving along it.
  */
 export function Circuit({

@@ -13,12 +13,12 @@ const posts = [
 const top = ELECTRODE_TOP * BENCH;
 
 describe("electrolysis circuit", () => {
-  it("centres one cell under the power pack and spreads two either side", () => {
+  it("centres one cell under the battery and spreads two either side", () => {
     expect(cellCentres(1)).toEqual([0]);
     expect(cellCentres(2)).toEqual([-0.8, 0.8]);
   });
 
-  it("runs one cell's leads from its anode's clip to the positive post and from the negative post to its cathode's clip", () => {
+  it("runs one cell's leads from its anode's clip to the positive terminal and from the negative terminal to its cathode's clip", () => {
     const leads = circuitLeads(1, posts);
 
     expect(leads).toHaveLength(2);
