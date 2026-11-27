@@ -1,6 +1,5 @@
 import type { PollinationMode } from "@repo/design-system/components/contents/biology/flower/model";
 import { FlowerAnatomyScene } from "@repo/design-system/components/contents/biology/flower/scene";
-import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
@@ -72,13 +71,12 @@ export function FlowerAnatomyLab({
   const copy = labels.modes[active];
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setSelected(modes[0]);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
-      <ViewReset
-        onReset={() => {
-          setSelected(modes[0]);
-        }}
-      />
 
       {modes.length > 1 ? (
         <VisualCardToolbar>

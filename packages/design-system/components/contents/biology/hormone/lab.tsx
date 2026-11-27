@@ -1,6 +1,5 @@
 import type { PhytohormoneId } from "@repo/design-system/components/contents/biology/hormone/model";
 import { PhytohormoneScene } from "@repo/design-system/components/contents/biology/hormone/scene";
-import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
@@ -70,13 +69,12 @@ export function PhytohormoneActionLab({
   );
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setSelected(hormones[0]);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
-      <ViewReset
-        onReset={() => {
-          setSelected(hormones[0]);
-        }}
-      />
 
       {hormones.length > 1 ? (
         <VisualCardToolbar>

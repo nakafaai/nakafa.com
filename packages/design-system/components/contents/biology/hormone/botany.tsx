@@ -1,229 +1,200 @@
-import { leafBlade } from "@repo/design-system/components/contents/biology/flora";
-import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
-import { Array as Arr } from "effect";
-import { useEffect, useMemo } from "react";
 import {
-  CatmullRomCurve3,
-  Color,
-  LatheGeometry,
-  TubeGeometry,
-  Vector2,
-  Vector3,
-} from "three";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+  buildLaminaGeometry,
+  buildRibbedFruitGeometry,
+  buildStemGeometry,
+} from "@repo/design-system/components/contents/biology/botanical";
+import { useEffect, useMemo } from "react";
+import { Vector3 } from "three";
 
-/** Sculpted terracotta pot, organic curved stem, veined botanical leaves, calyx, and apical shoot buds. */
-export function useHormoneBotanyGeometries(
-  stemHeight: number,
-  yellowLeaf: boolean
-) {
+/**
+ * Builds sculpted photorealistic botanical plant geometries for the
+ * Phytohormone Action Lab: fibrous tapered herbaceous stem with anatomical
+ * swollen leaf nodes, serrated cupped foliage blades with curved petioles,
+ * overlapping scaly apical bud crown, lateral axillary shoot sprig, curved
+ * pedicel, ribbed heirloom tomato fruit, and 5-pointed curling star calyx.
+ */
+export function useHormoneBotanyGeometries(stemHeight: number) {
   const staticGeos = useMemo(() => {
-    // Authentic rolled-lip terracotta planter pot.
-    const potPts = [
-      new Vector2(0.002, 0),
-      new Vector2(0.24, 0),
-      new Vector2(0.29, 0.22),
-      new Vector2(0.32, 0.24),
-      new Vector2(0.32, 0.285),
-      new Vector2(0.285, 0.285),
-      new Vector2(0.275, 0.23),
-      new Vector2(0.002, 0.22),
-    ];
-    const pot = new LatheGeometry(potPts, 32);
-
-    // Sculpted glossy tomato / fleshy berry fruit with gentle ribbed botanical shoulder.
-    const fruitPts = Arr.map(Arr.range(0, 18), (s) => {
-      const t = s / 18;
-      const y = (t - 0.5) * 0.2;
-      const r = Math.max(
-        0.003,
-        Math.sin(t * Math.PI) ** 0.72 *
-          0.118 *
-          (1 + 0.08 * Math.sin(t * Math.PI * 2))
-      );
-      return new Vector2(r, y);
+    // Ribbed heirloom tomato fruit with gentle 6-carpel lobing & dimpled shoulder.
+    const fruit = buildRibbedFruitGeometry({
+      height: 0.21,
+      radialSegments: 36,
+      radius: 0.132,
+      ribDepth: 0.075,
+      ribs: 6,
+      rows: 22,
     });
-    const fruit = new LatheGeometry(fruitPts, 28);
 
-    // 5-pointed green star calyx crowning the fruit.
-    const calyxBase = new Color(BOTANY_COLORS.sepalGreen);
-    const calyxTip = new Color(BOTANY_COLORS.healthyLeaf);
-    const calyx = mergeGeometries(
-      Arr.makeBy(5, (i) =>
-        leafBlade(
-          new Vector3(0, 0.095, 0),
-          (i / 5) * Math.PI * 2,
-          0.02,
-          0.075,
-          0.022,
-          -0.02,
-          4,
-          calyxBase,
-          calyxTip
-        )
-      )
-    );
+    // Individual curling green calyx sepal forming the 5-pointed fruit star.
+    const calyxSepal = buildLaminaGeometry({
+      baseTaper: 0.45,
+      cols: 8,
+      cup: 0.012,
+      droop: 0.032,
+      length: 0.1,
+      midribCrease: 0.005,
+      notchDepth: 0,
+      rows: 10,
+      ruffleAmp: 0.003,
+      ruffleFreq: 2,
+      serrationAmp: 0,
+      serrationTeeth: 0,
+      tipPower: 0.85,
+      width: 0.036,
+    });
 
-    // Unfurling young apical shoot bud leaves cupping the apical meristem.
-    const budLeaves = mergeGeometries(
-      Arr.makeBy(4, (i) =>
-        leafBlade(
-          new Vector3(0, -0.02, 0),
-          (i / 4) * Math.PI * 2 + 0.5,
-          0.16,
-          0.14,
-          0.06,
-          0.03,
-          6,
-          new Color(BOTANY_COLORS.sepalGreen),
-          new Color(BOTANY_COLORS.windGreen)
-        )
-      )
-    );
+    // Pointed cupped overlapping imbricate bud scale for the scaly apical crown.
+    const budScale = buildLaminaGeometry({
+      baseTaper: 0.3,
+      cols: 10,
+      cup: 0.032,
+      droop: -0.025,
+      length: 0.115,
+      midribCrease: 0.008,
+      notchDepth: 0,
+      rows: 12,
+      ruffleAmp: 0.002,
+      ruffleFreq: 2,
+      serrationAmp: 0,
+      serrationTeeth: 0,
+      tipPower: 0.84,
+      width: 0.056,
+    });
 
-    // Sculpted lateral axillary shoot sprig.
-    const lateralSprig = mergeGeometries([
-      leafBlade(
+    // Unfurling young folded leaf primordium arching out from the apical crown.
+    const primordium = buildLaminaGeometry({
+      baseTaper: 0.28,
+      cols: 10,
+      cup: 0.036,
+      droop: 0.028,
+      length: 0.165,
+      midribCrease: 0.012,
+      notchDepth: 0,
+      rows: 14,
+      ruffleAmp: 0.004,
+      ruffleFreq: 3,
+      serrationAmp: 0.06,
+      serrationTeeth: 5,
+      tipPower: 0.78,
+      width: 0.078,
+    });
+
+    // Serrated cupped veined botanical leaf blade + curved tapering petiole.
+    const leafBladeGeo = buildLaminaGeometry({
+      baseTaper: 0.28,
+      cols: 16,
+      cup: 0.044,
+      droop: 0.095,
+      length: 0.48,
+      midribCrease: 0.016,
+      notchDepth: 0,
+      rows: 20,
+      ruffleAmp: 0.009,
+      ruffleFreq: 5,
+      serrationAmp: 0.085,
+      serrationTeeth: 9,
+      tipPower: 0.72,
+      width: 0.25,
+    });
+
+    const petiole = buildStemGeometry(
+      [
         new Vector3(0, 0, 0),
-        0,
-        0.16,
-        0.18,
-        0.055,
-        0.04,
-        6,
-        new Color(BOTANY_COLORS.sepalGreen),
-        new Color(BOTANY_COLORS.healthyLeaf)
-      ),
-      leafBlade(
-        new Vector3(0.02, 0.01, 0),
-        0.55,
-        0.14,
-        0.14,
-        0.042,
-        0.03,
-        5,
-        new Color(BOTANY_COLORS.healthyLeaf),
-        new Color(BOTANY_COLORS.windGreen)
-      ),
-      leafBlade(
-        new Vector3(0.02, 0.01, 0),
-        -0.55,
-        0.14,
-        0.14,
-        0.042,
-        0.03,
-        5,
-        new Color(BOTANY_COLORS.healthyLeaf),
-        new Color(BOTANY_COLORS.windGreen)
-      ),
-    ]);
+        new Vector3(0.055, 0.018, 0),
+        new Vector3(0.115, 0.016, 0),
+      ],
+      0.014,
+      0.009,
+      12,
+      8
+    );
 
-    return { budLeaves, calyx, fruit, lateralSprig, pot };
+    // Axillary lateral shoot leaflet & tiny shoot stem.
+    const lateralLeaflet = buildLaminaGeometry({
+      baseTaper: 0.26,
+      cols: 10,
+      cup: 0.024,
+      droop: 0.035,
+      length: 0.18,
+      midribCrease: 0.009,
+      notchDepth: 0,
+      rows: 12,
+      ruffleAmp: 0.004,
+      ruffleFreq: 3,
+      serrationAmp: 0.075,
+      serrationTeeth: 6,
+      tipPower: 0.74,
+      width: 0.092,
+    });
+    const lateralStem = buildStemGeometry(
+      [
+        new Vector3(0, 0, 0),
+        new Vector3(0.055, 0.032, 0.006),
+        new Vector3(0.11, 0.052, 0.01),
+      ],
+      0.014,
+      0.007,
+      12,
+      8
+    );
+
+    return {
+      budScale,
+      calyxSepal,
+      fruit,
+      lateralLeaflet,
+      lateralStem,
+      leafBladeGeo,
+      petiole,
+      primordium,
+    };
   }, []);
 
   const dynamicGeos = useMemo(() => {
-    const stemCurve = new CatmullRomCurve3([
-      new Vector3(0, 0.22, 0),
-      new Vector3(-0.02, 0.22 + stemHeight * 0.35, 0.01),
-      new Vector3(0.015, 0.22 + stemHeight * 0.7, -0.01),
-      new Vector3(0, 0.22 + stemHeight, 0),
-    ]);
-    const stem = new TubeGeometry(stemCurve, 28, 0.034, 14, false);
-    const sp = stem.attributes.position;
-    for (let i = 0; i < sp.count; i += 1) {
-      const py = sp.getY(i);
-      const t = Math.min(
-        1,
-        Math.max(0, (py - 0.22) / Math.max(0.1, stemHeight))
-      );
-      const taper = 1.08 - t * 0.42;
-      const center = stemCurve.getPoint(t);
-      sp.setXYZ(
-        i,
-        center.x + (sp.getX(i) - center.x) * taper,
-        py,
-        center.z + (sp.getZ(i) - center.z) * taper
-      );
-    }
-    stem.computeVertexNormals();
-
-    const pedicel = new TubeGeometry(
-      new CatmullRomCurve3([
-        new Vector3(0.01, 0.22 + stemHeight * 0.72, 0),
-        new Vector3(0.14, 0.22 + stemHeight * 0.78, 0.05),
-        new Vector3(0.24, 0.22 + stemHeight * 0.68, 0.08),
-      ]),
-      14,
-      0.012,
-      8,
-      false
+    // Smoothly tapered herbaceous stem with swollen anatomical leaf nodes.
+    const stem = buildStemGeometry(
+      [
+        new Vector3(0, 0.04, 0),
+        new Vector3(-0.022, 0.04 + stemHeight * 0.34, 0.012),
+        new Vector3(0.016, 0.04 + stemHeight * 0.68, -0.01),
+        new Vector3(0, 0.04 + stemHeight, 0),
+      ],
+      0.046,
+      0.022,
+      32,
+      16,
+      [
+        { bulge: 0.28, t: 0.38, width: 0.045 },
+        { bulge: 0.24, t: 0.68, width: 0.045 },
+      ]
     );
 
-    const leafBase = new Color(
-      yellowLeaf ? BOTANY_COLORS.chlorosisYellow : BOTANY_COLORS.sepalGreen
+    // Curved woody fruit pedicel arching cleanly from upper stem node to fruit calyx.
+    const pedicel = buildStemGeometry(
+      [
+        new Vector3(0.012, 0.04 + stemHeight * 0.7, -0.004),
+        new Vector3(0.14, 0.04 + stemHeight * 0.77, 0.048),
+        new Vector3(0.26, 0.04 + stemHeight * 0.66, 0.085),
+      ],
+      0.013,
+      0.009,
+      18,
+      8
     );
-    const leafTip = new Color(
-      yellowLeaf ? BOTANY_COLORS.necrosisEdge : BOTANY_COLORS.healthyLeaf
-    );
-    const mainLeaf = mergeGeometries([
-      leafBlade(
-        new Vector3(0, 0, 0),
-        Math.PI * 0.86,
-        0.16,
-        0.46,
-        0.22,
-        0.12,
-        8,
-        leafBase,
-        leafTip
-      ),
-      leafBlade(
-        new Vector3(0, -0.06, -0.02),
-        Math.PI * 1.18,
-        0.14,
-        0.38,
-        0.19,
-        0.1,
-        7,
-        leafBase,
-        leafTip
-      ),
-    ]);
-    const lowerLeaf = mergeGeometries([
-      leafBlade(
-        new Vector3(0, 0, 0),
-        Math.PI * 0.68,
-        0.12,
-        0.38,
-        0.19,
-        0.1,
-        7,
-        leafBase,
-        leafTip
-      ),
-      leafBlade(
-        new Vector3(0.01, -0.04, -0.03),
-        -0.55,
-        0.1,
-        0.32,
-        0.16,
-        0.09,
-        6,
-        leafBase,
-        leafTip
-      ),
-    ]);
 
-    return { lowerLeaf, mainLeaf, pedicel, stem };
-  }, [stemHeight, yellowLeaf]);
+    return { pedicel, stem };
+  }, [stemHeight]);
 
   useEffect(
     () => () => {
-      staticGeos.pot.dispose();
       staticGeos.fruit.dispose();
-      staticGeos.calyx.dispose();
-      staticGeos.budLeaves.dispose();
-      staticGeos.lateralSprig.dispose();
+      staticGeos.calyxSepal.dispose();
+      staticGeos.budScale.dispose();
+      staticGeos.primordium.dispose();
+      staticGeos.leafBladeGeo.dispose();
+      staticGeos.petiole.dispose();
+      staticGeos.lateralLeaflet.dispose();
+      staticGeos.lateralStem.dispose();
     },
     [staticGeos]
   );
@@ -232,8 +203,6 @@ export function useHormoneBotanyGeometries(
     () => () => {
       dynamicGeos.stem.dispose();
       dynamicGeos.pedicel.dispose();
-      dynamicGeos.mainLeaf.dispose();
-      dynamicGeos.lowerLeaf.dispose();
     },
     [dynamicGeos]
   );

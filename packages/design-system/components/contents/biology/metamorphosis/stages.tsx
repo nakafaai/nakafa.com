@@ -1,211 +1,327 @@
+import { MonarchButterfly } from "@repo/design-system/components/contents/biology/butterfly";
+import { useCuticleTextures } from "@repo/design-system/components/contents/biology/metamorphosis/cuticle";
+import { useStageGeometries } from "@repo/design-system/components/contents/biology/metamorphosis/geometry";
 import type { Insect } from "@repo/design-system/components/contents/biology/metamorphosis/growth";
-import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
-import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { SPECIMEN_COLORS } from "@repo/design-system/lib/material/specimen";
 import { Array as Arr } from "effect";
-import { useEffect, useMemo } from "react";
-import {
-  BufferAttribute,
-  CanvasTexture,
-  CatmullRomCurve3,
-  Color,
-  ExtrudeGeometry,
-  LatheGeometry,
-  MeshPhysicalMaterial,
-  Shape,
-  SRGBColorSpace,
-  TubeGeometry,
-  Vector2,
-  Vector3,
-} from "three";
+import { DoubleSide } from "three";
 
-const EGG_OFFSETS = [
-  { id: "e0", pos: [0, 0.03, 0] as const },
-  { id: "e1", pos: [0.075, 0.025, 0.045] as const },
-  { id: "e2", pos: [-0.07, 0.025, 0.05] as const },
-  { id: "e3", pos: [0.02, 0.025, -0.072] as const },
+const EGG_CLUTCH = [
+  {
+    id: "e0",
+    pos: [-0.04, 0.068, 0.015] as const,
+    rot: [0.06, 0.2, 0.04] as const,
+  },
+  {
+    id: "e1",
+    pos: [0.065, 0.066, 0.055] as const,
+    rot: [-0.05, 1.1, -0.06] as const,
+  },
+  {
+    id: "e2",
+    pos: [-0.115, 0.064, 0.05] as const,
+    rot: [0.04, 2.1, 0.08] as const,
+  },
+  {
+    id: "e3",
+    pos: [0.015, 0.066, -0.068] as const,
+    rot: [-0.08, 0.7, 0.04] as const,
+  },
 ] as const;
 
-/** Procedural monarch butterfly wing texture with black veins and white marginal spots. */
-function createMonarchWingTexture() {
-  const size = 256;
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext("2d");
-  if (ctx !== null) {
-    ctx.fillStyle = PLOT_COLORS.orange;
-    ctx.fillRect(0, 0, size, size);
-    ctx.strokeStyle = BIOLOGY_COLORS.microscopeBlack;
-    ctx.lineWidth = 10;
-    ctx.strokeRect(6, 6, size - 12, size - 12);
-    // Radiating dark wing veins.
-    ctx.lineWidth = 6;
-    for (let i = 0; i < 6; i += 1) {
-      ctx.beginPath();
-      ctx.moveTo(12, size * 0.55);
-      ctx.quadraticCurveTo(
-        size * 0.5,
-        size * (0.12 + i * 0.16),
-        size - 10,
-        size * (0.08 + i * 0.17)
-      );
-      ctx.stroke();
-    }
-    // White marginal border spots.
-    ctx.fillStyle = BIOLOGY_COLORS.bubble;
-    for (let i = 0; i < 8; i += 1) {
-      ctx.beginPath();
-      ctx.arc(size - 16, 22 + i * 30, 5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-  const tex = new CanvasTexture(canvas);
-  tex.colorSpace = SRGBColorSpace;
-  return tex;
+const SPIRACLE_XS = [-0.16, -0.1, -0.04, 0.02, 0.08, 0.14] as const;
+const PROLEG_XS = [-0.12, -0.06, 0, 0.06] as const;
+const GOLD_CROWN_ANGLES = [-1.1, -0.55, 0, 0.55, 1.1] as const;
+
+function CaterpillarStage({
+  cuticleTex,
+  geos,
+}: {
+  readonly cuticleTex: ReturnType<typeof useCuticleTextures>;
+  readonly geos: ReturnType<typeof useStageGeometries>;
+}) {
+  return (
+    <group position={[0, 0.06, 0]}>
+      <mesh castShadow geometry={geos.larvaBody} receiveShadow>
+        <meshPhysicalMaterial
+          bumpMap={cuticleTex.bumpMap}
+          bumpScale={0.014}
+          clearcoat={0.36}
+          clearcoatRoughness={0.34}
+          map={cuticleTex.map}
+          roughness={0.44}
+        />
+      </mesh>
+      <mesh castShadow position={[0.245, 0.015, 0]} scale={[0.92, 1, 0.96]}>
+        <sphereGeometry args={[0.054, 18, 14]} />
+        <meshPhysicalMaterial
+          clearcoat={0.68}
+          color={SPECIMEN_COLORS.caterpillarHead}
+          roughness={0.28}
+        />
+      </mesh>
+      {Arr.map([-1, 1] as const, (side) => (
+        <group key={`fil-${side}`}>
+          <mesh
+            castShadow
+            geometry={geos.filament}
+            position={[0.19, 0.055, side * 0.032]}
+            scale={[1, 1, side]}
+          >
+            <meshStandardMaterial
+              color={SPECIMEN_COLORS.caterpillarFilament}
+              roughness={0.42}
+            />
+          </mesh>
+          <mesh
+            castShadow
+            geometry={geos.filament}
+            position={[-0.2, 0.038, side * 0.028]}
+            rotation={[0, Math.PI, 0]}
+            scale={[0.72, 0.72, -side * 0.72]}
+          >
+            <meshStandardMaterial
+              color={SPECIMEN_COLORS.caterpillarFilament}
+              roughness={0.42}
+            />
+          </mesh>
+        </group>
+      ))}
+      {Arr.map(PROLEG_XS, (px) =>
+        Arr.map([-1, 1] as const, (side) => (
+          <mesh
+            castShadow
+            key={`pl-${px}-${side}`}
+            position={[px, -0.025, side * 0.042]}
+          >
+            <cylinderGeometry args={[0.014, 0.01, 0.036, 10]} />
+            <meshStandardMaterial
+              color={SPECIMEN_COLORS.caterpillarProleg}
+              roughness={0.56}
+            />
+          </mesh>
+        ))
+      )}
+      {Arr.map(SPIRACLE_XS, (sx) =>
+        Arr.map([-1, 1] as const, (side) => (
+          <mesh key={`sp-${sx}-${side}`} position={[sx, 0.032, side * 0.068]}>
+            <sphereGeometry args={[0.007, 8, 6]} />
+            <meshStandardMaterial
+              color={SPECIMEN_COLORS.caterpillarSpiracle}
+              roughness={0.5}
+            />
+          </mesh>
+        ))
+      )}
+    </group>
+  );
 }
 
-/** Sculpted realistic egg clutch, segmented larva/nymph, chrysalis pupa, and winged adult butterfly/grasshopper. */
+function ChrysalisStage({
+  geos,
+}: {
+  readonly geos: ReturnType<typeof useStageGeometries>;
+}) {
+  return (
+    <group>
+      <mesh castShadow geometry={geos.pupaTwig} receiveShadow>
+        <SurfaceMaterial
+          bump={0.9}
+          color={SPECIMEN_COLORS.barkTwig}
+          repeat={[3, 1]}
+          roughness={0.9}
+          surface="bark"
+        />
+      </mesh>
+      <mesh position={[0.02, 0.505, 0.02]} scale={[1.4, 0.45, 1.4]}>
+        <sphereGeometry args={[0.024, 14, 10]} />
+        <meshStandardMaterial
+          color={SPECIMEN_COLORS.chrysalisSilk}
+          roughness={0.86}
+        />
+      </mesh>
+      <mesh position={[0.02, 0.478, 0.02]}>
+        <cylinderGeometry args={[0.008, 0.012, 0.042, 10]} />
+        <meshStandardMaterial
+          color={SPECIMEN_COLORS.chrysalisCremaster}
+          roughness={0.42}
+        />
+      </mesh>
+      <group position={[0.02, 0.135, 0.02]}>
+        <mesh castShadow geometry={geos.chrysalis} receiveShadow>
+          <meshPhysicalMaterial
+            clearcoat={0.78}
+            clearcoatRoughness={0.16}
+            color={SPECIMEN_COLORS.chrysalisJade}
+            roughness={0.26}
+          />
+        </mesh>
+        {Arr.map(GOLD_CROWN_ANGLES, (ang) => (
+          <mesh
+            key={`gc-${ang}`}
+            position={[Math.sin(ang) * 0.098, 0.242, Math.cos(ang) * 0.098]}
+          >
+            <sphereGeometry args={[0.011, 10, 8]} />
+            <meshStandardMaterial
+              color={SPECIMEN_COLORS.chrysalisGold}
+              metalness={0.88}
+              roughness={0.18}
+            />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  );
+}
+
+function GrasshopperStage({
+  cuticleTex,
+  geos,
+  hasWings,
+  isAdult,
+}: {
+  readonly cuticleTex: ReturnType<typeof useCuticleTextures>;
+  readonly geos: ReturnType<typeof useStageGeometries>;
+  readonly hasWings: boolean;
+  readonly isAdult: boolean;
+}) {
+  return (
+    <group position={[0, 0.085, 0]}>
+      <mesh castShadow geometry={geos.larvaBody} receiveShadow>
+        <meshPhysicalMaterial
+          bumpMap={cuticleTex.bumpMap}
+          bumpScale={0.012}
+          clearcoat={0.38}
+          map={cuticleTex.map}
+          roughness={0.44}
+        />
+      </mesh>
+      <mesh castShadow position={[0.14, 0.032, 0]} scale={[1.15, 1.02, 1.05]}>
+        <cylinderGeometry args={[0.052, 0.058, 0.11, 14]} />
+        <meshPhysicalMaterial
+          clearcoat={0.42}
+          color={SPECIMEN_COLORS.ghPronotum}
+          roughness={0.42}
+        />
+      </mesh>
+      <group position={[0.24, 0.02, 0]}>
+        <mesh castShadow scale={[0.92, 1.15, 0.9]}>
+          <sphereGeometry args={[0.05, 16, 12]} />
+          <meshPhysicalMaterial
+            clearcoat={0.46}
+            color={SPECIMEN_COLORS.ghHead}
+            roughness={0.42}
+          />
+        </mesh>
+        {Arr.map([-1, 1] as const, (side) => (
+          <mesh
+            key={`ghe-${side}`}
+            position={[0.018, 0.016, side * 0.036]}
+            scale={[0.85, 1.25, 0.7]}
+          >
+            <sphereGeometry args={[0.022, 14, 10]} />
+            <meshPhysicalMaterial
+              clearcoat={0.85}
+              color={SPECIMEN_COLORS.ghEye}
+              roughness={0.18}
+            />
+          </mesh>
+        ))}
+        {Arr.map([-1, 1] as const, (side) => (
+          <mesh
+            geometry={geos.ghAntenna}
+            key={`gha-${side}`}
+            position={[0.034, 0.028, side * 0.016]}
+            scale={[1, 1, side]}
+          >
+            <meshStandardMaterial
+              color={SPECIMEN_COLORS.ghAntenna}
+              roughness={0.48}
+            />
+          </mesh>
+        ))}
+      </group>
+      {Arr.map([-1, 1] as const, (side) => (
+        <group
+          key={`hl-${side}`}
+          position={[0.04, 0.01, side * 0.04]}
+          scale={[1, 1, side]}
+        >
+          <mesh castShadow geometry={geos.hindFemur}>
+            <meshPhysicalMaterial
+              clearcoat={0.4}
+              color={SPECIMEN_COLORS.ghFemur}
+              roughness={0.42}
+            />
+          </mesh>
+          <mesh castShadow geometry={geos.hindTibia}>
+            <meshStandardMaterial
+              color={SPECIMEN_COLORS.ghTibia}
+              roughness={0.5}
+            />
+          </mesh>
+        </group>
+      ))}
+      {hasWings
+        ? Arr.map([-1, 1] as const, (side) => (
+            <mesh
+              castShadow
+              geometry={geos.tegmina}
+              key={`ghw-${side}`}
+              position={[0.12, 0.056, side * 0.038]}
+              rotation={[side * 0.36, Math.PI, -0.06]}
+              scale={isAdult ? [1.05, 1, 1] : [0.42, 0.8, 0.65]}
+            >
+              <meshPhysicalMaterial
+                clearcoat={0.34}
+                color={SPECIMEN_COLORS.ghTegmina}
+                opacity={0.88}
+                roughness={0.44}
+                side={DoubleSide}
+                transparent
+              />
+            </mesh>
+          ))
+        : null}
+    </group>
+  );
+}
+
+/**
+ * Renders each sculpted photorealistic metamorphosis stage:
+ * ribbed pearlescent eggs, banded caterpillar or grasshopper nymph,
+ * hanging jade chrysalis on woody twig, or winged adult insect.
+ */
 export function MetamorphosisOrganism({
   insect,
   instar,
+  playing,
   stage,
 }: {
   readonly insect: Insect;
   readonly instar: number;
+  readonly playing: boolean;
   readonly stage: "adult" | "egg" | "larva" | "nymph" | "pupa";
 }) {
-  const geos = useMemo(() => {
-    // Ribbed oval insect egg.
-    const eggPts = Arr.map(Arr.range(0, 14), (s) => {
-      const t = s / 14;
-      const r = Math.max(0.002, Math.sin(t * Math.PI) ** 0.7 * 0.044);
-      return new Vector2(r, t * 0.11);
-    });
-    const egg = new LatheGeometry(eggPts, 18);
-
-    // 10-segment continuous caterpillar / nymph body with ringed bands.
-    const larvaPts = Arr.map(Arr.range(0, 44), (s) => {
-      const t = s / 44;
-      const taper = Math.sin(t * Math.PI) ** 0.42;
-      const seg = 1 - 0.1 * Math.abs(Math.sin(t * Math.PI * 10));
-      return new Vector2(
-        Math.max(0.004, 0.082 * taper * seg),
-        (t - 0.5) * 0.52
-      );
-    });
-    const larva = new LatheGeometry(larvaPts, 24);
-    larva.rotateZ(-Math.PI / 2);
-    const lPos = larva.getAttribute("position");
-    const lCols = new Float32Array(lPos.count * 3);
-    const bandA = new Color(
-      insect === "grasshopper" ? BOTANY_COLORS.healthyLeaf : PLOT_COLORS.amber
-    );
-    const bandB = new Color(
-      insect === "grasshopper"
-        ? BOTANY_COLORS.sepalGreen
-        : BIOLOGY_COLORS.microscopeBlack
-    );
-    const tmp = new Color();
-    for (let i = 0; i < lPos.count; i += 1) {
-      const vx = lPos.getX(i);
-      const t = Math.min(1, Math.max(0, vx / 0.52 + 0.5));
-      const stripe = Math.sin(t * Math.PI * 20) > 0.35 ? 1 : 0;
-      tmp
-        .copy(bandA)
-        .lerp(bandB, stripe * (insect === "butterfly" ? 0.85 : 0.3));
-      lCols[i * 3] = tmp.r;
-      lCols[i * 3 + 1] = tmp.g;
-      lCols[i * 3 + 2] = tmp.b;
-    }
-    larva.setAttribute("color", new BufferAttribute(lCols, 3));
-    larva.computeVertexNormals();
-
-    // Sculpted chrysalis pupa with golden ridge keel and abdominal segments.
-    const pupaPts = Arr.map(Arr.range(0, 26), (s) => {
-      const t = s / 26;
-      const profile =
-        Math.sin(t * Math.PI) ** 0.65 *
-        (1 + 0.16 * Math.exp(-(((t - 0.62) / 0.18) ** 2))) *
-        (1 - 0.04 * Math.abs(Math.sin(t * Math.PI * 7)));
-      return new Vector2(Math.max(0.004, 0.11 * profile), (t - 0.5) * 0.38);
-    });
-    const pupa = new LatheGeometry(pupaPts, 22);
-    pupa.rotateZ(-Math.PI / 2);
-
-    // Sculpted monarch butterfly wing with normalized [0,1] UVs.
-    const wingShape = new Shape();
-    wingShape.moveTo(0, 0.02);
-    wingShape.bezierCurveTo(0.12, 0.2, 0.3, 0.24, 0.36, 0.12);
-    wingShape.bezierCurveTo(0.34, 0.01, 0.24, -0.02, 0.2, -0.06);
-    wingShape.bezierCurveTo(0.24, -0.14, 0.16, -0.22, 0.04, -0.18);
-    wingShape.lineTo(0, -0.05);
-    wingShape.closePath();
-    const butterflyWing = new ExtrudeGeometry(wingShape, {
-      bevelEnabled: false,
-      depth: 0.006,
-    });
-    const uv = butterflyWing.getAttribute("uv");
-    for (let i = 0; i < uv.count; i += 1) {
-      uv.setXY(
-        i,
-        Math.min(1, Math.max(0, uv.getX(i) / 0.36)),
-        Math.min(1, Math.max(0, (uv.getY(i) + 0.22) / 0.46))
-      );
-    }
-
-    const wingTex = createMonarchWingTexture();
-    const wingMat = new MeshPhysicalMaterial({
-      clearcoat: 0.35,
-      map: wingTex,
-      roughness: 0.42,
-      sheen: 0.45,
-      sheenColor: PLOT_COLORS.amber,
-      sheenRoughness: 0.5,
-    });
-
-    const antenna = new TubeGeometry(
-      new CatmullRomCurve3([
-        new Vector3(0, 0, 0),
-        new Vector3(0.08, 0.06, 0.04),
-        new Vector3(0.16, 0.09, 0.07),
-      ]),
-      10,
-      0.006,
-      6,
-      false
-    );
-
-    return { antenna, butterflyWing, egg, larva, pupa, wingMat, wingTex };
-  }, [insect]);
-
-  useEffect(
-    () => () => {
-      geos.egg.dispose();
-      geos.larva.dispose();
-      geos.pupa.dispose();
-      geos.butterflyWing.dispose();
-      geos.antenna.dispose();
-      geos.wingMat.dispose();
-      geos.wingTex.dispose();
-    },
-    [geos]
-  );
+  const cuticleTex = useCuticleTextures(insect);
+  const geos = useStageGeometries();
 
   if (stage === "egg") {
     return (
       <group>
-        {Arr.map(EGG_OFFSETS, (item) => (
+        {Arr.map(EGG_CLUTCH, (item) => (
           <mesh
             castShadow
             geometry={geos.egg}
             key={item.id}
-            position={item.pos}
+            position={[item.pos[0], item.pos[1], item.pos[2]]}
+            rotation={[item.rot[0], item.rot[1], item.rot[2]]}
           >
             <meshPhysicalMaterial
               clearcoat={0.78}
               clearcoatRoughness={0.18}
-              color={BIOLOGY_COLORS.seed}
+              color={SPECIMEN_COLORS.eggPearl}
               roughness={0.28}
             />
           </mesh>
@@ -213,167 +329,22 @@ export function MetamorphosisOrganism({
       </group>
     );
   }
-
-  if (stage === "larva" || stage === "nymph") {
-    return (
-      <group position={[0, 0.07, 0]}>
-        <mesh castShadow geometry={geos.larva} receiveShadow>
-          <meshPhysicalMaterial
-            clearcoat={0.42}
-            roughness={0.42}
-            vertexColors
-          />
-        </mesh>
-        {/* Hard chitin head capsule + antennae */}
-        <mesh castShadow position={[0.26, 0.015, 0]}>
-          <sphereGeometry args={[0.074, 18, 14]} />
-          <meshPhysicalMaterial
-            clearcoat={0.62}
-            color={BIOLOGY_COLORS.cork}
-            roughness={0.32}
-          />
-        </mesh>
-        {Arr.map([-1, 1] as const, (side) => (
-          <mesh
-            geometry={geos.antenna}
-            key={`l-ant-${side}`}
-            position={[0.31, 0.04, side * 0.025]}
-            scale={[0.7, 0.7, side * 0.7]}
-          >
-            <meshStandardMaterial
-              color={BIOLOGY_COLORS.microscopeBlack}
-              roughness={0.45}
-            />
-          </mesh>
-        ))}
-        {/* Growing wing pads on late-instar grasshopper nymphs */}
-        {insect === "grasshopper" && instar >= 3
-          ? Arr.map([-1, 1] as const, (side) => (
-              <mesh
-                castShadow
-                key={`pad-${side}`}
-                position={[0.04, 0.068, side * 0.052]}
-                rotation={[side * 0.25, 0, -0.18]}
-                scale={[0.38, 0.32, 0.22]}
-              >
-                <sphereGeometry args={[0.22, 14, 10]} />
-                <meshPhysicalMaterial
-                  clearcoat={0.4}
-                  color={BOTANY_COLORS.windGreen}
-                  roughness={0.42}
-                />
-              </mesh>
-            ))
-          : null}
-      </group>
-    );
+  if (stage === "larva") {
+    return <CaterpillarStage cuticleTex={cuticleTex} geos={geos} />;
   }
-
   if (stage === "pupa") {
-    return (
-      <group position={[0, 0.1, 0]}>
-        <mesh castShadow geometry={geos.pupa} receiveShadow>
-          <meshPhysicalMaterial
-            clearcoat={0.68}
-            clearcoatRoughness={0.2}
-            color={BOTANY_COLORS.windGreen}
-            roughness={0.3}
-          />
-        </mesh>
-        {/* Characteristic golden chrysalis metallic spots along thorax ridge */}
-        {Arr.map([-0.06, 0.02, 0.09] as const, (x) => (
-          <mesh key={`gold-${x}`} position={[x, 0.095, 0.042]}>
-            <sphereGeometry args={[0.014, 10, 8]} />
-            <meshStandardMaterial
-              color={BOTANY_COLORS.antherGold}
-              metalness={0.78}
-              roughness={0.22}
-            />
-          </mesh>
-        ))}
-      </group>
-    );
+    return <ChrysalisStage geos={geos} />;
   }
-
+  if (stage === "adult" && insect === "butterfly") {
+    return <MonarchButterfly playing={playing} />;
+  }
+  const isAdult = stage === "adult";
   return (
-    <group position={[0, 0.12, 0]}>
-      {/* Adult thorax + segmented abdomen + head + antennae */}
-      <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
-        <capsuleGeometry args={[0.042, 0.28, 12, 18]} />
-        <meshPhysicalMaterial
-          clearcoat={0.42}
-          color={
-            insect === "grasshopper"
-              ? BOTANY_COLORS.stemGreen
-              : BIOLOGY_COLORS.microscopeBlack
-          }
-          roughness={0.4}
-        />
-      </mesh>
-      <mesh castShadow position={[0.19, 0.015, 0]}>
-        <sphereGeometry args={[0.045, 16, 12]} />
-        <meshPhysicalMaterial
-          clearcoat={0.55}
-          color={
-            insect === "grasshopper"
-              ? BOTANY_COLORS.sepalGreen
-              : BIOLOGY_COLORS.microscopeBlack
-          }
-          roughness={0.34}
-        />
-      </mesh>
-      {Arr.map([-1, 1] as const, (side) => (
-        <mesh
-          geometry={geos.antenna}
-          key={`a-ant-${side}`}
-          position={[0.22, 0.03, side * 0.02]}
-          scale={[0.85, 0.85, side * 0.85]}
-        >
-          <meshStandardMaterial
-            color={BIOLOGY_COLORS.microscopeBlack}
-            roughness={0.45}
-          />
-        </mesh>
-      ))}
-      {/* Sculpted wings */}
-      {insect === "butterfly" ? (
-        <group>
-          <mesh
-            castShadow
-            geometry={geos.butterflyWing}
-            material={geos.wingMat}
-            position={[0.02, 0.03, 0.02]}
-            rotation={[-Math.PI * 0.3, 0.22, 0]}
-          />
-          <mesh
-            castShadow
-            geometry={geos.butterflyWing}
-            material={geos.wingMat}
-            position={[0.02, 0.03, -0.02]}
-            rotation={[Math.PI * 0.3, 0.22, Math.PI]}
-            scale={[1, -1, 1]}
-          />
-        </group>
-      ) : (
-        Arr.map([-1, 1] as const, (side) => (
-          <mesh
-            castShadow
-            key={`gh-wing-${side}`}
-            position={[-0.04, 0.045, side * 0.055]}
-            rotation={[side * 0.22, 0, -0.08]}
-            scale={[1.8, 0.25, 0.42]}
-          >
-            <sphereGeometry args={[0.14, 16, 12]} />
-            <meshPhysicalMaterial
-              clearcoat={0.48}
-              color={BOTANY_COLORS.windGreen}
-              opacity={0.86}
-              roughness={0.32}
-              transparent
-            />
-          </mesh>
-        ))
-      )}
-    </group>
+    <GrasshopperStage
+      cuticleTex={cuticleTex}
+      geos={geos}
+      hasWings={isAdult || instar >= 3}
+      isAdult={isAdult}
+    />
   );
 }
