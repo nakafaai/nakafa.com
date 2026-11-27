@@ -1,11 +1,13 @@
+import { railSheets } from "@repo/design-system/components/three/optic/scale";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { PrintFace } from "@repo/design-system/components/three/print/layer";
+import { usePrintNumber } from "@repo/design-system/components/three/print/number";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
-import { getColor } from "@repo/design-system/lib/color";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { useEffect, useMemo } from "react";
-import { CanvasTexture, Shape, SRGBColorSpace } from "three";
+import { useMemo } from "react";
+import { Shape } from "three";
 
 /** How tall the rail stands on the benchtop, and how wide its foot and its top are. */
 const RAIL_TALL = 0.15;
@@ -15,9 +17,6 @@ const RAIL_TOP = 0.105;
 /** Where the sloped front face of the rail starts and ends, which carries the scale. */
 const SLOPE_LOW = 0.028;
 const SLOPE_HIGH = 0.118;
-
-/** How many pixels of the scale's image one scene unit of rail takes. */
-const SCALE_PIXELS = 512;
 
 /** The cross-section of the rail: a wide foot, two sloped flanks and a flat top with a slot down its middle. */
 function railSection() {
@@ -54,40 +53,6 @@ function saddleSection() {
   section.lineTo(-lip, RAIL_TALL + 0.05);
   section.closePath();
   return section;
-}
-
-/**
- * Paints the engraved scale of a rail `length` long: a line at every
- * centimetre, a longer one at every fifth, and a numeral at every tenth,
- * white on the black anodised strip, counted from the rail's left end.
- */
-function paintScale(length: number, unit: number) {
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.min(8192, Math.round(length * SCALE_PIXELS));
-  canvas.height = 64;
-  const pen = canvas.getContext("2d");
-  if (pen === null) {
-    return null;
-  }
-  const perMark = (unit * canvas.width) / length;
-  pen.fillStyle = INSTRUMENT_COLORS.graphite;
-  pen.fillRect(0, 0, canvas.width, canvas.height);
-  pen.fillStyle = INSTRUMENT_COLORS.paper;
-  pen.font = "600 26px sans-serif";
-  pen.textAlign = "center";
-  pen.textBaseline = "bottom";
-  for (let mark = 0; mark * perMark <= canvas.width; mark += 1) {
-    const tenth = mark % 10 === 0;
-    const tall = mark % 5 === 0 ? 22 : 12;
-    pen.fillRect(mark * perMark - 1, 0, tenth ? 3 : 2, tenth ? 28 : tall);
-    if (tenth && mark > 0) {
-      pen.fillText(String(mark), mark * perMark, 62);
-    }
-  }
-  const texture = new CanvasTexture(canvas);
-  texture.colorSpace = SRGBColorSpace;
-  texture.anisotropy = 16;
-  return texture;
 }
 
 /** A levelling foot across one end of the rail: a cast bar on two knurled screws with rubber pads. */
@@ -147,10 +112,18 @@ export function Rail({
   readonly unit: number;
 }) {
   const section = useMemo(railSection, []);
-  const scale = useMemo(() => paintScale(length, unit), [length, unit]);
-  useEffect(() => () => scale?.dispose(), [scale]);
+  const format = usePrintNumber();
   const slope = Math.atan2(RAIL_FOOT - RAIL_TOP, SLOPE_HIGH - SLOPE_LOW);
   const wide = Math.hypot(RAIL_FOOT - RAIL_TOP, SLOPE_HIGH - SLOPE_LOW);
+  const scale = useMemo(
+    () =>
+      railSheets(
+        { long: length - 0.04, tall: wide * 0.78, unit },
+        INSTRUMENT_COLORS.paper,
+        format
+      ),
+    [format, length, unit, wide]
+  );
 
   return (
     <group>
@@ -181,21 +154,20 @@ export function Rail({
             surface="brushed"
           />
         </mesh>
-        <mesh
+        <group
           position={[
-            0,
+            0.02 - length / 2,
             (SLOPE_LOW + SLOPE_HIGH) / 2 + 0.004 * Math.sin(slope),
             (RAIL_FOOT + RAIL_TOP) / 2 + 0.004 * Math.cos(slope),
           ]}
           rotation={[slope - Math.PI / 2, 0, 0]}
         >
-          <planeGeometry args={[length - 0.04, wide * 0.78]} />
-          <meshStandardMaterial
-            color={getColor("WHITE")}
-            map={scale}
-            roughness={0.6}
-          />
-        </mesh>
+          {Arr.map(scale, (piece) => (
+            <group key={piece.at} position={[piece.at, 0, 0]}>
+              <PrintFace sheet={piece.sheet} stock="engraving" />
+            </group>
+          ))}
+        </group>
       </group>
       <Foot at={-length / 2 + 0.16} />
       <Foot at={length / 2 - 0.16} />
