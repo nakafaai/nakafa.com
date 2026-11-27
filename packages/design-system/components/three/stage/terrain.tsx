@@ -33,9 +33,14 @@ import {
 /** How far open ground spreads from the lab's middle, in reaches: past the haze and horizon fade. */
 export const GROUND_REACHES = 16;
 
-/** Where open ground starts and finishes dissolving into the horizon, in reaches from the scene origin. */
-export const HORIZON_FADE_INNER = 2.8;
-export const HORIZON_FADE_OUTER = 12.5;
+/**
+ * Where open ground starts and finishes dissolving, in reaches from the
+ * scene origin: only beyond where the haze has swallowed it from any camera
+ * that frames the lab, so it dissolves into the haze of the far distance
+ * and never into the backdrop.
+ */
+export const HORIZON_FADE_INNER = 12;
+export const HORIZON_FADE_OUTER = 15.5;
 
 /**
  * Where a top inside a room starts and finishes dissolving into the room

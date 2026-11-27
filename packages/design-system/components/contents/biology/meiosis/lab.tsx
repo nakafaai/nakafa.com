@@ -128,7 +128,7 @@ export function MeiosisShufflingLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} ground="epoxy" reach={2.5} setting="lab">
+        <ScienceStage reach={2.5} setting="microscope">
           <Suspense fallback={null}>
             <MeiosisShufflingScene
               chromosomePairs={pairs}

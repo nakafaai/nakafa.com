@@ -119,7 +119,7 @@ export function PlanckBlackbodyLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.2} setting="lab">
+        <ScienceStage floor={0} reach={2.2} setting="dark">
           <Suspense fallback={null}>
             <PlanckCavityScene
               model={active}

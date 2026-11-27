@@ -6,7 +6,6 @@ import {
   HueSaturation,
   N8AO,
   ToneMapping,
-  Vignette,
 } from "@react-three/postprocessing";
 import { usePostprocessingDegraded } from "@repo/design-system/components/three/guard";
 import { useStage } from "@repo/design-system/components/three/stage/context";
@@ -71,7 +70,6 @@ export function Finish() {
         <ToneMapping mode={ToneMappingMode.NEUTRAL} />
         <HueSaturation saturation={0.08} />
         <BrightnessContrast contrast={0.08} />
-        <Vignette darkness={0.16} offset={0.44} />
       </EffectComposer>
     </ErrorBoundary>
   );

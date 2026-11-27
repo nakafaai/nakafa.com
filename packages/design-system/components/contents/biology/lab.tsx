@@ -8,6 +8,7 @@ import {
 import { biologyReadings } from "@repo/design-system/components/contents/biology/readings";
 import { SceneSpinner } from "@repo/design-system/components/three/placeholder";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import type { Place } from "@repo/design-system/components/three/stage/place";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -92,10 +93,13 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
   live = true,
   onItemIndexChange,
   scene: Scene,
+  setting = "studio",
   title,
   view = BIOLOGY_DEFAULT_VIEW,
 }: BiologyLabProps<Item> & {
   scene: ComponentType<BiologySceneProps<Item>>;
+  /** The place the lab's subject belongs in. */
+  setting?: Place;
   view?: NarrowCameraPose;
 }) {
   const resolvedTheme = useTheme((state) => state.resolvedTheme);
@@ -159,7 +163,12 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
       >
         {live ? (
           <Suspense fallback={<SceneSpinner />}>
-            <BiologyStage colors={colors} store={store} view={view}>
+            <BiologyStage
+              colors={colors}
+              setting={setting}
+              store={store}
+              view={view}
+            >
               <Scene item={selectedItem} />
             </BiologyStage>
           </Suspense>
