@@ -10,7 +10,7 @@ const UP = new Vector3(0, 1, 0);
 
 /** The smallest and the largest a letter is drawn, in CSS pixels: readable on a phone, and still a caption on a wide card. */
 const SMALLEST = 14;
-const LARGEST = 34;
+const LARGEST = 32;
 
 /** The radius of the shaft of a force, the radius and the most length of its head, and how far past its tip its letter stands. */
 const ARROW = { gap: 0.1, head: 0.11, point: 0.04, shaft: 0.014 } as const;

@@ -36,6 +36,7 @@ import { useTimeline } from "@repo/design-system/components/contents/simulation/
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import type { LabelPixels } from "@repo/design-system/components/three/label/floor";
 import { NETWORK_COLORS } from "@repo/design-system/lib/material/network";
 import { Array as Arr, Option } from "effect";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -49,9 +50,6 @@ const KM = "\\text{ km}";
 
 /** How far a road's length plate lies to the side of the road, in metres. */
 const PLATE_SIDE = 0.03;
-
-/** The largest a road's length reads, in pixels: smaller than a town's name, as the plate is smaller than the pin. */
-const PLATE_LABEL = 14;
 
 /** The largest label on a wide card, in pixels, so a name never outgrows the pin it names. */
 const WIDE_LABEL = 17;
@@ -216,7 +214,6 @@ export function NetworkScene({
                 <ThreeLabel
                   color={ink}
                   fontSize="compact"
-                  maximumFontSize={PLATE_LABEL}
                   position={[side.x, 0.004, side.z]}
                 >
                   <InlineMath
@@ -294,7 +291,7 @@ function TownName({
 }: {
   readonly degree: number | null;
   readonly ink: string;
-  readonly largest: number;
+  readonly largest: LabelPixels;
   readonly name: string;
   readonly side: Side;
 }) {

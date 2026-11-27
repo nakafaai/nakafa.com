@@ -106,7 +106,6 @@ export function GlassCeramicScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[STAGE_X - 0.085, 0.048, RIG_Z + 0.118]}
       >
         <span>{primaryLabel}</span>
@@ -115,7 +114,6 @@ export function GlassCeramicScene({
         <ThreeLabel
           color={labelInk}
           fontSize="compact"
-          maximumFontSize={14}
           position={[STAGE_X + 0.03, 0.242, RIG_Z]}
         >
           <span>{secondaryLabel}</span>

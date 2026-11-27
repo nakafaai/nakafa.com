@@ -283,49 +283,19 @@ export function CalorimeterScene({
       </group>
 
       {/* Crisp compact non-overlapping labels */}
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={13}
-        minimumFontSize={11}
-        position={[-0.88, 0.98, 0]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[-0.88, 0.98, 0]}>
         <span>{parts.heater}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={13}
-        minimumFontSize={11}
-        position={[0.78, 1.12, 0]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[0.78, 1.12, 0]}>
         <span>{parts.thermometer}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={13}
-        minimumFontSize={11}
-        position={[0.18, 1.24, 0.24]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[0.18, 1.24, 0.24]}>
         <span>{parts.stirrer}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={13}
-        minimumFontSize={11}
-        position={[-0.96, 0.44, 0.18]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[-0.96, 0.44, 0.18]}>
         <span>{parts.insulation}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={13}
-        minimumFontSize={11}
-        position={[0.92, 0.38, 0.18]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[0.92, 0.38, 0.18]}>
         <span>{parts.sample}</span>
       </ThreeLabel>
     </group>

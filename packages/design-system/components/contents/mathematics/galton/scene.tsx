@@ -260,7 +260,6 @@ function Bins({ rows }: { readonly rows: number }) {
             fontSize={BIN_NUMBER}
             key={bin}
             maximumFontSize={15}
-            minimumFontSize={11}
             position={[
               binCentre(rows, bin),
               (FOOT_HEIGHT + BIN_FLOOR) / 2,

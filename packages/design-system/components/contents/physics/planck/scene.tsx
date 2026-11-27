@@ -313,22 +313,10 @@ export function PlanckCavityScene({
       </group>
 
       {/* Crisp compact non-overlapping labels */}
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={13}
-        minimumFontSize={11}
-        position={[0, 1.24, -0.18]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[0, 1.24, -0.18]}>
         <span>{parts.cavity}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={13}
-        minimumFontSize={11}
-        position={[0.78, 0.92, 0.18]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[0.78, 0.92, 0.18]}>
         <span>{parts.peakMarker}</span>
       </ThreeLabel>
     </group>

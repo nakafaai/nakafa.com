@@ -203,12 +203,7 @@ export function EnergyArrow({
         </mesh>
       </group>
       <group ref={label}>
-        <ThreeLabel
-          color={color}
-          fontSize={0.02}
-          minimumFontSize={13}
-          position={[0, 0, 0]}
-        >
+        <ThreeLabel color={color} fontSize={0.02} position={[0, 0, 0]}>
           <InlineMath math={name} />
         </ThreeLabel>
       </group>
@@ -244,7 +239,6 @@ export function Thermometer({
         <ThreeLabel
           color={BENCH_COLORS.lcdInk}
           fontSize={0.016}
-          minimumFontSize={11}
           outlineColor={BENCH_COLORS.lcd}
           outlineWidth={0.001}
           position={[0, 0.036, 0.015]}
