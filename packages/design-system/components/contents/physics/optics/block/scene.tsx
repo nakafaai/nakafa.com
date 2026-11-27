@@ -1,5 +1,4 @@
 import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
-import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import type { Spot } from "@repo/design-system/components/contents/physics/optics/ray";
 import {
   blockPath,
@@ -11,9 +10,11 @@ import {
   BOARD_TALL,
   Board,
 } from "@repo/design-system/components/three/optic/board";
+import { extent } from "@repo/design-system/components/three/optic/extent";
 import { Slab } from "@repo/design-system/components/three/optic/glass";
 import { Pulse } from "@repo/design-system/components/three/optic/pulse";
 import { RayBox } from "@repo/design-system/components/three/optic/source";
+import { View } from "@repo/design-system/components/three/optic/view";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
@@ -42,6 +43,21 @@ const ARC = 0.3;
 const PULSE_SECONDS = 2.6;
 
 const DEGREE = Math.PI / 180;
+
+/** How far behind its slit the ray box reaches, and how much room the view leaves round the path of the ray. */
+const BOX_LONG = 0.62;
+const ROOM = 0.28;
+
+/** The side the board is read from: from above its near edge, close to a plan of the ray. */
+const FROM = [0, 6, 2.1] as const;
+
+/** The corners of the block, in its own frame. */
+const CORNERS = [
+  { x: 0, y: 0 },
+  { x: SHAPE.width, y: 0 },
+  { x: SHAPE.width, y: SHAPE.height },
+  { x: 0, y: SHAPE.height },
+] as const;
 
 /** The direction, in radians on the page of the board, of the inward normal of each face. */
 const INWARD = { bottom: Math.PI / 2, left: 0, right: Math.PI } as const;
@@ -135,6 +151,8 @@ function Decision({
  * and at the next face it either leaves or, past the critical angle, is
  * totally reflected back into the glass. The marks on the board are the
  * normals, the angles of incidence and refraction, and the critical angle.
+ * The view holds the block and the whole path of the ray, from the ray box
+ * to where the light ends, and follows the path as the ray is turned.
  */
 export function BlockScene({
   incidence,
@@ -151,14 +169,20 @@ export function BlockScene({
   const source = points[0] ?? place(entry);
   const [x, y, z] = place(entry);
   const end = Arr.last(points);
+  const lamp = toward(
+    entry,
+    Math.PI / 2 + incidence * DEGREE,
+    REACH * UNIT + BOX_LONG
+  );
 
   return (
-    <group>
-      <BenchCamera
-        narrow={[0, 8.6, 5.2]}
-        target={[-0.1, 0.1, 0.25]}
-        wide={[0, 5.2, 3.5]}
-      />
+    <View
+      box={extent(
+        [lamp, place(ray.mirror), ...points, ...Arr.map(CORNERS, place)],
+        ROOM
+      )}
+      from={FROM}
+    >
       <SeamlessBenchSurface />
       <group position={[-0.25, 0, 0.3]}>
         <Board deep={4.4} wide={5.6} />
@@ -234,6 +258,6 @@ export function BlockScene({
           />
         ),
       })}
-    </group>
+    </View>
   );
 }

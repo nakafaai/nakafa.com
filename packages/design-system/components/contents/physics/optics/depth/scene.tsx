@@ -1,5 +1,4 @@
 import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
-import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Stand } from "@repo/design-system/components/contents/physics/bench/stand";
 import {
   Tank,
@@ -16,6 +15,7 @@ import {
   CROWN_INDEX,
   cellDrop,
 } from "@repo/design-system/components/three/optic/lens";
+import { View } from "@repo/design-system/components/three/optic/view";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
@@ -60,6 +60,9 @@ const VIEW = 6;
 
 /** The viewing lens an eye looks straight down through. */
 const VIEWER = { focal: 1.4, half: 0.3, index: CROWN_INDEX, thin: 0.03 };
+
+/** The side the tank is read from: straight on, level with the liquid. */
+const FROM = [0, 0.35, 6] as const;
 
 /** The radius of the coin, and its turned outline: a raised rim round a struck face. */
 const COIN = 0.17;
@@ -131,7 +134,8 @@ function Measure({
  * away from the normal at every boundary on their way up, by Snell's law;
  * their dashed extensions lead back down to where they seem to come from,
  * and the ghost of the coin floats there. The teal measure is the real
- * depth and the amber one the apparent depth.
+ * depth and the amber one the apparent depth. The view holds the tank from
+ * its floor to the viewing lens, so the depths fill the frame.
  */
 export function DepthScene({
   capacity,
@@ -158,12 +162,14 @@ export function DepthScene({
   );
 
   return (
-    <group>
-      <BenchCamera
-        narrow={[0.5, 2.4, 9.4]}
-        target={[0.25, 1.35, 0]}
-        wide={[0.9, 2.1, 5.9]}
-      />
+    <View
+      box={{
+        x: { max: reach + 0.78, min: -WIDE / 2 - 0.12 },
+        y: { max: eye + 0.52, min: -0.04 },
+        z: { max: DEEP / 2 + 0.08, min: -DEEP / 2 },
+      }}
+      from={FROM}
+    >
       <SeamlessBenchSurface />
       <Backboard back={1.1} tall={3.1} wide={5.2} />
       <Tank depth={DEEP} height={FULL * 1.08 + 0.03} width={WIDE} />
@@ -232,6 +238,6 @@ export function DepthScene({
         to={surface}
         x={WIDE / 2 + 0.3}
       />
-    </group>
+    </View>
   );
 }

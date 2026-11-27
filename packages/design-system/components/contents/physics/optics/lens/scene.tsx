@@ -1,7 +1,7 @@
 import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
-import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
 import {
+  lensReach,
   principalRays,
   thinLens,
 } from "@repo/design-system/components/contents/physics/optics/ray";
@@ -19,16 +19,17 @@ import {
   cellDrop,
 } from "@repo/design-system/components/three/optic/lens";
 import { Arrow, Lamp } from "@repo/design-system/components/three/optic/source";
+import { View } from "@repo/design-system/components/three/optic/view";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
 
 /** How high above the benchtop the optical axis runs. */
-const AXIS = 1.2;
+const AXIS = 1.3;
 
 /** How tall the lit arrow of the object is, and half the width of the lens. */
-const TALL = 0.2;
+const TALL = 0.3;
 const HALF = 0.46;
 
 /** How long the bench is in scene units, and how many focal lengths it gives each side of the lens. */
@@ -37,7 +38,7 @@ const LEFT = 4.2;
 const RIGHT = 4.3;
 
 /** The size of the screen that catches a real image. */
-const CARD = { tall: 1.5, wide: 0.9 } as const;
+const CARD = { tall: 2, wide: 0.9 } as const;
 
 /** The marks along the bench, in focal lengths from the lens. */
 const MARKS = [
@@ -47,7 +48,19 @@ const MARKS = [
   { at: 2, name: "2F" },
 ] as const;
 
-/** A brass pin on the rail that points up at a focal point on the axis. */
+/**
+ * How much of the bench the view holds beyond the reading at each end, in
+ * scene units: the lamp house behind the object, and a margin past the image.
+ */
+const LEAD = { left: 0.36, right: 0.26 } as const;
+
+/** The side the bench is read from: straight on, from a little above the axis. */
+const FROM = [0, 0.55, 6] as const;
+
+/**
+ * A brass pin on the rail that points up at a focal point on the axis. Its
+ * name stands at its foot, in front of the rail's scale, clear of the rays.
+ */
 function Pin({ at, name }: { readonly at: number; readonly name: string }) {
   return (
     <group position={[at, 0, 0]}>
@@ -59,7 +72,7 @@ function Pin({ at, name }: { readonly at: number; readonly name: string }) {
         <sphereGeometry args={[0.022, 20, 14]} />
         <meshBasicMaterial color={PLOT_COLORS.amber} toneMapped={false} />
       </mesh>
-      <Tag position={[0, AXIS - 0.16, 0.1]}>
+      <Tag position={[0, 0.02, 0.36]}>
         <InlineMath math={name} />
       </Tag>
     </group>
@@ -125,7 +138,9 @@ function Ray({
  * thin lens law, and meet at the tip of the real image, which the screen
  * stands at to catch. Inside the focal point they spread instead, and their
  * dashed extensions lead back to the upright virtual image on the same side
- * as the arrow.
+ * as the arrow. The object is marked in teal and its image in pink, in the
+ * plane of the rays, and the view holds the bench from the object to the
+ * image, so the diagram fills the frame wherever the object stands.
  */
 export function LensScene({
   focal,
@@ -160,16 +175,25 @@ export function LensScene({
     index: CROWN_INDEX,
     thin: 0.03,
   };
+  const reach = lensReach(focal, object, {
+    left: LEFT * focal,
+    right: RIGHT * focal,
+  });
 
   return (
-    <group>
-      <BenchCamera
-        narrow={[0.4, 2.5, 11.6]}
-        target={[0.05, 1, 0]}
-        wide={[0.7, 2.1, 6.9]}
-      />
+    <View
+      box={{
+        x: {
+          max: reach.right * unit + LEAD.right,
+          min: -reach.left * unit - LEAD.left,
+        },
+        y: { max: AXIS + CARD.tall / 2 + 0.06, min: -0.16 },
+        z: { max: 0.4, min: -0.3 },
+      }}
+      from={FROM}
+    >
       <SeamlessBenchSurface />
-      <Backboard back={0.8} tall={2.3} wide={length + 0.7} />
+      <Backboard back={0.8} tall={2.5} wide={length + 0.7} />
       <group position={[(right - left) / 2, 0, 0]}>
         <Rail length={length} unit={unit} />
       </group>
@@ -221,18 +245,31 @@ export function LensScene({
           />
         );
       })}
+      <group position={[-object * unit, AXIS, 0]}>
+        <Arrow color={PLOT_COLORS.teal} mark tall={TALL} />
+      </group>
+      {Option.match(caught, {
+        onNone: () => null,
+        onSome: (found) => (
+          <group position={[found.distance * unit, AXIS, 0]}>
+            <Arrow
+              color={PLOT_COLORS.pink}
+              mark
+              tall={TALL * found.magnification}
+            />
+          </group>
+        ),
+      })}
       {Option.match(
         Option.filter(virtual, (found) => -found.distance * unit <= left),
         {
           onNone: () => null,
           onSome: (found) => (
-            <group
-              position={[found.distance * unit, AXIS, 0]}
-              rotation={[0, Math.PI / 2, 0]}
-            >
+            <group position={[found.distance * unit, AXIS, 0]}>
               <Arrow
-                color={PLOT_COLORS.teal}
+                color={PLOT_COLORS.pink}
                 ghost
+                mark
                 tall={TALL * found.magnification}
               />
             </group>
@@ -242,6 +279,6 @@ export function LensScene({
       {Arr.map(MARKS, (mark) => (
         <Pin at={mark.at * focal * unit} key={mark.at} name={mark.name} />
       ))}
-    </group>
+    </View>
   );
 }

@@ -142,6 +142,9 @@ export function RayBox({
   );
 }
 
+/** How solid the arrow of a virtual image is drawn. */
+const GHOST = 0.5;
+
 /** The outline of an arrow from the origin up to `tall`, as wide as a lamp's slide shows it. */
 function arrowOutline(tall: number) {
   const outline = new Shape();
@@ -165,21 +168,25 @@ function arrowOutline(tall: number) {
  * A lit arrow in the plane of its group, from the axis up to `tall`, or
  * down when `tall` is negative: the object slide of a lamp, the real image
  * it throws on a screen, or, as a `ghost`, the virtual image a lens seems to
- * show where no light arrives.
+ * show where no light arrives. As a `mark` it is the arrow of a ray diagram
+ * instead: flat ink that stays in sight in front of the apparatus it marks.
  *
  * @param color - The colour of the light
  * @param tall - How far the arrow's tip stands from the axis, signed
  * @param strength - How bright it shines, from 0 to 1
  * @param ghost - Whether no light really arrives here
+ * @param mark - Whether it marks a place in a diagram rather than lighting a surface
  */
 export function Arrow({
   color,
   ghost = false,
+  mark = false,
   strength = 1,
   tall,
 }: {
   readonly color: string;
   readonly ghost?: boolean;
+  readonly mark?: boolean;
   readonly strength?: number;
   readonly tall: number;
 }) {
@@ -187,18 +194,19 @@ export function Arrow({
 
   return (
     <group>
-      <mesh renderOrder={6}>
+      <mesh renderOrder={mark ? 12 : 6}>
         <shapeGeometry args={[outline]} />
         <meshBasicMaterial
           color={color}
-          depthWrite={!ghost}
-          opacity={ghost ? 0.34 : Math.min(1, 0.35 + strength)}
+          depthTest={!mark}
+          depthWrite={!(ghost || mark)}
+          opacity={ghost ? GHOST : Math.min(1, 0.35 + strength)}
           side={DoubleSide}
           toneMapped={false}
           transparent
         />
       </mesh>
-      {ghost ? null : (
+      {ghost || mark ? null : (
         <group position={[0, tall * 0.55, 0.002]}>
           <Glow
             color={color}

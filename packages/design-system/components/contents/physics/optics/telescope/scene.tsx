@@ -1,5 +1,4 @@
 import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
-import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
 import {
   starRay,
@@ -16,13 +15,14 @@ import {
   CROWN_INDEX,
   cellDrop,
 } from "@repo/design-system/components/three/optic/lens";
+import { View } from "@repo/design-system/components/three/optic/view";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 
 /** How high above the benchtop the optical axis runs. */
-const AXIS = 0.95;
+const AXIS = 1.05;
 
 /** How long the bench is, and how far from its left end the objective stands. */
 const LENGTH = 7;
@@ -34,8 +34,15 @@ const TILT = -Math.tan((1.2 * Math.PI) / 180);
 /** The heights, as shares of the radius of the objective, of the three rays drawn from the star. */
 const RAY_HEIGHTS = [0.8, 0, -0.8] as const;
 
-/** Half the width of the objective, in scene units. */
-const RADIUS = 0.3;
+/** Half the width of the objective and of the eyepiece, in scene units. */
+const RADIUS = 0.55;
+const EYE = 0.135;
+
+/** How far in front of the objective the rays from the star are drawn. */
+const APPROACH = 0.9;
+
+/** The side the bench is read from: straight on, from a little above the axis. */
+const FROM = [0, 0.5, 6] as const;
 
 /**
  * An astronomical telescope in normal adjustment, built the way a class
@@ -43,7 +50,8 @@ const RADIUS = 0.3;
  * the sum of their focal lengths apart. Three parallel rays from a distant
  * star enter the objective, cross where it forms the image of the star in
  * the focal plane both lenses share, and leave the eyepiece parallel again
- * at a steeper angle.
+ * at a steeper angle. The view holds the bench from where the rays arrive to
+ * where they leave, so the telescope fills the frame at any length.
  */
 export function TelescopeScene({
   eyepiece,
@@ -79,22 +87,24 @@ export function TelescopeScene({
   };
   const back = {
     focal: lenses.eyepiece,
-    half: radius * 0.45,
+    half: EYE,
     index: CROWN_INDEX,
     thin: 0.02,
   };
-  const leave = Math.min(lenses.eyepiece * 3, 0.95);
+  const leave = Math.min(lenses.eyepiece * 6, 1.3);
   const focus = start + lenses.objective;
 
   return (
-    <group>
-      <BenchCamera
-        narrow={[0.6, 2.2, 11.8]}
-        target={[0.2, 0.8, 0]}
-        wide={[1.1, 1.75, 6.9]}
-      />
+    <View
+      box={{
+        x: { max: end + leave + 0.12, min: start - APPROACH - 0.12 },
+        y: { max: AXIS + radius + 0.42, min: -0.06 },
+        z: { max: 0.36, min: -0.3 },
+      }}
+      from={FROM}
+    >
       <SeamlessBenchSurface />
-      <Backboard back={0.8} tall={1.9} wide={LENGTH + 0.7} />
+      <Backboard back={0.8} tall={2.1} wide={LENGTH + 0.7} />
       <Rail length={LENGTH} unit={unit} />
       <Rider at={start} drop={cellDrop(front)} height={AXIS}>
         <Lens focal={front.focal} half={front.half} thin={front.thin} />
@@ -112,7 +122,7 @@ export function TelescopeScene({
             color={INSTRUMENT_COLORS.lampLight}
             key={share}
             points={[
-              [start - 1.1, AXIS + height - TILT * 1.1, 0],
+              [start - APPROACH, AXIS + height - TILT * APPROACH, 0],
               [start, AXIS + height, 0],
               [end, AXIS + ray.atEyepiece, 0],
               [end + leave, AXIS + ray.atEyepiece + ray.out * leave, 0],
@@ -135,6 +145,6 @@ export function TelescopeScene({
       <group position={[focus, AXIS + lenses.objective * TILT, 0.02]}>
         <Glow color={PLOT_COLORS.amber} size={0.16} strength={0.9} />
       </group>
-    </group>
+    </View>
   );
 }

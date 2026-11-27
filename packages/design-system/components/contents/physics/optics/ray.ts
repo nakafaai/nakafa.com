@@ -252,6 +252,27 @@ export function thinLens(focal: number, object: number) {
 }
 
 /**
+ * How far either side of a thin lens a reader must see to read its ray
+ * diagram, in centimetres: as far as the object, the 2F mark on each side,
+ * and the image wherever it forms. An image farther than `farthest` on its
+ * side is off the bench, so the reading stops at the end of the bench there.
+ */
+export function lensReach(
+  focal: number,
+  object: number,
+  farthest: { readonly left: number; readonly right: number }
+) {
+  const image = Option.match(thinLens(focal, object), {
+    onNone: () => 0,
+    onSome: (found) => found.distance,
+  });
+  return {
+    left: Math.min(Math.max(object, 2 * focal, -image), farthest.left),
+    right: Math.min(Math.max(2 * focal, image), farthest.right),
+  };
+}
+
+/**
  * The three principal rays from the tip of an object `tall` high that stands
  * `object` in front of a thin lens of focal length `focal`: where each meets
  * the lens above the axis, and its slope once the lens has bent it. The ray

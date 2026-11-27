@@ -1,5 +1,4 @@
 import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
-import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import {
   fringeStart,
   SCREEN_HALF,
@@ -22,6 +21,7 @@ import {
   LASER_DROP,
   Laser,
 } from "@repo/design-system/components/three/optic/source";
+import { View } from "@repo/design-system/components/three/optic/view";
 import { PrintFace } from "@repo/design-system/components/three/print/layer";
 import { usePrintNumber } from "@repo/design-system/components/three/print/number";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
@@ -44,6 +44,20 @@ const THROW = 0.8;
 const CARD = { tall: 1.8, wide: 2.6 } as const;
 const BAND = { at: 0.12, tall: 0.7, wide: 2.3 } as const;
 const PRINT = { dots: 0.56, scale: -0.3, span: -0.62, wide: BAND.wide };
+
+/**
+ * The side the bench is read from: from over the laser, looking along the
+ * light at the face of the screen, where the fringes are counted. From that
+ * high the slide stands below the fringes and their scale, not in front.
+ */
+const FROM = [-6, 2.9, 0.7] as const;
+
+/**
+ * How far the slits and the laser show below the axis of the screen from
+ * that side, for every scene unit they stand in front of it: the fall of
+ * the line of sight, and half as much again because they are nearer.
+ */
+const FALL = (1.5 * FROM[1]) / Math.hypot(FROM[0], FROM[2]);
 
 /** How many scene units of slide one millimetre between the slits takes, so the slits visibly part. */
 const PARTING = 0.1;
@@ -75,6 +89,9 @@ function Throw({ long }: { readonly long: number }) {
  * bright and dark fringes. The screen stands at the lab's distance along
  * the rail's scale, and shows the fringes in close-up over a printed
  * millimetre scale, with a dot over every bright fringe counted in a span.
+ * The view faces the screen and holds its whole face, with room under it
+ * for the slits and the laser's aperture, which stand nearer and so show
+ * lower, so the fringes and their scale fill the frame at any distance.
  */
 export function SlitScene({
   distance,
@@ -108,12 +125,17 @@ export function SlitScene({
   );
 
   return (
-    <group>
-      <BenchCamera
-        narrow={[-7.6, 3, 3.6]}
-        target={[0.6, 1.15, 0]}
-        wide={[-6.3, 2.5, 2.9]}
-      />
+    <View
+      box={{
+        x: { max: SLITS_AT + long + 0.02, min: SLITS_AT + long - 0.02 },
+        y: {
+          max: AXIS + CARD.tall / 2 + 0.06,
+          min: Math.min(0.15, AXIS - FALL * (long + THROW)),
+        },
+        z: { max: CARD.wide / 2 + 0.06, min: -CARD.wide / 2 - 0.06 },
+      }}
+      from={FROM}
+    >
       <SeamlessBenchSurface />
       <Backboard back={1.6} tall={2.5} wide={LENGTH + 0.7} />
       <Rail length={LENGTH} unit={UNIT} />
@@ -158,6 +180,6 @@ export function SlitScene({
         />
       </group>
       <Throw long={long} />
-    </group>
+    </View>
   );
 }

@@ -3,6 +3,7 @@ import {
   apparentDepth,
   blockPath,
   criticalAngle,
+  lensReach,
   principalRays,
   refract,
   starRay,
@@ -148,6 +149,30 @@ describe("thinLens", () => {
 
   it("forms no image of an object at the focal point", () => {
     expect(Option.isNone(thinLens(15, 15))).toBe(true);
+  });
+});
+
+describe("lensReach", () => {
+  const farthest = { left: 63, right: 64.5 };
+
+  it("reaches the 2F mark on each side when the object and its real image stand there", () => {
+    expect(lensReach(15, 30, farthest)).toEqual({ left: 30, right: 30 });
+  });
+
+  it("reaches back to a virtual image behind the object", () => {
+    const reach = lensReach(15, 10, farthest);
+    expect(reach.left).toBeCloseTo(30, 9);
+    expect(reach.right).toBe(30);
+  });
+
+  it("reaches out to a far object and stops at the end of the bench for an image beyond it", () => {
+    expect(lensReach(15, 60, farthest).left).toBe(60);
+    expect(lensReach(15, 18, farthest).right).toBe(64.5);
+    expect(lensReach(15, 14, farthest).left).toBe(63);
+  });
+
+  it("keeps to the 2F marks when the object at the focal point has no image", () => {
+    expect(lensReach(15, 15, farthest)).toEqual({ left: 30, right: 30 });
   });
 });
 

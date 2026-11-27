@@ -1,11 +1,11 @@
 import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
-import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { waveVectors } from "@repo/design-system/components/contents/physics/waves/tank/ripple";
 import { Water } from "@repo/design-system/components/contents/physics/waves/tank/water";
 import { refractWave } from "@repo/design-system/components/contents/physics/waves/wave";
 import { Beam } from "@repo/design-system/components/three/optic/beam";
 import { Arc } from "@repo/design-system/components/three/optic/board";
 import { Slab } from "@repo/design-system/components/three/optic/glass";
+import { View } from "@repo/design-system/components/three/optic/view";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -20,8 +20,8 @@ import { useMemo } from "react";
 import { DoubleSide, Shape } from "three";
 
 /** The water of the tank: its length along the boundary and across it, in scene units. */
-const WIDE = 4.4;
-const DEEP = 3.1;
+const WIDE = 3.9;
+const DEEP = 3.4;
 
 /** How many deep-water wavelengths fit across the tank. */
 const WAVES = 7;
@@ -47,13 +47,23 @@ const DIPPER_LONG = 1.1;
 const GANTRY = 0.72;
 
 /** How long each drawn ray is, and the radius of an angle's arc. */
-const RAY = 1.15;
-const ARC = 0.42;
+const RAY = 1.45;
+const ARC = 0.55;
 
 /** Wall seconds a crest takes to move one wavelength, whatever the real frequency. */
 const PERIOD_SECONDS = 1.1;
 
 const DEGREE = Math.PI / 180;
+
+/** The side the tank is read from: from above its near wall, close to a plan of the crests. */
+const FROM = [0, 6, 2.3] as const;
+
+/** What the view holds: the water from wall to wall, and the dipper over it. */
+const FRAME = {
+  x: { max: WIDE / 2 + WALL, min: -WIDE / 2 - WALL },
+  y: { max: LEVEL + 0.2, min: LEVEL - 0.1 },
+  z: { max: DEEP / 2 + WALL, min: -DEEP / 2 - WALL },
+} as const;
 
 /** The outline of a flat arrow `long` from its tail at the origin along +x. */
 function arrowOutline(long: number) {
@@ -285,7 +295,9 @@ function Dipper({ incidence }: { readonly incidence: number }) {
  * the step: the water's surface is the wave itself on both sides, so the
  * crests close up to the shorter wavelength and turn toward the normal
  * where they slow down. Over the water lie the ray along the direction of
- * travel on each side, the normal, and the two angles.
+ * travel on each side, the normal, and the two angles. The view looks down
+ * on the water from wall to wall, so the crests and the angles in both
+ * depths fill the frame.
  */
 export function TankScene({
   deep,
@@ -312,12 +324,7 @@ export function TankScene({
   const bend = refractWave(wave, shallow).refraction * DEGREE;
 
   return (
-    <group>
-      <BenchCamera
-        narrow={[0.3, 7.6, 8.4]}
-        target={[0, 0.95, 0.1]}
-        wide={[0.2, 4.9, 4.9]}
-      />
+    <View box={FRAME} from={FROM}>
       <SeamlessBenchSurface />
       <Tray />
       <group position={[0, LEGS + FLOOR, DEEP / 4]}>
@@ -366,6 +373,6 @@ export function TankScene({
           to={-Math.PI / 2 + bend}
         />
       </group>
-    </group>
+    </View>
   );
 }
