@@ -252,7 +252,11 @@ export function RippleTankLab({
   );
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setIncidence(start);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

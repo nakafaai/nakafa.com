@@ -273,7 +273,11 @@ export function InternalResistanceLab({
   const now = drive(cell, resistance);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setResistance(readings[0].resistance);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

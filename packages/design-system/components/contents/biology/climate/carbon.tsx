@@ -125,7 +125,14 @@ export function CarbonBudgetLab({
   const ppm = "\\text{ ppm}";
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setYear(RECORD_SPAN.last);
+        setJoined([]);
+        setCut(0);
+        setForest(0);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>

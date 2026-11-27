@@ -161,31 +161,47 @@ function VisualCard({
   children,
   className,
   onReset,
+  onStop,
   ref,
   ...props
 }: ComponentProps<typeof Card> & {
   /** Called whenever the card's reset action restores its initial view. */
   readonly onReset?: () => void;
+  /** Called whenever the card's stop or reset action rewinds playback to frame 0. */
+  readonly onStop?: () => void;
 }) {
   const [store] = useState(createVisualStore);
-  const { bind, place, presentation, view } = useStore(
+  const { bind, place, presentation, stopCount, view } = useStore(
     store,
     useShallow((state) => ({
       bind: state.bind,
       place: state.place,
       presentation: state.presentation,
+      stopCount: state.stopCount,
       view: state.view,
     }))
   );
   const shownView = useRef(view);
+  const shownStop = useRef(stopCount);
   const resetCard = useEffectEvent(() => {
     onReset?.();
+  });
+  const stopCard = useEffectEvent(() => {
+    onStop?.();
   });
   const cardRef = useMergedRef(ref, bind);
 
   // Activity hides a route and unmounting removes the card; both return it
   // to the page, so the page behind never stays inert.
   useLayoutEffect(() => () => store.getState().exit(), [store]);
+
+  useEffect(() => {
+    if (shownStop.current === stopCount) {
+      return;
+    }
+    shownStop.current = stopCount;
+    stopCard();
+  }, [stopCount]);
 
   useEffect(() => {
     if (shownView.current === view) {

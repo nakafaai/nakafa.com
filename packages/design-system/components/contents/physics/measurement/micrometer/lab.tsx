@@ -388,7 +388,11 @@ export function MicrometerScrewLab({
   const { division, reading, sleeve } = micrometerReading(thickness);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setThickness(initialThickness);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <div className="flex w-full flex-col gap-3">

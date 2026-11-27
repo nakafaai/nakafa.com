@@ -191,7 +191,12 @@ export function RainDriveRelativeVelocityLab({
   const isFrame = Schema.is(FrameSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setCar(initialCar);
+        setFrame("car");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

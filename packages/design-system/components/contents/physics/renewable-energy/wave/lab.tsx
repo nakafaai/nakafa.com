@@ -217,7 +217,11 @@ export function WaveBuoyPowerLab({
   const isSea = Schema.is(SeaSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setSea(initialSea);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

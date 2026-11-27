@@ -194,7 +194,12 @@ export function WireResistanceLab({
   const ratios = wireRatios(length, diameter);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setLength(lengthRatio);
+        setDiameter(diameterRatio);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <div className="flex w-full flex-col gap-4">

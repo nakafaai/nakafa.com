@@ -184,7 +184,11 @@ export function OrienteeringMapVectorLab({
   const { vector } = shownVector(marks, view);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setView(views[0] ?? "forward");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

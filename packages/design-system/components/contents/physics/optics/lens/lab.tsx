@@ -175,7 +175,11 @@ export function ConvexLensLab({
   const image = thinLens(focal, object);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setObject(start);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

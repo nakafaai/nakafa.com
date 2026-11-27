@@ -222,7 +222,11 @@ export function GasPistonLab({
     ) * 50;
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setStage("start");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

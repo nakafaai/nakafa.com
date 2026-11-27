@@ -309,7 +309,11 @@ export function DensityMeasurementLab({
   const isMaterial = Schema.is(MaterialSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setMaterial("aluminium");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

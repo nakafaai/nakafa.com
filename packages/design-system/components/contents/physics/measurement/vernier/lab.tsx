@@ -350,7 +350,11 @@ export function VernierCaliperLab({
   const { line, main, reading } = vernierReading(width);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setWidth(initialWidth);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <div className="flex w-full flex-col gap-3">

@@ -262,7 +262,12 @@ export function DoubleSlitLab({
     fringeSpacing(wavelength * 1e-9, separation * 1e-3, distance) * 1000;
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setDistance(startDistance);
+        setSeparation(startSeparation);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <div className="flex w-full flex-col gap-4">

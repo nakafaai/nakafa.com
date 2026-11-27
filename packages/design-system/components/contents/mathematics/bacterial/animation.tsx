@@ -18,6 +18,13 @@ import {
   createBacteriaStore,
   shownGeneration,
 } from "@repo/design-system/components/contents/mathematics/bacterial/store";
+import {
+  fade,
+  litBall,
+  mix,
+  vignette,
+  withShadow,
+} from "@repo/design-system/components/contents/physics/canvas/paint";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import {
   useVisualScene,
@@ -32,6 +39,7 @@ import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { P5Sketch } from "@repo/design-system/components/visual/sketch";
 import { useRequired } from "@repo/design-system/hooks/required";
+import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type p5 from "p5";
@@ -80,10 +88,151 @@ interface BacteriaFrame {
   readonly next: number;
 }
 
+/** Draws an illuminated microscope culture chamber with condenser glow, graticule ticks, and cover-slip rim. */
+function drawMicroscopeStage(
+  sketch: p5,
+  width: number,
+  height: number,
+  accent: string
+) {
+  const cx = width / 2;
+  const cy = height / 2;
+  const span = Math.hypot(width, height) * 0.56;
+  const stageEdge = mix(getColor("ZINC", 950), accent, 0.16);
+  const agarCenter = mix(accent, getColor("WHITE"), 0.88);
+  const agarMid = mix(accent, getColor("SLATE", 200), 0.72);
+  const agarOuter = mix(accent, getColor("SLATE", 700), 0.52);
+  const graticule = mix(accent, getColor("ZINC", 950), 0.7);
+
+  sketch.background(stageEdge);
+
+  // Full-field trans-illuminated condenser light through nutrient agar
+  const context = sketch.drawingContext;
+  if (context instanceof CanvasRenderingContext2D) {
+    const condenser = context.createRadialGradient(
+      cx - width * 0.06,
+      cy - height * 0.08,
+      Math.min(width, height) * 0.04,
+      cx,
+      cy,
+      span
+    );
+    condenser.addColorStop(0, agarCenter);
+    condenser.addColorStop(0.58, agarMid);
+    condenser.addColorStop(1, agarOuter);
+    context.fillStyle = condenser;
+    context.fillRect(0, 0, width, height);
+  } else {
+    sketch.background(agarMid);
+  }
+
+  // Subtle etched microscopy ocular reticle (crosshair + concentric measurement rings)
+  sketch.noFill();
+  sketch.stroke(fade(graticule, 0.11));
+  sketch.strokeWeight(1);
+  const minorRadius = Math.min(width, height) * 0.34;
+  sketch.circle(cx, cy, minorRadius * 2);
+  sketch.circle(cx, cy, minorRadius * 3.1);
+  sketch.line(cx - width * 0.44, cy, cx + width * 0.44, cy);
+  sketch.line(cx, cy - height * 0.44, cx, cy + height * 0.44);
+
+  // Micrometer scale ticks along the horizontal reticle
+  const tickStep = Math.max(18, Math.round(width / 26));
+  const halfTicks = Math.floor((width * 0.4) / tickStep);
+  Arr.forEach(Arr.range(-halfTicks, halfTicks), (index) => {
+    if (index === 0) {
+      return;
+    }
+    const tx = cx + index * tickStep;
+    const major = index % 5 === 0 ? 7 : 3.5;
+    sketch.line(tx, cy - major, tx, cy + major);
+  });
+
+  // Beveled glass cover-slip frame + top-left specular sheen
+  const inset = 6;
+  sketch.stroke(fade(getColor("WHITE"), 0.55));
+  sketch.strokeWeight(1.5);
+  sketch.rect(inset, inset, width - inset * 2, height - inset * 2, 8);
+  sketch.stroke(fade(graticule, 0.18));
+  sketch.strokeWeight(1);
+  sketch.rect(
+    inset + 2,
+    inset + 2,
+    width - (inset + 2) * 2,
+    height - (inset + 2) * 2,
+    6
+  );
+  sketch.noStroke();
+}
+
+/** Draws one shaded bacterial cell with agar contact shadow, membrane halo, nucleoid, and wet specular gloss. */
+function drawBacterium(
+  sketch: p5,
+  x: number,
+  y: number,
+  radius: number,
+  color: string
+) {
+  const darkEdge = mix(color, getColor("BLACK"), 0.45);
+  const deepCore = mix(color, getColor("ZINC", 950), 0.78);
+  const brightCore = mix(color, getColor("WHITE"), 0.54);
+
+  // Soft agar contact shadow offset toward bottom-right
+  sketch.noStroke();
+  withShadow(
+    sketch,
+    {
+      blur: Math.max(4, radius * 0.28),
+      color: fade(deepCore, 0.28),
+      drop: Math.max(2, radius * 0.12),
+    },
+    () => {
+      // 3D-shaded cytoplasmic body
+      litBall(sketch, { x, y }, radius, {
+        dark: darkEdge,
+        light: brightCore,
+      });
+    }
+  );
+
+  // Outer translucent glycocalyx / capsule halo
+  sketch.noFill();
+  sketch.stroke(fade(brightCore, 0.42));
+  sketch.strokeWeight(Math.max(1.2, radius * 0.1));
+  sketch.circle(x, y, radius * 2.1);
+
+  // Crisp outer plasma membrane rim
+  sketch.stroke(fade(darkEdge, 0.68));
+  sketch.strokeWeight(Math.max(0.75, radius * 0.06));
+  sketch.circle(x, y, radius * 1.98);
+  sketch.noStroke();
+
+  // Internal nucleoid region, ribosome flecks & curved wet specular highlight
+  if (radius >= 4) {
+    sketch.fill(fade(darkEdge, 0.22));
+    sketch.ellipse(
+      x + radius * 0.08,
+      y + radius * 0.06,
+      radius * 0.86,
+      radius * 0.66
+    );
+    sketch.fill(fade(brightCore, 0.28));
+    sketch.circle(x + radius * 0.26, y - radius * 0.18, radius * 0.18);
+    sketch.circle(x - radius * 0.16, y + radius * 0.3, radius * 0.14);
+    sketch.fill(fade(getColor("WHITE"), 0.62));
+    sketch.ellipse(
+      x - radius * 0.3,
+      y - radius * 0.32,
+      radius * 0.42,
+      radius * 0.28
+    );
+  }
+}
+
 /**
- * Draws dividing bacteria. Each frame moves the dish's division on, asks the
- * lesson for the next generation once one ends, and draws the cells of that
- * moment; a paused card shows the generation the learner chose.
+ * Draws dividing bacteria inside an illuminated microscope culture chamber.
+ * Each frame moves the division on, asks the lesson for the next generation
+ * once one ends, and draws shaded cells with membrane halos and optical depth.
  */
 function bacteriaProgram(sketch: p5, read: () => BacteriaFrame) {
   let division = NO_DIVISION;
@@ -104,8 +253,7 @@ function bacteriaProgram(sketch: p5, read: () => BacteriaFrame) {
     if (step.ended) {
       frame.advance();
     }
-    sketch.clear();
-    sketch.fill(frame.color);
+    drawMicroscopeStage(sketch, sketch.width, sketch.height, frame.color);
     Arr.forEach(
       divisionCells(
         frame.current,
@@ -115,9 +263,10 @@ function bacteriaProgram(sketch: p5, read: () => BacteriaFrame) {
         sketch.height
       ),
       ({ radius, x, y }) => {
-        sketch.circle(x, y, radius * 2);
+        drawBacterium(sketch, x, y, radius, frame.color);
       }
     );
+    vignette(sketch, 0.16);
   };
 }
 
@@ -273,7 +422,14 @@ export function BacterialGrowth({
       }}
     >
       <BacterialTimeProvider time={time}>
-        <VisualCard>
+        <VisualCard
+          onReset={() => {
+            store.getState().pace(1);
+          }}
+          onStop={() => {
+            store.getState().show(0, store.getState().view);
+          }}
+        >
           <VisualCardHeader
             description={labels.description}
             title={labels.title}

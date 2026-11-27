@@ -237,7 +237,11 @@ export function EnergyFlowLossLab({
   const isPlant = Schema.is(PlantSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setPlant(initialPlant);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

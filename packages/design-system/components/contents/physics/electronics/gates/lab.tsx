@@ -295,7 +295,11 @@ export function LogicGateLab({
   ).length;
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setGate(start);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

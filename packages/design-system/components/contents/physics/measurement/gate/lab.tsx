@@ -373,7 +373,11 @@ export function LightGateSpeedLab({
   const { speed, time } = gateReading(distance);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setDistance(initialDistance);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <div className="flex w-full flex-col gap-3">

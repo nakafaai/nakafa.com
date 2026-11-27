@@ -281,7 +281,11 @@ export function FlashlightEfficiencyLab({
   const isBulb = Schema.is(BulbSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setBulb(initialBulb);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

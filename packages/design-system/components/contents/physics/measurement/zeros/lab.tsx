@@ -315,7 +315,12 @@ export function SignificantZerosLab({
   const isUnit = Schema.is(RodUnitSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setTool("ruler");
+        setUnit("cm");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

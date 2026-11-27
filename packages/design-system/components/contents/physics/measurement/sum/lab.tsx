@@ -269,7 +269,11 @@ export function DecimalSumLab({
   const isTool = Schema.is(CopperToolSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setTool("ruler");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

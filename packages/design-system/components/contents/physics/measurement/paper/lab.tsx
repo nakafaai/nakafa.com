@@ -377,7 +377,11 @@ export function PaperStackLab({
   const isStack = Schema.is(StackSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setStack("500");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

@@ -344,7 +344,11 @@ export function BoltDimensionsLab({
   const isQuantity = Schema.is(BoltQuantitySchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setQuantity("length");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

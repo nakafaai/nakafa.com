@@ -316,7 +316,11 @@ export function HydroDamLab({
   const stages = stagePowers(head);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setHead(initialHead);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

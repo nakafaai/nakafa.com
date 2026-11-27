@@ -94,7 +94,12 @@ export function PredatorPreyLab({
   );
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setOwls(10);
+        setYear(YEARS);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
 
       <VisualCardToolbar>

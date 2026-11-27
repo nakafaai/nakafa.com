@@ -228,7 +228,11 @@ export function GridLoadCurveLab({
   const isSchedule = Schema.is(ScheduleSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setSchedule(initialSchedule);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

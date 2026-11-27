@@ -254,7 +254,12 @@ export function MicrohydroLab({
   const [head, setHead] = useState(initialHead);
   const measure = useQuantity();
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setFlow(initialFlow);
+        setHead(initialHead);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

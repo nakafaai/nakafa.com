@@ -198,7 +198,11 @@ export function SpringChainLab({
   const most = springChain(stiffness, Math.max(start * 2, 10)).total * 100;
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setLoad(start);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

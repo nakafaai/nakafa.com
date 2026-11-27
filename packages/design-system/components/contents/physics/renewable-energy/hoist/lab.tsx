@@ -288,7 +288,11 @@ export function HoistWorkLab({
   const isMotor = Schema.is(MotorSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setMotor(initialMotor);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

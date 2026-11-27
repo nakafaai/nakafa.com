@@ -259,7 +259,11 @@ export function PendulumGraphLab({
   const line = pendulumLine(gradient, measure === "top" ? radius : 0);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setMeasure("top");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

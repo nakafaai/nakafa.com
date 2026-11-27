@@ -256,7 +256,11 @@ export function SolarRoofPaybackLab({
   const measure = useQuantity();
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setYield(initialYield);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <LabSlider

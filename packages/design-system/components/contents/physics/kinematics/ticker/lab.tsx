@@ -385,7 +385,11 @@ export function TickerTapeMotionLab({
   const isMotion = Schema.is(TapeMotionSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setMotion(initialMotion);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

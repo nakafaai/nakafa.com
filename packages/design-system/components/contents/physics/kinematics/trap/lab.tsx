@@ -254,7 +254,11 @@ export function SpeedTrapInstantSpeedLab({
   const isGap = Schema.is(TrapGapSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setGap(40);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

@@ -158,7 +158,12 @@ export function WindMapVectorLab({
   const parts = breezeParts(breeze);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setAngle(startAngle);
+        setSpeed(startSpeed);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <div className="flex w-full flex-col gap-4">

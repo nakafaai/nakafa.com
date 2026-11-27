@@ -334,7 +334,11 @@ export function StreetOriginPositionLab({
     `${value > 0 ? "+" : ""}${measure(value, "\\text{ m}", 0)}`;
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setOrigin("store");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

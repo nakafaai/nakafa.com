@@ -250,7 +250,12 @@ export function TrainPassengerRelativeLab({
     `${value > 0 ? "+" : ""}${quantity(value, "\\text{ m/s}", 1)}`;
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setObserver("platform");
+        setWay("forward");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

@@ -252,7 +252,11 @@ export function HoseJetProjectileLab({
   const isAngle = Schema.is(JetAngleSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setAngle(initialAngle);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup

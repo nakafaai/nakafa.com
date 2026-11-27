@@ -209,7 +209,11 @@ export function StringWhirlReleaseLab({
   const isRelease = Schema.is(ReleasePointSchema);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setRelease("north");
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <ToggleGroup
