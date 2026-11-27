@@ -1,23 +1,13 @@
-import { caption } from "@repo/design-system/components/contents/physics/canvas/caption";
-import {
-  fade,
-  vignette,
-} from "@repo/design-system/components/contents/physics/canvas/paint";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
-import {
-  paintBoard,
-  paintBulb,
-  paintResistor,
-  terminal,
-  wire,
-} from "@repo/design-system/components/contents/physics/circuit/board";
 import { dividerVoltage } from "@repo/design-system/components/contents/physics/electronics/logic";
 import {
-  paintLdr,
-  paintTransistor,
-} from "@repo/design-system/components/contents/physics/electronics/parts";
+  Lamp,
+  TransistorSwitchScene,
+} from "@repo/design-system/components/contents/physics/electronics/switch/scene";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   VisualCard,
   VisualCardBody,
@@ -28,14 +18,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { P5Sketch } from "@repo/design-system/components/visual/sketch";
-import { getColor } from "@repo/design-system/lib/color";
-import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
-import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
-import { Schema } from "effect";
-import type p5 from "p5";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 
 /**
  * The resistance of a typical light-dependent resistor, in kilohms: about
@@ -56,90 +40,6 @@ function switchingLight(supply: number, threshold: number, resistor: number) {
     Math.max(Math.log(needed / LDR.dark) / Math.log(LDR.bright / LDR.dark), 0),
     1
   );
-}
-
-/** What the sketch reads on every frame. */
-const SwitchFrameSchema = Schema.Struct({
-  light: Schema.Finite,
-  on: Schema.Boolean,
-});
-type SwitchFrame = typeof SwitchFrameSchema.Type;
-
-/**
- * Draws the automatic lamp on its board: the supply rails, the fixed
- * resistor above the LDR in the divider, the base wire to the transistor,
- * and the bulb in the collector circuit, lit only while the base voltage has
- * reached the switching value. The board darkens with the light level.
- */
-function switchProgram(sketch: p5, read: () => SwitchFrame) {
-  sketch.setup = () => {
-    sketch.createCanvas(1, 1);
-  };
-  sketch.draw = () => {
-    const frame = read();
-    const { height, width } = sketch;
-    const at = (x: number, y: number) => ({ x: width * x, y: height * y });
-    paintBoard(sketch);
-    sketch.noStroke();
-    sketch.fill(fade(getColor("BLACK"), 0.55 * (1 - frame.light)));
-    sketch.rect(0, 0, width, height);
-    wire(sketch, [at(0.06, 0.1), at(0.94, 0.1)], MACHINE_COLORS.hullRed);
-    wire(
-      sketch,
-      [at(0.06, 0.9), at(0.94, 0.9)],
-      INSTRUMENT_COLORS.trolleyPaint
-    );
-    wire(sketch, [at(0.24, 0.1), at(0.24, 0.2)], MACHINE_COLORS.hullRed);
-    paintResistor(sketch, at(0.24, 0.2), at(0.24, 0.4), height * 0.16);
-    wire(sketch, [at(0.24, 0.4), at(0.24, 0.6)], MACHINE_COLORS.signalAmber);
-    wire(sketch, [at(0.24, 0.5), at(0.6, 0.5)], MACHINE_COLORS.signalAmber);
-    terminal(sketch, at(0.24, 0.5));
-    paintLdr(
-      sketch,
-      at(0.24, 0.68),
-      Math.min(width, height) * 0.12,
-      frame.light
-    );
-    wire(
-      sketch,
-      [at(0.24, 0.75), at(0.24, 0.9)],
-      INSTRUMENT_COLORS.trolleyPaint
-    );
-    const legs = paintTransistor(
-      sketch,
-      at(0.64, 0.46),
-      Math.min(width, height) * 0.1
-    );
-    wire(sketch, [at(0.6, 0.5), legs.base], MACHINE_COLORS.signalAmber);
-    wire(
-      sketch,
-      [legs.emitter, { x: legs.emitter.x, y: height * 0.9 }],
-      INSTRUMENT_COLORS.trolleyPaint
-    );
-    wire(
-      sketch,
-      [legs.collector, { x: width * 0.8, y: legs.collector.y }, at(0.8, 0.36)],
-      MACHINE_COLORS.hullRed
-    );
-    paintBulb(
-      sketch,
-      at(0.8, 0.28),
-      Math.min(width, height) * 0.12,
-      frame.on ? 1 : 0
-    );
-    wire(sketch, [at(0.8, 0.2), at(0.8, 0.1)], MACHINE_COLORS.hullRed);
-    const sign = {
-      align: "left",
-      baseline: "middle",
-      color: fade(getColor("WHITE"), 0.9),
-      size: 14,
-    } as const;
-    caption(sketch, "+", { x: width * 0.02, y: height * 0.1 }, sign);
-    caption(sketch, "−", { x: width * 0.02, y: height * 0.9 }, sign);
-    caption(sketch, "R", { x: width * 0.29, y: height * 0.3 }, sign);
-    caption(sketch, "LDR", { x: width * 0.31, y: height * 0.68 }, sign);
-    vignette(sketch, 0.3);
-  };
 }
 
 interface TransistorSwitchLabProps {
@@ -220,12 +120,18 @@ export function TransistorSwitchLab({
           />
         </div>
       </VisualCardToolbar>
-      <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
-        <P5Sketch
-          label={labels.viewLabel}
-          program={switchProgram}
-          state={{ light, on: base >= threshold }}
-        />
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ScienceStage floor={0} reach={2.7} setting="lab">
+          <Suspense fallback={null}>
+            <TransistorSwitchScene base={base} on={base >= threshold}>
+              <Lamp light={light} />
+            </TransistorSwitchScene>
+          </Suspense>
+        </ScienceStage>
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>

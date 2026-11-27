@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   gasPressure,
+  heatingTemperature,
   latentFromHeating,
   meltIce,
 } from "@repo/design-system/components/contents/physics/heat/thermal";
@@ -50,5 +51,19 @@ describe("latentFromHeating", () => {
     });
     expect(sample.power).toBeCloseTo(66.67, 2);
     expect(sample.latent).toBeCloseTo(1e5, 6);
+  });
+});
+
+describe("heatingTemperature", () => {
+  const heating = { melt: 5, melting: 60, top: 80, warm: 2 };
+
+  it("stays at the melting point while the solid melts", () => {
+    expect(heatingTemperature(heating, 0)).toBe(60);
+    expect(heatingTemperature(heating, 5 / 7)).toBe(60);
+  });
+
+  it("climbs steadily to the final temperature once the solid has melted", () => {
+    expect(heatingTemperature(heating, 6 / 7)).toBeCloseTo(70, 9);
+    expect(heatingTemperature(heating, 1)).toBeCloseTo(80, 9);
   });
 });

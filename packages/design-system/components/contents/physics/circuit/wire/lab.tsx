@@ -1,20 +1,10 @@
-import { caption } from "@repo/design-system/components/contents/physics/canvas/caption";
-import {
-  fade,
-  gradientRect,
-  mix,
-  spotlight,
-  vignette,
-} from "@repo/design-system/components/contents/physics/canvas/paint";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
-import {
-  paintBoard,
-  terminal,
-  wire,
-} from "@repo/design-system/components/contents/physics/circuit/board";
 import { wireRatios } from "@repo/design-system/components/contents/physics/circuit/current";
+import { WireResistanceScene } from "@repo/design-system/components/contents/physics/circuit/wire/scene";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   VisualCard,
   VisualCardBody,
@@ -25,136 +15,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { P5Sketch } from "@repo/design-system/components/visual/sketch";
-import { getColor } from "@repo/design-system/lib/color";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
-import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
-import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
-import { Schema } from "effect";
-import type p5 from "p5";
 import type { ReactNode } from "react";
-import { useState } from "react";
-
-/** What the sketch reads on every frame: the second wire's length and diameter as multiples of the first. */
-const WireFrameSchema = Schema.Struct({
-  diameter: Schema.Finite,
-  length: Schema.Finite,
-});
-type WireFrame = typeof WireFrameSchema.Type;
-
-/** One nichrome wire stretched between two posts, `thick` pixels thick, glowing with `glow` from 0 to 1. */
-function paintWire(
-  sketch: p5,
-  from: number,
-  to: number,
-  y: number,
-  thick: number,
-  glow: number
-) {
-  spotlight(sketch, { x: (from + to) / 2, y }, (to - from) * 0.6, {
-    color: BENCH_COLORS.coalGlow,
-    strength: 0.45 * glow,
-  });
-  gradientRect(
-    sketch,
-    { height: thick, width: to - from, x: from, y: y - thick / 2 },
-    [
-      [
-        0,
-        mix(
-          mix(ENERGY_COLORS.galvanizedSteel, BENCH_COLORS.coalGlow, glow),
-          getColor("WHITE"),
-          0.35
-        ),
-      ],
-      [0.5, mix(ENERGY_COLORS.galvanizedSteel, BENCH_COLORS.coalGlow, glow)],
-      [
-        1,
-        mix(
-          mix(ENERGY_COLORS.galvanizedSteel, BENCH_COLORS.coalGlow, glow),
-          getColor("BLACK"),
-          0.4
-        ),
-      ],
-    ]
-  );
-  terminal(sketch, { x: from, y });
-  terminal(sketch, { x: to, y });
-}
-
-/**
- * Draws both wires on the same supply, each between its two posts, drawn to
- * scale in length and thickness: the first above, the second below, each
- * glowing with its power relative to the brighter one.
- */
-function wireProgram(sketch: p5, read: () => WireFrame) {
-  sketch.setup = () => {
-    sketch.createCanvas(1, 1);
-  };
-  sketch.draw = () => {
-    const frame = read();
-    const { height, width } = sketch;
-    const second = wireRatios(frame.length, frame.diameter);
-    const longest = Math.max(1, frame.length);
-    const unit = (width * 0.7) / longest;
-    const thickest = Math.max(1, frame.diameter);
-    const thickness = Math.min(height * 0.035, (height * 0.1) / thickest);
-    const brightest = Math.max(1, second.power);
-    paintBoard(sketch);
-    const left = width * 0.15;
-    wire(
-      sketch,
-      [
-        { x: width * 0.06, y: height * 0.3 },
-        { x: left, y: height * 0.3 },
-      ],
-      MACHINE_COLORS.hullRed
-    );
-    wire(
-      sketch,
-      [
-        { x: width * 0.06, y: height * 0.68 },
-        { x: left, y: height * 0.68 },
-      ],
-      MACHINE_COLORS.hullRed
-    );
-    paintWire(
-      sketch,
-      left,
-      left + unit,
-      height * 0.3,
-      thickness,
-      Math.sqrt(1 / brightest)
-    );
-    paintWire(
-      sketch,
-      left,
-      left + unit * frame.length,
-      height * 0.68,
-      thickness * frame.diameter,
-      Math.sqrt(second.power / brightest)
-    );
-    const name = {
-      align: "left",
-      baseline: "bottom",
-      color: fade(getColor("WHITE"), 0.9),
-      size: 13,
-    } as const;
-    caption(
-      sketch,
-      "1",
-      { x: left, y: height * 0.3 - thickness * 1.5 - 8 },
-      name
-    );
-    caption(
-      sketch,
-      "2",
-      { x: left, y: height * 0.68 - thickness * frame.diameter * 0.5 - 12 },
-      name
-    );
-    vignette(sketch, 0.3);
-  };
-}
+import { Suspense, useState } from "react";
 
 interface WireResistanceLabProps {
   description: NonNullable<ReactNode>;
@@ -225,12 +87,16 @@ export function WireResistanceLab({
           />
         </div>
       </VisualCardToolbar>
-      <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
-        <P5Sketch
-          label={labels.viewLabel}
-          program={wireProgram}
-          state={{ diameter, length }}
-        />
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ScienceStage floor={0} reach={2.8} setting="lab">
+          <Suspense fallback={null}>
+            <WireResistanceScene diameter={diameter} length={length} />
+          </Suspense>
+        </ScienceStage>
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>

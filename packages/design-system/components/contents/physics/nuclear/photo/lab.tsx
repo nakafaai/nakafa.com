@@ -1,15 +1,10 @@
-import {
-  fade,
-  gradientRect,
-  mix,
-  spotlight,
-  vignette,
-} from "@repo/design-system/components/contents/physics/canvas/paint";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
 import { photoelectric } from "@repo/design-system/components/contents/physics/nuclear/decay";
-import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
+import { PhotoelectricScene } from "@repo/design-system/components/contents/physics/nuclear/photo/scene";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   VisualCard,
   VisualCardBody,
@@ -20,134 +15,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { P5Sketch } from "@repo/design-system/components/visual/sketch";
-import { getColor } from "@repo/design-system/lib/color";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
-import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
-import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
-import { LIGHT_COLORS } from "@repo/design-system/lib/material/light";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { Array as Arr, Option, Schema } from "effect";
-import type p5 from "p5";
 import type { ReactNode } from "react";
-import { useState } from "react";
-
-/**
- * The colour a camera records for light of `wavelength` nanometres, from a
- * piecewise approximation of the visible spectrum, with ultraviolet drawn as
- * a deep violet.
- */
-function spectrum(wavelength: number) {
-  const stops: readonly (readonly [number, string])[] = [
-    [380, PLOT_COLORS.violet],
-    [450, LIGHT_COLORS.spectrumBlue],
-    [495, LIGHT_COLORS.spectrumCyan],
-    [530, LIGHT_COLORS.spectrumGreen],
-    [580, LIGHT_COLORS.spectrumYellow],
-    [620, LIGHT_COLORS.spectrumOrange],
-    [700, LIGHT_COLORS.spectrumRed],
-  ];
-  const upper = Arr.findFirstIndex(stops, ([edge]) => edge >= wavelength);
-  if (Option.isNone(upper)) {
-    return LIGHT_COLORS.spectrumRed;
-  }
-  const high = stops[upper.value];
-  const low = stops[Math.max(upper.value - 1, 0)];
-  if (!(high && low) || high[0] === low[0]) {
-    return high?.[1] ?? PLOT_COLORS.violet;
-  }
-  return mix(low[1], high[1], (wavelength - low[0]) / (high[0] - low[0]));
-}
-
-/** What the sketch reads on every frame. */
-const PhotoFrameSchema = Schema.Struct({
-  emits: Schema.Boolean,
-  intensity: Schema.Finite,
-  kinetic: Schema.Finite,
-  wavelength: Schema.Finite,
-});
-type PhotoFrame = typeof PhotoFrameSchema.Type;
-
-/**
- * Draws one moment inside an evacuated tube: a lamp on the left sends
- * photons of the chosen colour, as many each second as the intensity says,
- * onto a metal plate. Where one photon carries more than the work function,
- * an electron leaves the plate at a speed that grows with its greatest
- * kinetic energy; otherwise the photons are absorbed and nothing leaves.
- */
-function photoProgram(sketch: p5, read: () => PhotoFrame) {
-  let clock = 0;
-  sketch.setup = () => {
-    sketch.createCanvas(1, 1);
-  };
-  sketch.draw = () => {
-    const frame = read();
-    if (sketch.isLooping()) {
-      clock += Math.min(sketch.deltaTime / 1000, 0.1);
-    }
-    const { height, width } = sketch;
-    gradientRect(sketch, { height, width, x: 0, y: 0 }, [
-      [0, mix(ENERGY_COLORS.nightSky, getColor("WHITE"), 0.05)],
-      [1, getColor("ZINC", 950)],
-    ]);
-    const tube = {
-      height: height * 0.62,
-      width: width * 0.86,
-      x: width * 0.07,
-      y: height * 0.19,
-    };
-    sketch.noStroke();
-    sketch.fill(fade(BENCH_COLORS.glass, 0.08));
-    sketch.rect(tube.x, tube.y, tube.width, tube.height, tube.height * 0.5);
-    sketch.noFill();
-    sketch.stroke(fade(BENCH_COLORS.glass, 0.6));
-    sketch.strokeWeight(2);
-    sketch.rect(tube.x, tube.y, tube.width, tube.height, tube.height * 0.5);
-    const plate = { x: width * 0.6, y: height * 0.32 };
-    sketch.noStroke();
-    sketch.fill(INSTRUMENT_COLORS.aluminium);
-    sketch.rect(plate.x, plate.y, width * 0.03, height * 0.36);
-    const color = spectrum(frame.wavelength);
-    const lamp = { x: width * 0.14, y: height * 0.5 };
-    spotlight(sketch, lamp, width * 0.12, { color, strength: 0.6 });
-    sketch.fill(mix(color, getColor("WHITE"), 0.5));
-    sketch.circle(lamp.x, lamp.y, 18);
-    const photons = Math.round(6 + frame.intensity * 14);
-    const flight = 1.2;
-    Arr.forEach(
-      Arr.makeBy(photons, (index) => index),
-      (index) => {
-        const phase = (hashUnit(index, 0) * flight + clock) % flight;
-        const share = phase / flight;
-        const targetY = plate.y + hashUnit(index, 1) * height * 0.36;
-        const x = lamp.x + (plate.x - lamp.x) * share;
-        const y = lamp.y + (targetY - lamp.y) * share;
-        sketch.stroke(color);
-        sketch.strokeWeight(2);
-        sketch.noFill();
-        const wave = 6;
-        sketch.line(
-          x - wave,
-          y + Math.sin(share * 40) * 2,
-          x + wave,
-          y - Math.sin(share * 40) * 2
-        );
-        if (frame.emits) {
-          const out = (phase + flight * 0.5) % flight;
-          const fly = Math.sqrt(frame.kinetic) * width * 0.25 * (out / flight);
-          sketch.noStroke();
-          sketch.fill(PLOT_COLORS.teal);
-          sketch.circle(
-            plate.x + width * 0.04 + fly,
-            targetY - fly * 0.2 * (hashUnit(index, 2) - 0.5),
-            5
-          );
-        }
-      }
-    );
-    vignette(sketch, 0.3);
-  };
-}
+import { Suspense, useState } from "react";
 
 interface PhotoelectricLabProps {
   /** The elementary charge, in coulombs, which turns joules into electronvolts. */
@@ -234,17 +103,23 @@ export function PhotoelectricLab({
           />
         </div>
       </VisualCardToolbar>
-      <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
-        <P5Sketch
-          label={labels.viewLabel}
-          program={photoProgram}
-          state={{
-            emits: photon.emits,
-            intensity,
-            kinetic: photon.kinetic,
-            wavelength,
-          }}
-        />
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ScienceStage floor={0} reach={3} setting="lab">
+          <Suspense fallback={null}>
+            <PhotoelectricScene
+              emits={photon.emits}
+              energy={photon.energy}
+              intensity={intensity}
+              kinetic={photon.kinetic}
+              wavelength={wavelength}
+              work={workFunction}
+            />
+          </Suspense>
+        </ScienceStage>
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>

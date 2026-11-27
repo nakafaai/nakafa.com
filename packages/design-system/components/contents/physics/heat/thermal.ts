@@ -65,3 +65,27 @@ export function latentFromHeating(sample: {
   const power = (sample.mass * sample.specific * sample.rise) / sample.warm;
   return { latent: (power * sample.melt) / sample.mass, power };
 }
+
+/**
+ * The temperature a `share` of the way through a heating that first melts a
+ * solid for `melt` minutes at its melting point and then warms the liquid to
+ * `top` over `warm` minutes: flat while it melts, then a steady climb.
+ */
+export function heatingTemperature(
+  heating: {
+    readonly melt: number;
+    readonly melting: number;
+    readonly top: number;
+    readonly warm: number;
+  },
+  share: number
+) {
+  const minutes = share * (heating.melt + heating.warm);
+  if (minutes <= heating.melt) {
+    return heating.melting;
+  }
+  return (
+    heating.melting +
+    ((heating.top - heating.melting) * (minutes - heating.melt)) / heating.warm
+  );
+}
