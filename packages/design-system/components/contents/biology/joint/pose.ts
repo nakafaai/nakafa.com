@@ -68,23 +68,23 @@ export const NAMES: Record<
   ballSocket: {
     bone: { at: [-0.62, -0.08, 0], side: "right", target: [-0.54, -0.08, 0] },
     cartilage: {
-      at: [-0.44, -0.32, 0.06],
+      at: [-0.42, -0.3, 0.06],
       side: "top",
       target: [-0.077, -0.084, 0.065],
     },
     fluid: {
-      at: [0.4, -0.4, -0.1],
-      side: "left",
+      at: [0.36, -0.48, -0.1],
+      side: "top",
       target: [-0.046, -0.13, -0.099],
     },
     ligament: {
-      at: [-0.12, -0.48, 0.06],
+      at: [-0.24, -0.48, 0.06],
       side: "top",
       target: [-0.175, -0.107, 0.064],
     },
     membrane: {
-      at: [0.4, -0.2, -0.1],
-      side: "left",
+      at: [0.44, -0.3, -0.1],
+      side: "top",
       target: [-0.052, -0.106, -0.142],
     },
     muscle: {
@@ -96,23 +96,23 @@ export const NAMES: Record<
   hinge: {
     bone: { at: [-0.6, 0, 0], side: "right", target: [-0.52, 0, 0] },
     cartilage: {
-      at: [-0.44, -0.32, 0.1],
+      at: [-0.42, -0.3, 0.1],
       side: "top",
       target: [-0.03, -0.07, 0.105],
     },
     fluid: {
-      at: [0.4, -0.4, -0.1],
-      side: "left",
+      at: [0.36, -0.48, -0.1],
+      side: "top",
       target: [0.045, -0.109, -0.122],
     },
     ligament: {
-      at: [-0.12, -0.48, 0.14],
+      at: [-0.24, -0.48, 0.14],
       side: "top",
       target: [0, -0.02, 0.146],
     },
     membrane: {
-      at: [0.4, -0.2, -0.1],
-      side: "left",
+      at: [0.44, -0.3, -0.1],
+      side: "top",
       target: [0.108, -0.141, -0.091],
     },
     muscle: {
