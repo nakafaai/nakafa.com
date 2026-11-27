@@ -12,16 +12,17 @@ import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 const PLACE = [-0.16, 0, -0.14] as const;
 
 /**
- * What the camera frames at every width, in scene units: the anvil, the ball
- * it holds against the spindle, the sleeve, and the numbered bevel of the
- * thimble, which are the subject and both scales of its reading. Past the
- * bevel the thimble and its ratchet run out of the picture, and so does the
- * low back of the frame, so the scales stay large enough to read on a phone.
+ * What the camera frames at every width, in scene units: the whole C frame
+ * with its range plate, the anvil, the ball it holds against the spindle,
+ * the sleeve, and the numbered bevel of the thimble, which are the subject
+ * and both scales of its reading. Past the bevel the thimble and its
+ * ratchet run out of the picture at the side, so the scales stay large
+ * enough to read on a phone, and nothing is cut at the bottom.
  */
 const READING = {
-  x: { max: PLACE[0] + 0.62, min: PLACE[0] - 0.1 },
+  x: { max: PLACE[0] + 0.62, min: PLACE[0] - 0.16 },
   y: { max: PLATE_TOP + 0.18, min: PLATE_TOP },
-  z: { max: PLACE[2] + 0.1, min: PLACE[2] - 0.1 },
+  z: { max: PLACE[2] + 0.4, min: PLACE[2] - 0.1 },
 } as const;
 
 /**

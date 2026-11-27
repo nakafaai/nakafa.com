@@ -58,7 +58,7 @@ describe("spread results sheet", () => {
       plain
     );
     const numbers = Arr.flatMap(sheet.marks, (mark) =>
-      mark.kind === "text" && mark.size < 7 ? [mark.text] : []
+      mark.kind === "text" && mark.align === "middle" ? [mark.text] : []
     );
 
     expect(numbers).toEqual(["10.00 cm", "9.95", "10.00", "10.05"]);

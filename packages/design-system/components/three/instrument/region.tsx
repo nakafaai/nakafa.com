@@ -1,9 +1,8 @@
 import { DoubleSide } from "three";
 
 /**
- * The regions a lesson marks on an instrument or on what it measures, in the
- * lesson's colour: the band a value may lie in, the face an area is taken
- * over, the volume a density fills. They glow a little, so they read as a
+ * The regions a lesson marks on what an instrument measures, in the lesson's
+ * colour: the face an area is taken over, the volume a density fills. They glow a little, so they read as a
  * mark on the picture and never as part of the bench. Every lab draws its
  * regions through this file, so they look the same in each of them.
  */
@@ -13,42 +12,6 @@ type Triple = readonly [number, number, number];
 
 /** How see-through a region is, so what it marks shows through it. */
 const SHEER = 0.42;
-
-/**
- * A band between two values: a block `size` wide, tall and deep about `at`.
- * A `solid` band is a line laid on a scale and hides what is behind it.
- *
- * @param at - The middle of the band
- * @param color - The lesson's colour for this quantity
- * @param size - How wide, tall and deep the band is
- * @param solid - Whether the band is a solid line and not a see-through region
- */
-export function Band({
-  at,
-  color,
-  size,
-  solid = false,
-}: {
-  readonly at: Triple;
-  readonly color: string;
-  readonly size: Triple;
-  readonly solid?: boolean;
-}) {
-  return (
-    <mesh position={[at[0], at[1], at[2]]}>
-      <boxGeometry args={[size[0], size[1], size[2]]} />
-      <meshStandardMaterial
-        color={color}
-        depthWrite={solid}
-        emissive={color}
-        emissiveIntensity={0.5}
-        opacity={solid ? 1 : SHEER}
-        roughness={0.5}
-        transparent={!solid}
-      />
-    </mesh>
-  );
-}
 
 /**
  * The round face an area is taken over: a see-through disc about `at`,

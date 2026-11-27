@@ -154,7 +154,7 @@ export function spreadSheet(
         align: "end",
         at: [PAGE.left - 8, middle],
         ink: INSTRUMENT_COLORS.scaleInk,
-        size: 7.5,
+        size: 9,
         text: student.name,
       }),
       stroke(
@@ -197,7 +197,7 @@ export function spreadSheet(
       words({
         at: [placeOf(actual), top + 10],
         ink: PLOT_COLORS.teal,
-        size: 6.5,
+        size: 8.5,
         text: label,
       }),
       stroke(
@@ -208,10 +208,10 @@ export function spreadSheet(
       ),
       ...ruleMarks(rule, format, {
         ink: INSTRUMENT_COLORS.scaleInk,
-        major: 4.2,
-        minor: 2,
-        size: 5.6,
-        width: 0.32,
+        major: 4.6,
+        minor: 2.2,
+        size: 8.5,
+        width: 0.4,
       }),
     ],
     width: PAGE.width,

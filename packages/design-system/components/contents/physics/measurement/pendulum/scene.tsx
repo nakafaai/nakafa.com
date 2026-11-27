@@ -1,7 +1,6 @@
 import { useFrame } from "@react-three/fiber";
 import {
   BobSchema,
-  bobRadius,
   STRING_RANGE,
   swingAngle,
   swingReach,
@@ -11,10 +10,7 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { Bob } from "@repo/design-system/components/three/instrument/bob";
 import { MILLIMETRE } from "@repo/design-system/components/three/instrument/scale";
-import {
-  GANTRY_REACH,
-  Gantry,
-} from "@repo/design-system/components/three/instrument/stand";
+import { Gantry } from "@repo/design-system/components/three/instrument/stand";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr, Match } from "effect";
@@ -26,37 +22,45 @@ type Kind = typeof BobSchema.Type;
 /** The radius of the crossbar the threads are tied round, in millimetres. */
 const BAR = 5;
 
+/**
+ * The radius of every bob, in millimetres. A set made to show that the
+ * period does not depend on mass has balls of one size in different
+ * materials, so the drag on them and the length to their middle are the
+ * same and only the mass differs.
+ */
+const BALL = 30;
+
 /** How far the lowest bob clears the bench on the longest string, in millimetres. */
 const CLEAR = 60;
 
 /** How high the underside of the crossbar is over the bench, in millimetres. */
-const RISE = STRING_RANGE.max * 1000 + bobRadius("wood") * 1000 + CLEAR;
+const RISE = STRING_RANGE.max * 1000 + BALL + CLEAR;
 
-/** How far apart the threads hang, in millimetres. */
-const APART = 190;
+/** How far apart the threads hang, in millimetres: two balls and a gap of one. */
+const APART = BALL * 4;
 
 /** How far apart the two stands are, in millimetres: the three threads, and the widest swing clear on either side. */
-const WIDE = 2 * (APART + swingReach(STRING_RANGE.max) * 1000 + 70);
+const WIDE = 2 * (APART + swingReach(STRING_RANGE.max) * 1000 + BALL + 40);
 
 /**
  * What the camera frames at every width for strings `length` metres long,
- * in scene units: the crossbar between the two rods, and under it every
- * place a bob swings through, down to just under the bobs. On a short
- * string the feet of the stands run out of the picture, so the bobs stay as
- * large as the string allows.
+ * in scene units: the crossbar from rod to rod, and under it every place a
+ * bob swings through, down to just under the bobs. On the longest string
+ * that reaches the bench and the feet of the stands; on a shorter one the
+ * rods run out of the picture at the bottom, so the bobs stay as large as
+ * the string allows.
  */
 function frameOf(length: number) {
   return {
     x: {
-      max: (WIDE / 2 + 30) * MILLIMETRE,
-      min: (-WIDE / 2 - 30) * MILLIMETRE,
+      max: (WIDE / 2 + 20) * MILLIMETRE,
+      min: (-WIDE / 2 - 20) * MILLIMETRE,
     },
     y: {
-      max: (RISE + 60) * MILLIMETRE,
-      min:
-        (RISE - length * 1000 - bobRadius("wood") * 1000 - CLEAR) * MILLIMETRE,
+      max: (RISE + 30) * MILLIMETRE,
+      min: Math.max(0, RISE - length * 1000 - BALL - 20) * MILLIMETRE,
     },
-    z: { max: 40 * MILLIMETRE, min: (-GANTRY_REACH - 40) * MILLIMETRE },
+    z: { max: (BALL + 10) * MILLIMETRE, min: -BALL * MILLIMETRE },
   };
 }
 
@@ -97,8 +101,10 @@ function Stuff({ kind }: { readonly kind: Kind }) {
 
 /**
  * Three pendulums of one length on one gantry, as a bench: a 50 g wooden
- * bob, a 200 g brass bob and a 500 g lead bob, each a solid ball of its true
- * size, on threads tied round one crossbar. While the lab plays they are let
+ * bob, a 200 g brass bob and a 500 g lead bob, balls of one size as in a
+ * real mass-independence set, on threads tied round one crossbar. The
+ * camera looks a little up from the bobs, so they are the nearest and
+ * largest thing in the picture. While the lab plays they are let
  * go together and swing in real time, and they keep step at every length,
  * because no power of mass enters the period.
  *
@@ -115,9 +121,9 @@ export function SwingScene({ length }: { readonly length: number }) {
   return (
     <group>
       <CameraControls
-        cameraPosition={[4.5, 8.6, 24]}
+        cameraPosition={[1.2, (RISE / 2) * MILLIMETRE - 0.9, 4.6]}
         cameraTarget={[0, (RISE / 2) * MILLIMETRE, 0]}
-        fov={36}
+        fov={50}
         framing="content"
         maxPolarAngle={Math.PI * 0.49}
       />
@@ -130,7 +136,7 @@ export function SwingScene({ length }: { readonly length: number }) {
             >
               <Bob
                 cord={length * 1000}
-                radius={bobRadius(kind) * 1000}
+                radius={BALL}
                 round={BAR}
                 swing={() => angle.current}
               >

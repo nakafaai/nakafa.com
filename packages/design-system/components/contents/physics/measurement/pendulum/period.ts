@@ -14,22 +14,16 @@ export const GRAVITY = 9.81;
 /** The shortest and longest string, in metres. */
 export const STRING_RANGE = { max: 1.2, min: 0.2 } as const;
 
-/** The bobs, each with its mass in kilograms and its density in kilograms per cubic metre. */
+/** The bobs, each with its mass in kilograms. */
 export const BobSchema = Schema.Literals(["wood", "brass", "lead"]);
 export const BOBS = {
-  brass: { density: 8500, mass: 0.2 },
-  lead: { density: 11_340, mass: 0.5 },
-  wood: { density: 600, mass: 0.05 },
+  brass: { mass: 0.2 },
+  lead: { mass: 0.5 },
+  wood: { mass: 0.05 },
 } as const;
 
 /** The widest swing, in radians. */
 const SWING = 0.2;
-
-/** The radius of a solid ball bob, in metres, from its mass and density. */
-export function bobRadius(bob: typeof BobSchema.Type) {
-  const { density, mass } = BOBS[bob];
-  return Math.cbrt((3 * mass) / (4 * Math.PI * density));
-}
 
 /**
  * The powers of mass, length and gravity whose product has the dimension of
