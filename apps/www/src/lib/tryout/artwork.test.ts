@@ -195,12 +195,15 @@ describe("try-out artwork", () => {
   );
 
   it.each([
-    ["de", "de"],
-    ["en", "en"],
-    ["id", "en"],
-    ["ms", "en"],
+    [
+      "de",
+      "/open-graph/tryout/germany/entrance-examination/de-tu-darmstadt-mathematics.png",
+    ],
+    ["en", undefined],
+    ["id", undefined],
+    ["ms", undefined],
   ] as const)(
-    "draws Germany's Darmstadt Mathematics in German for %s readers and in English otherwise (%s)",
+    "draws Darmstadt Mathematics in German alone, and borrows no other lettering, for %s readers",
     (locale, file) => {
       expect(
         getTryoutTrackCatalogArtwork(locale, {
@@ -208,9 +211,36 @@ describe("try-out artwork", () => {
           examKey: "entrance-examination",
           trackKey: "tu-darmstadt-mathematics",
         })
-      ).toBe(
-        `/open-graph/tryout/germany/entrance-examination/${file}-tu-darmstadt-mathematics.png`
-      );
+      ).toBe(file);
+    }
+  );
+
+  it.each([
+    ["en", "en", "en", "en"],
+    ["id", "id", "id", "id"],
+    ["de", "de", "de", "de"],
+    ["ms", undefined, "id", "id"],
+  ] as const)(
+    "draws the SPM subjects in %s where their lettering is drawn",
+    (locale, physics, chemistry, biology) => {
+      const fileOf = (trackKey: string, file: string | undefined) =>
+        file === undefined
+          ? undefined
+          : `/open-graph/tryout/malaysia/spm/${file}-${trackKey}.png`;
+
+      for (const [trackKey, file] of [
+        ["physics", physics],
+        ["chemistry", chemistry],
+        ["biology", biology],
+      ] as const) {
+        expect(
+          getTryoutTrackCatalogArtwork(locale, {
+            countryKey: "malaysia",
+            examKey: "spm",
+            trackKey,
+          })
+        ).toBe(fileOf(trackKey, file));
+      }
     }
   );
 

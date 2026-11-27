@@ -2,107 +2,104 @@ import {
   ACTIVE_APP_LOCALE_CODES,
   ENGLISH_APP_LOCALE_CODE,
 } from "@nakafa/aksara-contracts/locale";
-import { Array as Arr, Option, Record as Rec } from "effect";
+import { Array as Arr, Option, Record as Rec, Tuple } from "effect";
 import type { Locale } from "use-intl";
 import { getOgUrl } from "@/lib/seo/social";
 
-const ALL_ARTWORK_LOCALES = ACTIVE_APP_LOCALE_CODES;
-const ENGLISH_ARTWORK = [ENGLISH_APP_LOCALE_CODE] as const;
-/**
- * A design lettered with an exam's own name, such as SNBT, TKA,
- * Aufnahmeprüfung or Feststellungsprüfung. No language translates an exam's
- * name, so the design is drawn once, in the exam's own language, and every
- * locale shows that one file. Never ask for, or install, a translated version.
- */
-const EXAM_NAME_ARTWORK = ENGLISH_ARTWORK;
-/**
- * A design whose Indonesian lettering is not Malaysian Malay, such as
- * `Matematika` for `Matematik`, until the Malay lettering is drawn. A design
- * whose lettering reads the same in both, such as `tanya Nina`, has its Malay
- * file.
- */
-const WITHOUT_MALAY_ARTWORK = ["en", "id", "de"] as const;
+/** Which file of a design each locale's readers see: reader locale to file locale. */
+type ArtworkReaders = Readonly<Record<string, Locale>>;
 
-/**
- * Reviewed public artwork grouped by stable, language-neutral identity, each with
- * the locales it has a file for. English is the default: every design has an
- * English file, and a locale without its own file shows the English one, so a
- * design drawn in Indonesian or German alone, such as the German "mathematik",
- * shows English everywhere else. A design whose words read the same in every
- * language, such as the School's or the Quran's, and a design of an exam's own
- * name (`EXAM_NAME_ARTWORK`) have that one file alone.
- */
-export const artworkSources = {
-  "app/ask-nina": ALL_ARTWORK_LOCALES,
-  "app/landing": ["en", "id", "de"],
-  "app/pricing": ALL_ARTWORK_LOCALES,
-  "app/school": ENGLISH_ARTWORK,
-  "curriculum/cambridge-international": ENGLISH_ARTWORK,
-  "curriculum/index": ALL_ARTWORK_LOCALES,
-  "curriculum/kssm": ENGLISH_ARTWORK,
-  "curriculum/merdeka": ALL_ARTWORK_LOCALES,
-  "curriculum/singapore-moe": ENGLISH_ARTWORK,
-  "curriculum/united-states": ENGLISH_ARTWORK,
-  "grade/class-9": ALL_ARTWORK_LOCALES,
-  "grade/class-10": ALL_ARTWORK_LOCALES,
-  "grade/class-11": ALL_ARTWORK_LOCALES,
-  "grade/class-12": ALL_ARTWORK_LOCALES,
-  "grade/form-4": ["en", "id"],
-  "grade/form-5": ["en", "id"],
-  "grade/high-school": ["en", "id"],
-  "grade/secondary": ["en", "de"],
-  "grade/upper-secondary": ["en", "de"],
-  "quran/index": ENGLISH_ARTWORK,
-  "subject/biology": ALL_ARTWORK_LOCALES,
-  "subject/chemistry": ALL_ARTWORK_LOCALES,
-  "subject/mathematics": WITHOUT_MALAY_ARTWORK,
-  "subject/physics": WITHOUT_MALAY_ARTWORK,
-  "subject/science": ALL_ARTWORK_LOCALES,
-  "subject/secondary-additional-mathematics": ["en", "de"],
-  "tryout/germany/entrance-examination": EXAM_NAME_ARTWORK,
-  "tryout/germany/entrance-examination/tu-darmstadt-mathematics": ["en", "de"],
-  "tryout/germany/index": ENGLISH_ARTWORK,
-  "tryout/indonesia/2027": ENGLISH_ARTWORK,
-  "tryout/indonesia/index": ENGLISH_ARTWORK,
-  "tryout/indonesia/snbt": EXAM_NAME_ARTWORK,
-  "tryout/indonesia/snbt/general-reasoning": WITHOUT_MALAY_ARTWORK,
-  "tryout/indonesia/snbt/mathematical-reasoning": WITHOUT_MALAY_ARTWORK,
-  "tryout/indonesia/snbt/quantitative-knowledge": ALL_ARTWORK_LOCALES,
-  "tryout/indonesia/tka": EXAM_NAME_ARTWORK,
-  "tryout/indonesia/tka/advanced-mathematics": WITHOUT_MALAY_ARTWORK,
-  "tryout/indonesia/tka/compulsory-mathematics": WITHOUT_MALAY_ARTWORK,
-  "tryout/indonesia/tka/english-language": WITHOUT_MALAY_ARTWORK,
-  "tryout/indonesia/tka/indonesian-language": ALL_ARTWORK_LOCALES,
-} as const satisfies Readonly<Record<string, readonly [Locale, ...Locale[]]>>;
-
-export type ArtworkIdentity = keyof typeof artworkSources;
-
-/** The inventory read by any name, so a name that a route makes up finds its artwork or none. */
-const artworkInventory: Readonly<
-  Record<string, readonly [Locale, ...Locale[]]>
-> = artworkSources;
-
-/** The file of one identity in the locale, or its English default when the locale has none. */
-function pickArtworkPath(
-  identity: string,
-  locales: readonly Locale[],
-  locale: Locale
-) {
-  return Option.map(
-    Option.orElse(
-      Arr.findFirst(locales, (candidate) => candidate === locale),
-      () =>
-        Arr.findFirst(
-          locales,
-          (candidate) => candidate === ENGLISH_APP_LOCALE_CODE
-        )
-    ),
-    (artworkLocale) => getStaticArtworkPath(identity, artworkLocale)
+/** Every locale reads the design's file of its own locale. */
+function own(...locales: readonly Locale[]): ArtworkReaders {
+  return Rec.fromEntries(
+    Arr.map(locales, (locale) => Tuple.make(locale, locale))
   );
 }
 
-/** Resolves exact locale artwork, then the reviewed English default every design has. */
-export function resolveStaticArtwork(
+/**
+ * Every locale reads the one file of a design whose lettering no language
+ * translates: an exam's name such as SNBT, a program's name such as Kurikulum
+ * Merdeka, or an institution's name such as Niedersächsisches Studienkolleg.
+ */
+function shared(file: Locale): ArtworkReaders {
+  return Rec.fromEntries(
+    Arr.map(ACTIVE_APP_LOCALE_CODES, (locale) => Tuple.make(locale, file))
+  );
+}
+
+/**
+ * The designer's reviewed artwork by stable, language-neutral identity: for
+ * each locale, the file whose lettering reads that locale's own words. A
+ * locale reads another locale's file only where the words are the same, such
+ * as Malay `Kimia` on the Indonesian file. A locale missing here has no
+ * lettering of its own yet: its card draws a tile, and only its social image
+ * falls back to the English file.
+ */
+export const artworkSources = {
+  "app/ask-nina": { ...own("en", "id", "de"), ms: "id" },
+  "app/landing": own("en", "id", "de"),
+  "app/pricing": { ...own("en", "id", "de"), ms: "id" },
+  "app/school": shared("en"),
+  "curriculum/cambridge-international": shared("en"),
+  "curriculum/index": { ...own("en", "id", "de"), ms: "id" },
+  "curriculum/kssm": shared("en"),
+  "curriculum/merdeka": shared("id"),
+  "curriculum/singapore-moe": shared("en"),
+  "curriculum/united-states": shared("en"),
+  "grade/class-9": { ...own("en", "id", "de"), ms: "id" },
+  "grade/class-10": { ...own("en", "id", "de"), ms: "id" },
+  "grade/class-11": { ...own("en", "id", "de"), ms: "id" },
+  "grade/class-12": { ...own("en", "id", "de"), ms: "id" },
+  "grade/form-4": { ...own("en", "id"), de: "en", ms: "id" },
+  "grade/form-5": { ...own("en", "id"), de: "en", ms: "id" },
+  "grade/hannover": shared("de"),
+  "grade/high-school": { ...own("en", "id"), de: "en", ms: "en" },
+  "grade/sachsen": shared("de"),
+  "grade/secondary": { ...own("en", "de"), id: "en" },
+  "grade/tu-darmstadt": shared("de"),
+  "grade/upper-secondary": { ...own("en", "de"), id: "en" },
+  "quran/index": shared("en"),
+  "subject/additional-mathematics": { ...own("en", "de"), id: "en" },
+  "subject/biology": { ...own("en", "id", "de"), ms: "id" },
+  "subject/chemistry": { ...own("en", "id", "de"), ms: "id" },
+  "subject/mathematics": own("en", "id", "de", "ms"),
+  "subject/physics": own("en", "id", "de", "ms"),
+  "subject/science": { ...own("en", "id", "de"), ms: "id" },
+  "tryout/germany/entrance-examination": shared("en"),
+  "tryout/germany/entrance-examination/tu-darmstadt-mathematics": own("de"),
+  "tryout/germany/index": shared("en"),
+  "tryout/indonesia/2027": shared("en"),
+  "tryout/indonesia/index": shared("en"),
+  "tryout/indonesia/snbt": shared("en"),
+  "tryout/indonesia/snbt/general-reasoning": own("en", "id", "de"),
+  "tryout/indonesia/snbt/mathematical-reasoning": own("en", "id", "de"),
+  "tryout/indonesia/snbt/quantitative-knowledge": {
+    ...own("en", "id", "de"),
+    ms: "id",
+  },
+  "tryout/indonesia/tka": shared("en"),
+  "tryout/indonesia/tka/advanced-mathematics": own("en", "id", "de"),
+  "tryout/indonesia/tka/compulsory-mathematics": own("en", "id", "de"),
+  "tryout/indonesia/tka/english-language": own("en", "id", "de"),
+  "tryout/indonesia/tka/indonesian-language": {
+    ...own("en", "id", "de"),
+    ms: "id",
+  },
+  "tryout/malaysia/spm/biology": { ...own("en", "id", "de"), ms: "id" },
+  "tryout/malaysia/spm/chemistry": { ...own("en", "id", "de"), ms: "id" },
+  "tryout/malaysia/spm/physics": own("en", "id", "de"),
+} as const satisfies Readonly<Record<string, ArtworkReaders>>;
+
+export type ArtworkIdentity = keyof typeof artworkSources;
+
+const artworkReaders: Readonly<Record<ArtworkIdentity, ArtworkReaders>> =
+  artworkSources;
+
+/**
+ * The file a card of the identity draws in the locale: only a file whose
+ * lettering reads that locale's words, or nothing, so the card draws its tile.
+ */
+export function resolveCardArtwork(
   identity: ArtworkIdentity | undefined,
   locale: Locale
 ) {
@@ -111,18 +108,23 @@ export function resolveStaticArtwork(
   }
 
   return Option.getOrUndefined(
-    pickArtworkPath(identity, artworkSources[identity], locale)
+    Option.map(Rec.get(artworkReaders[identity], locale), (file) =>
+      getStaticArtworkPath(identity, file)
+    )
   );
 }
 
 /**
- * Resolves the artwork that a name made from what a page is, such as
- * `subject/chemistry`, finds in the inventory, or nothing when no design names
- * it yet.
+ * The social image of the identity in the locale: the card's file, or the
+ * English readers' file for a locale whose lettering is not drawn yet.
  */
-export function resolveNamedArtwork(identity: string, locale: Locale) {
-  return Option.flatMap(Rec.get(artworkInventory, identity), (locales) =>
-    pickArtworkPath(identity, locales, locale)
+export function resolveStaticArtwork(
+  identity: ArtworkIdentity | undefined,
+  locale: Locale
+) {
+  return (
+    resolveCardArtwork(identity, locale) ??
+    resolveCardArtwork(identity, ENGLISH_APP_LOCALE_CODE)
   );
 }
 

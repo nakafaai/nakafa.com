@@ -41,7 +41,7 @@ export const readCurriculumPage = Effect.fn("www.curricula.route.read")(
       locale,
       path: data.path,
     });
-    const { program, route } = model;
+    const { route } = model;
     // The page's topics are what it lists: its material cards, or else its child routes.
     const topics =
       model.materialCards.length > 0
@@ -96,7 +96,7 @@ export const readCurriculumPage = Effect.fn("www.curricula.route.read")(
       ),
       kind: "found" as const,
       description: seo.description,
-      image: getCurriculumRouteSocialImage(locale, program.key, route),
+      image: getCurriculumRouteSocialImage(locale, route),
       labels: {
         home: homeLabel,
         routeAction: tCommon("view-options"),

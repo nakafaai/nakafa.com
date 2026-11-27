@@ -17,7 +17,11 @@ import {
 } from "effect";
 import type { Locale } from "use-intl";
 import type { ArtworkIdentity } from "@/lib/og/artwork";
-import { resolveSocialArtwork, resolveStaticArtwork } from "@/lib/og/artwork";
+import {
+  resolveCardArtwork,
+  resolveSocialArtwork,
+  resolveStaticArtwork,
+} from "@/lib/og/artwork";
 
 /**
  * The image of one entity's card, such as SNBT's or a TKA subject's, which
@@ -37,9 +41,8 @@ const PageArtworkSchema = Schema.String.pipe(Schema.brand("TryoutPageArtwork"));
 /** What one reviewed design was drawn for: one entity, or one page. */
 const ArtworkRoleSchema = Schema.Literals(["entity", "page"]);
 
-/** One reviewed design: its installed identity, its role, and the owner's source file for each locale. */
+/** One reviewed design: its installed identity and its role. */
 const TryoutArtworkSchema = Schema.Struct({
-  drawn: Schema.Record(Schema.String, Schema.String),
   identity: Schema.String,
   role: ArtworkRoleSchema,
 });
@@ -47,84 +50,80 @@ const TryoutArtworkSchema = Schema.Struct({
 /**
  * The owner's try-out designs, each recorded once with the one entity or page
  * it was drawn for, keyed by the stable keys of that entity, never its
- * localized slugs. `drawn` names the file of each locale in the owner's
- * source folder, `opengraph-nakafa/<drawn>.webp`, numbered as the designer's
- * export of 20 November 2026 numbers them. A country's design is that country
- * page's social image alone. An exam's design is lettered with the exam's own
- * name, which no language translates. A test drawn in German alone, such as
- * Darmstadt's "mathematik", shows the English design of its subject to every
- * other reader. An entity that has no design of its own borrows none: its card
- * draws the tile of its own icon.
+ * localized slugs. A country's design is that country page's social image
+ * alone. An exam's design is lettered with the exam's own name, which no
+ * language translates. A card shows a design only in a locale whose lettering
+ * it reads (see `artworkSources`); an entity that has no design of its own, or
+ * none in that locale yet, borrows none: its card draws the tile of its own
+ * icon.
  */
 const TRYOUT_ARTWORK = {
   "country/germany": {
-    drawn: { en: "tryout/103" },
     identity: "tryout/germany/index",
     role: "page",
   },
   "country/indonesia": {
-    drawn: { en: "tryout/102" },
     identity: "tryout/indonesia/index",
     role: "page",
   },
   "exam/germany/entrance-examination": {
-    drawn: { en: "tryout/152" },
     identity: "tryout/germany/entrance-examination",
     role: "entity",
   },
   "exam/indonesia/snbt": {
-    drawn: { en: "tryout/89" },
     identity: "tryout/indonesia/snbt",
     role: "entity",
   },
   "exam/indonesia/tka": {
-    drawn: { en: "tryout/89" },
     identity: "tryout/indonesia/tka",
     role: "entity",
   },
   "section/indonesia/snbt/general-reasoning": {
-    drawn: { de: "tryout/40", en: "tryout/39", id: "tryout/38" },
     identity: "tryout/indonesia/snbt/general-reasoning",
     role: "page",
   },
   "section/indonesia/snbt/mathematical-reasoning": {
-    drawn: { de: "tryout/49", en: "tryout/48", id: "tryout/47" },
     identity: "tryout/indonesia/snbt/mathematical-reasoning",
     role: "page",
   },
   "section/indonesia/snbt/quantitative-knowledge": {
-    drawn: { de: "tryout/52", en: "tryout/51", id: "tryout/50" },
     identity: "tryout/indonesia/snbt/quantitative-knowledge",
     role: "page",
   },
   "track/germany/entrance-examination/tu-darmstadt-mathematics": {
-    drawn: { de: "tryout/154", en: "mata pelajaran/12" },
     identity: "tryout/germany/entrance-examination/tu-darmstadt-mathematics",
     role: "entity",
   },
   "track/indonesia/snbt/2027": {
-    drawn: { en: "tryout/92" },
     identity: "tryout/indonesia/2027",
     role: "entity",
   },
   "track/indonesia/tka/advanced-mathematics": {
-    drawn: { de: "tryout/115", en: "tryout/114", id: "tryout/113" },
     identity: "tryout/indonesia/tka/advanced-mathematics",
     role: "entity",
   },
   "track/indonesia/tka/compulsory-mathematics": {
-    drawn: { de: "tryout/112", en: "tryout/111", id: "tryout/110" },
     identity: "tryout/indonesia/tka/compulsory-mathematics",
     role: "entity",
   },
   "track/indonesia/tka/english-language": {
-    drawn: { de: "tryout/106", en: "tryout/105", id: "tryout/104" },
     identity: "tryout/indonesia/tka/english-language",
     role: "entity",
   },
   "track/indonesia/tka/indonesian-language": {
-    drawn: { de: "tryout/109", en: "tryout/108", id: "tryout/107" },
     identity: "tryout/indonesia/tka/indonesian-language",
+    role: "entity",
+  },
+  "track/malaysia/spm/biology": {
+    identity: "tryout/malaysia/spm/biology",
+    role: "entity",
+  },
+  "track/malaysia/spm/chemistry": {
+    identity: "tryout/malaysia/spm/chemistry",
+    role: "entity",
+  },
+  "track/malaysia/spm/physics": {
+    identity: "tryout/malaysia/spm/physics",
     role: "entity",
   },
 } as const satisfies Record<string, typeof TryoutArtworkSchema.Type>;
@@ -146,12 +145,12 @@ function identitiesOf(role: typeof ArtworkRoleSchema.Type) {
 const ENTITY_ARTWORK = identitiesOf("entity");
 const PAGE_ARTWORK = identitiesOf("page");
 
-/** The card image of one entity, by its kind and keys, or none when it has no design of its own. */
+/** The card image of one entity, by its kind and keys, or none when no design of its own reads its label in the locale. */
 function cardArtworkOf(locale: Locale, key: string) {
   return Option.getOrUndefined(
     Option.map(
       Option.flatMap(HashMap.get(ENTITY_ARTWORK, key), (identity) =>
-        Option.fromNullishOr(resolveStaticArtwork(identity, locale))
+        Option.fromNullishOr(resolveCardArtwork(identity, locale))
       ),
       (src) => CardArtworkSchema.make(src)
     )

@@ -57,12 +57,9 @@ function readCurriculumVisualSource(
  * routes of one grid never look alike.
  *
  * A grid whose cards may draw artwork names that artwork with `readArtwork`.
- * A route of a stage or a course that has some comes back as its artwork
- * source, in its place. The artwork of a subject is that subject's own look,
- * so only the first route of the subject in the grid draws it, and a later
- * route of the same subject, such as Additional Mathematics after Mathematics,
- * takes a tile of the family of that subject, so no two cards of a grid show
- * one picture.
+ * A route that has some comes back as its artwork source, in its place. Each
+ * card's artwork is the design whose lettering reads that card's own label,
+ * so two cards of one grid never show one picture.
  *
  * The families hold many icons that a card never needs, so this stays on the
  * server and hands each card only the icon it took.
@@ -104,7 +101,7 @@ export function getCurriculumLooks(
       const seen = Arr.contains(subjects, source.key);
       const next = Arr.append(subjects, source.key);
 
-      if (artwork !== undefined && !seen) {
+      if (artwork !== undefined) {
         return Tuple.make(next, artwork);
       }
 
