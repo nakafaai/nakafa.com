@@ -1,8 +1,4 @@
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
-import {
-  BENCH_LABEL,
-  BENCH_LABEL_OUTLINE,
-} from "@repo/design-system/components/contents/chemistry/label";
 import type {
   Hue,
   Titration,
@@ -37,11 +33,23 @@ const TIP_END = 0.154;
 
 /** Where the stand's rod rises, behind and to the left of the burette, how tall it is, and where its clamp grips. */
 const ROD = [-0.11, -0.04] as const;
-const ROD_HEIGHT = 0.86;
+const ROD_HEIGHT = 0.72;
 const GRIP = 0.62;
 
 /** The white tile on the stand's base that the flask stands on, so its colour reads against white. */
 const TILE_HEIGHT = 0.006;
+
+/**
+ * What the camera frames, in metres: the stand's base, the tile and the
+ * flask at the foot, the burette to its open top, and the room its reading
+ * takes beside it. The burette is as tall as the frame, so its scale and its
+ * meniscus are as large as a 50 cm³ burette can be drawn whole.
+ */
+const FRAME = {
+  x: { max: 0.25, min: -0.15 },
+  y: { max: TIP_END + BURETTE.top + 0.005, min: -0.02 },
+  z: { max: AXIS_Z + 0.02, min: AXIS_Z - 0.02 },
+};
 
 /** How strongly the solutions absorb light, for each metre: a clear one, an indicator's colour, and dichromate. */
 const STRENGTH = { clear: 3, dichromate: 110, tinted: 30 } as const;
@@ -86,64 +94,71 @@ export function TitrationScene({
       <CameraBounds exclude>
         <LabBench width={3} />
       </CameraBounds>
-      <Stand
-        at={ROD}
-        height={ROD_HEIGHT}
-        holds={[{ at: [0, GRIP, AXIS_Z], radius: BURETTE.radius }]}
-      />
-      <group position={[0, 0, AXIS_Z]}>
-        <mesh
-          castShadow
-          position={[0, STAND_TOP + TILE_HEIGHT / 2, 0]}
-          receiveShadow
-        >
-          <boxGeometry args={[0.11, TILE_HEIGHT, 0.11]} />
-          <SurfaceMaterial
-            coat={0.7}
-            color={BENCH_COLORS.ceramicTile}
-            repeat={[2, 2]}
-            roughness={0.4}
-            surface="ceramic"
-          />
-        </mesh>
-        <group position={[0, STAND_TOP + TILE_HEIGHT, 0]}>
-          <Vessel
-            capacity={250}
-            holds={{
-              color: hueColor(hue, titration),
-              strength: hue === "colourless" ? STRENGTH.clear : STRENGTH.tinted,
-              volume: titration.analyte.volume + added,
-            }}
-            kind="conical"
-          />
-        </group>
-        <group position={[0, TIP_END, 0]}>
-          <Burette
-            holds={{
-              color: dichromate
-                ? REAGENT_COLORS.dichromate
-                : REAGENT_COLORS.solution,
-              strength: dichromate ? STRENGTH.dichromate : STRENGTH.clear,
-            }}
-            reading={added}
-          />
-        </group>
-        {showReading ? (
-          <ThreeLabel
-            anchorX="left"
-            color={ORIGIN_COLOR.LIGHT}
-            {...BENCH_LABEL}
-            gap={0.003}
-            outlineColor={ORIGIN_COLOR.DARK}
-            outlineWidth={BENCH_LABEL_OUTLINE}
-            position={[BURETTE.radius + 0.012, TIP_END + meniscusOf(added), 0]}
+      <CameraBounds bounds={FRAME}>
+        <Stand
+          at={ROD}
+          height={ROD_HEIGHT}
+          holds={[{ at: [0, GRIP, AXIS_Z], radius: BURETTE.radius }]}
+        />
+        <group position={[0, 0, AXIS_Z]}>
+          <mesh
+            castShadow
+            position={[0, STAND_TOP + TILE_HEIGHT / 2, 0]}
+            receiveShadow
           >
-            <InlineMath
-              math={`\\leftarrow ${String(Math.round(added * 10) / 10)}\\text{ cm}^3`}
+            <boxGeometry args={[0.11, TILE_HEIGHT, 0.11]} />
+            <SurfaceMaterial
+              coat={0.7}
+              color={BENCH_COLORS.ceramicTile}
+              repeat={[2, 2]}
+              roughness={0.4}
+              surface="ceramic"
             />
-          </ThreeLabel>
-        ) : null}
-      </group>
+          </mesh>
+          <group position={[0, STAND_TOP + TILE_HEIGHT, 0]}>
+            <Vessel
+              capacity={250}
+              holds={{
+                color: hueColor(hue, titration),
+                strength:
+                  hue === "colourless" ? STRENGTH.clear : STRENGTH.tinted,
+                volume: titration.analyte.volume + added,
+              }}
+              kind="conical"
+            />
+          </group>
+          <group position={[0, TIP_END, 0]}>
+            <Burette
+              holds={{
+                color: dichromate
+                  ? REAGENT_COLORS.dichromate
+                  : REAGENT_COLORS.solution,
+                strength: dichromate ? STRENGTH.dichromate : STRENGTH.clear,
+              }}
+              reading={added}
+            />
+          </group>
+          {showReading ? (
+            <ThreeLabel
+              anchorX="left"
+              color={ORIGIN_COLOR.LIGHT}
+              fontSize="compact"
+              gap={0.004}
+              outlineColor={ORIGIN_COLOR.DARK}
+              outlineWidth={0.006}
+              position={[
+                BURETTE.radius + 0.012,
+                TIP_END + meniscusOf(added),
+                0,
+              ]}
+            >
+              <InlineMath
+                math={`\\leftarrow ${String(Math.round(added * 10) / 10)}\\text{ cm}^3`}
+              />
+            </ThreeLabel>
+          ) : null}
+        </group>
+      </CameraBounds>
     </group>
   );
 }

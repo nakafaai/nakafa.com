@@ -1,6 +1,5 @@
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import {
-  BEAKER_RADIUS,
   Beaker,
   Deposit,
   Electrons,
@@ -11,10 +10,6 @@ import {
   ELECTRODE_TOP,
 } from "@repo/design-system/components/contents/chemistry/electrolysis/circuit";
 import { getElectrolysisColors } from "@repo/design-system/components/contents/chemistry/electrolysis/color";
-import {
-  BENCH_LABEL,
-  BENCH_LABEL_OUTLINE,
-} from "@repo/design-system/components/contents/chemistry/label";
 import type { Metal } from "@repo/design-system/components/contents/chemistry/voltaic/cell";
 import { halfCell } from "@repo/design-system/components/contents/chemistry/voltaic/cell";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -94,13 +89,13 @@ const LEADS: readonly LeadAsk[] = [
 /**
  * What the camera frames, in metres from the middle of the cell: the
  * upright face of the two half-cells, the bridge and the leads. The
- * voltmeter stands in front of that face and lower than it, so the face
- * reaches below the bench by as much as the meter's foot shows under it
- * from the camera.
+ * voltmeter stands in front of that face and lower than it, and each
+ * half-cell's name is written under the meter's foot, so the face reaches
+ * below the bench by as much as the two show under it from the camera.
  */
 const FRAME = {
   x: { max: 0.19, min: -0.19 },
-  y: { max: 0.2, min: -0.1 },
+  y: { max: 0.2, min: -0.13 },
   z: { max: 0.04, min: -0.04 },
 };
 
@@ -156,9 +151,9 @@ export function ChemicalCellScene({
           </group>
           <ThreeLabel
             color={BENCH_COLORS.meterInk}
-            {...BENCH_LABEL}
+            fontSize="compact"
             outlineColor={BENCH_COLORS.meterHalo}
-            outlineWidth={BENCH_LABEL_OUTLINE}
+            outlineWidth={0.006}
             position={[0, 0.155, 0]}
           >
             {showProducts ? <InlineMath math={reading} /> : voltmeter}
@@ -208,10 +203,10 @@ export function HalfCell({
         <ThreeLabel
           anchorX={side === -1 ? "right" : "left"}
           color={ORIGIN_COLOR.LIGHT}
-          {...BENCH_LABEL}
-          gap={0.003}
+          fontSize="compact"
+          gap={0.004}
           outlineColor={ORIGIN_COLOR.DARK}
-          outlineWidth={BENCH_LABEL_OUTLINE}
+          outlineWidth={0.006}
           position={[side * 0.08, ELECTRODE_TOP - 0.02, 0.1]}
         >
           <InlineMath math={side === -1 ? "(-)" : "(+)"} />
@@ -220,10 +215,10 @@ export function HalfCell({
       <ThreeLabel
         anchorY="top"
         color={ORIGIN_COLOR.LIGHT}
-        {...BENCH_LABEL}
+        fontSize="compact"
         outlineColor={ORIGIN_COLOR.DARK}
-        outlineWidth={BENCH_LABEL_OUTLINE}
-        position={[side * 0.4, -0.06, BEAKER_RADIUS]}
+        outlineWidth={0.006}
+        position={[side * 0.08, -0.85, 0]}
       >
         <InlineMath math={`${symbol}\\,|\\,${ion}\\mathrm{(aq)}`} />
       </ThreeLabel>
