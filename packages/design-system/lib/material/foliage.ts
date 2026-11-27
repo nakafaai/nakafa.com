@@ -3,8 +3,6 @@
  * stomatal guard cells, and chloroplast labs.
  */
 export const FOLIAGE_COLORS = {
-  annualEarly: "#d7b384",
-  annualLate: "#a97748",
   atpGlow: "#f59e0b",
   bark: "#7c583c",
   cambium: "#84cc16",
@@ -18,8 +16,6 @@ export const FOLIAGE_COLORS = {
   cuticle: "#d9e7b8",
   cytoplasm: "#b9e0a5",
   epidermis: "#c4df9b",
-  flowerAccent: "#e7b93c",
-  flowerCenter: "#78350f",
   guardWallInner: "#2d6a4f",
   guardWallOuter: "#74c69d",
   intermembrane: "#14471a",
@@ -41,8 +37,6 @@ export const FOLIAGE_COLORS = {
   plastoglobule: "#eab308",
   potassiumIon: "#8b5cf6",
   ribosome: "#475569",
-  rootCap: "#c8a97e",
-  rootHair: "#d8c3a5",
   scanRing: "#0284c7",
   sclerenchyma: "#9e6240",
   senescentLeaf: "#b88a44",
@@ -50,7 +44,6 @@ export const FOLIAGE_COLORS = {
   soilBase: "#8c6d53",
   spongy: "#64ae5b",
   starchGranule: "#f6f0dc",
-  stemWood: "#8f6542",
   stroma: "#a7d7a9",
   thylakoidLit: "#4c9a45",
   thylakoidSac: "#2c6a33",
