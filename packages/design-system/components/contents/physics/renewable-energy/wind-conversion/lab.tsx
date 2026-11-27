@@ -96,6 +96,7 @@ export function WindEnergyConversionLab({
               cameraPosition={[2.9, 1.3, 5.2]}
               cameraTarget={[0, 1.2, 0.1]}
               fov={34}
+              framing="content"
             />
             <WindConversionScene
               onReset={() => setWindSpeed(DEFAULT_WIND_SPEED)}

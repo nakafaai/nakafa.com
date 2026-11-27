@@ -1,6 +1,7 @@
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { bladeGeometry } from "@repo/design-system/components/three/energy/blade";
 import {
   NACELLE,
@@ -327,6 +328,13 @@ function Rotor({ rate }: { readonly rate: number }) {
  * @param metres - The rotor's real radius, in metres
  * @param wind - The wind speed, in metres per second
  */
+/** The room the turbine takes while its rotor turns, in rotor radii: a camera frames this, not where the blades stand at one moment. */
+const ENVELOPE = {
+  x: { max: 1, min: -1 },
+  y: { max: ROTOR.hub + 1, min: 0 },
+  z: { max: 0.35, min: -0.35 },
+} as const;
+
 export function Turbine({
   metres,
   radius,
@@ -338,9 +346,11 @@ export function Turbine({
 }) {
   return (
     <group scale={radius}>
-      <Tower />
-      <Nacelle wind={wind} />
-      <Rotor rate={rotorRate(wind, metres)} />
+      <CameraBounds bounds={ENVELOPE}>
+        <Tower />
+        <Nacelle wind={wind} />
+        <Rotor rate={rotorRate(wind, metres)} />
+      </CameraBounds>
     </group>
   );
 }

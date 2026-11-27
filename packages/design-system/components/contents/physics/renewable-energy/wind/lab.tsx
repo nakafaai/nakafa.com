@@ -110,6 +110,7 @@ export function WindRotorLab({
               cameraPosition={[3.6, 1.5, 6.6]}
               cameraTarget={[0, 1.55, 0]}
               fov={36}
+              framing="content"
               maxDistance={14}
               maxPolarAngle={Math.PI / 2 - 0.02}
               minDistance={2}

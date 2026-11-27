@@ -115,6 +115,7 @@ export function DoorHingeTorqueLab({
               cameraPosition={[2.7, 2.1, 3.5]}
               cameraTarget={[0.4, 1.1, 0]}
               fov={38}
+              framing="content"
               maxDistance={7}
               minDistance={1.4}
             />

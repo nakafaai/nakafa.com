@@ -112,7 +112,14 @@ export function DoorScene({
       <CameraBounds exclude>
         <Doorway width={door.width} />
       </CameraBounds>
-      <group ref={leaf}>
+      <CameraBounds
+        bounds={{
+          x: { max: door.width + 0.15, min: -0.32 },
+          y: { max: DOOR.height + 0.05, min: 0 },
+          z: { max: 0.7, min: -0.1 },
+        }}
+      >
+        <group ref={leaf}>
         <Leaf width={door.width} />
         <Vector
           color={PLOT_COLORS.slate}
@@ -155,6 +162,7 @@ export function DoorScene({
         math="\vec\tau"
         vector={[0, -torque, 0]}
       />
+      </CameraBounds>
     </group>
   );
 }
