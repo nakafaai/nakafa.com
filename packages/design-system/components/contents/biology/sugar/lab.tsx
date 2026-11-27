@@ -13,7 +13,10 @@ import {
   REACTIONS,
   SCALES,
 } from "@repo/design-system/components/contents/biology/sugar/polymer";
-import { SugarScene } from "@repo/design-system/components/contents/biology/sugar/scene";
+import {
+  ChainScene,
+  PairScene,
+} from "@repo/design-system/components/contents/biology/sugar/scene";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -208,15 +211,20 @@ export function GlycosidicBondLab({
       >
         <ScienceStage floor={0} reach={1.9} setting="studio">
           <Suspense fallback={null}>
-            <SugarScene
-              bondLabel={labels.bond}
-              monomerNames={labels.monomers}
-              polysaccharide={polysaccharide}
-              reaction={reaction}
-              scale={scale}
-              sugar={sugar}
-              units={unitCount}
-            />
+            {scale === "pair" ? (
+              <PairScene
+                bondLabel={labels.bond}
+                monomerNames={labels.monomers}
+                reaction={reaction}
+                sugar={sugar}
+              />
+            ) : (
+              <ChainScene
+                bondLabel={labels.bond}
+                polysaccharide={polysaccharide}
+                units={unitCount}
+              />
+            )}
           </Suspense>
         </ScienceStage>
       </VisualCardBody>
