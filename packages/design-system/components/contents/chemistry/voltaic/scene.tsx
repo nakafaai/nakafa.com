@@ -1,44 +1,44 @@
-import { RoundedBox } from "@react-three/drei";
-import {
-  ColumnLiquid,
-  LabBench,
-} from "@repo/design-system/components/contents/chemistry/bench";
+import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import {
   BEAKER_RADIUS,
   Beaker,
-  ELECTRODE_BOTTOM,
-  ELECTRODE_THICKNESS,
-  ELECTRODE_WIDTH,
-  Lead,
-  LIQUID_HEIGHT,
+  Deposit,
+  Electrons,
+  Plate,
 } from "@repo/design-system/components/contents/chemistry/electrolysis/apparatus";
 import {
-  BATTERY_Y,
+  BENCH,
   ELECTRODE_TOP,
-  TERMINAL_OFFSET,
 } from "@repo/design-system/components/contents/chemistry/electrolysis/circuit";
 import { getElectrolysisColors } from "@repo/design-system/components/contents/chemistry/electrolysis/color";
+import {
+  BENCH_LABEL,
+  BENCH_LABEL_OUTLINE,
+} from "@repo/design-system/components/contents/chemistry/label";
 import type { Metal } from "@repo/design-system/components/contents/chemistry/voltaic/cell";
 import { halfCell } from "@repo/design-system/components/contents/chemistry/voltaic/cell";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { Lead } from "@repo/design-system/components/three/apparatus/lead";
+import {
+  METER_POSTS,
+  Readout,
+} from "@repo/design-system/components/three/apparatus/meter";
+import type { Lead as LeadAsk } from "@repo/design-system/components/three/apparatus/route";
+import { Borosilicate } from "@repo/design-system/components/three/apparatus/vessel";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { Sweep } from "@repo/design-system/components/three/form/part";
 import type { Path } from "@repo/design-system/components/three/form/path";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import {
-  GlassMaterial,
-  MetalMaterial,
-} from "@repo/design-system/components/three/physical";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { getColor } from "@repo/design-system/lib/color";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { LABWARE_COLORS } from "@repo/design-system/lib/material/labware";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-
-/** Metres per scene unit, the same bench scale as the electrolysis lab. */
-const SCENE_SCALE = 0.1;
 
 /** How far each half-cell's beaker stands from the middle, in scene units. */
 const APART = 1.1;
@@ -63,6 +63,47 @@ const METAL_COLOR = {
   zinc: getColor("ZINC"),
 } satisfies Record<Metal, string>;
 
+/** Where the voltmeter stands, in front of the cell under the salt bridge, in metres, and how large it is. */
+const METER = { at: [0, 0, 0.15], scale: 0.8 } as const;
+
+/** Where one of the voltmeter's posts is, in metres from the middle of the cell. */
+function postAt(post: (typeof METER_POSTS)[number]) {
+  return [
+    METER.at[0] + post[0] * METER.scale,
+    post[1] * METER.scale,
+    METER.at[2] + post[2] * METER.scale,
+  ] as const;
+}
+
+/** The leads of the external circuit, each written the way electrons travel: out of the negative plate, into the positive. */
+const LEADS: readonly LeadAsk[] = [
+  {
+    ends: ["clip", "plug"],
+    from: [-ELECTRODE_X * BENCH, ELECTRODE_TOP * BENCH, 0],
+    lift: 0.04,
+    to: postAt(METER_POSTS[0]),
+  },
+  {
+    ends: ["plug", "clip"],
+    from: postAt(METER_POSTS[1]),
+    lift: 0.04,
+    to: [ELECTRODE_X * BENCH, ELECTRODE_TOP * BENCH, 0],
+  },
+];
+
+/**
+ * What the camera frames, in metres from the middle of the cell: the
+ * upright face of the two half-cells, the bridge and the leads. The
+ * voltmeter stands in front of that face and lower than it, so the face
+ * reaches below the bench by as much as the meter's foot shows under it
+ * from the camera.
+ */
+const FRAME = {
+  x: { max: 0.19, min: -0.19 },
+  y: { max: 0.2, min: -0.1 },
+  z: { max: 0.04, min: -0.04 },
+};
+
 /** The colour of each metal's solution: copper(II) blue, iron(II) pale green, the rest clear. */
 const SOLUTION_COLOR = {
   copper: REAGENT_COLORS.copperSulfate,
@@ -84,71 +125,58 @@ export function ChemicalCellScene({
   children,
   reading,
   showProducts,
+  voltage,
   voltmeter,
 }: {
   readonly children: ReactNode;
   readonly reading: string;
   readonly showProducts: boolean;
+  readonly voltage: number;
   readonly voltmeter: string;
 }) {
   const colors = getElectrolysisColors();
-  const leads = [
-    [
-      [-ELECTRODE_X, ELECTRODE_TOP, 0],
-      [-ELECTRODE_X, BATTERY_Y, 0],
-      [-TERMINAL_OFFSET, BATTERY_Y, 0],
-    ],
-    [
-      [TERMINAL_OFFSET, BATTERY_Y, 0],
-      [ELECTRODE_X, BATTERY_Y, 0],
-      [ELECTRODE_X, ELECTRODE_TOP, 0],
-    ],
-  ] as const;
 
   return (
     <group>
-      <LabBench width={3} />
-      <group position={[0, 0, 0.14]} scale={SCENE_SCALE}>
-        {children}
-        <SaltBridge />
-        <RoundedBox
-          args={[TERMINAL_OFFSET * 2, 0.4, 0.16]}
-          castShadow
-          position={[0, BATTERY_Y, 0]}
-          radius={0.04}
-          smoothness={4}
-        >
-          <meshPhysicalMaterial
-            clearcoat={0.35}
-            color={BENCH_COLORS.meterBody}
-            roughness={0.5}
-          />
-        </RoundedBox>
-        <mesh position={[0, BATTERY_Y + 0.02, 0.081]}>
-          <planeGeometry args={[TERMINAL_OFFSET * 1.4, 0.2]} />
-          <meshStandardMaterial
-            color={BENCH_COLORS.lcd}
-            emissive={BENCH_COLORS.lcdGlow}
-            roughness={0.3}
-          />
-        </mesh>
-        <ThreeLabel
-          color={BENCH_COLORS.meterInk}
-          fontSize="compact"
-          outlineColor={BENCH_COLORS.meterHalo}
-          outlineWidth={0.003}
-          position={[0, BATTERY_Y, 0.09]}
-        >
-          {showProducts ? <InlineMath math={reading} /> : voltmeter}
-        </ThreeLabel>
-        {Arr.map(leads, (lead, index) => (
-          <Lead
-            colors={colors}
-            key={String(index)}
-            lead={lead}
-            sheath={index === 0 ? BENCH_COLORS.leadBlack : BENCH_COLORS.leadRed}
-          />
-        ))}
+      <CameraBounds exclude>
+        <LabBench width={3} />
+      </CameraBounds>
+      <group position={[0, 0, -0.02]}>
+        <CameraBounds bounds={FRAME}>
+          <group scale={BENCH}>
+            {children}
+            <SaltBridge />
+          </group>
+          <group position={METER.at} scale={METER.scale}>
+            <Readout
+              digits={2}
+              unit="V"
+              {...(showProducts ? { reading: voltage } : {})}
+            />
+          </group>
+          <ThreeLabel
+            color={BENCH_COLORS.meterInk}
+            {...BENCH_LABEL}
+            outlineColor={BENCH_COLORS.meterHalo}
+            outlineWidth={BENCH_LABEL_OUTLINE}
+            position={[0, 0.155, 0]}
+          >
+            {showProducts ? <InlineMath math={reading} /> : voltmeter}
+          </ThreeLabel>
+          {Arr.map(LEADS, (lead, index) => (
+            <group key={String(index)}>
+              <Lead
+                color={
+                  index === 0
+                    ? LABWARE_COLORS.leadBlack
+                    : LABWARE_COLORS.leadRed
+                }
+                {...lead}
+              />
+              <Electrons color={colors.electron} lead={lead} />
+            </group>
+          ))}
+        </CameraBounds>
       </group>
     </group>
   );
@@ -164,50 +192,26 @@ export function HalfCell({
   readonly showProducts: boolean;
   readonly side: -1 | 1;
 }) {
-  const height = ELECTRODE_TOP - ELECTRODE_BOTTOM;
-  const submerged = LIQUID_HEIGHT - ELECTRODE_BOTTOM;
   const wears = showProducts && side === -1;
   const coated = showProducts && side === 1;
   const { ion, symbol } = halfCell(metal);
 
   return (
     <group position={[side * APART, 0, 0]}>
-      <Beaker colors={getElectrolysisColors()} />
-      <ColumnLiquid
-        bottom={0.01}
+      <Beaker
         color={SOLUTION_COLOR[metal]}
-        level={LIQUID_HEIGHT + 0.01}
-        opacity={metal === "copper" ? 0.5 : 0.28}
-        radius={BEAKER_RADIUS - 0.012}
+        strength={metal === "copper" ? 20 : 3}
       />
       <group position={[side * (ELECTRODE_X - APART), 0, 0]}>
-        <mesh
-          castShadow
-          position={[0, ELECTRODE_BOTTOM + height / 2, 0]}
-          scale={[wears ? 0.55 : 1, 1, 1]}
-        >
-          <boxGeometry args={[ELECTRODE_THICKNESS, height, ELECTRODE_WIDTH]} />
-          <MetalMaterial color={METAL_COLOR[metal]} />
-        </mesh>
-        {coated ? (
-          <mesh position={[0, ELECTRODE_BOTTOM + submerged / 2, 0]}>
-            <boxGeometry
-              args={[
-                ELECTRODE_THICKNESS + 0.03,
-                submerged,
-                ELECTRODE_WIDTH + 0.03,
-              ]}
-            />
-            <MetalMaterial color={METAL_COLOR[metal]} roughness={0.6} />
-          </mesh>
-        ) : null}
+        <Plate color={METAL_COLOR[metal]} wear={wears ? 0.55 : 1} />
+        {coated ? <Deposit color={METAL_COLOR[metal]} /> : null}
         <ThreeLabel
           anchorX={side === -1 ? "right" : "left"}
           color={ORIGIN_COLOR.LIGHT}
-          fontSize="compact"
-          gap={0.004}
+          {...BENCH_LABEL}
+          gap={0.003}
           outlineColor={ORIGIN_COLOR.DARK}
-          outlineWidth={0.006}
+          outlineWidth={BENCH_LABEL_OUTLINE}
           position={[side * 0.08, ELECTRODE_TOP - 0.02, 0.1]}
         >
           <InlineMath math={side === -1 ? "(-)" : "(+)"} />
@@ -216,10 +220,10 @@ export function HalfCell({
       <ThreeLabel
         anchorY="top"
         color={ORIGIN_COLOR.LIGHT}
-        fontSize="compact"
+        {...BENCH_LABEL}
         outlineColor={ORIGIN_COLOR.DARK}
-        outlineWidth={0.006}
-        position={[0, -0.06, BEAKER_RADIUS]}
+        outlineWidth={BENCH_LABEL_OUTLINE}
+        position={[side * 0.4, -0.06, BEAKER_RADIUS]}
       >
         <InlineMath math={`${symbol}\\,|\\,${ion}\\mathrm{(aq)}`} />
       </ThreeLabel>
@@ -247,23 +251,30 @@ const BRIDGE: Path = {
 function SaltBridge() {
   return (
     <group>
-      <mesh>
+      <mesh renderOrder={1}>
         <Sweep path={BRIDGE} radius={BRIDGE_RADIUS * 0.78} />
         <meshPhysicalMaterial
           color={BENCH_COLORS.agar}
-          opacity={0.78}
+          depthWrite={false}
+          opacity={0.6}
           roughness={0.5}
           transparent
         />
       </mesh>
       <mesh castShadow renderOrder={2}>
         <Sweep ends="open" path={BRIDGE} radius={BRIDGE_RADIUS} />
-        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.3} />
+        <Borosilicate />
       </mesh>
       {Arr.map([-BRIDGE_X, BRIDGE_X], (x) => (
-        <mesh key={x} position={[x, BRIDGE_DIP + 0.02, 0]}>
-          <sphereGeometry args={[BRIDGE_RADIUS * 0.95, 24, 16]} />
-          <meshStandardMaterial color={BENCH_COLORS.ptfe} roughness={1} />
+        <mesh key={x} position={[x, BRIDGE_DIP + 0.03, 0]} scale={[1, 1.5, 1]}>
+          <sphereGeometry args={[BRIDGE_RADIUS * 0.8, 24, 16]} />
+          <SurfaceMaterial
+            bump={1}
+            color={BENCH_COLORS.ptfe}
+            repeat={[2, 2]}
+            roughness={1}
+            surface="cloth"
+          />
         </mesh>
       ))}
     </group>

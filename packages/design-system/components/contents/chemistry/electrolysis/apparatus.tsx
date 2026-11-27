@@ -1,140 +1,185 @@
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import type { Path } from "@repo/design-system/components/contents/chemistry/electrolysis/circuit";
 import {
-  BATTERY_Y,
+  BENCH,
+  circuitLeads,
   ELECTRODE_TOP,
-  pointAlong,
-  TERMINAL_OFFSET,
 } from "@repo/design-system/components/contents/chemistry/electrolysis/circuit";
 import type { ElectrolysisColors } from "@repo/design-system/components/contents/chemistry/electrolysis/color";
-import { createBeakerMarkingsTexture } from "@repo/design-system/components/contents/chemistry/glassware";
-import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { Turn } from "@repo/design-system/components/three/form/part";
-import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
-  GlassMaterial,
-  MetalMaterial,
-} from "@repo/design-system/components/three/physical";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
-import { CAR_COLORS } from "@repo/design-system/lib/material/car";
-import { Array as Arr, Option } from "effect";
-import { useEffect, useMemo, useRef } from "react";
+  BENCH_LABEL,
+  BENCH_LABEL_OUTLINE,
+} from "@repo/design-system/components/contents/chemistry/label";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
+import {
+  boreAt,
+  levelOf,
+} from "@repo/design-system/components/three/apparatus/glass";
+import { Lead } from "@repo/design-system/components/three/apparatus/lead";
+import { Mote } from "@repo/design-system/components/three/apparatus/mote";
+import type { Lead as LeadAsk } from "@repo/design-system/components/three/apparatus/route";
+import { routeOf } from "@repo/design-system/components/three/apparatus/route";
+import {
+  SUPPLY_POSTS,
+  Supply,
+} from "@repo/design-system/components/three/apparatus/supply";
+import { Vessel } from "@repo/design-system/components/three/apparatus/vessel";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import {
+  placeOn,
+  trackOf,
+} from "@repo/design-system/components/three/form/path";
+import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { LABWARE_COLORS } from "@repo/design-system/lib/material/labware";
+import { Array as Arr } from "effect";
+import { useMemo, useRef } from "react";
 import type { Group } from "three";
-import { CatmullRomCurve3, Vector3 } from "three";
 
-/** The beaker's inner radius and height. */
-export const BEAKER_RADIUS = 0.42;
-const BEAKER_HEIGHT = 0.95;
+/** The beaker of one cell and the electrolyte it holds, in millilitres. */
+const CELL = { capacity: 250, kind: "beaker" } as const;
+const ELECTROLYTE = 190;
 
-/** How high the electrolyte stands in the beaker. */
-export const LIQUID_HEIGHT = 0.62;
+/** The beaker's inner radius, in scene units. */
+export const BEAKER_RADIUS = boreAt(CELL, 0.05) / BENCH;
+
+/** How high the electrolyte stands in the beaker, in scene units. */
+export const LIQUID_HEIGHT = levelOf(CELL, ELECTROLYTE) / BENCH;
 
 /** The height of an electrode's bottom, clear of the beaker's floor. */
-export const ELECTRODE_BOTTOM = 0.12;
+const ELECTRODE_BOTTOM = 0.12;
 
 /** An electrode plate's thickness and width. */
-export const ELECTRODE_THICKNESS = 0.07;
-export const ELECTRODE_WIDTH = 0.14;
+const ELECTRODE_THICKNESS = 0.024;
+const ELECTRODE_WIDTH = 0.16;
 
-/** The dots that stand for electrons on each lead, and how fast they move. */
-const ELECTRONS_PER_LEAD = 6;
+/** The motes that stand for electrons on each lead, and how fast they move. */
+const ELECTRONS_PER_LEAD = 5;
 const ELECTRON_SPEED = 0.16;
 
-/** The bubbles a gas electrode gives off. */
-const BUBBLES = 6;
+/** The bubbles a gas electrode gives off: how many, and each one's size, in scene units. */
+const BUBBLES = Arr.makeBy(10, (index) => 0.009 + ((index * 7) % 5) * 0.0022);
 
-/** How thick the beaker's wall and its base are drawn, in scene units. */
-const WALL = 0.014;
-const BASE = 0.03;
+/** How far behind the cells the power pack stands, and the voltage it is set to. */
+const PACK_BACK = 0.17;
+const PACK_VOLTS = 6;
 
-/**
- * A Griffin beaker's wall in section, turned on the lathe: a thick base, a
- * rounded heel, a straight wall, a rim that flares and rolls over, and the
- * inner wall back down, so the glass has a real thickness to catch the light.
- */
-const BEAKER_PROFILE = [
-  [0, 0],
-  [BEAKER_RADIUS - 0.03, 0],
-  [BEAKER_RADIUS + WALL - 0.008, 0.008],
-  [BEAKER_RADIUS + WALL, 0.035],
-  [BEAKER_RADIUS + WALL, BEAKER_HEIGHT - 0.05],
-  [BEAKER_RADIUS + WALL + 0.012, BEAKER_HEIGHT - 0.02],
-  [BEAKER_RADIUS + WALL + 0.03, BEAKER_HEIGHT - 0.003],
-  [BEAKER_RADIUS + WALL + 0.03, BEAKER_HEIGHT + 0.006],
-  [BEAKER_RADIUS + WALL + 0.018, BEAKER_HEIGHT + 0.008],
-  [BEAKER_RADIUS, BEAKER_HEIGHT - 0.04],
-  [BEAKER_RADIUS, BASE + 0.025],
-  [BEAKER_RADIUS - 0.025, BASE],
-  [0.001, BASE],
+/** Where the power pack's positive and negative posts are, in metres from the middle of the row of cells. */
+const POSTS = [
+  [SUPPLY_POSTS[0][0], SUPPLY_POSTS[0][1], SUPPLY_POSTS[0][2] - PACK_BACK],
+  [SUPPLY_POSTS[1][0], SUPPLY_POSTS[1][1], SUPPLY_POSTS[1][2] - PACK_BACK],
 ] as const;
 
 /**
- * A borosilicate Griffin beaker with a pouring spout and its printed scale,
- * open at the top, standing on the bench at y = 0.
+ * A 250 mL borosilicate beaker of electrolyte, standing on the bench at
+ * y = 0: its solution filters the light as deeply as it is strong.
  */
-export function Beaker({ colors }: { readonly colors: ElectrolysisColors }) {
-  const markings = useMemo(createBeakerMarkingsTexture, []);
-  useEffect(() => () => markings?.dispose(), [markings]);
-
+export function Beaker({
+  color,
+  strength,
+}: {
+  readonly color: string;
+  readonly strength: number;
+}) {
   return (
-    <group>
-      <mesh castShadow renderOrder={2}>
-        <Turn profile={BEAKER_PROFILE} />
-        <GlassMaterial color={colors.glass} opacity={0.26} />
-      </mesh>
-      <mesh
-        position={[0, BEAKER_HEIGHT - 0.012, BEAKER_RADIUS + WALL + 0.024]}
-        rotation={[0.42, 0, 0]}
-        scale={[0.8, 0.6, 1.15]}
-      >
-        <cylinderGeometry
-          args={[0.045, 0.07, 0.1, 24, 1, true, -1.2 - Math.PI / 2, 2.4]}
-        />
-        <GlassMaterial color={colors.glass} opacity={0.5} />
-      </mesh>
-      {markings === null ? null : (
-        <mesh
-          position={[0, BEAKER_HEIGHT * 0.5, 0]}
-          renderOrder={3}
-          rotation={[0, -Math.PI * 0.72, 0]}
-        >
-          <cylinderGeometry
-            args={[
-              BEAKER_RADIUS + WALL + 0.003,
-              BEAKER_RADIUS + WALL + 0.003,
-              BEAKER_HEIGHT * 0.78,
-              64,
-              1,
-              true,
-            ]}
-          />
-          <meshBasicMaterial
-            depthWrite={false}
-            map={markings}
-            opacity={0.9}
-            transparent
-          />
-        </mesh>
-      )}
+    <group scale={1 / BENCH}>
+      <Vessel
+        capacity={CELL.capacity}
+        holds={{ color, strength, volume: ELECTROLYTE }}
+        kind={CELL.kind}
+      />
     </group>
   );
 }
 
-/** Bubbles rising from an electrode's submerged face to the surface. */
+/**
+ * One electrode: a strip cut from sheet metal and rubbed bright, or a
+ * pressed graphite plate, from its bottom in the electrolyte up to where
+ * its lead clips on. `wear` is how much of its thickness is left.
+ */
+export function Plate({
+  color,
+  graphite = false,
+  wear = 1,
+}: {
+  readonly color: string;
+  readonly graphite?: boolean;
+  readonly wear?: number;
+}) {
+  const height = ELECTRODE_TOP - ELECTRODE_BOTTOM;
+
+  return (
+    <RoundedBox
+      args={[ELECTRODE_THICKNESS, height, ELECTRODE_WIDTH]}
+      castShadow
+      position={[0, ELECTRODE_BOTTOM + height / 2, 0]}
+      radius={0.006}
+      scale={[wear, 1, 1]}
+      smoothness={3}
+    >
+      {graphite ? (
+        <SurfaceMaterial
+          color={color}
+          repeat={[1, 6]}
+          roughness={0.82}
+          surface="cast"
+        />
+      ) : (
+        <SurfaceMaterial
+          color={color}
+          metalness={1}
+          repeat={[2, 12]}
+          roughness={0.34}
+          surface="brushed"
+        />
+      )}
+    </RoundedBox>
+  );
+}
+
+/**
+ * The metal an electrode takes on from its electrolyte: a matt, grainy coat
+ * over the part of the plate that stands in the solution.
+ */
+export function Deposit({ color }: { readonly color: string }) {
+  const submerged = LIQUID_HEIGHT - ELECTRODE_BOTTOM;
+
+  return (
+    <RoundedBox
+      args={[ELECTRODE_THICKNESS + 0.022, submerged, ELECTRODE_WIDTH + 0.022]}
+      position={[0, ELECTRODE_BOTTOM + submerged / 2, 0]}
+      radius={0.01}
+      smoothness={3}
+    >
+      <SurfaceMaterial
+        bump={1}
+        color={color}
+        metalness={1}
+        repeat={[2, 6]}
+        roughness={0.62}
+        surface="cast"
+      />
+    </RoundedBox>
+  );
+}
+
+/** Bubbles of gas rising from an electrode's submerged face to the surface, each a film of liquid about the gas. */
 export function Bubbles({ color }: { readonly color: string }) {
   const group = useRef<Group>(null);
 
   useFrame(({ clock }) => {
     Arr.forEach(group.current?.children ?? [], (bubble, index) => {
-      const progress = (clock.elapsedTime * 0.35 + index / BUBBLES) % 1;
+      const progress =
+        (clock.elapsedTime * (0.28 + (index % 3) * 0.06) +
+          index / BUBBLES.length) %
+        1;
       bubble.position.set(
-        (index % 2 === 0 ? 1 : -1) * (ELECTRODE_THICKNESS / 2 + 0.025),
+        (index % 2 === 0 ? 1 : -1) * (ELECTRODE_THICKNESS / 2 + 0.022) +
+          Math.sin(progress * 9 + index) * 0.008,
         ELECTRODE_BOTTOM +
           0.04 +
           progress * (LIQUID_HEIGHT - ELECTRODE_BOTTOM - 0.06),
-        ((index % 3) - 1) * 0.04
+        ((index % 5) - 2) * 0.028
       );
     });
   });
@@ -142,13 +187,17 @@ export function Bubbles({ color }: { readonly color: string }) {
   return (
     <CameraBounds exclude>
       <group ref={group}>
-        {Arr.makeBy(BUBBLES, (index) => (
+        {Arr.map(BUBBLES, (radius, index) => (
           <mesh key={String(index)}>
-            <sphereGeometry args={[0.018, 12, 8]} />
-            <meshStandardMaterial
+            <sphereGeometry args={[radius, 16, 12]} />
+            <meshPhysicalMaterial
+              clearcoat={1}
+              clearcoatRoughness={0.05}
               color={color}
-              opacity={0.7}
-              roughness={0.1}
+              depthWrite={false}
+              ior={1.333}
+              opacity={0.34}
+              roughness={0.04}
               transparent
             />
           </mesh>
@@ -159,9 +208,9 @@ export function Bubbles({ color }: { readonly color: string }) {
 }
 
 /**
- * The low-voltage DC power pack a school lab runs electrolysis from: a
- * light grey case with a dark front panel and a voltage knob, and its two
- * 4 mm terminals on top, red for positive on the left and black for negative.
+ * The low-voltage DC power pack a school lab runs electrolysis from,
+ * standing on the bench behind the cells, with the signs of its two posts
+ * and its name beside it.
  */
 export function Battery({
   colors,
@@ -171,143 +220,101 @@ export function Battery({
   readonly label: string;
 }) {
   return (
-    <group position={[0, BATTERY_Y, 0]}>
-      <RoundedBox
-        args={[TERMINAL_OFFSET * 2 + 0.34, 0.3, 0.26]}
-        castShadow
-        position={[0, -0.18, 0]}
-        radius={0.035}
-        smoothness={4}
-      >
-        <meshPhysicalMaterial
-          clearcoat={0.3}
-          color={BENCH_COLORS.hotplateBody}
-          roughness={0.5}
-        />
-      </RoundedBox>
-      <mesh position={[0, -0.18, 0.131]}>
-        <planeGeometry args={[TERMINAL_OFFSET * 2 + 0.2, 0.2]} />
-        <meshStandardMaterial color={BENCH_COLORS.epoxy} roughness={0.7} />
-      </mesh>
-      <mesh position={[0, -0.18, 0.15]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.045, 0.05, 0.04, 32]} />
-        <meshStandardMaterial color={BENCH_COLORS.bottleCap} roughness={0.45} />
-      </mesh>
-      {Arr.map(
-        [
-          { color: BENCH_COLORS.leadRed, x: -TERMINAL_OFFSET },
-          { color: BENCH_COLORS.leadBlack, x: TERMINAL_OFFSET },
-        ] as const,
-        (terminal) => (
-          <mesh castShadow key={terminal.x} position={[terminal.x, -0.02, 0]}>
-            <cylinderGeometry args={[0.03, 0.034, 0.07, 24]} />
-            <meshPhysicalMaterial
-              clearcoat={0.4}
-              color={terminal.color}
-              roughness={0.4}
-            />
-          </mesh>
-        )
-      )}
-      <ThreeLabel
-        color={colors.text}
-        fontSize="compact"
-        outlineColor={colors.halo}
-        outlineWidth={0.006}
-        position={[-TERMINAL_OFFSET - 0.1, 0.02, 0.08]}
-      >
-        <InlineMath math="+" />
-      </ThreeLabel>
-      <ThreeLabel
-        color={colors.text}
-        fontSize="compact"
-        outlineColor={colors.halo}
-        outlineWidth={0.006}
-        position={[TERMINAL_OFFSET + 0.1, 0.02, 0.08]}
-      >
-        <InlineMath math="-" />
-      </ThreeLabel>
-      <ThreeLabel
-        color={colors.text}
-        fontSize="compact"
-        outlineColor={colors.halo}
-        outlineWidth={0.006}
-        position={[0, 0.12, 0]}
-      >
-        {label}
-      </ThreeLabel>
+    <group>
+      <group scale={1 / BENCH}>
+        <group position={[0, 0, -PACK_BACK]}>
+          <Supply volts={PACK_VOLTS} />
+        </group>
+        <ThreeLabel
+          color={colors.text}
+          {...BENCH_LABEL}
+          outlineColor={colors.halo}
+          outlineWidth={BENCH_LABEL_OUTLINE}
+          position={[POSTS[0][0] - 0.02, POSTS[0][1] + 0.012, POSTS[0][2]]}
+        >
+          <InlineMath math="+" />
+        </ThreeLabel>
+        <ThreeLabel
+          color={colors.text}
+          {...BENCH_LABEL}
+          outlineColor={colors.halo}
+          outlineWidth={BENCH_LABEL_OUTLINE}
+          position={[POSTS[1][0] + 0.02, POSTS[1][1] + 0.012, POSTS[1][2]]}
+        >
+          <InlineMath math="-" />
+        </ThreeLabel>
+        <ThreeLabel
+          color={colors.text}
+          {...BENCH_LABEL}
+          outlineColor={colors.halo}
+          outlineWidth={BENCH_LABEL_OUTLINE}
+          position={[0, POSTS[0][1] + 0.085, -PACK_BACK]}
+        >
+          {label}
+        </ThreeLabel>
+      </group>
     </group>
   );
 }
 
 /**
- * One insulated test lead in its colour, run along its path with soft bends,
- * a chrome crocodile clip where it grips an electrode, and the electrons
- * moving along it.
+ * The leads of the cells in series, red to the power pack's positive post
+ * and black for the rest, each with the electrons moving along it.
  */
-export function Lead({
+export function Circuit({
   colors,
-  lead,
-  sheath,
+  count,
 }: {
   readonly colors: ElectrolysisColors;
-  readonly lead: Path;
-  readonly sheath: string;
+  readonly count: number;
+}) {
+  const leads = useMemo(() => circuitLeads(count, POSTS), [count]);
+
+  return (
+    <group scale={1 / BENCH}>
+      {Arr.map(leads, (lead, index) => (
+        <group key={String(index)}>
+          <Lead
+            color={
+              index === 0 ? LABWARE_COLORS.leadRed : LABWARE_COLORS.leadBlack
+            }
+            {...lead}
+          />
+          <Electrons color={colors.electron} lead={lead} />
+        </group>
+      ))}
+    </group>
+  );
+}
+
+/** The electrons moving along one lead, from its first end to its second. */
+export function Electrons({
+  color,
+  lead,
+}: {
+  readonly color: string;
+  readonly lead: LeadAsk;
 }) {
   const group = useRef<Group>(null);
-  const cable = useMemo(
-    () =>
-      new CatmullRomCurve3(
-        Arr.map(lead, ([x, y, z]) => new Vector3(x, y, z)),
-        false,
-        "catmullrom",
-        0.05
-      ),
-    [lead]
-  );
-  const clips = Arr.filter(
-    [Arr.head(lead), Arr.last(lead)],
-    (end) => Option.isSome(end) && end.value[1] === ELECTRODE_TOP
-  );
+  const track = useMemo(() => trackOf(routeOf(lead)), [lead]);
 
   useFrame(({ clock }) => {
     Arr.forEach(group.current?.children ?? [], (electron, index) => {
-      const [x, y, z] = pointAlong(
-        lead,
-        clock.elapsedTime * ELECTRON_SPEED + index / ELECTRONS_PER_LEAD
+      placeOn(
+        track,
+        (clock.elapsedTime * ELECTRON_SPEED + index / ELECTRONS_PER_LEAD) % 1,
+        electron.position
       );
-      electron.position.set(x, y, z);
     });
   });
 
   return (
-    <group>
-      <mesh castShadow>
-        <tubeGeometry args={[cable, 96, 0.016, 12, false]} />
-        <meshPhysicalMaterial clearcoat={0.3} color={sheath} roughness={0.45} />
-      </mesh>
-      {Arr.map(Arr.getSomes(clips), ([x, y, z]) => (
-        <RoundedBox
-          args={[0.06, 0.08, 0.1]}
-          castShadow
-          key={`${x}-${y}`}
-          position={[x, y + 0.02, z]}
-          radius={0.012}
-          smoothness={2}
-        >
-          <MetalMaterial color={CAR_COLORS.chrome} roughness={0.25} />
-        </RoundedBox>
-      ))}
-      <CameraBounds exclude>
-        <group ref={group}>
-          {Arr.makeBy(ELECTRONS_PER_LEAD, (index) => (
-            <mesh key={String(index)}>
-              <sphereGeometry args={[0.022, 12, 8]} />
-              <meshStandardMaterial color={colors.electron} roughness={0.3} />
-            </mesh>
-          ))}
-        </group>
-      </CameraBounds>
-    </group>
+    <CameraBounds exclude>
+      <group ref={group}>
+        {Arr.makeBy(ELECTRONS_PER_LEAD, (index) => (
+          <Mote color={color} core={0.34} key={String(index)} radius={0.0058} />
+        ))}
+      </group>
+    </CameraBounds>
   );
 }

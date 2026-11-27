@@ -1,61 +1,43 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  BATTERY_Y,
+  BENCH,
   cellCentres,
   circuitLeads,
   ELECTRODE_TOP,
-  pointAlong,
-  TERMINAL_OFFSET,
 } from "@repo/design-system/components/contents/chemistry/electrolysis/circuit";
-import { Array as Arr, Option } from "effect";
+
+const posts = [
+  [-0.05, 0.12, -0.14],
+  [0.05, 0.12, -0.14],
+] as const;
+const top = ELECTRODE_TOP * BENCH;
 
 describe("electrolysis circuit", () => {
-  it("centres one cell under the battery and spreads two either side", () => {
+  it("centres one cell under the power pack and spreads two either side", () => {
     expect(cellCentres(1)).toEqual([0]);
     expect(cellCentres(2)).toEqual([-0.8, 0.8]);
   });
 
-  it("runs one cell's leads from its anode to the positive terminal and from the negative terminal to its cathode", () => {
-    expect(circuitLeads(1)).toEqual([
-      [
-        [-0.2, ELECTRODE_TOP, 0],
-        [-0.2, BATTERY_Y, 0],
-        [-TERMINAL_OFFSET, BATTERY_Y, 0],
-      ],
-      [
-        [TERMINAL_OFFSET, BATTERY_Y, 0],
-        [0.2, BATTERY_Y, 0],
-        [0.2, ELECTRODE_TOP, 0],
-      ],
-    ]);
+  it("runs one cell's leads from its anode's clip to the positive post and from the negative post to its cathode's clip", () => {
+    const leads = circuitLeads(1, posts);
+
+    expect(leads).toHaveLength(2);
+    expect(leads[0].ends).toEqual(["clip", "plug"]);
+    expect(leads[0].from[0]).toBeCloseTo(-0.02);
+    expect(leads[0].from[1]).toBeCloseTo(top);
+    expect(leads[0].to).toEqual(posts[0]);
+    expect(leads[1]?.ends).toEqual(["plug", "clip"]);
+    expect(leads[1]?.from).toEqual(posts[1]);
+    expect(leads[1]?.to[0]).toBeCloseTo(0.02);
   });
 
-  it("links the second cell's anode to the first cell's cathode in series", () => {
-    const leads = circuitLeads(2);
+  it("links the second cell's anode to the first cell's cathode in series, clip to clip", () => {
+    const leads = circuitLeads(2, posts);
 
     expect(leads).toHaveLength(3);
-    expect(leads[1]?.[0]).toEqual([0.600_000_000_000_000_1, ELECTRODE_TOP, 0]);
-    expect(Arr.last(leads[1] ?? [])).toEqual(
-      Option.some([-0.600_000_000_000_000_1, ELECTRODE_TOP, 0])
-    );
-  });
-
-  it("moves along a path by length, around its corners, and wraps", () => {
-    const path = [
-      [0, 0, 0],
-      [0, 1, 0],
-      [0, 1, 0],
-      [3, 1, 0],
-    ] as const;
-
-    expect(pointAlong(path, 0)).toEqual([0, 0, 0]);
-    expect(pointAlong(path, 0.125)).toEqual([0, 0.5, 0]);
-    expect(pointAlong(path, 0.5)).toEqual([1, 1, 0]);
-    expect(pointAlong(path, 1.5)).toEqual([1, 1, 0]);
-    expect(pointAlong(path, -0.5)).toEqual([1, 1, 0]);
-  });
-
-  it("keeps a path of one point in place", () => {
-    expect(pointAlong([[1, 2, 3]], 0.4)).toEqual([1, 2, 3]);
+    expect(leads[1]?.ends).toEqual(["clip", "clip"]);
+    expect(leads[1]?.from[0]).toBeCloseTo(0.06);
+    expect(leads[1]?.to[0]).toBeCloseTo(-0.06);
+    expect(leads[1]?.lift).toBeLessThan(leads[0].lift);
   });
 });

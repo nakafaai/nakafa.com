@@ -4,7 +4,6 @@ import {
   analyteMoles,
   endPoint,
   hueAfter,
-  levelFor,
   pairOf,
   phAfter,
 } from "@repo/design-system/components/contents/chemistry/titration/model";
@@ -98,15 +97,5 @@ describe("titration model", () => {
     expect(pairOf(unknown)).toBeUndefined();
     expect(hueAfter(unknown, 10)).toBe("pale-green");
     expect(() => endOf(unknown)).toThrow("unknown pair");
-  });
-});
-
-describe("liquid level", () => {
-  it("fills a cylinder to the height its volume needs, and stops at the top", () => {
-    const radius = 0.04;
-    const level = levelFor(100, () => radius, 0.2);
-
-    expect(level).toBeCloseTo(100e-6 / (Math.PI * radius ** 2), 6);
-    expect(levelFor(1e6, () => radius, 0.2)).toBeCloseTo(0.2, 6);
   });
 });

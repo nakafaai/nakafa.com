@@ -203,35 +203,3 @@ export function hueAfter(titration: Titration, added: number): Hue {
     ? "pale-green"
     : "colourless";
 }
-
-/**
- * The height in metres a liquid of `volume` cm³ stands to in a vessel whose
- * inside has radius `radiusAt(y)` metres at height `y`, found by halving the
- * interval until the volume below matches, never above `top`.
- */
-export function levelFor(
-  volume: number,
-  radiusAt: (y: number) => number,
-  top: number
-) {
-  const steps = 200;
-  const below = (height: number) => {
-    let total = 0;
-    for (let index = 0; index < steps; index += 1) {
-      const y = ((index + 0.5) / steps) * height;
-      total += Math.PI * radiusAt(y) ** 2 * (height / steps);
-    }
-    return total * 1e6;
-  };
-  let low = 0;
-  let high = top;
-  for (let round = 0; round < 40; round += 1) {
-    const middle = (low + high) / 2;
-    if (below(middle) < volume) {
-      low = middle;
-    } else {
-      high = middle;
-    }
-  }
-  return (low + high) / 2;
-}
