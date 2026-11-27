@@ -10,6 +10,7 @@ import { inspectHeaderActions } from "#scripts/check/actions";
 import { arrayFindings, isProjectConfig } from "#scripts/check/arrays";
 import { inspectBandSource } from "#scripts/check/bands";
 import { inspectButtonSource } from "#scripts/check/buttons";
+import { inspectCatalogue } from "#scripts/check/catalogue";
 import { inspectChartSource } from "#scripts/check/charts";
 import { classFindings } from "#scripts/check/classes";
 import {
@@ -58,6 +59,7 @@ import { inspectMessageReach } from "#scripts/check/messages";
 import { manifestEntries, nameViolations } from "#scripts/check/names";
 import { inspectOptionSource } from "#scripts/check/options";
 import { inspectMenuOrder } from "#scripts/check/order";
+import { inspectLabs } from "#scripts/check/pending";
 import { inspectPickerSource } from "#scripts/check/pickers";
 import { pluginRuleNames } from "#scripts/check/plugin";
 import { inspectPoses } from "#scripts/check/poses";
@@ -167,6 +169,8 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
     inspectTables(parsed.modules),
     yield* classFindings(parsed),
     inspectPoses(parsed.modules),
+    yield* inspectLabs(root, parsed.modules),
+    yield* inspectCatalogue(root),
   ]);
 }, Effect.scoped);
 

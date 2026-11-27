@@ -18,6 +18,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 | Effect compiler rules                                                                   | `packages/typescript-config/base.json`                                                                                                       |
 | React, state, Tailwind, test, and layout policy                                         | `scripts/check/tests.ts` and the modules it runs                                                                                             |
 | Architecture decisions: client state and hydration, the renderer contract, and the rest | `docs/adr`                                                                                                                                   |
+| Building or changing a 3D lab: the engine catalogue, the order of work, the bar         | `docs/adr/0052-labs.md`, enforced by `scripts/check/labs.ts`                                                                                 |
 | Advisories without a patched release                                                    | `osv.toml`                                                                                                                                   |
 | Authored content and its rules                                                          | the Aksara repository and its `nakafa-content` skill                                                                                         |
 
