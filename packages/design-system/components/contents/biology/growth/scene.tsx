@@ -21,6 +21,9 @@ import {
 import { useCallback, useRef } from "react";
 import type { Group } from "three";
 
+/** What the ruler beside the planter reads along its length: 0 to 40 cm, numbered every 5. */
+const RULER_SCALE = { from: 0, major: 5, minor: 1, to: 40 } as const;
+
 function GrowthCamera() {
   const narrow = isNarrowThreeScene(
     useThree((state) => state.size),
@@ -89,6 +92,8 @@ export function PlantSpecimenScene({
         height={1.35}
         position={[0.76, 0.68, -0.06]}
         rotation={[0, -0.25, 0]}
+        scale={RULER_SCALE}
+        turn={0}
         width={0.09}
       />
 

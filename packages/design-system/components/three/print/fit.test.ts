@@ -4,7 +4,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   fitText,
   wrapLines,
-} from "@repo/design-system/components/contents/mathematics/counterexample/wrap";
+} from "@repo/design-system/components/three/print/fit";
 
 /** A face whose every character is half as wide as its size, spaces included. */
 function measure(text: string) {

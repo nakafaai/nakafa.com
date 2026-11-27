@@ -4,6 +4,12 @@ import {
   GlassMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
+import {
+  fillRise,
+  graduationSheet,
+} from "@repo/design-system/components/three/print/graduation";
+import { PrintSleeve } from "@repo/design-system/components/three/print/layer";
+import { usePrintNumber } from "@repo/design-system/components/three/print/number";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
@@ -11,12 +17,10 @@ import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
 import {
-  CanvasTexture,
   CatmullRomCurve3,
   ExtrudeGeometry,
   LatheGeometry,
   Shape,
-  SRGBColorSpace,
   TubeGeometry,
   Vector3,
 } from "three";
@@ -41,44 +45,14 @@ const LARGE_BEAKER_WALL = latheProfile([
   [0.001, 0.0042],
 ]);
 
-function createBeakerScaleTexture(): CanvasTexture | null {
-  if (typeof document === "undefined") {
-    return null;
-  }
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 256;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return null;
-  }
-  ctx.clearRect(0, 0, 512, 256);
-  ctx.shadowColor = BENCH_COLORS.glassMarkingShadow;
-  ctx.shadowBlur = 2;
-  ctx.strokeStyle = BENCH_COLORS.glassMarking;
-  ctx.fillStyle = BENCH_COLORS.glassMarking;
-  ctx.lineWidth = 4;
-  ctx.font = "700 20px ui-sans-serif, system-ui, sans-serif";
-  const ticks = [
-    { label: "200", y: 50 },
-    { label: "150", y: 96 },
-    { label: "100", y: 142 },
-    { label: "50", y: 188 },
-  ] as const;
-  Arr.forEach(ticks, (tick) => {
-    ctx.beginPath();
-    ctx.moveTo(212, tick.y);
-    ctx.lineTo(266, tick.y);
-    ctx.stroke();
-    ctx.fillText(tick.label, 274, tick.y + 7);
-  });
-  ctx.font = "700 16px ui-sans-serif, system-ui, sans-serif";
-  ctx.fillText("250 mL", 212, 26);
-  const texture = new CanvasTexture(canvas);
-  texture.colorSpace = SRGBColorSpace;
-  texture.needsUpdate = true;
-  return texture;
-}
+/** The inner radius of a half-cell beaker and the height of its inner floor, in metres. */
+const BEAKER_BORE = { floor: 0.0055, radius: 0.0454 } as const;
+
+/**
+ * The scale fired on a half-cell beaker: 100 to 400 mL, each mark at the
+ * height a beaker of this bore holds that much, under its nominal capacity.
+ */
+const BEAKER_SCALE = { from: 100, major: 100, minor: 50, to: 400 } as const;
 
 function createElectrodeGeometry() {
   const halfW = 0.0115;
@@ -126,9 +100,22 @@ export function HalfCellBeaker({
   readonly x: number;
 }) {
   const beakerGeo = useMemo(() => new LatheGeometry(LARGE_BEAKER_WALL, 56), []);
-  const markings = useMemo(createBeakerScaleTexture, []);
+  const format = usePrintNumber();
+  const markings = useMemo(
+    () =>
+      graduationSheet(
+        {
+          caption: `${format(500, 0)} mL`,
+          ink: BENCH_COLORS.schellbachWhite,
+          rise: fillRise(BEAKER_BORE.radius),
+          scale: BEAKER_SCALE,
+          size: 0.0068,
+        },
+        format
+      ),
+    [format]
+  );
   useEffect(() => () => beakerGeo.dispose(), [beakerGeo]);
-  useEffect(() => () => markings?.dispose(), [markings]);
 
   return (
     <group position={[x, 0, BEAKER_Z]}>
@@ -159,21 +146,18 @@ export function HalfCellBeaker({
           <torusGeometry args={[0.0496, 0.0014, 10, 56]} />
           <GlassMaterial color={BENCH_COLORS.glassEdge} opacity={0.58} />
         </mesh>
-        {markings === null ? null : (
-          <mesh
-            position={[0, 0.048, 0]}
-            renderOrder={3}
-            rotation={[0, -Math.PI, 0]}
-          >
-            <cylinderGeometry args={[0.0484, 0.0484, 0.072, 44, 1, true]} />
-            <meshBasicMaterial
-              depthWrite={false}
-              map={markings}
-              opacity={0.92}
-              transparent
-            />
-          </mesh>
-        )}
+        {/* Fired white enamel graduations, each at the height the beaker holds that volume */}
+        <group
+          position={[
+            0,
+            BEAKER_BORE.floor +
+              ((BEAKER_SCALE.from + BEAKER_SCALE.to) / 2) *
+                fillRise(BEAKER_BORE.radius),
+            0,
+          ]}
+        >
+          <PrintSleeve radius={0.048} sheet={markings} stock="enamel" />
+        </group>
       </group>
     </group>
   );

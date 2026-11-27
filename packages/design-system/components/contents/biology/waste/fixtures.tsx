@@ -1,4 +1,4 @@
-import { createPrintedLabelTexture } from "@repo/design-system/components/contents/biology/fixtures";
+import { WrappedLabel } from "@repo/design-system/components/contents/biology/fixtures";
 import {
   AUTOCLAVE,
   BOTTLE,
@@ -18,7 +18,6 @@ import { LiquidMaterial } from "@repo/design-system/components/three/physical";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { LABORATORY_COLORS } from "@repo/design-system/lib/material/laboratory";
 import { Array as Arr } from "effect";
-import { useEffect, useMemo } from "react";
 import { DoubleSide } from "three";
 
 /** Undermount laboratory sink with swan-neck chrome tap. */
@@ -107,17 +106,6 @@ const CAP_FLUTES = Arr.range(0, 15);
 /** 2.5 L lathed amber borosilicate Winchester chemical waste bottle with funnel, fluted cap, meniscus, and hazard label. */
 export function ChemicalBottle() {
   const [x, , z] = BOTTLE.at;
-  const labelTex = useMemo(
-    () =>
-      createPrintedLabelTexture({
-        accentColor: LABORATORY_COLORS.fireRed,
-        badge: "HAZARDOUS CHEMICAL WASTE",
-        subtitle: "ORGANIC SOLVENTS",
-        title: "WASTE 2.5 L",
-      }),
-    []
-  );
-  useEffect(() => () => labelTex?.dispose(), [labelTex]);
 
   return (
     <group position={[x, 0, z]}>
@@ -156,31 +144,17 @@ export function ChemicalBottle() {
         />
       </mesh>
       {/* Crisp wrapped chemical-waste hazard label */}
-      {labelTex === null ? null : (
-        <mesh
-          position={[0, BOTTLE.height * 0.34, 0]}
-          rotation={[0, -Math.PI * 0.45, 0]}
-        >
-          <cylinderGeometry
-            args={[
-              BOTTLE.radius + 0.0012,
-              BOTTLE.radius + 0.0012,
-              BOTTLE.height * 0.36,
-              28,
-              1,
-              true,
-              0,
-              Math.PI * 0.9,
-            ]}
-          />
-          <meshStandardMaterial
-            map={labelTex}
-            polygonOffset
-            polygonOffsetFactor={-1}
-            roughness={0.82}
-          />
-        </mesh>
-      )}
+      <group position={[0, BOTTLE.height * 0.34, 0]}>
+        <WrappedLabel
+          accentColor={LABORATORY_COLORS.fireRed}
+          arc={Math.PI * 0.9}
+          badge="HAZARDOUS CHEMICAL WASTE"
+          height={BOTTLE.height * 0.36}
+          radius={BOTTLE.radius + 0.0012}
+          subtitle="ORGANIC SOLVENTS"
+          title="WASTE 2.5 L"
+        />
+      </group>
       {/* Molded polypropylene funnel seated in the bottle neck */}
       <mesh castShadow position={[0, BOTTLE.height, 0]}>
         <latheGeometry args={[FUNNEL_PROFILE, 32]} />
