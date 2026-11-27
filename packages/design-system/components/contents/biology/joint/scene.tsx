@@ -182,7 +182,7 @@ export function JointScene({
             </Body>
           </group>
           <Callout
-            at={[-0.4, 0.4, 0]}
+            at={[-0.4, 0.5, 0]}
             scale={SCALE}
             side="bottom"
             target={[-0.36, 0.26, -0.06]}
@@ -190,7 +190,7 @@ export function JointScene({
             {parts.bone}
           </Callout>
           <Callout
-            at={[0.1, -0.4, 0]}
+            at={[0.12, -0.52, 0]}
             scale={SCALE}
             side="top"
             target={[0, -0.28, 0]}
