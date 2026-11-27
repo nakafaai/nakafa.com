@@ -1,3 +1,5 @@
+import type { CameraRound } from "@repo/design-system/components/three/camera/silhouette";
+import { roundOf } from "@repo/design-system/components/three/camera/silhouette";
 import type { CoordinateFrame } from "@repo/design-system/components/three/frame";
 import type {
   CameraLabelBounds,
@@ -6,8 +8,15 @@ import type {
 } from "@repo/design-system/lib/geometry/camera/bounds";
 import { MutableHashMap, MutableHashSet } from "effect";
 import type { ReactNode, RefObject } from "react";
-import { createContext, use, useLayoutEffect, useRef, useState } from "react";
-import type { Group } from "three";
+import {
+  createContext,
+  use,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import type { Group, Object3D } from "three";
 import { Box3, Vector3 } from "three";
 
 function createFraming() {
@@ -16,6 +25,11 @@ function createFraming() {
   // graph, so each registry keys an object by its id.
   const labels = MutableHashMap.empty<number, CameraLabelBounds>();
   const subjects = MutableHashMap.empty<number, CameraSubjectBounds>();
+  // A round subject keeps its object, so the fit reads where it stands now.
+  const rounds = MutableHashMap.empty<
+    number,
+    { readonly object: Object3D; readonly round: CameraRound }
+  >();
   let scheduled: number | undefined;
   let flushed = false;
   let controllers = 0;
@@ -36,6 +50,7 @@ function createFraming() {
 
   return {
     labels,
+    rounds,
     subjects,
     commit(children: ReactNode) {
       if (renderedChildren === children) {
@@ -103,8 +118,12 @@ export function useCameraFraming() {
 }
 
 /**
- * Declares a stable local animation envelope or excludes scene decoration.
- * Geometry inside a finite envelope never makes the camera chase animation.
+ * Declares what the camera frames for a part of the scene: a fixed box, a ball
+ * or a ring (`bounds`), a stable animation envelope (`motion`), or nothing at
+ * all (`exclude`, for decoration). Declared bounds stand for everything drawn
+ * inside them, so moving parts never make the camera chase the animation. A
+ * ball or a ring is framed by its true round outline instead of the corners of
+ * a box round it.
  */
 export function CameraBounds({
   bounds,
@@ -113,7 +132,7 @@ export function CameraBounds({
   motion,
   objectRef,
 }: {
-  bounds?: CoordinateFrame | undefined;
+  bounds?: CoordinateFrame | CameraRound | undefined;
   children: ReactNode;
   exclude?: boolean;
   motion?: CameraMotionBounds;
@@ -122,12 +141,25 @@ export function CameraBounds({
   const framing = useCameraFraming();
   const ownedGroup = useRef<Group>(null);
   const group = objectRef ?? ownedGroup;
-  const minX = bounds?.x.min;
-  const minY = bounds?.y.min;
-  const minZ = bounds?.z.min;
-  const maxX = bounds?.x.max;
-  const maxY = bounds?.y.max;
-  const maxZ = bounds?.z.max;
+  const declared =
+    bounds !== undefined && "kind" in bounds ? bounds : undefined;
+  const box = bounds !== undefined && "kind" in bounds ? undefined : bounds;
+  const minX = box?.x.min;
+  const minY = box?.y.min;
+  const minZ = box?.z.min;
+  const maxX = box?.x.max;
+  const maxY = box?.y.max;
+  const maxZ = box?.z.max;
+  // Read by value, so an inline literal does not register again on each render.
+  const radius = declared?.radius;
+  const [centerX, centerY, centerZ] = declared?.center ?? [];
+  const [normalX, normalY, normalZ] =
+    declared?.kind === "ring" ? declared.normal : [];
+  const round = useMemo(
+    () =>
+      roundOf(radius, [centerX, centerY, centerZ], [normalX, normalY, normalZ]),
+    [radius, centerX, centerY, centerZ, normalX, normalY, normalZ]
+  );
   const rotation = motion?.rotation;
   const scale = motion?.scale;
   const travelMinX = motion?.translation?.x.min;
@@ -180,16 +212,22 @@ export function CameraBounds({
         object.id,
         new Box3(new Vector3(minX, minY, minZ), new Vector3(maxX, maxY, maxZ))
       );
+    } else if (round) {
+      // The round outline stands for the geometry inside it.
+      MutableHashMap.set(framing.subjects, object.id, false);
+      MutableHashMap.set(framing.rounds, object.id, { object, round });
     }
     framing.invalidate();
     return () => {
       MutableHashMap.remove(framing.subjects, object.id);
+      MutableHashMap.remove(framing.rounds, object.id);
       framing.invalidate();
     };
   }, [
     exclude,
     framing,
     group,
+    round,
     minX,
     minY,
     minZ,
