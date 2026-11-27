@@ -1,4 +1,7 @@
-import { converge } from "@repo/design-system/components/three/optic/trace";
+import {
+  bend,
+  converge,
+} from "@repo/design-system/components/three/optic/trace";
 import { Array as Arr, Option, Schema } from "effect";
 
 /**
@@ -117,6 +120,62 @@ export function traceBlock(block: Block, entry: number, incidence: number) {
   };
   return {
     hits: bounce({ x: entry, y: block.height }, sine(refraction), []),
+    refraction,
+  };
+}
+
+/** The inward normal of each face of the block a ray can leave through, in the block's frame. */
+const FACE_NORMALS = {
+  bottom: [0, 1],
+  left: [1, 0],
+  right: [-1, 0],
+} as const;
+
+/**
+ * The whole path of the ray of `traceBlock` in the block's frame, for a ray
+ * box that stands `reach` from the point of entry: from its slit to the top
+ * face, through every face the ray meets inside the glass, and `reach` on
+ * into the air once it refracts out, bent there by Snell's law. `mirror` is
+ * where the weak part the top face reflects ends, as far from the entry as
+ * the slit is.
+ */
+export function blockPath(
+  block: Block,
+  entry: number,
+  incidence: number,
+  reach: number
+) {
+  const { hits, refraction } = traceBlock(block, entry, incidence);
+  const lean = sine(incidence) * reach;
+  const rise = Math.cos(incidence * DEGREE) * reach;
+  const top: Spot = { x: entry, y: block.height };
+  const inside = [top, ...Arr.map(hits, (hit) => hit.at)];
+  const leaves = Option.flatMap(
+    Arr.last(Arr.zip(inside, hits)),
+    ([before, hit]) => {
+      const long = Math.hypot(hit.at.x - before.x, hit.at.y - before.y);
+      return Option.map(
+        bend(
+          [(hit.at.x - before.x) / long, (hit.at.y - before.y) / long],
+          FACE_NORMALS[hit.face],
+          block.index,
+          AIR_INDEX
+        ),
+        ([x, y]): Spot => ({
+          x: hit.at.x + x * reach,
+          y: hit.at.y + y * reach,
+        })
+      );
+    }
+  );
+  return {
+    hits,
+    mirror: { x: entry + lean, y: block.height + rise },
+    path: [
+      { x: entry - lean, y: block.height + rise },
+      ...inside,
+      ...Option.toArray(leaves),
+    ],
     refraction,
   };
 }

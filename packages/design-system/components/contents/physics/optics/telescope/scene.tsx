@@ -26,13 +26,16 @@ const AXIS = 0.95;
 
 /** How long the bench is, and how far from its left end the objective stands. */
 const LENGTH = 7;
-const LEAD = 0.75;
+const LEAD = 1.5;
 
 /** The slope at which light from the distant star reaches the objective: it comes down at 1.2 degrees. */
 const TILT = -Math.tan((1.2 * Math.PI) / 180);
 
 /** The heights, as shares of the radius of the objective, of the three rays drawn from the star. */
 const RAY_HEIGHTS = [0.8, 0, -0.8] as const;
+
+/** Half the width of the objective, in scene units. */
+const RADIUS = 0.3;
 
 /**
  * An astronomical telescope in normal adjustment, built the way a class
@@ -60,10 +63,10 @@ export function TelescopeScene({
   readonly objective: number;
 }) {
   const scope = telescope(objective, eyepiece);
-  const unit = (LENGTH - LEAD - 1.4) / longest;
+  const unit = (LENGTH - LEAD - 1.1) / longest;
   const start = -LENGTH / 2 + LEAD;
   const end = start + scope.length * unit;
-  const radius = scope.objective * 0.06 * unit;
+  const radius = RADIUS;
   const lenses = {
     eyepiece: scope.eyepiece * unit,
     objective: scope.objective * unit,
@@ -80,7 +83,7 @@ export function TelescopeScene({
     index: CROWN_INDEX,
     thin: 0.02,
   };
-  const leave = Math.min(lenses.eyepiece * 3, 1.3);
+  const leave = Math.min(lenses.eyepiece * 3, 0.95);
   const focus = start + lenses.objective;
 
   return (
@@ -109,7 +112,7 @@ export function TelescopeScene({
             color={INSTRUMENT_COLORS.lampLight}
             key={share}
             points={[
-              [start - 0.6, AXIS + height - TILT * 0.6, 0],
+              [start - 1.1, AXIS + height - TILT * 1.1, 0],
               [start, AXIS + height, 0],
               [end, AXIS + ray.atEyepiece, 0],
               [end + leave, AXIS + ray.atEyepiece + ray.out * leave, 0],

@@ -1,8 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   apparentDepth,
+  blockPath,
   criticalAngle,
+  principalRays,
   refract,
+  starRay,
   telescope,
   thinLens,
   traceBlock,
@@ -53,6 +56,41 @@ describe("traceBlock", () => {
       "left",
     ]);
     expect(Arr.every(hits, (hit) => hit.event === "reflected")).toBe(true);
+  });
+});
+
+describe("blockPath", () => {
+  const block = { height: 1, index: 1.5, width: 1.6 };
+
+  it("leaves the bottom face parallel to the ray that entered the top", () => {
+    const { mirror, path } = blockPath(block, 1, 30, 2);
+    const [source, entry, bottom, end] = path;
+    expect(path).toHaveLength(4);
+    expect(entry).toEqual({ x: 1, y: 1 });
+    expect(source?.x).toBeCloseTo(0, 9);
+    expect(source?.y).toBeCloseTo(1 + Math.sqrt(3), 9);
+    expect(mirror.x).toBeCloseTo(2, 9);
+    expect(mirror.y).toBeCloseTo(1 + Math.sqrt(3), 9);
+    expect((end?.x ?? 0) - (bottom?.x ?? 0)).toBeCloseTo(1, 9);
+    expect((end?.y ?? 0) - (bottom?.y ?? 0)).toBeCloseTo(-Math.sqrt(3), 9);
+  });
+
+  it("follows the SPM ray off the side face and out through the bottom", () => {
+    const { hits, path, refraction } = blockPath(block, 1, 60, 1);
+    expect(refraction).toBeCloseTo(35.26, 2);
+    expect(Arr.map(hits, (hit) => hit.face)).toEqual(["right", "bottom"]);
+    expect(path).toHaveLength(5);
+    expect(path[2]?.x).toBe(1.6);
+    expect(path[3]?.y).toBe(0);
+    expect((path[4]?.x ?? 0) - (path[3]?.x ?? 0)).toBeCloseTo(
+      -Math.sin(Math.PI / 3),
+      9
+    );
+  });
+
+  it("ends inside the glass when the ray never gets out", () => {
+    const { path } = blockPath({ height: 20, index: 1.5, width: 0.2 }, 0.1, 60, 1);
+    expect(path).toHaveLength(6);
   });
 });
 

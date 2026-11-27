@@ -150,7 +150,7 @@ export function Slab({
   }, [chamfer, deep, wide]);
 
   return (
-    <group position={[0, chamfer, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+    <group position={[0, chamfer + 0.003, 0]} rotation={[-Math.PI / 2, 0, 0]}>
       <mesh renderOrder={4}>
         <extrudeGeometry
           args={[
@@ -164,7 +164,7 @@ export function Slab({
             },
           ]}
         />
-        <GlassMaterial color={BENCH_COLORS.glassEdge} opacity={0.3} />
+        <GlassMaterial color={BENCH_COLORS.glassEdge} opacity={0.2} />
       </mesh>
     </group>
   );
