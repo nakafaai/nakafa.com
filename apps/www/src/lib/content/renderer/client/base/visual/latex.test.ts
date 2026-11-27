@@ -18,6 +18,15 @@ describe("formatFormulaLatex", () => {
       "\\exp(-(x - 1)^{2}) + \\ln(x)"
     );
     expect(formatFormulaLatex("2^(x + 1)")).toBe("2^{x + 1}");
+    expect(formatFormulaLatex("1 + log_10(x)")).toBe("1 + \\log_{10}(x)");
+    expect(formatFormulaLatex("log_2(x) + log_(1/2)(x) + log(x)")).toBe(
+      "\\log_{2}(x) + \\log_{1/2}(x) + \\log(x)"
+    );
+    expect(
+      formatFormulaLatex("cbrt(x) + floor(x) + ceil(x) + asin(x) + sign(x)")
+    ).toBe(
+      "\\sqrt[3]{x} + \\lfloor x \\rfloor + \\lceil x \\rceil + \\arcsin(x) + \\operatorname{sgn}(x)"
+    );
   });
 });
 

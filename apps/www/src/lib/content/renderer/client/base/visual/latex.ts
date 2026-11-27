@@ -4,14 +4,21 @@ import type { PlaneObject } from "@/lib/content/renderer/client/base/visual/scen
 const MAX_EXPRESSION_LENGTH = 32;
 const ZERO_TOLERANCE = 1e-6;
 const FUNCTION_NAME_PATTERN =
-  /\b(?<fn>sin|cos|tan|sec|csc|cot|arcsin|arccos|arctan|sinh|cosh|tanh|ln|log|exp)\b/gu;
+  /\b(?<fn>sin|cos|tan|sec|csc|cot|arcsin|arccos|arctan|sinh|cosh|tanh|ln|log|exp|min|max)\b/gu;
+const INVERSE_TRIG_PATTERN = /\ba(?<fn>sin|cos|tan)\b/gu;
+const SIGN_FUNCTION_PATTERN = /\bsign\b/gu;
+const LOG_BASE_PAREN_PATTERN = /\blog_\((?<base>[^()]+)\)/gu;
+const LOG_BASE_PATTERN = /\blog_(?<base>\d+(?:\.\d+)?|[a-zA-Z])/gu;
 const CONSTANT_TOKEN_PATTERN = /\b(?<sym>pi|theta)\b/gu;
 const DIGIT_MULTIPLY_PATTERN = /(?<lhs>\d)\s*\*\s*(?<rhs>\d)/gu;
 const SYMBOL_MULTIPLY_PATTERN = /\s*\*\s*/gu;
 const SIMPLE_EXPONENT_PATTERN = /\^(?<exp>[+-]?\d+(?:\.\d+)?|[a-zA-Z])/gu;
 const PAREN_EXPONENT_PATTERN = /\^\((?<exp>[^()]+)\)/gu;
 const SQRT_CALL_PATTERN = /\bsqrt\((?<arg>[^()]+)\)/gu;
+const CBRT_CALL_PATTERN = /\bcbrt\((?<arg>[^()]+)\)/gu;
 const ABS_CALL_PATTERN = /\babs\((?<arg>[^()]+)\)/gu;
+const FLOOR_CALL_PATTERN = /\bfloor\((?<arg>[^()]+)\)/gu;
+const CEIL_CALL_PATTERN = /\bceil\((?<arg>[^()]+)\)/gu;
 const COMPACT_SPACES_PATTERN = /\s+/gu;
 
 /** Rounds a clean display number to at most 2 decimals without trailing zeros. */
@@ -49,10 +56,17 @@ function formatTerm(
 export function formatFormulaLatex(raw: string): string {
   let tex = Str.trim(raw);
   tex = tex.replace(SQRT_CALL_PATTERN, "\\sqrt{$<arg>}");
+  tex = tex.replace(CBRT_CALL_PATTERN, "\\sqrt[3]{$<arg>}");
   tex = tex.replace(ABS_CALL_PATTERN, "|$<arg>|");
+  tex = tex.replace(FLOOR_CALL_PATTERN, "\\lfloor $<arg> \\rfloor");
+  tex = tex.replace(CEIL_CALL_PATTERN, "\\lceil $<arg> \\rceil");
   tex = tex.replace(PAREN_EXPONENT_PATTERN, "^{$<exp>}");
   tex = tex.replace(SIMPLE_EXPONENT_PATTERN, "^{$<exp>}");
   tex = tex.replace(FUNCTION_NAME_PATTERN, "\\$<fn>");
+  tex = tex.replace(INVERSE_TRIG_PATTERN, "\\arc$<fn>");
+  tex = tex.replace(SIGN_FUNCTION_PATTERN, "\\operatorname{sgn}");
+  tex = tex.replace(LOG_BASE_PAREN_PATTERN, "\\log_{$<base>}");
+  tex = tex.replace(LOG_BASE_PATTERN, "\\log_{$<base>}");
   tex = tex.replace(CONSTANT_TOKEN_PATTERN, "\\$<sym>");
   tex = tex.replace(DIGIT_MULTIPLY_PATTERN, "$<lhs> \\cdot $<rhs>");
   tex = tex.replace(SYMBOL_MULTIPLY_PATTERN, " ");
