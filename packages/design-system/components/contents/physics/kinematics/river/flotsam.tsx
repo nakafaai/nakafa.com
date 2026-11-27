@@ -79,11 +79,7 @@ export function Flotsam({
         continue;
       }
       const along = raftAlong(lane.start, time, current, width);
-      place.position.set(
-        along,
-        0.012 * Math.sin(time * 1.6 + index),
-        lane.z
-      );
+      place.position.set(along, 0.012 * Math.sin(time * 1.6 + index), lane.z);
       place.rotation.set(
         0.02 * Math.sin(time * 1.1 + index * 2),
         index + time * lane.spin,
@@ -102,8 +98,8 @@ export function Flotsam({
         args={[geometry, undefined, RAFTS]}
         castShadow
         frustumCulled={false}
-        ref={rafts}
         receiveShadow
+        ref={rafts}
       >
         <meshStandardMaterial roughness={0.42} side={DoubleSide} vertexColors />
       </instancedMesh>

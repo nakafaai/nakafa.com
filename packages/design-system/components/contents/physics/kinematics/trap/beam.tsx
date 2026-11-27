@@ -24,7 +24,6 @@ const FLANK = ROAD.lane + SEDAN.width / 2;
 const BEACON_GLOW = 7;
 const BEACON_REST = 0.12;
 
-
 /** What a simulation drives on a light gate every frame. */
 export interface GateRig {
   /** Cuts the beam at the car's flank while the car stands in it, and lights the beacon. */

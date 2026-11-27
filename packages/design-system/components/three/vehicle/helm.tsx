@@ -210,9 +210,6 @@ const ARMS = [
   },
 ] satisfies readonly LimbProps[];
 
-/** Where the hand on the tiller closes, in the helm's own frame, in metres. */
-const HELM_GRIP: Place = [-0.07, 0.16, -0.57];
-
 interface LimbProps {
   readonly color: string;
   readonly from: Place;
@@ -303,8 +300,8 @@ function Limb({
 /**
  * The person at a small boat's helm, at real size, in metres: seated facing
  * +x with the origin on the seat under the hips, in a shirt, trousers, a
- * buoyancy vest and a peaked cap, the left hand closed on the tiller at
- * `HELM_GRIP` and the right resting on the knee.
+ * buoyancy vest and a peaked cap, the left hand closed on the tiller and the
+ * right resting on the knee.
  */
 export function Helm() {
   return (

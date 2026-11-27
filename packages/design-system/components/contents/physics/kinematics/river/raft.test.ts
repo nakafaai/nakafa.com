@@ -37,8 +37,12 @@ describe("raftLanes", () => {
   it("keeps every raft clear of both banks", () => {
     const lanes = raftLanes(60, 40);
     expect(lanes.length).toBe(40);
-    expect(Math.max(...Arr.map(lanes, (lane) => Math.abs(lane.z)))).toBeLessThan(27);
-    expect(Math.min(...Arr.map(lanes, (lane) => lane.scale))).toBeGreaterThan(0.59);
+    expect(
+      Math.max(...Arr.map(lanes, (lane) => Math.abs(lane.z)))
+    ).toBeLessThan(27);
+    expect(Math.min(...Arr.map(lanes, (lane) => lane.scale))).toBeGreaterThan(
+      0.59
+    );
   });
 });
 

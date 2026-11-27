@@ -32,7 +32,8 @@ export function paintFrost(size: number) {
   const pixels = new Uint8ClampedArray(size * size * 4).fill(255);
   for (let row = 0; row < size; row += 1) {
     for (let column = 0; column < size; column += 1) {
-      const tone = 110 + 145 * frostAt((column + 0.5) / size, (row + 0.5) / size);
+      const tone =
+        110 + 145 * frostAt((column + 0.5) / size, (row + 0.5) / size);
       const at = (row * size + column) * 4;
       pixels[at] = tone;
       pixels[at + 1] = tone;

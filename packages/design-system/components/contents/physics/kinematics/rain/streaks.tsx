@@ -2,8 +2,8 @@ import {
   dropAlong,
   dropHeight,
 } from "@repo/design-system/components/contents/physics/kinematics/rain/fall";
-import { chanceAt } from "@repo/design-system/components/three/field/noise";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import { chanceAt } from "@repo/design-system/components/three/field/noise";
 import { WEATHER_COLORS } from "@repo/design-system/lib/material/weather";
 import { Array as Arr } from "effect";
 import type { Ref } from "react";

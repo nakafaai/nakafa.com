@@ -171,11 +171,11 @@ export function reedBeds(side: 1 | -1, half: number, count: number) {
     const back = -0.9 + 2.1 * chanceAt(index, 12, side + 5);
     return [
       {
-      scale: 0.7 + 0.6 * chanceAt(index, 13, side + 5),
-      turn: chanceAt(index, 14, side + 5) * Math.PI * 2,
-      x: along,
-      y: Math.min(0, bankHeight(back, along)) - 0.05,
-      z: side * (half + shoreAt(along, side) + back),
+        scale: 0.7 + 0.6 * chanceAt(index, 13, side + 5),
+        turn: chanceAt(index, 14, side + 5) * Math.PI * 2,
+        x: along,
+        y: Math.min(0, bankHeight(back, along)) - 0.05,
+        z: side * (half + shoreAt(along, side) + back),
       },
     ];
   });

@@ -34,9 +34,7 @@ export function SpeedBoard({
       rotation={[0, 0.5, 0]}
     >
       <mesh castShadow position={[0, (HEIGHT - SIZE[1] / 2) / 2, -0.07]}>
-        <cylinderGeometry
-          args={[0.045, 0.05, HEIGHT - SIZE[1] / 2, 20]}
-        />
+        <cylinderGeometry args={[0.045, 0.05, HEIGHT - SIZE[1] / 2, 20]} />
         <SurfaceMaterial
           color={GATE_COLORS.steel}
           metalness={0.85}

@@ -58,10 +58,7 @@ export function MarkerFlag({
     wind.current += simulationStep(delta);
     const places = cloth.geometry.getAttribute("position");
     for (let index = 0; index < cloth.alongs.length; index += 1) {
-      places.setZ(
-        index,
-        rippleAt(cloth.alongs[index] ?? 0, wind.current, FLY)
-      );
+      places.setZ(index, rippleAt(cloth.alongs[index] ?? 0, wind.current, FLY));
     }
     places.needsUpdate = true;
     cloth.geometry.computeVertexNormals();
@@ -69,11 +66,7 @@ export function MarkerFlag({
 
   return (
     <group
-      position={[
-        at,
-        side < 0 ? ROAD.kerb : 0,
-        side * (ROAD.halfWidth + 0.4),
-      ]}
+      position={[at, side < 0 ? ROAD.kerb : 0, side * (ROAD.halfWidth + 0.4)]}
     >
       <mesh castShadow position={[0, 0.04, 0]} receiveShadow>
         <cylinderGeometry args={[0.2, 0.24, 0.08, 32]} />

@@ -1,9 +1,8 @@
 import { Instance, Instances } from "@react-three/drei";
-import type { Surface } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/friction";
 import { grainTexture } from "@repo/design-system/components/contents/physics/kinematics/grain";
 import { Trees } from "@repo/design-system/components/contents/physics/kinematics/roadside";
+import type { Surface } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/friction";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { getColor } from "@repo/design-system/lib/color";
 import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Array as Arr, Schema } from "effect";

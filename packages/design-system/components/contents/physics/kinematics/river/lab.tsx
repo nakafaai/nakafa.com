@@ -221,7 +221,8 @@ function RiverScene({
     const time = clock.current;
     time.water += step;
     if (playing) {
-      time.run = time.run + step > PLAY_SECONDS + HOLD_SECONDS ? 0 : time.run + step;
+      time.run =
+        time.run + step > PLAY_SECONDS + HOLD_SECONDS ? 0 : time.run + step;
     }
     const share = Math.min(1, time.run / PLAY_SECONDS);
     const now = share * (crossing?.time ?? 0);

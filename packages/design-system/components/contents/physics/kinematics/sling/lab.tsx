@@ -381,9 +381,7 @@ function WhirlScene({
           outlineWidth={0.05}
           position={[speedArrow[0], 0.14, 0]}
         >
-          <InlineMath
-            math={`v=${quantity(motion.speed, "\\text{ m/s}", 2)}`}
-          />
+          <InlineMath math={`v=${quantity(motion.speed, "\\text{ m/s}", 2)}`} />
         </ThreeLabel>
       </group>
       <group ref={pull}>

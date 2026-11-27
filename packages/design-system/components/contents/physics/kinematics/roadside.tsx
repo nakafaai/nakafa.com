@@ -65,7 +65,8 @@ function crownOf(x: number, tree: number) {
 /** The boughs of one tree: each leaves the fork and climbs outward under the crown. */
 function boughsOf(x: number, tree: number) {
   return Arr.map(Arr.range(0, BOUGHS - 1), (bough) => {
-    const angle = (bough / BOUGHS) * Math.PI * 2 + hashUnit(tree + 5, bough) * 1.1;
+    const angle =
+      (bough / BOUGHS) * Math.PI * 2 + hashUnit(tree + 5, bough) * 1.1;
     const lean = 0.75 + 0.3 * hashUnit(bough, tree + 13);
     const reach = 1.45;
     return {
@@ -86,7 +87,11 @@ function boughsOf(x: number, tree: number) {
  * umbrella of leafy masses, mottled by a grain that breaks each mass into
  * leaves.
  */
-export function Trees({ positions }: { readonly positions: readonly number[] }) {
+export function Trees({
+  positions,
+}: {
+  readonly positions: readonly number[];
+}) {
   const leaves = useMemo(() => {
     const grain = grainTexture(1.7);
     grain.repeat.set(4, 3);
