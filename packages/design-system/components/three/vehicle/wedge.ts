@@ -35,7 +35,7 @@ export function wedgeSheet(tiles: number) {
     Arr.flatMap(Arr.range(0, COLUMNS - 1), (column) => {
       const a = row * (COLUMNS + 1) + column;
       const b = a + COLUMNS + 1;
-      return [a, a + 1, b, b, a + 1, b + 1];
+      return [a, b, a + 1, a + 1, b, b + 1];
     })
   );
   return {

@@ -129,13 +129,12 @@ export function reedClump() {
       const up = piece / PIECES;
       const out = root + tall * (lean * up + 0.35 * lean * up ** 3);
       const wide = 0.022 * (1 - up) ** 0.7 + 0.002;
-      const centre = [Math.cos(turn) * out, tall * up, Math.sin(turn) * out];
-      const across = [-Math.sin(turn) * wide, 0, Math.cos(turn) * wide];
       return Arr.map([-1, 1], (edge) => ({
-        position: Arr.map(
-          centre,
-          (value, axis) => value + edge * (across[axis] ?? 0)
-        ),
+        position: [
+          Math.cos(turn) * out - edge * Math.sin(turn) * wide,
+          tall * up,
+          Math.sin(turn) * out + edge * Math.cos(turn) * wide,
+        ],
         up,
       }));
     });

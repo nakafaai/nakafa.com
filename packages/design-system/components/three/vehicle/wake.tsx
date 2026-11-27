@@ -17,7 +17,7 @@ import {
 } from "three";
 
 /** How many foam tiles lie along the wedge. */
-const TILES = 3;
+const TILES = 7;
 
 /** Pixels along each side of the foam tile. */
 const TILE = 256;

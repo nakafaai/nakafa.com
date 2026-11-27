@@ -12,6 +12,7 @@ import { useLayoutEffect, useRef } from "react";
  * back at `offset` from the subject.
  */
 export function FollowCamera({
+  across,
   depth = 0,
   follow,
   lookAhead = 0,
@@ -19,6 +20,8 @@ export function FollowCamera({
   minDistance,
   offset,
 }: {
+  /** Where the subject is across its path now, in metres, when it also moves sideways as a boat on a current does. */
+  readonly across?: () => number;
   /** How far across the road the subject drives, in metres. */
   readonly depth?: number;
   /** Where the subject is along the road now, in metres. */
@@ -35,28 +38,36 @@ export function FollowCamera({
   const invalidate = useThree((state) => state.invalidate);
   const view = useVisualScene((card) => card.view, 0);
   const last = useRef(0);
+  const lastAcross = useRef(depth);
   const shownView = useRef(view);
 
   // Reset view, and the first frame, set the pose; the learner owns it after.
   useLayoutEffect(() => {
     shownView.current = view;
     const x = follow();
+    const z = across === undefined ? depth : across();
     last.current = x;
-    camera.position.set(x + offset[0], offset[1], depth + offset[2]);
-    controls.current?.target.set(x + lookAhead, 0.8, depth);
+    lastAcross.current = z;
+    camera.position.set(x + offset[0], offset[1], z + offset[2]);
+    controls.current?.target.set(x + lookAhead, 0.8, z);
     controls.current?.update();
     invalidate();
-  }, [camera, depth, follow, invalidate, lookAhead, offset, view]);
+  }, [across, camera, depth, follow, invalidate, lookAhead, offset, view]);
 
   useFrame(() => {
     const x = follow();
+    const z = across === undefined ? depth : across();
     const moved = x - last.current;
+    const swayed = z - lastAcross.current;
     last.current = x;
-    if (moved === 0 || !controls.current) {
+    lastAcross.current = z;
+    if ((moved === 0 && swayed === 0) || !controls.current) {
       return;
     }
     camera.position.x += moved;
+    camera.position.z += swayed;
     controls.current.target.x += moved;
+    controls.current.target.z += swayed;
     controls.current.update();
   });
 

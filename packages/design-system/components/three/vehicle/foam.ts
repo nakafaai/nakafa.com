@@ -9,18 +9,27 @@ import {
  * foam can drift; `across` runs from one edge of the wedge to the other. The
  * foam gathers in the two arms, where the diverging waves break along the
  * wedge's edges, and in the churned wash of the propeller down the middle,
- * and between them the water stays clear.
+ * and between them the water stays clear. It is never an even band: it
+ * breaks into lace and patches, as foam does once the crest that made it
+ * has passed.
  *
  * @param along - The place along the wake, from 0 to 1 over one tile
  * @param across - The place across the wedge, from 0 at one edge to 1 at the other
  */
 export function foamAt(along: number, across: number) {
   const out = Math.abs(across * 2 - 1);
-  const arm = Math.exp(-(((out - 0.84) / 0.11) ** 2));
+  const arm = Math.exp(-(((out - 0.84) / 0.1) ** 2));
   const wash = Math.exp(-((out / 0.2) ** 2));
-  const crests = ridgedAt(along, across, 5, 9, 11);
-  const churn = fractalAt(along, across, 12, 9, 23) ** 1.5;
-  return Math.min(1, arm * (0.2 + 1.1 * crests) + wash * (0.15 + 1.6 * churn));
+  const crests = ridgedAt(along, across, 9, 16, 11);
+  const churn = fractalAt(along, across, 14, 12, 23) ** 1.5;
+  const broken = Math.min(
+    1,
+    Math.max(0, (fractalAt(along, across, 7, 10, 37) - 0.36) * 4)
+  );
+  return Math.min(
+    1,
+    broken * (arm * (0.1 + 1.3 * crests ** 2) + wash * (0.1 + 2.2 * churn))
+  );
 }
 
 /**
