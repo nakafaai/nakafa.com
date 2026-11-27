@@ -160,17 +160,22 @@ export const BOARDS = 4;
  * and a cloudy formation. Planks are
  * boards of sawn wood laid side by side, each from its own stretch of the
  * tree and of its own tone, with a groove where two meet. Plastic is
- * nearly even, moulded with a fine pebble. Rubber is finely dimpled. Slate
- * breaks in flat beds with sharp steps between them. Stone is craggy and
- * cracked. Living tissue is a mosaic of domed cells. Wood runs in long pores
- * across darker growth rings. Hide is the thick skin of a sea cow, a whale
- * or a tapir: a net of fine creases round small plates, pitted with pores.
- * Scales overlap in staggered rows, each standing proud at its free edge.
- * Mucosa is wet living lining, softly folded and threaded with fine vessels.
- * Sand lies in ripples the water left, grain by grain. Cytoplasm is the
- * inside of one living cell seen through its membrane: clouded, and
- * speckled with granules. Fur is a short coat that lies one way: fine
- * strands in soft clumps.
+ * nearly even, moulded with a fine pebble. Polished metal is a mirror
+ * crossed by hairline scratches and dulled by smudges. Cast resin is flat
+ * and dark under pale specks of its filler. Rubber is finely dimpled. Sand
+ * lies in soft ripples the wind combed, grain on grain. Slate breaks in flat
+ * beds with sharp steps between them. Snow drifts under a fine crust. Soil
+ * is clods and crumbs with a pale pebble here and there. Stone is craggy and
+ * cracked. Living tissue is a mosaic of domed cells. A winding is round wire
+ * laid turn beside turn. Wood runs in long pores across the dark late wood
+ * of growth rings, over broad bands of heart and sap wood. Hide is the thick
+ * skin of a sea cow, a whale or a tapir: a net of fine creases round small
+ * plates, pitted with pores. Scales overlap in staggered rows, each standing
+ * proud at its free edge. Mucosa is wet living lining, softly folded and
+ * threaded with fine vessels. Sand lies in ripples the water left, grain by
+ * grain. Cytoplasm is the inside of one living cell seen through its
+ * membrane: clouded, and speckled with granules. Fur is a short coat that
+ * lies one way: fine strands in soft clumps.
  */
 const PATTERNS: Record<
   Surface,
