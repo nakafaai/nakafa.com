@@ -41,7 +41,7 @@ const STANDS: Partial<Record<Place, Ground>> = {
  * lab that is itself a block cut out of the ground, such as strata with a
  * well through them, which no ground may cover.
  */
-export const StandSchema = Schema.Union([GroundSchema, Schema.Literal("cut")]);
+const StandSchema = Schema.Union([GroundSchema, Schema.Literal("cut")]);
 export type Stand = typeof StandSchema.Type;
 
 /**
