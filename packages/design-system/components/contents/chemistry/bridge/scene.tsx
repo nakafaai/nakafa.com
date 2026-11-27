@@ -5,64 +5,82 @@ import {
   ANODE_X,
   BEAKER_Z,
   CATHODE_X,
+  Circuit,
   ElectrodeAssembly,
   HalfCellBeaker,
   InvertedUTubeBridge,
   LEFT_BEAKER_X,
-  RIGHT_BEAKER_X,
-  SALT_BRIDGE,
-} from "@repo/design-system/components/contents/chemistry/bridge/apparatus";
-import {
-  BenchVoltmeter,
-  CurvedTestLeads,
   LEFT_LEAD,
   METER_Z,
+  RIGHT_BEAKER_X,
   RIGHT_LEAD,
-} from "@repo/design-system/components/contents/chemistry/bridge/meter";
+  SALT_BRIDGE,
+} from "@repo/design-system/components/contents/chemistry/bridge/apparatus";
 import type { GalvanicCell } from "@repo/design-system/components/contents/chemistry/bridge/model";
 import { evaluateGalvanicCell } from "@repo/design-system/components/contents/chemistry/bridge/model";
+import { BENCH_LABEL } from "@repo/design-system/components/contents/chemistry/label";
 import {
   SimulationTicker,
   simulationStep,
 } from "@repo/design-system/components/contents/simulation/ticker";
+import { Mote } from "@repo/design-system/components/three/apparatus/mote";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import {
   placeOn,
   pointOn,
   trackOf,
 } from "@repo/design-system/components/three/form/path";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import {
   useVisualScene,
   useVisualStop,
 } from "@repo/design-system/components/visual/card";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr, Match } from "effect";
 import { useMemo, useRef } from "react";
-import type { Mesh } from "three";
+import type { Group } from "three";
 
 /** The salt bridge and the two test leads as measured tracks the ions and electrons ride. */
 const BRIDGE_TRACK = trackOf(SALT_BRIDGE);
 const LEFT_TRACK = trackOf(LEFT_LEAD);
 const RIGHT_TRACK = trackOf(RIGHT_LEAD);
 
+/** Where the electron wire's label stands: at the middle of the lead from the voltmeter to the cathode. */
+const WIRE = pointOn(RIGHT_TRACK, 0.5);
+
+/** How far in front of a beaker's axis its tile's front edge is, and its glass's front, in metres. */
+const TILE_FRONT = 0.063;
+const GLASS_FRONT = 0.043;
+
+/** How far in front of the voltmeter's middle its plinth's front edge is, in metres. */
+const METER_FRONT = 0.072;
+
+/**
+ * What the camera frames, in metres: the upright face of the cell, from
+ * tile to tile and from the bench to the names over its leads. The voltmeter
+ * stands in front of that face and lower than it, so the face reaches below
+ * the bench by as much as the meter's foot shows under it from the camera.
+ */
+const FRAME = {
+  x: { max: 0.26, min: -0.26 },
+  y: { max: 0.28, min: -0.1 },
+  z: { max: 0.1, min: 0.02 },
+};
+
 const ION_COUNT = 3;
 const ELECTRON_PER_LEAD = 3;
 
+/** The camera looks down on the cell from the front and stands as near as holds all of it, whatever the frame's shape. */
 function BridgeCamera() {
-  const narrow = isNarrowThreeScene(
-    useThree((state) => state.size),
-    1.25
-  );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0, 0.36, 1.2] : [0, 0.3, 0.88]}
-      cameraTarget={[0, 0.145, 0]}
+      cameraPosition={[0, 0.3, 0.88]}
+      cameraTarget={[0, 0.11, 0.1]}
       fov={37}
+      framing="content"
       maxDistance={2.4}
       minDistance={0.4}
     />
@@ -75,25 +93,25 @@ function cellVisuals(cell: GalvanicCell) {
       anodeColor: PROCESS_COLORS.anodeZinc,
       cathodeColor: INSTRUMENT_COLORS.copper,
       leftLiquid: REAGENT_COLORS.solution,
-      leftOpacity: 0.48,
+      leftStrength: 3,
       rightLiquid: REAGENT_COLORS.copperSulfate,
-      rightOpacity: 0.68,
+      rightStrength: 20,
     })),
     Match.when("copperSilver", () => ({
       anodeColor: INSTRUMENT_COLORS.copper,
       cathodeColor: INSTRUMENT_COLORS.silver,
       leftLiquid: REAGENT_COLORS.copperSulfate,
-      leftOpacity: 0.62,
+      leftStrength: 20,
       rightLiquid: REAGENT_COLORS.solution,
-      rightOpacity: 0.42,
+      rightStrength: 3,
     })),
     Match.when("magnesiumCopper", () => ({
       anodeColor: INSTRUMENT_COLORS.aluminium,
       cathodeColor: INSTRUMENT_COLORS.copper,
       leftLiquid: REAGENT_COLORS.solution,
-      leftOpacity: 0.44,
+      leftStrength: 3,
       rightLiquid: REAGENT_COLORS.copperSulfate,
-      rightOpacity: 0.68,
+      rightStrength: 20,
     })),
     Match.exhaustive
   );
@@ -120,10 +138,10 @@ export function SaltBridgeScene({
   const invalidate = useThree((state) => state.invalidate);
   const labelInk = useLabelInk();
 
-  const leftElectronRefs = useRef<(Mesh | null)[]>([]);
-  const rightElectronRefs = useRef<(Mesh | null)[]>([]);
-  const cationRefs = useRef<(Mesh | null)[]>([]);
-  const anionRefs = useRef<(Mesh | null)[]>([]);
+  const leftElectronRefs = useRef<(Group | null)[]>([]);
+  const rightElectronRefs = useRef<(Group | null)[]>([]);
+  const cationRefs = useRef<(Group | null)[]>([]);
+  const anionRefs = useRef<(Group | null)[]>([]);
   const phaseRef = useRef(0);
 
   const spec = evaluateGalvanicCell(cell);
@@ -141,12 +159,10 @@ export function SaltBridgeScene({
       const leftMesh = leftElectronRefs.current[i];
       if (leftMesh !== null && leftMesh !== undefined) {
         placeOn(LEFT_TRACK, t, leftMesh.position);
-        leftMesh.position.z += 0.005;
       }
       const rightMesh = rightElectronRefs.current[i];
       if (rightMesh !== null && rightMesh !== undefined) {
         placeOn(RIGHT_TRACK, t, rightMesh.position);
-        rightMesh.position.z += 0.005;
       }
     }
     for (let i = 0; i < ION_COUNT; i += 1) {
@@ -185,161 +201,149 @@ export function SaltBridgeScene({
     <group>
       <SimulationTicker running={playing} />
       <BridgeCamera />
-      <LabBench width={2.8} />
+      <CameraBounds exclude>
+        <LabBench shelf={false} width={2.8} />
+      </CameraBounds>
 
-      {/* Left (anode) and right (cathode) borosilicate half-cell beakers */}
-      <HalfCellBeaker
-        liquidColor={visuals.leftLiquid}
-        liquidOpacity={visuals.leftOpacity}
-        x={LEFT_BEAKER_X}
-      />
-      <HalfCellBeaker
-        liquidColor={visuals.rightLiquid}
-        liquidOpacity={visuals.rightOpacity}
-        x={RIGHT_BEAKER_X}
-      />
+      <CameraBounds bounds={FRAME}>
+        {/* Left (anode) and right (cathode) borosilicate half-cell beakers */}
+        <HalfCellBeaker
+          liquidColor={visuals.leftLiquid}
+          strength={visuals.leftStrength}
+          x={LEFT_BEAKER_X}
+        />
+        <HalfCellBeaker
+          liquidColor={visuals.rightLiquid}
+          strength={visuals.rightStrength}
+          x={RIGHT_BEAKER_X}
+        />
 
-      {/* Brushed metal electrodes with crocodile clips */}
-      <ElectrodeAssembly
-        clipColor={BENCH_COLORS.leadBlack}
-        metalColor={visuals.anodeColor}
-        x={ANODE_X}
-      />
-      <ElectrodeAssembly
-        clipColor={BENCH_COLORS.leadRed}
-        metalColor={visuals.cathodeColor}
-        x={CATHODE_X}
-      />
+        {/* Brushed metal electrodes with crocodile clips */}
+        <ElectrodeAssembly metalColor={visuals.anodeColor} x={ANODE_X} />
+        <ElectrodeAssembly metalColor={visuals.cathodeColor} x={CATHODE_X} />
 
-      {/* Inverted borosilicate U-tube salt bridge */}
-      <InvertedUTubeBridge />
+        {/* Inverted borosilicate U-tube salt bridge */}
+        <InvertedUTubeBridge />
 
-      {/* Benchtop sloped analog voltmeter & curved test leads */}
-      <BenchVoltmeter emfVolts={spec.emfVolts} />
-      <CurvedTestLeads />
+        {/* Benchtop sloped analog voltmeter & curved test leads */}
+        <Circuit emfVolts={spec.emfVolts} />
 
-      {/* Glowing golden electrons streaming anode -> voltmeter -> cathode */}
-      {Arr.map(electronSlots, (idx) => {
-        const t = (idx + 0.5) / ELECTRON_PER_LEAD;
-        const leftPt = pointOn(LEFT_TRACK, t);
-        const rightPt = pointOn(RIGHT_TRACK, t);
-        return (
-          <group key={`e-${idx}`}>
-            <mesh
-              position={[leftPt[0], leftPt[1], leftPt[2] + 0.005]}
-              ref={(el) => {
-                leftElectronRefs.current[idx] = el;
-              }}
-            >
-              <sphereGeometry args={[0.0054, 12, 10]} />
-              <meshStandardMaterial
+        {/* Glowing golden electrons streaming anode -> voltmeter -> cathode */}
+        {Arr.map(electronSlots, (idx) => {
+          const t = (idx + 0.5) / ELECTRON_PER_LEAD;
+          const leftPt = pointOn(LEFT_TRACK, t);
+          const rightPt = pointOn(RIGHT_TRACK, t);
+          return (
+            <group key={`e-${idx}`}>
+              <Mote
                 color={PROCESS_COLORS.electronGold}
-                emissive={PROCESS_COLORS.electronGold}
-                emissiveIntensity={0.95}
+                core={0.34}
+                position={[leftPt[0], leftPt[1], leftPt[2]]}
+                radius={0.0085}
+                ref={(el) => {
+                  leftElectronRefs.current[idx] = el;
+                }}
               />
-            </mesh>
-            <mesh
-              position={[rightPt[0], rightPt[1], rightPt[2] + 0.005]}
-              ref={(el) => {
-                rightElectronRefs.current[idx] = el;
-              }}
-            >
-              <sphereGeometry args={[0.0054, 12, 10]} />
-              <meshStandardMaterial
+              <Mote
                 color={PROCESS_COLORS.electronGold}
-                emissive={PROCESS_COLORS.electronGold}
-                emissiveIntensity={0.95}
+                core={0.34}
+                position={[rightPt[0], rightPt[1], rightPt[2]]}
+                radius={0.0085}
+                ref={(el) => {
+                  rightElectronRefs.current[idx] = el;
+                }}
               />
-            </mesh>
-          </group>
-        );
-      })}
+            </group>
+          );
+        })}
 
-      {/* Glowing green cations migrating right & amber anions migrating left inside U-tube */}
-      {Arr.map(ionSlots, (idx) => {
-        const cationPt = pointOn(BRIDGE_TRACK, (idx + 0.5) / ION_COUNT);
-        const anionPt = pointOn(BRIDGE_TRACK, 1 - (idx + 0.2) / ION_COUNT);
-        return (
-          <group key={`ion-${idx}`}>
-            <mesh
-              position={[cationPt[0], cationPt[1] + 0.002, cationPt[2] + 0.003]}
-              ref={(el) => {
-                cationRefs.current[idx] = el;
-              }}
-            >
-              <sphereGeometry args={[0.0046, 12, 10]} />
-              <meshStandardMaterial
+        {/* Glowing green cations migrating right & amber anions migrating left inside U-tube */}
+        {Arr.map(ionSlots, (idx) => {
+          const cationPt = pointOn(BRIDGE_TRACK, (idx + 0.5) / ION_COUNT);
+          const anionPt = pointOn(BRIDGE_TRACK, 1 - (idx + 0.2) / ION_COUNT);
+          return (
+            <group key={`ion-${idx}`}>
+              <Mote
                 color={PROCESS_COLORS.greenProduct}
-                emissive={PROCESS_COLORS.greenProduct}
-                emissiveIntensity={0.85}
+                core={0.5}
+                position={[
+                  cationPt[0],
+                  cationPt[1] + 0.002,
+                  cationPt[2] + 0.003,
+                ]}
+                radius={0.0062}
+                ref={(el) => {
+                  cationRefs.current[idx] = el;
+                }}
               />
-            </mesh>
-            <mesh
-              position={[anionPt[0], anionPt[1] - 0.002, anionPt[2] - 0.003]}
-              ref={(el) => {
-                anionRefs.current[idx] = el;
-              }}
-            >
-              <sphereGeometry args={[0.0046, 12, 10]} />
-              <meshStandardMaterial
+              <Mote
                 color={PROCESS_COLORS.oleumAmber}
-                emissive={PROCESS_COLORS.oleumAmber}
-                emissiveIntensity={0.85}
+                core={0.5}
+                position={[anionPt[0], anionPt[1] - 0.002, anionPt[2] - 0.003]}
+                radius={0.0062}
+                ref={(el) => {
+                  anionRefs.current[idx] = el;
+                }}
               />
-            </mesh>
-          </group>
-        );
-      })}
+            </group>
+          );
+        })}
 
-      {/* Adaptive labels */}
-      <ThreeLabel
-        color={labelInk}
-        fontSize="compact"
-        position={[0, 0.312, METER_Z + 0.02]}
-      >
-        <span>
-          {parts.voltmeter} ({spec.emfVolts.toFixed(2)} V)
-        </span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={labelInk}
-        fontSize="compact"
-        position={[0.175, 0.258, -0.01]}
-      >
-        <span>{parts.electronWire}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={labelInk}
-        fontSize="compact"
-        position={[-0.258, 0.142, BEAKER_Z]}
-      >
-        <span>
-          {parts.anode} ({spec.anodeSymbol})
-        </span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={labelInk}
-        fontSize="compact"
-        position={[0.258, 0.142, BEAKER_Z]}
-      >
-        <span>
-          {parts.cathode} ({spec.cathodeSymbol})
-        </span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={labelInk}
-        fontSize="compact"
-        position={[0, 0.128, BEAKER_Z + 0.044]}
-      >
-        <span>{parts.saltBridge}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={labelInk}
-        fontSize="compact"
-        position={[LEFT_BEAKER_X, 0.024, BEAKER_Z + 0.095]}
-      >
-        <span>{parts.electrolyte}</span>
-      </ThreeLabel>
+        {/* Each label stands at the part it names */}
+        <ThreeLabel
+          anchorY="top"
+          color={labelInk}
+          {...BENCH_LABEL}
+          position={[LEFT_BEAKER_X, 0, BEAKER_Z + TILE_FRONT]}
+        >
+          <span>
+            {parts.anode} ({spec.anodeSymbol})
+          </span>
+        </ThreeLabel>
+        <ThreeLabel
+          anchorY="top"
+          color={labelInk}
+          {...BENCH_LABEL}
+          position={[RIGHT_BEAKER_X, 0, BEAKER_Z + TILE_FRONT]}
+        >
+          <span>
+            {parts.cathode} ({spec.cathodeSymbol})
+          </span>
+        </ThreeLabel>
+        <ThreeLabel
+          color={labelInk}
+          {...BENCH_LABEL}
+          position={[LEFT_BEAKER_X, 0.03, BEAKER_Z + GLASS_FRONT]}
+        >
+          <span>{parts.electrolyte}</span>
+        </ThreeLabel>
+        <ThreeLabel
+          color={labelInk}
+          {...BENCH_LABEL}
+          position={[0, 0.192, BEAKER_Z]}
+        >
+          <span>{parts.saltBridge}</span>
+        </ThreeLabel>
+        <ThreeLabel
+          anchorX="left"
+          color={labelInk}
+          {...BENCH_LABEL}
+          gap={0.006}
+          position={WIRE}
+        >
+          <span>{parts.electronWire}</span>
+        </ThreeLabel>
+        <ThreeLabel
+          anchorY="top"
+          color={labelInk}
+          {...BENCH_LABEL}
+          position={[0, 0, METER_Z + METER_FRONT]}
+        >
+          <span>
+            {parts.voltmeter} {spec.emfVolts.toFixed(2)} V
+          </span>
+        </ThreeLabel>
+      </CameraBounds>
     </group>
   );
 }
