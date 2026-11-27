@@ -23,6 +23,11 @@ describe("standsOn", () => {
     expect(standsOn("sky", 0, undefined)).toBeUndefined();
   });
 
+  it("lays no ground over a lab that is a block cut out of the ground", () => {
+    expect(standsOn("field", 0, "cut")).toBeUndefined();
+    expect(standsOn("lab", 0, "cut")).toBeUndefined();
+  });
+
   it("gives a lab without a floor no ground, whatever it names", () => {
     expect(standsOn("lab", undefined, undefined)).toBeUndefined();
     expect(standsOn("field", undefined, "grass")).toBeUndefined();

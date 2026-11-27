@@ -1,4 +1,5 @@
 import type { Ground } from "@repo/design-system/components/three/stage/land";
+import { GroundSchema } from "@repo/design-system/components/three/stage/land";
 import { Schema } from "effect";
 
 /**
@@ -36,9 +37,17 @@ const STANDS: Partial<Record<Place, Ground>> = {
 };
 
 /**
+ * What a lab names as its ground: one of the stage's grounds, or `cut` for a
+ * lab that is itself a block cut out of the ground, such as strata with a
+ * well through them, which no ground may cover.
+ */
+export const StandSchema = Schema.Union([GroundSchema, Schema.Literal("cut")]);
+export type Stand = typeof StandSchema.Type;
+
+/**
  * What a lab stands on: the ground it names, else the ground of its place,
- * so no lab with a floor stands on a blank plane. A lab without a floor
- * stands on nothing, whatever it names.
+ * so no lab with a floor stands on a blank plane. A lab without a floor, or
+ * one that is a block cut out of the ground, stands on nothing.
  *
  * @param place - The place the lab stands in
  * @param floor - The height of the lab's floor, when it has one
@@ -47,9 +56,9 @@ const STANDS: Partial<Record<Place, Ground>> = {
 export function standsOn(
   place: Place,
   floor: number | undefined,
-  ground: Ground | undefined
+  ground: Stand | undefined
 ) {
-  if (floor === undefined) {
+  if (floor === undefined || ground === "cut") {
     return;
   }
   return ground ?? STANDS[place];

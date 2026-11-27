@@ -2,13 +2,15 @@ import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { StageProvider } from "@repo/design-system/components/three/stage/context";
 import { Finish } from "@repo/design-system/components/three/stage/finish";
 import { Ground } from "@repo/design-system/components/three/stage/ground";
-import type { Ground as GroundKind } from "@repo/design-system/components/three/stage/land";
 import {
   CellSetting,
   MicroscopeSetting,
   WaterSetting,
 } from "@repo/design-system/components/three/stage/medium";
-import type { Place } from "@repo/design-system/components/three/stage/place";
+import type {
+  Place,
+  Stand,
+} from "@repo/design-system/components/three/stage/place";
 import { standsOn } from "@repo/design-system/components/three/stage/place";
 import {
   DarkSetting,
@@ -59,7 +61,8 @@ const SETTINGS: Record<Place, ComponentType> = {
  * @param reach - How far the lab reaches from its middle, which the key
  * light's shadows, the haze, and the focus cover
  * @param floor - The height of the floor objects stand on, when there is one
- * @param ground - What the lab stands on, when it is not the ground of its place
+ * @param ground - What the lab stands on, when it is not the ground of its
+ * place, or `cut` for a lab that is itself a block cut out of the ground
  */
 export function ScienceStage({
   children,
@@ -72,7 +75,7 @@ export function ScienceStage({
   readonly children: ReactNode;
   readonly floor?: number;
   readonly frameloop?: "always" | "demand";
-  readonly ground?: GroundKind;
+  readonly ground?: Stand;
   readonly reach?: number;
   readonly setting: Place;
 }) {
