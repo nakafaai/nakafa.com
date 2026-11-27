@@ -27,10 +27,17 @@ export const GLASS_WALL = 0.0018;
  * A school chemistry bench at real size, in metres: a speckled dark phenolic
  * epoxy worktop 0.9 m deep with beveled edge and stainless backsplash rail on
  * a pale laboratory cabinet, backed by a row of translucent borosilicate
- * reagent bottles with visible liquid menisci and printed formula labels.
- * Experiments stand on the worktop at y = 0.
+ * reagent bottles with visible liquid menisci and printed formula labels,
+ * unless a lab leaves the `shelf` off because its frame would cut the
+ * bottles at its edge. Experiments stand on the worktop at y = 0.
  */
-export function LabBench({ width = 2.4 }: { readonly width?: number }) {
+export function LabBench({
+  shelf = true,
+  width = 2.4,
+}: {
+  readonly shelf?: boolean;
+  readonly width?: number;
+}) {
   const epoxyTex = useMemo(createEpoxyTexture, []);
   useEffect(() => () => epoxyTex?.dispose(), [epoxyTex]);
 
@@ -69,7 +76,7 @@ export function LabBench({ width = 2.4 }: { readonly width?: number }) {
         <boxGeometry args={[0.16, 0.012, 0.012]} />
         <MetalMaterial color={BENCH_COLORS.cabinetHandle} roughness={0.32} />
       </mesh>
-      <ReagentShelf width={width} />
+      {shelf ? <ReagentShelf width={width} /> : null}
     </group>
   );
 }

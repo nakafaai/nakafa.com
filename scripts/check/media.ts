@@ -23,7 +23,6 @@ const EARTH_GLOBE_ASSETS_MODULE =
   "packages/design-system/components/contents/biology/assets.ts";
 const EARTH_GLOBE_TEXTURE_MODULES = HashSet.make(
   "packages/design-system/components/contents/biology/climate/observation.tsx",
-  "packages/design-system/components/contents/biology/climate/planet.tsx",
   "packages/design-system/components/contents/physics/kepler/scene.tsx"
 );
 const ALLOWED_PUBLIC_RASTER_FILES = HashSet.make(

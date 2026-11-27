@@ -12,6 +12,7 @@ export const BIOLOGY_COLORS = {
   boxwood: "#d9b77e",
   bubble: "#f4f7f8",
   capillaryWater: "#4f9cc4",
+  chainBeside: "#8fa3b5",
   cheekCell: "#aac3e6",
   chromatinStain: "#6b2a5c",
   coleoptile: "#c9d98a",
