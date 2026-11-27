@@ -52,6 +52,7 @@ import { inspectGroupSource } from "#scripts/check/groups";
 import { inspectIconSource } from "#scripts/check/icons";
 import { inspectMarkers, TEXT_FILE_PATTERN } from "#scripts/check/markers";
 import { inspectMathSource } from "#scripts/check/math";
+import { inspectMediaFiles, inspectMediaSource } from "#scripts/check/media";
 import { inspectMenuSource } from "#scripts/check/menus";
 import { inspectMessageReach } from "#scripts/check/messages";
 import { manifestEntries, nameViolations } from "#scripts/check/names";
@@ -155,6 +156,7 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectSectionSource(file, sourceFile),
         inspectVisualSource(file, sourceFile),
         inspectMathSource(file, sourceFile),
+        inspectMediaSource(file, sourceFile),
         inspectBandSource(file, sourceFile),
         inspectModuleSize(file, sourceFile),
       ])
@@ -321,6 +323,7 @@ export const checkTestPolicy = Effect.fn("RepositoryPolicy.checkTests")(
         lineReport(dictionaryViolations),
         lineReport(messageViolations),
         lineReport(Arr.flatten(markerViolations)),
+        lineReport(inspectMediaFiles(repositoryPaths)),
         lineReport(names),
         lineReport(
           inspectCompilerConfigs(
