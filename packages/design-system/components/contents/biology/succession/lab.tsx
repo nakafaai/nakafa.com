@@ -55,7 +55,7 @@ export function EcologicalSuccessionLab({
       Partial<
         Record<
           SuccessionStage,
-          { readonly name: string; readonly summary: ReactNode }
+          { readonly name: ReactNode; readonly summary: ReactNode }
         >
       >
     >;
@@ -177,7 +177,11 @@ export function EcologicalSuccessionLab({
           {labels.biodiversity === undefined ? null : (
             <VisualFactTabular
               label={labels.biodiversity}
-              value={`${Math.round(reading.biodiversityIndex * 100)}%`}
+              value={
+                <InlineMath
+                  math={quantity(reading.biodiversityIndex * 100, "\\%", 0)}
+                />
+              }
             />
           )}
         </VisualCardFacts>

@@ -44,7 +44,7 @@ export function FluidMosaicMembraneLab({
       Partial<
         Record<
           MembraneComponent,
-          { readonly name: string; readonly role: ReactNode }
+          { readonly name: ReactNode; readonly role: ReactNode }
         >
       >
     >;
@@ -151,7 +151,11 @@ export function FluidMosaicMembraneLab({
           {labels.fluidity === undefined ? null : (
             <VisualFactTabular
               label={labels.fluidity}
-              value={`${reading.fluidityPercent}%`}
+              value={
+                <InlineMath
+                  math={quantity(reading.fluidityPercent, "\\%", 0)}
+                />
+              }
             />
           )}
         </VisualCardFacts>

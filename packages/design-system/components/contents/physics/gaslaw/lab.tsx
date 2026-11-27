@@ -46,7 +46,7 @@ export function GasLawThermalLab({
       Partial<
         Record<
           GasLawId,
-          { readonly name: string; readonly relation: ReactNode }
+          { readonly name: ReactNode; readonly relation: ReactNode }
         >
       >
     >;
@@ -178,7 +178,9 @@ export function GasLawThermalLab({
           {labels.collisions === undefined ? null : (
             <VisualFactTabular
               label={labels.collisions}
-              value={`${reading.collisionIndex}%`}
+              value={
+                <InlineMath math={quantity(reading.collisionIndex, "\\%", 0)} />
+              }
             />
           )}
         </VisualCardFacts>

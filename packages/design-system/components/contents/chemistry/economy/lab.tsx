@@ -48,7 +48,7 @@ export function AtomEconomyReactorLab({
           SynthesisRoute,
           {
             readonly economy: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
             readonly wasteNote: ReactNode;
           }
         >

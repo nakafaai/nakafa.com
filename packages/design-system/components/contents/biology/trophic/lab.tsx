@@ -62,7 +62,7 @@ export function FoodWebTrophicLab({
       Partial<
         Record<
           TrophicScenario,
-          { readonly effect: ReactNode; readonly name: string }
+          { readonly effect: ReactNode; readonly name: ReactNode }
         >
       >
     >;

@@ -148,13 +148,21 @@ export function ThermoregulationSkinLab({
           {labels.bloodFlow === undefined ? null : (
             <VisualFactTabular
               label={labels.bloodFlow}
-              value={`${reading.bloodFlowPercent}%`}
+              value={
+                <InlineMath
+                  math={quantity(reading.bloodFlowPercent, "\\%", 0)}
+                />
+              }
             />
           )}
           {labels.heatLoss === undefined ? null : (
             <VisualFactTabular
               label={labels.heatLoss}
-              value={`${reading.heatLossPercent}%`}
+              value={
+                <InlineMath
+                  math={quantity(reading.heatLossPercent, "\\%", 0)}
+                />
+              }
             />
           )}
         </VisualCardFacts>

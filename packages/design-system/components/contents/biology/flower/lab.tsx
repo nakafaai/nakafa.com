@@ -41,7 +41,7 @@ export function FlowerAnatomyLab({
           PollinationMode,
           {
             readonly adaptation: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
             readonly pollen: ReactNode;
           }
         >

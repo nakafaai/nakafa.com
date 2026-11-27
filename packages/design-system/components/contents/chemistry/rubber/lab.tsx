@@ -2,6 +2,8 @@ import { ViewReset } from "@repo/design-system/components/contents/biology/reset
 import type { RubberState } from "@repo/design-system/components/contents/chemistry/rubber/model";
 import { RubberVulcanizationScene } from "@repo/design-system/components/contents/chemistry/rubber/scene";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -52,7 +54,7 @@ export function RubberVulcanizationLab({
           {
             readonly elasticityNote: ReactNode;
             readonly heatNote: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
           }
         >
       >
@@ -70,6 +72,7 @@ export function RubberVulcanizationLab({
 }) {
   const [selected, setSelected] = useState<RubberState>(states[0]);
   const [stretchVal, setStretchVal] = useState(stretch.value);
+  const quantity = useQuantity();
 
   const active = Arr.contains(states, selected) ? selected : states[0];
   const copy = labels.states[active];
@@ -113,7 +116,7 @@ export function RubberVulcanizationLab({
           max={stretch.max}
           min={stretch.min}
           onValueChange={setStretchVal}
-          readout={`${Math.round(stretchVal)}%`}
+          readout={<InlineMath math={quantity(stretchVal, "\\%", 0)} />}
           step={1}
           value={stretchVal}
         />

@@ -56,7 +56,7 @@ export function AlveolusGasExchangeLab({
       Partial<
         Record<
           ActivityState,
-          { readonly name: string; readonly summary: ReactNode }
+          { readonly name: ReactNode; readonly summary: ReactNode }
         >
       >
     >;

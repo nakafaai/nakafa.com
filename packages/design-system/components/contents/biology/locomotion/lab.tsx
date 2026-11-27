@@ -48,7 +48,7 @@ export function AnimalLocomotionLab({
           LocomotionAnimal,
           {
             readonly against: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
             readonly skeleton: ReactNode;
           }
         >

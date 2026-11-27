@@ -9,6 +9,8 @@ import {
   WATER_SPECIFIC_HEAT,
 } from "@repo/design-system/components/contents/biology/water/bonds";
 import { WaterScene } from "@repo/design-system/components/contents/biology/water/scene";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -77,6 +79,7 @@ export function WaterBondLab({
   const [property, setProperty] = useState<Property>(properties[0]);
   const [radiusUm, setRadiusUm] = useState(radius.value);
   const [heatJ, setHeatJ] = useState(heat.value);
+  const quantity = useQuantity();
 
   const riseMeters = capillaryRiseMeters(radiusUm);
   const waterDelta = temperatureRise(heatJ, mass, WATER_SPECIFIC_HEAT);
@@ -125,7 +128,7 @@ export function WaterBondLab({
             max={heat.max}
             min={heat.min}
             onValueChange={setHeatJ}
-            readout={`${heatJ} J`}
+            readout={<InlineMath math={quantity(heatJ, "\\text{ J}", 0)} />}
             step={Math.max(1, Math.round((heat.max - heat.min) / 40))}
             value={heatJ}
           />
@@ -173,19 +176,29 @@ export function WaterBondLab({
           {property !== "heat" && labels.rise !== undefined && (
             <VisualFactTabular
               label={labels.rise}
-              value={`${riseMeters.toFixed(2)} m`}
+              value={
+                <InlineMath math={quantity(riseMeters, "\\text{ m}", 2)} />
+              }
             />
           )}
           {property === "heat" && labels.water !== undefined && (
             <VisualFactTabular
               label={labels.water}
-              value={`+${waterDelta.toFixed(1)} °C`}
+              value={
+                <InlineMath
+                  math={`+${quantity(waterDelta, "^\\circ\\text{C}", 1)}`}
+                />
+              }
             />
           )}
           {property === "heat" && labels.ethanol !== undefined && (
             <VisualFactTabular
               label={labels.ethanol}
-              value={`+${ethanolDelta.toFixed(1)} °C`}
+              value={
+                <InlineMath
+                  math={`+${quantity(ethanolDelta, "^\\circ\\text{C}", 1)}`}
+                />
+              }
             />
           )}
         </VisualCardFacts>

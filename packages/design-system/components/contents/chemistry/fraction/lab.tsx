@@ -43,7 +43,7 @@ export function FractionalDistillationLab({
           PetroleumFraction,
           {
             readonly boilingRange: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
             readonly useNote: ReactNode;
           }
         >

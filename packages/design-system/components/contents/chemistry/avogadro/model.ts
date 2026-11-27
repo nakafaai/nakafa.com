@@ -6,7 +6,7 @@ export type GasCondition = typeof GasConditionSchema.Type;
 
 const GasVolumeReadingSchema = Schema.Struct({
   molarVolumeDm3: Schema.Finite,
-  moleculesLabel: Schema.String,
+  moleculesMath: Schema.String,
   volumeDm3: Schema.Finite,
 });
 
@@ -21,7 +21,7 @@ export function evaluateAvogadroGas(
   const scaled = (n * 6.02).toFixed(2);
   return {
     molarVolumeDm3,
-    moleculesLabel: `${scaled} x 10^23`,
+    moleculesMath: `${scaled} \\times 10^{23}`,
     volumeDm3,
   };
 }

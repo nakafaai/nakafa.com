@@ -56,7 +56,7 @@ export function NuclearBindingCurveLab({
       Partial<
         Record<
           NuclearProcess,
-          { readonly detail: ReactNode; readonly name: string }
+          { readonly detail: ReactNode; readonly name: ReactNode }
         >
       >
     >;

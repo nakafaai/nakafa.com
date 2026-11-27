@@ -42,7 +42,7 @@ export function SaltBridgeIonFlowLab({
           GalvanicCell,
           {
             readonly emf: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
             readonly redoxEquation: ReactNode;
           }
         >

@@ -55,7 +55,7 @@ export function ActiveTransportPumpLab({
       Partial<
         Record<
           TransportMode,
-          { readonly mechanism: ReactNode; readonly name: string }
+          { readonly mechanism: ReactNode; readonly name: ReactNode }
         >
       >
     >;

@@ -52,7 +52,7 @@ export function EpsilonDeltaBandLab({
       Partial<
         Record<
           EpsilonFunction,
-          { readonly formula: ReactNode; readonly name: string }
+          { readonly formula: ReactNode; readonly name: ReactNode }
         >
       >
     >;

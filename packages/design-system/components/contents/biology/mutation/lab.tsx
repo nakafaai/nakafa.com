@@ -44,7 +44,7 @@ export function ChromosomeMutationLab({
           {
             readonly change: ReactNode;
             readonly effect: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
           }
         >
       >

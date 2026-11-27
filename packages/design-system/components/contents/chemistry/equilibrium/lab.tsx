@@ -74,7 +74,7 @@ export function DynamicEquilibriumLab({
           DynamicSystem,
           {
             readonly equation: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
             readonly product: string;
             readonly reactant: string;
           }

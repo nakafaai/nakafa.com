@@ -161,7 +161,11 @@ export function CollisionTheoryEnergyLab({
         <VisualCardFacts>
           <VisualFactTabular
             label={labels.activationEnergy}
-            value={`${Math.round(reading.effectiveFraction * 100)}%`}
+            value={
+              <InlineMath
+                math={quantity(reading.effectiveFraction * 100, "\\%", 0)}
+              />
+            }
           />
           {labels.collisionFreq === undefined ? null : (
             <VisualFactTabular

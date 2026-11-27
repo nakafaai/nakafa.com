@@ -53,7 +53,7 @@ export function VectorParallelepipedLab({
       Partial<
         Record<
           ParallelepipedConfig,
-          { readonly name: string; readonly summary: ReactNode }
+          { readonly name: ReactNode; readonly summary: ReactNode }
         >
       >
     >;

@@ -46,7 +46,7 @@ export function LeafLaminaCrossSectionLab({
       Partial<
         Record<
           LeafLayer,
-          { readonly adaptation: ReactNode; readonly name: string }
+          { readonly adaptation: ReactNode; readonly name: ReactNode }
         >
       >
     >;

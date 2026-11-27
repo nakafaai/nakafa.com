@@ -44,7 +44,7 @@ export function AlkaneAlkeneIsomerLab({
           {
             readonly bromineTest: ReactNode;
             readonly formula: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
           }
         >
       >

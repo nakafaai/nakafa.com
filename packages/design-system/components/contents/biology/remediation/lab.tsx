@@ -3,6 +3,8 @@ import { evaluatePhytoremediation } from "@repo/design-system/components/content
 import { PhytoremediationScene } from "@repo/design-system/components/contents/biology/remediation/scene";
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -54,7 +56,7 @@ export function PhytoremediationLab({
       Partial<
         Record<
           RemediationPlant,
-          { readonly medium: ReactNode; readonly name: string }
+          { readonly medium: ReactNode; readonly name: ReactNode }
         >
       >
     >;
@@ -66,6 +68,7 @@ export function PhytoremediationLab({
 }) {
   const [selected, setSelected] = useState<RemediationPlant>(plants[0]);
   const [cycles, setCycles] = useState(harvests.value);
+  const quantity = useQuantity();
 
   const active = Arr.contains(plants, selected) ? selected : plants[0];
   const reading = evaluatePhytoremediation(active, cycles);
@@ -143,7 +146,11 @@ export function PhytoremediationLab({
           {labels.remaining === undefined ? null : (
             <VisualFactTabular
               label={labels.remaining}
-              value={`${reading.remainingPercent}%`}
+              value={
+                <InlineMath
+                  math={quantity(reading.remainingPercent, "\\%", 0)}
+                />
+              }
             />
           )}
         </VisualCardFacts>

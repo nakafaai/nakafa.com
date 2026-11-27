@@ -10,6 +10,8 @@ import {
 import { MeristemGrowthScene } from "@repo/design-system/components/contents/biology/meristem/scene";
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -73,7 +75,7 @@ export function RootShootGrowthZoneLab({
     readonly zones: Readonly<
       Record<
         GrowthZone,
-        { readonly activity: ReactNode; readonly name: string }
+        { readonly activity: ReactNode; readonly name: ReactNode }
       >
     >;
   };
@@ -90,6 +92,7 @@ export function RootShootGrowthZoneLab({
   const [selectedOrgan, setSelectedOrgan] = useState<PlantOrgan>(organs[0]);
   const [position, setPosition] = useState(20);
   const [year, setYear] = useState(years.value);
+  const quantity = useQuantity();
 
   const activeMode = Arr.contains(modes, selectedMode)
     ? selectedMode
@@ -165,7 +168,7 @@ export function RootShootGrowthZoneLab({
             max={100}
             min={0}
             onValueChange={setPosition}
-            readout={`${Math.round(position)}%`}
+            readout={<InlineMath math={quantity(position, "\\%", 0)} />}
             step={1}
             value={position}
           />

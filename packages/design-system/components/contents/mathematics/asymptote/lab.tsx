@@ -47,7 +47,7 @@ export function AsymptoteBehaviorLab({
       Partial<
         Record<
           AsymptoteCurve,
-          { readonly formula: ReactNode; readonly name: string }
+          { readonly formula: ReactNode; readonly name: ReactNode }
         >
       >
     >;

@@ -7,6 +7,7 @@ import { evaluatePlasmolysis } from "@repo/design-system/components/contents/bio
 import { PlasmolysisScene } from "@repo/design-system/components/contents/biology/plasmolysis/scene";
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -71,10 +72,10 @@ export function PlasmolysisCellLab({
     ? selectedSolution
     : solutions[0];
   const reading = evaluatePlasmolysis(activeCell, activeSolution);
-  const flowArrow = Match.value(reading.waterNet).pipe(
-    Match.when("in", () => "->"),
-    Match.when("balanced", () => "<->"),
-    Match.when("out", () => "<-"),
+  const flowMath = Match.value(reading.waterNet).pipe(
+    Match.when("in", () => "\\rightarrow"),
+    Match.when("balanced", () => "\\leftrightarrow"),
+    Match.when("out", () => "\\leftarrow"),
     Match.exhaustive
   );
 
@@ -170,7 +171,10 @@ export function PlasmolysisCellLab({
             />
           )}
           {labels.waterFlow === undefined ? null : (
-            <VisualFact label={labels.waterFlow} value={flowArrow} />
+            <VisualFact
+              label={labels.waterFlow}
+              value={<InlineMath math={flowMath} />}
+            />
           )}
         </VisualCardFacts>
       </VisualCardFooter>

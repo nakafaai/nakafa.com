@@ -157,7 +157,11 @@ export function DeBroglieMatterWaveLab({
           {labels.diffraction === undefined ? null : (
             <VisualFactTabular
               label={labels.diffraction}
-              value={`${Math.round(reading.diffractionRadius * 100)}%`}
+              value={
+                <InlineMath
+                  math={quantity(reading.diffractionRadius * 100, "\\%", 0)}
+                />
+              }
             />
           )}
         </VisualCardFacts>

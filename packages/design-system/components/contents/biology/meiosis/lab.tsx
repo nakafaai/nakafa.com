@@ -3,6 +3,8 @@ import { evaluateMeiosisCombinations } from "@repo/design-system/components/cont
 import { MeiosisShufflingScene } from "@repo/design-system/components/contents/biology/meiosis/scene";
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -59,7 +61,7 @@ export function MeiosisShufflingLab({
       Partial<
         Record<
           MeiosisStage,
-          { readonly mechanism: ReactNode; readonly name: string }
+          { readonly mechanism: ReactNode; readonly name: ReactNode }
         >
       >
     >;
@@ -70,6 +72,7 @@ export function MeiosisShufflingLab({
 }) {
   const [selected, setSelected] = useState<MeiosisStage>(stages[0]);
   const [pairs, setPairs] = useState(chromosomePairs.value);
+  const quantity = useQuantity();
 
   const active = Arr.contains(stages, selected) ? selected : stages[0];
   const reading = evaluateMeiosisCombinations(active, pairs);
@@ -114,7 +117,7 @@ export function MeiosisShufflingLab({
           max={chromosomePairs.max}
           min={chromosomePairs.min}
           onValueChange={setPairs}
-          readout={`${Math.round(pairs)}`}
+          readout={<InlineMath math={quantity(pairs, "", 0)} />}
           step={1}
           value={pairs}
         />
@@ -147,7 +150,7 @@ export function MeiosisShufflingLab({
           {labels.combinations === undefined ? null : (
             <VisualFactTabular
               label={labels.combinations}
-              value={reading.combinationsLabel}
+              value={<InlineMath math={reading.combinationsMath} />}
             />
           )}
         </VisualCardFacts>

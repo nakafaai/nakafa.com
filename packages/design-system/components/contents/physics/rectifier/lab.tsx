@@ -166,7 +166,9 @@ export function RectifierDiodeLab({
           {labels.ripple === undefined ? null : (
             <VisualFactTabular
               label={labels.ripple}
-              value={`${reading.ripplePercent}%`}
+              value={
+                <InlineMath math={quantity(reading.ripplePercent, "\\%", 0)} />
+              }
             />
           )}
         </VisualCardFacts>

@@ -1,7 +1,7 @@
 import {
   BotanicalLeaf,
   FibrousRoots,
-} from "@repo/design-system/components/contents/biology/botanical";
+} from "@repo/design-system/components/contents/biology/seedling";
 import {
   latheProfile,
   liquidMeniscus,

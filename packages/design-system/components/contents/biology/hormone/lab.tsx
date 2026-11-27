@@ -44,7 +44,7 @@ export function PhytohormoneActionLab({
           {
             readonly effect: ReactNode;
             readonly farmUse: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
           }
         >
       >

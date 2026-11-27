@@ -55,7 +55,7 @@ export function SoapMicelleEmulsionLab({
       Partial<
         Record<
           MicelleStage,
-          { readonly mechanism: ReactNode; readonly name: string }
+          { readonly mechanism: ReactNode; readonly name: ReactNode }
         >
       >
     >;
@@ -65,7 +65,7 @@ export function SoapMicelleEmulsionLab({
       Partial<
         Record<
           WaterType,
-          { readonly name: string; readonly outcome: ReactNode }
+          { readonly name: ReactNode; readonly outcome: ReactNode }
         >
       >
     >;

@@ -49,7 +49,7 @@ export function EsterificationRefluxLab({
           {
             readonly aroma: ReactNode;
             readonly equation: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
           }
         >
       >

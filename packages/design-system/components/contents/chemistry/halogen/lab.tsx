@@ -41,7 +41,7 @@ export function HalogenDisplacementLab({
         Record<
           HalogenPair,
           {
-            readonly name: string;
+            readonly name: ReactNode;
             readonly observation: ReactNode;
             readonly redoxOutcome: ReactNode;
           }

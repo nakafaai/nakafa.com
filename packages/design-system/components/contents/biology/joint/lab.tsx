@@ -5,6 +5,8 @@ import type {
 import { JointScene } from "@repo/design-system/components/contents/biology/joint/scene";
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -44,7 +46,7 @@ export function JointMovementLab({
           {
             readonly example: ReactNode;
             readonly movement: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
           }
         >
       >
@@ -58,6 +60,7 @@ export function JointMovementLab({
 }) {
   const [joint, setJoint] = useState<JointKind>(joints[0]);
   const [motion, setMotion] = useState(0.45);
+  const quantity = useQuantity();
   const entry = labels.joints[joint];
 
   return (
@@ -103,7 +106,7 @@ export function JointMovementLab({
           min={0}
           onValueChange={(next) => setMotion(next / 100)}
           pauseOnChange
-          readout={`${Math.round(motion * 100)}%`}
+          readout={<InlineMath math={quantity(motion * 100, "\\%", 0)} />}
           step={1}
           value={Math.round(motion * 100)}
         />

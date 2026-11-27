@@ -12,6 +12,8 @@ import {
 } from "@repo/design-system/components/contents/biology/drawing/scale";
 import { DrawingScene } from "@repo/design-system/components/contents/biology/drawing/scene";
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -79,6 +81,7 @@ export function SpecimenDrawingLab({
 }: SpecimenDrawingLabProps) {
   const [version, setVersion] = useState<Version>("correct");
   const [drawingMm, setDrawingMm] = useState(drawing.value);
+  const quantity = useQuantity();
 
   const magnification = formatMagnification(magnificationOf(drawingMm, actual));
   const boundaryLabel =
@@ -121,7 +124,7 @@ export function SpecimenDrawingLab({
           max={drawing.max}
           min={drawing.min}
           onValueChange={setDrawingMm}
-          readout={`${drawingMm} mm`}
+          readout={<InlineMath math={quantity(drawingMm, "\\text{ mm}", 0)} />}
           step={1}
           value={drawingMm}
         />
@@ -157,7 +160,11 @@ export function SpecimenDrawingLab({
         <VisualCardFacts>
           <VisualFactTabular
             label={labels.size}
-            value={`${drawingMm} mm / ${actual} µm`}
+            value={
+              <InlineMath
+                math={`${quantity(drawingMm, "\\text{ mm}", 0)} / ${quantity(actual, "\\ \\mu\\text{m}", 0)}`}
+              />
+            }
           />
 
           {labels.magnification !== undefined && (

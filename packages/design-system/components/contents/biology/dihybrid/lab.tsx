@@ -43,7 +43,7 @@ export function DihybridCrossLab({
           DihybridFilter,
           {
             readonly count: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
             readonly ratio: ReactNode;
           }
         >

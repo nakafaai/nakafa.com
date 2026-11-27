@@ -41,7 +41,7 @@ export function CarnivorousPlantLab({
           SpecialNutritionMode,
           {
             readonly adaptation: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
             readonly source: ReactNode;
           }
         >

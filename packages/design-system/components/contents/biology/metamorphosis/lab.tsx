@@ -7,6 +7,8 @@ import type {
 import { growthAt } from "@repo/design-system/components/contents/biology/metamorphosis/growth";
 import type { MetamorphosisPart } from "@repo/design-system/components/contents/biology/metamorphosis/scene";
 import { MetamorphosisScene } from "@repo/design-system/components/contents/biology/metamorphosis/scene";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -63,6 +65,7 @@ export function MetamorphosisLab({
 }: MetamorphosisLabProps) {
   const [insect, setInsect] = useState<Insect>(insects[0]);
   const [time, setTime] = useState(0);
+  const quantity = useQuantity();
 
   const snap = growthAt(insect, time);
 
@@ -104,7 +107,7 @@ export function MetamorphosisLab({
           min={0}
           onValueChange={(pct) => setTime(pct / 100)}
           pauseOnChange
-          readout={`${Math.round(time * 100)}%`}
+          readout={<InlineMath math={quantity(time * 100, "\\%", 0)} />}
           step={1}
           value={Math.round(time * 100)}
         />
@@ -136,9 +139,16 @@ export function MetamorphosisLab({
           <VisualFactTabular label={labels.moults} value={`${snap.moults}`} />
           <VisualFactTabular
             label={labels.length}
-            value={`${snap.lengthMm} mm`}
+            value={
+              <InlineMath math={quantity(snap.lengthMm, "\\text{ mm}", 0)} />
+            }
           />
-          <VisualFactTabular label={labels.mass} value={`${snap.massMg} mg`} />
+          <VisualFactTabular
+            label={labels.mass}
+            value={
+              <InlineMath math={quantity(snap.massMg, "\\text{ mg}", 0)} />
+            }
+          />
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>

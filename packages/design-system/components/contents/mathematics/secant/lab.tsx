@@ -45,7 +45,7 @@ export function SecantToTangentLab({
       Partial<
         Record<
           SecantCurve,
-          { readonly formula: ReactNode; readonly name: string }
+          { readonly formula: ReactNode; readonly name: ReactNode }
         >
       >
     >;

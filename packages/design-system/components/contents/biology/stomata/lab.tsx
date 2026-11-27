@@ -7,6 +7,8 @@ import type {
 import { evaluateStomata } from "@repo/design-system/components/contents/biology/stomata/model";
 import { StomataScene } from "@repo/design-system/components/contents/biology/stomata/scene";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -80,6 +82,7 @@ export function StomatalGuardCellLab({
     conditions[0]
   );
   const [lightLevel, setLightLevel] = useState(light.value);
+  const quantity = useQuantity();
 
   const activeCondition = Arr.contains(conditions, selectedCondition)
     ? selectedCondition
@@ -164,11 +167,15 @@ export function StomatalGuardCellLab({
           />
           <VisualFactTabular
             label={labels.co2Intake}
-            value={`${reading.co2Percent}%`}
+            value={<InlineMath math={quantity(reading.co2Percent, "\\%", 0)} />}
           />
           <VisualFactTabular
             label={labels.transpiration}
-            value={`${reading.transpirationPercent}%`}
+            value={
+              <InlineMath
+                math={quantity(reading.transpirationPercent, "\\%", 0)}
+              />
+            }
           />
           {labels.aperture === undefined ? null : (
             <VisualFact

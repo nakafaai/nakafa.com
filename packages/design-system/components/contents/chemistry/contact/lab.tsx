@@ -50,7 +50,7 @@ export function ContactSulfuricTowerLab({
           {
             readonly conditions: ReactNode;
             readonly equation: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
           }
         >
       >

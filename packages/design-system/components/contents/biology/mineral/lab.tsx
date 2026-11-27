@@ -44,7 +44,7 @@ export function MineralDeficiencyLab({
         Record<
           CultureSolution,
           {
-            readonly name: string;
+            readonly name: ReactNode;
             readonly role: ReactNode;
             readonly symptom: ReactNode;
           }

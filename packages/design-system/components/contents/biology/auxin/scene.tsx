@@ -4,8 +4,8 @@ import {
   ColeoptileCutaway,
   DirectionalBrassLamp,
 } from "@repo/design-system/components/contents/biology/auxin/parts";
-import { TerracottaPot } from "@repo/design-system/components/contents/biology/botanical";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
+import { TerracottaPot } from "@repo/design-system/components/contents/biology/seedling";
 import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import {
   SimulationTicker,

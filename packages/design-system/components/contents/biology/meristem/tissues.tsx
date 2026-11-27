@@ -1,4 +1,4 @@
-import { BotanicalLeaf } from "@repo/design-system/components/contents/biology/botanical";
+import { BotanicalLeaf } from "@repo/design-system/components/contents/biology/seedling";
 import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
 import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
 import { FOLIAGE_COLORS } from "@repo/design-system/lib/material/foliage";

@@ -124,13 +124,17 @@ export function HaberAmmoniaConverterLab({
           {labels.equilibriumYield === undefined ? null : (
             <VisualFactTabular
               label={labels.equilibriumYield}
-              value={`${reading.yieldPercent}%`}
+              value={
+                <InlineMath math={quantity(reading.yieldPercent, "\\%", 0)} />
+              }
             />
           )}
           {labels.rateNote === undefined ? null : (
             <VisualFactTabular
               label={labels.rateNote}
-              value={`${reading.relativeRate}%`}
+              value={
+                <InlineMath math={quantity(reading.relativeRate, "\\%", 0)} />
+              }
             />
           )}
         </VisualCardFacts>
