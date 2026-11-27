@@ -284,49 +284,19 @@ export function DeBroglieScene({
       </group>
 
       {/* Crisp staggered labels cleanly spaced inside viewport */}
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={12}
-        minimumFontSize={10}
-        position={[-1.2, 1.06, 0]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[-1.2, 1.06, 0]}>
         <span>{parts.electronGun}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={12}
-        minimumFontSize={10}
-        position={[-0.48, 0.3, 0.25]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[-0.48, 0.3, 0.25]}>
         <span>{parts.matterWave}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={12}
-        minimumFontSize={10}
-        position={[-0.08, 1.18, 0]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[-0.08, 1.18, 0]}>
         <span>{parts.graphiteTarget}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={12}
-        minimumFontSize={10}
-        position={[0.98, 1.32, 0]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[0.98, 1.32, 0]}>
         <span>{parts.diffractionRings}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={12}
-        minimumFontSize={10}
-        position={[1.02, 0.14, 0.2]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[1.02, 0.14, 0.2]}>
         <span>{parts.screen}</span>
       </ThreeLabel>
     </group>

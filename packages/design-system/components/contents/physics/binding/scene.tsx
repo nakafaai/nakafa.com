@@ -333,8 +333,6 @@ export function NuclearBindingScene({
         anchorY="bottom"
         color={ink}
         fontSize="compact"
-        maximumFontSize={13}
-        minimumFontSize={11}
         position={[-0.08, crown, 0]}
       >
         <Legend color={QUANTUM_COLORS.proton} name={parts.proton} />
@@ -344,8 +342,6 @@ export function NuclearBindingScene({
         anchorY="bottom"
         color={ink}
         fontSize="compact"
-        maximumFontSize={13}
-        minimumFontSize={11}
         position={[0.08, crown, 0]}
       >
         <Legend color={QUANTUM_COLORS.neutron} name={parts.neutron} />
@@ -354,8 +350,6 @@ export function NuclearBindingScene({
         anchorY="bottom"
         color={ink}
         fontSize="compact"
-        maximumFontSize={13}
-        minimumFontSize={11}
         position={[0, crown + 0.13, 0]}
       >
         <span>{zoneText}</span>

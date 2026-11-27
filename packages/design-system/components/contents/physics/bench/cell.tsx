@@ -170,7 +170,6 @@ export function Supply({
         color={BENCH_COLORS.lcdInk}
         fontSize="compact"
         maximumFontSize={15}
-        minimumFontSize={11}
         outlineColor={BENCH_COLORS.lcdHalo}
         outlineWidth={0.003}
         position={[-0.14, 0.27, 0.266]}

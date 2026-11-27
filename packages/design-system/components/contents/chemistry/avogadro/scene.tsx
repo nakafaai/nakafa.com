@@ -220,7 +220,6 @@ export function AvogadroGasScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[0, pistonY + 0.168, RIG_Z]}
       >
         <span>{parts.piston}</span>
@@ -229,7 +228,6 @@ export function AvogadroGasScene({
         anchorX="right"
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[-0.085, 0.33, RIG_Z + 0.03]}
       >
         <span>{parts.cylinder}</span>
@@ -238,7 +236,6 @@ export function AvogadroGasScene({
         anchorX="right"
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[-0.085, 0.162, RIG_Z + 0.05]}
       >
         <span>{parts.volumeScale}</span>
@@ -246,7 +243,6 @@ export function AvogadroGasScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[THERM_X + 0.088, 0.255, RIG_Z + 0.02]}
       >
         <span>{parts.thermometer}</span>
@@ -254,7 +250,6 @@ export function AvogadroGasScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[0.165, 0.068, RIG_Z + 0.085]}
       >
         <span>{parts.gasParticles}</span>

@@ -5,8 +5,11 @@ import type { ThreeFontSize } from "@repo/design-system/components/three/data/co
 import {
   resolveThreeFontSize,
   THREE_DIAGRAM_MAXIMUM_FONT_SIZE,
-  THREE_DIAGRAM_MINIMUM_FONT_SIZE,
 } from "@repo/design-system/components/three/data/constants";
+import type { LabelPixels } from "@repo/design-system/components/three/label/floor";
+import { labelRange } from "@repo/design-system/components/three/label/floor";
+import type { Rgb } from "@repo/design-system/components/three/label/ink";
+import { readableInk } from "@repo/design-system/components/three/label/ink";
 import { SceneHtml } from "@repo/design-system/components/three/overlay";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { MutableHashMap } from "effect";
@@ -32,10 +35,16 @@ interface ThreeLabelProps {
   fontSize?: ThreeFontSize | number;
   /** Separation from the anchor in camera-facing world units. */
   gap?: number;
-  /** Upper rendered size keeps annotations subordinate to their geometry. */
-  maximumFontSize?: number;
-  /** Minimum rendered font size in CSS pixels, independent of the world scale. */
-  minimumFontSize?: number;
+  /**
+   * Upper rendered size in CSS pixels, which keeps an annotation subordinate to
+   * its geometry. It never goes under the label floor (`label/floor.ts`).
+   */
+  maximumFontSize?: LabelPixels;
+  /**
+   * Least rendered size in CSS pixels, independent of the world scale. The label
+   * floor (`label/floor.ts`) holds when it is left out or smaller.
+   */
+  minimumFontSize?: LabelPixels;
   /** Hides the label while an object of the scene stands between the camera and the label. */
   occlude?: boolean | undefined;
   outlineColor?: string | undefined;
@@ -51,9 +60,69 @@ const LABEL_BASE_FONT_SIZE = 16;
  * The halo every label without an outline of its own draws in the card's color,
  * in em of its font size. Half of it shows outside the glyphs, so an axis, a
  * grid line, or an arrow that passes behind a label stops at the letters
- * instead of striking through them.
+ * instead of striking through them, while the letters stay the larger part.
  */
-const LABEL_HALO_EM = 0.24;
+const LABEL_HALO_EM = 0.18;
+
+/**
+ * Formulas in a label draw once, at the size of the words around them. A label
+ * is hidden from assistive technology, so KaTeX's MathML copy has no reader there
+ * and never shows, whether or not the page loaded the KaTeX stylesheet, and
+ * KaTeX's own 1.21em gives way to the label's size.
+ */
+const LABEL_MATH_CLASS = "[&_.katex-mathml]:hidden [&_.katex]:text-[1em]!";
+
+/** A 1 by 1 canvas that turns any CSS color the browser knows into its sRGB channels. */
+let colorProbe: CanvasRenderingContext2D | null = null;
+
+/** Reads a resolved CSS color, such as `oklch(...)` or `rgb(...)`, as sRGB channels. */
+function readRgb(color: string): Rgb {
+  if (!colorProbe) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+    colorProbe = canvas.getContext("2d", { willReadFrequently: true });
+  }
+  if (!colorProbe) {
+    return [0, 0, 0];
+  }
+  colorProbe.clearRect(0, 0, 1, 1);
+  colorProbe.fillStyle = "#000";
+  colorProbe.fillStyle = color;
+  colorProbe.fillRect(0, 0, 1, 1);
+  const [red = 0, green = 0, blue = 0] = colorProbe.getImageData(
+    0,
+    0,
+    1,
+    1
+  ).data;
+  return [red, green, blue];
+}
+
+/**
+ * Sets the ink of one label's content so its text reaches WCAG AA on what stands
+ * right behind it: the label's own outline, or else its halo in the card color of
+ * the theme the page shows now, which may be any named theme.
+ */
+function paintInk(
+  content: HTMLElement,
+  ink: string,
+  outline: string | undefined
+) {
+  const backing =
+    outline ?? getComputedStyle(content).getPropertyValue("--card");
+  const [red, green, blue] = readableInk(readRgb(ink), readRgb(backing));
+  content.style.color = `rgb(${red} ${green} ${blue})`;
+}
+
+/** Calls back whenever the root element changes its theme class or color scheme. */
+function watchTheme(onChange: () => void) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, {
+    attributeFilter: ["class", "style", "data-theme"],
+  });
+  return () => observer.disconnect();
+}
 
 /** What the overlay content of one label draws, which it reads from its label. */
 interface LabelValues {
@@ -130,12 +199,8 @@ export function ThreeLabel({
   color,
   fontSize = "annotation",
   gap = 0,
-  minimumFontSize = typeof fontSize === "number"
-    ? 0
-    : THREE_DIAGRAM_MINIMUM_FONT_SIZE,
-  maximumFontSize = minimumFontSize > 0
-    ? THREE_DIAGRAM_MAXIMUM_FONT_SIZE
-    : Number.POSITIVE_INFINITY,
+  minimumFontSize,
+  maximumFontSize,
   outlineColor,
   outlineWidth = 0,
   occlude,
@@ -147,23 +212,50 @@ export function ThreeLabel({
   const group = useRef<Group>(null);
   const content = useRef<HTMLSpanElement>(null);
   const lastScale = useRef(Number.NaN);
-  const attachContent = useCallback((element: HTMLSpanElement | null) => {
-    content.current = element;
-    lastScale.current = Number.NaN;
-  }, []);
+  const labelColor = color instanceof Color ? color.getStyle() : color;
+  const worldFontSize = resolveThreeFontSize(fontSize);
+  const outlineWidthEm = worldFontSize > 0 ? outlineWidth / worldFontSize : 0;
+  const outline = outlineColor && outlineWidthEm > 0 ? outlineColor : undefined;
+  const attachContent = useCallback(
+    (element: HTMLSpanElement | null) => {
+      content.current = element;
+      lastScale.current = Number.NaN;
+      if (element) {
+        paintInk(element, labelColor, outline);
+      }
+    },
+    [labelColor, outline]
+  );
+  // A new theme repaints the ink against the card color it brings.
+  useEffect(
+    () =>
+      watchTheme(() => {
+        if (content.current) {
+          paintInk(content.current, labelColor, outline);
+        }
+      }),
+    [labelColor, outline]
+  );
   const labelPosition = useMemo(() => new Vector3(), []);
   const cameraPosition = useMemo(() => new Vector3(), []);
   const camera = useThree((state) => state.camera);
   const canvasHeight = useThree((state) => state.size.height);
+  const canvasWidth = useThree((state) => state.size.width);
   const invalidate = useThree((state) => state.invalidate);
-  const labelColor = color instanceof Color ? color.getStyle() : color;
-  const worldFontSize = resolveThreeFontSize(fontSize);
+  const { high: largestSize, low: leastSize } = labelRange({
+    canvasWidth,
+    maximum:
+      maximumFontSize ??
+      (typeof fontSize === "number" && minimumFontSize === undefined
+        ? Number.POSITIVE_INFINITY
+        : THREE_DIAGRAM_MAXIMUM_FONT_SIZE),
+    minimum: minimumFontSize ?? 0,
+  });
   const distanceFactor =
     (worldFontSize * (isOrthographicCamera(camera) ? 1 : canvasHeight)) /
     LABEL_BASE_FONT_SIZE;
   const gapPixels =
     worldFontSize > 0 ? (gap * LABEL_BASE_FONT_SIZE) / worldFontSize : 0;
-  const outlineWidthEm = worldFontSize > 0 ? outlineWidth / worldFontSize : 0;
 
   // Display scaling never changes the natural dimensions observed for fitting.
   useFrame(({ camera: activeCamera, size }) => {
@@ -195,8 +287,7 @@ export function ThreeLabel({
       return;
     }
     const nextScale =
-      MathUtils.clamp(naturalSize, minimumFontSize, maximumFontSize) /
-      naturalSize;
+      MathUtils.clamp(naturalSize, leastSize, largestSize) / naturalSize;
     if (
       !Number.isFinite(lastScale.current) ||
       Math.abs(nextScale - lastScale.current) > 1e-4
@@ -240,18 +331,10 @@ export function ThreeLabel({
             y: gapDirection(anchorY) * gap,
           },
           height,
-          ...(minimumFontSize
-            ? {
-                pixels: {
-                  width:
-                    (element.offsetWidth * minimumFontSize) /
-                    LABEL_BASE_FONT_SIZE,
-                  height:
-                    (element.offsetHeight * minimumFontSize) /
-                    LABEL_BASE_FONT_SIZE,
-                },
-              }
-            : {}),
+          pixels: {
+            width: (element.offsetWidth * leastSize) / LABEL_BASE_FONT_SIZE,
+            height: (element.offsetHeight * leastSize) / LABEL_BASE_FONT_SIZE,
+          },
           rotation,
           width,
         });
@@ -272,7 +355,7 @@ export function ThreeLabel({
       framing,
       gap,
       invalidate,
-      minimumFontSize,
+      leastSize,
       rotation,
       worldFontSize,
     ]
@@ -320,6 +403,7 @@ export function ThreeLabel({
         <LabelHtml>
           <span
             aria-hidden="true"
+            className={LABEL_MATH_CLASS}
             ref={attachContent}
             style={{
               display: "inline-block",

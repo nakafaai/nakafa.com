@@ -272,8 +272,6 @@ function DropTower({ mode }: { readonly mode: Mode }) {
                 anchorX="right"
                 color={CAR_COLORS.tyre}
                 fontSize={0.085}
-                maximumFontSize={13}
-                minimumFontSize={11}
                 position={[-0.12, 0, 0]}
               >
                 <span>{`${meters} m`}</span>

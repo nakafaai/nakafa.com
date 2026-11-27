@@ -420,8 +420,6 @@ export function KeplerOrbitScene({
       <ThreeLabel
         color={QUANTUM_COLORS.spaceLabel}
         fontSize="compact"
-        maximumFontSize={12}
-        minimumFontSize={10}
         outlineColor={QUANTUM_COLORS.furnaceSteel}
         outlineWidth={0.028}
         position={[c, 0.58, 0]}
@@ -431,8 +429,6 @@ export function KeplerOrbitScene({
       <ThreeLabel
         color={QUANTUM_COLORS.spaceLabel}
         fontSize="compact"
-        maximumFontSize={12}
-        minimumFontSize={10}
         outlineColor={QUANTUM_COLORS.furnaceSteel}
         outlineWidth={0.028}
         position={[-c, 0.48, -0.18]}
@@ -442,8 +438,6 @@ export function KeplerOrbitScene({
       <ThreeLabel
         color={QUANTUM_COLORS.spaceLabel}
         fontSize="compact"
-        maximumFontSize={12}
-        minimumFontSize={10}
         outlineColor={QUANTUM_COLORS.furnaceSteel}
         outlineWidth={0.028}
         position={[a - 0.08, 0.42, 0.34]}
@@ -453,8 +447,6 @@ export function KeplerOrbitScene({
       <ThreeLabel
         color={QUANTUM_COLORS.spaceLabel}
         fontSize="compact"
-        maximumFontSize={12}
-        minimumFontSize={10}
         outlineColor={QUANTUM_COLORS.furnaceSteel}
         outlineWidth={0.028}
         position={[-a + 0.08, 0.42, 0.34]}
@@ -464,8 +456,6 @@ export function KeplerOrbitScene({
       <ThreeLabel
         color={QUANTUM_COLORS.spaceLabel}
         fontSize="compact"
-        maximumFontSize={12}
-        minimumFontSize={10}
         outlineColor={QUANTUM_COLORS.furnaceSteel}
         outlineWidth={0.028}
         position={[0.2, 0.36, b + 0.22]}
