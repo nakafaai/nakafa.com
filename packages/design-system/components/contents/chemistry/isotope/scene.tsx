@@ -31,6 +31,14 @@ const NUCLEON = 0.5;
  */
 const CUBE = 0.66;
 
+/**
+ * How the nucleus is turned and tilted at rest, in radians: the pose in
+ * which neither deuterium nor tritium hides a nucleon behind another, so
+ * the smallest nuclei can be counted before the card plays.
+ */
+const REST_TURN = 5.45;
+const REST_TILT = -0.55;
+
 /** The dark of open space behind the nucleus, which outlines its labels, and how wide that outline is. */
 const BACKDROP = getColor("ZINC", 950);
 const OUTLINE = 0.012;
@@ -65,8 +73,8 @@ export function NuclideScene({
   useFrame((_, delta) => {
     const time = calm ? 0 : advance(delta);
     if (nucleus.current !== null) {
-      nucleus.current.rotation.y = 0.5 + time * 0.3;
-      nucleus.current.rotation.x = 0.3 + Math.sin(time * 0.4) * 0.15;
+      nucleus.current.rotation.y = REST_TURN + time * 0.3;
+      nucleus.current.rotation.x = REST_TILT + Math.sin(time * 0.4) * 0.15;
     }
   });
 
