@@ -8,6 +8,7 @@ import {
   TAB,
 } from "@repo/design-system/components/contents/mathematics/argument/layout";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { ARGUMENT_COLORS } from "@repo/design-system/lib/material/argument";
 import { Array as Arr, Option } from "effect";
 import { useRef, useState } from "react";
@@ -93,7 +94,7 @@ export function PaperCard({
         receiveShadow
         smoothness={2}
       >
-        <meshStandardMaterial color={ARGUMENT_COLORS.paper} roughness={0.86} />
+        <Matter color={ARGUMENT_COLORS.paper} of="paper" />
       </RoundedBox>
       <ThreeLabel
         color={ARGUMENT_COLORS.ink}
@@ -139,7 +140,7 @@ function IndexTab({ shape }: { readonly shape: Shape }) {
     <group position={[CARD.width / 2 + TAB.reach / 2 - 0.002, 0, TAB_Z]}>
       <mesh castShadow position={[0, CARD.thickness / 2, 0]} receiveShadow>
         <boxGeometry args={[TAB.reach + 0.004, CARD.thickness, TAB.depth]} />
-        <meshStandardMaterial color={ARGUMENT_COLORS.tab} roughness={0.7} />
+        <Matter color={ARGUMENT_COLORS.tab} of="paper" />
       </mesh>
       <mesh
         position={[0.001, top, 0]}
@@ -150,10 +151,7 @@ function IndexTab({ shape }: { readonly shape: Shape }) {
         ) : (
           <circleGeometry args={[0.0042, shape === "circle" ? 28 : 3]} />
         )}
-        <meshStandardMaterial
-          color={ARGUMENT_COLORS.tabShape}
-          roughness={0.8}
-        />
+        <Matter color={ARGUMENT_COLORS.tabShape} of="paper" />
       </mesh>
     </group>
   );
@@ -166,12 +164,12 @@ function Seal() {
     <group position={[-CARD.width / 2 + 0.001, 0, -CARD.depth / 2 + 0.001]}>
       <mesh castShadow position={[0, CARD.thickness + 0.0005, 0]}>
         <cylinderGeometry args={[SEAL, SEAL, 0.001, 32]} />
-        <meshStandardMaterial color={ARGUMENT_COLORS.seal} roughness={0.45} />
+        <Matter color={ARGUMENT_COLORS.seal} of="wax" />
       </mesh>
       {Arr.map([Math.PI / 4, -Math.PI / 4], (turn) => (
         <mesh key={turn} position={[0, top, 0]} rotation={[0, turn, 0]}>
           <boxGeometry args={[SEAL * 1.2, 0.0002, SEAL * 0.26]} />
-          <meshBasicMaterial color={ARGUMENT_COLORS.sealCross} />
+          <Matter color={ARGUMENT_COLORS.sealCross} of="wax" />
         </mesh>
       ))}
     </group>

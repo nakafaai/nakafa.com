@@ -8,13 +8,13 @@ import {
 } from "@repo/design-system/components/contents/physics/electronics/parts";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import {
   useVisualScene,
   useVisualStop,
 } from "@repo/design-system/components/visual/card";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
-import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
+import { CIRCUIT_COLORS } from "@repo/design-system/lib/material/circuit";
 import { Array as Arr, Schema } from "effect";
 import { useRef, useState } from "react";
 
@@ -104,17 +104,12 @@ export function LogicGateScene({
       {Arr.map(STANDOFFS, ([x, z]) => (
         <mesh castShadow key={`${x}:${z}`} position={[x, 0.045, z]}>
           <cylinderGeometry args={[0.03, 0.03, 0.09, 6]} />
-          <MetalMaterial color={QUANTUM_COLORS.brass} roughness={0.3} />
+          <Matter of="brass" />
         </mesh>
       ))}
       <mesh castShadow position={[0, 0.1, 0]} receiveShadow>
         <boxGeometry args={[2.2, 0.03, 1.4]} />
-        <meshPhysicalMaterial
-          clearcoat={0.5}
-          clearcoatRoughness={0.28}
-          color={QUANTUM_COLORS.pcbBoard}
-          roughness={0.4}
-        />
+        <Matter color={CIRCUIT_COLORS.mask} of="epoxy" />
       </mesh>
       <group position={[0, DECK + 0.006, 0]}>
         {Arr.map(TRACKS, (track) => (
@@ -124,7 +119,7 @@ export function LogicGateScene({
             rotation={[0, track.turn, 0]}
           >
             <boxGeometry args={[track.size[0], 0.004, track.size[1]]} />
-            <MetalMaterial color={QUANTUM_COLORS.pcbTrace} roughness={0.3} />
+            <Matter color={CIRCUIT_COLORS.maskOverCopper} of="epoxy" />
           </mesh>
         ))}
         {Arr.map(INPUTS, (input) => (

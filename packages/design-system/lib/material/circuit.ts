@@ -11,11 +11,6 @@ export const CIRCUIT_COLORS = {
   maskOverCopper: "#35a065",
   // The routed edge of the glass-epoxy laminate.
   laminate: "#b7a66a",
-  // Immersion gold on pads and plated holes, and the dark of a drilled hole.
-  gold: "#d8b24c",
+  // The dark of a drilled hole.
   drill: "#10160f",
-  // Silkscreen ink.
-  silk: "#eef2ea",
-  // The nickel-plated brass of a standoff or a mounting screw.
-  hardware: "#b9bdc1",
 } as const;

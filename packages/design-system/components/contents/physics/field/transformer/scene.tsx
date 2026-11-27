@@ -10,7 +10,7 @@ import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import {
   useVisualScene,
   useVisualStop,
@@ -119,7 +119,7 @@ function Winding({ turns, x }: { readonly turns: number; readonly x: number }) {
     <group position={[x, CENTRE, 0]}>
       <mesh castShadow>
         <cylinderGeometry args={[0.265, 0.265, WOUND + 0.02, 40]} />
-        <meshStandardMaterial color={APPARATUS_COLORS.bobbin} roughness={0.6} />
+        <Matter color={APPARATUS_COLORS.bobbin} of="plastic" />
       </mesh>
       {Arr.map([-1, 1] as const, (side) => (
         <mesh
@@ -128,20 +128,11 @@ function Winding({ turns, x }: { readonly turns: number; readonly x: number }) {
           position={[0, (side * (WOUND + 0.06)) / 2, 0]}
         >
           <cylinderGeometry args={[0.36, 0.36, 0.03, 40]} />
-          <meshStandardMaterial
-            color={APPARATUS_COLORS.bobbin}
-            roughness={0.55}
-          />
+          <Matter color={APPARATUS_COLORS.bobbin} of="plastic" />
         </mesh>
       ))}
       <mesh castShadow geometry={coil}>
-        <meshPhysicalMaterial
-          clearcoat={0.7}
-          clearcoatRoughness={0.2}
-          color={APPARATUS_COLORS.enamelCopper}
-          metalness={0.75}
-          roughness={0.3}
-        />
+        <Matter of="copper" />
       </mesh>
     </group>
   );
@@ -188,21 +179,13 @@ function Flux() {
   return (
     <group position={[0, CENTRE, 0]}>
       <mesh geometry={line}>
-        <meshStandardMaterial
-          color={APPARATUS_COLORS.fluxGlow}
-          emissive={APPARATUS_COLORS.fluxGlow}
-          emissiveIntensity={1.6}
-        />
+        <Matter color={APPARATUS_COLORS.fluxGlow} glow={0.8} of="light" />
       </mesh>
       <group ref={markers}>
         {Arr.makeBy(FLUX_MARKERS, (index) => (
           <mesh key={index} position={path.getPointAt(index / FLUX_MARKERS)}>
             <sphereGeometry args={[0.03, 14, 10]} />
-            <meshStandardMaterial
-              color={APPARATUS_COLORS.fluxGlow}
-              emissive={APPARATUS_COLORS.fluxGlow}
-              emissiveIntensity={3.4}
-            />
+            <Matter color={APPARATUS_COLORS.fluxGlow} glow={1.7} of="light" />
           </mesh>
         ))}
       </group>
@@ -291,7 +274,7 @@ export function TransformerScene({
           receiveShadow
         >
           <boxGeometry args={[0.24, LIFT, SHEETS * SHEET + 0.3]} />
-          <MetalMaterial color={APPARATUS_COLORS.caseSteel} roughness={0.42} />
+          <Matter of="steel" />
         </mesh>
       ))}
       {Arr.makeBy(SHEETS, (index) => (
@@ -301,17 +284,7 @@ export function TransformerScene({
           key={index}
           position={[0, CENTRE, (index - SHEETS / 2) * SHEET]}
         >
-          <meshStandardMaterial
-            color={
-              index % 2 === 0
-                ? APPARATUS_COLORS.laminate
-                : APPARATUS_COLORS.laminateEdge
-            }
-            emissive={APPARATUS_COLORS.nichromeWarm}
-            emissiveIntensity={(1 - efficiency) * 0.16}
-            metalness={0.85}
-            roughness={0.42}
-          />
+          <Matter finish="machined" glow={(1 - efficiency) * 0.25} of="iron" />
         </mesh>
       ))}
       <Flux />

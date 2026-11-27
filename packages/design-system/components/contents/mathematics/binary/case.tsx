@@ -5,8 +5,7 @@ import {
   Pads,
   Traces,
 } from "@repo/design-system/components/contents/mathematics/pcb";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
-import { LAMP_COLORS } from "@repo/design-system/lib/material/lamp";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { Array as Arr } from "effect";
 
 /** The distance between neighbouring lamps, in metres. */
@@ -94,18 +93,11 @@ export function PanelCase({
         receiveShadow
         smoothness={6}
       >
-        <SurfaceMaterial
-          bump={0.012}
-          coat={0.5}
-          color={LAMP_COLORS.walnut}
-          repeat={[0.4, 3]}
-          roughness={0.5}
-          surface="wood"
-        />
+        <Matter of="walnut" />
       </RoundedBox>
       <mesh position={[0, CASE.height * 0.12, 0]}>
         <boxGeometry args={[width + 0.002, 0.004, CASE.depth + 0.002]} />
-        <meshStandardMaterial color={LAMP_COLORS.walnutEdge} roughness={0.8} />
+        <Matter of="walnut" />
       </mesh>
       <CircuitBoard
         depth={plateDepth}

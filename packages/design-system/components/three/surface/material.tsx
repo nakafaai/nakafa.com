@@ -5,7 +5,7 @@ import type { Side } from "three";
 import { FrontSide } from "three";
 
 /** How strongly a relief of 1 bends the light: the slope its normals are painted at. */
-const RELIEF = 1 / 0.6;
+export const RELIEF = 1 / 0.6;
 
 /**
  * The detail textures of one surface laid `across` by `along` tiles over a

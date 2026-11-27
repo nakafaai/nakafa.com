@@ -1,18 +1,41 @@
 import {
   cellsAt,
-  chanceAt,
   fractalAt,
   ridgedAt,
   warpedAt,
 } from "@repo/design-system/components/three/field/noise";
 import {
+  anodisedAt,
+  brushedAt,
+  castAt,
+  knurlAt,
+  machinedAt,
+  polishedAt,
+  windingAt,
+} from "@repo/design-system/components/three/surface/metal";
+import {
+  corkAt,
+  feltAt,
+  foamAt,
+  paperAt,
+} from "@repo/design-system/components/three/surface/pressed";
+import {
   paintNormals,
   paintOpenness,
 } from "@repo/design-system/components/three/surface/relief";
+import {
+  fromStripe,
+  held,
+} from "@repo/design-system/components/three/surface/tile";
+import {
+  planksAt,
+  woodAt,
+} from "@repo/design-system/components/three/surface/wood";
 import { Schema } from "effect";
 
 /** The real surfaces a lab object is made of, each with its own fine detail. */
 export const SurfaceSchema = Schema.Literals([
+  "anodised",
   "asphalt",
   "bark",
   "brushed",
@@ -20,12 +43,18 @@ export const SurfaceSchema = Schema.Literals([
   "ceramic",
   "cloth",
   "concrete",
+  "cork",
+  "felt",
+  "foam",
   "grass",
   "knurl",
   "leaf",
+  "machined",
   "paint",
+  "paper",
   "planks",
   "plastic",
+  "polished",
   "resin",
   "rubber",
   "slate",
@@ -33,6 +62,7 @@ export const SurfaceSchema = Schema.Literals([
   "soil",
   "stone",
   "tissue",
+  "winding",
   "wood",
   "hide",
   "scales",
@@ -55,6 +85,7 @@ const LookSchema = Schema.Struct({
 });
 
 const LOOKS: Record<Surface, typeof LookSchema.Type> = {
+  anodised: { dip: 0.08, relief: 0.05, rough: 0.46, wear: 0.14 },
   asphalt: { dip: 0.55, relief: 0.5, rough: 0.82, wear: 0.12 },
   bark: { dip: 0.6, relief: 1, rough: 0.9, wear: 0.06 },
   brushed: { dip: 0.16, relief: 0.1, rough: 0.28, wear: 0.18 },
@@ -62,12 +93,18 @@ const LOOKS: Record<Surface, typeof LookSchema.Type> = {
   ceramic: { dip: 0.1, relief: 0.08, rough: 0.12, wear: 0.1 },
   cloth: { dip: 0.3, relief: 0.5, rough: 0.82, wear: 0.1 },
   concrete: { dip: 0.28, relief: 0.4, rough: 0.88, wear: 0.1 },
+  cork: { dip: 0.4, relief: 0.5, rough: 0.9, wear: 0.06 },
+  felt: { dip: 0.26, relief: 0.4, rough: 0.96, wear: 0.04 },
+  foam: { dip: 0.16, relief: 0.35, rough: 0.92, wear: 0.04 },
   grass: { dip: 0.6, relief: 0.8, rough: 0.86, wear: 0.06 },
   knurl: { dip: 0.3, relief: 0.6, rough: 0.34, wear: 0.16 },
   leaf: { dip: 0.3, relief: 0.3, rough: 0.5, wear: 0.2 },
+  machined: { dip: 0.1, relief: 0.09, rough: 0.2, wear: 0.16 },
   paint: { dip: 0.14, relief: 0.035, rough: 0.38, wear: 0.34 },
+  paper: { dip: 0.08, relief: 0.1, rough: 0.88, wear: 0.06 },
   planks: { dip: 0.5, relief: 0.22, rough: 0.46, wear: 0.16 },
   plastic: { dip: 0.06, relief: 0.05, rough: 0.42, wear: 0.12 },
+  polished: { dip: 0.07, relief: 0.03, rough: 0.1, wear: 0.22 },
   resin: { dip: 0.2, relief: 0.08, rough: 0.62, wear: 0.25 },
   rubber: { dip: 0.14, relief: 0.2, rough: 0.86, wear: 0.08 },
   slate: { dip: 0.3, relief: 0.5, rough: 0.7, wear: 0.16 },
@@ -75,7 +112,8 @@ const LOOKS: Record<Surface, typeof LookSchema.Type> = {
   soil: { dip: 0.55, relief: 0.85, rough: 0.94, wear: 0.05 },
   stone: { dip: 0.42, relief: 0.9, rough: 0.9, wear: 0.08 },
   tissue: { dip: 0.3, relief: 0.5, rough: 0.55, wear: 0.2 },
-  wood: { dip: 0.4, relief: 0.16, rough: 0.6, wear: 0.18 },
+  winding: { dip: 0.3, relief: 0.45, rough: 0.3, wear: 0.1 },
+  wood: { dip: 0.55, relief: 0.16, rough: 0.6, wear: 0.18 },
   hide: { dip: 0.34, relief: 0.55, rough: 0.56, wear: 0.24 },
   scales: { dip: 0.3, relief: 0.5, rough: 0.24, wear: 0.2 },
   mucosa: { dip: 0.26, relief: 0.32, rough: 0.2, wear: 0.16 },
@@ -95,76 +133,52 @@ const SHADE_STRENGTH = 3.2;
 /** How much of a pit's shade is also painted into the tone. */
 const SHADE_IN_TONE = 0.3;
 
-/** A number held between 0 and 1. */
-function held(value: number) {
-  return Math.min(1, Math.max(0, value));
-}
-
-/** How far a place is from the middle of its own stripe of `count` stripes, from 0 to 1. */
-function fromStripe(place: number, count: number) {
-  const along = place * count;
-  return Math.abs(along - Math.floor(along) - 0.5) * 2;
-}
-
 /** How many boards lie side by side across one tile of planks. */
 export const BOARDS = 4;
-
-/** The share of a board's width that slopes into the groove at each edge. */
-const GROOVE = 0.05;
-
-/** How much darker the darkest board of a floor is than the palest. */
-const BOARD_TONES = 0.24;
-
-/**
- * Sawn wood at a place of the tile: long pores along the grain, across the
- * darker late wood of growth rings that a slow figure bends.
- */
-function woodAt(x: number, y: number) {
-  const figure = warpedAt(x, y, 1, 3, 31, 0.3);
-  const ring = 0.5 + 0.5 * Math.sin((y * 9 + 3.2 * figure) * 2 * Math.PI);
-  const late = ring ** 5;
-  const pores = fractalAt(x, y, 4, 160, 37, 2);
-  const band = fractalAt(x, y, 2, 20, 39, 3);
-  return {
-    height: 0.6 + 0.5 * (pores - 0.5) - 0.25 * late,
-    shade: 0.92 - 0.3 * late - 0.4 * (1 - pores) - 0.25 * (1 - band),
-  };
-}
 
 /**
  * What each surface is at a place of the tile: its `height`, between 0 and
  * 1, where 1 stands highest, and its `shade`, where 1 is the surface at its
  * cleanest and brightest.
  *
+ * Anodised aluminium is a satin etch over the faint lines of its extrusion.
  * Asphalt is crushed stone bedded in dark binder. Bark stands in long
  * fibrous ridges between deep furrows. Brushed metal is
  * streaked along its length. Cast metal is finely pitted from its sand
  * mould. Glazed ceramic is nearly flat under a net of hairline crazing.
  * Cloth is a plain weave of round threads. Concrete is mottled and pitted
- * with air holes. Grass is a thatch of blades leaning every way, thicker in
- * clumps. A knurl is a grid of small pyramids for a thumb to grip. A
- * leaf's veins sweep from its midrib across a mesh of smaller cells. Paint
- * has a faint orange peel, soft blotches of grime and scuffs. Planks are
+ * with air holes. Cork is pressed granules with dark walls and open pits.
+ * Felt is matted fibres lying every way, with no weave. Foam is expanded
+ * beads pressed together, creased where they meet. Grass is a thatch of
+ * blades leaning every way, thicker in clumps. A knurl is a grid of small
+ * pyramids for a thumb to grip. A leaf's veins sweep from its midrib across
+ * a mesh of smaller cells. Machined metal carries the fine cusps a lathe
+ * tool leaves around a turned part. Paint has a faint orange peel, soft
+ * blotches of grime and scuffs. Paper is a felt of fibres with a fine tooth
+ * and a cloudy formation. Planks are
  * boards of sawn wood laid side by side, each from its own stretch of the
  * tree and of its own tone, with a groove where two meet. Plastic is
- * nearly even, moulded with a fine pebble. Cast resin is flat and dark
- * under pale specks of its filler. Rubber is finely dimpled. Sand lies in
- * soft ripples the wind combed, grain on grain. Slate breaks in flat beds
- * with sharp steps between them. Snow drifts under a fine crust. Soil is
- * clods and crumbs with a pale pebble here and there. Stone is craggy and
- * cracked. Living tissue is a mosaic of domed cells. Wood runs in long pores
- * across darker growth rings. Hide is the thick skin of a sea cow, a whale
- * or a tapir: a net of fine creases round small plates, pitted with pores.
- * Scales overlap in staggered rows, each standing proud at its free edge.
- * Mucosa is wet living lining, softly folded and threaded with fine vessels.
- * Sand lies in ripples the water left, grain by grain. Cytoplasm is the
- * inside of one living cell seen through its membrane: clouded, and
- * speckled with granules.
+ * nearly even, moulded with a fine pebble. Polished metal is a mirror
+ * crossed by hairline scratches and dulled by smudges. Cast resin is flat
+ * and dark under pale specks of its filler. Rubber is finely dimpled. Sand
+ * lies in soft ripples the wind combed, grain on grain. Slate breaks in flat
+ * beds with sharp steps between them. Snow drifts under a fine crust. Soil
+ * is clods and crumbs with a pale pebble here and there. Stone is craggy and
+ * cracked. Living tissue is a mosaic of domed cells. A winding is round wire
+ * laid turn beside turn. Wood runs in long pores across the dark late wood
+ * of growth rings, over broad bands of heart and sap wood. Hide is the thick
+ * skin of a sea cow, a whale or a tapir: a net of fine creases round small
+ * plates, pitted with pores. Scales overlap in staggered rows, each standing
+ * proud at its free edge. Mucosa is wet living lining, softly folded and
+ * threaded with fine vessels. Sand lies in ripples the water left, grain by
+ * grain. Cytoplasm is the inside of one living cell seen through its
+ * membrane: clouded, and speckled with granules.
  */
 const PATTERNS: Record<
   Surface,
   (x: number, y: number) => { readonly height: number; readonly shade: number }
 > = {
+  anodised: anodisedAt,
   asphalt: (x, y) => {
     const stones = cellsAt(x, y, 44, 44, 163);
     const stone = held(1.25 - stones.nearest * 2.6);
@@ -189,22 +203,8 @@ const PATTERNS: Record<
       shade: 0.12 + 0.5 * ridge + 0.18 * fibres + 0.2 * flakes,
     };
   },
-  brushed: (x, y) => {
-    const streaks = fractalAt(x, y, 3, 96, 3, 2);
-    return {
-      height: streaks,
-      shade: 0.55 + 0.3 * streaks + 0.15 * fractalAt(x, y, 4, 4, 5, 3),
-    };
-  },
-  cast: (x, y) => {
-    const grain = fractalAt(x, y, 56, 56, 127, 3);
-    const pores = cellsAt(x, y, 36, 36, 131);
-    const pore = pores.owner < 0.3 ? held(1 - pores.nearest * 3) : 0;
-    return {
-      height: 0.25 + 0.75 * grain - 0.5 * pore,
-      shade: 0.6 + 0.4 * fractalAt(x, y, 8, 8, 137, 3) - 0.3 * pore,
-    };
-  },
+  brushed: brushedAt,
+  cast: castAt,
   ceramic: (x, y) => {
     const sway = 0.06 * (fractalAt(x, y, 4, 4, 105, 2) - 0.5);
     const craze = cellsAt(x + sway, y - sway, 6, 6, 103);
@@ -241,6 +241,9 @@ const PATTERNS: Record<
       shade: 0.45 + 0.55 * fractalAt(x, y, 5, 5, 57) - 0.3 * hole,
     };
   },
+  cork: corkAt,
+  felt: feltAt,
+  foam: foamAt,
   grass: (x, y) => {
     const clump = (seed: number) =>
       0.55 + 0.9 * (fractalAt(x, y, 9, 9, seed, 2) - 0.5);
@@ -260,10 +263,7 @@ const PATTERNS: Record<
       shade: 0.15 + 0.3 * thatch + 0.6 * blades,
     };
   },
-  knurl: (x, y) => {
-    const peak = 1 - Math.max(fromStripe(x + y, 24), fromStripe(x - y, 24));
-    return { height: peak, shade: 0.55 + 0.45 * peak };
-  },
+  knurl: knurlAt,
   leaf: (x, y) => {
     const side = Math.abs(y - 0.5);
     const lateral = held(
@@ -283,6 +283,7 @@ const PATTERNS: Record<
         0.2 * (fractalAt(x, y, 6, 6, 113, 3) - 0.5),
     };
   },
+  machined: machinedAt,
   paint: (x, y) => ({
     height: fractalAt(x, y, 40, 40, 19, 2),
     shade:
@@ -290,24 +291,13 @@ const PATTERNS: Record<
       0.7 * fractalAt(x, y, 4, 4, 11) ** 3 -
       0.3 * fractalAt(x, y, 32, 32, 17) ** 4,
   }),
-  planks: (x, y) => {
-    const across = y * BOARDS;
-    const board = Math.floor(across);
-    const within = across - board;
-    const flat = held(Math.min(within, 1 - within) / GROOVE);
-    const sawn = woodAt(x + 0.37 * board, y + 0.29 * board);
-    return {
-      height: (0.88 + 0.12 * sawn.height) * flat ** 0.5,
-      shade:
-        (0.5 + 0.5 * sawn.shade) *
-        (1 - BOARD_TONES * chanceAt(board, 0, 151)) *
-        (0.35 + 0.65 * flat),
-    };
-  },
+  paper: paperAt,
+  planks: (x, y) => planksAt(x, y, BOARDS),
   plastic: (x, y) => ({
     height: fractalAt(x, y, 96, 96, 23, 1),
     shade: 0.8 + 0.2 * fractalAt(x, y, 16, 16, 27),
   }),
+  polished: polishedAt,
   resin: (x, y) => {
     const specks = cellsAt(x, y, 64, 64, 197);
     const speck = specks.owner < 0.12 ? held(1 - specks.nearest * 3.6) : 0;
@@ -381,6 +371,7 @@ const PATTERNS: Record<
       shade: 0.5 + 0.3 * body + 0.2 * cells.owner,
     };
   },
+  winding: windingAt,
   wood: woodAt,
   hide: (x, y) => {
     const sway = 0.05 * (fractalAt(x, y, 5, 5, 157, 2) - 0.5);
