@@ -190,15 +190,15 @@ export function collateralForms(detail: number): readonly Form[] {
         [
           [-0.02, 0, 0.128, 0],
           [-0.005, 0, 0.138, 0.03],
-          [0.07, 0, 0.145, 0.026],
-          [0.13, 0, 0.143, 0.024],
-          [0.2, 0.002, 0.122, 0.02],
+          [0.07, 0, 0.145, 0.04],
+          [0.13, 0, 0.143, 0.044],
+          [0.2, 0.002, 0.122, 0.034],
           [0.225, 0.002, 0.112, 0],
         ] as const,
         ([x, y, z, tall]): Station => ({
           centre: [x, y, z],
           tall,
-          wide: tall === 0 ? 0 : 0.008,
+          wide: tall === 0 ? 0 : 0.006,
         })
       ),
       up: [0, 1, 0],
@@ -255,7 +255,7 @@ export function bellyForms(detail: number): readonly Form[] {
       lump: 0.07,
       paint: (along, around, color) => {
         const fascicle = fractalAt(along, around, 2, 30, 103, 3);
-        const end = Math.min(1, (1 - along) / 0.16);
+        const end = Math.min(1, (1 - along) / 0.22);
         color
           .copy(DARK)
           .lerp(RED, 0.5 * fascicle)
@@ -273,7 +273,12 @@ export function bellyForms(detail: number): readonly Form[] {
           step === 0 || step === 14
             ? 0
             : 0.16 + 0.84 * Math.sin(Math.PI * (0.22 + 0.78 * along)) ** 0.8;
-        return { centre: [along, 0, 0], tall: girth, wide: girth };
+        // The first section sits just inside the sawn face, so the cut is flat.
+        return {
+          centre: [step === 1 ? 0.006 : along, 0, 0],
+          tall: girth,
+          wide: girth,
+        };
       }),
       up: [0, 1, 0],
     }),

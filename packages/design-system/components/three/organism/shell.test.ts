@@ -51,14 +51,18 @@ describe("shellBody", () => {
     const plate = shellBody(PLATE);
 
     expect(placeOf(plate, 4, 0)).toEqual(placeOf(plate, 4, 16));
-    expect(Array.from(plate.normal.subarray(4 * 17 * 3, 4 * 17 * 3 + 3))).toEqual(
-      Array.from(plate.normal.subarray((4 * 17 + 16) * 3, (4 * 17 + 16) * 3 + 3))
+    expect(
+      Array.from(plate.normal.subarray(4 * 17 * 3, 4 * 17 * 3 + 3))
+    ).toEqual(
+      Array.from(
+        plate.normal.subarray((4 * 17 + 16) * 3, (4 * 17 + 16) * 3 + 3)
+      )
     );
     const [firstX, , firstZ] = placeOf(plate, 0, 4);
     const [backX, , backZ] = placeOf(plate, 0, 12);
     expect(firstX).toBeCloseTo(Number(backX));
     expect(firstZ).toBeCloseTo(Number(backZ));
-    expect(plate.color[(4 * 17) * 3]).toBeCloseTo(0.5);
+    expect(plate.color[4 * 17 * 3]).toBeCloseTo(0.5);
   });
 
   it("shifts each side edge by its own serration and swells with noise", () => {

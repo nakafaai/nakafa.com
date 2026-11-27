@@ -78,10 +78,7 @@ export function shellBody(shell: Shell): Form {
         ? column / shell.columns
         : (loop - column) / shell.columns;
       const longitude =
-        shell.across[0] +
-        across * wide +
-        first * (1 - across) +
-        last * across;
+        shell.across[0] + across * wide + first * (1 - across) + last * across;
       const kept = rounded(across, rimAcross) * rounded(along, rimAlong);
       const side = (outer ? 1 : -1) * kept;
       const swell =

@@ -1,6 +1,6 @@
 import { useFrame } from "@react-three/fiber";
-import { Callout } from "@repo/design-system/components/contents/biology/joint/callout";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
+import { Callout } from "@repo/design-system/components/contents/biology/joint/callout";
 import type {
   JointKind,
   JointPart,
@@ -192,7 +192,7 @@ const NAMES: Record<
 const SCALE = 3.5;
 
 /** How thick a tendon is drawn. */
-const CORD = 0.014;
+const CORD = 0.019;
 
 /** The two places a frame works out for a muscle, reused so a frame allocates nothing. */
 const grip = new Vector3();
@@ -291,7 +291,7 @@ export function JointScene({
       junction,
       bulge(muscle.girth, muscle.rest, muscle.origin.distanceTo(junction))
     );
-    mark.current.position.copy(junction);
+    mark.current.position.copy(junction).multiplyScalar(SCALE);
   });
 
   if (joint === "suture") {
@@ -299,8 +299,8 @@ export function JointScene({
       <group>
         <SimulationTicker running={playing} />
         <JointCamera distance={DISTANCE[joint]} />
-        <group rotation={[-0.5, 0.42, 0.12]} scale={SCALE}>
-          <group position={[0, 0, -1.2]}>
+        <group rotation={[-0.5, 0.42, 0.12]}>
+          <group position={[0, 0, -1.2 * SCALE]} scale={SCALE}>
             <Body shape={vaultForms}>
               <BoneSkin />
             </Body>
@@ -309,13 +309,19 @@ export function JointScene({
             </Body>
           </group>
           <Callout
-            at={[-0.4, 0.44, 0]}
+            at={[-0.4, 0.4, 0]}
+            scale={SCALE}
             side="bottom"
             target={[-0.36, 0.26, -0.06]}
           >
             {parts.bone}
           </Callout>
-          <Callout at={[0.1, -0.46, 0]} side="top" target={[0, -0.28, 0]}>
+          <Callout
+            at={[0.1, -0.4, 0]}
+            scale={SCALE}
+            side="top"
+            target={[0, -0.28, 0]}
+          >
             {parts.ligament}
           </Callout>
         </group>
@@ -328,26 +334,29 @@ export function JointScene({
       <group>
         <SimulationTicker running={playing} />
         <JointCamera distance={DISTANCE[joint]} />
-        <group rotation={[0.12, 0.65, 0]} scale={SCALE}>
-          <group position={[0, -0.165, 0]}>
-            <Body shape={vertebraForms}>
-              <BoneSkin />
-            </Body>
-          </group>
-          <group ref={pad}>
-            <Body shape={discForms}>
-              <CordSkin />
-            </Body>
-          </group>
-          <group ref={moving}>
-            <group position={[0, 0.165, 0]}>
+        <group rotation={[0.12, 0.65, 0]}>
+          <group scale={SCALE}>
+            <group position={[0, -0.165, 0]}>
               <Body shape={vertebraForms}>
                 <BoneSkin />
               </Body>
             </group>
+            <group ref={pad}>
+              <Body shape={discForms}>
+                <CordSkin />
+              </Body>
+            </group>
+            <group ref={moving}>
+              <group position={[0, 0.165, 0]}>
+                <Body shape={vertebraForms}>
+                  <BoneSkin />
+                </Body>
+              </group>
+            </group>
           </group>
           <Callout
             at={[-0.26, 0.36, 0.2]}
+            scale={SCALE}
             side="bottom"
             target={[-0.12, 0.2, 0.13]}
           >
@@ -355,6 +364,7 @@ export function JointScene({
           </Callout>
           <Callout
             at={[0.3, -0.36, 0.2]}
+            scale={SCALE}
             side="top"
             target={[0.1, -0.02, 0.15]}
           >
@@ -370,47 +380,49 @@ export function JointScene({
   const names = NAMES[joint];
 
   return (
-    <group scale={SCALE}>
+    <group>
       <SimulationTicker running={playing} />
       <JointCamera distance={DISTANCE[joint]} />
-      <Body shape={hinge ? humerusForms : scapulaForms}>
-        <BoneSkin />
-      </Body>
-      <Body shape={soft.cartilage}>
-        <CartilageSkin />
-      </Body>
-      <Body shape={soft.capsule}>
-        <CapsuleSkin />
-      </Body>
-      <Body cast={false} shape={soft.fluid}>
-        <FluidSkin />
-      </Body>
-      <CameraBounds
-        motion={{ rotation: hinge ? "z" : "all" }}
-        objectRef={moving}
-      >
-        <Body shape={hinge ? forearmForms : ballForms}>
+      <group scale={SCALE}>
+        <Body shape={hinge ? humerusForms : scapulaForms}>
           <BoneSkin />
         </Body>
-        {hinge ? (
-          <Body shape={collateralForms}>
+        <Body shape={soft.cartilage}>
+          <CartilageSkin />
+        </Body>
+        <Body shape={soft.capsule}>
+          <CapsuleSkin />
+        </Body>
+        <Body cast={false} shape={soft.fluid}>
+          <FluidSkin />
+        </Body>
+        <CameraBounds
+          motion={{ rotation: hinge ? "z" : "all" }}
+          objectRef={moving}
+        >
+          <Body shape={hinge ? forearmForms : ballForms}>
+            <BoneSkin />
+          </Body>
+          {hinge ? (
+            <Body shape={collateralForms}>
+              <CordSkin />
+            </Body>
+          ) : (
+            <Body shape={headCartilage}>
+              <CartilageSkin />
+            </Body>
+          )}
+        </CameraBounds>
+        <CameraBounds exclude objectRef={tendon}>
+          <Body shape={tendonForms}>
             <CordSkin />
           </Body>
-        ) : (
-          <Body shape={headCartilage}>
-            <CartilageSkin />
+        </CameraBounds>
+        <CameraBounds exclude objectRef={belly}>
+          <Body shape={bellyForms}>
+            <MuscleSkin />
           </Body>
-        )}
-      </CameraBounds>
-      <group ref={tendon}>
-        <Body shape={tendonForms}>
-          <CordSkin />
-        </Body>
-      </group>
-      <group ref={belly}>
-        <Body shape={bellyForms}>
-          <MuscleSkin />
-        </Body>
+        </CameraBounds>
       </group>
       <group ref={mark}>
         <ThreeLabel
@@ -418,8 +430,8 @@ export function JointScene({
           anchorY="bottom"
           color={ink}
           fontSize="compact"
-          gap={0.04}
-          position={[-0.02, 0.07, 0]}
+          gap={0.1}
+          position={[-0.07, 0.25, 0]}
         >
           {parts.tendon}
         </ThreeLabel>
@@ -428,6 +440,7 @@ export function JointScene({
         <Callout
           at={names[part].at}
           key={part}
+          scale={SCALE}
           side={names[part].side}
           target={names[part].target}
         >
