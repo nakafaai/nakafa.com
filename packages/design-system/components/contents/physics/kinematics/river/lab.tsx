@@ -277,7 +277,7 @@ function RiverScene({
         <ThreeLabel
           color={PLOT_COLORS.teal}
           fontSize="compact"
-          outlineColor={getColor("SLATE", 950)}
+          outlineColor={getColor("SLATE", 50)}
           outlineWidth={0.05}
           position={[own[0] * 0.5, 0.5, own[2] * 0.5]}
         >
@@ -292,7 +292,7 @@ function RiverScene({
         <ThreeLabel
           color={PLOT_COLORS.amber}
           fontSize="compact"
-          outlineColor={getColor("SLATE", 950)}
+          outlineColor={getColor("SLATE", 50)}
           outlineWidth={0.05}
           position={[(own[0] + sum[0]) * 0.5, 0.5, own[2]]}
         >
@@ -307,7 +307,7 @@ function RiverScene({
         <ThreeLabel
           color={PLOT_COLORS.violet}
           fontSize="compact"
-          outlineColor={getColor("SLATE", 950)}
+          outlineColor={getColor("SLATE", 50)}
           outlineWidth={0.05}
           position={[sum[0] * 0.5, -0.5, sum[2] * 0.5]}
         >

@@ -1,5 +1,4 @@
 import {
-  dashed,
   fade,
   gradientRect,
   mix,
@@ -27,13 +26,13 @@ const GraphSchema = Schema.Struct({
 export type Graph = typeof GraphSchema.Type;
 
 /** The canvas x of a moment on the graph. */
-export function graphX(graph: Graph, time: number) {
+function graphX(graph: Graph, time: number) {
   const [start, end] = graph.time;
   return graph.box.x + ((time - start) / (end - start)) * graph.box.width;
 }
 
 /** The canvas y of a value on the graph, which grows upward. */
-export function graphY(graph: Graph, value: number) {
+function graphY(graph: Graph, value: number) {
   const [low, high] = graph.value;
   return (
     graph.box.y +
@@ -119,32 +118,6 @@ export function paintCurve(
   }
   sketch.endShape();
   sketch.pop();
-}
-
-/**
- * Draws a straight line through a point with a slope, across the whole time
- * range, dashed: a tangent, or a secant extended past its two points.
- */
-export function paintSlopeLine(
-  sketch: p5,
-  graph: Graph,
-  through: { readonly time: number; readonly value: number },
-  slope: number,
-  style: { readonly color: string; readonly weight: number }
-) {
-  const [start, end] = graph.time;
-  dashed(
-    sketch,
-    {
-      x: graphX(graph, start),
-      y: graphY(graph, through.value + slope * (start - through.time)),
-    },
-    {
-      x: graphX(graph, end),
-      y: graphY(graph, through.value + slope * (end - through.time)),
-    },
-    { color: style.color, dash: 6, weight: style.weight }
-  );
 }
 
 /** A dot on the graph at one moment, ringed so it reads over a curve. */

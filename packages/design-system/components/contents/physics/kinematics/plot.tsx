@@ -14,6 +14,20 @@ import { Array as Arr, Option, Schema } from "effect";
 import type { ReactNode } from "react";
 import { useFormatter } from "use-intl";
 
+/**
+ * One row of the graph: a moment, and the height of whichever series stands
+ * there. The two markers stand at `y`, which the vertical axis reads.
+ */
+const RowSchema = Schema.Struct({
+  curve: Schema.optional(Schema.Finite),
+  end: Schema.optional(Schema.Finite),
+  secant: Schema.optional(Schema.Finite),
+  start: Schema.optional(Schema.Finite),
+  tangent: Schema.optional(Schema.Finite),
+  x: Schema.Finite,
+  y: Schema.optional(Schema.Finite),
+});
+
 /** A point of the graph: a moment and the plotted quantity then. */
 const PointSchema = Schema.Struct({ x: Schema.Finite, y: Schema.Finite });
 
@@ -98,8 +112,8 @@ export function MotionPlot({
   };
   const across = axisTicks(x.domain[0], x.domain[1]);
   const up = axisTicks(y.domain[0], y.domain[1]);
-  const starts = [start.point];
-  const ends = [end.point];
+  const starts: (typeof RowSchema.Type)[] = [start.point];
+  const ends: (typeof RowSchema.Type)[] = [end.point];
 
   return (
     <div className="flex flex-col gap-1 p-(--card-spacing) pb-0">

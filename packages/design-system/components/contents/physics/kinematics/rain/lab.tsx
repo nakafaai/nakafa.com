@@ -261,7 +261,7 @@ function RainScene({
           color={PLOT_COLORS.violet}
           fontSize="compact"
           gap={0.12}
-          outlineColor={getColor("SLATE", 950)}
+          outlineColor={getColor("SLATE", 50)}
           outlineWidth={0.05}
           position={[0, down[1] / 2, 0]}
         >
@@ -280,7 +280,7 @@ function RainScene({
               color={PLOT_COLORS.amber}
               fontSize="compact"
               gap={0.12}
-              outlineColor={getColor("SLATE", 950)}
+              outlineColor={getColor("SLATE", 50)}
               outlineWidth={0.05}
               position={[back[0] / 2, back[1], 0]}
             >
@@ -298,7 +298,7 @@ function RainScene({
               color={PLOT_COLORS.fuchsia}
               fontSize="compact"
               gap={0.12}
-              outlineColor={getColor("SLATE", 950)}
+              outlineColor={getColor("SLATE", 50)}
               outlineWidth={0.05}
               position={[back[0] / 2, back[1] / 2, 0]}
             >

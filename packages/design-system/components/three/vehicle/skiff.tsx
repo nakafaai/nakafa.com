@@ -18,7 +18,7 @@ import {
 import { Strake } from "@repo/design-system/components/three/vessel/strake";
 import { BOAT_COLORS } from "@repo/design-system/lib/material/boat";
 import { Array as Arr } from "effect";
-import type { Ref } from "react";
+import type { ReactNode, Ref } from "react";
 import { useEffect, useImperativeHandle, useMemo, useRef } from "react";
 import type { Group } from "three";
 import { BackSide, Shape, ShapeGeometry } from "three";
@@ -28,7 +28,7 @@ import { BackSide, Shape, ShapeGeometry } from "three";
  * on the keel amidships: 4.3 m long, 1.62 m in beam and 0.62 m deep, drawing
  * 0.2 m, as a river ferryman's or a fisherman's boat measures.
  */
-export const SKIFF = {
+const SKIFF = {
   beam: 1.62,
   depth: 0.62,
   draught: 0.2,
@@ -146,8 +146,11 @@ function Boards() {
   );
 }
 
-/** The hull: antifouled below the waterline, painted above it, with its lighter inside. */
-function Shell({ color }: { readonly color: string }) {
+/**
+ * The hull: antifouled below the waterline, with its lighter inside, and
+ * above the waterline whatever paint the boat's owner gives its topsides.
+ */
+function Shell({ children }: { readonly children: ReactNode }) {
   const parts = useMemo(
     () => ({
       bottom: hullGeometry(LINES, 0, SKIFF.draught + 0.03),
@@ -177,14 +180,7 @@ function Shell({ color }: { readonly color: string }) {
         />
       </mesh>
       <mesh castShadow geometry={parts.topside} receiveShadow>
-        <SurfaceMaterial
-          attach="material-0"
-          coat={0.6}
-          color={color}
-          repeat={[1.2, 1.2]}
-          roughness={0.42}
-          surface="paint"
-        />
+        {children}
       </mesh>
       <mesh geometry={parts.inside} position={[0, SKIN, 0]} receiveShadow>
         <SurfaceMaterial
@@ -248,7 +244,16 @@ export function Skiff({
         <Wake ref={wake} />
       </group>
       <group ref={hull}>
-        <Shell color={color} />
+        <Shell>
+          <SurfaceMaterial
+            attach="material-0"
+            coat={0.6}
+            color={color}
+            repeat={[1.2, 1.2]}
+            roughness={0.42}
+            surface="paint"
+          />
+        </Shell>
         <Strake
           color={BOAT_COLORS.gunwale}
           points={gunwale}

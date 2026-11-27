@@ -89,16 +89,7 @@ const GRIP: readonly Place[] = [
 ];
 
 /** The turned parts of the engine, each an outline stretched fore and aft. */
-const TURNED: readonly {
-  readonly coat: number;
-  readonly color: string;
-  readonly key: string;
-  readonly outline: Outline;
-  readonly position: Place;
-  readonly rotation: Place;
-  readonly scale: Place;
-  readonly surface: Surface;
-}[] = [
+const TURNED = [
   {
     coat: 0.8,
     color: BOAT_COLORS.cowling,
@@ -149,7 +140,7 @@ const TURNED: readonly {
     scale: [1, 1, 1],
     surface: "paint",
   },
-];
+] as const;
 
 /** A solid of revolution from an outline of half-widths at heights. */
 function Turned({

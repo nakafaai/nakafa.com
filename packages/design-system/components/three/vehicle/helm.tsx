@@ -78,14 +78,7 @@ const PEAK: Outline = [
 ];
 
 /** The parts of the body that are turned: each an outline, flattened front to back. */
-const TURNED: readonly {
-  readonly color: string;
-  readonly key: string;
-  readonly outline: Outline;
-  readonly position: Place;
-  readonly scale: Place;
-  readonly surface: Surface;
-}[] = [
+const TURNED = [
   {
     color: BOAT_COLORS.shirt,
     key: "trunk",
@@ -126,7 +119,7 @@ const TURNED: readonly {
     scale: [1.15, 1, 0.82],
     surface: "cloth",
   },
-];
+] as const;
 
 /** The two legs: a thigh along the seat, a shin down to the boards and a shoe on them. */
 const LEGS = Arr.flatMap([1, -1], (side) => [
@@ -218,7 +211,7 @@ const ARMS = [
 ] satisfies readonly LimbProps[];
 
 /** Where the hand on the tiller closes, in the helm's own frame, in metres. */
-export const HELM_GRIP: Place = [-0.07, 0.16, -0.57];
+const HELM_GRIP: Place = [-0.07, 0.16, -0.57];
 
 interface LimbProps {
   readonly color: string;

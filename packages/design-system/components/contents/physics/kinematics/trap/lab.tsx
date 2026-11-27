@@ -292,7 +292,7 @@ function TrapScene({ gap }: { readonly gap: TrapGap }) {
       <ThreeLabel
         color={PLOT_COLORS.amber}
         fontSize="compact"
-        outlineColor={getColor("SLATE", 950)}
+        outlineColor={getColor("SLATE", 50)}
         outlineWidth={0.05}
         position={[TRAP_CENTRE, 0.3, 1.4]}
       >

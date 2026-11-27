@@ -120,7 +120,7 @@ export function MarkerFlag({
       <ThreeLabel
         color={color}
         fontSize="compact"
-        outlineColor={getColor("SLATE", 950)}
+        outlineColor={getColor("SLATE", 50)}
         outlineWidth={0.05}
         position={[0, POLE + 0.55, 0]}
       >

@@ -3,19 +3,10 @@ import {
   froudeAt,
   heaveAt,
   rollAt,
-  spinAt,
   trimAt,
   WAKE_ANGLE,
-  wakeLength,
   wakeStrength,
 } from "@repo/design-system/components/three/vehicle/motion";
-
-describe("spinAt", () => {
-  it("turns a wheel once for each circumference it rolls, and back in reverse", () => {
-    expect(spinAt(2 * Math.PI * 0.34, 0.34)).toBeCloseTo(2 * Math.PI, 9);
-    expect(spinAt(-0.34, 0.34)).toBeCloseTo(-1, 9);
-  });
-});
 
 describe("froudeAt", () => {
   it("compares the speed with the wave as long as the hull, whichever way it moves", () => {
@@ -37,11 +28,6 @@ describe("trimAt", () => {
 describe("wake", () => {
   it("fills Kelvin's wedge of asin(1/3)", () => {
     expect((WAKE_ANGLE * 180) / Math.PI).toBeCloseTo(19.47, 2);
-  });
-
-  it("follows with the wave that travels at the hull's speed", () => {
-    expect(wakeLength(4)).toBeCloseTo((2 * Math.PI * 16) / 9.81, 9);
-    expect(wakeLength(0)).toBe(0);
   });
 
   it("shows nothing at rest and grows toward a full wake", () => {
