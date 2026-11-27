@@ -321,7 +321,7 @@ export function ShootApexCutaway({
   const horns = usePrimordia();
 
   return (
-    <group position={[0, 1.42, 0]} rotation={[0, 0, Math.PI]}>
+    <group position={[0, SHOOT.length, 0]} rotation={[0, 0, Math.PI]}>
       <Skin color={FLORA_COLORS.shootSkin} section={SHOOT} />
       <Cells cells={cells} depth={DEPTH} lit={lit} tones={SHOOT_TONES} />
       <mesh castShadow geometry={horns} receiveShadow scale={[1, 1, 0.55]}>

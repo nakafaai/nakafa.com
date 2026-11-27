@@ -130,7 +130,7 @@ function PrimaryApexView() {
       <CameraBounds bounds={ORGAN_ROOM}>
         <ShootApexCutaway lit={lit} />
       </CameraBounds>
-      <Leader anchorY="bottom" at={[0.2, 1.6, 0]} to={[0.04, 1.32, FACE]}>
+      <Leader anchorY="bottom" at={[0.2, 1.5, 0]} to={[0.04, 1.22, FACE]}>
         <span>{parts.apicalMeristem}</span>
       </Leader>
       <Leader anchorX="right" at={[-0.36, 0.7, 0]} to={[-0.12, 0.7, FACE]}>
