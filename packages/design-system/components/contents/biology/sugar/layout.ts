@@ -45,6 +45,9 @@ const OUTWARD = 2;
 const BELOW = 1.4;
 const NEAR = 2.4;
 
+/** How deep the box the camera frames a pair in is, in angstrom each way: shallower than the sugars, so they fill the frame. */
+const DEPTH = 2;
+
 /** The pose that lays the line from `from` to `to` along x, with the first ring's face leaning toward the viewer. */
 function poseOf(from: Point, to: Point) {
   const along = unit(sub(to, from));
@@ -130,7 +133,7 @@ export function pairLayout(sugar: Sugar) {
   const bounds = {
     x: { max: box.x.max + GAP / 2, min: box.x.min - GAP / 2 },
     y: { max: box.y.max, min: rest[1] - REACH },
-    z: box.z,
+    z: { max: DEPTH, min: -DEPTH },
   };
   const { place, size } = standOf(bounds.x.max - bounds.x.min);
   const name = (center: Point, side: 1 | -1): Point =>
