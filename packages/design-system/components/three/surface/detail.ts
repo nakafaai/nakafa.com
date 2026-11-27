@@ -28,13 +28,17 @@ export const SurfaceSchema = Schema.Literals([
   "plastic",
   "resin",
   "rubber",
-  "sand",
   "slate",
   "snow",
   "soil",
   "stone",
   "tissue",
   "wood",
+  "hide",
+  "scales",
+  "mucosa",
+  "sand",
+  "cytoplasm",
 ]);
 export type Surface = typeof SurfaceSchema.Type;
 
@@ -66,13 +70,17 @@ const LOOKS: Record<Surface, typeof LookSchema.Type> = {
   plastic: { dip: 0.06, relief: 0.05, rough: 0.42, wear: 0.12 },
   resin: { dip: 0.2, relief: 0.08, rough: 0.62, wear: 0.25 },
   rubber: { dip: 0.14, relief: 0.2, rough: 0.86, wear: 0.08 },
-  sand: { dip: 0.3, relief: 0.32, rough: 0.92, wear: 0.06 },
   slate: { dip: 0.3, relief: 0.5, rough: 0.7, wear: 0.16 },
   snow: { dip: 0.12, relief: 0.45, rough: 0.6, wear: 0.3 },
   soil: { dip: 0.55, relief: 0.85, rough: 0.94, wear: 0.05 },
   stone: { dip: 0.42, relief: 0.9, rough: 0.9, wear: 0.08 },
   tissue: { dip: 0.3, relief: 0.5, rough: 0.55, wear: 0.2 },
   wood: { dip: 0.4, relief: 0.16, rough: 0.6, wear: 0.18 },
+  hide: { dip: 0.34, relief: 0.55, rough: 0.56, wear: 0.24 },
+  scales: { dip: 0.3, relief: 0.5, rough: 0.24, wear: 0.2 },
+  mucosa: { dip: 0.26, relief: 0.32, rough: 0.2, wear: 0.16 },
+  sand: { dip: 0.3, relief: 0.6, rough: 0.9, wear: 0.06 },
+  cytoplasm: { dip: 0.16, relief: 0.16, rough: 0.28, wear: 0.12 },
 };
 
 /** How tall the deepest relief stands, in tile widths. */
@@ -145,7 +153,13 @@ function woodAt(x: number, y: number) {
  * with sharp steps between them. Snow drifts under a fine crust. Soil is
  * clods and crumbs with a pale pebble here and there. Stone is craggy and
  * cracked. Living tissue is a mosaic of domed cells. Wood runs in long pores
- * across darker growth rings.
+ * across darker growth rings. Hide is the thick skin of a sea cow, a whale
+ * or a tapir: a net of fine creases round small plates, pitted with pores.
+ * Scales overlap in staggered rows, each standing proud at its free edge.
+ * Mucosa is wet living lining, softly folded and threaded with fine vessels.
+ * Sand lies in ripples the water left, grain by grain. Cytoplasm is the
+ * inside of one living cell seen through its membrane: clouded, and
+ * speckled with granules.
  */
 const PATTERNS: Record<
   Surface,
@@ -310,15 +324,6 @@ const PATTERNS: Record<
       shade: 0.6 + 0.4 * fractalAt(x, y, 48, 48, 33, 3),
     };
   },
-  sand: (x, y) => {
-    const drift = fractalAt(x, y, 3, 4, 229, 2);
-    const ripple = 0.5 + 0.5 * Math.sin((y * 9 + 1.6 * drift) * 2 * Math.PI);
-    const grains = fractalAt(x, y, 128, 128, 233, 2);
-    return {
-      height: 0.2 + 0.5 * ripple + 0.3 * grains,
-      shade: 0.5 + 0.25 * ripple + 0.25 * grains,
-    };
-  },
   slate: (x, y) => {
     const bed = warpedAt(x, y, 3, 3, 89, 0.2) * 6;
     const tread = Math.floor(bed);
@@ -377,6 +382,66 @@ const PATTERNS: Record<
     };
   },
   wood: woodAt,
+  hide: (x, y) => {
+    const sway = 0.05 * (fractalAt(x, y, 5, 5, 157, 2) - 0.5);
+    const plates = cellsAt(x + sway, y - sway, 22, 14, 163);
+    const whole = held((plates.second - plates.nearest) * 5);
+    const pores = cellsAt(x, y, 72, 72, 167);
+    const pore = pores.owner < 0.25 ? held(1 - pores.nearest * 3.4) : 0;
+    const folds = ridgedAt(x, y, 3, 9, 173, 2);
+    return {
+      height: 0.2 + 0.5 * whole ** 0.6 + 0.3 * folds - 0.35 * pore,
+      shade:
+        0.45 + 0.3 * whole + 0.25 * fractalAt(x, y, 6, 6, 179, 3) - 0.2 * pore,
+    };
+  },
+  scales: (x, y) => {
+    const row = Math.floor(y * 28);
+    const within = y * 28 - row;
+    const across = x * 28 + (row % 2) * 0.5;
+    const off = Math.abs(across - Math.floor(across) - 0.5) * 2;
+    const edge = held((1 - off * off - within) * 6);
+    const lift = within * edge;
+    return {
+      height: 0.15 + 0.85 * lift,
+      shade:
+        0.5 +
+        0.35 * edge * (0.4 + 0.6 * within) +
+        0.15 * fractalAt(x, y, 9, 9, 181, 2),
+    };
+  },
+  mucosa: (x, y) => {
+    const folds = fractalAt(x, y, 5, 7, 191, 3);
+    const vessels = held(ridgedAt(x, y, 6, 6, 193, 3) * 2.4 - 1.1);
+    return {
+      height:
+        0.3 +
+        0.45 * folds +
+        0.15 * fractalAt(x, y, 44, 44, 197, 2) +
+        0.1 * vessels,
+      shade: 0.72 + 0.28 * folds - 0.3 * vessels,
+    };
+  },
+  sand: (x, y) => {
+    const sway = 0.5 * (fractalAt(x, y, 3, 3, 199, 2) - 0.5);
+    const ripple = 0.5 + 0.5 * Math.sin((y * 9 + sway) * 2 * Math.PI);
+    const grains = cellsAt(x, y, 96, 96, 211);
+    const grain = held(1 - grains.nearest * 1.8);
+    return {
+      height: 0.55 * ripple ** 1.5 + 0.3 * grain + 0.15 * grains.owner,
+      shade: 0.5 + 0.25 * ripple + 0.25 * grains.owner,
+    };
+  },
+  cytoplasm: (x, y) => {
+    const cloud = fractalAt(x, y, 5, 5, 223, 3);
+    const granules = cellsAt(x, y, 54, 54, 227);
+    const granule =
+      granules.owner < 0.45 ? held(1 - granules.nearest * 2.6) : 0;
+    return {
+      height: 0.35 + 0.35 * cloud + 0.3 * granule,
+      shade: 0.74 + 0.26 * cloud - 0.22 * granule,
+    };
+  },
 };
 
 /**

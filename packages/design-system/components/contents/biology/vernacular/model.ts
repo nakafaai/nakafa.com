@@ -21,6 +21,7 @@ const SeaSpeciesSchema = Schema.Struct({
   id: SeaAnimalSchema,
   isFish: Schema.Boolean,
   scientific: Schema.String,
+  tag: Schema.Finite,
   x: Schema.Finite,
   y: Schema.Finite,
   z: Schema.Finite,
@@ -31,48 +32,54 @@ type SeaSpecies = typeof SeaSpeciesSchema.Type;
 /**
  * Cited marine species of Malaysian waters whose everyday names often mislead:
  * dugong and Bryde's whale are mammals, moon jellyfish and horned sea star are
- * invertebrates, and Indian mackerel is a true bony fish.
+ * invertebrates, and Indian mackerel is a true bony fish. Each has its place
+ * in the water, and `tag` is how far above it its name tag hangs.
  */
 const SEA_SPECIES: Readonly<Record<SeaAnimal, SeaSpecies>> = {
   dugong: {
     id: "dugong",
     isFish: false,
     scientific: "Dugong dugon",
-    x: -1.55,
-    y: 0.42,
-    z: 0.35,
+    tag: 0.24,
+    x: -0.85,
+    y: 0.36,
+    z: 0.45,
   },
   jellyfish: {
     id: "jellyfish",
     isFish: false,
     scientific: "Aurelia aurita",
-    x: 0.0,
-    y: 0.72,
-    z: 0.42,
+    tag: 0.17,
+    x: -0.1,
+    y: 0.5,
+    z: 0.6,
   },
   mackerel: {
     id: "mackerel",
     isFish: true,
     scientific: "Rastrelliger kanagurta",
-    x: 1.55,
-    y: 0.48,
-    z: 0.2,
+    tag: 0.2,
+    x: 0.9,
+    y: 0.8,
+    z: 0.1,
   },
   seaStar: {
     id: "seaStar",
     isFish: false,
     scientific: "Protoreaster nodosus",
-    x: 0.8,
+    tag: 0.2,
+    x: 0.6,
     y: 0.08,
-    z: 0.75,
+    z: 1.0,
   },
   whale: {
     id: "whale",
     isFish: false,
     scientific: "Balaenoptera edeni",
-    x: -0.65,
-    y: 0.78,
-    z: -0.55,
+    tag: 0.2,
+    x: -0.45,
+    y: 1.06,
+    z: -0.9,
   },
 };
 
