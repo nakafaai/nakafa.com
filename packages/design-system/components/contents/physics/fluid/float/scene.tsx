@@ -1,6 +1,5 @@
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { useOakGrain } from "@repo/design-system/components/contents/physics/bench/board";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
@@ -75,7 +74,6 @@ export function FloatingBlockScene({
         target={[0, 0.56, 0]}
         wide={[0.5, 1.35, 3.1]}
       />
-      <SeamlessBenchSurface />
       <group position={[0, rest, 0]} ref={block}>
         <RoundedBox
           args={[0.66, BLOCK, 0.5]}

@@ -354,17 +354,6 @@ export function SeaNameScene({
     <group>
       <SimulationTicker running={playing} />
       <SeaCamera />
-      <mesh
-        position={[0, -0.02, 0]}
-        receiveShadow
-        rotation={[-Math.PI / 2, 0, 0]}
-      >
-        <circleGeometry args={[3.4, 48]} />
-        <meshStandardMaterial
-          color={CLASSIFICATION_COLORS.seaSand}
-          roughness={0.92}
-        />
-      </mesh>
       <mesh position={[0, 1.28, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[3.35, 48]} />
         <meshPhysicalMaterial

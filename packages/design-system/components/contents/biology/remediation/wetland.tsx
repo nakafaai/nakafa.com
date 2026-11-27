@@ -5,10 +5,6 @@ import {
   createSoilTexture,
   FibrousRoots,
 } from "@repo/design-system/components/contents/biology/seedling";
-import {
-  useGround,
-  useHorizonFade,
-} from "@repo/design-system/components/three/stage/terrain";
 import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
 import { FOLIAGE_COLORS } from "@repo/design-system/lib/material/foliage";
 import { Array as Arr, Match } from "effect";
@@ -31,39 +27,6 @@ const HYACINTH_LEAVES = [
   { id: "hl4", yaw: 4.05 },
   { id: "hl5", yaw: 5.3 },
 ] as const;
-
-/** Seamless natural outdoor soil/wetland terrain fading smoothly into the horizon. */
-export function WetlandHorizonFloor({
-  isAquatic,
-}: {
-  readonly isAquatic: boolean;
-}) {
-  const texture = useGround(isAquatic ? "sand" : "soil", [22, 22]);
-  const horizonFade = useHorizonFade(2.2, 11.5);
-
-  return (
-    <mesh
-      position={[0, 0, 0]}
-      receiveShadow
-      renderOrder={-10}
-      rotation={[-Math.PI / 2, 0, 0]}
-      userData={{ treatAsOpaque: true }}
-    >
-      <circleGeometry args={[15, 96]} />
-      <meshStandardMaterial
-        aoMap={texture.patches}
-        aoMapIntensity={0.85}
-        bumpMap={texture.bump}
-        bumpScale={0.22}
-        depthWrite
-        map={texture.map}
-        ref={horizonFade}
-        roughness={0.92}
-        transparent
-      />
-    </mesh>
-  );
-}
 
 /** Layered geological soil horizons OR translucent wetland aquatic cutaway trough. */
 export function SubstrateCutaway({

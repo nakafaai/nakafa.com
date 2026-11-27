@@ -1,4 +1,4 @@
-import { grainAt } from "@repo/design-system/components/three/stage/grain";
+import { fractalAt } from "@repo/design-system/components/three/field/noise";
 import { Array as Arr, MutableHashMap, Option } from "effect";
 import { DataTexture, LinearMipmapLinearFilter, SRGBColorSpace } from "three";
 
@@ -68,7 +68,9 @@ export function paintSolar(columns: number, rows: number) {
     const x = (px % CELL) / CELL;
     const y = (py % CELL) / CELL;
     const { bare, tone } = toneAt(x, y, py % (CELL / 8) === 0);
-    const lit = bare ? 0.9 + 0.2 * grainAt(px / width, py / height, 8, 53) : 1;
+    const lit = bare
+      ? 0.9 + 0.2 * fractalAt(px / width, py / height, 8, 8, 53)
+      : 1;
     const at = pixel * 4;
     pixels[at] = tone[0] * lit;
     pixels[at + 1] = tone[1] * lit;

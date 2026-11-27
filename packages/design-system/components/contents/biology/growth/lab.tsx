@@ -134,7 +134,7 @@ export function PlantGrowthCurveLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.2} setting="lab">
+        <ScienceStage floor={0} ground="epoxy" reach={2.2} setting="lab">
           <Suspense fallback={null}>
             <PlantSpecimenScene
               lifeCycle={activeType}

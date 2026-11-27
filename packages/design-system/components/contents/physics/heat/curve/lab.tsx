@@ -89,7 +89,7 @@ export function HeatingCurveLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.6} setting="lab">
+        <ScienceStage floor={0} ground="epoxy" reach={2.6} setting="lab">
           <Suspense fallback={null}>
             <HeatingCurveScene
               melt={meltMinutes}

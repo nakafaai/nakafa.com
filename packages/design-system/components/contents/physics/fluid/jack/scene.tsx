@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Gauge } from "@repo/design-system/components/contents/physics/bench/gauge";
 import { Vector } from "@repo/design-system/components/contents/physics/bench/vector";
@@ -111,7 +110,6 @@ export function HydraulicJackScene({
         target={[-0.1, 0.9, 0]}
         wide={[0.3, 1.7, 4.6]}
       />
-      <SeamlessBenchSurface />
       <mesh castShadow position={[-0.18, FOOT / 2, 0]} receiveShadow>
         <boxGeometry args={[3.3, FOOT, 1.36]} />
         <meshPhysicalMaterial

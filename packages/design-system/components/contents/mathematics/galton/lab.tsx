@@ -119,7 +119,7 @@ export function GaltonBoardLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={0.5} setting="studio">
+        <ScienceStage floor={0} ground="maple" reach={0.5} setting="studio">
           <GaltonCamera />
           <Suspense fallback={null}>
             <GaltonScene

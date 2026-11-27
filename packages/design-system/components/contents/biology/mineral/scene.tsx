@@ -2,7 +2,6 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import { KnopCultureJar } from "@repo/design-system/components/contents/biology/mineral/culture";
 import type { CultureSolution } from "@repo/design-system/components/contents/biology/mineral/model";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import {
   SimulationTicker,
   simulationStep,
@@ -77,7 +76,6 @@ export function MineralDeficiencyScene({
     <group>
       <SimulationTicker running={playing} />
       <MineralCamera />
-      <SeamlessBenchSurface radius={14} y={0} />
       <KnopCultureJar solution={solution} />
 
       {/* Rising aeration bubbles inside the nutrient solution */}

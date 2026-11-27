@@ -13,6 +13,4 @@ export const BUNDLE_COLORS = {
   box: "#b08a5c",
   // A turned beech tray with a waxed finish.
   tray: "#c99a63",
-  // An oiled oak desk top.
-  desk: "#9a6c42",
 } as const;

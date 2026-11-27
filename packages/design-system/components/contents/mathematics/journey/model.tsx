@@ -7,7 +7,6 @@ import {
   HALF,
   LAND,
 } from "@repo/design-system/components/contents/mathematics/journey/layout";
-import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import {
   hashUnit,
   valueNoise,
@@ -344,9 +343,6 @@ export function Diorama({
 }) {
   return (
     <group>
-      <group position={[0, TABLE_TOP, 0]}>
-        <StudioTable color={JOURNEY_COLORS.table} />
-      </group>
       <Frame />
       <Land />
       {children}

@@ -7,11 +7,9 @@
  * A simulation that shows one of them takes its colour from here, so it looks the same in every lesson.
  */
 export const ABACUS_COLORS = {
-  // The walnut of the base, the darker end grain of its plinth, and the oak
-  // of the desk it stands on.
+  // The walnut of the base and the darker end grain of its plinth.
   base: "#8a5a36",
   plinth: "#6f452a",
-  desk: "#b98b5e",
   // Polished brass rods and the brass of their collars.
   brass: "#d4aa52",
   brassShade: "#a57c2e",

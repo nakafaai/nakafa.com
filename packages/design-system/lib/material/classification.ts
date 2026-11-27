@@ -7,7 +7,6 @@ export const CLASSIFICATION_COLORS = {
   // Shallow Malaysian sea (SeaNameLab).
   seaWater: "#2b7f9e",
   seaShallow: "#4aa6bd",
-  seaSand: "#d8c39a",
   dugong: "#8c8b85",
   whale: "#46596d",
   whaleBelly: "#cfd7df",

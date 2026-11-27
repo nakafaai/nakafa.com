@@ -1,9 +1,6 @@
 import { useThree } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
-import {
-  Desk,
-  Pegboard,
-} from "@repo/design-system/components/contents/mathematics/logic/board";
+import { Pegboard } from "@repo/design-system/components/contents/mathematics/logic/board";
 import { LampHolder } from "@repo/design-system/components/contents/mathematics/logic/bulb";
 import type { Placement } from "@repo/design-system/components/contents/mathematics/logic/circuit";
 import {
@@ -76,7 +73,6 @@ export function LogicScene({
   return (
     <group>
       <LogicCamera narrow={narrow} />
-      <Desk />
       <Pegboard />
       {Arr.map(layout.parts, ({ name, placement }) => (
         <PartAt key={name} placement={placement}>

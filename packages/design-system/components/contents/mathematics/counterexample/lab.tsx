@@ -172,7 +172,7 @@ export function CounterexampleGridLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={REACH} setting="studio">
+        <ScienceStage floor={0} ground="maple" reach={REACH} setting="studio">
           <Suspense fallback={null}>
             <CounterexampleScene
               claim={claim}

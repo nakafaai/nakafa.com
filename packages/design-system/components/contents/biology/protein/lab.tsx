@@ -134,7 +134,7 @@ export function ProteinFoldLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={1.9} setting="studio">
+        <ScienceStage floor={0} ground="epoxy" reach={1.9} setting="studio">
           <Suspense fallback={null}>
             <ProteinScene
               condition={condition}

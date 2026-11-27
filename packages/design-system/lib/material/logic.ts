@@ -7,8 +7,7 @@
  * colour from here, so it looks the same in every lesson.
  */
 export const LOGIC_COLORS = {
-  // The oak desk and the tempered hardboard pegboard on it, its holes dark.
-  desk: "#b98b5e",
+  // The tempered hardboard pegboard, its holes dark.
   hardboard: "#6e4f33",
   hole: "#24170d",
   // Black phenolic bases and handles, brass posts, blades and jaws.

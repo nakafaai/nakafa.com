@@ -11,8 +11,7 @@ import { PLOT_COLORS } from "@repo/design-system/lib/plot";
  * every lesson.
  */
 export const JOURNEY_COLORS = {
-  // The table, the diorama's frame, and its flocked land from the verge to the hilltops.
-  table: "#8d6a48",
+  // The diorama's frame, and its flocked land from the verge to the hilltops.
   frame: "#5d3d27",
   grass: "#6f8f4a",
   meadow: "#8a9c52",

@@ -92,7 +92,7 @@ export function WireResistanceLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.8} setting="lab">
+        <ScienceStage floor={0} ground="epoxy" reach={2.8} setting="lab">
           <Suspense fallback={null}>
             <WireResistanceScene diameter={diameter} length={length} />
           </Suspense>

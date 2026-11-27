@@ -9,8 +9,7 @@
  * them takes its colour from here, so it looks the same in every lesson.
  */
 export const NETWORK_COLORS = {
-  // The planning table and the walnut frame of the map on it.
-  table: "#b38a5f",
+  // The walnut frame of the map.
   frame: "#5b3a24",
   // The map's hypsometric tints, valley floor to summit, and its contour ink.
   valley: "#7fa45f",

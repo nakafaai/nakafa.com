@@ -7,10 +7,7 @@ import {
   FertilisationView,
   SpindleApparatus,
 } from "@repo/design-system/components/contents/biology/meiosis/stages";
-import {
-  BiologyBenchSurface,
-  SlideStage,
-} from "@repo/design-system/components/contents/biology/workbench";
+import { SlideStage } from "@repo/design-system/components/contents/biology/workbench";
 import {
   SimulationTicker,
   simulationStep,
@@ -158,7 +155,6 @@ export function MeiosisShufflingScene({
     <group>
       <SimulationTicker running={playing} />
       <MeiosisCamera />
-      <BiologyBenchSurface radius={14} y={0} />
       <SlideStage position={[0, 0, 0]} radius={1.08} />
 
       <group ref={groupRef}>

@@ -1,4 +1,3 @@
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { OakBoard } from "@repo/design-system/components/contents/physics/bench/board";
 import { Bulb } from "@repo/design-system/components/contents/physics/bench/bulb";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
@@ -145,7 +144,6 @@ export function TransistorSwitchScene({
         target={[-0.1, 0.3, 0]}
         wide={[-0.1, 2.4, 3.95]}
       />
-      <SeamlessBenchSurface />
       <group position={[-0.1, 0, 0]}>
         <OakBoard depth={2} width={3.1} />
       </group>

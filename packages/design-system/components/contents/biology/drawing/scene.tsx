@@ -18,7 +18,6 @@ import {
   strokeProgress,
 } from "@repo/design-system/components/contents/biology/drawing/scale";
 import { GraduatedRuler } from "@repo/design-system/components/contents/biology/fixtures";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import {
   SimulationTicker,
   simulationStep,
@@ -168,7 +167,6 @@ export function DrawingScene({
         cameraTarget={CAMERA_TARGET}
         fov={36}
       />
-      <SeamlessBenchSurface radius={12} y={0} />
 
       {/* Left rear: realistic brass and enamel compound light microscope */}
       <CompoundMicroscope position={[-0.64, 0, -0.22]} specimen={specimen} />

@@ -3,7 +3,6 @@ import { useLabelInk } from "@repo/design-system/components/contents/biology/cel
 import type { RingMode } from "@repo/design-system/components/contents/biology/phloem/model";
 import { evaluatePhloemFlow } from "@repo/design-system/components/contents/biology/phloem/model";
 import { PhloemVascularBundle } from "@repo/design-system/components/contents/biology/phloem/vascular";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import {
   SimulationTicker,
   simulationStep,
@@ -82,7 +81,6 @@ export function PhloemTranslocationScene({
     <group>
       <SimulationTicker running={playing} />
       <PhloemCamera />
-      <SeamlessBenchSurface radius={14} y={0} />
       <PhloemVascularBundle bulgeScale={flow.bulgeScale} mode={mode} />
 
       {/* Flowing translucent golden sucrose-solution droplets */}

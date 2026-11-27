@@ -3,7 +3,6 @@ import {
   BeadLacquer,
   BeadPot,
   Board,
-  Desk,
   PLACE_COLORS,
   useLathe,
 } from "@repo/design-system/components/contents/mathematics/abacus/desk";
@@ -112,7 +111,6 @@ export function AbacusScene({
     <group>
       <SimulationTicker running={playing} />
       <AbacusCamera />
-      <Desk />
       <Board base={base} />
       <BeadPot />
       {Arr.map(PLACE_COLORS, (color, place) => (

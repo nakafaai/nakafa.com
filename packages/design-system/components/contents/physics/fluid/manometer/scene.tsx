@@ -1,4 +1,3 @@
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Lead } from "@repo/design-system/components/contents/physics/bench/lead";
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
@@ -100,7 +99,6 @@ export function ManometerScene({
         target={[-0.35, 1.3, 0]}
         wide={[0.4, 1.6, 4.7]}
       />
-      <SeamlessBenchSurface />
       <mesh castShadow position={[0, 0.04, -0.02]} receiveShadow>
         <boxGeometry args={[1.3, 0.08, 0.6]} />
         <meshPhysicalMaterial

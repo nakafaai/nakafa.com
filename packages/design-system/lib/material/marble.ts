@@ -22,8 +22,6 @@ export const MARBLE_COLORS = {
   lidLacquer: "#8a1c22",
   // A white glazed stoneware dish.
   dish: "#f1eee8",
-  // An oiled oak tabletop.
-  oak: "#8a5f3a",
   // A walnut tally board and its drilled holes.
   walnut: "#5b3a24",
   walnutHole: "#2a190e",

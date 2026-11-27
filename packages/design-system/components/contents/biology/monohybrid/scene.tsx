@@ -4,7 +4,6 @@ import { useLabelInk } from "@repo/design-system/components/contents/biology/cel
 import type { MonohybridCross } from "@repo/design-system/components/contents/biology/monohybrid/model";
 import { evaluateMonohybridCross } from "@repo/design-system/components/contents/biology/monohybrid/model";
 import { PeaPlantPot } from "@repo/design-system/components/contents/biology/monohybrid/plant";
-import { BiologyBenchSurface } from "@repo/design-system/components/contents/biology/workbench";
 import {
   SimulationTicker,
   simulationStep,
@@ -115,7 +114,6 @@ export function MonohybridCrossScene({
     <group>
       <SimulationTicker running={playing} />
       <MonohybridCamera />
-      <BiologyBenchSurface radius={14} y={0} />
 
       {/* Engraved walnut-and-brass 2x2 Punnett specimen tray */}
       <group>

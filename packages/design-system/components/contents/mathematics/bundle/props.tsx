@@ -6,7 +6,6 @@ import {
   bandPath,
   STICK,
 } from "@repo/design-system/components/contents/mathematics/bundle/layout";
-import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { BUNDLE_COLORS } from "@repo/design-system/lib/material/bundle";
 import { Array as Arr } from "effect";
@@ -23,14 +22,6 @@ import {
 
 /** How many texture tiles cross one metre of a stick's birch, so its grain keeps its real size of about 7 cm a tile. */
 const GRAIN_PER_METRE = 14;
-
-/**
- * The oak top of a school desk: planked and oiled, each board with its own
- * tone and wandering grain, running out past the frame, its top at y = 0.
- */
-export function Desk() {
-  return <StudioTable color={BUNDLE_COLORS.desk} />;
-}
 
 /**
  * One ice-cream stick: a flat strip with round ends and softened edges,

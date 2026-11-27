@@ -111,7 +111,7 @@ export function MillikanOilDropLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage reach={6} setting="lab">
+        <ScienceStage floor={-4.94} ground="epoxy" reach={6} setting="lab">
           <MillikanCamera />
           <Plates voltage={voltage} />
         </ScienceStage>

@@ -13,7 +13,6 @@ import {
   SecondaryWoodCrossSection,
   ShootApexCutaway,
 } from "@repo/design-system/components/contents/biology/meristem/tissues";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import {
   SimulationTicker,
   simulationStep,
@@ -244,7 +243,6 @@ export function MeristemGrowthScene({
       <group>
         <SimulationTicker running={playing} />
         <MeristemCamera />
-        <SeamlessBenchSurface radius={14} y={0} />
         <group ref={specimenRef}>
           {mode === "primary" ? <PrimaryApexView /> : <SecondaryTrunkView />}
         </group>

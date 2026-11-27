@@ -25,9 +25,7 @@ import {
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
 import type { ReactionCharacteristicsLabProps } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/lab";
 import { createBeakerMarkingsTexture } from "@repo/design-system/components/contents/chemistry/glassware";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow";
-import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   GlassMaterial,
@@ -109,9 +107,6 @@ export function ReactionCharacteristicsScene({
 
   return (
     <group position={[0, SCENE_Y, 0]} scale={SCENE_SCALE}>
-      <CameraBounds exclude>
-        <SeamlessBenchSurface radius={22} y={BENCH_Y * BEAKER_SCALE} />
-      </CameraBounds>
       <ThreeLabel
         anchorY="bottom"
         color={colors.text}
