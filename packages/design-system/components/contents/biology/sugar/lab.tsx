@@ -209,7 +209,7 @@ export function GlycosidicBondLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={1.9} setting="studio">
+        <ScienceStage reach={1.9} setting="water">
           <Suspense fallback={null}>
             {scale === "pair" ? (
               <PairScene
