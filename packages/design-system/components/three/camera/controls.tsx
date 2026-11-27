@@ -14,6 +14,7 @@ import {
 } from "@repo/design-system/components/three/camera/fit";
 import { useCameraFraming } from "@repo/design-system/components/three/camera/framing";
 import { useCameraPlay } from "@repo/design-system/components/three/camera/play";
+import { resolveCameraRefit } from "@repo/design-system/components/three/camera/refit";
 import { framedContent } from "@repo/design-system/components/three/camera/silhouette";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import type { CameraProjection } from "@repo/design-system/lib/geometry/camera";
@@ -23,7 +24,7 @@ import {
   resolveOrthographicZoom,
 } from "@repo/design-system/lib/geometry/camera";
 import { measureCameraBounds } from "@repo/design-system/lib/geometry/camera/bounds";
-import { resolveCameraRefit } from "@repo/design-system/lib/geometry/camera/fit";
+
 import { Effect, HashMap } from "effect";
 import type { ComponentRef } from "react";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
