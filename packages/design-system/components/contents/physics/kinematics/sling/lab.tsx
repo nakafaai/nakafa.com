@@ -53,8 +53,8 @@ import {
   RepeatWrapping,
 } from "three";
 
-/** How long the freed stone is followed after release, in seconds. */
-const FLIGHT_SECONDS = 0.5;
+/** How far the freed stone is followed after release, in string lengths: it stays in view. */
+const FLIGHT = 0.6;
 
 /** Simulated seconds per wall second: the whirl is slowed so the release can be seen. */
 const PLAY_RATE = 0.4;
@@ -138,8 +138,8 @@ export function StringWhirlReleaseLab({
         >
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[radius * 0.9, radius * 1.7, radius * 3.3]}
-              cameraTarget={[-radius * 0.3, 0.1, -radius * 0.2]}
+              cameraPosition={[radius * 0.55, radius * 2.3, radius * 4.4]}
+              cameraTarget={[0, 0.05, radius * 0.1]}
               fov={40}
               maxPolarAngle={Math.PI / 2 - 0.1}
             />
@@ -253,9 +253,11 @@ function WhirlScene({
   const string = useRef<Group>(null);
   const velocity = useRef<Group>(null);
   const pull = useRef<Group>(null);
-  const end = releaseTime(period, release) + FLIGHT_SECONDS;
-  const { advance, playing } = useTimeline(0, end / PLAY_RATE);
+  const freed = useRef(true);
+  const [released, setReleased] = useState(true);
   const motion = whirl(radius, period);
+  const end = releaseTime(period, release) + (FLIGHT * radius) / motion.speed;
+  const { advance, playing } = useTimeline(0, end / PLAY_RATE);
   const letGo = RELEASE_ANGLES[release];
   const speedArrow = useMemo(
     () => [motion.speed * radius * 0.11, 0, 0] as const,
@@ -291,8 +293,9 @@ function WhirlScene({
     velocity.current?.rotation.set(0, around + Math.PI / 2, 0);
     pull.current?.position.set(place.x, ARROWS, -place.y);
     pull.current?.rotation.set(0, around + Math.PI, 0);
-    if (pull.current) {
-      pull.current.visible = !place.released;
+    if (freed.current !== place.released) {
+      freed.current = place.released;
+      setReleased(place.released);
     }
   });
 
@@ -379,29 +382,31 @@ function WhirlScene({
           fontSize="compact"
           outlineColor={getColor("SLATE", 50)}
           outlineWidth={0.05}
-          position={[speedArrow[0], 0.14, 0]}
+          position={[speedArrow[0] * 0.2, 0.42, 0]}
         >
           <InlineMath math={`v=${quantity(motion.speed, "\\text{ m/s}", 2)}`} />
         </ThreeLabel>
       </group>
-      <group ref={pull}>
+      <group ref={pull} visible={!released}>
         <VelocityArrow
           color={PLOT_COLORS.fuchsia}
           from={ORIGIN}
           thick={radius * 0.016}
           to={pullArrow}
         />
-        <ThreeLabel
-          color={PLOT_COLORS.fuchsia}
-          fontSize="compact"
-          outlineColor={getColor("SLATE", 50)}
-          outlineWidth={0.05}
-          position={[pullArrow[0] * 0.5, 0.16, 0]}
-        >
-          <InlineMath
-            math={`a=${quantity(motion.acceleration, "\\text{ m/s}^2", 1)}`}
-          />
-        </ThreeLabel>
+        {released ? null : (
+          <ThreeLabel
+            color={PLOT_COLORS.fuchsia}
+            fontSize="compact"
+            outlineColor={getColor("SLATE", 50)}
+            outlineWidth={0.05}
+            position={[pullArrow[0] * 0.5, 0.16, 0]}
+          >
+            <InlineMath
+              math={`a=${quantity(motion.acceleration, "\\text{ m/s}^2", 1)}`}
+            />
+          </ThreeLabel>
+        )}
       </group>
     </>
   );
