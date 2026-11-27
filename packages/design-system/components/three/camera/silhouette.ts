@@ -1,5 +1,9 @@
-import type { CameraPixelLabel } from "@repo/design-system/lib/geometry/camera/bounds";
-import { Array as Arr, Match, Option, Schema } from "effect";
+import type {
+  CameraLabelBounds,
+  CameraSubjectBounds,
+} from "@repo/design-system/lib/geometry/camera/bounds";
+import { measureCameraBounds } from "@repo/design-system/lib/geometry/camera/bounds";
+import { Array as Arr, Effect, HashMap, Match, Option, Schema } from "effect";
 import type { Matrix4, Object3D } from "three";
 import { Box3, Vector3 } from "three";
 
@@ -97,24 +101,40 @@ function roundShown(object: Object3D): boolean {
 }
 
 /**
- * What the camera frames now: the measured geometry with its fixed-pixel
- * labels, and the world outline of every round subject that is drawn. Read
- * after the scene's world matrices are up to date.
+ * Measures what the camera frames now: the scene's finite geometry with its
+ * fixed-pixel labels, and the world outline of every round subject that is
+ * drawn. The geometry is one box round everything measured.
  */
-export function framedContent(
-  measurement: Option.Option<{
-    readonly bounds: Box3;
-    readonly labels: readonly CameraPixelLabel[];
-  }>,
-  rounds: Iterable<
-    readonly [
-      number,
-      { readonly object: Object3D; readonly round: CameraRound },
-    ]
-  >
-) {
+export const measureContent = Effect.fn("camera.measureContent")(function* ({
+  position,
+  registry,
+  root,
+  target,
+}: {
+  readonly position: Vector3;
+  readonly registry: {
+    readonly labels: Iterable<readonly [number, CameraLabelBounds]>;
+    readonly rounds: Iterable<
+      readonly [
+        number,
+        { readonly object: Object3D; readonly round: CameraRound },
+      ]
+    >;
+    readonly subjects: Iterable<readonly [number, CameraSubjectBounds]>;
+  };
+  readonly root: Object3D;
+  readonly target: Vector3;
+}) {
+  const measurement = yield* measureCameraBounds({
+    labels: HashMap.fromIterable(registry.labels),
+    position,
+    root,
+    subjects: HashMap.fromIterable(registry.subjects),
+    target,
+  });
+  // The measurement has just brought every world matrix up to date.
   const placed = Arr.map(
-    Arr.filter(Arr.fromIterable(rounds), ([, { object }]) =>
+    Arr.filter(Arr.fromIterable(registry.rounds), ([, { object }]) =>
       roundShown(object)
     ),
     ([, { object, round }]) => placeCameraRound(round, object.matrixWorld)
@@ -126,7 +146,7 @@ export function framedContent(
       silhouettes: [{ box: bounds, kind: "box" as const }, ...placed],
     }),
   });
-}
+});
 
 /** The world box that holds a silhouette, for clip planes and pan limits. */
 export function silhouetteBounds(silhouette: CameraSilhouette) {

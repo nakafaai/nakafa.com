@@ -15,7 +15,7 @@ import {
 import { useCameraFraming } from "@repo/design-system/components/three/camera/framing";
 import { useCameraPlay } from "@repo/design-system/components/three/camera/play";
 import { resolveCameraRefit } from "@repo/design-system/components/three/camera/refit";
-import { framedContent } from "@repo/design-system/components/three/camera/silhouette";
+import { measureContent } from "@repo/design-system/components/three/camera/silhouette";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import type { CameraProjection } from "@repo/design-system/lib/geometry/camera";
 import {
@@ -23,9 +23,8 @@ import {
   resolveCameraDistanceLimits,
   resolveOrthographicZoom,
 } from "@repo/design-system/lib/geometry/camera";
-import { measureCameraBounds } from "@repo/design-system/lib/geometry/camera/bounds";
 
-import { Effect, HashMap } from "effect";
+import { Effect } from "effect";
 import type { ComponentRef } from "react";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import type { Box3, PerspectiveCamera as ThreePerspectiveCamera } from "three";
@@ -264,17 +263,14 @@ export function CameraControls(props: CameraControlsProps) {
         pendingFit.current = true;
         return;
       }
-      const measurement = Effect.runSync(
-        measureCameraBounds({
-          labels: HashMap.fromIterable(framing.labels),
+      const { labels, silhouettes } = Effect.runSync(
+        measureContent({
           position: authoredPosition,
+          registry: framing,
           root: scene,
-          subjects: HashMap.fromIterable(framing.subjects),
           target: authoredTarget,
         })
       );
-      const content = framedContent(measurement, framing.rounds);
-      const { labels, silhouettes } = content;
       if (silhouettes.length === 0) {
         initializePose(controls, authoredPosition, authoredTarget);
         return;
