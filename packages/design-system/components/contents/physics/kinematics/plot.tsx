@@ -14,13 +14,6 @@ import { Array as Arr, Option, Schema } from "effect";
 import type { ReactNode } from "react";
 import { useFormatter } from "use-intl";
 
-/** One row of the graph: a moment, and the value of whichever marker stands there. */
-const RowSchema = Schema.Struct({
-  end: Schema.optional(Schema.Finite),
-  start: Schema.optional(Schema.Finite),
-  x: Schema.Finite,
-});
-
 /** A point of the graph: a moment and the plotted quantity then. */
 const PointSchema = Schema.Struct({ x: Schema.Finite, y: Schema.Finite });
 
@@ -105,12 +98,8 @@ export function MotionPlot({
   };
   const across = axisTicks(x.domain[0], x.domain[1]);
   const up = axisTicks(y.domain[0], y.domain[1]);
-  const starts: (typeof RowSchema.Type)[] = [
-    { start: start.point.y, x: start.point.x },
-  ];
-  const ends: (typeof RowSchema.Type)[] = [
-    { end: end.point.y, x: end.point.x },
-  ];
+  const starts = [start.point];
+  const ends = [end.point];
 
   return (
     <div className="flex flex-col gap-1 p-(--card-spacing) pb-0">
@@ -138,7 +127,7 @@ export function MotionPlot({
           type="number"
         />
         <YAxis
-          dataKey="start"
+          dataKey="y"
           domain={[
             Option.getOrElse(Arr.head(up), () => y.domain[0]),
             Option.getOrElse(Arr.last(up), () => y.domain[1]),

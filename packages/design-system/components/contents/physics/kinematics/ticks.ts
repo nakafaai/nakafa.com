@@ -5,8 +5,9 @@ const STEPS = [1, 2, 2.5, 5, 10] as const;
 
 /**
  * The ticks of a graph's axis that covers `low` to `high`: about five of
- * them, a round step apart, from `low` to the first tick at or beyond
- * `high`, so every gridline of a motion graph is a number a reader can name.
+ * them, a round step apart, from the last round number at or below `low`
+ * to the first at or beyond `high`, so every gridline of a motion graph is
+ * a number a reader can name.
  *
  * @param low - The least value the axis shows
  * @param high - The greatest value the axis must reach
@@ -18,8 +19,9 @@ export function axisTicks(low: number, high: number) {
     Math.min(
       ...Arr.filter(STEPS, (candidate) => candidate * magnitude >= rough)
     ) * magnitude;
-  const count = Math.ceil((high - low) / step - 1e-9);
-  return Arr.makeBy(count + 1, (index) => low + index * step);
+  const first = Math.floor(low / step + 1e-9) * step;
+  const count = Math.ceil((high - first) / step - 1e-9);
+  return Arr.makeBy(count + 1, (index) => first + index * step);
 }
 
 /**

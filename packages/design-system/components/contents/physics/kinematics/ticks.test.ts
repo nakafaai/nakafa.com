@@ -9,11 +9,13 @@ describe("axisTicks", () => {
     expect(axisTicks(0, 80)).toStrictEqual([0, 20, 40, 60, 80]);
     expect(axisTicks(0, 7)).toStrictEqual([0, 2, 4, 6, 8]);
     expect(axisTicks(-10, 10)).toStrictEqual([-10, -5, 0, 5, 10]);
+    expect(axisTicks(-6, 6)).toStrictEqual([-10, -5, 0, 5, 10]);
+    expect(axisTicks(3, 110)).toStrictEqual([0, 50, 100, 150]);
   });
 
   it("still gives an axis when the range is empty", () => {
     expect(axisTicks(3, 3).length).toBeGreaterThan(0);
-    expect(axisTicks(3, 3)[0]).toBe(3);
+    expect(axisTicks(3, 3)[0]).toBeCloseTo(3, 9);
   });
 });
 
