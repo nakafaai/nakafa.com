@@ -1,4 +1,3 @@
-import { ArrowDown02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { IonSampleId } from "@repo/design-system/components/contents/chemistry/ion/data";
 import {
   ION_SAMPLE_IDS,
@@ -6,23 +5,27 @@ import {
   isIonSampleId,
   SODIUM_CATION_ID,
 } from "@repo/design-system/components/contents/chemistry/ion/data";
+import {
+  IonParticle,
+  IonScene,
+} from "@repo/design-system/components/contents/chemistry/ion/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -113,45 +116,50 @@ export function IonLab({ title, description, labels }: IonLabProps) {
         </ToggleGroup>
       </VisualCardToolbar>
 
-      <VisualCardBody className="grid gap-2 p-(--card-spacing) md:grid-cols-[minmax(0,1fr)_4rem_minmax(0,1fr)] md:items-center [[data-fullscreen]>&]:grid">
-        <ParticleCard
-          charge={<InlineMath math="0" />}
-          electrons={<InlineMath math={`${neutralElectrons}`} />}
-          labels={labels}
-          notation={neutralNotation}
-          stage={labels.beforeChange}
-          title={labels.neutralAtom}
-        />
-
-        <section
-          aria-label={labels.electronChange}
-          className="text-muted-foreground grid min-h-10 place-items-center text-3xl md:min-h-44"
-        >
-          <HugeIcons
-            aria-hidden="true"
-            className="md:hidden"
-            icon={ArrowDown02Icon}
-          />
-          <HugeIcons
-            aria-hidden="true"
-            className="hidden md:block"
-            icon={ArrowRight02Icon}
-          />
-        </section>
-
-        <ParticleCard
-          charge={<InlineMath math={signedChargeMath} />}
-          electrons={<InlineMath math={`${ionElectrons}`} />}
-          labels={labels}
-          notation={ionNotation}
-          stage={labels.afterChange}
-          title={selectedLabels.type}
-        />
+      <VisualCardBody
+        aria-label={`${labels.beforeChange}: ${labels.neutralAtom}, ${labels.afterChange}: ${selectedLabels.type}`}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ScienceStage reach={5} setting="space">
+          <IonScene>
+            <IonParticle
+              electrons={neutralElectrons}
+              heading={`${labels.beforeChange}: ${labels.neutralAtom}`}
+              neutrons={neutronCount}
+              protons={selectedSample.atomicNumber}
+              side={-1}
+            >
+              <ParticleReadings
+                charge="0"
+                electrons={neutralElectrons}
+                notation={neutralNotation}
+              >
+                {labels.electrons}
+                {labels.charge}
+              </ParticleReadings>
+            </IonParticle>
+            <IonParticle
+              electrons={ionElectrons}
+              heading={`${labels.afterChange}: ${selectedLabels.type}`}
+              neutrons={neutronCount}
+              protons={selectedSample.atomicNumber}
+              side={1}
+            >
+              <ParticleReadings
+                charge={signedChargeMath}
+                electrons={ionElectrons}
+                notation={ionNotation}
+              >
+                {labels.electrons}
+                {labels.charge}
+              </ParticleReadings>
+            </IonParticle>
+          </IonScene>
+        </ScienceStage>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
         <VisualCardFacts>
@@ -224,41 +232,32 @@ function getSignedChargeMath(charge: number) {
 }
 
 /**
- * Shows either the neutral atom card or the resulting ion card.
+ * What is read under one particle: its notation, then its electron count and
+ * its charge, each after the lesson's word for it. The two words are its
+ * children, the word for electrons first.
  */
-function ParticleCard({
+function ParticleReadings({
   charge,
+  children,
   electrons,
-  labels,
   notation,
-  stage,
-  title,
 }: {
-  charge: ReactNode;
-  electrons: ReactNode;
-  labels: IonLabProps["labels"];
-  notation: string;
-  stage: string;
-  title: ReactNode;
+  readonly charge: string;
+  readonly children: readonly [ReactNode, ReactNode];
+  readonly electrons: number;
+  readonly notation: string;
 }) {
   return (
-    <section
-      aria-label={`${stage}: ${title}`}
-      className="grid min-h-44 place-items-center p-3 text-center"
-    >
-      <div className="flex w-full max-w-64 flex-col gap-4">
-        <div className="space-y-1">
-          <div className="text-sm font-medium">{stage}</div>
-          <div className="text-muted-foreground text-sm">{title}</div>
-        </div>
-        <div className="text-5xl sm:text-6xl">
-          <InlineMath math={notation} />
-        </div>
-        <dl className="grid grid-cols-2 gap-3 text-sm">
-          <VisualFact label={labels.electrons} value={electrons} />
-          <VisualFact label={labels.charge} value={charge} />
-        </dl>
-      </div>
-    </section>
+    <span className="flex flex-col items-center gap-1 whitespace-nowrap">
+      <span>
+        <InlineMath math={notation} />
+      </span>
+      <span>
+        {children[0]}: <InlineMath math={`${electrons}`} />
+      </span>
+      <span>
+        {children[1]}: <InlineMath math={charge} />
+      </span>
+    </span>
   );
 }
