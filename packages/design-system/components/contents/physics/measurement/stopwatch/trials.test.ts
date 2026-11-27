@@ -3,8 +3,10 @@ import {
   MAX_TRIALS,
   PERIOD,
   PRESS_SPREAD,
+  swingAngle,
   TRUE_TIME,
   timingSpread,
+  trialMoment,
   trialTimes,
 } from "@repo/design-system/components/contents/physics/measurement/stopwatch/trials";
 import { Array as Arr } from "effect";
@@ -45,5 +47,18 @@ describe("timing a pendulum by hand", () => {
       spread: 0,
       uncertainty: 0,
     });
+  });
+
+  it("plays a trial three times faster than real time, rests on its reading, and starts again", () => {
+    expect(trialMoment(0, 18)).toBe(18);
+    expect(trialMoment(2, 18)).toBeCloseTo(6, 12);
+    expect(trialMoment(7, 18)).toBe(18);
+    expect(trialMoment(9, 18)).toBeCloseTo(3, 12);
+  });
+
+  it("releases the bob from its widest swing and brings it back every period", () => {
+    expect(swingAngle(0)).toBeCloseTo(0.16, 12);
+    expect(swingAngle(PERIOD / 2)).toBeCloseTo(-0.16, 12);
+    expect(swingAngle(PERIOD)).toBeCloseTo(0.16, 12);
   });
 });

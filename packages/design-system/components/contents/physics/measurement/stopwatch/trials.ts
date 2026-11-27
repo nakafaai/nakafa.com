@@ -30,6 +30,15 @@ export const PRESS_SPREAD = 0.08;
 /** The stopwatch's resolution, in seconds. */
 const STOPWATCH_STEP = 0.01;
 
+/** How much faster than real time a trial plays. */
+const PLAY_RATE = 3;
+
+/** How long a finished trial rests before the next run, in wall seconds. */
+const HOLD_SECONDS = 2;
+
+/** The widest swing, in radians. */
+const AMPLITUDE = 0.16;
+
 /** The most trials the lab records. */
 export const MAX_TRIALS = 20;
 
@@ -86,4 +95,23 @@ export function timingSpread(times: readonly number[]) {
   const squares = Arr.reduce(times, 0, (sum, time) => sum + (time - mean) ** 2);
   const spread = count > 1 ? Math.sqrt(squares / (count - 1)) : 0;
   return { mean, spread, uncertainty: spread / Math.sqrt(count) };
+}
+
+/**
+ * The moment of a trial the bench shows after the lab has played for `wall`
+ * seconds: the trial runs `PLAY_RATE` times faster than real time up to its
+ * reading, rests there, and starts again. A lab that has not played yet
+ * shows the trial finished, so its reading is on the watch.
+ */
+export function trialMoment(wall: number, duration: number) {
+  if (wall <= 0) {
+    return duration;
+  }
+  const cycle = duration / PLAY_RATE + HOLD_SECONDS;
+  return Math.min((wall % cycle) * PLAY_RATE, duration);
+}
+
+/** The angle of the thread from the vertical at a moment of a trial, in radians. */
+export function swingAngle(moment: number) {
+  return AMPLITUDE * Math.cos((2 * Math.PI * moment) / PERIOD);
 }
