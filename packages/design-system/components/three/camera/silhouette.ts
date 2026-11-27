@@ -39,7 +39,10 @@ const CameraRoundEntrySchema = Schema.Struct({
 export type CameraRoundEntry = typeof CameraRoundEntrySchema.Type;
 
 const CameraSilhouetteSchema = Schema.Union([
-  Schema.Struct({ box: Schema.instanceOf(Box3), kind: Schema.Literal("box") }),
+  Schema.Struct({
+    kind: Schema.Literal("hull"),
+    points: Schema.Array(Schema.instanceOf(Vector3)),
+  }),
   Schema.Struct({
     center: Schema.instanceOf(Vector3),
     kind: Schema.Literal("sphere"),
@@ -53,7 +56,10 @@ const CameraSilhouetteSchema = Schema.Union([
   }),
 ]);
 
-/** A convex world-space outline the camera fits by its true projected edge. */
+/**
+ * A convex world-space outline the camera fits by its true projected edge: the
+ * hull of measured points, a ball, or a ring.
+ */
 export type CameraSilhouette = typeof CameraSilhouetteSchema.Type;
 
 /**
@@ -146,7 +152,10 @@ export const measureContent = Effect.fn("camera.measureContent")(function* ({
     onNone: () => ({ labels: [], silhouettes: placed }),
     onSome: (measured) => ({
       labels: measured.labels,
-      silhouettes: [{ box: measured.bounds, kind: "box" as const }, ...placed],
+      silhouettes: [
+        { kind: "hull" as const, points: measured.corners },
+        ...placed,
+      ],
     }),
   });
 });
@@ -155,7 +164,7 @@ export const measureContent = Effect.fn("camera.measureContent")(function* ({
 export function silhouetteBounds(silhouette: CameraSilhouette) {
   return Match.value(silhouette).pipe(
     Match.discriminatorsExhaustive("kind")({
-      box: ({ box }) => box.clone(),
+      hull: ({ points }) => new Box3().setFromPoints(points),
       ring: ({ center, normal, radius }) => {
         // A circle reaches radius * sqrt(1 - n^2) along each world axis.
         const reach = new Vector3(
@@ -185,14 +194,17 @@ export function silhouetteReach(
 ) {
   return Match.value(silhouette).pipe(
     Match.discriminatorsExhaustive("kind")({
-      box: ({ box }) => {
-        const half = box.getSize(new Vector3()).multiplyScalar(0.5);
-        return (
-          box.getCenter(new Vector3()).sub(origin).dot(direction) +
-          half.x * Math.abs(direction.x) +
-          half.y * Math.abs(direction.y) +
-          half.z * Math.abs(direction.z)
-        );
+      hull: ({ points }) => {
+        let reach = Number.NEGATIVE_INFINITY;
+        for (const point of points) {
+          reach = Math.max(
+            reach,
+            (point.x - origin.x) * direction.x +
+              (point.y - origin.y) * direction.y +
+              (point.z - origin.z) * direction.z
+          );
+        }
+        return reach;
       },
       ring: ({ center, normal, radius }) =>
         center.clone().sub(origin).dot(direction) +

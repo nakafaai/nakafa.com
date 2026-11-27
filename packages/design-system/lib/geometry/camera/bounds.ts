@@ -46,6 +46,12 @@ export type CameraPixelLabel = typeof CameraPixelLabelSchema.Type;
 
 const CameraMeasurementSchema = Schema.Struct({
   bounds: Schema.instanceOf(Box3),
+  /**
+   * The world corners of every measured part's own box. Their hull is the
+   * content's true outline, which a sparse or turned scene fills far less than
+   * the world box round it.
+   */
+  corners: Schema.Array(Schema.instanceOf(Vector3)),
   labels: Schema.Array(CameraPixelLabelSchema),
 });
 
@@ -94,13 +100,15 @@ export const measureCameraBounds = Effect.fn("camera.measureBounds")(
     ): Effect.fn.Return<CameraMeasurement> {
       const subject = Option.getOrUndefined(HashMap.get(subjects, object.id));
       if (!object.visible || subject === false) {
-        return { bounds: new Box3(), labels: [] };
+        return { bounds: new Box3(), corners: [], labels: [] };
       }
 
       const matrix = parent.clone().multiply(object.matrix);
       if (subject instanceof Box3) {
+        const corners = boxCorners(subject, matrix);
         return {
-          bounds: new Box3().copy(subject).applyMatrix4(matrix),
+          bounds: new Box3().setFromPoints(corners),
+          corners,
           labels: [],
         };
       }
@@ -108,12 +116,14 @@ export const measureCameraBounds = Effect.fn("camera.measureBounds")(
         const motionChildren = yield* Effect.forEach(object.children, (child) =>
           visit(child, new Matrix4())
         );
+        const envelopes = Arr.map(motionChildren, (child) =>
+          motionEnvelope(child.bounds, subject)
+        );
         return transformMeasurement(
           {
-            bounds: unionBounds(
-              Arr.map(motionChildren, (child) =>
-                motionEnvelope(child.bounds, subject)
-              )
+            bounds: unionBounds(envelopes),
+            corners: Arr.flatMap(envelopes, (envelope) =>
+              boxCorners(envelope, new Matrix4())
             ),
             labels: Arr.flatMap(motionChildren, (child) =>
               Arr.map(child.labels, (label) => ({
@@ -126,25 +136,26 @@ export const measureCameraBounds = Effect.fn("camera.measureBounds")(
         );
       }
 
-      const bounds = new Box3();
-      bounds.union(yield* measureGeometryBounds(object, matrix));
-
+      const corners = [...(yield* measureGeometryCorners(object, matrix))];
       const label = Option.getOrUndefined(HashMap.get(labels, object.id));
       if (label) {
-        bounds.union(labelBounds(label, matrix, right, up));
+        corners.push(...labelCorners(label, matrix, right, up));
       }
 
       const children = yield* Effect.forEach(object.children, (child) =>
         visit(child, matrix)
       );
+      const bounds = new Box3().setFromPoints(corners);
       for (const child of children) {
         bounds.union(child.bounds);
+        corners.push(...child.corners);
       }
       const ownLabels = label?.pixels
         ? [pixelLabelBounds(label, label.pixels, matrix)]
         : [];
       return {
         bounds,
+        corners,
         labels: [
           ...ownLabels,
           ...Arr.flatMap(children, (child) => child.labels),
@@ -170,6 +181,9 @@ function unionBounds(boxes: readonly Box3[]) {
 
 function transformMeasurement(measured: CameraMeasurement, matrix: Matrix4) {
   measured.bounds.applyMatrix4(matrix);
+  for (const corner of measured.corners) {
+    corner.applyMatrix4(matrix);
+  }
   for (const label of measured.labels) {
     label.anchors.applyMatrix4(matrix);
   }
@@ -217,14 +231,28 @@ function motionEnvelope(
   return envelope;
 }
 
-/** Resolves a camera-facing HTML rectangle in the geometry's world space. */
-function labelBounds(
+/** The eight corners of a local box carried into the world, none for an empty box. */
+function boxCorners(box: Box3, matrix: Matrix4) {
+  if (box.isEmpty()) {
+    return [];
+  }
+  return Arr.flatMap([box.min.x, box.max.x], (x) =>
+    Arr.flatMap([box.min.y, box.max.y], (y) =>
+      Arr.map([box.min.z, box.max.z], (z) =>
+        new Vector3(x, y, z).applyMatrix4(matrix)
+      )
+    )
+  );
+}
+
+/** Resolves a camera-facing HTML rectangle's corners in the geometry's world space. */
+function labelCorners(
   label: CameraLabelBounds,
   matrix: Matrix4,
   right: Vector3,
   up: Vector3
 ) {
-  const bounds = new Box3();
+  const corners: Vector3[] = [];
   const origin = new Vector3().setFromMatrixPosition(matrix);
   const cosine = Math.cos(label.rotation);
   const sine = Math.sin(label.rotation);
@@ -232,7 +260,7 @@ function labelBounds(
     for (const y of [label.anchorY, label.anchorY + 1]) {
       const horizontal = x * label.width + label.gap.x;
       const vertical = y * label.height + label.gap.y;
-      bounds.expandByPoint(
+      corners.push(
         origin
           .clone()
           .addScaledVector(right, horizontal * cosine - vertical * sine)
@@ -240,7 +268,7 @@ function labelBounds(
       );
     }
   }
-  return bounds;
+  return corners;
 }
 
 function pixelLabelBounds(
@@ -275,13 +303,13 @@ function pixelLabelBounds(
 }
 
 /** Samples the renderer-owned buffers, including the current instance matrices. */
-const measureGeometryBounds = Effect.fn("camera.measureGeometryBounds")(
+const measureGeometryCorners = Effect.fn("camera.measureGeometryCorners")(
   (object: Object3D, matrix: Matrix4) =>
     Effect.sync(() => {
       if (object instanceof InstancedMesh) {
         object.boundingBox ??= new Box3();
         object.computeBoundingBox();
-        return object.boundingBox.clone().applyMatrix4(matrix);
+        return boxCorners(object.boundingBox, matrix);
       }
       if (
         !(
@@ -290,10 +318,10 @@ const measureGeometryBounds = Effect.fn("camera.measureGeometryBounds")(
           object instanceof Points
         )
       ) {
-        return new Box3();
+        return [];
       }
       object.geometry.boundingBox ??= new Box3();
       object.geometry.computeBoundingBox();
-      return object.geometry.boundingBox.clone().applyMatrix4(matrix);
+      return boxCorners(object.geometry.boundingBox, matrix);
     })
 );
