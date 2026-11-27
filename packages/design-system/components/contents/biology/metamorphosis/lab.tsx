@@ -7,7 +7,6 @@ import type {
 import { growthAt } from "@repo/design-system/components/contents/biology/metamorphosis/growth";
 import type { MetamorphosisPart } from "@repo/design-system/components/contents/biology/metamorphosis/scene";
 import { MetamorphosisScene } from "@repo/design-system/components/contents/biology/metamorphosis/scene";
-import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -68,14 +67,13 @@ export function MetamorphosisLab({
   const snap = growthAt(insect, time);
 
   return (
-    <VisualCard>
+    <VisualCard
+      onReset={() => {
+        setInsect(insects[0]);
+        setTime(0);
+      }}
+    >
       <VisualCardHeader description={description} title={title} />
-      <ViewReset
-        onReset={() => {
-          setInsect(insects[0]);
-          setTime(0);
-        }}
-      />
 
       <VisualCardToolbar>
         {insects.length > 1 && (
@@ -117,7 +115,7 @@ export function MetamorphosisLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.0} setting="studio">
+        <ScienceStage floor={0} reach={2.5} setting="lab">
           <Suspense fallback={null}>
             <MetamorphosisScene
               insect={insect}

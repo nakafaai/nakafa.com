@@ -1,5 +1,10 @@
 import { useFrame } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
+import {
+  CovalentBond,
+  MonosaccharideMolecule,
+  WaterMolecule,
+} from "@repo/design-system/components/contents/biology/sugar/molecules";
 import type {
   Monomer,
   Polysaccharide,
@@ -11,25 +16,31 @@ import {
   chainNodes,
   monomersOf,
 } from "@repo/design-system/components/contents/biology/sugar/polymer";
-import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
+import {
+  SimulationTicker,
+  simulationStep,
+} from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import {
+  useVisualScene,
+  useVisualStop,
+} from "@repo/design-system/components/visual/card";
 import { ATOM_COLORS } from "@repo/design-system/lib/material/atom";
 import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { LABORATORY_COLORS } from "@repo/design-system/lib/material/laboratory";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { Array as Arr, Match } from "effect";
+import { Array as Arr } from "effect";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BufferGeometry, Vector3 } from "three";
 
-const CAMERA_POSITION: readonly [number, number, number] = [0, 0.9, 2.25];
+const CAMERA_POSITION: readonly [number, number, number] = [0, 0.9, 2.38];
 const CAMERA_TARGET: readonly [number, number, number] = [0, 0.56, 0];
 
 /**
  * 3D carbohydrate workbench: pair scale animates condensation and hydrolysis
- * between two monosaccharide rings with a glycosidic oxygen bridge and water
- * molecule; chain scale renders starch helix, branched glycogen, or parallel
+ * between two 3D CPK monosaccharide chair/envelope rings with a glycosidic
+ * oxygen bridge and bent H2O; chain scale renders 3D starch, glycogen, or
  * H-bonded cellulose chains.
  */
 export function SugarScene({
@@ -59,6 +70,11 @@ export function SugarScene({
     clock.current = 0;
   }, [reaction]);
 
+  useVisualStop(() => {
+    clock.current = 0;
+    setPhase(reaction === "condensation" ? 1 : 0);
+  });
+
   useFrame((_, delta) => {
     if (!playing) {
       return;
@@ -74,123 +90,119 @@ export function SugarScene({
     [polysaccharide, units]
   );
 
-  const backboneGeo = useMemo(() => {
-    const pts = Arr.flatMap(nodes, (a, i) => {
-      const b = nodes[i + 1];
-      return b === undefined || a.row !== b.row
-        ? []
-        : [
-            new Vector3(a.position[0], a.position[1], a.position[2]),
-            new Vector3(b.position[0], b.position[1], b.position[2]),
-          ];
-    });
-    const geometry = new BufferGeometry();
-    geometry.setFromPoints(pts);
-    return geometry;
-  }, [nodes]);
-
-  const celluloseCrossGeo = useMemo(() => {
-    const half = Math.ceil(nodes.length / 2);
-    const pts =
-      polysaccharide === "cellulose"
-        ? Arr.flatMap(Arr.take(nodes, half), (top, i) => {
-            const bottom = nodes[i + half];
-            return bottom === undefined
-              ? []
-              : [
-                  new Vector3(
-                    top.position[0],
-                    top.position[1],
-                    top.position[2]
-                  ),
-                  new Vector3(
-                    bottom.position[0],
-                    bottom.position[1],
-                    bottom.position[2]
-                  ),
-                ];
-          })
-        : [];
-    const geometry = new BufferGeometry();
-    geometry.setFromPoints(pts);
-    return geometry;
-  }, [nodes, polysaccharide]);
-
-  useEffect(
-    () => () => {
-      backboneGeo.dispose();
-      celluloseCrossGeo.dispose();
-    },
-    [backboneGeo, celluloseCrossGeo]
+  // 3D covalent glycosidic linkages along each polysaccharide row.
+  const backboneLinks = useMemo(
+    () =>
+      Arr.flatMap(nodes, (a, i) => {
+        const b = nodes[i + 1];
+        if (b === undefined || a.row !== b.row) {
+          return [];
+        }
+        return [
+          {
+            from: a.position,
+            id: `bb-${a.id}-${b.id}`,
+            mid: [
+              (a.position[0] + b.position[0]) * 0.5,
+              (a.position[1] + b.position[1]) * 0.5,
+              (a.position[2] + b.position[2]) * 0.5,
+            ] as const,
+            to: b.position,
+          },
+        ];
+      }),
+    [nodes]
   );
 
-  const sep = 0.34 + (1 - phase) * 0.24;
-  const waterY = 0.22 + (1 - phase) * 0.32;
+  // Inter-chain hydrogen bonds bridging parallel cellulose fibrils.
+  const celluloseCrossLinks = useMemo(() => {
+    if (polysaccharide !== "cellulose") {
+      return [];
+    }
+    const half = Math.ceil(nodes.length / 2);
+    return Arr.flatMap(Arr.take(nodes, half), (top, i) => {
+      const bottom = nodes[i + half];
+      return bottom === undefined
+        ? []
+        : [{ from: top.position, id: `hb-${top.id}`, to: bottom.position }];
+    });
+  }, [nodes, polysaccharide]);
+
+  const sep = 0.42 + (1 - phase) * 0.24;
+  const waterY = 0.22 + (1 - phase) * 0.3;
 
   return (
     <group>
+      <SimulationTicker running={playing} />
       <CameraControls
         cameraPosition={CAMERA_POSITION}
         cameraTarget={CAMERA_TARGET}
         fov={38}
       />
 
-      <mesh position={[0, -0.02, 0]} receiveShadow>
-        <boxGeometry args={[2.1, 0.04, 1.0]} />
-        <meshStandardMaterial
-          color={LABORATORY_COLORS.worktop}
-          roughness={0.65}
+      {/* Laboratory stone bench */}
+      <mesh position={[0, -0.025, 0]} receiveShadow>
+        <boxGeometry args={[2.2, 0.05, 1.05]} />
+        <SurfaceMaterial
+          bump={0.22}
+          color={LABORATORY_COLORS.cabinet}
+          roughness={0.72}
+          surface="concrete"
         />
       </mesh>
 
       {scale === "pair" ? (
         <group>
-          <SugarRing monomer={leftMonomer} position={[-sep, 0.62, 0]} />
-          <SugarRing monomer={rightMonomer} position={[sep, 0.62, 0]} />
+          <MonosaccharideMolecule
+            monomer={leftMonomer}
+            position={[-sep, 0.64, 0]}
+          />
+          <MonosaccharideMolecule
+            monomer={rightMonomer}
+            position={[sep, 0.64, 0]}
+          />
 
-          {/* Glycosidic -O- bridge visible when joined */}
-          {phase > 0.35 && (
-            <group position={[0, 0.62, 0]}>
-              <mesh rotation={[0, 0, Math.PI / 2]}>
-                <cylinderGeometry args={[0.024, 0.024, sep * 1.1, 12]} />
-                <meshStandardMaterial color={PLOT_COLORS.teal} />
-              </mesh>
-              <mesh castShadow>
-                <sphereGeometry args={[0.056, 18, 18]} />
-                <meshStandardMaterial color={ATOM_COLORS.cpkOxygen} />
+          {/* 3D angled C-O-C glycosidic ether bridge visible when joined */}
+          {phase > 0.35 ? (
+            <group>
+              <CovalentBond
+                color={PLOT_COLORS.teal}
+                from={[-sep + 0.19, 0.64, 0]}
+                radius={0.018}
+                to={[0, 0.68, 0.03]}
+              />
+              <CovalentBond
+                color={PLOT_COLORS.teal}
+                from={[0, 0.68, 0.03]}
+                radius={0.018}
+                to={[sep - 0.19, 0.64, 0]}
+              />
+              <mesh castShadow position={[0, 0.68, 0.03]}>
+                <sphereGeometry args={[0.056, 22, 18]} />
+                <meshPhysicalMaterial
+                  clearcoat={0.82}
+                  color={ATOM_COLORS.cpkOxygen}
+                  roughness={0.2}
+                />
               </mesh>
               <ThreeLabel
                 anchorY="bottom"
                 color={ink}
                 gap={0.08}
-                position={[0, 0.08, 0]}
+                position={[0, 0.8, 0]}
               >
                 {bondLabel}
               </ThreeLabel>
             </group>
-          )}
+          ) : null}
 
-          {/* Water molecule released during condensation / entering during hydrolysis */}
-          <group position={[0, waterY, 0.14]}>
-            <mesh castShadow>
-              <sphereGeometry args={[0.048, 16, 16]} />
-              <meshStandardMaterial color={ATOM_COLORS.cpkOxygen} />
-            </mesh>
-            <mesh position={[-0.055, -0.036, 0]}>
-              <sphereGeometry args={[0.03, 12, 12]} />
-              <meshStandardMaterial color={ATOM_COLORS.cpkHydrogen} />
-            </mesh>
-            <mesh position={[0.055, -0.036, 0]}>
-              <sphereGeometry args={[0.03, 12, 12]} />
-              <meshStandardMaterial color={ATOM_COLORS.cpkHydrogen} />
-            </mesh>
-          </group>
+          <WaterMolecule position={[0, waterY, 0.18]} />
 
           <ThreeLabel
             anchorY="top"
             color={ink}
             gap={0.04}
-            position={[-sep, 0.34, 0]}
+            position={[-sep, 0.28, 0]}
           >
             {monomerNames[leftMonomer]}
           </ThreeLabel>
@@ -198,7 +210,7 @@ export function SugarScene({
             anchorY="top"
             color={ink}
             gap={0.04}
-            position={[sep, 0.34, 0]}
+            position={[sep, 0.28, 0]}
           >
             {monomerNames[rightMonomer]}
           </ThreeLabel>
@@ -213,51 +225,44 @@ export function SugarScene({
               color = PLOT_COLORS.teal;
             }
             return (
-              <mesh
-                castShadow
+              <MonosaccharideMolecule
+                compact
                 key={node.id}
+                monomer="glucose"
                 position={node.position}
-                rotation={[Math.PI / 2, 0, 0]}
-              >
-                <cylinderGeometry args={[0.075, 0.075, 0.036, 6]} />
-                <meshStandardMaterial color={color} roughness={0.45} />
-              </mesh>
+                tintColor={color}
+              />
             );
           })}
-          <lineSegments geometry={backboneGeo}>
-            <lineBasicMaterial color={PLOT_COLORS.orange} />
-          </lineSegments>
-          {polysaccharide === "cellulose" && (
-            <lineSegments geometry={celluloseCrossGeo}>
-              <lineBasicMaterial color={PLOT_COLORS.teal} />
-            </lineSegments>
-          )}
+          {Arr.map(backboneLinks, (link) => (
+            <group key={link.id}>
+              <CovalentBond
+                color={PLOT_COLORS.orange}
+                from={link.from}
+                radius={0.011}
+                to={link.to}
+              />
+              <mesh castShadow position={link.mid}>
+                <sphereGeometry args={[0.026, 12, 10]} />
+                <meshPhysicalMaterial
+                  clearcoat={0.75}
+                  color={ATOM_COLORS.cpkOxygen}
+                  roughness={0.22}
+                />
+              </mesh>
+            </group>
+          ))}
+          {Arr.map(celluloseCrossLinks, (hb) => (
+            <CovalentBond
+              color={PLOT_COLORS.teal}
+              from={hb.from}
+              key={hb.id}
+              radius={0.008}
+              to={hb.to}
+            />
+          ))}
         </group>
       )}
     </group>
-  );
-}
-
-/** Monosaccharide ring (hexose 6-sided for glucose/galactose, pentose 5-sided for fructose). */
-function SugarRing({
-  monomer,
-  position,
-}: {
-  readonly monomer: Monomer;
-  readonly position: readonly [number, number, number];
-}) {
-  const sides = monomer === "fructose" ? 5 : 6;
-  const color = Match.value(monomer).pipe(
-    Match.when("glucose", () => BIOLOGY_COLORS.glucose),
-    Match.when("fructose", () => PLOT_COLORS.amber),
-    Match.when("galactose", () => PLOT_COLORS.violet),
-    Match.exhaustive
-  );
-
-  return (
-    <mesh castShadow position={position} rotation={[Math.PI / 2, 0, 0]}>
-      <cylinderGeometry args={[0.2, 0.2, 0.05, sides]} />
-      <meshStandardMaterial color={color} roughness={0.45} />
-    </mesh>
   );
 }

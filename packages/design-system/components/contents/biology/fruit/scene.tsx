@@ -1,4 +1,6 @@
 import { useFrame, useThree } from "@react-three/fiber";
+import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
+import { useFruitSeedGeometries } from "@repo/design-system/components/contents/biology/fruit/anatomy";
 import type { FruitType } from "@repo/design-system/components/contents/biology/fruit/model";
 import { evaluateFruitOrigin } from "@repo/design-system/components/contents/biology/fruit/model";
 import {
@@ -8,10 +10,14 @@ import {
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import {
+  useVisualScene,
+  useVisualStop,
+} from "@repo/design-system/components/visual/card";
 import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
 import { Array as Arr } from "effect";
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 import type { Group } from "three";
 
 function FruitCamera() {
@@ -21,8 +27,8 @@ function FruitCamera() {
   );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0, 1.5, 3.3] : [0, 1.25, 2.65]}
-      cameraTarget={[0, 0.56, 0]}
+      cameraPosition={narrow ? [0, 1.48, 3.45] : [0, 1.24, 2.85]}
+      cameraTarget={[0, 0.54, 0]}
       fov={38}
       maxDistance={5.8}
       minDistance={1.4}
@@ -40,177 +46,253 @@ export function FruitSeedScene({
   >;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
+  const labelInk = useLabelInk();
+  const geos = useFruitSeedGeometries();
+  const origin = evaluateFruitOrigin(fruit);
   const fruitRef = useRef<Group>(null);
   const phaseRef = useRef(0);
-  const origin = evaluateFruitOrigin(fruit);
 
-  const drupelets = useMemo(
-    () =>
-      Arr.makeBy(origin.carpelCount, (index) => ({
-        angle: (index / origin.carpelCount) * Math.PI * 2,
-        id: `dr-${index}`,
-      })),
-    [origin.carpelCount]
-  );
-
-  const segments = useMemo(
-    () =>
-      Arr.makeBy(origin.flowerCount, (index) => ({
-        id: `seg-${index}`,
-        x: index % 2 === 0 ? -0.14 : 0.14,
-        y: 0.2 + Math.floor(index / 2) * 0.18,
-      })),
-    [origin.flowerCount]
-  );
+  useVisualStop(() => {
+    phaseRef.current = 0;
+    if (fruitRef.current !== null) {
+      fruitRef.current.rotation.y = 0;
+    }
+  });
 
   useFrame((_, delta) => {
     if (!playing || fruitRef.current === null) {
       return;
     }
-    phaseRef.current += simulationStep(delta) * 0.7;
-    fruitRef.current.rotation.y = Math.sin(phaseRef.current) * 0.35;
+    phaseRef.current += simulationStep(delta) * 0.65;
+    fruitRef.current.rotation.y = Math.sin(phaseRef.current) * 0.34;
   });
 
   return (
     <group>
       <SimulationTicker running={playing} />
       <FruitCamera />
-      {/* Left: Fruit type geometry */}
-      <group position={[-0.48, 0, 0]} ref={fruitRef}>
+
+      {/* Left: Sculpted botanical fruit specimen */}
+      <group position={[-0.54, 0.52, 0]} ref={fruitRef}>
         {fruit === "simple" ? (
           <group>
-            <mesh castShadow position={[0, 0.54, 0]}>
-              <sphereGeometry args={[0.32, 20, 16, 0, Math.PI * 1.4]} />
-              <meshStandardMaterial
-                color={BOTANY_COLORS.pericarpPeach}
-                roughness={0.45}
+            {/* Velvety peach pericarp outer shell facing +Z cutaway */}
+            <mesh castShadow geometry={geos.peachSkin} receiveShadow>
+              <meshPhysicalMaterial
+                clearcoat={0.18}
+                clearcoatRoughness={0.45}
+                roughness={0.58}
+                side={2}
+                vertexColors
+              />
+            </mesh>
+            {/* Juicy inner mesocarp cut faces sealing the wedge */}
+            <mesh
+              geometry={geos.fleshWall}
+              rotation={[0, Math.PI * 0.27 - Math.PI / 2, 0]}
+            >
+              <meshPhysicalMaterial
+                clearcoat={0.42}
+                clearcoatRoughness={0.22}
+                color={BOTANY_COLORS.cotyledonGold}
+                roughness={0.34}
                 side={2}
               />
             </mesh>
-            <mesh position={[0, 0.54, 0]}>
-              <sphereGeometry args={[0.13, 14, 12]} />
-              <meshStandardMaterial
+            <mesh
+              geometry={geos.fleshWall}
+              rotation={[0, Math.PI * 1.73 - Math.PI / 2, 0]}
+            >
+              <meshPhysicalMaterial
+                clearcoat={0.42}
+                clearcoatRoughness={0.22}
+                color={BOTANY_COLORS.cotyledonGold}
+                roughness={0.34}
+                side={2}
+              />
+            </mesh>
+            {/* Corrugated woody endocarp stone pit */}
+            <mesh castShadow geometry={geos.pit}>
+              <SurfaceMaterial
                 color={BOTANY_COLORS.testaBrown}
-                roughness={0.65}
+                roughness={0.82}
+                surface="bark"
+              />
+            </mesh>
+            {/* Woody pedicel stem + peach leaf */}
+            <mesh castShadow geometry={geos.pedicel}>
+              <SurfaceMaterial
+                color={BOTANY_COLORS.barkBrown}
+                roughness={0.85}
+                surface="bark"
+              />
+            </mesh>
+            <mesh castShadow geometry={geos.peachLeaf}>
+              <meshPhysicalMaterial
+                clearcoat={0.25}
+                roughness={0.44}
+                side={2}
+                vertexColors
               />
             </mesh>
           </group>
         ) : null}
 
         {fruit === "aggregate" ? (
-          <group position={[0, 0.54, 0]}>
-            {Arr.map(drupelets, (d) => (
-              <mesh
-                castShadow
-                key={d.id}
-                position={[
-                  Math.cos(d.angle) * 0.15,
-                  Math.sin(d.angle) * 0.15,
-                  0.04,
-                ]}
-              >
-                <sphereGeometry args={[0.12, 12, 10]} />
-                <meshStandardMaterial
-                  color={BOTANY_COLORS.fruitRed}
-                  roughness={0.38}
-                />
-              </mesh>
-            ))}
+          <group>
+            {/* Central pale receptacle core */}
+            <mesh position={[0, 0.02, 0]}>
+              <sphereGeometry args={[0.13, 18, 16]} />
+              <meshStandardMaterial
+                color={BOTANY_COLORS.cortexCream}
+                roughness={0.65}
+              />
+            </mesh>
+            {/* Glossy translucent crimson drupelet cluster */}
+            {Arr.map(
+              Arr.take(geos.drupeletCoords, origin.carpelCount * 3),
+              (d) => (
+                <group key={d.id} position={[d.x, d.y, d.z]}>
+                  <mesh castShadow>
+                    <sphereGeometry args={[0.088, 18, 14]} />
+                    <meshPhysicalMaterial
+                      clearcoat={0.72}
+                      clearcoatRoughness={0.14}
+                      color={BOTANY_COLORS.fruitRed}
+                      roughness={0.22}
+                    />
+                  </mesh>
+                  {/* Tiny style hair tip on each drupelet */}
+                  <mesh position={[d.x * 0.45, 0.02, d.z * 0.45]}>
+                    <sphereGeometry args={[0.012, 8, 6]} />
+                    <meshStandardMaterial
+                      color={BOTANY_COLORS.endodermisRust}
+                      roughness={0.75}
+                    />
+                  </mesh>
+                </group>
+              )
+            )}
+            {/* Green calyx skirt */}
+            <mesh castShadow geometry={geos.berryCalyx}>
+              <meshStandardMaterial roughness={0.5} side={2} vertexColors />
+            </mesh>
           </group>
         ) : null}
 
         {fruit === "multiple" ? (
-          <group>
-            {Arr.map(segments, (seg) => (
-              <mesh castShadow key={seg.id} position={[seg.x, seg.y, 0]}>
-                <boxGeometry args={[0.24, 0.2, 0.24]} />
-                <meshStandardMaterial
-                  color={BOTANY_COLORS.cotyledonGold}
-                  roughness={0.5}
-                />
-              </mesh>
-            ))}
-            <mesh position={[0, 0.94, 0]}>
-              <coneGeometry args={[0.16, 0.22, 8]} />
-              <meshStandardMaterial
-                color={BOTANY_COLORS.healthyLeaf}
-                roughness={0.55}
+          <group position={[0, -0.02, 0]}>
+            {/* Sculpted ovoid syncarp core */}
+            <mesh castShadow geometry={geos.pineCore}>
+              <meshStandardMaterial roughness={0.58} vertexColors />
+            </mesh>
+            {/* Overlapping hexagonal fused fruitlet eyes */}
+            {Arr.map(
+              Arr.take(geos.pineEyes, origin.flowerCount * 3 + 4),
+              (eye) => (
+                <group
+                  key={eye.id}
+                  position={[eye.x, eye.y, eye.z]}
+                  rotation={[0, -eye.ang + Math.PI / 2, 0]}
+                >
+                  <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
+                    <cylinderGeometry args={[0.052, 0.068, 0.036, 6]} />
+                    <meshStandardMaterial
+                      color={BOTANY_COLORS.agarAmber}
+                      roughness={0.48}
+                    />
+                  </mesh>
+                  <mesh position={[0, 0.01, 0.024]}>
+                    <sphereGeometry args={[0.018, 10, 8]} />
+                    <meshStandardMaterial
+                      color={BOTANY_COLORS.ligninBrown}
+                      roughness={0.72}
+                    />
+                  </mesh>
+                </group>
+              )
+            )}
+            {/* Lush spiky green rosette crown */}
+            <mesh castShadow geometry={geos.pineCrown}>
+              <meshPhysicalMaterial
+                clearcoat={0.28}
+                roughness={0.42}
+                side={2}
+                vertexColors
               />
             </mesh>
           </group>
         ) : null}
       </group>
 
-      {/* Right: Magnified seed cross-section */}
-      <group position={[0.54, 0.54, 0]}>
-        {/* Testa seed coat */}
-        <mesh castShadow scale={[1.15, 0.85, 0.65]}>
-          <sphereGeometry args={[0.26, 18, 14, 0, Math.PI * 1.4]} />
-          <meshStandardMaterial
+      {/* Right: Magnified dicot kidney-bean seed cutaway facing +Z */}
+      <group position={[0.56, 0.54, 0]}>
+        <mesh castShadow geometry={geos.testaShell} receiveShadow>
+          <meshPhysicalMaterial
+            clearcoat={0.28}
+            clearcoatRoughness={0.36}
             color={BOTANY_COLORS.testaBrown}
-            roughness={0.6}
-            side={2}
+            roughness={0.54}
           />
         </mesh>
-        {/* Endosperm reserve */}
-        <mesh position={[-0.04, 0.06, 0.04]} scale={[0.9, 0.6, 0.45]}>
-          <sphereGeometry args={[0.18, 14, 12]} />
+        <mesh castShadow geometry={geos.endosperm}>
           <meshStandardMaterial
             color={BOTANY_COLORS.endospermIvory}
-            roughness={0.55}
-          />
-        </mesh>
-        {/* Cotyledon */}
-        <mesh position={[0.04, -0.04, 0.07]} scale={[0.85, 0.6, 0.45]}>
-          <sphereGeometry args={[0.15, 14, 12]} />
-          <meshStandardMaterial
-            color={BOTANY_COLORS.cotyledonGold}
             roughness={0.48}
           />
         </mesh>
-        {/* Embryo axis */}
-        <mesh position={[-0.08, -0.08, 0.12]} rotation={[0, 0, 0.5]}>
-          <capsuleGeometry args={[0.032, 0.1, 6, 10]} />
-          <meshStandardMaterial
-            color={BOTANY_COLORS.embryoGreen}
+        <mesh castShadow geometry={geos.cotyledon}>
+          <meshPhysicalMaterial
+            clearcoat={0.2}
+            color={BOTANY_COLORS.cotyledonGold}
             roughness={0.42}
           />
         </mesh>
+        <mesh castShadow geometry={geos.embryoAxis}>
+          <meshPhysicalMaterial
+            clearcoat={0.32}
+            color={BOTANY_COLORS.embryoGreen}
+            roughness={0.36}
+          />
+        </mesh>
+        <mesh castShadow geometry={geos.plumuleLeaves}>
+          <meshStandardMaterial roughness={0.42} side={2} vertexColors />
+        </mesh>
       </group>
 
-      {/* Labels */}
+      {/* Anatomical callouts */}
       <ThreeLabel
-        color={BOTANY_COLORS.labelInk}
+        color={labelInk}
         fontSize="compact"
-        position={[-0.56, 1.04, 0]}
+        position={[-0.56, 1.12, 0]}
       >
         <span>{parts.pericarp}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={BOTANY_COLORS.labelInk}
+        color={labelInk}
         fontSize="compact"
-        position={[0.54, 0.96, 0]}
+        position={[0.56, 1.04, 0]}
       >
         <span>{parts.testa}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={BOTANY_COLORS.labelInk}
+        color={labelInk}
         fontSize="compact"
-        position={[0.92, 0.68, 0]}
+        position={[1.18, 0.74, 0]}
       >
         <span>{parts.endosperm}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={BOTANY_COLORS.labelInk}
+        color={labelInk}
         fontSize="compact"
-        position={[0.92, 0.34, 0]}
+        position={[1.18, 0.34, 0]}
       >
         <span>{parts.cotyledon}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={BOTANY_COLORS.labelInk}
+        color={labelInk}
         fontSize="compact"
-        position={[0.32, 0.18, 0.24]}
+        position={[0.24, 0.14, 0.22]}
       >
         <span>{parts.embryo}</span>
       </ThreeLabel>

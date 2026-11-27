@@ -1,23 +1,42 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
+import {
+  buildLaminaGeometry,
+  buildStemGeometry,
+} from "@repo/design-system/components/contents/biology/botanical";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
+import {
+  useLeafTextures,
+  useStemTextures,
+} from "@repo/design-system/components/contents/biology/foliage";
 import type { Insect } from "@repo/design-system/components/contents/biology/metamorphosis/growth";
 import {
   growthAt,
   lengthCurvePoints,
 } from "@repo/design-system/components/contents/biology/metamorphosis/growth";
-import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
+import { MetamorphosisOrganism } from "@repo/design-system/components/contents/biology/metamorphosis/stages";
+import { OrganicSoilBed } from "@repo/design-system/components/contents/biology/planter";
+import {
+  SimulationTicker,
+  simulationStep,
+} from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
+import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import {
+  useVisualReset,
+  useVisualScene,
+  useVisualStop,
+} from "@repo/design-system/components/visual/card";
 import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { LABORATORY_COLORS } from "@repo/design-system/lib/material/laboratory";
+import { SPECIMEN_COLORS } from "@repo/design-system/lib/material/specimen";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo, useRef } from "react";
-import { BufferGeometry, Vector3 } from "three";
+import { CatmullRomCurve3, DoubleSide, TubeGeometry, Vector3 } from "three";
 
-const CAMERA_POSITION: readonly [number, number, number] = [0, 0.86, 2.25];
-const CAMERA_TARGET: readonly [number, number, number] = [0, 0.54, 0];
+const CHART_GRID_YS = [-0.2, -0.05, 0.1, 0.25] as const;
 
 export type MetamorphosisPart =
   | "exoskeleton"
@@ -27,10 +46,27 @@ export type MetamorphosisPart =
   | "headCapsule"
   | "leaf";
 
+function MetamorphosisCamera() {
+  const narrow = isNarrowThreeScene(
+    useThree((state) => state.size),
+    1.25
+  );
+  return (
+    <CameraControls
+      cameraPosition={narrow ? [0, 1.15, 3.05] : [0, 0.96, 2.55]}
+      cameraTarget={[0, 0.52, 0.04]}
+      fov={38}
+      maxDistance={5.5}
+      minDistance={1.4}
+    />
+  );
+}
+
 /**
- * 3D insect metamorphosis scene: food leaf supporting the developing insect
- * (egg -> nymph/larva -> pupa -> winged adult) with shed exuvia during ecdysis
- * moults and a stepped exoskeleton-length growth chart in the backdrop.
+ * 3D insect metamorphosis scene: grounded organic soil bed + woody host twig
+ * supporting a sculpted serrated veined milkweed/host leaf, developing insect
+ * (egg -> larva/nymph -> hanging chrysalis -> winged adult), shed exuvia during
+ * moults, and a grounded frosted-glass 3D stepped exoskeleton growth chart.
  */
 export function MetamorphosisScene({
   insect,
@@ -47,6 +83,17 @@ export function MetamorphosisScene({
   const ink = useLabelInk();
   const clock = useRef(time);
   const lastSent = useRef(time);
+  const leafTex = useLeafTextures("healthy");
+  const stemTex = useStemTextures();
+
+  const resetTimeline = () => {
+    clock.current = 0;
+    lastSent.current = 0;
+    onTime(0);
+  };
+
+  useVisualStop(resetTimeline);
+  useVisualReset(resetTimeline);
 
   if (!playing) {
     clock.current = time;
@@ -65,165 +112,228 @@ export function MetamorphosisScene({
   });
 
   const snap = growthAt(insect, time);
-  const bodyScale = 0.4 + (snap.lengthMm / 42) * 0.85;
+  let bodyScale = 0.62 + (snap.lengthMm / 42) * 0.56;
+  if (snap.stage === "egg") {
+    bodyScale = 0.95;
+  } else if (snap.stage === "pupa") {
+    bodyScale = 0.96;
+  }
   const cursorX = -0.85 + time * 1.7;
 
-  const curveGeo = useMemo(() => {
-    const pts = lengthCurvePoints(insect);
-    const segs = Arr.flatMap(pts, (a, i) => {
-      const b = pts[i + 1];
-      return b === undefined
-        ? []
-        : [new Vector3(a[0], a[1], a[2]), new Vector3(b[0], b[1], b[2])];
+  const { curveTube, hostLeafGeo, hostTwigGeo, petioleGeo } = useMemo(() => {
+    const pts = Arr.map(
+      lengthCurvePoints(insect),
+      ([x, y, z]) => new Vector3(x, y, z)
+    );
+    const tube = new TubeGeometry(
+      new CatmullRomCurve3(pts, false, "centripetal", 0.08),
+      64,
+      0.011,
+      8,
+      false
+    );
+
+    // Sculpted curved, organically serrated, deeply veined milkweed/host leaf.
+    const leaf = buildLaminaGeometry({
+      baseTaper: 0.24,
+      cols: 18,
+      cup: 0.068,
+      droop: 0.075,
+      length: 1.34,
+      midribCrease: 0.022,
+      notchDepth: 0,
+      rows: 24,
+      ruffleAmp: 0.016,
+      ruffleFreq: 6,
+      serrationAmp: 0.065,
+      serrationTeeth: 12,
+      tipPower: 0.7,
+      width: 0.68,
     });
-    const geo = new BufferGeometry();
-    geo.setFromPoints(segs);
-    return geo;
+
+    // Organic woody stem rising cleanly out of the dark soil mound on the left.
+    const twig = buildStemGeometry(
+      [
+        new Vector3(-0.62, 0.01, 0.16),
+        new Vector3(-0.76, 0.1, 0.2),
+        new Vector3(-0.78, 0.19, 0.22),
+      ],
+      0.044,
+      0.024,
+      18,
+      12
+    );
+
+    // Curved tapering petiole blending seamlessly into the leaf's raised underside midrib.
+    const petiole = buildStemGeometry(
+      [
+        new Vector3(-0.8, 0.185, 0.22),
+        new Vector3(-0.68, 0.18, 0.22),
+        new Vector3(-0.32, 0.215, 0.22),
+        new Vector3(0.22, 0.205, 0.22),
+      ],
+      0.02,
+      0.005,
+      24,
+      8
+    );
+
+    return {
+      curveTube: tube,
+      hostLeafGeo: leaf,
+      hostTwigGeo: twig,
+      petioleGeo: petiole,
+    };
   }, [insect]);
 
-  useEffect(() => () => curveGeo.dispose(), [curveGeo]);
+  useEffect(
+    () => () => {
+      curveTube.dispose();
+      hostLeafGeo.dispose();
+      hostTwigGeo.dispose();
+      petioleGeo.dispose();
+    },
+    [curveTube, hostLeafGeo, hostTwigGeo, petioleGeo]
+  );
 
   return (
     <group>
-      <CameraControls
-        cameraPosition={CAMERA_POSITION}
-        cameraTarget={CAMERA_TARGET}
-        fov={38}
+      <SimulationTicker running={playing} />
+      <MetamorphosisCamera />
+
+      {/* Seamless horizon-faded organic botanical soil bed (zero floating gray slab) */}
+      <OrganicSoilBed
+        innerRadius={0.86}
+        moundHeight={0.075}
+        moundRadius={0.84}
+        outerRadius={1.98}
+        seed={43}
       />
 
-      <mesh position={[0, -0.02, 0]} receiveShadow>
-        <boxGeometry args={[2.2, 0.04, 1.0]} />
-        <meshStandardMaterial
-          color={LABORATORY_COLORS.worktop}
-          roughness={0.65}
-        />
-      </mesh>
-
-      {/* Stepped exoskeleton growth curve backdrop */}
-      <mesh position={[0, 0.82, -0.26]}>
-        <boxGeometry args={[1.9, 0.62, 0.03]} />
-        <meshStandardMaterial
-          color={LABORATORY_COLORS.paper}
-          roughness={0.85}
-        />
-      </mesh>
-      <lineSegments geometry={curveGeo}>
-        <lineBasicMaterial color={PLOT_COLORS.teal} />
-      </lineSegments>
-      <mesh position={[cursorX, 0.82, -0.2]}>
-        <boxGeometry args={[0.014, 0.56, 0.014]} />
-        <meshStandardMaterial color={PLOT_COLORS.amber} />
-      </mesh>
-
-      {/* Food plant leaf */}
-      <mesh position={[0, 0.08, 0.16]} receiveShadow scale={[1.8, 0.12, 0.85]}>
-        <sphereGeometry args={[0.42, 24, 16]} />
-        <meshStandardMaterial color={BIOLOGY_COLORS.leaf} roughness={0.65} />
-      </mesh>
-      <ThreeLabel
-        anchorX="right"
-        color={ink}
-        gap={0.04}
-        position={[-0.78, 0.14, 0.16]}
-      >
-        {parts.leaf}
-      </ThreeLabel>
-
-      {/* Developing insect on leaf */}
-      <group position={[0, 0.2, 0.16]} scale={bodyScale}>
-        {snap.stage === "egg" && (
-          <mesh castShadow>
-            <sphereGeometry args={[0.1, 16, 16]} />
-            <meshStandardMaterial color={BIOLOGY_COLORS.seed} />
-          </mesh>
-        )}
-
-        {(snap.stage === "nymph" || snap.stage === "larva") && (
-          <group>
-            {/* Segmented body + hard chitin head capsule */}
-            {Arr.map([-0.18, -0.04, 0.1, 0.22] as const, (x) => (
-              <mesh castShadow key={x} position={[x, 0, 0]}>
-                <sphereGeometry args={[0.095, 16, 16]} />
-                <meshStandardMaterial
-                  color={
-                    insect === "grasshopper"
-                      ? BIOLOGY_COLORS.coleoptile
-                      : PLOT_COLORS.amber
-                  }
-                />
-              </mesh>
-            ))}
-            <mesh castShadow position={[0.34, 0.02, 0]}>
-              <sphereGeometry args={[0.08, 16, 16]} />
-              <meshStandardMaterial color={BIOLOGY_COLORS.cork} />
-            </mesh>
-            {insect === "grasshopper" && snap.instar >= 3 && (
-              <mesh position={[0.08, 0.1, 0]} rotation={[0, 0, -0.3]}>
-                <boxGeometry args={[0.14, 0.03, 0.16]} />
-                <meshStandardMaterial color={BIOLOGY_COLORS.leafUnder} />
-              </mesh>
-            )}
-          </group>
-        )}
-
-        {snap.stage === "pupa" && (
-          <mesh
-            castShadow
-            position={[0, 0.06, 0]}
-            rotation={[0, 0, Math.PI / 2]}
-          >
-            <capsuleGeometry args={[0.11, 0.24, 10, 18]} />
+      {/* Frosted glass stepped exoskeleton growth chart on grounded anodized posts */}
+      <group position={[0, 0.88, -0.32]}>
+        <mesh castShadow receiveShadow>
+          <boxGeometry args={[1.94, 0.64, 0.024]} />
+          <meshPhysicalMaterial
+            clearcoat={0.72}
+            color={LABORATORY_COLORS.paper}
+            opacity={0.74}
+            roughness={0.22}
+            transparent
+          />
+        </mesh>
+        {Arr.map(CHART_GRID_YS, (gy) => (
+          <mesh key={`cg-${gy}`} position={[0, gy, 0.015]}>
+            <boxGeometry args={[1.78, 0.004, 0.004]} />
             <meshStandardMaterial
-              color={BIOLOGY_COLORS.boxwood}
-              roughness={0.55}
+              color={LABORATORY_COLORS.plinth}
+              opacity={0.35}
+              roughness={0.5}
+              transparent
             />
           </mesh>
-        )}
+        ))}
+        <mesh position={[0, -0.33, 0.004]}>
+          <boxGeometry args={[1.98, 0.026, 0.048]} />
+          <meshStandardMaterial
+            color={LABORATORY_COLORS.plinth}
+            metalness={0.42}
+            roughness={0.4}
+          />
+        </mesh>
+        {/* Twin grounded anodized vertical chart posts down to y = 0 */}
+        {Arr.map([-0.78, 0.78] as const, (px) => (
+          <mesh castShadow key={`post-${px}`} position={[px, -0.61, 0]}>
+            <cylinderGeometry args={[0.016, 0.022, 0.56, 14]} />
+            <meshStandardMaterial
+              color={LABORATORY_COLORS.plinth}
+              metalness={0.55}
+              roughness={0.36}
+            />
+          </mesh>
+        ))}
+      </group>
+      <mesh geometry={curveTube} position={[0, 0.06, -0.06]}>
+        <meshPhysicalMaterial
+          clearcoat={0.65}
+          color={PLOT_COLORS.teal}
+          emissive={PLOT_COLORS.teal}
+          emissiveIntensity={0.22}
+          roughness={0.24}
+        />
+      </mesh>
+      <mesh position={[cursorX, 0.88, -0.28]}>
+        <boxGeometry args={[0.014, 0.58, 0.022]} />
+        <meshPhysicalMaterial
+          clearcoat={0.78}
+          color={PLOT_COLORS.amber}
+          roughness={0.2}
+        />
+      </mesh>
 
-        {snap.stage === "adult" && (
-          <group>
-            <mesh castShadow rotation={[0, 0, Math.PI / 2]}>
-              <capsuleGeometry args={[0.075, 0.34, 10, 18]} />
-              <meshStandardMaterial
-                color={
-                  insect === "grasshopper"
-                    ? BIOLOGY_COLORS.stem
-                    : BIOLOGY_COLORS.microscopeBlack
-                }
-              />
-            </mesh>
-            {/* Wings */}
-            {Arr.map([-1, 1] as const, (side) => (
-              <mesh
-                castShadow
-                key={side}
-                position={[0, 0.14, side * 0.22]}
-                rotation={[side * 0.55, 0, 0]}
-              >
-                <boxGeometry args={[0.36, 0.02, 0.32]} />
-                <meshStandardMaterial
-                  color={
-                    insect === "grasshopper"
-                      ? BIOLOGY_COLORS.leafUnder
-                      : PLOT_COLORS.orange
-                  }
-                  opacity={0.85}
-                  transparent
-                />
-              </mesh>
-            ))}
-          </group>
-        )}
+      {/* Woody host stem twig + curved petiole + sculpted serrated veined host leaf */}
+      <mesh castShadow geometry={hostTwigGeo} receiveShadow>
+        <SurfaceMaterial
+          bump={0.9}
+          color={SPECIMEN_COLORS.barkTwigWarm}
+          repeat={[2, 2]}
+          roughness={0.9}
+          surface="bark"
+        />
+      </mesh>
+      <mesh castShadow geometry={petioleGeo}>
+        <meshPhysicalMaterial
+          bumpMap={stemTex.bumpMap}
+          bumpScale={0.01}
+          map={stemTex.map}
+          roughness={0.52}
+        />
+      </mesh>
+      <mesh
+        castShadow
+        geometry={hostLeafGeo}
+        position={[-0.72, 0.18, 0.22]}
+        receiveShadow
+        rotation={[0.2, 0, -0.02]}
+      >
+        <meshPhysicalMaterial
+          bumpMap={leafTex.bumpMap}
+          bumpScale={0.018}
+          clearcoat={0.28}
+          clearcoatRoughness={0.36}
+          map={leafTex.map}
+          roughness={0.5}
+          roughnessMap={leafTex.roughnessMap}
+          side={DoubleSide}
+        />
+      </mesh>
+      <ThreeLabel color={ink} fontSize="compact" position={[-0.68, 0.38, 0.44]}>
+        <span>{parts.leaf}</span>
+      </ThreeLabel>
+
+      {/* Sculpted developing insect stage resting cleanly on leaf (or hanging in pupa) */}
+      <group
+        position={[0, snap.stage === "pupa" ? 0.16 : 0.26, 0.22]}
+        scale={bodyScale}
+      >
+        <MetamorphosisOrganism
+          insect={insect}
+          instar={snap.instar}
+          playing={playing}
+          stage={snap.stage}
+        />
       </group>
 
-      {/* Shed old exoskeleton (exuvia) beside insect during moults */}
-      {snap.shedding && (
-        <group position={[-0.45, 0.16, 0.22]}>
+      {/* Translucent shed exuvia cuticle beside insect during ecdysis */}
+      {snap.shedding ? (
+        <group position={[-0.46, 0.28, 0.28]}>
           <mesh rotation={[0, 0, Math.PI / 2]}>
-            <capsuleGeometry args={[0.055, 0.16, 8, 12]} />
-            <meshStandardMaterial
+            <capsuleGeometry args={[0.042, 0.15, 10, 14]} />
+            <meshPhysicalMaterial
+              clearcoat={0.55}
               color={BIOLOGY_COLORS.bean}
-              opacity={0.55}
+              opacity={0.44}
+              roughness={0.36}
               transparent
             />
           </mesh>
@@ -236,7 +346,7 @@ export function MetamorphosisScene({
             {parts.exuvia}
           </ThreeLabel>
         </group>
-      )}
+      ) : null}
     </group>
   );
 }
