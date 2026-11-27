@@ -2,10 +2,10 @@ import {
   createBeakerMarkingsTexture,
   createEpoxyTexture,
   createFlaskMarkingsTexture,
-  latheProfile,
   liquidMeniscus,
   ReagentShelf,
 } from "@repo/design-system/components/contents/chemistry/glassware";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   GlassMaterial,
@@ -301,26 +301,22 @@ export function ColumnLiquid({
   readonly opacity: number;
   readonly radius: number;
 }) {
-  const points = useMemo(
-    () =>
-      latheProfile([
-        [0.0005, bottom],
-        [radius, bottom],
-        ...liquidMeniscus(radius, level),
-        [0.0005, level],
-      ]),
-    [bottom, level, radius]
-  );
+  const points = [
+    [0, bottom],
+    [radius, bottom],
+    ...liquidMeniscus(radius, level),
+    [0, level],
+  ] as const;
   return (
     <mesh>
-      <latheGeometry args={[points, 48]} />
+      <Turn profile={points} />
       <LiquidMaterial color={color} opacity={opacity} />
     </mesh>
   );
 }
 
-const FLASK_WALL = latheProfile([
-  [0.001, 0],
+const FLASK_WALL = [
+  [0, 0],
   [0.04, 0],
   [0.0435, 0.004],
   [0.0435, 0.013],
@@ -334,8 +330,8 @@ const FLASK_WALL = latheProfile([
   [0.0166, 0.104],
   [0.0414, 0.013],
   [0.039, 0.004],
-  [0.001, 0.0035],
-]);
+  [0, 0.0035],
+] as const;
 
 /** The radius of the flask's inside at height `y`, for the liquid it holds. */
 export function flaskRadiusAt(y: number) {
@@ -356,7 +352,7 @@ export function Flask() {
   return (
     <group>
       <mesh castShadow renderOrder={2}>
-        <latheGeometry args={[FLASK_WALL, 64]} />
+        <Turn profile={FLASK_WALL} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.26} />
       </mesh>
       <mesh position={[0, 0.147, 0]} rotation={[Math.PI / 2, 0, 0]}>
@@ -392,29 +388,25 @@ export function FlaskLiquid({
   readonly level: number;
   readonly opacity?: number;
 }) {
-  const points = useMemo(
-    () =>
-      latheProfile([
-        [0.001, 0.0038],
-        ...Arr.map(Arr.range(0, 7), (step) => {
-          const y = 0.0038 + ((level - 0.0038) * step) / 8;
-          return [flaskRadiusAt(y) - 0.002, y] as const;
-        }),
-        ...liquidMeniscus(flaskRadiusAt(level) - 0.002, level),
-        [0.001, level],
-      ]),
-    [level]
-  );
+  const points = [
+    [0, 0.0038],
+    ...Arr.map(Arr.range(0, 7), (step) => {
+      const y = 0.0038 + ((level - 0.0038) * step) / 8;
+      return [flaskRadiusAt(y) - 0.002, y] as const;
+    }),
+    ...liquidMeniscus(flaskRadiusAt(level) - 0.002, level),
+    [0, level],
+  ] as const;
   return (
     <mesh>
-      <latheGeometry args={[points, 40]} />
+      <Turn profile={points} />
       <LiquidMaterial color={color} opacity={opacity} />
     </mesh>
   );
 }
 
-const BEAKER_WALL = latheProfile([
-  [0.001, 0],
+const BEAKER_WALL = [
+  [0, 0],
   [0.0245, 0],
   [0.0268, 0.0035],
   [0.0268, 0.069],
@@ -423,8 +415,8 @@ const BEAKER_WALL = latheProfile([
   [0.0249, 0.069],
   [0.0249, 0.0042],
   [0.023, 0.0032],
-  [0.001, 0.0032],
-]);
+  [0, 0.0032],
+] as const;
 
 /** A 100 mL borosilicate Griffin beaker with double-walled rim, pouring lip, and graduations. */
 export function Beaker() {
@@ -434,7 +426,7 @@ export function Beaker() {
   return (
     <group>
       <mesh castShadow renderOrder={2}>
-        <latheGeometry args={[BEAKER_WALL, 64]} />
+        <Turn profile={BEAKER_WALL} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.28} />
       </mesh>
       <mesh position={[0, 0.0722, 0]} rotation={[Math.PI / 2, 0, 0]}>

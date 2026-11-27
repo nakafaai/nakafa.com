@@ -8,6 +8,7 @@ import {
   MultiBond,
   SpecimenPlinth,
 } from "@repo/design-system/components/contents/chemistry/specimen";
+import { Sweep } from "@repo/design-system/components/three/form/part";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
@@ -16,8 +17,7 @@ import { ORGANIC_COLORS } from "@repo/design-system/lib/material/organic";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr } from "effect";
-import { useEffect, useMemo } from "react";
-import { CatmullRomCurve3, TubeGeometry, Vector3 } from "three";
+import { useMemo } from "react";
 
 export const RIG_Z = 0.04;
 export const UPPER_Y = 0.215;
@@ -247,17 +247,10 @@ export function PolyisopreneChain({
     [showDoubleBonds, spanHalf, waveAmp, xOffset, yCenter]
   );
 
-  const tubeGeo = useMemo(() => {
-    const curve = new CatmullRomCurve3(
-      Arr.map(points, ({ pos }) => new Vector3(pos[0], pos[1], pos[2]))
-    );
-    return new TubeGeometry(curve, 64, 0.0052, 14, false);
-  }, [points]);
-  useEffect(() => () => tubeGeo.dispose(), [tubeGeo]);
-
   return (
     <group>
-      <mesh castShadow geometry={tubeGeo}>
+      <mesh castShadow>
+        <Sweep path={Arr.map(points, ({ pos }) => pos)} radius={0.0052} />
         <meshPhysicalMaterial
           clearcoat={0.7}
           clearcoatRoughness={0.16}

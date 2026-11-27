@@ -10,10 +10,8 @@ import {
   SINK,
   TRAY,
 } from "@repo/design-system/components/contents/biology/waste/station";
-import {
-  latheProfile,
-  liquidMeniscus,
-} from "@repo/design-system/components/contents/chemistry/glassware";
+import { liquidMeniscus } from "@repo/design-system/components/contents/chemistry/glassware";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { LiquidMaterial } from "@repo/design-system/components/three/physical";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { LABORATORY_COLORS } from "@repo/design-system/lib/material/laboratory";
@@ -71,8 +69,8 @@ export function SinkModel({ running }: { readonly running: boolean }) {
   );
 }
 
-const WINCHESTER_PROFILE = latheProfile([
-  [0.001, 0],
+const WINCHESTER_PROFILE = [
+  [0, 0],
   [BOTTLE.radius * 0.9, 0],
   [BOTTLE.radius, 0.012],
   [BOTTLE.radius, BOTTLE.height * 0.62],
@@ -82,16 +80,16 @@ const WINCHESTER_PROFILE = latheProfile([
   [BOTTLE.neck * 1.15, BOTTLE.height * 0.97],
   [BOTTLE.neck * 1.38, BOTTLE.height * 0.985],
   [BOTTLE.neck * 1.32, BOTTLE.height],
-]);
+] as const;
 
-const WINCHESTER_LIQUID = latheProfile([
-  [0.001, 0.01],
+const WINCHESTER_LIQUID = [
+  [0, 0.01],
   [BOTTLE.radius * 0.91, 0.01],
   ...liquidMeniscus(BOTTLE.radius * 0.91, BOTTLE.height * 0.46),
   [0.001, BOTTLE.height * 0.46],
-]);
+] as const;
 
-const FUNNEL_PROFILE = latheProfile([
+const FUNNEL_PROFILE = [
   [0.007, -FUNNEL.stem],
   [0.0085, 0.004],
   [FUNNEL.radius, 0.005 + FUNNEL.cone],
@@ -99,7 +97,7 @@ const FUNNEL_PROFILE = latheProfile([
   [FUNNEL.radius * 0.96, 0.005 + FUNNEL.cone + 0.004],
   [0.006, 0.004],
   [0.0055, -FUNNEL.stem],
-]);
+] as const;
 
 const CAP_FLUTES = Arr.range(0, 15);
 
@@ -111,7 +109,7 @@ export function ChemicalBottle() {
     <group position={[x, 0, z]}>
       {/* Internal spent-solvent liquid with concave meniscus */}
       <mesh>
-        <latheGeometry args={[WINCHESTER_LIQUID, 40]} />
+        <Turn profile={WINCHESTER_LIQUID} />
         <LiquidMaterial color={LABORATORY_COLORS.amberGlass} opacity={0.78} />
       </mesh>
       {/* Heavy amber glass base */}
@@ -129,7 +127,7 @@ export function ChemicalBottle() {
       </mesh>
       {/* Lathed amber borosilicate Winchester body */}
       <mesh castShadow renderOrder={2}>
-        <latheGeometry args={[WINCHESTER_PROFILE, 44]} />
+        <Turn profile={WINCHESTER_PROFILE} />
         <meshPhysicalMaterial
           clearcoat={1}
           clearcoatRoughness={0.05}
@@ -157,7 +155,7 @@ export function ChemicalBottle() {
       </group>
       {/* Molded polypropylene funnel seated in the bottle neck */}
       <mesh castShadow position={[0, BOTTLE.height, 0]}>
-        <latheGeometry args={[FUNNEL_PROFILE, 32]} />
+        <Turn profile={FUNNEL_PROFILE} />
         <meshPhysicalMaterial
           clearcoat={0.45}
           color={LABORATORY_COLORS.polystyrene}

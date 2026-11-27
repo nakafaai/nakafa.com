@@ -1,132 +1,90 @@
+import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
+import type { Path } from "@repo/design-system/components/three/form/path";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { Array as Arr } from "effect";
-import { useEffect, useMemo } from "react";
-import {
-  CatmullRomCurve3,
-  DoubleSide,
-  LatheGeometry,
-  TubeGeometry,
-  Vector2,
-  Vector3,
-} from "three";
+import { DoubleSide } from "three";
 
-/** Converts [radius, height] pairs into LatheGeometry Vector2 control points. */
-function lathePoints(pairs: readonly (readonly [number, number])[]) {
-  return Arr.map(pairs, ([radius, height]) => new Vector2(radius, height));
-}
+/** The outer stainless jacket, as the outline of its wall. */
+const JACKET = [
+  [0.062, 0.008],
+  [0.067, 0.008],
+  [0.068, 0.013],
+  [0.068, 0.144],
+  [0.066, 0.148],
+  [0.062, 0.148],
+  [0.062, 0.008],
+] as const;
 
-/** 120-degree front cutaway outer stainless steel calorimeter jacket. */
-function buildOuterJacketGeometry() {
-  const points = lathePoints([
-    [0.062, 0.008],
-    [0.067, 0.008],
-    [0.068, 0.013],
-    [0.068, 0.144],
-    [0.066, 0.148],
-    [0.062, 0.148],
-    [0.062, 0.014],
-    [0.062, 0.008],
-  ]);
-  return new LatheGeometry(points, 56, Math.PI / 3, (4 * Math.PI) / 3);
-}
+/** The jacket's cutaway: a third of a turn left open at the front. */
+const JACKET_ARC = [Math.PI / 3, (4 * Math.PI) / 3] as const;
 
-/** 104-degree front cutaway inner expanded polystyrene insulating cup. */
-function buildInnerCupGeometry() {
-  const points = lathePoints([
-    [0.049, 0.016],
-    [0.056, 0.016],
-    [0.058, 0.14],
-    [0.055, 0.143],
-    [0.049, 0.143],
-    [0.048, 0.022],
-    [0.049, 0.016],
-  ]);
-  return new LatheGeometry(points, 56, 0.91, Math.PI * 2 - 1.82);
-}
+/** The inner expanded polystyrene cup, as the outline of its wall. */
+const CUP = [
+  [0.049, 0.016],
+  [0.056, 0.016],
+  [0.058, 0.14],
+  [0.055, 0.143],
+  [0.049, 0.143],
+  [0.048, 0.022],
+  [0.049, 0.016],
+] as const;
 
-/** Beveled insulated dark neoprene calorimeter lid profile. */
-function buildLidGeometry() {
-  const points = lathePoints([
-    [0.0006, 0],
-    [0.065, 0],
-    [0.071, 0.004],
-    [0.071, 0.013],
-    [0.067, 0.016],
-    [0.0006, 0.016],
-  ]);
-  return new LatheGeometry(points, 56);
-}
+/** The cup's cutaway, a little narrower than the jacket's. */
+const CUP_ARC = [0.91, Math.PI * 2 - 1.82] as const;
 
-/** Tapered borosilicate laboratory thermometer stem and submerged bulb. */
-function buildThermometerGlassGeometry() {
-  const points = lathePoints([
-    [0.0004, 0],
-    [0.0038, 0.002],
-    [0.0052, 0.008],
-    [0.0052, 0.022],
-    [0.0036, 0.029],
-    [0.0038, 0.268],
-    [0.0028, 0.274],
-    [0.0004, 0.276],
-  ]);
-  return new LatheGeometry(points, 28);
-}
+/** The bevelled neoprene lid. */
+const LID = [
+  [0, 0],
+  [0.065, 0],
+  [0.071, 0.004],
+  [0.071, 0.013],
+  [0.067, 0.016],
+  [0, 0.016],
+] as const;
 
-/** Stainless-steel wire ring stirrer shaft looping into a circular stirring ring. */
-function buildStirrerWireGeometry() {
-  const ringY = 0.044;
-  const ringR = 0.029;
-  const segments = 20;
-  const points = [
-    new Vector3(0.029, 0.242, 0),
-    new Vector3(0.029, 0.12, 0),
-    new Vector3(0.029, ringY + 0.012, 0),
-    ...Arr.makeBy(segments + 1, (step) => {
-      const theta = (step / segments) * Math.PI * 2;
-      return new Vector3(
-        Math.cos(theta) * ringR,
-        ringY,
-        Math.sin(theta) * ringR
-      );
-    }),
-  ];
-  const curve = new CatmullRomCurve3(points);
-  return new TubeGeometry(curve, 64, 0.0017, 10, false);
-}
+/** The thermometer's glass: its bulb, then its long stem. */
+const THERMOMETER = [
+  [0, 0],
+  [0.0038, 0.002],
+  [0.0052, 0.008],
+  [0.0052, 0.022],
+  [0.0036, 0.029],
+  [0.0038, 0.268],
+  [0.0028, 0.274],
+  [0, 0.276],
+] as const;
 
-/** Sculpted 3D lathe thermal heat-transfer arrow pointing along +Y (rotate to aim). */
-function buildHeatArrowGeometry() {
-  const points = lathePoints([
-    [0.0004, 0],
-    [0.0075, 0],
-    [0.0068, 0.006],
-    [0.0054, 0.04],
-    [0.0135, 0.04],
-    [0.014, 0.043],
-    [0.0004, 0.072],
-  ]);
-  return new LatheGeometry(points, 28);
-}
+/** The stirrer: a wire shaft that runs down the cup and is wound into one ring at its foot. */
+const STIRRER: Path = {
+  from: [0, 0.0445, 0],
+  kind: "helix",
+  lead: [
+    [0.029, 0.242, 0],
+    [0.029, 0.12, 0],
+    [0.029, 0.056, 0],
+  ],
+  radius: 0.029,
+  to: [0, 0.0435, 0],
+  turns: -1,
+};
+
+/** A heat arrow pointing up its own axis: a tapered shaft under a broad head. */
+const HEAT_ARROW = [
+  [0, 0],
+  [0.0075, 0],
+  [0.0068, 0.006],
+  [0.0054, 0.04],
+  [0.0135, 0.04],
+  [0.014, 0.043],
+  [0, 0.072],
+] as const;
 
 /** Double-walled cutaway calorimeter vessel: stainless jacket, foam cup, neoprene lid. */
 export function CalorimeterVessel() {
-  const jacketGeo = useMemo(buildOuterJacketGeometry, []);
-  const cupGeo = useMemo(buildInnerCupGeometry, []);
-  const lidGeo = useMemo(buildLidGeometry, []);
-
-  useEffect(
-    () => () => {
-      jacketGeo.dispose();
-      cupGeo.dispose();
-      lidGeo.dispose();
-    },
-    [cupGeo, jacketGeo, lidGeo]
-  );
-
   const jacketEdges = [Math.PI / 3, -Math.PI / 3] as const;
   const cupEdges = [0.91, -0.91] as const;
 
@@ -146,7 +104,8 @@ export function CalorimeterVessel() {
         />
       </mesh>
       {/* Outer brushed stainless protective jacket with 120 deg cutaway */}
-      <mesh castShadow geometry={jacketGeo} receiveShadow>
+      <mesh castShadow receiveShadow>
+        <Turn arc={JACKET_ARC} profile={JACKET} />
         <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.34} />
       </mesh>
       {Arr.map(jacketEdges, (angle) => (
@@ -160,7 +119,8 @@ export function CalorimeterVessel() {
         </mesh>
       ))}
       {/* Inner expanded polystyrene insulating cup with cutaway */}
-      <mesh castShadow geometry={cupGeo} receiveShadow>
+      <mesh castShadow receiveShadow>
+        <Turn arc={CUP_ARC} profile={CUP} />
         <meshStandardMaterial
           color={PROCESS_COLORS.ceramicIvory}
           roughness={0.88}
@@ -177,7 +137,8 @@ export function CalorimeterVessel() {
         </mesh>
       ))}
       {/* Insulated dark neoprene lid with two brass grommets */}
-      <mesh castShadow geometry={lidGeo} position={[0, 0.143, 0]} receiveShadow>
+      <mesh castShadow position={[0, 0.143, 0]} receiveShadow>
+        <Turn profile={LID} />
         <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.78} />
       </mesh>
       {Arr.map(
@@ -210,9 +171,6 @@ export function CalibratedThermometer({
   readonly columnColor: string;
   readonly columnTopY: number;
 }) {
-  const glassGeo = useMemo(buildThermometerGlassGeometry, []);
-  useEffect(() => () => glassGeo.dispose(), [glassGeo]);
-
   const ticks = Arr.makeBy(11, (index) => ({
     key: index,
     major: index % 2 === 0,
@@ -223,7 +181,8 @@ export function CalibratedThermometer({
   return (
     <group>
       {/* Borosilicate glass bulb and stem */}
-      <mesh castShadow geometry={glassGeo}>
+      <mesh castShadow>
+        <Turn profile={THERMOMETER} />
         <meshPhysicalMaterial
           clearcoat={1}
           clearcoatRoughness={0.04}
@@ -277,12 +236,10 @@ export function CalibratedThermometer({
 
 /** Reciprocating stainless-steel wire ring stirrer with knurled insulated grip. */
 export function WireRingStirrer() {
-  const wireGeo = useMemo(buildStirrerWireGeometry, []);
-  useEffect(() => () => wireGeo.dispose(), [wireGeo]);
-
   return (
     <group>
-      <mesh castShadow geometry={wireGeo}>
+      <mesh castShadow>
+        <Sweep ends="round" path={STIRRER} radius={0.0017} />
         <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.24} />
       </mesh>
       {/* Brass ferrule */}
@@ -315,16 +272,13 @@ export function ThermalArrow({
   readonly pointing: "left" | "right";
   readonly scale: number;
 }) {
-  const geo = useMemo(buildHeatArrowGeometry, []);
-  useEffect(() => () => geo.dispose(), [geo]);
-
   return (
     <mesh
       castShadow
-      geometry={geo}
       rotation={[0, 0, pointing === "right" ? -Math.PI / 2 : Math.PI / 2]}
       scale={scale}
     >
+      <Turn profile={HEAT_ARROW} />
       <meshPhysicalMaterial
         clearcoat={0.65}
         clearcoatRoughness={0.18}

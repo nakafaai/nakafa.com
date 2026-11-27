@@ -1,6 +1,6 @@
 import { leafSurface } from "@repo/design-system/components/contents/biology/leaf";
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { getColor } from "@repo/design-system/lib/color";
 import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
 import { Array as Arr } from "effect";
@@ -270,8 +270,8 @@ export function BotanicalLeaf({
   );
 }
 
-const POT_PROFILE = latheProfile([
-  [0.001, 0],
+const POT_PROFILE = [
+  [0, 0],
   [0.24, 0],
   [0.26, 0.02],
   [0.32, 0.28],
@@ -279,7 +279,7 @@ const POT_PROFILE = latheProfile([
   [0.365, 0.355],
   [0.325, 0.355],
   [0.31, 0.3],
-]);
+] as const;
 
 /** Lathed terracotta ceramic pot with rolled lip and bumpy granular peat-soil mound. */
 export function TerracottaPot({
@@ -318,7 +318,7 @@ export function TerracottaPot({
   return (
     <group position={position} scale={scale}>
       <mesh castShadow receiveShadow>
-        <latheGeometry args={[POT_PROFILE, 40]} />
+        <Turn profile={POT_PROFILE} />
         <meshStandardMaterial
           color={BOTANY_COLORS.terracotta}
           roughness={0.82}

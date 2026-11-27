@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Lead } from "@repo/design-system/components/contents/physics/bench/lead";
 import {
@@ -11,6 +10,7 @@ import { hashUnit } from "@repo/design-system/components/contents/simulation/gra
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -53,7 +53,7 @@ const SPECTRUM = [
   [700, APPARATUS_COLORS.photonRed],
 ] as const;
 
-const BULB = latheProfile([
+const BULB = [
   [0.001, -HALF - 0.16],
   [RADIUS * 0.5, -HALF - 0.11],
   [RADIUS * 0.86, -HALF],
@@ -62,7 +62,7 @@ const BULB = latheProfile([
   [RADIUS * 0.86, HALF],
   [RADIUS * 0.5, HALF + 0.11],
   [0.001, HALF + 0.16],
-]);
+] as const;
 const METER_AT = [1.7, 0, 0.7] as const;
 
 /** The colour of light of `wavelength` nanometres, blended between its neighbours in the spectrum. */
@@ -225,7 +225,7 @@ export function PhotoelectricScene({
           <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.3} />
         </mesh>
         <mesh castShadow renderOrder={3} rotation={[0, 0, Math.PI / 2]}>
-          <latheGeometry args={[BULB, 56]} />
+          <Turn profile={BULB} />
           <GlassMaterial color={BENCH_COLORS.glass} opacity={0.16} />
         </mesh>
         {Arr.map([-1, 1] as const, (side) => (

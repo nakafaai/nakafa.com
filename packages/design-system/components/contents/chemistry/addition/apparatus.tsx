@@ -3,7 +3,7 @@ import {
   ColumnLiquid,
   LabBench,
 } from "@repo/design-system/components/contents/chemistry/bench";
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -33,8 +33,8 @@ const BASE_FEET = [
   [0.31, 0.075],
 ] as const;
 
-const VIAL_PROFILE = latheProfile([
-  [0.001, 0],
+const VIAL_PROFILE = [
+  [0, 0],
   [0.0145, 0],
   [0.0165, 0.003],
   [0.0165, 0.046],
@@ -46,8 +46,8 @@ const VIAL_PROFILE = latheProfile([
   [0.0098, 0.053],
   [0.0148, 0.046],
   [0.0148, 0.0035],
-  [0.001, 0.003],
-]);
+  [0, 0.003],
+] as const;
 
 const METHYL_H_DIRS = [
   [0.013, 0.007, 0.009],
@@ -326,7 +326,7 @@ export function PolymerDisplayBase({
             radius={0.014}
           />
           <mesh castShadow position={[0, 0.003, 0]} renderOrder={2}>
-            <latheGeometry args={[VIAL_PROFILE, 36]} />
+            <Turn profile={VIAL_PROFILE} />
             <GlassMaterial color={BENCH_COLORS.glass} opacity={0.32} />
           </mesh>
           <mesh position={[0, 0.025, 0]} rotation={[0, -Math.PI * 0.45, 0]}>

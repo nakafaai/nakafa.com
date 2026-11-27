@@ -1,4 +1,6 @@
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
+import { Sweep } from "@repo/design-system/components/three/form/part";
+import type { Path } from "@repo/design-system/components/three/form/path";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -9,65 +11,39 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { Array as Arr } from "effect";
 import type { RefObject } from "react";
-import { useEffect, useMemo } from "react";
 import type { Group } from "three";
-import {
-  CatmullRomCurve3,
-  LatheGeometry,
-  TubeGeometry,
-  Vector2,
-  Vector3,
-} from "three";
 
 export const RIG_Z = 0.03;
 export const COMPRESSOR_X = -0.31;
 export const CONVERTER_X = 0;
 export const CONDENSER_X = 0.31;
 
-export function createFeedCurve() {
-  return new CatmullRomCurve3([
-    new Vector3(COMPRESSOR_X, 0.315, RIG_Z),
-    new Vector3(COMPRESSOR_X + 0.03, 0.352, RIG_Z),
-    new Vector3(-0.155, 0.352, RIG_Z),
-    new Vector3(-0.088, 0.318, RIG_Z),
-  ]);
-}
+/** The feed line from the compressor's head to the converter's inlet. */
+export const FEED: Path = [
+  [COMPRESSOR_X, 0.315, RIG_Z],
+  [COMPRESSOR_X + 0.03, 0.352, RIG_Z],
+  [-0.155, 0.352, RIG_Z],
+  [-0.088, 0.318, RIG_Z],
+];
 
-export function createSynthesisCurve() {
-  return new CatmullRomCurve3([
-    new Vector3(0.088, 0.132, RIG_Z),
-    new Vector3(0.155, 0.132, RIG_Z),
-    new Vector3(0.185, 0.285, RIG_Z),
-    new Vector3(CONDENSER_X - 0.075, 0.305, RIG_Z),
-  ]);
-}
+/** The synthesis line from the converter's outlet up to the condenser. */
+export const SYNTHESIS: Path = [
+  [0.088, 0.132, RIG_Z],
+  [0.155, 0.132, RIG_Z],
+  [0.185, 0.285, RIG_Z],
+  [CONDENSER_X - 0.075, 0.305, RIG_Z],
+];
 
-export function createRecycleCurve() {
-  return new CatmullRomCurve3([
-    new Vector3(CONDENSER_X, 0.388, RIG_Z),
-    new Vector3(CONDENSER_X, 0.452, RIG_Z),
-    new Vector3(0.18, 0.472, RIG_Z),
-    new Vector3(0, 0.475, RIG_Z),
-    new Vector3(-0.18, 0.472, RIG_Z),
-    new Vector3(COMPRESSOR_X, 0.448, RIG_Z - 0.01),
-    new Vector3(COMPRESSOR_X, 0.33, RIG_Z - 0.025),
-  ]);
-}
-
-export function createDomeGeometry(radius: number, height: number) {
-  const pts = Arr.makeBy(13, (step) => {
-    const t = step / 12;
-    const angle = t * (Math.PI / 2);
-    return [Math.cos(angle) * radius, Math.sin(angle) * height] as const;
-  });
-  return new LatheGeometry(
-    Arr.map(
-      [[radius + 0.012, 0], [radius + 0.012, 0.014], ...pts, [0.001, height]],
-      ([r, y]) => new Vector2(r, y)
-    ),
-    40
-  );
-}
+/** The recycle loop from the condenser's top back over the rig to the compressor. */
+export const RECYCLE: Path = [
+  [CONDENSER_X, 0.388, RIG_Z],
+  [CONDENSER_X, 0.452, RIG_Z],
+  [0.18, 0.472, RIG_Z],
+  [0, 0.475, RIG_Z],
+  [-0.18, 0.472, RIG_Z],
+  [COMPRESSOR_X, 0.448, RIG_Z - 0.01],
+  [COMPRESSOR_X, 0.33, RIG_Z - 0.025],
+];
 
 /** Bolted dark steel skid baseplate sitting directly on the epoxy benchtop. */
 export function PilotSkid() {
@@ -241,31 +217,18 @@ export function CompressorUnit({
 
 /** Flanged stainless interconnecting pipes and overhead recycle loop with brass valve wheel. */
 export function ProcessPiping() {
-  const feedGeo = useMemo(
-    () => new TubeGeometry(createFeedCurve(), 48, 0.011, 14, false),
-    []
-  );
-  const synthGeo = useMemo(
-    () => new TubeGeometry(createSynthesisCurve(), 48, 0.011, 14, false),
-    []
-  );
-  const recycleGeo = useMemo(
-    () => new TubeGeometry(createRecycleCurve(), 84, 0.0115, 14, false),
-    []
-  );
-  useEffect(() => () => feedGeo.dispose(), [feedGeo]);
-  useEffect(() => () => synthGeo.dispose(), [synthGeo]);
-  useEffect(() => () => recycleGeo.dispose(), [recycleGeo]);
-
   return (
     <group>
-      <mesh castShadow geometry={feedGeo}>
+      <mesh castShadow>
+        <Sweep path={FEED} radius={0.011} />
         <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.26} />
       </mesh>
-      <mesh castShadow geometry={synthGeo}>
+      <mesh castShadow>
+        <Sweep path={SYNTHESIS} radius={0.011} />
         <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.26} />
       </mesh>
-      <mesh castShadow geometry={recycleGeo}>
+      <mesh castShadow>
+        <Sweep path={RECYCLE} radius={0.0115} />
         <MetalMaterial color={PROCESS_COLORS.alloySteel} roughness={0.26} />
       </mesh>
       {Arr.map([-0.16, 0.16] as const, (x) => (

@@ -1,5 +1,8 @@
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import type { ContactStage } from "@repo/design-system/components/contents/chemistry/contact/model";
+import { head } from "@repo/design-system/components/three/form/outline";
+import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
+import type { Path } from "@repo/design-system/components/three/form/path";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -9,16 +12,8 @@ import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { Array as Arr } from "effect";
 import type { RefObject } from "react";
-import { useEffect, useMemo } from "react";
 import type { Group } from "three";
-import {
-  CatmullRomCurve3,
-  DoubleSide,
-  LatheGeometry,
-  TubeGeometry,
-  Vector2,
-  Vector3,
-} from "three";
+import { DoubleSide } from "three";
 
 export const PLANT_Z = 0.03;
 export const BURNER_X = -0.35;
@@ -27,58 +22,42 @@ export const ABSORBER_X = 0.12;
 export const DILUTION_X = 0.34;
 export const FLASK_X = 0.495;
 
-export function createDomeGeometry(radius: number, height: number) {
-  const pts = Arr.makeBy(12, (step) => {
-    const t = step / 11;
-    const angle = t * (Math.PI / 2);
-    return [Math.cos(angle) * radius, Math.sin(angle) * height] as const;
-  });
-  return new LatheGeometry(
-    Arr.map(
-      [[radius + 0.01, 0], [radius + 0.01, 0.012], ...pts, [0.001, height]],
-      ([r, y]) => new Vector2(r, y)
-    ),
-    36
-  );
-}
+/** How far the plant's bolting flanges stand out, and how deep they are. */
+export const FLANGE = [0.01, 0.012] as const;
 
-export function createBurnerToConverterCurve() {
-  return new CatmullRomCurve3([
-    new Vector3(BURNER_X, 0.21, PLANT_Z),
-    new Vector3(BURNER_X, 0.26, PLANT_Z),
-    new Vector3(-0.24, 0.26, PLANT_Z),
-    new Vector3(-0.22, 0.115, PLANT_Z),
-    new Vector3(CONVERTER_X - 0.066, 0.115, PLANT_Z),
-  ]);
-}
+/** The gas duct from the burner's stack down into the converter. */
+export const BURNER_DUCT: Path = [
+  [BURNER_X, 0.21, PLANT_Z],
+  [BURNER_X, 0.26, PLANT_Z],
+  [-0.24, 0.26, PLANT_Z],
+  [-0.22, 0.115, PLANT_Z],
+  [CONVERTER_X - 0.066, 0.115, PLANT_Z],
+];
 
-export function createConverterToAbsorberCurve() {
-  return new CatmullRomCurve3([
-    new Vector3(CONVERTER_X, 0.372, PLANT_Z),
-    new Vector3(CONVERTER_X, 0.41, PLANT_Z),
-    new Vector3(0, 0.415, PLANT_Z),
-    new Vector3(0.01, 0.12, PLANT_Z),
-    new Vector3(ABSORBER_X - 0.066, 0.12, PLANT_Z),
-  ]);
-}
+/** The gas duct from the converter's head down into the absorber. */
+export const CONVERTER_DUCT: Path = [
+  [CONVERTER_X, 0.372, PLANT_Z],
+  [CONVERTER_X, 0.41, PLANT_Z],
+  [0, 0.415, PLANT_Z],
+  [0.01, 0.12, PLANT_Z],
+  [ABSORBER_X - 0.066, 0.12, PLANT_Z],
+];
 
-export function createAbsorberToDilutionCurve() {
-  return new CatmullRomCurve3([
-    new Vector3(ABSORBER_X + 0.066, 0.1, PLANT_Z),
-    new Vector3(0.225, 0.1, PLANT_Z),
-    new Vector3(0.235, 0.215, PLANT_Z),
-    new Vector3(DILUTION_X - 0.062, 0.215, PLANT_Z),
-  ]);
-}
+/** The oleum duct from the absorber up into the dilution tank. */
+export const ABSORBER_DUCT: Path = [
+  [ABSORBER_X + 0.066, 0.1, PLANT_Z],
+  [0.225, 0.1, PLANT_Z],
+  [0.235, 0.215, PLANT_Z],
+  [DILUTION_X - 0.062, 0.215, PLANT_Z],
+];
 
-export function createOutletPipeCurve() {
-  return new CatmullRomCurve3([
-    new Vector3(DILUTION_X + 0.062, 0.165, PLANT_Z),
-    new Vector3(0.445, 0.175, PLANT_Z + 0.006),
-    new Vector3(FLASK_X, 0.172, PLANT_Z + 0.01),
-    new Vector3(FLASK_X, 0.148, PLANT_Z + 0.01),
-  ]);
-}
+/** The acid outlet from the dilution tank to the receiving flask. */
+export const OUTLET: Path = [
+  [DILUTION_X + 0.062, 0.165, PLANT_Z],
+  [0.445, 0.175, PLANT_Z + 0.006],
+  [FLASK_X, 0.172, PLANT_Z + 0.01],
+  [FLASK_X, 0.148, PLANT_Z + 0.01],
+];
 
 /** Process skid plate and epoxy lab benchtop. */
 export function ContactPlantSkid() {
@@ -186,11 +165,6 @@ export function SulfurBurner({
 
 /** Stage 2: Bolted stainless catalytic converter tower with 4 porous V2O5 beds behind sight glass. */
 export function VanadiumConverter({ active }: { readonly active: boolean }) {
-  const topDome = useMemo(() => createDomeGeometry(0.066, 0.042), []);
-  const bottomDome = useMemo(() => createDomeGeometry(0.066, 0.032), []);
-  useEffect(() => () => topDome.dispose(), [topDome]);
-  useEffect(() => () => bottomDome.dispose(), [bottomDome]);
-
   const beds = [0.112, 0.164, 0.216, 0.268] as const;
   const legs = Arr.makeBy(4, (step) => (step / 4) * Math.PI * 2 + Math.PI / 4);
   const bolts = Arr.makeBy(10, (step) => (step / 10) * Math.PI * 2);
@@ -207,15 +181,12 @@ export function VanadiumConverter({ active }: { readonly active: boolean }) {
           <MetalMaterial color={CAR_COLORS.castIron} roughness={0.5} />
         </mesh>
       ))}
-      <mesh
-        castShadow
-        geometry={bottomDome}
-        position={[0, 0.088, 0]}
-        rotation={[Math.PI, 0, 0]}
-      >
+      <mesh castShadow position={[0, 0.088, 0]} rotation={[Math.PI, 0, 0]}>
+        <Turn profile={head(0.066, 0.032, FLANGE)} />
         <MetalMaterial color={PROCESS_COLORS.alloySteel} roughness={0.3} />
       </mesh>
-      <mesh castShadow geometry={topDome} position={[0, 0.316, 0]}>
+      <mesh castShadow position={[0, 0.316, 0]}>
+        <Turn profile={head(0.066, 0.042, FLANGE)} />
         <MetalMaterial color={PROCESS_COLORS.alloySteel} roughness={0.3} />
       </mesh>
       {Arr.map(bolts, (ang) => (
@@ -280,25 +251,6 @@ export function VanadiumConverter({ active }: { readonly active: boolean }) {
 
 /** Curved flanged interconnecting stainless gas/oleum ducts with brass valve wheels. */
 export function StageDucts({ stage }: { readonly stage: ContactStage }) {
-  const duct1 = useMemo(
-    () =>
-      new TubeGeometry(createBurnerToConverterCurve(), 48, 0.0095, 12, false),
-    []
-  );
-  const duct2 = useMemo(
-    () =>
-      new TubeGeometry(createConverterToAbsorberCurve(), 56, 0.0095, 12, false),
-    []
-  );
-  const duct3 = useMemo(
-    () =>
-      new TubeGeometry(createAbsorberToDilutionCurve(), 44, 0.0095, 12, false),
-    []
-  );
-  useEffect(() => () => duct1.dispose(), [duct1]);
-  useEffect(() => () => duct2.dispose(), [duct2]);
-  useEffect(() => () => duct3.dispose(), [duct3]);
-
   const activeXByStage: Record<ContactStage, number> = {
     catalyticOxidation: CONVERTER_X,
     dilution: DILUTION_X,
@@ -316,13 +268,16 @@ export function StageDucts({ stage }: { readonly stage: ContactStage }) {
 
   return (
     <group>
-      <mesh castShadow geometry={duct1}>
+      <mesh castShadow>
+        <Sweep path={BURNER_DUCT} radius={0.0095} />
         <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.26} />
       </mesh>
-      <mesh castShadow geometry={duct2}>
+      <mesh castShadow>
+        <Sweep path={CONVERTER_DUCT} radius={0.0095} />
         <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.26} />
       </mesh>
-      <mesh castShadow geometry={duct3}>
+      <mesh castShadow>
+        <Sweep path={ABSORBER_DUCT} radius={0.0095} />
         <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.26} />
       </mesh>
       {Arr.map(

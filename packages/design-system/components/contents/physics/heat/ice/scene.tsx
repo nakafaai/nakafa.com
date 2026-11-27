@@ -1,12 +1,12 @@
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Stand } from "@repo/design-system/components/contents/physics/bench/stand";
 import { Thermometer } from "@repo/design-system/components/contents/physics/bench/thermometer";
 import { useCycleClock } from "@repo/design-system/components/contents/simulation/clock";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { LiquidMaterial } from "@repo/design-system/components/three/physical";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
 import { useRef } from "react";
@@ -28,16 +28,22 @@ const OPENING = Math.PI * 0.62;
 const CUBE = 0.36;
 const THERMOMETER = { tall: 1.5, x: 0.26, y: 0.2 } as const;
 
-const CUP = latheProfile([
-  [0.001, 0],
+/**
+ * The cup's foam, as an outline: its recessed base and the foot ring it
+ * stands on, up its outside, over its rolled rim and down its inside.
+ */
+const CUP = [
+  [0, 0.02],
+  [INSIDE.floor + WALL - 0.08, 0.02],
+  [INSIDE.floor + WALL - 0.05, 0],
   [INSIDE.floor + WALL, 0],
   [INSIDE.rim + WALL, HEIGHT],
   [INSIDE.rim + WALL + 0.03, HEIGHT + 0.03],
   [INSIDE.rim, HEIGHT + 0.03],
   [INSIDE.rim, HEIGHT],
   [INSIDE.floor, WALL],
-  [0.001, WALL],
-]);
+  [0, WALL],
+] as const;
 
 /** How far through the mixing the water has got at `time`: fast at first, then slowing as the temperatures meet. */
 export function mixingShare(time: number) {
@@ -147,7 +153,7 @@ export function IceMeltingScene({
         </mesh>
       </group>
       <mesh castShadow receiveShadow rotation={[0, OPENING / 2, 0]}>
-        <latheGeometry args={[CUP, 64, 0, Math.PI * 2 - OPENING]} />
+        <Turn arc={[0, Math.PI * 2 - OPENING]} profile={CUP} />
         <meshStandardMaterial
           color={APPARATUS_COLORS.foamCup}
           roughness={0.96}

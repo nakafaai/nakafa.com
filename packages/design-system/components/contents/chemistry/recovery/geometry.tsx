@@ -4,6 +4,8 @@ import {
   FlaskLiquid,
 } from "@repo/design-system/components/contents/chemistry/bench";
 import type { CatalysisMode } from "@repo/design-system/components/contents/chemistry/recovery/model";
+import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
+import type { Path } from "@repo/design-system/components/three/form/path";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -12,14 +14,6 @@ import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { Array as Arr } from "effect";
-import { useEffect, useMemo } from "react";
-import {
-  CatmullRomCurve3,
-  LatheGeometry,
-  TubeGeometry,
-  Vector2,
-  Vector3,
-} from "three";
 
 export const REACTOR_X = -0.01;
 export const REACTOR_Z = 0.02;
@@ -28,139 +22,92 @@ export const WASTE_CARBOY_POS = [0.255, 0, 0.068] as const;
 
 const CARBOY_TICKS = [0.024, 0.044, 0.064, 0.084, 0.102] as const;
 
-export function createFeedCurve() {
-  return new CatmullRomCurve3([
-    new Vector3(-0.194, 0.105, 0.02),
-    new Vector3(-0.145, 0.105, 0.02),
-    new Vector3(-0.092, 0.1, 0.02),
-    new Vector3(-0.052, 0.096, 0.02),
-  ]);
-}
+/** The feed line from the reservoir to the reactor. */
+export const FEED: Path = [
+  [-0.194, 0.105, 0.02],
+  [-0.145, 0.105, 0.02],
+  [-0.092, 0.1, 0.02],
+  [-0.052, 0.096, 0.02],
+];
 
-export function createRecoveryCurve() {
-  return new CatmullRomCurve3(
-    [
-      new Vector3(0.008, 0.23, 0.02),
-      new Vector3(0.036, 0.304, 0.01),
-      new Vector3(0.035, 0.26, 0.01),
-      new Vector3(-0.018, 0.278, 0.014),
-      new Vector3(-0.062, 0.258, 0.018),
-      new Vector3(-0.066, 0.205, 0.02),
-      new Vector3(-0.044, 0.19, 0.02),
-    ],
-    false
-  );
-}
+/** The recovery loop from the reactor's head through the cyclone and back. */
+export const RECOVERY: Path = [
+  [0.008, 0.23, 0.02],
+  [0.036, 0.304, 0.01],
+  [0.035, 0.26, 0.01],
+  [-0.018, 0.278, 0.014],
+  [-0.062, 0.258, 0.018],
+  [-0.066, 0.205, 0.02],
+  [-0.044, 0.19, 0.02],
+];
 
-export function createProductCurve() {
-  return new CatmullRomCurve3([
-    new Vector3(0.035, 0.342, 0.01),
-    new Vector3(0.092, 0.346, -0.004),
-    new Vector3(0.142, 0.295, -0.018),
-    new Vector3(0.155, 0.22, -0.025),
-    new Vector3(0.155, 0.154, -0.025),
-  ]);
-}
+/** The product arm from the cyclone down into the product flask. */
+export const PRODUCT: Path = [
+  [0.035, 0.342, 0.01],
+  [0.092, 0.346, -0.004],
+  [0.142, 0.295, -0.018],
+  [0.155, 0.22, -0.025],
+  [0.155, 0.154, -0.025],
+];
 
-function createWasteCurve() {
-  return new CatmullRomCurve3([
-    new Vector3(0.034, 0.072, 0.028),
-    new Vector3(0.105, 0.09, 0.048),
-    new Vector3(0.195, 0.168, 0.066),
-    new Vector3(0.246, 0.165, 0.068),
-    new Vector3(0.255, 0.146, 0.068),
-  ]);
-}
+/** The waste drain from the reactor's foot to the carboy. */
+const WASTE: Path = [
+  [0.034, 0.072, 0.028],
+  [0.105, 0.09, 0.048],
+  [0.195, 0.168, 0.066],
+  [0.246, 0.165, 0.068],
+  [0.255, 0.146, 0.068],
+];
 
-export function createDomeCapGeometry() {
-  const profile = Arr.map(
-    [
-      [0.036, 0],
-      [0.036, 0.008],
-      [0.031, 0.018],
-      [0.02, 0.025],
-      [0.008, 0.028],
-      [0.0005, 0.028],
-    ] as const,
-    ([r, y]) => new Vector2(r, y)
-  );
-  return new LatheGeometry(profile, 36);
-}
+/** The dished cap of the feed reservoir and the reactor. */
+export const DOME_CAP = [
+  [0.036, 0],
+  [0.036, 0.008],
+  [0.031, 0.018],
+  [0.02, 0.025],
+  [0.008, 0.028],
+  [0, 0.028],
+] as const;
 
-function createCycloneGeometry() {
-  const profile = Arr.map(
-    [
-      [0.0045, -0.045],
-      [0.0065, -0.042],
-      [0.025, -0.002],
-      [0.026, 0.03],
-      [0.011, 0.032],
-      [0.01, 0.044],
-      [0.0075, 0.044],
-      [0.0075, 0.03],
-    ] as const,
-    ([r, y]) => new Vector2(r, y)
-  );
-  return new LatheGeometry(profile, 40);
-}
+/** The cyclone: a cone under a short barrel, with its vortex finder on top. */
+const CYCLONE = [
+  [0.0045, -0.045],
+  [0.0065, -0.042],
+  [0.025, -0.002],
+  [0.026, 0.03],
+  [0.011, 0.032],
+  [0.01, 0.044],
+  [0.0075, 0.044],
+  [0.0075, 0.03],
+] as const;
 
-function createCarboyGeometry() {
-  const profile = Arr.map(
-    [
-      [0.001, 0],
-      [0.042, 0],
-      [0.046, 0.005],
-      [0.046, 0.108],
-      [0.042, 0.118],
-      [0.02, 0.132],
-      [0.018, 0.144],
-      [0.0205, 0.146],
-      [0.0165, 0.146],
-      [0.0165, 0.13],
-      [0.044, 0.106],
-      [0.044, 0.004],
-      [0.001, 0.004],
-    ] as const,
-    ([r, y]) => new Vector2(r, y)
-  );
-  return new LatheGeometry(profile, 48);
-}
+/** The outside of the waste carboy, from its base to its neck. */
+const CARBOY = [
+  [0, 0],
+  [0.042, 0],
+  [0.046, 0.005],
+  [0.046, 0.108],
+  [0.042, 0.118],
+  [0.02, 0.132],
+  [0.018, 0.144],
+  [0.0205, 0.146],
+] as const;
 
 /** Overhead stainless cyclone separator, closed recovery loop, and product/waste tubing. */
 export function CycloneAndTubing({ active }: { readonly active: boolean }) {
-  const { cycloneGeo, productGeo, recoveryGeo, wasteGeo } = useMemo(() => {
-    const recoveryCurve = createRecoveryCurve();
-    const productCurve = createProductCurve();
-    const wasteCurve = createWasteCurve();
-    return {
-      cycloneGeo: createCycloneGeometry(),
-      productGeo: new TubeGeometry(productCurve, 40, 0.0042, 12, false),
-      recoveryGeo: new TubeGeometry(recoveryCurve, 56, 0.0052, 14, false),
-      wasteGeo: new TubeGeometry(wasteCurve, 40, 0.0046, 12, false),
-    };
-  }, []);
-
-  useEffect(
-    () => () => {
-      cycloneGeo.dispose();
-      productGeo.dispose();
-      recoveryGeo.dispose();
-      wasteGeo.dispose();
-    },
-    [cycloneGeo, productGeo, recoveryGeo, wasteGeo]
-  );
-
   return (
     <group>
       {/* Conical stainless cyclone separator */}
-      <mesh castShadow geometry={cycloneGeo} position={[0.035, 0.3, 0.01]}>
+      <mesh castShadow position={[0.035, 0.3, 0.01]}>
+        <Turn profile={CYCLONE} />
         <MetalMaterial
           color={active ? BENCH_COLORS.panSteel : CAR_COLORS.castIron}
           roughness={active ? 0.25 : 0.55}
         />
       </mesh>
       {/* Recovery loop tubing (dimmed when stoichiometric shutoff is engaged) */}
-      <mesh castShadow geometry={recoveryGeo}>
+      <mesh castShadow>
+        <Sweep path={RECOVERY} radius={0.0052} />
         <meshPhysicalMaterial
           clearcoat={active ? 0.5 : 0.1}
           color={active ? PROCESS_COLORS.catalystTeal : CAR_COLORS.hub}
@@ -190,11 +137,13 @@ export function CycloneAndTubing({ active }: { readonly active: boolean }) {
         </group>
       )}
       {/* Curved borosilicate product delivery arm */}
-      <mesh geometry={productGeo} renderOrder={2}>
+      <mesh renderOrder={2}>
+        <Sweep ends="open" path={PRODUCT} radius={0.0042} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.35} />
       </mesh>
       {/* Side waste drain tube to carboy */}
-      <mesh castShadow geometry={wasteGeo}>
+      <mesh castShadow>
+        <Sweep path={WASTE} radius={0.0046} />
         <MetalMaterial color={CAR_COLORS.castIron} roughness={0.48} />
       </mesh>
     </group>
@@ -211,9 +160,6 @@ export function ProductAndWasteVessels({
   readonly productLevel: number;
   readonly wasteLevel: number;
 }) {
-  const carboyGeo = useMemo(createCarboyGeometry, []);
-  useEffect(() => () => carboyGeo.dispose(), [carboyGeo]);
-
   return (
     <group>
       {/* Product Erlenmeyer flask on ceramic pad */}
@@ -250,7 +196,8 @@ export function ProductAndWasteVessels({
             <meshStandardMaterial color={CAR_COLORS.rimDark} roughness={0.88} />
           </mesh>
         ) : null}
-        <mesh castShadow geometry={carboyGeo} renderOrder={2}>
+        <mesh castShadow renderOrder={2}>
+          <Turn profile={CARBOY} wall={[0.002, 0.004]} />
           <GlassMaterial color={BENCH_COLORS.glass} opacity={0.28} />
         </mesh>
         {/* Carboy screw collar */}

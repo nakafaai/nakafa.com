@@ -2,6 +2,8 @@ import {
   CYLINDER_Z,
   SEPTUM_Y,
 } from "@repo/design-system/components/contents/chemistry/lechatelier/geometry";
+import { Sweep } from "@repo/design-system/components/three/form/part";
+import type { Path } from "@repo/design-system/components/three/form/path";
 import {
   GlassMaterial,
   LiquidMaterial,
@@ -13,32 +15,24 @@ import { EQUILIBRIUM_COLORS } from "@repo/design-system/lib/material/equilibrium
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { Array as Arr } from "effect";
-import { useEffect, useMemo } from "react";
-import { CatmullRomCurve3, TubeGeometry, Vector3 } from "three";
 
-function createThermalCoilGeometry() {
-  const turns = 4;
-  const samples = 96;
-  const radius = 0.08;
-  const yStart = 0.036;
-  const yEnd = 0.09;
-  const points = [
-    new Vector3(-0.076, 0.056, 0.086),
-    new Vector3(-0.068, 0.04, 0.072),
-    ...Arr.makeBy(samples + 1, (step) => {
-      const t = step / samples;
-      const angle = 2.15 + t * Math.PI * 2 * turns;
-      return new Vector3(
-        Math.cos(angle) * radius,
-        yStart + t * (yEnd - yStart),
-        Math.sin(angle) * radius
-      );
-    }),
-    new Vector3(-0.056, 0.078, 0.076),
-    new Vector3(-0.054, 0.056, 0.095),
-  ];
-  return new TubeGeometry(new CatmullRomCurve3(points), 140, 0.0038, 12, false);
-}
+/** The thermal coil: four turns round the foot of the cylinder, with a lead to each terminal post. */
+const COIL: Path = {
+  from: [0, 0.036, 0],
+  kind: "helix",
+  lead: [
+    [-0.076, 0.056, 0.086],
+    [-0.068, 0.04, 0.072],
+  ],
+  phase: 2.15,
+  radius: 0.08,
+  tail: [
+    [-0.056, 0.078, 0.076],
+    [-0.054, 0.056, 0.095],
+  ],
+  to: [0, 0.09, 0],
+  turns: 4,
+};
 
 /** Helical copper/nichrome thermal coil with ceramic terminal posts. */
 export function ThermalCoil({
@@ -48,9 +42,6 @@ export function ThermalCoil({
   readonly activeMode: "cold" | "hot" | "neutral";
   readonly intensity: number;
 }) {
-  const coilGeo = useMemo(createThermalCoilGeometry, []);
-  useEffect(() => () => coilGeo.dispose(), [coilGeo]);
-
   const strength = Math.abs(intensity);
   const coilVisualByMode = {
     cold: {
@@ -70,7 +61,8 @@ export function ThermalCoil({
 
   return (
     <group position={[0, 0, CYLINDER_Z]}>
-      <mesh castShadow geometry={coilGeo}>
+      <mesh castShadow>
+        <Sweep path={COIL} radius={0.0038} />
         <meshStandardMaterial
           color={color}
           emissive={color}

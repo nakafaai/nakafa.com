@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Lead } from "@repo/design-system/components/contents/physics/bench/lead";
 import { Stand } from "@repo/design-system/components/contents/physics/bench/stand";
@@ -9,6 +8,7 @@ import { useCycleClock } from "@repo/design-system/components/contents/simulatio
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   LiquidMaterial,
@@ -59,13 +59,13 @@ const LUMPS = Arr.makeBy(9, (index) => {
   } as const;
 });
 
-const BEAKER = latheProfile([
-  [0.001, 0.012],
+const BEAKER = [
+  [0, 0.012],
   [RADIUS - 0.03, 0.012],
   [RADIUS + 0.012, 0.05],
   [RADIUS + 0.012, HEIGHT - 0.03],
   [RADIUS + 0.04, HEIGHT],
-]);
+] as const;
 const ELEMENT = [
   [-0.2, 1.34, 0],
   [-0.2, 0.3, 0],
@@ -240,7 +240,7 @@ export function HeatingCurveScene({
           <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.3} />
         </mesh>
         <mesh castShadow renderOrder={3}>
-          <latheGeometry args={[BEAKER, 64]} />
+          <Turn profile={BEAKER} />
           <GlassMaterial color={BENCH_COLORS.glass} opacity={0.2} />
         </mesh>
       </group>

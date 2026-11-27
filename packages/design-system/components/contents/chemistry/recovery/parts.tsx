@@ -1,11 +1,12 @@
 import { ColumnLiquid } from "@repo/design-system/components/contents/chemistry/bench";
 import {
-  createDomeCapGeometry,
-  createFeedCurve,
+  DOME_CAP,
+  FEED,
   REACTOR_X,
   REACTOR_Z,
 } from "@repo/design-system/components/contents/chemistry/recovery/geometry";
 import type { CatalysisMode } from "@repo/design-system/components/contents/chemistry/recovery/model";
+import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -15,30 +16,13 @@ import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { Array as Arr, Match } from "effect";
 import type { ReactNode } from "react";
-import { useEffect, useMemo } from "react";
-import { TubeGeometry } from "three";
+import { useMemo } from "react";
 
 const FLANGE_ANGLES = Arr.makeBy(6, (i) => (i / 6) * Math.PI * 2);
 const TIE_ROD_ANGLES = Arr.makeBy(3, (i) => (i / 3) * Math.PI * 2 + 0.5);
 
 /** Stainless reactant feed reservoir, flanged feed tube, and brass gate valve. */
 export function FeedManifold() {
-  const { capGeo, tubeGeo } = useMemo(() => {
-    const curve = createFeedCurve();
-    return {
-      capGeo: createDomeCapGeometry(),
-      tubeGeo: new TubeGeometry(curve, 32, 0.0055, 14, false),
-    };
-  }, []);
-
-  useEffect(
-    () => () => {
-      capGeo.dispose();
-      tubeGeo.dispose();
-    },
-    [capGeo, tubeGeo]
-  );
-
   return (
     <group>
       {/* Stainless feed vessel */}
@@ -51,7 +35,8 @@ export function FeedManifold() {
           <cylinderGeometry args={[0.036, 0.036, 0.136, 36]} />
           <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.28} />
         </mesh>
-        <mesh castShadow geometry={capGeo} position={[0, 0.146, 0]}>
+        <mesh castShadow position={[0, 0.146, 0]}>
+          <Turn profile={DOME_CAP} />
           <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.24} />
         </mesh>
         {/* Front sight-glass showing blue reactant fill */}
@@ -85,7 +70,8 @@ export function FeedManifold() {
       </group>
 
       {/* Curved stainless feed pipe */}
-      <mesh castShadow geometry={tubeGeo}>
+      <mesh castShadow>
+        <Sweep path={FEED} radius={0.0055} />
         <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.3} />
       </mesh>
       {/* Brass gate valve wheel */}

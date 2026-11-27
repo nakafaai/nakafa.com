@@ -2,13 +2,13 @@ import {
   Beaker,
   ColumnLiquid,
 } from "@repo/design-system/components/contents/chemistry/bench";
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
 import type { SilicateMaterial } from "@repo/design-system/components/contents/chemistry/silicate/model";
 import {
   AtomSphere,
   BondCylinder,
   FormulaPlaque,
 } from "@repo/design-system/components/contents/chemistry/specimen";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -19,15 +19,13 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr, Match } from "effect";
-import { useEffect, useMemo } from "react";
-import { LatheGeometry } from "three";
 
 const SPECIMEN_X = -0.22;
 export const STAGE_X = 0.125;
 export const RIG_Z = 0.04;
 
-const CRUCIBLE_PROFILE = latheProfile([
-  [0.001, 0],
+const CRUCIBLE_PROFILE = [
+  [0, 0],
   [0.03, 0],
   [0.036, 0.008],
   [0.044, 0.038],
@@ -37,10 +35,10 @@ const CRUCIBLE_PROFILE = latheProfile([
   [0.04, 0.068],
   [0.037, 0.038],
   [0.029, 0.01],
-  [0.001, 0.008],
-]);
+  [0, 0.008],
+] as const;
 
-const BEARING_PROFILE = latheProfile([
+const BEARING_PROFILE = [
   [0.022, 0],
   [0.042, 0],
   [0.046, 0.006],
@@ -50,7 +48,7 @@ const BEARING_PROFILE = latheProfile([
   [0.018, 0.044],
   [0.018, 0.006],
   [0.022, 0],
-]);
+] as const;
 
 const TETRA_VERTICES = [
   [0, 0.025, 0],
@@ -150,14 +148,6 @@ export function MacroMaterialSpecimen({
 }: {
   readonly material: SilicateMaterial;
 }) {
-  const crucibleGeo = useMemo(
-    () => new LatheGeometry(CRUCIBLE_PROFILE, 44),
-    []
-  );
-  const bearingGeo = useMemo(() => new LatheGeometry(BEARING_PROFILE, 44), []);
-  useEffect(() => () => crucibleGeo.dispose(), [crucibleGeo]);
-  useEffect(() => () => bearingGeo.dispose(), [bearingGeo]);
-
   const plaque = Match.value(material).pipe(
     Match.when("sodaLimeGlass", () => ({
       formula: "SiO₂ · Na₂O",
@@ -225,7 +215,8 @@ export function MacroMaterialSpecimen({
             </group>
           )),
           Match.when("traditionalCeramic", () => (
-            <mesh castShadow geometry={crucibleGeo} receiveShadow>
+            <mesh castShadow receiveShadow>
+              <Turn profile={CRUCIBLE_PROFILE} />
               <meshPhysicalMaterial
                 clearcoat={0.22}
                 clearcoatRoughness={0.58}
@@ -238,11 +229,11 @@ export function MacroMaterialSpecimen({
             <group>
               <mesh
                 castShadow
-                geometry={bearingGeo}
                 position={[0, 0.046, 0]}
                 receiveShadow
                 rotation={[Math.PI / 2, 0, 0]}
               >
+                <Turn profile={BEARING_PROFILE} />
                 <meshPhysicalMaterial
                   clearcoat={0.85}
                   clearcoatRoughness={0.1}

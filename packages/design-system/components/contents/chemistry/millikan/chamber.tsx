@@ -1,4 +1,4 @@
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -14,17 +14,17 @@ export const PLATE = { radius: 3.4, thick: 0.24 } as const;
 const BENCH_DROP = 2.2;
 
 /** A machined brass plate in section, its inner face at y = 0: a flat disc with a chamfered rim. */
-const PLATE_PROFILE = latheProfile([
-  [0.001, 0],
+const PLATE_PROFILE = [
+  [0, 0],
   [PLATE.radius - 0.05, 0],
   [PLATE.radius, 0.05],
   [PLATE.radius, PLATE.thick - 0.05],
   [PLATE.radius - 0.05, PLATE.thick],
   [0.001, PLATE.thick],
-]);
+] as const;
 
 /** The upper plate, with the pinhole in its middle the oil mist falls through. */
-const PIERCED_PROFILE = latheProfile([
+const PIERCED_PROFILE = [
   [0.07, 0],
   [PLATE.radius - 0.05, 0],
   [PLATE.radius, 0.05],
@@ -32,11 +32,11 @@ const PIERCED_PROFILE = latheProfile([
   [PLATE.radius - 0.05, PLATE.thick],
   [0.16, PLATE.thick],
   [0.07, PLATE.thick - 0.08],
-]);
+] as const;
 
 /** The turned pedestal that carries the lower plate over the bench. */
-const PEDESTAL = latheProfile([
-  [0.001, 0],
+const PEDESTAL = [
+  [0, 0],
   [1.5, 0],
   [1.55, 0.06],
   [1.55, 0.2],
@@ -46,7 +46,7 @@ const PEDESTAL = latheProfile([
   [0.8, BENCH_DROP - 0.06],
   [0.8, BENCH_DROP],
   [0.001, BENCH_DROP],
-]);
+] as const;
 
 /** Where the three insulating spacers stand round the plates, as angles. */
 const SPACERS = [
@@ -70,7 +70,7 @@ export function Chamber({ gap }: { readonly gap: number }) {
   return (
     <group>
       <mesh castShadow position={[0, gap / 2, 0]} receiveShadow>
-        <latheGeometry args={[PIERCED_PROFILE, 96]} />
+        <Turn profile={PIERCED_PROFILE} />
         <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.24} />
       </mesh>
       <mesh
@@ -79,7 +79,7 @@ export function Chamber({ gap }: { readonly gap: number }) {
         receiveShadow
         rotation={[Math.PI, 0, 0]}
       >
-        <latheGeometry args={[PLATE_PROFILE, 96]} />
+        <Turn profile={PLATE_PROFILE} />
         <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.24} />
       </mesh>
       <mesh
@@ -87,7 +87,7 @@ export function Chamber({ gap }: { readonly gap: number }) {
         position={[0, -gap / 2 - PLATE.thick - BENCH_DROP, 0]}
         receiveShadow
       >
-        <latheGeometry args={[PEDESTAL, 64]} />
+        <Turn profile={PEDESTAL} />
         <meshPhysicalMaterial
           clearcoat={0.5}
           clearcoatRoughness={0.3}

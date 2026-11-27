@@ -5,56 +5,18 @@ import {
   FlaskLiquid,
 } from "@repo/design-system/components/contents/chemistry/bench";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { GlassMaterial } from "@repo/design-system/components/three/physical";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { LABORATORY_COLORS } from "@repo/design-system/lib/material/laboratory";
 import { Array as Arr } from "effect";
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import type { InstancedMesh } from "three";
-import {
-  Euler,
-  LatheGeometry,
-  Matrix4,
-  Quaternion,
-  Vector2,
-  Vector3,
-} from "three";
-
-/** An outline turned around a vertical axis, from its radii at each height, in metres. */
-export function profile(points: readonly (readonly [number, number])[]) {
-  return Arr.map(points, ([radius, height]) => new Vector2(radius, height));
-}
-
-/**
- * A lathe-turned vessel whose rim is pinched out into a pouring spout facing
- * +x, as the glassblower draws one with a hot pin over the top centimetre.
- */
-function useSpouted(
-  points: readonly (readonly [number, number])[],
-  rim: number
-) {
-  const geometry = useMemo(() => {
-    const vessel = new LatheGeometry(profile(points), 64);
-    const position = vessel.getAttribute("position");
-    for (const index of Arr.range(0, position.count - 1)) {
-      const x = position.getX(index);
-      const y = position.getY(index);
-      const z = position.getZ(index);
-      const lift = Math.max(0, (y - (rim - 0.01)) / 0.01);
-      const facing = Math.max(0, x / Math.max(Math.hypot(x, z), 1e-6)) ** 10;
-      const pull = 1 + 0.12 * lift * facing;
-      position.setXYZ(index, x * pull, y + 0.002 * lift * facing, z);
-    }
-    vessel.computeVertexNormals();
-    return vessel;
-  }, [points, rim]);
-  useEffect(() => () => geometry.dispose(), [geometry]);
-  return geometry;
-}
+import { Euler, Matrix4, Quaternion, Vector3 } from "three";
 
 /** A 250 mL low-form beaker, 70 mm across and 95 mm tall, its outline from base to rim. */
 const BEAKER = [
-  [0.001, 0],
+  [0, 0],
   [0.033, 0],
   [0.035, 0.003],
   [0.035, 0.093],
@@ -66,10 +28,10 @@ const BEAKER_FIFTY = 5e-5 / (Math.PI * 0.0335 ** 2);
 
 /** The beaker, printed with a white scale every 50 mL, holding 150 mL of water. */
 export function Beaker() {
-  const glass = useSpouted(BEAKER, 0.095);
   return (
     <group position={PLACES.beaker.base}>
-      <mesh castShadow geometry={glass}>
+      <mesh castShadow>
+        <Turn profile={BEAKER} spout wall={[0.0015, 0.003]} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.26} />
       </mesh>
       {Arr.map(Arr.range(1, 4), (step) => (
@@ -114,7 +76,7 @@ export function ConicalFlask() {
 
 /** A 100 mL measuring cylinder's glass tube, 29 mm across, from its hexagonal foot to the spouted rim. */
 const CYLINDER = [
-  [0.001, 0.008],
+  [0, 0.008],
   [0.0145, 0.008],
   [0.0145, 0.252],
   [0.0153, 0.255],
@@ -166,14 +128,14 @@ function CylinderTicks({ long }: { readonly long: boolean }) {
 
 /** The measuring cylinder: a hexagonal foot, a scale ticked every 2 mL and longer every 10, and 62 mL of water. */
 export function MeasuringCylinder() {
-  const glass = useSpouted(CYLINDER, 0.256);
   return (
     <group position={PLACES.measuringCylinder.base} rotation={[0, 0.5, 0]}>
       <mesh castShadow position={[0, 0.004, 0]}>
         <cylinderGeometry args={[0.0375, 0.0375, 0.008, 6]} />
         <GlassMaterial color={BENCH_COLORS.glassEdge} opacity={0.42} />
       </mesh>
-      <mesh castShadow geometry={glass}>
+      <mesh castShadow>
+        <Turn profile={CYLINDER} spout wall={[0.0015, 0.0025]} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.24} />
       </mesh>
       <CylinderTicks long={false} />

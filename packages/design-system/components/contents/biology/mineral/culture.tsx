@@ -8,10 +8,8 @@ import {
   BotanicalLeaf,
   FibrousRoots,
 } from "@repo/design-system/components/contents/biology/seedling";
-import {
-  latheProfile,
-  liquidMeniscus,
-} from "@repo/design-system/components/contents/chemistry/glassware";
+import { liquidMeniscus } from "@repo/design-system/components/contents/chemistry/glassware";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   LiquidMaterial,
@@ -22,8 +20,8 @@ import { Array as Arr, Match } from "effect";
 import { useMemo } from "react";
 import { CatmullRomCurve3, DoubleSide, Vector3 } from "three";
 
-const JAR_PROFILE = latheProfile([
-  [0.001, 0],
+const JAR_PROFILE = [
+  [0, 0],
   [0.34, 0],
   [0.37, 0.025],
   [0.37, 0.62],
@@ -31,14 +29,14 @@ const JAR_PROFILE = latheProfile([
   [0.24, 0.73],
   [0.24, 0.8],
   [0.27, 0.825],
-]);
+] as const;
 
-const LIQUID_PROFILE = latheProfile([
-  [0.001, 0.02],
+const LIQUID_PROFILE = [
+  [0, 0.02],
   [0.345, 0.02],
   ...liquidMeniscus(0.345, 0.56),
-  [0.001, 0.56],
-]);
+  [0, 0.56],
+] as const;
 
 const LEAF_SLOTS = [
   { id: "lf1", pitch: 0.22, ratio: 0.36, roll: 0.32, scale: 1.0, yaw: 0.2 },
@@ -164,12 +162,12 @@ export function KnopCultureJar({
     <group>
       {/* Knop nutrient solution with concave meniscus */}
       <mesh>
-        <latheGeometry args={[LIQUID_PROFILE, 40]} />
+        <Turn profile={LIQUID_PROFILE} />
         <LiquidMaterial color={BOTANY_COLORS.waterBlue} opacity={0.48} />
       </mesh>
       {/* Crystal-clear borosilicate jar */}
       <mesh castShadow renderOrder={2}>
-        <latheGeometry args={[JAR_PROFILE, 44]} />
+        <Turn profile={JAR_PROFILE} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.28} />
       </mesh>
       {/* Dark foil sleeve wrapping back and sides to block algae (front cutaway exposes roots) */}

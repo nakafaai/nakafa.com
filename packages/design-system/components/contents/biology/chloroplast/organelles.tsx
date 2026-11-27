@@ -1,5 +1,5 @@
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { FOLIAGE_COLORS } from "@repo/design-system/lib/material/foliage";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
@@ -12,15 +12,15 @@ import {
   Vector3,
 } from "three";
 
-const THYLAKOID_PROFILE = latheProfile([
-  [0.001, -0.018],
+const THYLAKOID_PROFILE = [
+  [0, -0.018],
   [0.125, -0.018],
   [0.145, -0.012],
   [0.15, 0],
   [0.145, 0.012],
   [0.125, 0.018],
-  [0.001, 0.018],
-]);
+  [0, 0.018],
+] as const;
 
 const GRANA = [
   { discs: 6, id: "g1", x: -0.64, z: -0.14 },
@@ -209,7 +209,7 @@ export function ChloroplastInterior({
               key={`${stack.id}-${idx}`}
               position={[0, idx * 0.046, 0]}
             >
-              <latheGeometry args={[THYLAKOID_PROFILE, 28]} />
+              <Turn profile={THYLAKOID_PROFILE} />
               <meshPhysicalMaterial
                 clearcoat={0.55}
                 clearcoatRoughness={0.24}
