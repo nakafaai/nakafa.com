@@ -151,7 +151,7 @@ export function GametogenesisLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage reach={1.9} setting="microscope">
+        <ScienceStage reach={1.9} setting="cell">
           <Suspense fallback={null}>
             <GametogenesisScene
               cells={labels.cells}

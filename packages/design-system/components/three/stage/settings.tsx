@@ -409,7 +409,7 @@ export function SpaceSetting() {
 
 /**
  * A teaching laboratory with its lights off, for beams, glowing tubes and
- * screens: the same room, benches and windows, a twentieth as bright, with
+ * screens: the same room, benches and windows, a small part as bright, with
  * one dim lamp overhead as its key light and dust in the air, so a beam
  * shows along its whole length. It stays dark in both themes.
  */
@@ -421,9 +421,9 @@ export function DarkSetting() {
       {profile.useExrEnvironment ? (
         <ErrorBoundary fallbackRender={() => <Unlit />} report={false}>
           <PhotoEnvironment
-            backdrop={0.07}
+            backdrop={0.11}
             blur={0.2}
-            exposure={0.16}
+            exposure={0.36}
             file="lab"
             turn={LAB_TURN}
           />
@@ -431,7 +431,7 @@ export function DarkSetting() {
       ) : (
         <Unlit />
       )}
-      <Sun direction={LAB_SUN} intensity={0.5} />
+      <Sun direction={LAB_SUN} intensity={1.1} />
       <Motes
         blur={1.4}
         drift={0.02}

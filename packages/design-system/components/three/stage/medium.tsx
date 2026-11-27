@@ -54,8 +54,8 @@ export function WaterSetting() {
         grain={2.4}
         high={toneColor([127, 208, 223])}
         low={toneColor([10, 58, 82])}
-        ripple={0.3}
-        shafts={0.22}
+        ripple={0.11}
+        shafts={0.16}
       />
       <fog args={[depth, DEPTH_NEAR * reach, DEPTH_FAR * reach]} attach="fog" />
       <Softboxes ambient={0.45} exposure={0.85} hemisphere={0.8} />

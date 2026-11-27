@@ -80,8 +80,8 @@ void main() {
   vec2 above = way.xz / (0.4 + abs(way.y));
   float shaft = layered(vec3(above * 2.4, uTime * 0.04));
   tone += uGlow * uShafts * smoothstep(0.42, 0.78, shaft) * smoothstep(-0.3, 0.9, way.y);
-  float net = layered(way * 5.0 + vec3(0.0, uTime * 0.05, uTime * 0.03));
-  tone += uGlow * uRipple * pow(1.0 - abs(2.0 * net - 1.0), 7.0);
+  float net = layered(way * 9.0 + vec3(0.0, uTime * 0.05, uTime * 0.03));
+  tone += uGlow * uRipple * pow(1.0 - abs(2.0 * net - 1.0), 10.0) * smoothstep(-0.7, 0.5, way.y);
   float along = dot(way, uPole);
   float dust = layered(way * 3.4 + vec3(5.0));
   tone += uGlow * uBand * exp(-18.0 * along * along) * (0.35 + dust) * (1.0 - 0.7 * smoothstep(0.5, 0.7, layered(way * 7.0)));
