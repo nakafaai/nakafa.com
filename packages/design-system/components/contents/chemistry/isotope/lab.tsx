@@ -5,7 +5,7 @@ import {
   ISOTOPE_SAMPLES,
   isIsotopeSampleId,
 } from "@repo/design-system/components/contents/chemistry/isotope/data";
-import { IsotopeScene } from "@repo/design-system/components/contents/chemistry/isotope/scene";
+import { NuclideScene } from "@repo/design-system/components/contents/chemistry/isotope/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   ToggleGroup,
@@ -108,7 +108,11 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
         render={<section />}
       >
         <ScienceStage reach={4} setting="space">
-          <IsotopeScene name={selectedLabels.name} sample={selectedSample} />
+          <NuclideScene
+            neutrons={neutronCount}
+            notation={selectedLabels.name}
+            protons={selectedSample.atomicNumber}
+          />
         </ScienceStage>
       </VisualCardBody>
 

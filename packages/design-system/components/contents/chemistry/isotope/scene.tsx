@@ -1,6 +1,5 @@
 import { useReducedMotion } from "@mantine/hooks";
 import { useFrame } from "@react-three/fiber";
-import type { ISOTOPE_SAMPLES } from "@repo/design-system/components/contents/chemistry/isotope/data";
 import {
   useInvalidateOnChange,
   useSimulationClock,
@@ -30,27 +29,30 @@ const BACKDROP = getColor("ZINC", 950);
 const OUTLINE = 0.012;
 
 /**
- * One isotope's nucleus, close enough to count: every proton and neutron a
+ * One nuclide's nucleus, close enough to count: every proton and neutron a
  * sphere resting against its neighbours, turning slowly while the card
- * plays, with the isotope's notation above it and the count of each kind of
- * nucleon beside it. Isotopes of one element show the same protons and a
- * different number of neutrons.
+ * plays, with the nuclide's notation above it, the count of each kind of
+ * nucleon beside it, and a caption below when the lab has one. Isotopes of
+ * one element show the same protons and a different number of neutrons.
  */
-export function IsotopeScene({
-  name,
-  sample,
+export function NuclideScene({
+  caption,
+  neutrons,
+  notation,
+  protons,
 }: {
-  readonly name: ReactNode;
-  readonly sample: (typeof ISOTOPE_SAMPLES)[keyof typeof ISOTOPE_SAMPLES];
+  readonly caption?: ReactNode;
+  readonly neutrons: number;
+  readonly notation: ReactNode;
+  readonly protons: number;
 }) {
-  useInvalidateOnChange(sample);
+  useInvalidateOnChange(`${protons}:${neutrons}`);
   const { advance, playing } = useSimulationClock(0);
   const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
   const nucleus = useRef<Group>(null);
-  const neutrons = sample.massNumber - sample.atomicNumber;
   const reach = useMemo(
-    () => reachOf(packOf(sample.atomicNumber, neutrons)) * NUCLEON,
-    [neutrons, sample.atomicNumber]
+    () => reachOf(packOf(protons, neutrons)) * NUCLEON,
+    [neutrons, protons]
   );
 
   useFrame((_, delta) => {
@@ -84,34 +86,45 @@ export function IsotopeScene({
           <AtomNucleus
             neutrons={neutrons}
             nucleon={NUCLEON}
-            protons={sample.atomicNumber}
+            protons={protons}
           />
         </group>
       </CameraBounds>
       <ThreeLabel
         anchorY="bottom"
         color={QUANTUM_COLORS.spaceLabel}
-        fontSize="display"
+        fontSize={reach * 0.3}
         outlineColor={BACKDROP}
         outlineWidth={OUTLINE}
         position={[0, reach * 1.1, 0]}
       >
-        {name}
+        {notation}
+      </ThreeLabel>
+      <ThreeLabel
+        anchorY="top"
+        color={QUANTUM_COLORS.spaceLabel}
+        fontSize={reach * 0.2}
+        outlineColor={BACKDROP}
+        outlineWidth={OUTLINE}
+        position={[0, -reach * 1.1, 0]}
+        visible={caption !== undefined}
+      >
+        {caption}
       </ThreeLabel>
       <ThreeLabel
         anchorX="right"
         color={PARTICLE_COLORS.proton}
-        fontSize="reading"
+        fontSize={reach * 0.2}
         outlineColor={BACKDROP}
         outlineWidth={OUTLINE}
         position={[-reach * 1.12, 0, 0]}
       >
-        <InlineMath math={`p^+ = ${sample.atomicNumber}`} />
+        <InlineMath math={`p^+ = ${protons}`} />
       </ThreeLabel>
       <ThreeLabel
         anchorX="left"
         color={PARTICLE_COLORS.neutron}
-        fontSize="reading"
+        fontSize={reach * 0.2}
         outlineColor={BACKDROP}
         outlineWidth={OUTLINE}
         position={[reach * 1.12, 0, 0]}
