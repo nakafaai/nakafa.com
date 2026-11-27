@@ -29,6 +29,7 @@ export const INSTRUMENT_COLORS = {
   // The grey-green hammertone enamel of a cast balance housing.
   hammertone: "#66736f",
   iris: "#4e3423",
+  iron: "#80848a",
   lampLight: "#fff1d6",
   // A liquid-crystal display: its grey-green ground and its dark figures.
   lcd: "#b3bca6",
