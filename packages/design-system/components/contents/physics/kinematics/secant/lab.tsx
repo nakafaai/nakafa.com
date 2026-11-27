@@ -152,7 +152,7 @@ export function CarTripSecantSlopeLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={40} setting="field">
+        <ScienceStage floor={0} frameloop="always" reach={40} setting="field">
           <Suspense fallback={null}>
             <TripScene interval={interval} trip={trip} />
           </Suspense>

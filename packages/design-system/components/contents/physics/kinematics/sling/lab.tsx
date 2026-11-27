@@ -132,6 +132,7 @@ export function StringWhirlReleaseLab({
       >
         <ScienceStage
           floor={0}
+          frameloop="always"
           ground="snow"
           reach={radius * 5}
           setting="field"
