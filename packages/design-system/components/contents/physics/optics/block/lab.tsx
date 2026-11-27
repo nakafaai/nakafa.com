@@ -93,7 +93,13 @@ export function GlassBlockLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} frameloop="always" reach={4} setting="lab">
+        <ScienceStage
+          floor={0}
+          frameloop="always"
+          ground="epoxy"
+          reach={4.6}
+          setting="lab"
+        >
           <Suspense fallback={null}>
             <BlockScene incidence={incidence} index={index} />
           </Suspense>

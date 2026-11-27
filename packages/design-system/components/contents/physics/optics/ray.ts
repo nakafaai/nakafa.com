@@ -273,6 +273,20 @@ export function lensReach(
 }
 
 /**
+ * How far past a lens a ray runs that leaves it `height` above the axis with
+ * the slope `slope`: as far as `limit`, or only until it has fallen `drop`
+ * below the axis, where the bench stops it.
+ */
+export function rayRun(
+  height: number,
+  slope: number,
+  drop: number,
+  limit: number
+) {
+  return slope < 0 ? Math.min(limit, (-drop - height) / slope) : limit;
+}
+
+/**
  * The three principal rays from the tip of an object `tall` high that stands
  * `object` in front of a thin lens of focal length `focal`: where each meets
  * the lens above the axis, and its slope once the lens has bent it. The ray

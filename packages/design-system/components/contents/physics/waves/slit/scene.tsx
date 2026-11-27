@@ -1,4 +1,3 @@
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import {
   fringeStart,
   SCREEN_HALF,
@@ -136,7 +135,6 @@ export function SlitScene({
       }}
       from={FROM}
     >
-      <SeamlessBenchSurface />
       <Backboard back={1.6} tall={2.5} wide={LENGTH + 0.7} />
       <Rail length={LENGTH} unit={UNIT} />
       <Rider at={SLITS_AT - THROW - 0.31} drop={LASER_DROP} height={AXIS}>

@@ -1,4 +1,3 @@
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import type { Spot } from "@repo/design-system/components/contents/physics/optics/ray";
 import {
   blockPath,
@@ -183,9 +182,8 @@ export function BlockScene({
       )}
       from={FROM}
     >
-      <SeamlessBenchSurface />
-      <group position={[-0.25, 0, 0.3]}>
-        <Board deep={4.4} wide={5.6} />
+      <group position={[0, 0, -0.35]}>
+        <Board deep={6.4} wide={6.6} />
       </group>
       <group position={[0, BOARD_TALL, 0]}>
         <Slab

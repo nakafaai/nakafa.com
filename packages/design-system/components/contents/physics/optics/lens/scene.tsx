@@ -1,8 +1,8 @@
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
 import {
   lensReach,
   principalRays,
+  rayRun,
   thinLens,
 } from "@repo/design-system/components/contents/physics/optics/ray";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -20,25 +20,32 @@ import {
 } from "@repo/design-system/components/three/optic/lens";
 import { Arrow, Lamp } from "@repo/design-system/components/three/optic/source";
 import { View } from "@repo/design-system/components/three/optic/view";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
+import { DoubleSide } from "three";
 
 /** How high above the benchtop the optical axis runs. */
-const AXIS = 1.3;
+const AXIS = 1.5;
+
+/** How high the top of the rail stands, which stops a ray that falls that far. */
+const RAIL = 0.23;
 
 /** How tall the lit arrow of the object is, and half the width of the lens. */
-const TALL = 0.3;
+const TALL = 0.36;
 const HALF = 0.46;
 
-/** How long the bench is in scene units, and how many focal lengths it gives each side of the lens. */
-const SPAN = 6.3;
+/**
+ * How long the bench is in scene units, and how many focal lengths it gives
+ * each side of the lens. It is long enough that the lamp at its nearest
+ * still stands clear of the lens and of its carrier.
+ */
+const SPAN = 9;
 const LEFT = 4.2;
 const RIGHT = 4.3;
 
 /** The size of the screen that catches a real image. */
-const CARD = { tall: 2, wide: 0.9 } as const;
+const CARD = { tall: 2.5, wide: 1.1 } as const;
 
 /** The marks along the bench, in focal lengths from the lens. */
 const MARKS = [
@@ -58,19 +65,23 @@ const LEAD = { left: 0.36, right: 0.26 } as const;
 const FROM = [0, 0.55, 6] as const;
 
 /**
- * A brass pin on the rail that points up at a focal point on the axis. Its
- * name stands at its foot, in front of the rail's scale, clear of the rays.
+ * A focal point of the diagram: a dot on the axis, drawn over whatever
+ * stands there, and its name under it in front of the rail's scale, clear
+ * of the rays.
  */
-function Pin({ at, name }: { readonly at: number; readonly name: string }) {
+function Mark({ at, name }: { readonly at: number; readonly name: string }) {
   return (
     <group position={[at, 0, 0]}>
-      <mesh castShadow position={[0, (AXIS + 0.2) / 2, 0]}>
-        <cylinderGeometry args={[0.004, 0.009, AXIS - 0.24, 12]} />
-        <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.28} />
-      </mesh>
-      <mesh position={[0, AXIS, 0]}>
-        <sphereGeometry args={[0.022, 20, 14]} />
-        <meshBasicMaterial color={PLOT_COLORS.amber} toneMapped={false} />
+      <mesh position={[0, AXIS, 0]} renderOrder={12}>
+        <circleGeometry args={[0.032, 28]} />
+        <meshBasicMaterial
+          color={PLOT_COLORS.amber}
+          depthTest={false}
+          depthWrite={false}
+          side={DoubleSide}
+          toneMapped={false}
+          transparent
+        />
       </mesh>
       <Tag position={[0, 0.02, 0.36]}>
         <InlineMath math={name} />
@@ -192,8 +203,7 @@ export function LensScene({
       }}
       from={FROM}
     >
-      <SeamlessBenchSurface />
-      <Backboard back={0.8} tall={2.5} wide={length + 0.7} />
+      <Backboard back={0.8} tall={3} wide={length + 0.7} />
       <group position={[(right - left) / 2, 0, 0]}>
         <Rail length={length} unit={unit} />
       </group>
@@ -236,7 +246,11 @@ export function LensScene({
             back={Option.map(virtual, (found) =>
               Math.max(found.distance * unit, -left)
             )}
-            far={onCard ? stop - 0.008 : right + 0.5}
+            far={
+              onCard
+                ? stop - 0.008
+                : rayRun(ray.height, ray.slope, AXIS - RAIL, right + 0.5)
+            }
             height={ray.height}
             key={ray.height}
             landing={onCard && Option.isNone(caught)}
@@ -277,7 +291,7 @@ export function LensScene({
         }
       )}
       {Arr.map(MARKS, (mark) => (
-        <Pin at={mark.at * focal * unit} key={mark.at} name={mark.name} />
+        <Mark at={mark.at * focal * unit} key={mark.at} name={mark.name} />
       ))}
     </View>
   );

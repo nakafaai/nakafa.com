@@ -1,4 +1,3 @@
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { waveVectors } from "@repo/design-system/components/contents/physics/waves/tank/ripple";
 import { Water } from "@repo/design-system/components/contents/physics/waves/tank/water";
 import { refractWave } from "@repo/design-system/components/contents/physics/waves/wave";
@@ -325,7 +324,6 @@ export function TankScene({
 
   return (
     <View box={FRAME} from={FROM}>
-      <SeamlessBenchSurface />
       <Tray />
       <group position={[0, LEGS + FLOOR, DEEP / 4]}>
         <Slab deep={DEEP / 2 - 0.02} tall={PLATE} wide={WIDE - 0.04} />

@@ -1,4 +1,3 @@
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
 import {
   starRay,
@@ -103,7 +102,6 @@ export function TelescopeScene({
       }}
       from={FROM}
     >
-      <SeamlessBenchSurface />
       <Backboard back={0.8} tall={2.1} wide={LENGTH + 0.7} />
       <Rail length={LENGTH} unit={unit} />
       <Rider at={start} drop={cellDrop(front)} height={AXIS}>
@@ -136,8 +134,8 @@ export function TelescopeScene({
         color={PLOT_COLORS.amber}
         dashed
         points={[
-          [focus, AXIS - radius * 1.1, 0],
-          [focus, AXIS + radius * 1.1, 0],
+          [focus, AXIS - radius * 0.7, 0],
+          [focus, AXIS + radius * 0.7, 0],
         ]}
         strength={0.9}
         width={0.007}

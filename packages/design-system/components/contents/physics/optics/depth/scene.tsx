@@ -1,4 +1,3 @@
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { Stand } from "@repo/design-system/components/contents/physics/bench/stand";
 import {
   Tank,
@@ -60,6 +59,9 @@ const VIEW = 6;
 
 /** The viewing lens an eye looks straight down through. */
 const VIEWER = { focal: 1.4, half: 0.3, index: CROWN_INDEX, thin: 0.03 };
+
+/** How far from the viewing lens its stand is: far enough that the stand's base clears the tank. */
+const STAND = 0.86;
 
 /** The side the tank is read from: straight on, level with the liquid. */
 const FROM = [0, 0.35, 6] as const;
@@ -164,13 +166,12 @@ export function DepthScene({
   return (
     <View
       box={{
-        x: { max: reach + 0.78, min: -WIDE / 2 - 0.12 },
+        x: { max: reach + STAND + 0.25, min: -WIDE / 2 - 0.12 },
         y: { max: eye + 0.52, min: -0.04 },
         z: { max: DEEP / 2 + 0.08, min: -DEEP / 2 },
       }}
       from={FROM}
     >
-      <SeamlessBenchSurface />
       <Backboard back={1.1} tall={3.1} wide={5.2} />
       <Tank depth={DEEP} height={FULL * 1.08 + 0.03} width={WIDE} />
       {Arr.map(Arr.reverse(layers), (layer, index) => (
@@ -223,8 +224,8 @@ export function DepthScene({
       <group position={[0, eye + 0.03, 0]} rotation={[0, 0, Math.PI / 2]}>
         <Lens focal={VIEWER.focal} half={VIEWER.half} thin={VIEWER.thin} />
       </group>
-      <group position={[reach + 0.62, 0, 0]}>
-        <Stand height={eye + 0.03} reach={0.57} tall={eye + 0.5} />
+      <group position={[reach + STAND, 0, 0]}>
+        <Stand height={eye + 0.03} reach={STAND - 0.05} tall={eye + 0.5} />
       </group>
       <Measure
         color={PLOT_COLORS.teal}

@@ -94,7 +94,13 @@ export function ApparentDepthLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} frameloop="always" reach={4} setting="lab">
+        <ScienceStage
+          floor={0}
+          frameloop="always"
+          ground="epoxy"
+          reach={4}
+          setting="lab"
+        >
           <Suspense fallback={null}>
             <DepthScene capacity={capacity} layers={shown} />
           </Suspense>

@@ -5,6 +5,7 @@ import {
   criticalAngle,
   lensReach,
   principalRays,
+  rayRun,
   refract,
   starRay,
   telescope,
@@ -173,6 +174,18 @@ describe("lensReach", () => {
 
   it("keeps to the 2F marks when the object at the focal point has no image", () => {
     expect(lensReach(15, 15, farthest)).toEqual({ left: 30, right: 30 });
+  });
+});
+
+describe("rayRun", () => {
+  it("stops a falling ray where it reaches the bench", () => {
+    expect(rayRun(0.36, -0.5, 1.2, 10)).toBeCloseTo(3.12, 9);
+  });
+
+  it("lets a ray run to the limit when it falls too slowly to reach the bench, or rises", () => {
+    expect(rayRun(0.36, -0.1, 1.2, 5)).toBe(5);
+    expect(rayRun(-0.2, 0, 1.2, 5)).toBe(5);
+    expect(rayRun(0, 0.3, 1.2, 5)).toBe(5);
   });
 });
 
