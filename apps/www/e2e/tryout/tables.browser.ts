@@ -139,14 +139,15 @@ const NAMED_SET_TABLES = [
 ] as const;
 
 /**
- * The owner's notes of 26 and 27 Nov: a track's set table stands at the catalog's width (4xl), and its Name column
- * stands as wide as its longest set name in the page's language and no wider, so a reader sees which set each row is,
- * Aufgabensatz 1 as whole as Set 1, and on a desktop every column stands whole without scrolling. A phone scrolls the
- * table sideways inside its card, never cutting a name.
+ * The owner's notes of 26 and 27 Nov: a track's set table stands at the catalog's width (4xl), and its Name and Status
+ * columns stand as wide as the widest thing they draw in the page's language: the longest set name, Aufgabensatz 1 as
+ * whole as Set 1, and the widest status badge, Zeit abgelaufen as whole as Completed, with no room to spare. So no name
+ * or badge is cut, on a phone the table scrolls sideways inside its card, and on a desktop every column stands whole
+ * without scrolling, the spare width shared among the columns.
  */
 for (const href of NAMED_SET_TABLES) {
   for (const width of TABLE_WIDTHS) {
-    test(`shows every set name whole on ${href} at ${width} px`, async ({
+    test(`fits the set names and status badges on ${href} at ${width} px`, async ({
       page,
     }) => {
       await page.setViewportSize({ height: 900, width });
@@ -157,30 +158,70 @@ for (const href of NAMED_SET_TABLES) {
         const viewport = element.querySelector<HTMLElement>(
           '[data-slot="scroll-area-viewport"]'
         );
+        const inner = (cell: Element) => {
+          const style = getComputedStyle(cell);
+          return (
+            cell.getBoundingClientRect().width -
+            Number.parseFloat(style.paddingLeft) -
+            Number.parseFloat(style.paddingRight)
+          );
+        };
+        const widest = (parts: readonly Element[]) =>
+          Math.max(
+            0,
+            ...parts.map((part) => part.getBoundingClientRect().width)
+          );
+        const heads = Array.from(element.querySelectorAll("thead th"));
+        const status = heads.find(
+          (head) =>
+            head.querySelector("[aria-hidden] [data-slot=badge]") !== null
+        );
+        // A name's link fills its cell, so what it draws ends where its words end: its mark, then its name.
         const names = Array.from(
+          element.querySelectorAll("tbody td:first-child a[href]"),
+          (link) =>
+            (link.querySelector(".truncate")?.getBoundingClientRect().right ??
+              0) - link.getBoundingClientRect().left
+        );
+        const words = Array.from(
           element.querySelectorAll<HTMLElement>(
-            "tbody td:first-child a[href] .truncate"
+            "tbody td:first-child a[href] .truncate, tbody [data-slot=badge] .truncate"
           )
         );
         return {
-          cut: names
-            .filter((name) => name.scrollWidth > name.clientWidth)
-            .map((name) => name.textContent),
-          head:
-            element.querySelector("thead th")?.getBoundingClientRect().width ??
-            0,
+          cut: words
+            .filter((word) => word.scrollWidth > word.clientWidth)
+            .map((word) => word.textContent),
+          nameSpare:
+            heads[0] === undefined
+              ? -1
+              : inner(heads[0]) - Math.max(0, ...names),
           names: names.length,
           scrolls:
             viewport !== null &&
             viewport.scrollWidth > viewport.clientWidth + 1,
+          statusSpare:
+            status === undefined
+              ? -1
+              : inner(status) -
+                widest(
+                  Array.from(
+                    status.querySelectorAll("[aria-hidden] [data-slot=badge]")
+                  )
+                ),
         };
       });
       expect(table.names).toBeGreaterThan(0);
       expect(table.cut).toEqual([]);
-      expect(table.head).toBeLessThanOrEqual(220);
+      expect(table.nameSpare).toBeGreaterThanOrEqual(-1);
+      expect(table.statusSpare).toBeGreaterThanOrEqual(-1);
       if (width === 1440) {
         expect(table.scrolls).toBe(false);
+        return;
       }
+      // A phone's table is wider than its card, so no column takes spare width: each stands at what it draws.
+      expect(table.nameSpare).toBeLessThanOrEqual(2);
+      expect(table.statusSpare).toBeLessThanOrEqual(2);
     });
   }
 }

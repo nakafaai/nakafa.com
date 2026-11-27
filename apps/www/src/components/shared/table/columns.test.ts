@@ -139,6 +139,19 @@ describe("the columns of a table", () => {
     ).toMatchObject({ meta: { width: "fit" } });
   });
 
+  it("marks a column of one value whose cells draw it as a status badge", () => {
+    expect(
+      columns.choice((row) => row.status, {
+        badge: true,
+        header: "State",
+        id: "state",
+        options: [],
+      })
+    ).toMatchObject({
+      meta: { filter: { badge: true, kind: "choice", options: [] } },
+    });
+  });
+
   it("leaves the row's menu the one column with nothing to filter by", () => {
     const cell = () => "menu";
 

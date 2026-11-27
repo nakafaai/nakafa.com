@@ -1,11 +1,16 @@
 import { Badge } from "@repo/design-system/components/ui/badge";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  HugeIcons,
+  OptionIcon,
+} from "@repo/design-system/components/ui/huge-icons";
 import type { StatusTone } from "@repo/design-system/lib/status";
 import {
   BAND_STATUS_BADGES,
   STATUS_BADGES,
 } from "@repo/design-system/lib/status";
+import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
+import type { ColumnOption } from "@/components/shared/table/columns";
 
 /**
  * How one state of a table looks: its own icon and its tone, as `TableStatus` draws them. A table's
@@ -41,5 +46,26 @@ export function TableStatus({
       <HugeIcons data-icon="inline-start" icon={icon} />
       <span className="truncate">{label}</span>
     </Badge>
+  );
+}
+
+/**
+ * The room of a column of status badges, under its head: every value the column can hold, drawn as the badge its cells
+ * draw and hidden. A badge names its state in a smaller type than the table's, so no count of characters measures it;
+ * the browser lays these badges out instead, and the column (`fit`) stands exactly as wide as its widest badge in the
+ * reader's language, before its rows arrive and under any filter, so no badge is cut and none leaves a gap.
+ */
+export function StatusRoom({ options }: { options: readonly ColumnOption[] }) {
+  return (
+    <div aria-hidden="true" className="invisible h-0 overflow-hidden">
+      {Arr.map(options, (option) => (
+        <div key={option.value}>
+          <Badge variant={STATUS_BADGES.neutral}>
+            <OptionIcon icon={option.icon} />
+            <span>{option.label}</span>
+          </Badge>
+        </div>
+      ))}
+    </div>
   );
 }

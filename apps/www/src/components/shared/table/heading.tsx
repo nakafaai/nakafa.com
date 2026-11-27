@@ -9,7 +9,7 @@ import { Array as Arr, Match, Option } from "effect";
 import type { ComponentProps, ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import {
-  fitWidth,
+  choiceWidth,
   HeadAlignContext,
   headPlace,
   menuPlaceOf,
@@ -31,6 +31,7 @@ import {
   HeadText,
   useIsFiltered,
 } from "@/components/shared/table/panel";
+import { StatusRoom } from "@/components/shared/table/status";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 
 /** The arrow of a column's head while it sorts the rows each way. */
@@ -61,7 +62,7 @@ export function DataTableHead<TData extends RowData>({
       </ColumnHead>
     );
   }
-  const sizing = columnSizing(column, filter, title, width);
+  const sizing = columnSizing(filter, title, width);
   return (
     <ColumnHead
       menu={menuPlaceOf(
@@ -84,6 +85,9 @@ export function DataTableHead<TData extends RowData>({
           {children}
         </HeadControl>
       </HeadAlignContext>
+      {filter.kind === "choice" && filter.badge === true ? (
+        <StatusRoom options={filter.options} />
+      ) : null}
     </ColumnHead>
   );
 }
@@ -193,28 +197,20 @@ function SortingHead<TData extends RowData>({
 }
 
 /**
- * How wide a column of data stands: a column of one known value as wide as its longest value (`fitWidth`), a first
- * column of short names as wide as the longest name its rows hold, a column of wide cells at the wide width, and every
- * other column at the width of what it holds (`headWidth`).
+ * How wide a column of data stands: a first column of short names and a column of status badges as wide as the widest
+ * thing they draw (`fit`), a column of one other known value as wide as its longest value (`choiceWidth`), a column of
+ * wide cells at the wide width, and every other column at the width of what it holds (`headWidth`).
  */
-function columnSizing<TData extends RowData>(
-  column: Header<typeof dataTableFeatures, TData>["column"],
+function columnSizing(
   filter: HeadFilter,
   title: string,
   width: ColumnWidth | undefined
 ) {
-  if (width === "fit") {
-    return {
-      size: fitWidth(
-        title,
-        Arr.map(column.table.getCoreRowModel().rows, (row) =>
-          String(row.getValue(column.id))
-        )
-      ),
-    };
-  }
-  if (width === "wide") {
+  if (width === "wide" || width === "fit") {
     return { width };
+  }
+  if (filter.kind === "choice" && filter.badge === true) {
+    return { width: "fit" as const };
   }
   if (width === "compact") {
     return {
@@ -224,7 +220,7 @@ function columnSizing<TData extends RowData>(
   }
   if (filter.kind === "choice") {
     return {
-      size: fitWidth(
+      size: choiceWidth(
         title,
         Arr.map(filter.options, (option) => option.label)
       ),
