@@ -34,7 +34,7 @@ describe("exams/figure/stored", () => {
             id: "moving",
             kind: "marker",
             x: "a",
-            y: "1",
+            y: "b",
           },
           {
             appearance: "primary",

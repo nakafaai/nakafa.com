@@ -73,8 +73,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "8.17.0",
-    "nakafa.com declares 8.17.0, which peers effect 4.1.5 exactly, the adopted cohort. 8.17.0 adds 20 STEM 3D labs covering ecosystem ecology (FoodWebTrophicLab, QuadratSamplingLab, EcologicalSuccessionLab), human respiration (AlveolusGasExchangeLab, ThoraxDiaphragmLab), linear methods (EigenTransform3DLab, PcaProjection3DLab, QrGramSchmidt3DLab), derivative calculus (SecantToTangentLab, DerivativeSlopeFieldLab, OptimizationBox3DLab), integral calculus (RiemannSumConvergenceLab, SolidOfRevolutionLab, AreaBetweenCurvesLab), limits (EpsilonDeltaBandLab, AsymptoteBehaviorLab, SqueezeTheoremWaveLab), and 3D vector operations (Vector3DCrossProductLab, DotProductProjection3DLab, VectorParallelepipedLab), bringing the visual catalog to 366 visuals in total. Every catalog figure renders in lessons and try-outs through one renderer, whose registry equals the catalog. Checked 26 November 2026.",
+    "8.17.1",
+    "nakafa.com declares 8.17.1, which peers effect 4.1.5 exactly, the adopted cohort. 8.17.1 keeps the 366-visual catalog of 8.17.0 and adds one formula scope rule from aksara#1070: every slider must drive at least one object in its visual scene. Aksara publishes content releases against 8.17.1, and release catalog-20261127d failed target verification with CONTENT_RELEASE_INTEGRITY while nakafa.com still declared 8.17.0. Every catalog figure renders in lessons and try-outs through one renderer, whose registry equals the catalog. Checked 27 November 2026.",
   ],
   [
     "tsrs@latest",
