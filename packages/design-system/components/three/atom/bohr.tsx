@@ -82,7 +82,7 @@ export function BohrShells({
       <Clock value={clock}>
         <Electrons
           key={Arr.join(
-            Arr.map(orbits, (orbit) => orbit.electrons),
+            Arr.map(orbits, (orbit) => String(orbit.electrons)),
             "-"
           )}
           orbits={orbits}
