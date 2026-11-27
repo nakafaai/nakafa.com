@@ -30,7 +30,7 @@ const BlastomereSchema = Schema.Struct({
   radius: Schema.Finite,
 });
 
-type Blastomere = typeof BlastomereSchema.Type;
+export type Blastomere = typeof BlastomereSchema.Type;
 
 /** Clamp post-fertilisation day into [0, 9]. */
 export function clampDay(day: number): number {

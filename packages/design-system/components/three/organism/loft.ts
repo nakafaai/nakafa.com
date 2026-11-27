@@ -31,7 +31,9 @@ export type Station = typeof StationSchema.Type;
  * pleats, lobes, knuckles. `paint` gives a place its colour: a dark back
  * over a pale belly, stripes, spots. Both read `along` from 0 at the first
  * station to 1 at the last, and `around` from 0 on the back through 0.5 on
- * the belly and on to 1 at the back again.
+ * the belly and on to 1 at the back again. `steady` keeps the back facing
+ * `up` all the way along, as a body cut open towards the viewer needs,
+ * where a free frame would drift round a spine that winds through space.
  */
 export interface Loft {
   readonly along: number;
@@ -43,6 +45,7 @@ export interface Loft {
   readonly seed: number;
   readonly square: number;
   readonly stations: readonly Station[];
+  readonly steady?: boolean;
   readonly up: readonly [number, number, number];
 }
 
@@ -104,7 +107,8 @@ export function loftBody(loft: Loft): Form {
   const color = new Float32Array(rings * columns * 3);
   const uv = new Float32Array(rings * columns * 2);
   const index = new Uint32Array(loft.along * loft.around * 6);
-  const up = new Vector3(...loft.up).normalize();
+  const first = new Vector3(...loft.up).normalize();
+  const up = first.clone();
   const tangent = new Vector3();
   const side = new Vector3();
   const ink = new Color();
@@ -121,6 +125,9 @@ export function loftBody(loft: Loft): Form {
         after.centre[2] - before.centre[2]
       )
       .normalize();
+    if (loft.steady === true) {
+      up.copy(first);
+    }
     up.addScaledVector(tangent, -up.dot(tangent)).normalize();
     side.crossVectors(tangent, up);
 
