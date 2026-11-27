@@ -68,8 +68,8 @@ export function useTryoutSetColumns() {
       cell: (info) => <TryoutSetName row={info.row.original} />,
       header: tCommon("name"),
       id: "title",
-      // A set's name is short, such as Set 1, so it holds no more than a short name's room.
-      width: "short",
+      // A set's name is short, such as Set 1 or Aufgabensatz 1, so the column stands as wide as its longest name.
+      width: "fit",
     }),
     setColumns.choice((row) => row.level, {
       cell: (info) => <TryoutLevel level={info.row.original.level} />,
@@ -79,6 +79,7 @@ export function useTryoutSetColumns() {
       sort: { asc: t("level-sort-easiest"), desc: t("level-sort-hardest") },
     }),
     setColumns.choice((row) => row.attemptStatus ?? "not-started", {
+      badge: true,
       cell: (info) => (
         <span className="contents" data-progress>
           <TryoutStatus status={info.row.original.attemptStatus} />

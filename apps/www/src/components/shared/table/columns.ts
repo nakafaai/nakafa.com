@@ -32,6 +32,7 @@ export type HeadFilter =
   | { readonly kind: "number" }
   | { readonly kind: "text" }
   | {
+      readonly badge?: boolean;
       readonly kind: "choice";
       readonly options: readonly ColumnOption[];
       readonly sort?: ColumnSortWords;
@@ -58,14 +59,22 @@ export const ColumnSortWords = Schema.Struct({
 });
 export type ColumnSortWords = typeof ColumnSortWords.Type;
 
-/** What a column of one value adds when the server also sorts by the order of its values. */
-const ChoiceSort = Schema.Struct({ sort: Schema.optionalKey(ColumnSortWords) });
+/**
+ * What a column of one value may add: `badge` when its cells draw each value as a status badge, whose name stands in
+ * a smaller type than the table's, so the column holds its widest badge exactly (`StatusRoom`); and `sort` when the
+ * server also sorts by the order of its values.
+ */
+const ChoiceSpec = Schema.Struct({
+  badge: Schema.optionalKey(Schema.Boolean),
+  sort: Schema.optionalKey(ColumnSortWords),
+});
 
 /**
- * A column that needs less or more room than its kind normally takes. `short` is a first column of short names, such
- * as a try-out's sets: it holds a short name's room, so the columns beside it share the rest of the table.
+ * A column that needs less or more room than its kind normally takes. `fit` is a first column of short names, such as
+ * a try-out's sets: its cells give it the width of its longest name as the browser draws it in the reader's language,
+ * so every name reads whole, Set 1 and Aufgabensatz 1 alike, and the columns beside it share the rest of the table.
  */
-const ColumnWidth = Schema.Literals(["compact", "short", "wide"]);
+const ColumnWidth = Schema.Literals(["compact", "fit", "wide"]);
 export type ColumnWidth = typeof ColumnWidth.Type;
 
 /** What every column of data declares: its ID, its name in the head, how its cell draws, and where it stands. */
@@ -141,14 +150,16 @@ export const tableColumns = <TData extends RowData>() => ({
   choice: <TValue extends string>(
     read: AccessorFn<TData, TValue>,
     {
+      badge,
       options,
       sort,
       ...column
-    }: ValuesSpec<TData, TValue> & typeof ChoiceSort.Type
+    }: ValuesSpec<TData, TValue> & typeof ChoiceSpec.Type
   ): TableColumn<TData> => ({
     ...dataColumn(read, column, {
       kind: "choice",
       options,
+      ...(badge === undefined ? {} : { badge }),
       ...(sort === undefined ? {} : { sort }),
     }),
     enableSorting: sort !== undefined,

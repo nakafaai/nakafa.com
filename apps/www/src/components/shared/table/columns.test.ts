@@ -122,7 +122,7 @@ describe("the columns of a table", () => {
     });
   });
 
-  it("keeps the room a wide or short cell asks for in the column's meta", () => {
+  it("keeps the room a wide or fitted cell asks for in the column's meta", () => {
     expect(
       columns.number((row) => row.score, {
         header: "Score",
@@ -134,9 +134,22 @@ describe("the columns of a table", () => {
       columns.text((row) => row.name, {
         header: "Name",
         id: "name",
-        width: "short",
+        width: "fit",
       })
-    ).toMatchObject({ meta: { width: "short" } });
+    ).toMatchObject({ meta: { width: "fit" } });
+  });
+
+  it("marks a column of one value whose cells draw it as a status badge", () => {
+    expect(
+      columns.choice((row) => row.status, {
+        badge: true,
+        header: "State",
+        id: "state",
+        options: [],
+      })
+    ).toMatchObject({
+      meta: { filter: { badge: true, kind: "choice", options: [] } },
+    });
   });
 
   it("leaves the row's menu the one column with nothing to filter by", () => {

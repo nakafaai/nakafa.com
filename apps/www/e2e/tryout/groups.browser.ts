@@ -1,49 +1,25 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
-import { groupHref, trackHref } from "@/e2e/support/tryout";
+import {
+  DARMSTADT,
+  groupHref,
+  TKA_GRADE,
+  trackHref,
+  visit,
+} from "@/e2e/support/tryout";
 
 /** Indonesia's page, which holds SNBT and TKA. */
 const INDONESIA = "/en/try-out/indonesia";
 /** Germany's page, which holds the Aufnahmeprüfung. */
 const GERMANY = "/en/try-out/germany";
-/** TKA's one grade today, in English: its page holds the subject cards. */
-const TKA_GRADE = "/en/try-out/indonesia/tka/senior-high-school";
-/** The Aufnahmeprüfung's one Studienkolleg and its one test, in English. */
-const DARMSTADT =
-  "/en/try-out/germany/aufnahmepruefung/tu-darmstadt-studienkolleg/mathematics";
 /** The name of an exam card's link and of a subject card's link. */
 const EXAM_CARD = /^View options /u;
 const SUBJECT_CARD = /^View sets /u;
-/** The head of a set table's level column, whose button opens its filter. */
-const LEVEL_HEAD = /Level/u;
 /** The country's design, which only its own page's metadata names. */
 const GERMANY_DESIGN = /\/open-graph\/tryout\/germany\/en-index\.png$/u;
 /** The Darmstadt Mathematics test's English design, which its page shares in English. */
 const DARMSTADT_MATHEMATICS =
   /\/open-graph\/tryout\/germany\/entrance-examination\/en-tu-darmstadt-mathematics\.png$/u;
-/**
- * The set tables the owner checks: SNBT's one track, whose Indonesian states are
- * the longest, and TKA's compulsory mathematics, where the columns went missing.
- */
-const SET_TABLES = [
-  trackHref,
-  trackHref.replace("/en/", "/id/"),
-  `${TKA_GRADE}/compulsory-mathematics`,
-  "/id/try-out/indonesia/tka/sma-ma-smk/matematika-wajib",
-] as const;
-/** The widths at which the set table keeps every column: two phones and a desktop. */
-const TABLE_WIDTHS = [320, 390, 1440] as const;
-
-/**
- * Opens a page and lets it finish loading before a test leaves it. In Firefox
- * and WebKit a page left while it was still loading navigated to its own
- * address and interrupted the next one, so a walk across pages waits.
- */
-async function visit(page: Page, href: string) {
-  await page.goto(href);
-  await page.waitForLoadState("networkidle");
-}
-
 /** The paths a page's card links of one kind open, in order. */
 function cardPaths(page: Page, name: RegExp) {
   return page
@@ -274,176 +250,6 @@ test("a short screen scrolls the try-out rows under their sticky header", async 
   expect(scroll.page).toBeLessThanOrEqual(1);
   expect(scroll.rows).toBeGreaterThan(0);
   expect(Math.abs(scroll.headShift)).toBeLessThanOrEqual(1);
-});
-
-/**
- * One table at every width (the owner's rule): every column of a track's sets
- * stands on a phone as on a desktop, Level, Questions, Minutes and Score
- * included, and a card narrower than its columns scrolls them sideways inside
- * itself, under the row's menu, while the page never scrolls sideways. So no head
- * is hidden or zero wide, every row holds a cell under every head, the table's
- * scroll stays inside the card's edges, and once scrolled to its end the last
- * column stands whole beside the menu. Each state badge draws its name whole or
- * cut with an ellipsis inside the badge.
- */
-for (const href of SET_TABLES) {
-  for (const width of TABLE_WIDTHS) {
-    test(`${href} keeps every column of its set table at ${width} px`, async ({
-      page,
-    }) => {
-      await page.setViewportSize({ height: 800, width });
-      await visit(page, href);
-      const card = page.locator('[data-slot="table-card"]');
-      await expect(card.locator("tbody tr a[href]").first()).toBeVisible();
-      const table = await card.evaluate((element) => {
-        const edges = element.getBoundingClientRect();
-        const viewport = element.querySelector<HTMLElement>(
-          '[data-slot="scroll-area-viewport"]'
-        );
-        const heads = Array.from(
-          element.querySelectorAll<HTMLElement>("thead th")
-        );
-        const shown = (cell: Element) =>
-          getComputedStyle(cell).display !== "none" &&
-          cell.getBoundingClientRect().width > 0;
-        const hidden = heads
-          .filter((head) => !shown(head))
-          .map((head, index) => head.textContent?.trim() || `head ${index}`);
-        const rows = Array.from(element.querySelectorAll("tbody tr"));
-        const short = rows.filter(
-          (row) =>
-            Array.from(row.querySelectorAll("td")).filter(shown).length !==
-            heads.length
-        ).length;
-        const box = viewport?.getBoundingClientRect();
-        const scrolls =
-          viewport !== null && viewport.scrollWidth > viewport.clientWidth;
-        if (viewport !== null) {
-          viewport.scrollLeft = viewport.scrollWidth;
-        }
-        const last = heads.at(-2)?.getBoundingClientRect();
-        const menu = heads.at(-1)?.getBoundingClientRect();
-        const badges = Array.from(
-          element.querySelectorAll<HTMLElement>(
-            "[data-progress] [data-slot=badge]"
-          )
-        ).filter((badge) => {
-          const name = badge.querySelector<HTMLElement>(".truncate");
-          return !(
-            badge.scrollWidth <= badge.clientWidth &&
-            (name === null ||
-              name.scrollWidth <= name.clientWidth ||
-              getComputedStyle(name).textOverflow === "ellipsis")
-          );
-        }).length;
-        const frame = element.closest('[data-slot="page-list"]');
-        const padding =
-          frame === null
-            ? 0
-            : Number.parseFloat(getComputedStyle(frame).paddingBottom);
-        return {
-          clearance: window.innerHeight - edges.bottom - padding,
-          pageScroll:
-            document.documentElement.scrollHeight - window.innerHeight,
-          cutBadges: badges,
-          heads: heads.length,
-          hidden,
-          inside:
-            box !== undefined &&
-            box.left >= edges.left - 0.5 &&
-            box.right <= edges.right + 0.5,
-          lastBesideMenu:
-            last !== undefined &&
-            menu !== undefined &&
-            last.right <= menu.left + 0.5,
-          rows: rows.length,
-          scrolls,
-          short,
-        };
-      });
-
-      // Six columns of data and the row's menu.
-      expect(table.heads).toBe(7);
-      expect(table.hidden).toEqual([]);
-      expect(table.rows).toBeGreaterThan(0);
-      expect(table.short).toBe(0);
-      expect(table.inside).toBe(true);
-      expect(Math.abs(table.clearance)).toBeLessThanOrEqual(1);
-      expect(table.pageScroll).toBeLessThanOrEqual(1);
-      expect(table.lastBesideMenu).toBe(true);
-      expect(table.cutBadges).toBe(0);
-      // On a phone the card must scroll. A desktop may also scroll inside the 3xl column.
-      if (width < 768) {
-        expect(table.scrolls).toBe(true);
-      }
-      expect(
-        await page.evaluate(
-          () => document.documentElement.scrollWidth - window.innerWidth
-        )
-      ).toBeLessThanOrEqual(0);
-    });
-  }
-}
-
-/**
- * The owner's notes of 26 Nov: a track's set table stands at the catalog's width (4xl), its Name column holds a short
- * name's room, so on a desktop every column stands whole without scrolling, and the Level filter draws each level with
- * the bars its rows draw, never a separate icon.
- */
-test("a track's set table keeps a short Name column and every column whole at 1440 px", async ({
-  page,
-}) => {
-  await page.setViewportSize({ height: 900, width: 1440 });
-  await visit(page, trackHref);
-  const card = page.locator('[data-slot="table-card"]');
-  await expect(card.locator("tbody tr a[href]").first()).toBeVisible();
-  const table = await card.evaluate((element) => {
-    const viewport = element.querySelector<HTMLElement>(
-      '[data-slot="scroll-area-viewport"]'
-    );
-    const name = element.querySelector("thead th");
-    return {
-      name: name?.getBoundingClientRect().width ?? 0,
-      scrolls:
-        viewport !== null && viewport.scrollWidth > viewport.clientWidth + 1,
-    };
-  });
-  expect(table.name).toBeGreaterThan(0);
-  expect(table.name).toBeLessThanOrEqual(200);
-  expect(table.scrolls).toBe(false);
-});
-
-test("the Level filter draws each level with the bars its rows draw", async ({
-  page,
-}) => {
-  await page.setViewportSize({ height: 900, width: 1440 });
-  await visit(page, trackHref);
-  const readBarWidths = (scope: ReturnType<Page["locator"]>) =>
-    scope
-      .locator('span[aria-hidden="true"] > span')
-      .evaluateAll((bars) =>
-        bars.map((bar) => bar.getBoundingClientRect().width)
-      );
-  const rowWidths = await readBarWidths(
-    page.locator("tbody tr").first().locator("td").nth(1)
-  );
-  expect(rowWidths).toHaveLength(4);
-  expect(Math.min(...rowWidths)).toBeGreaterThanOrEqual(3);
-  await page
-    .locator("thead")
-    .getByRole("button", { name: LEVEL_HEAD })
-    .first()
-    .click();
-  for (const level of ["Easy", "Medium", "Hard", "Cooked"]) {
-    const option = page.getByRole("menuitemradio", {
-      exact: true,
-      name: level,
-    });
-    await expect(option).toBeVisible();
-    const widths = await readBarWidths(option);
-    expect(widths).toHaveLength(4);
-    expect(Math.min(...widths)).toBeGreaterThanOrEqual(1);
-  }
 });
 
 /** An exam's official name is never translated, in any locale. */

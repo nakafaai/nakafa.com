@@ -12,6 +12,11 @@ export const trackHref = `${groupHref}/utbk`;
 export const setHref = `${trackHref}/set-1`;
 /** The first section of the set, at its own address. */
 export const sectionHref = `${setHref}/general-reasoning`;
+/** TKA's one grade today, in English: its page holds the subject cards. */
+export const TKA_GRADE = "/en/try-out/indonesia/tka/senior-high-school";
+/** The Aufnahmeprüfung's one Studienkolleg and its one test, in English. */
+export const DARMSTADT =
+  "/en/try-out/germany/aufnahmepruefung/tu-darmstadt-studienkolleg/mathematics";
 
 /** The shell's lock attribute, which the lock store sets once a page hydrates. */
 export const LOCKED_SHELL = "[data-slot=sidebar-wrapper][data-locked]";
@@ -109,3 +114,13 @@ export const openSetPane = Effect.fn("NakafaE2E.openTryoutSetPane")(function* (
   yield* arrive(page, onPath(setHref), start);
   return start;
 });
+
+/**
+ * Opens a page and lets it finish loading before a test leaves it. In Firefox
+ * and WebKit a page left while it was still loading navigated to its own
+ * address and interrupted the next one, so a walk across pages waits.
+ */
+export async function visit(page: Page, href: string) {
+  await page.goto(href);
+  await page.waitForLoadState("networkidle");
+}

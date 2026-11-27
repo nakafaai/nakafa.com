@@ -31,6 +31,7 @@ import {
   HeadText,
   useIsFiltered,
 } from "@/components/shared/table/panel";
+import { StatusRoom } from "@/components/shared/table/status";
 import { useTableFilters } from "@/components/shared/table/toolbar";
 
 /** The arrow of a column's head while it sorts the rows each way. */
@@ -84,6 +85,9 @@ export function DataTableHead<TData extends RowData>({
           {children}
         </HeadControl>
       </HeadAlignContext>
+      {filter.kind === "choice" && filter.badge === true ? (
+        <StatusRoom options={filter.options} />
+      ) : null}
     </ColumnHead>
   );
 }
@@ -193,17 +197,20 @@ function SortingHead<TData extends RowData>({
 }
 
 /**
- * How wide a column of data stands: a column of one known value as wide as its longest value (`choiceWidth`), a column
- * of wide cells at the wide width, a first column of short names at a short name's width, and every other column at
- * the width of what it holds (`headWidth`).
+ * How wide a column of data stands: a first column of short names and a column of status badges as wide as the widest
+ * thing they draw (`fit`), a column of one other known value as wide as its longest value (`choiceWidth`), a column of
+ * wide cells at the wide width, and every other column at the width of what it holds (`headWidth`).
  */
 function columnSizing(
   filter: HeadFilter,
   title: string,
   width: ColumnWidth | undefined
 ) {
-  if (width === "wide" || width === "short") {
+  if (width === "wide" || width === "fit") {
     return { width };
+  }
+  if (filter.kind === "choice" && filter.badge === true) {
+    return { width: "fit" as const };
   }
   if (width === "compact") {
     return {

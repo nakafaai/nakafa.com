@@ -300,6 +300,7 @@ function AnswerList({
             id: "points",
           }),
           answerColumns.choice((answer) => answer.verdict, {
+            badge: true,
             cell: (info) => (
               <TableStatus
                 icon={VERDICT_LOOKS[info.getValue()].icon}

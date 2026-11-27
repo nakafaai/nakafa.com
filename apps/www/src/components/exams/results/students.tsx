@@ -188,6 +188,7 @@ function useStudentColumns() {
       id: "name",
     }),
     studentColumns.choice((row) => row.state, {
+      badge: true,
       cell: (info) => (
         <TableStatus
           icon={STATE_LOOKS[info.getValue()].icon}
