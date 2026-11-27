@@ -156,7 +156,6 @@ export function spreadSheet(
         ink: INSTRUMENT_COLORS.scaleInk,
         size: 7.5,
         text: student.name,
-        weight: picked ? 700 : 500,
       }),
       stroke(
         [PAGE.left, rest],

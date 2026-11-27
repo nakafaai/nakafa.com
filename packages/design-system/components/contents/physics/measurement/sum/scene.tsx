@@ -30,14 +30,20 @@ const BEHIND = ROD.radius + 0.6 * MILLIMETRE;
 const ZERO = (-SCALE * 10 * MILLIMETRE) / 2;
 
 /**
- * What the camera frames at every width, in scene units: the rule from end
- * to end with both rods along its edge.
+ * What the camera frames at every width, in scene units: the joined end of
+ * the rods against the stretch of the scale it is read on, from 11.3 cm to
+ * 13.9 cm, with the numerals of that stretch. The sum is decided within a
+ * millimetre of that end, so the camera comes close enough to read it, and a
+ * reader pulls back to see both rods.
  */
-const BENCH = {
-  x: { max: -ZERO + 8 * MILLIMETRE, min: ZERO - 8 * MILLIMETRE },
+const READING = {
+  x: { max: ZERO + 139 * MILLIMETRE, min: ZERO + 113 * MILLIMETRE },
   y: { max: 2 * ROD.radius, min: 0 },
-  z: { max: 27 * MILLIMETRE, min: -BEHIND - ROD.radius },
+  z: { max: 14 * MILLIMETRE, min: -BEHIND - ROD.radius },
 } as const;
+
+/** Where the camera looks, in scene units: the middle of that stretch, at the rule's edge. */
+const AIM = [ZERO + 126 * MILLIMETRE, 0.02, 0.02] as const;
 
 /** The outline of a rod `long` scene units long, turned about its axis, with a chamfer on both ends. */
 function rodOutline(long: number) {
@@ -99,8 +105,8 @@ function Glow({
 }
 
 /**
- * An iron rod and a copper rod laid end to end along a steel rule, with the
- * joined end marked: the band where it may really lie, which the coarser
+ * An iron rod and a copper rod laid end to end along a steel rule, seen
+ * close on the joined end, which is marked: the band where it may really lie, which the coarser
  * reading sets, the sum as a calculator writes it, and the sum rounded to
  * the decimals that band allows, picked out on the rule's scale.
  *
@@ -112,13 +118,13 @@ export function JoinScene({ tool }: { readonly tool: Tool }) {
   return (
     <group>
       <CameraControls
-        cameraPosition={[1.05, 0.82, 0.95]}
-        cameraTarget={[0.1, 0, 0]}
+        cameraPosition={[AIM[0], AIM[1] + 0.82, AIM[2] + 0.57]}
+        cameraTarget={[AIM[0], AIM[1], AIM[2]]}
         fov={36}
         framing="content"
         maxPolarAngle={Math.PI * 0.49}
       />
-      <CameraBounds bounds={BENCH}>
+      <CameraBounds bounds={READING}>
         <group position={[ZERO, 0, 0]}>
           <Rule length={SCALE} />
           <Rod from={0} long={IRON_LENGTH}>

@@ -13,13 +13,14 @@ import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 const PLACE = [-0.16, 0, -0.14] as const;
 
 /**
- * What the camera frames at every width, in scene units: the ball between
- * the anvil and the spindle, the sleeve and the thimble, which are the
- * subject and both scales of its reading. The rest of the frame may run out
- * of the picture.
+ * What the camera frames at every width, in scene units: the anvil, the ball
+ * it holds against the spindle, the sleeve, and the numbered bevel of the
+ * thimble, which are the subject and both scales of its reading. Past the
+ * bevel the thimble and its ratchet run out of the picture, and so does the
+ * low back of the frame, so the scales stay large enough to read on a phone.
  */
 const READING = {
-  x: { max: PLACE[0] + 0.92, min: PLACE[0] - 0.12 },
+  x: { max: PLACE[0] + 0.62, min: PLACE[0] - 0.1 },
   y: { max: PLATE_TOP + 0.18, min: PLATE_TOP },
   z: { max: PLACE[2] + 0.1, min: PLACE[2] - 0.1 },
 } as const;
@@ -42,8 +43,8 @@ export function GaugeScene({
   return (
     <group>
       <CameraControls
-        cameraPosition={[0.3, PLATE_TOP + 0.87, 0.22]}
-        cameraTarget={[0.3, PLATE_TOP + 0.09, -0.14]}
+        cameraPosition={[0.1, PLATE_TOP + 0.87, 0.22]}
+        cameraTarget={[0.1, PLATE_TOP + 0.09, -0.14]}
         fov={36}
         framing="content"
         maxPolarAngle={Math.PI * 0.49}
