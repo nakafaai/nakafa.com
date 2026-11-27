@@ -364,7 +364,11 @@ export function Laser({ color }: { readonly color: string }) {
             surface="brushed"
           />
         </mesh>
-        <mesh castShadow position={[0, 0.02, 0.07]} rotation={[Math.PI / 2, 0, 0]}>
+        <mesh
+          castShadow
+          position={[0, 0.02, 0.07]}
+          rotation={[Math.PI / 2, 0, 0]}
+        >
           <cylinderGeometry args={[0.014, 0.014, 0.03, 20]} />
           <SurfaceMaterial
             color={INSTRUMENT_COLORS.aluminium}

@@ -110,9 +110,21 @@ export function Slits({
       </mesh>
       {Arr.map(
         [
-          { at: [0, -SLIDE / 2 - 0.012, 0], key: "sill", size: [SLIDE + 0.07, 0.04, 0.04] },
-          { at: [-SLIDE / 2 - 0.018, -0.02, 0], key: "left", size: [0.03, SLIDE, 0.04] },
-          { at: [SLIDE / 2 + 0.018, -0.02, 0], key: "right", size: [0.03, SLIDE, 0.04] },
+          {
+            at: [0, -SLIDE / 2 - 0.012, 0],
+            key: "sill",
+            size: [SLIDE + 0.07, 0.04, 0.04],
+          },
+          {
+            at: [-SLIDE / 2 - 0.018, -0.02, 0],
+            key: "left",
+            size: [0.03, SLIDE, 0.04],
+          },
+          {
+            at: [SLIDE / 2 + 0.018, -0.02, 0],
+            key: "right",
+            size: [0.03, SLIDE, 0.04],
+          },
         ] as const,
         (bar) => (
           <mesh castShadow key={bar.key} position={bar.at}>

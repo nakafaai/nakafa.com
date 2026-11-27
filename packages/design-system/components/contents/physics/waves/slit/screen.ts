@@ -71,7 +71,7 @@ export function screenMarks(
   format: (value: number, digits: number) => string
 ): readonly Mark[] {
   const millimetre = layout.wide / (SCREEN_HALF * 2);
-  const size = layout.wide * 0.03;
+  const size = layout.wide * 0.042;
   const scale = ruleMarks(
     {
       from: [-layout.wide / 2, layout.scale],
@@ -85,7 +85,7 @@ export function screenMarks(
       major: size * 0.9,
       minor: size * 0.45,
       size,
-      width: size * 0.09,
+      width: size * 0.12,
     }
   );
   return Option.match(Option.fromNullishOr(fringes.span), {
@@ -93,7 +93,11 @@ export function screenMarks(
     onSome: (span) => {
       const left = fringeStart(fringes.spacing, span) * millimetre;
       const right = left + span * millimetre;
-      const stroke = { ink: inks.count, kind: "line", width: size * 0.12 } as const;
+      const stroke = {
+        ink: inks.count,
+        kind: "line",
+        width: size * 0.16,
+      } as const;
       return [
         ...scale,
         ...Arr.makeBy(

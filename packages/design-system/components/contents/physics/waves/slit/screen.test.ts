@@ -48,9 +48,12 @@ describe("screenMarks", () => {
       marks,
       (mark) => mark.kind === "text" && mark.ink === "amber"
     );
-    expect(Arr.map(letters, (mark) => mark.kind === "text" && mark.text)).toEqual(
-      ["P", "Q"]
+    expect(
+      Arr.map(letters, (mark) => mark.kind === "text" && mark.text)
+    ).toEqual(["P", "Q"]);
+    expect(letters[1]?.kind === "text" && letters[1].at[0]).toBeCloseTo(
+      0.24,
+      9
     );
-    expect(letters[1]?.kind === "text" && letters[1].at[0]).toBeCloseTo(0.24, 9);
   });
 });

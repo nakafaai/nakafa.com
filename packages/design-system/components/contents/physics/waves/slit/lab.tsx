@@ -106,8 +106,8 @@ export function DoubleSlitLab({
             <SlitScene
               distance={distance}
               separation={separation}
-              span={span}
               spacing={spacing}
+              span={span}
             />
           </Suspense>
         </ScienceStage>

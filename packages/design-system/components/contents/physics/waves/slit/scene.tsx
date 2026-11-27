@@ -42,8 +42,8 @@ const THROW = 0.8;
 
 /** The screen, the band of fringes on it, and where its scale, its count and its span are printed. */
 const CARD = { tall: 1.2, wide: 1.7 } as const;
-const BAND = { at: 0.26, tall: 0.5, wide: 1.6 } as const;
-const PRINT = { dots: 0.555, scale: -0.03, span: -0.33, wide: BAND.wide };
+const BAND = { at: 0.26, tall: 0.5, wide: 1.5 } as const;
+const PRINT = { dots: 0.555, scale: -0.04, span: -0.38, wide: BAND.wide };
 
 /** How many scene units of slide one millimetre between the slits takes, so the slits visibly part. */
 const PARTING = 0.1;
@@ -110,9 +110,9 @@ export function SlitScene({
   return (
     <group>
       <BenchCamera
-        narrow={[-4.4, 3.3, 10.2]}
-        target={[0.25, 0.85, 0]}
-        wide={[-3.2, 2.3, 6.3]}
+        narrow={[-4.9, 3.6, 11.4]}
+        target={[-0.35, 0.8, 0]}
+        wide={[-3.7, 2.5, 7.3]}
       />
       <SeamlessBenchSurface />
       <Backboard back={0.8} tall={2.1} wide={LENGTH + 0.7} />
