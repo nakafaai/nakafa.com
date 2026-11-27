@@ -1,7 +1,10 @@
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import type { CurvePair } from "@repo/design-system/components/contents/mathematics/enclose/model";
 import { evaluateAreaBetweenCurves } from "@repo/design-system/components/contents/mathematics/enclose/model";
-import { AreaBetweenCurvesScene } from "@repo/design-system/components/contents/mathematics/enclose/scene";
+import {
+  AreaBetweenCurvesScene,
+  ENCLOSE_SCALE,
+} from "@repo/design-system/components/contents/mathematics/enclose/scene";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -29,6 +32,9 @@ import { VisualSlider } from "@repo/design-system/components/visual/slider";
 import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
+
+/** The step of the bound slider, which the play action sweeps by. */
+const BOUND_STEP = 0.05;
 
 export function AreaBetweenCurvesLab({
   description,
@@ -120,20 +126,24 @@ export function AreaBetweenCurvesLab({
             min={upperBound.min}
             onValueChange={setBound}
             readout={<InlineMath math={quantity(bound, "", 2)} />}
-            step={0.05}
+            step={BOUND_STEP}
             value={bound}
           />
         </VisualCardToolbar>
 
         <CoordinateSystem
           aria-label={labels.view}
-          cameraPosition={[2.0, 1.3, 6.8]}
-          cameraTarget={[2.0, 1.15, 0]}
+          cameraFraming="focus"
+          cameraPosition={[2.4, 0.9, 10]}
+          cameraProjection={{ kind: "orthographic" }}
+          cameraTarget={[2.4, 0.9, 0]}
           focus={{
-            x: { max: 4.3, min: -0.3 },
-            y: { max: 2.5, min: -0.2 },
+            x: { max: 6, min: -1.2 },
+            y: { max: 2.6, min: -0.8 },
             z: { max: 0.4, min: -0.4 },
           }}
+          playOrbit={false}
+          scale={ENCLOSE_SCALE}
           showZAxis={false}
           ticks
         >
@@ -141,6 +151,13 @@ export function AreaBetweenCurvesLab({
             <AreaBetweenCurvesScene
               pair={active}
               parts={labels.parts}
+              sweep={{
+                initial: upperBound.value,
+                max: upperBound.max,
+                min: upperBound.min,
+                onValue: setBound,
+                step: BOUND_STEP,
+              }}
               upperBound={bound}
             />
           </Suspense>

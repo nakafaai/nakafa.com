@@ -7,14 +7,12 @@ import {
   endQuantity,
   stateAlong,
 } from "@repo/design-system/components/contents/physics/thermodynamics/gas-process/gas";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 
 /**
- * The p-V diagram on the board: its axes from zero, where a state lies on
- * the plot, the band under a path whose area is the work the gas does, the
- * isotherms, and the end a press on the plot sets. Places on the plot are in
- * metres from its origin, x across with the volume and y up with the
- * pressure.
+ * The p-V diagram under the cylinder: its axes from zero, the path of a
+ * process as far as a play has come, the isotherms, and the end a press on
+ * the plot sets.
  */
 
 /** One axis from zero: where it ends and the step between its marks. */
@@ -28,18 +26,11 @@ export type Axis = typeof AxisSchema.Type;
 const AxesSchema = Schema.Struct({ pressure: AxisSchema, volume: AxisSchema });
 export type Axes = typeof AxesSchema.Type;
 
-/** The size of the plot on the board, in metres. */
-const PlotSchema = Schema.Struct({
-  height: Schema.Finite,
-  width: Schema.Finite,
-});
-type Plot = typeof PlotSchema.Type;
-
-/** A place on the plot, in metres from its origin. */
+/** A place on the plot, as shares of its width and its height from the origin. */
 const SpotSchema = Schema.Struct({ x: Schema.Finite, y: Schema.Finite });
 type Spot = typeof SpotSchema.Type;
 
-/** How many steps the path, its band and the isotherms are drawn in. */
+/** How many steps the path and the isotherms are drawn in. */
 export const SAMPLES = 48;
 
 /** How far an axis reaches past the largest value it must hold. */
@@ -88,23 +79,11 @@ export function axesFor(states: readonly GasState[], steps: number): Axes {
   };
 }
 
-/** The values an axis marks, from its first step to its end: zero is the origin's own mark. */
+/** The values an axis marks, from zero to its end. */
 export function axisTicks(axis: Axis) {
-  return Arr.makeBy(Math.round(axis.maximum / axis.step), (index) =>
-    tidy((index + 1) * axis.step)
+  return Arr.makeBy(Math.round(axis.maximum / axis.step) + 1, (index) =>
+    tidy(index * axis.step)
   );
-}
-
-/** Where a pressure and volume lie on the plot. */
-export function plotPoint(
-  point: { readonly pressure: number; readonly volume: number },
-  axes: Axes,
-  plot: Plot
-): Spot {
-  return {
-    x: (point.volume / axes.volume.maximum) * plot.width,
-    y: (point.pressure / axes.pressure.maximum) * plot.height,
-  };
 }
 
 /** The step the learner sets an end in: about a fiftieth of its range, on a 1, 2 or 5. */
@@ -127,13 +106,12 @@ export function endAt(
   process: GasProcess,
   range: EndRange,
   axes: Axes,
-  plot: Plot,
   spot: Spot
 ) {
   const value =
     endQuantity(process) === "volume"
-      ? (spot.x / plot.width) * axes.volume.maximum
-      : (spot.y / plot.height) * axes.pressure.maximum;
+      ? spot.x * axes.volume.maximum
+      : spot.y * axes.pressure.maximum;
   return settleEnd(range, value);
 }
 
@@ -154,42 +132,15 @@ export function pathStates(
 }
 
 /**
- * The band between a path and the volume axis, whose area is the work: for
- * each state a vertex on the path and one under it on the axis, three
- * numbers each.
- */
-export function bandPositions(
-  states: readonly GasState[],
-  axes: Axes,
-  plot: Plot
-) {
-  const positions = new Float32Array(states.length * 6);
-  Arr.forEach(states, (state, index) => {
-    const spot = plotPoint(state, axes, plot);
-    positions.set([spot.x, spot.y, 0, spot.x, 0, 0], index * 6);
-  });
-  return positions;
-}
-
-/** The triangles of a band of `count` + 1 states: two between each state and the next. */
-export function bandIndex(count: number) {
-  return Arr.flatMap(Arr.range(0, count - 1), (index) => {
-    const top = index * 2;
-    return [top, top + 1, top + 2, top + 1, top + 3, top + 2];
-  });
-}
-
-/**
  * The isotherm through a state, where p V keeps its value, as `count` + 1
- * places on the plot from where it comes in at the top to the right edge;
+ * states from where it comes in at the top of the plot to its right edge;
  * none when it passes above the plot.
  */
-export function isothermSpots(
+export function isothermStates(
   state: GasState,
   axes: Axes,
-  plot: Plot,
   count: number
-) {
+): readonly GasState[] {
   const product = state.pressure * state.volume;
   const from = product / axes.pressure.maximum;
   const to = axes.volume.maximum;
@@ -198,58 +149,10 @@ export function isothermSpots(
   }
   return Arr.makeBy(count + 1, (index) => {
     const volume = from * (to / from) ** (index / count);
-    return plotPoint({ pressure: product / volume, volume }, axes, plot);
+    return {
+      pressure: product / volume,
+      temperature: state.temperature,
+      volume,
+    };
   });
-}
-
-/**
- * Where the arrowhead on a path stands, halfway along it, and the angle it
- * points in, in radians from the volume axis; none on a path too short to
- * point anywhere.
- */
-export function arrowOn(spots: readonly Spot[]) {
-  const middle = Math.floor(spots.length / 2);
-  return Option.flatMap(
-    Option.all([Arr.get(spots, middle - 1), Arr.get(spots, middle + 1)]),
-    ([before, after]) => {
-      const across = after.x - before.x;
-      const up = after.y - before.y;
-      return Math.hypot(across, up) < 1e-6
-        ? Option.none()
-        : Option.some({
-            angle: Math.atan2(up, across),
-            x: (before.x + after.x) / 2,
-            y: (before.y + after.y) / 2,
-          });
-    }
-  );
-}
-
-/**
- * The heights two labels stand at, moved apart evenly about their middle
- * when they would stand closer than `gap`, so neither covers the other, and
- * lifted together so the lower stands no lower than `floor`.
- */
-export function spreadApart(
-  heights: readonly [number, number],
-  gap: number,
-  floor: number
-): readonly [number, number] {
-  const [first, second] = heights;
-  const middle = (first + second) / 2;
-  const half = Math.max(Math.abs(second - first), gap) / 2;
-  const low = Math.max(middle - half, floor);
-  const high = low + 2 * half;
-  return first <= second ? [low, high] : [high, low];
-}
-
-/**
- * Which side of its point each end's name stands: 1 up and right, -1 down
- * and left. Isotherms run up-left and down-right through every point, so
- * those two corners are clear of them; the end's name stands on the side
- * the path runs toward, and the start's on the other.
- */
-export function tagSides(from: Spot, to: Spot) {
-  const end = to.x - from.x + (to.y - from.y) >= 0 ? 1 : -1;
-  return { end, start: -end };
 }

@@ -30,6 +30,9 @@ import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
+/** The step of the tolerance slider, which the play action sweeps by. */
+const EPSILON_STEP = 0.02;
+
 export function EpsilonDeltaBandLab({
   description,
   epsilon,
@@ -118,20 +121,23 @@ export function EpsilonDeltaBandLab({
             readout={
               <InlineMath math={`\\varepsilon = ${quantity(epsVal, "", 2)}`} />
             }
-            step={0.02}
+            step={EPSILON_STEP}
             value={epsVal}
           />
         </VisualCardToolbar>
 
         <CoordinateSystem
           aria-label={labels.view}
-          cameraPosition={[0, 1.0, 6.8]}
-          cameraTarget={[0, 1.0, 0]}
+          cameraFraming="focus"
+          cameraPosition={[0.3, 1, 10]}
+          cameraProjection={{ kind: "orthographic" }}
+          cameraTarget={[0.3, 1, 0]}
           focus={{
-            x: { max: 2.6, min: -2.6 },
-            y: { max: 2.8, min: -0.8 },
+            x: { max: 3.2, min: -2.6 },
+            y: { max: 3, min: -1 },
             z: { max: 0.4, min: -0.4 },
           }}
+          playOrbit={false}
           showZAxis={false}
           ticks
         >
@@ -140,6 +146,13 @@ export function EpsilonDeltaBandLab({
               epsilon={epsVal}
               fn={active}
               parts={labels.parts}
+              sweep={{
+                initial: epsilon.value,
+                max: epsilon.max,
+                min: epsilon.min,
+                onValue: setEpsVal,
+                step: EPSILON_STEP,
+              }}
             />
           </Suspense>
         </CoordinateSystem>

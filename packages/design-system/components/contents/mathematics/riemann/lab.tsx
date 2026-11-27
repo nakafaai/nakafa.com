@@ -4,7 +4,10 @@ import type {
   RiemannMethod,
 } from "@repo/design-system/components/contents/mathematics/riemann/model";
 import { evaluateRiemannSum } from "@repo/design-system/components/contents/mathematics/riemann/model";
-import { RiemannSumConvergenceScene } from "@repo/design-system/components/contents/mathematics/riemann/scene";
+import {
+  RIEMANN_SCALE,
+  RiemannSumConvergenceScene,
+} from "@repo/design-system/components/contents/mathematics/riemann/scene";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -32,6 +35,9 @@ import { VisualSlider } from "@repo/design-system/components/visual/slider";
 import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
+
+/** The step of the partition slider, which the play action sweeps by. */
+const PARTITION_STEP = 1;
 
 export function RiemannSumConvergenceLab({
   curves,
@@ -158,20 +164,22 @@ export function RiemannSumConvergenceLab({
             min={partitions.min}
             onValueChange={setNVal}
             readout={<InlineMath math={`n = ${Math.round(nVal)}`} />}
-            step={1}
+            step={PARTITION_STEP}
             value={nVal}
           />
         </VisualCardToolbar>
 
         <CoordinateSystem
           aria-label={labels.view}
-          cameraPosition={[2.4, 2.3, 6.2]}
-          cameraTarget={[2.0, 0.9, 0]}
+          cameraFraming="focus"
+          cameraPosition={[3.8, 2.6, 6.6]}
+          cameraTarget={[2.8, 0.9, 0]}
           focus={{
-            x: { max: 4.2, min: -0.2 },
-            y: { max: 2.4, min: -0.2 },
-            z: { max: 0.8, min: -0.8 },
+            x: { max: 6.4, min: -0.8 },
+            y: { max: 2.4, min: -0.5 },
+            z: { max: 0.4, min: -0.4 },
           }}
+          scale={RIEMANN_SCALE}
           showZAxis
           ticks
         >
@@ -181,6 +189,13 @@ export function RiemannSumConvergenceLab({
               method={activeMethod}
               partitions={nVal}
               parts={labels.parts}
+              sweep={{
+                initial: partitions.value,
+                max: partitions.max,
+                min: partitions.min,
+                onValue: setNVal,
+                step: PARTITION_STEP,
+              }}
             />
           </Suspense>
         </CoordinateSystem>

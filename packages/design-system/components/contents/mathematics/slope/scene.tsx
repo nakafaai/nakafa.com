@@ -1,19 +1,38 @@
 import { Line } from "@react-three/drei";
+import { useCalculusColors } from "@repo/design-system/components/contents/mathematics/palette";
 import type { SlopeCurve } from "@repo/design-system/components/contents/mathematics/slope/model";
 import { evaluateSlopeField } from "@repo/design-system/components/contents/mathematics/slope/model";
-import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { ParameterSweep } from "@repo/design-system/components/contents/mathematics/sweep";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { LineEquation } from "@repo/design-system/components/three/line";
-import { CALCULUS_COLORS } from "@repo/design-system/lib/material/calculus";
-import { Array as Arr } from "effect";
+import { GraphMarker } from "@repo/design-system/components/three/marker";
+import { GraphTag } from "@repo/design-system/components/three/tag";
+import { STROKE_DASH } from "@repo/design-system/lib/plot";
+import { Array as Arr, Option } from "effect";
+import type { ComponentProps } from "react";
 import { useMemo } from "react";
 
-const CURVE_XS = Arr.makeBy(41, (i) => -2.2 + i * 0.11);
-const NEEDLE_XS = Arr.makeBy(11, (i) => -2.0 + i * 0.4);
+/** The window of the plane the lab frames. */
+const VIEW = { bottom: -1.6, left: -2.2, right: 2.2, top: 2.8 };
+/** The height the probe's reading stands at, under every curve the view keeps, at the foot of the probe's dashed line. */
+const READOUT_Y = VIEW.bottom - 0.1;
+const SAMPLES = 220;
+/** Where a short needle shows the local slope of the function. */
+const NEEDLE_XS = Arr.makeBy(11, (i) => -2 + i * 0.4);
+const NEEDLE_LENGTH = 0.24;
+const TANGENT_LENGTH = 0.7;
+
+/** Half of a segment of a given length along a slope, as its run and its rise. */
+function along(slope: number, length: number) {
+  const run = length / Math.hypot(1, slope);
+  return { rise: run * slope, run };
+}
 
 export function DerivativeSlopeFieldScene({
   curve,
   parts,
   probeX,
+  sweep,
 }: {
   readonly curve: SlopeCurve;
   readonly parts: Readonly<
@@ -27,149 +46,172 @@ export function DerivativeSlopeFieldScene({
     >
   >;
   readonly probeX: number;
+  readonly sweep: Omit<ComponentProps<typeof ParameterSweep>, "value">;
 }) {
+  const colors = useCalculusColors();
+  const quantity = useQuantity();
   const probe = evaluateSlopeField(curve, probeX);
 
-  const fnPoints = useMemo(
+  const samples = useMemo(
     () =>
-      Arr.map(CURVE_XS, (x) => ({
-        x,
-        y: evaluateSlopeField(curve, x).value,
-        z: 0.4,
-      })),
+      Arr.makeBy(SAMPLES + 1, (i) => {
+        const x = VIEW.left + (i / SAMPLES) * (VIEW.right - VIEW.left);
+        return { x, ...evaluateSlopeField(curve, x) };
+      }),
     [curve]
   );
-
-  const derivPoints = useMemo(
-    () =>
-      Arr.map(CURVE_XS, (x) => ({
-        x,
-        y: evaluateSlopeField(curve, x).derivative,
-        z: -0.6,
-      })),
-    [curve]
+  const inside = (y: number) => y >= VIEW.bottom && y <= VIEW.top;
+  const functionPoints = Arr.filter(
+    Arr.map(samples, ({ value, x }) => ({ x, y: value, z: 0.02 })),
+    (point) => inside(point.y)
   );
-
-  const probeLen = 0.65;
-  const norm = Math.hypot(1, probe.derivative);
-  const dx = (probeLen / norm) * 1;
-  const dy = (probeLen / norm) * probe.derivative;
+  const derivativePoints = Arr.filter(
+    Arr.map(samples, ({ derivative, x }) => ({ x, y: derivative, z: 0 })),
+    (point) => inside(point.y)
+  );
+  // A stationary point stands where the derivative changes sign between two samples.
+  const critical = Arr.map(
+    Arr.filter(
+      Arr.zip(samples, Arr.drop(samples, 1)),
+      ([one, two]) =>
+        one.derivative === 0 || one.derivative * two.derivative < 0
+    ),
+    ([one]) => one
+  );
+  const tangent = along(probe.derivative, TANGENT_LENGTH);
+  const functionEnd = Arr.last(functionPoints);
+  const derivativeEnd = Arr.last(derivativePoints);
+  const firstCritical = Arr.head(critical);
+  const lastNeedleX = Arr.lastNonEmpty(Arr.prepend(NEEDLE_XS, VIEW.right));
+  const lastNeedle = evaluateSlopeField(curve, lastNeedleX);
+  // The curve that ends higher takes the label above its end, the other the one below.
+  const functionAbove =
+    Option.getOrElse(
+      Option.map(functionEnd, (point) => point.y),
+      () => 0
+    ) >=
+    Option.getOrElse(
+      Option.map(derivativeEnd, (point) => point.y),
+      () => 0
+    );
 
   return (
     <group>
-      {/* Function curve f(x) */}
+      <ParameterSweep {...sweep} value={probeX} />
       <LineEquation
-        color={CALCULUS_COLORS.cobaltCurve}
-        lineWidth={3}
-        points={fnPoints}
+        color={colors.slope}
+        lineWidth={2.4}
+        points={derivativePoints}
         showPoints={false}
-        smooth
       />
-      {/* Derivative curve f'(x) */}
       <LineEquation
-        color={CALCULUS_COLORS.emeraldSlope}
-        lineWidth={2.6}
-        points={derivPoints}
+        color={colors.curve}
+        lineWidth={3.2}
+        points={functionPoints}
         showPoints={false}
-        smooth
       />
-      {/* Local slope needles along f(x) */}
       {Arr.map(NEEDLE_XS, (x) => {
-        const pt = evaluateSlopeField(curve, x);
-        const s = 0.22 / Math.hypot(1, pt.derivative);
-        const isCritical = Math.abs(pt.derivative) < 0.25;
+        const point = evaluateSlopeField(curve, x);
+        const needle = along(point.derivative, NEEDLE_LENGTH);
         return (
-          <group key={x}>
-            <Line
-              color={CALCULUS_COLORS.amberAccent}
-              lineWidth={2}
-              points={[
-                [x - s, pt.value - s * pt.derivative, 0.44],
-                [x + s, pt.value + s * pt.derivative, 0.44],
-              ]}
-            />
-            {isCritical ? (
-              <mesh position={[x, pt.value, 0.46]}>
-                <sphereGeometry args={[0.09, 14, 14]} />
-                <meshBasicMaterial
-                  color={CALCULUS_COLORS.roseAlert}
-                  toneMapped={false}
-                />
-              </mesh>
-            ) : null}
-          </group>
+          <Line
+            color={colors.accent}
+            key={x}
+            lineWidth={2.4}
+            points={[
+              [x - needle.run, point.value - needle.rise, 0.04],
+              [x + needle.run, point.value + needle.rise, 0.04],
+            ]}
+          />
         );
       })}
-      {/* Probe tangent segment & vertical connector to f'(x) */}
-      <mesh position={[probeX, probe.value, 0.48]}>
-        <sphereGeometry args={[0.11, 16, 16]} />
-        <meshBasicMaterial
-          color={CALCULUS_COLORS.amberAccent}
-          toneMapped={false}
+      {Arr.map(critical, (point) => (
+        <GraphMarker
+          color={colors.alert}
+          key={point.x}
+          position={[point.x, point.value, 0.06]}
+          radius={0.065}
         />
-      </mesh>
+      ))}
+      {/* The probe: its tangent on f, and the same x read off the derivative curve */}
       <Line
-        color={CALCULUS_COLORS.amberAccent}
-        lineWidth={3.2}
-        points={[
-          [probeX - dx, probe.value - dy, 0.48],
-          [probeX + dx, probe.value + dy, 0.48],
-        ]}
-      />
-      <Line
-        color={CALCULUS_COLORS.violetNormal}
+        color={colors.normal}
         dashed
-        dashSize={0.1}
-        gapSize={0.08}
-        lineWidth={2}
+        dashSize={STROKE_DASH.dash}
+        gapSize={STROKE_DASH.gap}
+        lineWidth={1.8}
         points={[
-          [probeX, probe.value, 0.42],
-          [probeX, probe.derivative, -0.6],
+          [probeX, probe.value, 0.03],
+          [probeX, Math.min(probe.derivative, READOUT_Y), 0.03],
         ]}
       />
-      <mesh position={[probeX, probe.derivative, -0.6]}>
-        <sphereGeometry args={[0.09, 14, 14]} />
-        <meshBasicMaterial
-          color={CALCULUS_COLORS.emeraldSlope}
-          toneMapped={false}
+      <Line
+        color={colors.accent}
+        lineWidth={3.4}
+        points={[
+          [probeX - tangent.run, probe.value - tangent.rise, 0.06],
+          [probeX + tangent.run, probe.value + tangent.rise, 0.06],
+        ]}
+      />
+      <GraphMarker
+        color={colors.accent}
+        position={[probeX, probe.value, 0.1]}
+        radius={0.085}
+      />
+      <GraphMarker
+        color={colors.slope}
+        position={[probeX, probe.derivative, 0.1]}
+        radius={0.07}
+      />
+      {Option.isSome(functionEnd) ? (
+        <GraphTag
+          anchorX="left"
+          anchorY={functionAbove ? "bottom" : "top"}
+          color={colors.curve}
+          math="y = f(x)"
+          name={parts.functionCurve}
+          position={[functionEnd.value.x, functionEnd.value.y, 0]}
         />
-      </mesh>
-      {/* Labels */}
-      <ThreeLabel
-        color={CALCULUS_COLORS.cobaltCurve}
-        fontSize="compact"
-        position={[-1.9, 1.95, 0.4]}
-      >
-        <span>{parts.functionCurve}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={CALCULUS_COLORS.emeraldSlope}
-        fontSize="compact"
-        position={[1.85, 1.8, -0.6]}
-      >
-        <span>{parts.derivativeCurve}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={CALCULUS_COLORS.amberAccent}
-        fontSize="compact"
-        position={[probeX - 0.45, probe.value + 0.48, 0.48]}
-      >
-        <span>{parts.probeMarker}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={CALCULUS_COLORS.amberAccent}
-        fontSize="compact"
-        position={[-1.85, -0.4, 0.4]}
-      >
-        <span>{parts.slopeNeedles}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={CALCULUS_COLORS.roseAlert}
-        fontSize="compact"
-        position={[1.55, -0.45, 0.4]}
-      >
-        <span>{parts.criticalPoints}</span>
-      </ThreeLabel>
+      ) : null}
+      {Option.isSome(derivativeEnd) ? (
+        <GraphTag
+          anchorX="left"
+          anchorY={functionAbove ? "top" : "bottom"}
+          color={colors.slope}
+          math="y = f'(x)"
+          name={parts.derivativeCurve}
+          position={[derivativeEnd.value.x, derivativeEnd.value.y, 0]}
+        />
+      ) : null}
+      <GraphTag
+        anchorX={probeX > 0.8 ? "right" : "left"}
+        anchorY="top"
+        color={colors.accent}
+        gap={0.08}
+        math={`f'(${quantity(probeX, "", 2)}) = ${quantity(probe.derivative, "", 2)}`}
+        name={parts.probeMarker}
+        position={[probeX, READOUT_Y, 0.12]}
+      />
+      {Option.isSome(firstCritical) ? (
+        <GraphTag
+          anchorX="center"
+          anchorY="bottom"
+          color={colors.alert}
+          gap={0.46}
+          math="f'(x) = 0"
+          name={parts.criticalPoints}
+          position={[firstCritical.value.x, firstCritical.value.value, 0.1]}
+        />
+      ) : null}
+      <GraphTag
+        anchorX="left"
+        anchorY="top"
+        color={colors.accent}
+        gap={0.14}
+        math="m = f'(x)"
+        name={parts.slopeNeedles}
+        position={[lastNeedleX, lastNeedle.value, 0.1]}
+      />
     </group>
   );
 }

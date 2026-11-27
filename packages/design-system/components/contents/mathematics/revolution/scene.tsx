@@ -1,16 +1,31 @@
+import { Line } from "@react-three/drei";
+import { useCalculusColors } from "@repo/design-system/components/contents/mathematics/palette";
 import type { RevolutionProfile } from "@repo/design-system/components/contents/mathematics/revolution/model";
 import { evaluateSolidRevolution } from "@repo/design-system/components/contents/mathematics/revolution/model";
+import { ParameterSweep } from "@repo/design-system/components/contents/mathematics/sweep";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow";
-import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { LineEquation } from "@repo/design-system/components/three/line";
-import { CALCULUS_COLORS } from "@repo/design-system/lib/material/calculus";
+import { GRAPH_FULL_CIRCLE_SEGMENTS } from "@repo/design-system/components/three/data/quality";
+import { GraphTag } from "@repo/design-system/components/three/tag";
 import { Array as Arr } from "effect";
+import type { ComponentProps } from "react";
 import { useMemo } from "react";
 import { DoubleSide, Vector2 } from "three";
 
-const PROFILE_TS = Arr.makeBy(25, (i) => i / 24);
+/**
+ * World units of one mathematical unit. The lab passes the same scale to its
+ * coordinate system, so the radius the footer reads is the one the ticks show.
+ */
+export const REVOLUTION_SCALE = { x: 1.4, y: 1.4, z: 1.4 } as const;
+const UNIT = REVOLUTION_SCALE.x;
+/** Half of the solid's length along its axis, in world units. */
+const HALF_LENGTH = 1.6;
+const PROFILE_SAMPLES = 64;
+/** The stations along the axis that carry a ring, the edges that give the solid its form. */
+const RING_STATIONS = [0, 0.25, 0.5, 0.75, 1] as const;
 
-function profileRadius(profile: RevolutionProfile, t: number): number {
+/** The shape of each profile along the axis, from one end (0) to the other (1). */
+function profileShape(profile: RevolutionProfile, t: number): number {
   if (profile === "paraboloid") {
     return 0.25 + Math.sqrt(t) * 1.15;
   }
@@ -23,9 +38,18 @@ function profileRadius(profile: RevolutionProfile, t: number): number {
   return 0.5 + t * 0.85;
 }
 
+/** One arc about the X axis at a station and a radius, swept from the profile's plane away from the camera. */
+function ring(x: number, radius: number, sweep: number) {
+  return Arr.makeBy(GRAPH_FULL_CIRCLE_SEGMENTS + 1, (i) => {
+    const turn = (i / GRAPH_FULL_CIRCLE_SEGMENTS) * sweep;
+    return [x, radius * Math.cos(turn), -radius * Math.sin(turn)] as const;
+  });
+}
+
 export function SolidOfRevolutionScene({
   parts,
   profile,
+  sweep,
   sweepAngle,
 }: {
   readonly parts: Readonly<
@@ -39,107 +63,165 @@ export function SolidOfRevolutionScene({
     >
   >;
   readonly profile: RevolutionProfile;
+  readonly sweep: Omit<ComponentProps<typeof ParameterSweep>, "value">;
   readonly sweepAngle: number;
 }) {
+  const colors = useCalculusColors();
+  const quantity = useQuantity();
   const metrics = evaluateSolidRevolution(profile, sweepAngle);
-  const thetaLen = (Math.min(360, Math.max(15, sweepAngle)) * Math.PI) / 180;
+  const turn = (Math.min(360, Math.max(0, sweepAngle)) * Math.PI) / 180;
+  // The profile is sized so its radius at the middle station is the model's outer radius.
+  const size = (metrics.outerRadius * UNIT) / profileShape(profile, 0.5);
+  const outer = metrics.outerRadius * UNIT;
+  const inner = metrics.innerRadius * UNIT;
 
-  const lathePoints = useMemo(
+  const samples = useMemo(
     () =>
-      Arr.map(
-        PROFILE_TS,
-        (t) => new Vector2(profileRadius(profile, t), -1.6 + t * 3.2)
-      ),
-    [profile]
+      Arr.makeBy(PROFILE_SAMPLES + 1, (i) => {
+        const t = i / PROFILE_SAMPLES;
+        return {
+          radius: profileShape(profile, t) * size,
+          x: -HALF_LENGTH + t * HALF_LENGTH * 2,
+        };
+      }),
+    [profile, size]
   );
-
-  const curvePoints = useMemo(
-    () =>
-      Arr.map(PROFILE_TS, (t) => ({
-        x: -1.6 + t * 3.2,
-        y: profileRadius(profile, t),
-        z: 0,
-      })),
-    [profile]
+  const lathe = useMemo(
+    () => Arr.map(samples, ({ radius, x }) => new Vector2(radius, x)),
+    [samples]
   );
-
-  const midRadius = profileRadius(profile, 0.5);
+  // The profile in its own plane, and again where the sweep has carried it.
+  const meridians = Arr.map([0, turn], (angle) =>
+    Arr.map(
+      samples,
+      ({ radius, x }) =>
+        [x, radius * Math.cos(angle), -radius * Math.sin(angle)] as const
+    )
+  );
+  const end = Arr.lastNonEmpty(
+    Arr.prepend(samples, { radius: outer, x: HALF_LENGTH })
+  );
 
   return (
     <group>
-      <hemisphereLight
-        args={[CALCULUS_COLORS.lightSky, CALCULUS_COLORS.lightGround, 1.25]}
-      />
-      {/* Profile curve y = f(x) */}
-      <LineEquation
-        color={CALCULUS_COLORS.amberAccent}
-        lineWidth={3.2}
-        points={curvePoints}
-        showPoints={false}
-        smooth
-      />
-      {/* Smooth revolved lathe surface around x-axis */}
+      <ParameterSweep {...sweep} value={sweepAngle} />
+      {/* The swept surface: an unlit, see-through skin that its rings and meridians outline */}
       <mesh rotation={[0, 0, -Math.PI / 2]}>
-        <latheGeometry args={[lathePoints, 40, 0, thetaLen]} />
-        <meshStandardMaterial
-          color={CALCULUS_COLORS.cobaltCurve}
-          opacity={0.44}
-          roughness={0.28}
-          side={DoubleSide}
-          transparent
-        />
-      </mesh>
-      {/* Highlighted cross-section disk/washer slice at x = 0 */}
-      <mesh position={[0, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <ringGeometry
-          args={[metrics.innerRadius * 1.1, midRadius, 36, 1, 0, thetaLen]}
+        <latheGeometry
+          args={[lathe, GRAPH_FULL_CIRCLE_SEGMENTS, Math.PI, turn]}
         />
         <meshBasicMaterial
-          color={CALCULUS_COLORS.amberAccent}
-          opacity={0.72}
+          color={colors.curve}
+          depthWrite={false}
+          opacity={0.16}
           side={DoubleSide}
           toneMapped={false}
           transparent
         />
       </mesh>
-      {/* Radius vector arrow R(x) */}
+      {Arr.map(RING_STATIONS, (station) => (
+        <Line
+          color={colors.curve}
+          key={station}
+          lineWidth={1.6}
+          points={ring(
+            -HALF_LENGTH + station * HALF_LENGTH * 2,
+            profileShape(profile, station) * size,
+            turn
+          )}
+        />
+      ))}
+      {inner > 0
+        ? Arr.map([-HALF_LENGTH, HALF_LENGTH], (x) => (
+            <Line
+              color={colors.curve}
+              key={x}
+              lineWidth={1.4}
+              points={ring(x, inner, turn)}
+            />
+          ))
+        : null}
+      <Line color={colors.curve} lineWidth={1.6} points={meridians[1] ?? []} />
+      <Line color={colors.accent} lineWidth={3.4} points={meridians[0] ?? []} />
+      {/* The cross-section at the middle station: a disk, or a washer around the bore */}
+      <mesh rotation={[0, Math.PI / 2, 0]}>
+        <ringGeometry
+          args={[inner, outer, GRAPH_FULL_CIRCLE_SEGMENTS, 1, 0, turn]}
+        />
+        <meshBasicMaterial
+          color={colors.cut}
+          depthWrite={false}
+          opacity={0.34}
+          side={DoubleSide}
+          toneMapped={false}
+          transparent
+        />
+      </mesh>
+      <Line color={colors.cut} lineWidth={2.4} points={ring(0, outer, turn)} />
+      {inner > 0 ? (
+        <Line color={colors.cut} lineWidth={2} points={ring(0, inner, turn)} />
+      ) : null}
       <ArrowHelper
-        color={CALCULUS_COLORS.roseAlert}
-        from={[0, 0, 0]}
-        label={parts.radiusArrow}
-        labelSize="compact"
+        arrowSize={0.2}
+        color={colors.alert}
+        from={[0, inner, 0]}
         lineWidth={3}
-        to={[0, midRadius, 0]}
+        to={[0, outer, 0]}
       />
-      {/* Labels */}
-      <ThreeLabel
-        color={CALCULUS_COLORS.axisGray}
-        fontSize="compact"
-        position={[-2.1, -0.35, 0]}
-      >
-        <span>{parts.rotationAxis}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={CALCULUS_COLORS.amberAccent}
-        fontSize="compact"
-        position={[0.2, midRadius + 0.45, 0]}
-      >
-        <span>{parts.crossSectionDisk}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={CALCULUS_COLORS.amberAccent}
-        fontSize="compact"
-        position={[1.7, profileRadius(profile, 1) + 0.35, 0]}
-      >
-        <span>{parts.profileCurve}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={CALCULUS_COLORS.cobaltCurve}
-        fontSize="compact"
-        position={[-1.3, -1.2, 0.7]}
-      >
-        <span>{parts.revolvedShell}</span>
-      </ThreeLabel>
+      {/* The axis of rotation, the stretch of the X axis the solid turns about */}
+      <Line
+        color={colors.ink}
+        lineWidth={2.2}
+        points={[
+          [-HALF_LENGTH - 0.3, 0, 0],
+          [HALF_LENGTH + 0.3, 0, 0],
+        ]}
+      />
+      <GraphTag
+        anchorX="right"
+        anchorY="bottom"
+        color={colors.accent}
+        gap={0.1}
+        math="y = f(x)"
+        name={parts.profileCurve}
+        position={[end.x, end.radius, 0]}
+      />
+      <GraphTag
+        anchorX="right"
+        anchorY="bottom"
+        color={colors.alert}
+        gap={0.1}
+        math={`R = ${quantity(metrics.outerRadius, "", 2)}`}
+        name={parts.radiusArrow}
+        position={[0, outer, 0]}
+      />
+      <GraphTag
+        anchorX="right"
+        anchorY="top"
+        color={colors.cut}
+        gap={0.14}
+        math={`A = ${quantity(metrics.sliceArea, "", 2)}`}
+        name={parts.crossSectionDisk}
+        position={[0, -outer, 0]}
+      />
+      <GraphTag
+        anchorX="left"
+        anchorY="top"
+        color={colors.curve}
+        gap={0.14}
+        math={`V = ${quantity(metrics.sweptVolume, "", 2)}`}
+        name={parts.revolvedShell}
+        position={[end.x, -end.radius, 0]}
+      />
+      <GraphTag
+        anchorX="right"
+        anchorY="top"
+        color={colors.ink}
+        gap={0.12}
+        math="y = 0"
+        name={parts.rotationAxis}
+        position={[-HALF_LENGTH - 0.3, 0, 0]}
+      />
     </group>
   );
 }

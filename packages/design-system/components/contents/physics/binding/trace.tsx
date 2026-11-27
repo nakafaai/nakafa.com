@@ -1,10 +1,14 @@
 import type { NuclideId } from "@repo/design-system/components/contents/physics/binding/model";
 import { nuclideSpec } from "@repo/design-system/components/contents/physics/binding/model";
+import {
+  TraceBand,
+  TraceChart,
+  TraceGuide,
+  TracePoint,
+} from "@repo/design-system/components/contents/simulation/trace";
 import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
 import { Array as Arr } from "effect";
 
-const WIDTH = 200;
-const HEIGHT = 88;
 const CURVE_NUCLIDES: readonly NuclideId[] = [
   "deuterium",
   "helium4",
@@ -12,15 +16,19 @@ const CURVE_NUCLIDES: readonly NuclideId[] = [
   "iron56",
   "uranium235",
 ];
+/** The mass numbers the axis covers on its logarithmic scale, and the one of the most tightly bound nucleus. */
+const MASS = { max: 250, min: 1.5, peak: 56 } as const;
 
-function xForMass(massNumber: number): number {
-  return 10 + (Math.log10(massNumber) / Math.log10(250)) * (WIDTH - 20);
-}
+const CURVE = Arr.map(CURVE_NUCLIDES, (id) => {
+  const spec = nuclideSpec(id);
+  return { binding: spec.bindingPerNucleonMev, mass: spec.massNumber };
+});
 
-function yForBinding(mev: number): number {
-  return HEIGHT - 6 - (mev / 9.5) * (HEIGHT - 14);
-}
-
+/**
+ * The binding energy per nucleon against the mass number: light nuclei gain
+ * by fusing, heavy ones by splitting, and both meet at the iron peak. The
+ * lab's nuclide is the point on the curve.
+ */
 export function BindingCurveTrace({
   active,
   fissionLabel,
@@ -32,49 +40,45 @@ export function BindingCurveTrace({
   readonly fusionLabel: string;
   readonly peakLabel: string;
 }) {
-  const points = Arr.join(
-    Arr.map(CURVE_NUCLIDES, (id) => {
-      const spec = nuclideSpec(id);
-      return `${xForMass(spec.massNumber)},${yForBinding(spec.bindingPerNucleonMev)}`;
-    }),
-    " "
-  );
   const current = nuclideSpec(active);
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="text-muted-foreground flex flex-wrap justify-between gap-x-4 text-xs">
-        <span style={{ color: QUANTUM_COLORS.fusionZone }}>{fusionLabel}</span>
-        <span style={{ color: QUANTUM_COLORS.ironPeak }}>{peakLabel}</span>
-        <span style={{ color: QUANTUM_COLORS.fissionZone }}>
-          {fissionLabel}
-        </span>
-      </div>
-      <div className="relative h-24 px-1 pb-1">
-        <div className="border-border relative h-full border-s border-b">
-          <svg
-            aria-hidden="true"
-            className="absolute inset-0 size-full overflow-visible"
-            preserveAspectRatio="none"
-            viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-          >
-            <polyline
-              fill="none"
-              points={points}
-              stroke={QUANTUM_COLORS.ironPeak}
-              strokeLinejoin="round"
-              strokeWidth={2.2}
-              vectorEffect="non-scaling-stroke"
-            />
-            <circle
-              cx={xForMass(current.massNumber)}
-              cy={yForBinding(current.bindingPerNucleonMev)}
-              fill={QUANTUM_COLORS.proton}
-              r={4}
-            />
-          </svg>
-        </div>
-      </div>
-    </div>
+    <TraceChart
+      data={CURVE}
+      marks={[
+        { color: QUANTUM_COLORS.fusionZone, kind: "band", label: fusionLabel },
+        { color: QUANTUM_COLORS.ironPeak, kind: "dashed", label: peakLabel },
+        {
+          color: QUANTUM_COLORS.fissionZone,
+          kind: "band",
+          label: fissionLabel,
+        },
+      ]}
+      series={[{ color: QUANTUM_COLORS.ironPeak, key: "binding" }]}
+      x={{
+        domain: [MASS.min, MASS.max],
+        key: "mass",
+        scale: "log",
+        ticks: Arr.map(CURVE, (point) => point.mass),
+      }}
+      y={{ domain: [0, 10], ticks: [0, 2, 4, 6, 8, 10] }}
+    >
+      <TraceBand
+        color={QUANTUM_COLORS.fusionZone}
+        from={MASS.min}
+        to={MASS.peak}
+      />
+      <TraceBand
+        color={QUANTUM_COLORS.fissionZone}
+        from={MASS.peak}
+        to={MASS.max}
+      />
+      <TraceGuide color={QUANTUM_COLORS.ironPeak} x={MASS.peak} />
+      <TracePoint
+        color={QUANTUM_COLORS.proton}
+        x={current.massNumber}
+        y={current.bindingPerNucleonMev}
+      />
+    </TraceChart>
   );
 }

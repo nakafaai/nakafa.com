@@ -30,6 +30,9 @@ import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
+/** The step of the window slider, which the play action sweeps by. */
+const RADIUS_STEP = 0.02;
+
 export function SqueezeTheoremWaveLab({
   description,
   envelopes,
@@ -120,20 +123,23 @@ export function SqueezeTheoremWaveLab({
             min={radius.min}
             onValueChange={setRVal}
             readout={<InlineMath math={`r = ${quantity(rVal, "", 2)}`} />}
-            step={0.02}
+            step={RADIUS_STEP}
             value={rVal}
           />
         </VisualCardToolbar>
 
         <CoordinateSystem
           aria-label={labels.view}
-          cameraPosition={[0, 0.2, 6.4]}
-          cameraTarget={[0, 0.1, 0]}
+          cameraFraming="focus"
+          cameraPosition={[0.75, 0, 10]}
+          cameraProjection={{ kind: "orthographic" }}
+          cameraTarget={[0.75, 0, 0]}
           focus={{
-            x: { max: 2.3, min: -2.3 },
-            y: { max: 1.9, min: -1.8 },
+            x: { max: 3.9, min: -2.4 },
+            y: { max: 2, min: -2 },
             z: { max: 0.4, min: -0.4 },
           }}
+          playOrbit={false}
           showZAxis={false}
           ticks
         >
@@ -142,6 +148,13 @@ export function SqueezeTheoremWaveLab({
               envelope={active}
               parts={labels.parts}
               radius={rVal}
+              sweep={{
+                initial: radius.value,
+                max: radius.max,
+                min: radius.min,
+                onValue: setRVal,
+                step: RADIUS_STEP,
+              }}
             />
           </Suspense>
         </CoordinateSystem>

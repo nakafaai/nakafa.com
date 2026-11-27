@@ -30,6 +30,9 @@ import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
+/** The step of the probe slider, which the play action sweeps by. */
+const PROBE_STEP = 0.05;
+
 export function DerivativeSlopeFieldLab({
   curves,
   description,
@@ -126,21 +129,24 @@ export function DerivativeSlopeFieldLab({
             min={probeX.min}
             onValueChange={setXVal}
             readout={<InlineMath math={quantity(xVal, "", 2)} />}
-            step={0.05}
+            step={PROBE_STEP}
             value={xVal}
           />
         </VisualCardToolbar>
 
         <CoordinateSystem
           aria-label={labels.view}
-          cameraPosition={[1.6, 2.2, 6.8]}
-          cameraTarget={[0, 0.7, 0]}
+          cameraFraming="focus"
+          cameraPosition={[0.8, 0.6, 10]}
+          cameraProjection={{ kind: "orthographic" }}
+          cameraTarget={[0.8, 0.6, 0]}
           focus={{
-            x: { max: 2.6, min: -2.6 },
-            y: { max: 2.4, min: -1.4 },
-            z: { max: 1.0, min: -1.0 },
+            x: { max: 4, min: -2.4 },
+            y: { max: 3, min: -2.1 },
+            z: { max: 0.4, min: -0.4 },
           }}
-          showZAxis
+          playOrbit={false}
+          showZAxis={false}
           ticks
         >
           <Suspense fallback={null}>
@@ -148,6 +154,13 @@ export function DerivativeSlopeFieldLab({
               curve={active}
               parts={labels.parts}
               probeX={xVal}
+              sweep={{
+                initial: probeX.value,
+                max: probeX.max,
+                min: probeX.min,
+                onValue: setXVal,
+                step: PROBE_STEP,
+              }}
             />
           </Suspense>
         </CoordinateSystem>

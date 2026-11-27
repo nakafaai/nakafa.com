@@ -1,7 +1,10 @@
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import type { RevolutionProfile } from "@repo/design-system/components/contents/mathematics/revolution/model";
 import { evaluateSolidRevolution } from "@repo/design-system/components/contents/mathematics/revolution/model";
-import { SolidOfRevolutionScene } from "@repo/design-system/components/contents/mathematics/revolution/scene";
+import {
+  REVOLUTION_SCALE,
+  SolidOfRevolutionScene,
+} from "@repo/design-system/components/contents/mathematics/revolution/scene";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -29,6 +32,9 @@ import { VisualSlider } from "@repo/design-system/components/visual/slider";
 import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
+
+/** The step of the sweep slider, which the play action sweeps by. */
+const SWEEP_STEP = 5;
 
 export function SolidOfRevolutionLab({
   description,
@@ -120,20 +126,22 @@ export function SolidOfRevolutionLab({
             min={sweepAngle.min}
             onValueChange={setAngle}
             readout={<InlineMath math={quantity(angle, "^\\circ", 0)} />}
-            step={5}
+            step={SWEEP_STEP}
             value={angle}
           />
         </VisualCardToolbar>
 
         <CoordinateSystem
           aria-label={labels.view}
-          cameraPosition={[3.8, 2.8, 5.4]}
+          cameraFraming="focus"
+          cameraPosition={[3.4, 2.6, 6.2]}
           cameraTarget={[0, 0, 0]}
           focus={{
-            x: { max: 2.2, min: -2.2 },
-            y: { max: 1.8, min: -1.6 },
-            z: { max: 1.8, min: -1.6 },
+            x: { max: 1.7, min: -1.7 },
+            y: { max: 1.3, min: -1.3 },
+            z: { max: 1.3, min: -1.3 },
           }}
+          scale={REVOLUTION_SCALE}
           showZAxis
           ticks
         >
@@ -141,6 +149,13 @@ export function SolidOfRevolutionLab({
             <SolidOfRevolutionScene
               parts={labels.parts}
               profile={active}
+              sweep={{
+                initial: sweepAngle.value,
+                max: sweepAngle.max,
+                min: sweepAngle.min,
+                onValue: setAngle,
+                step: SWEEP_STEP,
+              }}
               sweepAngle={angle}
             />
           </Suspense>

@@ -3,22 +3,20 @@ import {
   evaluateGrowthCurve,
   sampleGrowthCurve,
 } from "@repo/design-system/components/contents/biology/growth/model";
+import {
+  TraceChart,
+  TraceCursor,
+  TracePoint,
+} from "@repo/design-system/components/contents/simulation/trace";
 import { FOLIAGE_COLORS } from "@repo/design-system/lib/material/foliage";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 
-const WIDTH = 200;
-const HEIGHT = 88;
+/** How many points the growth curve is drawn through. */
+const STEPS = 80;
 
-function xOf(time: number): number {
-  return (time / 100) * WIDTH;
-}
-
-function yOf(dryMass: number): number {
-  return HEIGHT - Math.min(1, Math.max(0, dryMass)) * HEIGHT;
-}
-
+/** The dry mass of the plant over its life cycle, with a cursor and a point at the time the scene shows. */
 export function PlantGrowthTrace({
   dryMassLabel,
   lifeCycle,
@@ -30,59 +28,36 @@ export function PlantGrowthTrace({
   readonly time: number;
   readonly timeLabel: string;
 }) {
-  const samples = useMemo(() => sampleGrowthCurve(lifeCycle, 44), [lifeCycle]);
-  const current = evaluateGrowthCurve(lifeCycle, time);
-  const points = useMemo(
+  const data = useMemo(
     () =>
-      Arr.join(
-        Arr.map(samples, (pt) => `${xOf(pt.time)},${yOf(pt.dryMass)}`),
-        " "
-      ),
-    [samples]
+      Arr.map(sampleGrowthCurve(lifeCycle, STEPS), (point) => ({
+        mass: point.dryMass,
+        time: point.time,
+      })),
+    [lifeCycle]
   );
+  const current = evaluateGrowthCurve(lifeCycle, time);
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="text-muted-foreground flex flex-wrap justify-between gap-x-4 text-xs">
-        <span className="flex items-center gap-1.5">
-          <span
-            aria-hidden="true"
-            className="size-2 rounded-full"
-            style={{ backgroundColor: FOLIAGE_COLORS.palisade }}
-          />
-          {dryMassLabel}
-        </span>
-        <span>{timeLabel}</span>
-      </div>
-      <div className="relative h-24 px-1 pb-1">
-        <div className="border-border relative h-full border-s border-b">
-          <svg
-            aria-hidden="true"
-            className="absolute inset-0 size-full overflow-visible"
-            preserveAspectRatio="none"
-            viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-          >
-            <polyline
-              fill="none"
-              points={points}
-              stroke={FOLIAGE_COLORS.palisade}
-              strokeLinejoin="round"
-              strokeWidth={2}
-              vectorEffect="non-scaling-stroke"
-            />
-            <line
-              className="stroke-foreground"
-              strokeOpacity={0.4}
-              strokeWidth={1}
-              vectorEffect="non-scaling-stroke"
-              x1={xOf(current.time)}
-              x2={xOf(current.time)}
-              y1={0}
-              y2={HEIGHT}
-            />
-          </svg>
-        </div>
-      </div>
-    </div>
+    <TraceChart
+      data={data}
+      series={[
+        { color: FOLIAGE_COLORS.palisade, key: "mass", label: dryMassLabel },
+      ]}
+      x={{
+        domain: [0, 100],
+        key: "time",
+        label: timeLabel,
+        ticks: [0, 25, 50, 75, 100],
+      }}
+      y={{ domain: [0, 1], ticks: [0, 0.5, 1] }}
+    >
+      <TraceCursor x={current.time} />
+      <TracePoint
+        color={FOLIAGE_COLORS.palisade}
+        x={current.time}
+        y={Math.min(1, Math.max(0, current.dryMass))}
+      />
+    </TraceChart>
   );
 }

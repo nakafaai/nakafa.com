@@ -1,4 +1,4 @@
-import { Match, Schema } from "effect";
+import { Schema } from "effect";
 
 const BoxSheetSchema = Schema.Literals([
   "squareSheet",
@@ -7,6 +7,22 @@ const BoxSheetSchema = Schema.Literals([
 ]);
 
 export type BoxSheet = typeof BoxSheetSchema.Type;
+
+/** The length and the width of each sheet before its corners are cut. */
+export const BOX_SHEETS = {
+  squareSheet: { length: 6, width: 6 },
+  tallSheet: { length: 10, width: 6 },
+  wideSheet: { length: 8, width: 6 },
+} as const;
+
+/** The share of a sheet's shorter side the deepest corner cut takes, just short of the half that leaves no base. */
+const DEEPEST_CUT = 0.48;
+
+/** The deepest corner cut a sheet takes before its base closes. */
+export function deepestCut(sheet: BoxSheet) {
+  const { length, width } = BOX_SHEETS[sheet];
+  return Math.min(length, width) * DEEPEST_CUT;
+}
 
 const BoxMetricsSchema = Schema.Struct({
   baseLength: Schema.Finite,
@@ -21,14 +37,8 @@ export function evaluateOptimizationBox(
   sheet: BoxSheet,
   cutout: number
 ): typeof BoxMetricsSchema.Type {
-  const [length, width] = Match.value(sheet).pipe(
-    Match.when("squareSheet", () => [6, 6] as const),
-    Match.when("wideSheet", () => [8, 6] as const),
-    Match.when("tallSheet", () => [10, 6] as const),
-    Match.exhaustive
-  );
-  const maxCut = Math.min(length, width) * 0.48;
-  const x = Math.min(maxCut, Math.max(0.1, cutout));
+  const { length, width } = BOX_SHEETS[sheet];
+  const x = Math.min(deepestCut(sheet), Math.max(0.1, cutout));
   const baseLength = Math.max(0.1, length - 2 * x);
   const baseWidth = Math.max(0.1, width - 2 * x);
   const volume = x * baseLength * baseWidth;

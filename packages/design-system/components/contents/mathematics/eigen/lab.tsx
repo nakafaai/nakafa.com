@@ -30,6 +30,9 @@ import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
+/** The step of the progress slider, which the play action sweeps by. */
+const PROGRESS_STEP = 0.02;
+
 export function EigenTransform3DLab({
   description,
   labels,
@@ -121,19 +124,20 @@ export function EigenTransform3DLab({
             min={progress.min}
             onValueChange={setTVal}
             readout={<InlineMath math={quantity(tVal, "", 2)} />}
-            step={0.02}
+            step={PROGRESS_STEP}
             value={tVal}
           />
         </VisualCardToolbar>
 
         <CoordinateSystem
           aria-label={labels.view}
-          cameraPosition={[4.6, 3.6, 5.2]}
+          cameraFraming="focus"
+          cameraPosition={[4.4, 3.2, 6.2]}
           cameraTarget={[0.5, 0.5, 0.4]}
           focus={{
-            x: { max: 2.8, min: -1.8 },
-            y: { max: 2.4, min: -1.2 },
-            z: { max: 2.2, min: -1.2 },
+            x: { max: 2.6, min: -1.4 },
+            y: { max: 1.8, min: -0.4 },
+            z: { max: 1.6, min: -0.2 },
           }}
           showZAxis
           ticks
@@ -142,6 +146,13 @@ export function EigenTransform3DLab({
             <EigenTransform3DScene
               parts={labels.parts}
               progress={tVal}
+              sweep={{
+                initial: progress.value,
+                max: progress.max,
+                min: progress.min,
+                onValue: setTVal,
+                step: PROGRESS_STEP,
+              }}
               transform={active}
             />
           </Suspense>

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
-import { evaluateOptimizationBox } from "@repo/design-system/components/contents/mathematics/optimize/model";
+import {
+  deepestCut,
+  evaluateOptimizationBox,
+} from "@repo/design-system/components/contents/mathematics/optimize/model";
 
 describe("optimization box 3D model", () => {
   it("maximizes folded box volume at stationary cut x* where V'(x*) = 0", () => {
@@ -13,5 +16,11 @@ describe("optimization box 3D model", () => {
     expect(sqOpt.volume).toBeGreaterThan(sqLow.volume);
     expect(wide.volume).toBeGreaterThan(sqOpt.volume);
     expect(tall.volume).toBeGreaterThan(wide.volume);
+  });
+
+  it("stops the cut just short of half the shorter side, where the base closes", () => {
+    expect(deepestCut("squareSheet")).toBeCloseTo(2.88);
+    expect(deepestCut("tallSheet")).toBeCloseTo(2.88);
+    expect(evaluateOptimizationBox("wideSheet", 5).baseWidth).toBe(0.24);
   });
 });

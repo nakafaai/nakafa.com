@@ -1,20 +1,32 @@
-/** Physical palette for 3D linear methods, calculus, and vector labs. */
+/**
+ * The plotted colors of the calculus, vector and linear-method coordinate
+ * labs, one set per appearance. Each hue keeps clear of the red, green and
+ * blue that belong to the X, Y and Z axes, and stands out on its own card:
+ * deep on the light card, bright on the dark one.
+ */
 export const CALCULUS_COLORS = {
-  amberAccent: "#f59e0b",
-  axisGray: "#64748b",
-  baseSlate: "#cbd5e1",
-  boxCraft: "#d97706",
-  cobaltCurve: "#2563eb",
-  cyanPlane: "#06b6d4",
-  emeraldSlope: "#10b981",
-  gridMuted: "#94a3b8",
-  indigoPrism: "#4f46e5",
-  labelInk: "#1e293b",
-  lightGround: "#e2e8f0",
-  lightSky: "#ffffff",
-  limeEnvelope: "#65a30d",
-  orangeCut: "#ea580c",
-  roseAlert: "#e11d48",
-  tealVector: "#0d9488",
-  violetNormal: "#7c3aed",
+  dark: {
+    accent: "#fbbf24",
+    alert: "#f472b6",
+    curve: "#818cf8",
+    cut: "#fb923c",
+    envelope: "#a3e635",
+    guide: "#94a3b8",
+    ink: "#e2e8f0",
+    normal: "#c084fc",
+    plane: "#22d3ee",
+    slope: "#2dd4bf",
+  },
+  light: {
+    accent: "#d97706",
+    alert: "#db2777",
+    curve: "#4338ca",
+    cut: "#c2410c",
+    envelope: "#4d7c0f",
+    guide: "#64748b",
+    ink: "#1e293b",
+    normal: "#9333ea",
+    plane: "#0891b2",
+    slope: "#0f766e",
+  },
 } as const;

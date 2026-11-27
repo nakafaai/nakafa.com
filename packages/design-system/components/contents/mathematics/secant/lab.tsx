@@ -30,6 +30,9 @@ import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
+/** The step of the run slider, which the play action sweeps by. */
+const STEP_H_STEP = 0.02;
+
 export function SecantToTangentLab({
   curves,
   description,
@@ -121,20 +124,23 @@ export function SecantToTangentLab({
             min={stepH.min}
             onValueChange={setHVal}
             readout={<InlineMath math={quantity(hVal, "", 2)} />}
-            step={0.02}
+            step={STEP_H_STEP}
             value={hVal}
           />
         </VisualCardToolbar>
 
         <CoordinateSystem
           aria-label={labels.view}
-          cameraPosition={[0.8, 1.4, 7.2]}
-          cameraTarget={[0.8, 1.1, 0]}
+          cameraFraming="focus"
+          cameraPosition={[1.7, 1.3, 10]}
+          cameraProjection={{ kind: "orthographic" }}
+          cameraTarget={[1.7, 1.3, 0]}
           focus={{
-            x: { max: 3.4, min: -1.6 },
-            y: { max: 3.2, min: -0.6 },
+            x: { max: 5.2, min: -1.8 },
+            y: { max: 3.3, min: -0.7 },
             z: { max: 0.4, min: -0.4 },
           }}
+          playOrbit={false}
           showZAxis={false}
           ticks
         >
@@ -143,6 +149,13 @@ export function SecantToTangentLab({
               curve={active}
               parts={labels.parts}
               stepH={hVal}
+              sweep={{
+                initial: stepH.value,
+                max: stepH.max,
+                min: stepH.min,
+                onValue: setHVal,
+                step: STEP_H_STEP,
+              }}
             />
           </Suspense>
         </CoordinateSystem>

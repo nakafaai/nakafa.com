@@ -1,7 +1,14 @@
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import type { BoxSheet } from "@repo/design-system/components/contents/mathematics/optimize/model";
-import { evaluateOptimizationBox } from "@repo/design-system/components/contents/mathematics/optimize/model";
-import { OptimizationBox3DScene } from "@repo/design-system/components/contents/mathematics/optimize/scene";
+import {
+  BOX_SHEETS,
+  evaluateOptimizationBox,
+} from "@repo/design-system/components/contents/mathematics/optimize/model";
+import {
+  OPTIMIZE_SCALE,
+  OptimizationBox3DScene,
+} from "@repo/design-system/components/contents/mathematics/optimize/scene";
+import { VolumeTrace } from "@repo/design-system/components/contents/mathematics/optimize/trace";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -29,6 +36,9 @@ import { VisualSlider } from "@repo/design-system/components/visual/slider";
 import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
+
+/** The step of the cutout slider, which the play action sweeps by. */
+const CUTOUT_STEP = 0.05;
 
 export function OptimizationBox3DLab({
   cutout,
@@ -78,6 +88,8 @@ export function OptimizationBox3DLab({
   const active = Arr.contains(sheets, selected) ? selected : sheets[0];
   const reading = evaluateOptimizationBox(active, cutVal);
   const copy = labels.sheets[active];
+  // How far the sheet reaches along X in the scene, which the view widens with.
+  const reach = (BOX_SHEETS[active].length / 2) * OPTIMIZE_SCALE.x;
 
   return (
     <CoordinateProvider>
@@ -120,20 +132,22 @@ export function OptimizationBox3DLab({
             min={cutout.min}
             onValueChange={setCutVal}
             readout={<InlineMath math={quantity(cutVal, "", 2)} />}
-            step={0.05}
+            step={CUTOUT_STEP}
             value={cutVal}
           />
         </VisualCardToolbar>
 
         <CoordinateSystem
           aria-label={labels.view}
-          cameraPosition={[4.6, 3.8, 5.6]}
-          cameraTarget={[0, 0.8, -0.4]}
+          cameraFraming="focus"
+          cameraPosition={[3.6, 4.4, 6.2]}
+          cameraTarget={[0.2, 0.2, 0]}
           focus={{
-            x: { max: 2.6, min: -2.6 },
-            y: { max: 2.8, min: 0 },
-            z: { max: 2.2, min: -2.2 },
+            x: { max: reach + 1, min: -reach - 1 },
+            y: { max: 1.3, min: -0.1 },
+            z: { max: 1.6, min: -1.4 },
           }}
+          scale={OPTIMIZE_SCALE}
           showZAxis
           ticks
         >
@@ -142,6 +156,13 @@ export function OptimizationBox3DLab({
               cutout={cutVal}
               parts={labels.parts}
               sheet={active}
+              sweep={{
+                initial: cutout.value,
+                max: cutout.max,
+                min: cutout.min,
+                onValue: setCutVal,
+                step: CUTOUT_STEP,
+              }}
             />
           </Suspense>
         </CoordinateSystem>
@@ -149,6 +170,13 @@ export function OptimizationBox3DLab({
         <CoordinateControls />
 
         <VisualCardFooter>
+          <VolumeTrace
+            curveLabel={labels.parts.volumeCurve}
+            cutLabel={labels.cutout}
+            cutout={cutVal}
+            optimalLabel={labels.parts.optimalMarker}
+            sheet={active}
+          />
           <VisualCardFacts>
             {copy === undefined ? null : (
               <VisualFact label={labels.sheet} value={copy.dimensions} />

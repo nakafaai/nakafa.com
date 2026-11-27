@@ -30,6 +30,9 @@ import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
+/** The step of the angle slider, which the play action sweeps by. */
+const ANGLE_STEP = 1;
+
 export function Vector3DCrossProductLab({
   angle,
   description,
@@ -113,19 +116,23 @@ export function Vector3DCrossProductLab({
             min={angle.min}
             onValueChange={setDeg}
             readout={<InlineMath math={quantity(deg, "^\\circ", 0)} />}
-            step={1}
+            step={ANGLE_STEP}
             value={deg}
           />
         </VisualCardToolbar>
 
         <CoordinateSystem
           aria-label={labels.view}
-          cameraPosition={[4.6, 3.4, 5.2]}
-          cameraTarget={[0.6, 0.3, 0.4]}
+          cameraFraming="focus"
+          cameraPosition={[4.2, 3.2, 6.4]}
+          cameraTarget={[1.2, 0.6, -0.5]}
           focus={{
-            x: { max: 2.8, min: -1.6 },
-            y: { max: 2.4, min: -2.2 },
-            z: { max: 2.2, min: -1.2 },
+            x: { max: 3.6, min: -0.2 },
+            y:
+              active === "uCrossV"
+                ? { max: 3.2, min: -0.2 }
+                : { max: 0.2, min: -3.2 },
+            z: { max: 0.2, min: -1.6 },
           }}
           showZAxis
           ticks
@@ -135,6 +142,13 @@ export function Vector3DCrossProductLab({
               angle={deg}
               order={active}
               parts={labels.parts}
+              sweep={{
+                initial: angle.value,
+                max: angle.max,
+                min: angle.min,
+                onValue: setDeg,
+                step: ANGLE_STEP,
+              }}
             />
           </Suspense>
         </CoordinateSystem>
