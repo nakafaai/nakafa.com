@@ -126,8 +126,9 @@ export function ChemicalReactionCharacteristicsLab({
         render={<section />}
       >
         <ScienceStage
-          floor={-0.88}
+          floor={-0.9667}
           frameloop="always"
+          ground="epoxy"
           reach={4.4}
           setting="lab"
         >

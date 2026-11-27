@@ -9,7 +9,6 @@ import {
   ChloroplastInterior,
   Thylakoids,
 } from "@repo/design-system/components/contents/biology/chloroplast/organelles";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import {
   SimulationTicker,
   simulationStep,
@@ -128,7 +127,6 @@ export function ChloroplastScene({
     <group>
       <SimulationTicker running={playing} />
       <ChloroplastCamera />
-      <SeamlessBenchSurface radius={14} y={0} />
       <ChloroplastEnvelope stromaActive={stromaActive} />
       <ChloroplastInterior>
         <Thylakoids granaActive={granaActive} />

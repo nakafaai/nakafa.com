@@ -1,8 +1,8 @@
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { StageProvider } from "@repo/design-system/components/three/stage/context";
 import { Finish } from "@repo/design-system/components/three/stage/finish";
-import type { GroundSchema } from "@repo/design-system/components/three/stage/grain";
 import { Ground } from "@repo/design-system/components/three/stage/ground";
+import type { Ground as GroundKind } from "@repo/design-system/components/three/stage/land";
 import {
   FieldSetting,
   LabSetting,
@@ -33,15 +33,17 @@ const SETTINGS = {
  * light and shadows fall, and every lab is drawn through the same
  * photographic finish. A lab never draws a backdrop of its own. The canvas
  * tone maps with PBR Neutral, which the finish takes over while it draws.
- * A lab with a floor names its height, and one that stands on real ground
- * names what the ground is made of: the stage then draws that ground as far
- * as the haze, so no lab draws a slab of its own.
+ * A lab with a floor names its height, and names what it stands on: open
+ * ground, which the stage draws as far as the haze and rolls gently far from
+ * the lab, or a bench or table top inside a room, which dissolves into the
+ * room behind it. The stage alone draws what a lab stands on, so no lab
+ * draws a slab, a bench top or a floor of its own.
  *
  * @param setting - The place the lab stands in
  * @param reach - How far the lab reaches from its middle, which the key
  * light's shadows, the haze, and the focus cover
  * @param floor - The height of the floor objects stand on, when there is one
- * @param ground - What the ground is made of, when the lab stands on real ground
+ * @param ground - What the lab stands on: open ground, or a bench or table top
  */
 export function ScienceStage({
   children,
@@ -54,7 +56,7 @@ export function ScienceStage({
   readonly children: ReactNode;
   readonly floor?: number;
   readonly frameloop?: "always" | "demand";
-  readonly ground?: typeof GroundSchema.Type;
+  readonly ground?: GroundKind;
   readonly reach?: number;
   readonly setting: keyof typeof SETTINGS;
 }) {

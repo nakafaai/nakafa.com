@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
 import { fallThrough } from "@repo/design-system/components/contents/physics/field/magnet";
@@ -136,7 +135,6 @@ export function MagnetPipeScene({ longest }: { readonly longest: number }) {
         target={[0, 1.15, 0]}
         wide={[0.7, 1.6, 4.5]}
       />
-      <SeamlessBenchSurface />
       <mesh castShadow position={[0, FOOT / 2, 0]} receiveShadow>
         <boxGeometry args={[SPACING * 2 + 0.9, FOOT, 0.8]} />
         <meshPhysicalMaterial

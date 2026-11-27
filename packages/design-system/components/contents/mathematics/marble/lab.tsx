@@ -122,7 +122,7 @@ export function MarbleDrawLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={0.3} setting="lab">
+        <ScienceStage floor={0} ground="oak" reach={0.3} setting="lab">
           <Suspense fallback={null}>
             <MarbleScene
               jar={jar}

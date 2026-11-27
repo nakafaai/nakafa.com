@@ -3,10 +3,7 @@ import { useLabelInk } from "@repo/design-system/components/contents/biology/cel
 import { useGiemsaTexture } from "@repo/design-system/components/contents/biology/chromatin";
 import type { MutationKind } from "@repo/design-system/components/contents/biology/mutation/model";
 import { evaluateChromosomeMutation } from "@repo/design-system/components/contents/biology/mutation/model";
-import {
-  BiologyBenchSurface,
-  SpecimenPedestal,
-} from "@repo/design-system/components/contents/biology/workbench";
+import { SpecimenPedestal } from "@repo/design-system/components/contents/biology/workbench";
 import {
   SimulationTicker,
   simulationStep,
@@ -286,7 +283,6 @@ export function ChromosomeMutationScene({
     <group>
       <SimulationTicker running={playing} />
       <MutationCamera />
-      <BiologyBenchSurface radius={14} y={0} />
       <SpecimenPedestal depth={0.9} height={0.055} width={2.35} />
 
       {/* Normal reference chromosome pair (left) */}

@@ -1,6 +1,5 @@
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Stand } from "@repo/design-system/components/contents/physics/bench/stand";
 import { Thermometer } from "@repo/design-system/components/contents/physics/bench/thermometer";
@@ -119,7 +118,6 @@ export function IceMeltingScene({
         target={[0.25, 0.9, 0]}
         wide={[0.7, 1.9, 4.5]}
       />
-      <SeamlessBenchSurface />
       <mesh position={[0, WALL + (level - WALL) / 2, 0]} renderOrder={1}>
         <cylinderGeometry
           args={[radius - 0.004, INSIDE.floor - 0.004, level - WALL, 48]}

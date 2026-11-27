@@ -6,7 +6,6 @@ import {
   GrowthPlantSpecimen,
   SoilPlanterBed,
 } from "@repo/design-system/components/contents/biology/growth/stages";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import {
   SimulationTicker,
   simulationStep,
@@ -84,7 +83,6 @@ export function PlantSpecimenScene({
     <group>
       <SimulationTicker running={playing} />
       <GrowthCamera />
-      <SeamlessBenchSurface radius={14} y={0} />
       <SoilPlanterBed />
 
       {/* Botanical wooden scale ruler standing beside the planter */}

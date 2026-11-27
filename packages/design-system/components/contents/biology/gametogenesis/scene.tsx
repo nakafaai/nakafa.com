@@ -22,10 +22,7 @@ import {
   GonadView,
   SystemView,
 } from "@repo/design-system/components/contents/biology/gametogenesis/organs";
-import {
-  BiologyBenchSurface,
-  SlideStage,
-} from "@repo/design-system/components/contents/biology/workbench";
+import { SlideStage } from "@repo/design-system/components/contents/biology/workbench";
 import {
   SimulationTicker,
   simulationStep,
@@ -290,7 +287,6 @@ export function GametogenesisScene({
       <SimulationTicker running={playing} />
       <GameteCamera />
 
-      <BiologyBenchSurface radius={12} y={0} />
       <SlideStage position={[0, 0, 0]} radius={0.98} />
 
       <group ref={rootRef}>

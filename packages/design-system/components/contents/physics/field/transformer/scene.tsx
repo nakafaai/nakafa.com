@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { Bulb } from "@repo/design-system/components/contents/physics/bench/bulb";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import {
@@ -284,7 +283,6 @@ export function TransformerScene({
         target={[-0.1, 0.7, 0]}
         wide={[0, 1.7, 5.3]}
       />
-      <SeamlessBenchSurface />
       {Arr.map([-1, 1] as const, (side) => (
         <mesh
           castShadow

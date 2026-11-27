@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Gauge } from "@repo/design-system/components/contents/physics/bench/gauge";
 import { nichromeColor } from "@repo/design-system/components/contents/physics/bench/resistor";
@@ -138,7 +137,6 @@ export function GasPistonScene({
         target={[0.3, 1.15, 0]}
         wide={[0.9, 1.7, 5.5]}
       />
-      <SeamlessBenchSurface />
       <mesh castShadow position={[0, 0.05, 0]} receiveShadow>
         <boxGeometry args={[1.5, 0.1, 1.3]} />
         <meshPhysicalMaterial

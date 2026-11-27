@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Lead } from "@repo/design-system/components/contents/physics/bench/lead";
 import {
@@ -176,7 +175,6 @@ export function HalfLifeCounterScene({
         target={[0.25, 0.55, 0.1]}
         wide={[0.5, 1.7, 4.9]}
       />
-      <SeamlessBenchSurface />
       <group position={[SOURCE, 0, 0]}>
         <mesh castShadow position={[-0.08, 0.02, 0]} receiveShadow>
           <cylinderGeometry args={[0.24, 0.26, 0.04, 40]} />

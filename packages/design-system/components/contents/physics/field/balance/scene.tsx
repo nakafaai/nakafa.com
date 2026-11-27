@@ -1,5 +1,4 @@
 import { RoundedBox } from "@react-three/drei";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import {
   SUPPLY_SOCKETS,
@@ -143,7 +142,6 @@ export function CurrentBalanceScene({
         target={[-0.25, 0.5, -0.1]}
         wide={[0.5, 2.5, 3.7]}
       />
-      <SeamlessBenchSurface />
       <mesh castShadow position={[0, 0.05, 0]} receiveShadow>
         <boxGeometry args={[0.84, 0.1, GAP + 0.6]} />
         <MetalMaterial color={APPARATUS_COLORS.magnetSteel} roughness={0.4} />

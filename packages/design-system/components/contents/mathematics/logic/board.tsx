@@ -9,8 +9,6 @@ import {
   Pads,
   Traces,
 } from "@repo/design-system/components/contents/mathematics/pcb";
-import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
-import { LOGIC_COLORS } from "@repo/design-system/lib/material/logic";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 
@@ -24,11 +22,6 @@ function holeSpots() {
       z: (row - (rows - 1) / 2) * HOLE.pitch,
     }))
   );
-}
-
-/** The oak desk the board lies on, planked and oiled, running out past the frame. */
-export function Desk() {
-  return <StudioTable color={LOGIC_COLORS.desk} />;
 }
 
 /** How far the gold land round each plated hole reaches, in metres. */

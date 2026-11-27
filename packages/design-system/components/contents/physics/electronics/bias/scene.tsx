@@ -1,4 +1,3 @@
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { OakBoard } from "@repo/design-system/components/contents/physics/bench/board";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { DryCell } from "@repo/design-system/components/contents/physics/bench/cell";
@@ -87,7 +86,6 @@ export function TransistorBiasScene({
         target={[0.1, 0.16, 0]}
         wide={[0.1, 2.45, 4.05]}
       />
-      <SeamlessBenchSurface />
       <group position={[0.1, 0, 0]}>
         <OakBoard depth={2.1} width={3.4} />
       </group>

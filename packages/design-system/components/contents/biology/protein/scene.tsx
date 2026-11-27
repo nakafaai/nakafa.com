@@ -15,7 +15,6 @@ import {
   SubunitRibbon,
 } from "@repo/design-system/components/contents/biology/protein/structure";
 import {
-  BiologyBenchSurface,
   MolecularStick,
   SlideStage,
 } from "@repo/design-system/components/contents/biology/workbench";
@@ -118,7 +117,6 @@ export function ProteinScene({
         fov={38}
       />
 
-      <BiologyBenchSurface radius={12} y={0} />
       <SlideStage position={[0, 0, 0]} radius={0.96} />
 
       <group ref={rootRef}>

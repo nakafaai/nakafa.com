@@ -140,7 +140,7 @@ export function SwitchLogicLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={0.3} setting="lab">
+        <ScienceStage floor={0} ground="oak" reach={0.3} setting="lab">
           <PlayCases
             mode={mode}
             onCase={(next) => setBoard((shown) => setCase(shown, next))}

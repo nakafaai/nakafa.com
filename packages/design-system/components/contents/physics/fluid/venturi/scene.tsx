@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
 import { Vector } from "@repo/design-system/components/contents/physics/bench/vector";
@@ -131,7 +130,6 @@ export function VenturiScene({
         target={[0, 1.02, 0]}
         wide={[0, 1.5, 4.7]}
       />
-      <SeamlessBenchSurface />
       {Arr.map([-1.25, 1.25] as const, (x) => (
         <group key={x} position={[x, 0, 0]}>
           <mesh castShadow position={[0, 0.02, 0]} receiveShadow>

@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Lead } from "@repo/design-system/components/contents/physics/bench/lead";
 import { Stand } from "@repo/design-system/components/contents/physics/bench/stand";
@@ -179,7 +178,6 @@ export function HeatingCurveScene({
         target={[0.25, 0.95, 0]}
         wide={[0.9, 1.6, 4.6]}
       />
-      <SeamlessBenchSurface />
       <mesh castShadow position={[0, 0.02, 0]} receiveShadow>
         <boxGeometry args={[1.5, 0.04, 1.3]} />
         <meshStandardMaterial

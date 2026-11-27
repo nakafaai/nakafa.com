@@ -24,12 +24,10 @@ import {
   pinPoints,
 } from "@repo/design-system/components/contents/mathematics/galton/board";
 import { woodGrain } from "@repo/design-system/components/contents/mathematics/galton/wood";
-import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { GlassMaterial } from "@repo/design-system/components/three/physical";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { GALTON_COLORS } from "@repo/design-system/lib/material/galton";
-import { TABLE_COLORS } from "@repo/design-system/lib/material/table";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
 import type { Texture } from "three";
@@ -85,7 +83,6 @@ export function GaltonScene({
   const pose = useMemo(() => boardPose(p), [p]);
   return (
     <group>
-      <StudioTable color={TABLE_COLORS.maple} />
       <group position={[pose.pivot, 0, 0]} rotation={[0, 0, pose.angle]}>
         <group position={[-pose.pivot, 0, 0]}>
           <Frame />

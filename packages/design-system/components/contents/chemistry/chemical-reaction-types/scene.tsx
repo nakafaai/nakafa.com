@@ -12,9 +12,7 @@ import {
   ReactionPhaseContext,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/models";
 import { SpecimenPlinth } from "@repo/design-system/components/contents/chemistry/specimen";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow";
-import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { getColor } from "@repo/design-system/lib/color";
@@ -43,9 +41,6 @@ export function ChemicalReactionTypesScene({
 
   return (
     <group position={[0, -0.08, 0]} scale={SCENE_SCALE}>
-      <CameraBounds exclude>
-        <SeamlessBenchSurface radius={22} y={BENCH_Y} />
-      </CameraBounds>
       <ThreeLabel
         anchorY="bottom"
         color={colors.text}

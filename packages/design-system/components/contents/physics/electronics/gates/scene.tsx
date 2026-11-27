@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
 import {
@@ -102,7 +101,6 @@ export function LogicGateScene({
         target={[0, 0.2, 0.05]}
         wide={[0, 1.75, 2.6]}
       />
-      <SeamlessBenchSurface />
       {Arr.map(STANDOFFS, ([x, z]) => (
         <mesh castShadow key={`${x}:${z}`} position={[x, 0.045, z]}>
           <cylinderGeometry args={[0.03, 0.03, 0.09, 6]} />

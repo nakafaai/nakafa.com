@@ -175,7 +175,7 @@ export function JourneyGraphLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={REACH} setting="studio">
+        <ScienceStage floor={-0.03} ground="oak" reach={REACH} setting="studio">
           <Suspense fallback={null}>
             <JourneyScene
               minute={focus.minute}

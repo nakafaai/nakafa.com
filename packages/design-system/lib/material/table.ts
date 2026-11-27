@@ -5,7 +5,6 @@
  * every lesson.
  */
 export const TABLE_COLORS = {
-  // A pale and a dark hardwood.
-  maple: "#d9bf96",
+  // A dark hardwood.
   walnut: "#6b4630",
 } as const;

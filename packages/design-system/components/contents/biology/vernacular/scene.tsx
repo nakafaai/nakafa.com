@@ -129,17 +129,6 @@ export function SeaNameScene({
     <group>
       <SimulationTicker running={playing} />
       <SeaCamera />
-      <mesh
-        position={[0, -0.02, 0]}
-        receiveShadow
-        rotation={[-Math.PI / 2, 0, 0]}
-      >
-        <circleGeometry args={[3.4, 48]} />
-        <meshStandardMaterial
-          color={CLASSIFICATION_COLORS.seaSand}
-          roughness={0.92}
-        />
-      </mesh>
       <Seabed />
       {Arr.map(animals, (animal, index) => (
         // biome-ignore lint/a11y/noStaticElementInteractions: R3F group receives pointer selection while toolbar controls provide keyboard access.

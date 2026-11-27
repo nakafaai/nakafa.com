@@ -1,4 +1,3 @@
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import {
   SUPPLY_SOCKETS,
@@ -67,7 +66,6 @@ export function HeaterSupplyScene({
         target={[-0.15, 0.22, 0.1]}
         wide={[-0.15, 1.45, 3.4]}
       />
-      <SeamlessBenchSurface />
       <group position={[SUPPLY_X, 0, 0]}>
         <Supply share={supply / (ratedVoltage * 1.1)}>
           <InlineMath math={quantity(supply, "\\text{ V}", 0)} />

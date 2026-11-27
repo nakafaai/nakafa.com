@@ -18,7 +18,6 @@ import {
   looseBeads,
   potProfile,
 } from "@repo/design-system/components/contents/mathematics/abacus/shape";
-import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
@@ -97,11 +96,6 @@ const COLLAR = [
 
 /** How far the plinth's foot stands out past the base all round, and how tall it is. */
 const PLINTH = { height: 0.008, margin: 0.0035 } as const;
-
-/** An oak school desk top, planked and oiled, running out past the frame at y = 0. */
-export function Desk() {
-  return <StudioTable color={ABACUS_COLORS.desk} />;
-}
 
 /**
  * The walnut base on its moulded plinth, with four polished brass rods in

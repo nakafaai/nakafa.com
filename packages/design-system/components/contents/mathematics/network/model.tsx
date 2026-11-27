@@ -4,7 +4,6 @@ import {
   PEAK,
   reliefAt,
 } from "@repo/design-system/components/contents/mathematics/network/relief";
-import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { NETWORK_COLORS } from "@repo/design-system/lib/material/network";
@@ -177,9 +176,6 @@ export function ReliefMap({
 
   return (
     <group>
-      <group position={[0, TABLE_TOP, 0]}>
-        <StudioTable color={NETWORK_COLORS.table} />
-      </group>
       {Arr.map(rails, (rail) => (
         <mesh
           castShadow

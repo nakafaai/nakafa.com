@@ -1,4 +1,3 @@
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { OakBoard } from "@repo/design-system/components/contents/physics/bench/board";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { DryCell } from "@repo/design-system/components/contents/physics/bench/cell";
@@ -159,7 +158,6 @@ export function WireResistanceScene({
         target={[0, 0.12, 0]}
         wide={[0, 2.4, 3.95]}
       />
-      <SeamlessBenchSurface />
       <OakBoard depth={1.9} width={3.3}>
         <group position={[CELL_X, 0, CELL_Z]} rotation={[0, -Math.PI / 2, 0]}>
           <DryCell />

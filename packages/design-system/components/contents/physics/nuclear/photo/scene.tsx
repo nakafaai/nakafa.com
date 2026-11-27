@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Lead } from "@repo/design-system/components/contents/physics/bench/lead";
 import {
@@ -167,7 +166,6 @@ export function PhotoelectricScene({
         target={[0.5, 1.05, 0.2]}
         wide={[0.7, 2, 5.6]}
       />
-      <SeamlessBenchSurface />
       <mesh castShadow position={[0, 0.04, 0]} receiveShadow>
         <boxGeometry args={[2.5, 0.08, 1]} />
         <meshPhysicalMaterial
