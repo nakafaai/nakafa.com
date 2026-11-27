@@ -347,8 +347,8 @@ export function QuotientBalanceScene({
               <ThreeLabel
                 anchorY="bottom"
                 color={EQUILIBRIUM_COLORS.labelInk}
-                fontSize="compact"
-                maximumFontSize={18}
+                maximumFontSize={26}
+                minimumFontSize={22}
                 position={[0, 0.1, 0]}
               >
                 <InlineMath math={pan.name} />
