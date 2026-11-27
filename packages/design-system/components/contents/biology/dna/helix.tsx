@@ -143,7 +143,7 @@ export function DnaHelixLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage reach={6} setting="studio">
+        <ScienceStage reach={6} setting="cell">
           <HelixCamera />
           <HelixScene
             bases={bases}

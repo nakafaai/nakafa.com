@@ -8,7 +8,6 @@ import {
   NucleosomeSpecimen,
   NucleotideSpecimen,
 } from "@repo/design-system/components/contents/biology/chromosome/scales";
-import { SlideStage } from "@repo/design-system/components/contents/biology/workbench";
 import {
   SimulationTicker,
   simulationStep,
@@ -77,8 +76,6 @@ export function ChromosomeScene({
         cameraTarget={CAMERA_TARGET}
         fov={38}
       />
-
-      <SlideStage position={[0, 0, 0]} radius={0.95} />
 
       <group ref={rootRef}>
         {Match.value(level).pipe(

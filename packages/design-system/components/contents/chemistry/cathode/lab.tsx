@@ -87,7 +87,7 @@ export function CathodeRayLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={FLOOR} reach={9} setting="lab">
+        <ScienceStage floor={FLOOR} reach={9} setting="dark">
           <CathodeCamera />
           <CathodeTube plate={plate} />
         </ScienceStage>

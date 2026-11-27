@@ -1,5 +1,7 @@
+import { useDeepLight } from "@repo/design-system/components/three/stage/context";
 import type { Surface } from "@repo/design-system/components/three/surface/detail";
 import { surfaceMaps } from "@repo/design-system/components/three/surface/maps";
+import { wetLook } from "@repo/design-system/components/three/surface/wet";
 import { useEffect, useMemo } from "react";
 import type { Side } from "three";
 import { FrontSide } from "three";
@@ -54,7 +56,11 @@ export function useSurfaceMaps(
  * the surface's tone, normals and finish vary it across the object, so no
  * part reads as a flat, untextured shape, however close the camera comes.
  * `repeat` is how many tiles cross the part's texture coordinates in each
- * direction, chosen so the detail keeps its real size.
+ * direction, chosen so the detail keeps its real size. A part that gives
+ * off light of its own (a filament, a screen, a hot coal, a lit indicator)
+ * names the colour of its `glow`, and the surface's tone varies that light
+ * as it varies the colour. Thin living tissue and membranes are `wet`: water
+ * lies over them, and on a capable device light passes through them.
  *
  * @param attach - Where the material attaches, for a mesh with one material per group
  * @param surface - What the part is made of
@@ -65,44 +71,61 @@ export function useSurfaceMaps(
  * @param side - Which faces draw: both for cloth and thin sheets seen from either side
  * @param bump - How strongly the relief bends the light
  * @param coat - How much clear lacquer or varnish lies over the surface, from 0 to 1
+ * @param glow - The colour of the light the part gives off, when it gives off any
+ * @param shine - How bright that light is: 1 is as bright as a lit white surface, and past 2 it blooms
+ * @param wet - Whether the part is thin wet tissue or a membrane
  */
 export function SurfaceMaterial({
   attach = "material",
   bump = 0.6,
   coat = 0,
   color,
+  glow,
   metalness = 0,
   repeat = [1, 1],
   roughness = 1,
+  shine = 1,
   side = FrontSide,
   surface,
+  wet = false,
 }: {
   readonly attach?: string;
   readonly bump?: number;
   readonly coat?: number;
   readonly color: string;
+  readonly glow?: string;
   readonly metalness?: number;
   readonly repeat?: readonly [number, number];
   readonly roughness?: number;
+  readonly shine?: number;
   readonly side?: Side;
   readonly surface: Surface;
+  readonly wet?: boolean;
 }) {
   const maps = useSurfaceMaps(surface, repeat[0], repeat[1]);
+  const { smooth, varnish, ...passing } = wetLook(wet, useDeepLight());
 
   return (
     <meshPhysicalMaterial
       aoMap={maps.finish}
       attach={attach}
-      clearcoat={coat}
-      clearcoatRoughness={0.14}
+      clearcoat={Math.max(coat, varnish)}
+      clearcoatRoughness={wet ? 0.06 : 0.14}
       color={color}
+      emissive={glow ?? color}
+      emissiveIntensity={glow === undefined ? 0 : shine}
       map={maps.tone}
       metalness={metalness}
       normalMap={maps.normal}
       normalScale={[bump * RELIEF, bump * RELIEF]}
-      roughness={roughness}
+      roughness={roughness * smooth}
       roughnessMap={maps.finish}
       side={side}
+      {...passing}
+      {...{
+        attenuationColor: color,
+        emissiveMap: glow === undefined ? null : maps.tone,
+      }}
     />
   );
 }

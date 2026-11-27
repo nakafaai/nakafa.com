@@ -27,10 +27,10 @@ function ShadowClear() {
 }
 
 /**
- * The unseen floor that shows only the key light's shadows. A lab that names
- * no ground has it alone, over the backdrop. A top inside a room has it over
- * its own surface, where the room's soft light alone would leave that shadow
- * too pale to read.
+ * The unseen floor that shows only the key light's shadows. A lab whose
+ * place has no ground, such as open space, has it alone, over the backdrop.
+ * A top inside a room has it over its own surface, where the room's soft
+ * light alone would leave that shadow too pale to read.
  */
 function Catcher() {
   const { floor = 0, reach } = useStage();
@@ -51,10 +51,11 @@ function Catcher() {
 }
 
 /**
- * The floor a lab stands on, when it names one. A lab that names what it
- * stands on gets that ground: open land as far as the haze, or a bench or
- * table top that dissolves into the room, under the shadow catcher. A lab
- * that names only the height gets the shadow catcher alone.
+ * The floor a lab stands on, when it names one. It gets the ground it
+ * names, or the ground of its place: open land as far as the haze, or a
+ * bench or table top that dissolves into the room, under the shadow catcher.
+ * A lab whose place has no ground, or that is a block cut out of the
+ * ground, gets the shadow catcher alone.
  *
  * Static desktop and capable mobile labs bake soft contact shadows once
  * (`frames={1}`) so they add zero per-frame render passes after frame one.
