@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { useStage } from "@repo/design-system/components/three/stage/context";
 import { GROUNDS } from "@repo/design-system/components/three/stage/land";
+import { Lawn } from "@repo/design-system/components/three/stage/lawn";
 import { Terrain } from "@repo/design-system/components/three/stage/terrain";
 
 /** How far the shadow-catching ground spreads, in reaches of the lab. */
@@ -54,6 +55,7 @@ function Catcher() {
  * The floor a lab stands on, when it names one. It gets the ground it
  * names, or the ground of its place: open land as far as the haze, or a
  * bench or table top that dissolves into the room, under the shadow catcher.
+ * Grass is a lawn: blades stand on it wherever the camera looks.
  * A lab whose place has no ground, or that is a block cut out of the
  * ground, gets the shadow catcher alone.
  *
@@ -75,7 +77,14 @@ export function Ground() {
 
   return (
     <>
-      {ground === undefined ? null : <Terrain kind={ground} />}
+      {ground === "grass" ? (
+        <Lawn>
+          <Terrain kind={ground} />
+        </Lawn>
+      ) : null}
+      {ground === undefined || ground === "grass" ? null : (
+        <Terrain kind={ground} />
+      )}
       {catches ? <Catcher /> : null}
       {bakeContactShadows ? (
         <>
