@@ -228,6 +228,7 @@
                   "castShadow",
                   "clearcoat",
                   "clearcoatRoughness",
+                  "depthTest",
                   "depthWrite",
                   "distance",
                   "emissive",
