@@ -1,21 +1,64 @@
 import { Line } from "@react-three/drei";
 import type { EigenTransform } from "@repo/design-system/components/contents/mathematics/eigen/model";
 import { evaluateEigenTransform } from "@repo/design-system/components/contents/mathematics/eigen/model";
+import { useCalculusColors } from "@repo/design-system/components/contents/mathematics/palette";
+import { ParameterSweep } from "@repo/design-system/components/contents/mathematics/sweep";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow";
-import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { Polygon } from "@repo/design-system/components/three/polygon";
-import { CALCULUS_COLORS } from "@repo/design-system/lib/material/calculus";
+import { Facets } from "@repo/design-system/components/three/facets";
+import { GraphTag } from "@repo/design-system/components/three/tag";
+import { STROKE_DASH } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
+import type { ComponentProps } from "react";
 import { useMemo } from "react";
+
+/** The vector that lies on no eigenvector's span, so the map turns it. */
+const TEST = { x: 0.85, y: 0.85, z: 0.65 } as const;
+/** How far each eigenvector's span is drawn to either side of the origin. */
+const SPAN = 1.5;
+/** The corners of the unit cube, and the four corners of each of its faces. */
+const CORNERS = [
+  [0, 0, 0],
+  [1, 0, 0],
+  [1, 1, 0],
+  [0, 1, 0],
+  [0, 0, 1],
+  [1, 0, 1],
+  [1, 1, 1],
+  [0, 1, 1],
+] as const;
+const FACES = [
+  [0, 1, 2, 3],
+  [4, 5, 6, 7],
+  [0, 1, 5, 4],
+  [3, 2, 6, 7],
+  [0, 3, 7, 4],
+  [1, 2, 6, 5],
+] as const;
+/** The twelve edges of the unit cube before the map, as pairs of corners. */
+const EDGES = [
+  [0, 1],
+  [1, 2],
+  [2, 3],
+  [3, 0],
+  [4, 5],
+  [5, 6],
+  [6, 7],
+  [7, 4],
+  [0, 4],
+  [1, 5],
+  [2, 6],
+  [3, 7],
+] as const;
 
 export function EigenTransform3DScene({
   parts,
   progress,
+  sweep,
   transform,
 }: {
   readonly parts: Readonly<
     Record<
-      | "basisAxes"
       | "eigenvectorOne"
       | "eigenvectorThree"
       | "eigenvectorTwo"
@@ -25,113 +68,154 @@ export function EigenTransform3DScene({
     >
   >;
   readonly progress: number;
+  readonly sweep: Omit<ComponentProps<typeof ParameterSweep>, "value">;
   readonly transform: EigenTransform;
 }) {
+  const colors = useCalculusColors();
+  const quantity = useQuantity();
   const state = evaluateEigenTransform(transform, progress);
+  const { scaleX, scaleY, scaleZ, shearXY } = state;
+  const target = evaluateEigenTransform(transform, 1);
 
-  const faces = useMemo(() => {
-    const mapPt = (x: number, y: number, z: number) => ({
-      x: x * state.scaleX + y * state.shearXY,
-      y: y * state.scaleY,
-      z: z * state.scaleZ,
-    });
-    const p000 = mapPt(0, 0, 0);
-    const p100 = mapPt(1, 0, 0);
-    const p110 = mapPt(1, 1, 0);
-    const p010 = mapPt(0, 1, 0);
-    const p001 = mapPt(0, 0, 1);
-    const p101 = mapPt(1, 0, 1);
-    const p111 = mapPt(1, 1, 1);
-    const p011 = mapPt(0, 1, 1);
-    return [
-      { id: "back", vertices: [p000, p100, p110, p010] },
-      { id: "front", vertices: [p001, p101, p111, p011] },
-      { id: "bottom", vertices: [p000, p100, p101, p001] },
-      { id: "top", vertices: [p010, p110, p111, p011] },
-      { id: "left", vertices: [p000, p010, p011, p001] },
-      { id: "right", vertices: [p100, p110, p111, p101] },
-    ] as const;
-  }, [state.scaleX, state.scaleY, state.scaleZ, state.shearXY]);
+  const faces = useMemo(
+    () =>
+      Arr.map(FACES, (face) =>
+        Arr.map(face, (index) => {
+          const [x, y, z] = CORNERS[index];
+          return { x: x * scaleX + y * shearXY, y: y * scaleY, z: z * scaleZ };
+        })
+      ),
+    [scaleX, scaleY, scaleZ, shearXY]
+  );
 
-  const testTo: readonly [number, number, number] = [
-    0.85 * state.scaleX + 0.85 * state.shearXY,
-    0.85 * state.scaleY,
-    0.65 * state.scaleZ,
-  ];
+  // The second eigenvector of [[a, s], [0, b]] is (s, b - a): it leans with the shear, never along Y alone.
+  const lean = Math.hypot(target.shearXY, target.scaleY - target.scaleX);
+  const second =
+    target.shearXY === 0 || lean === 0
+      ? { x: 0, y: 1 }
+      : {
+          x:
+            (-target.shearXY / lean) * Math.sign(target.scaleX - target.scaleY),
+          y:
+            ((target.scaleX - target.scaleY) / lean) *
+            Math.sign(target.scaleX - target.scaleY),
+        };
+  const tested = {
+    x: TEST.x * scaleX + TEST.y * shearXY,
+    y: TEST.y * scaleY,
+    z: TEST.z * scaleZ,
+  };
+  const eigen = [
+    {
+      color: colors.slope,
+      direction: [1, 0, 0],
+      name: parts.eigenvectorOne,
+      symbol: "\\lambda_1",
+      value: scaleX,
+    },
+    {
+      color: colors.normal,
+      direction: [second.x, second.y, 0],
+      name: parts.eigenvectorTwo,
+      symbol: "\\lambda_2",
+      value: scaleY,
+    },
+    {
+      color: colors.cut,
+      direction: [0, 0, 1],
+      name: parts.eigenvectorThree,
+      symbol: "\\lambda_3",
+      value: scaleZ,
+    },
+  ] as const;
 
   return (
     <group>
-      {/* Translucent transformed unit cube so internal vectors shine through */}
-      {Arr.map(faces, (face) => {
-        const closed = [...face.vertices, face.vertices[0]];
-        return (
-          <group key={face.id}>
-            <Polygon
-              color={CALCULUS_COLORS.cobaltCurve}
-              opacity={0.16}
-              vertices={face.vertices}
-            />
+      <ParameterSweep {...sweep} value={progress} />
+      {/* The unit cube before the map */}
+      {Arr.map(EDGES, ([from, to]) => (
+        <Line
+          color={colors.guide}
+          dashed
+          dashSize={STROKE_DASH.dash / 2}
+          gapSize={STROKE_DASH.gap / 2}
+          key={`${from}-${to}`}
+          lineWidth={1.2}
+          points={[CORNERS[from], CORNERS[to]]}
+        />
+      ))}
+      <Facets color={colors.curve} edgeWidth={2} faces={faces} opacity={0.1} />
+      {Arr.map(
+        eigen,
+        ({ color, direction: [x, y, z], name, symbol, value }) => (
+          <group key={symbol}>
+            {/* The span the map keeps: the eigenvector only stretches along it */}
             <Line
-              color={CALCULUS_COLORS.cobaltCurve}
-              lineWidth={1.8}
-              points={Arr.map(closed, ({ x, y, z }) => [x, y, z] as const)}
+              color={color}
+              dashed
+              dashSize={STROKE_DASH.dash}
+              gapSize={STROKE_DASH.gap}
+              lineWidth={1.4}
+              points={[
+                [-x * SPAN, -y * SPAN, -z * SPAN],
+                [x * SPAN, y * SPAN, z * SPAN],
+              ]}
+            />
+            <ArrowHelper
+              arrowSize={0.22}
+              color={color}
+              from={[0, 0, 0]}
+              lineWidth={3.6}
+              to={[x * value, y * value, z * value]}
+            />
+            <GraphTag
+              anchorX={z > 0 ? "right" : "left"}
+              anchorY={z > 0 ? "top" : "bottom"}
+              color={color}
+              gap={0.1}
+              math={`${symbol} = ${quantity(value, "", 2)}`}
+              name={name}
+              position={[
+                x * Math.max(SPAN, Math.abs(value)),
+                y * Math.max(SPAN, Math.abs(value)),
+                z * Math.max(SPAN, Math.abs(value)),
+              ]}
             />
           </group>
-        );
-      })}
-      {/* Eigenvectors staying along invariant axes */}
+        )
+      )}
       <ArrowHelper
-        color={CALCULUS_COLORS.emeraldSlope}
+        arrowSize={0.18}
+        color={colors.guide}
         from={[0, 0, 0]}
-        label={parts.eigenvectorOne}
-        labelSize="compact"
-        lineWidth={3}
-        to={[state.scaleX * 1.45, 0, 0]}
+        lineWidth={1.8}
+        to={[TEST.x, TEST.y, TEST.z]}
       />
       <ArrowHelper
-        color={CALCULUS_COLORS.violetNormal}
+        arrowSize={0.22}
+        color={colors.accent}
         from={[0, 0, 0]}
-        label={parts.eigenvectorTwo}
-        labelSize="compact"
-        lineWidth={3}
-        to={[0, state.scaleY * 1.45, 0]}
+        lineWidth={3.4}
+        to={[tested.x, tested.y, tested.z]}
       />
-      <ArrowHelper
-        color={CALCULUS_COLORS.cyanPlane}
-        from={[0, 0, 0]}
-        label={parts.eigenvectorThree}
-        labelSize="compact"
-        lineWidth={3}
-        to={[0, 0, state.scaleZ * 1.45]}
+      <GraphTag
+        anchorX="left"
+        anchorY="bottom"
+        color={colors.accent}
+        gap={0.1}
+        math="A\vec{x}"
+        name={parts.testVector}
+        position={[tested.x, tested.y, tested.z]}
       />
-      {/* General test vector rotating off-axis under shear */}
-      <ArrowHelper
-        color={CALCULUS_COLORS.amberAccent}
-        from={[0, 0, 0]}
-        label={parts.testVector}
-        labelOffset={[0.35, 0.15, 0.2]}
-        labelSize="compact"
-        lineWidth={3}
-        to={testTo}
+      <GraphTag
+        anchorX="left"
+        anchorY="top"
+        color={colors.curve}
+        gap={0.12}
+        math={`\\det A = ${quantity(state.determinant, "", 2)}`}
+        name={parts.transformedGrid}
+        position={[scaleX, 0, scaleZ]}
       />
-      <ThreeLabel
-        color={CALCULUS_COLORS.cobaltCurve}
-        fontSize="compact"
-        position={[
-          state.scaleX * 0.5 + state.shearXY * 0.6,
-          state.scaleY + 0.35,
-          state.scaleZ * 0.5,
-        ]}
-      >
-        <span>{parts.transformedGrid}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={CALCULUS_COLORS.axisGray}
-        fontSize="compact"
-        position={[-1.4, -0.35, 0]}
-      >
-        <span>{parts.basisAxes}</span>
-      </ThreeLabel>
     </group>
   );
 }

@@ -29,8 +29,13 @@ interface Props {
   "aria-label"?: string | undefined;
   /** Background color of the canvas */
   backgroundColor?: CSSProperties["backgroundColor"];
-  /** Explicit complete-content fit for finite illustrations. */
-  cameraFraming?: "content" | undefined;
+  /**
+   * How the first view is fitted. `"content"` fits everything the scene
+   * draws, labels included, and fits again whenever that changes. `"focus"`
+   * fits the `focus` box alone, on a wide card and on a phone alike, so a
+   * scene whose marks and labels move keeps one steady view.
+   */
+  cameraFraming?: "content" | "focus" | undefined;
   /** Farthest orbit distance from the camera target. */
   cameraMaxDistance?: number;
   /** Nearest orbit distance from the camera target. */
@@ -52,6 +57,11 @@ interface Props {
   focus?: CoordinateFrame | undefined;
   /** Projected world coordinate of the mathematical origin. */
   origin?: Point3 | undefined;
+  /**
+   * Whether the card's play action turns the camera. A lab whose play action
+   * sweeps one of its own parameters keeps the camera still.
+   */
+  playOrbit?: boolean;
   /**
    * Half-width, in world units, of the box around the world's center that the
    * camera can ever show, where the axes and the grid end out of sight.
@@ -85,7 +95,7 @@ type CoordinateScene = Pick<
     Pick<ComponentProps<typeof Axes>, "reach" | "showLabels" | "showZAxis">
   > &
   Pick<ComponentProps<typeof Axes>, "origin"> &
-  Required<Pick<Props, "showAxes">>;
+  Required<Pick<Props, "playOrbit" | "showAxes">>;
 
 const CoordinateSceneContext = createContext<CoordinateScene | null>(null);
 
@@ -102,6 +112,7 @@ function CoordinateCamera() {
     framing,
     maxDistance,
     minDistance,
+    playOrbit,
     projection,
   } = useCoordinateScene();
 
@@ -112,7 +123,7 @@ function CoordinateCamera() {
       framing={framing}
       maxDistance={maxDistance}
       minDistance={minDistance}
-      orbitOnPlay
+      orbitOnPlay={playOrbit}
       projection={projection}
     />
   );
@@ -157,6 +168,7 @@ export function CoordinateSystem({
   cameraTarget,
   focus,
   origin,
+  playOrbit = true,
   scale,
   ticks = false,
   children,
@@ -185,10 +197,12 @@ export function CoordinateSystem({
     () => ({
       cameraPosition,
       cameraTarget,
-      framing: cameraFraming,
+      // Both modes fit: a focus fit only leaves the scene's own content out of the measure.
+      framing: cameraFraming === undefined ? undefined : ("content" as const),
       maxDistance: cameraMaxDistance,
       minDistance: cameraMinDistance,
       origin,
+      playOrbit,
       projection: cameraProjection,
       reach,
       showAxes,
@@ -203,6 +217,7 @@ export function CoordinateSystem({
       cameraProjection,
       cameraTarget,
       origin,
+      playOrbit,
       reach,
       showAxes,
       showLabels,
@@ -218,13 +233,14 @@ export function CoordinateSystem({
         data-scene="coordinate-system"
         render={ariaLabel === undefined ? undefined : <section />}
       >
-        <ThreeCanvas style={{ background: backgroundColor }}>
+        {/* A graph casts no shadow: a shadow behind a curve, an asymptote or a point reads as a second mark. */}
+        <ThreeCanvas shadows={false} style={{ background: backgroundColor }}>
           {/* Camera Controls */}
           <CoordinateCamera />
 
-          {/* Lighting */}
-          <ambientLight intensity={0.5} />
-          <pointLight intensity={1} position={[10, 10, 10]} />
+          {/* Flat, even light: a bright ambient fill and one key that only models a solid's faces. */}
+          <ambientLight intensity={1.5} />
+          <directionalLight intensity={1.2} position={[6, 10, 8]} />
 
           {/* Coordinate System */}
           {/* The camera fits the focus, or the true origin, never the decoration's length. */}
@@ -277,7 +293,11 @@ export function CoordinateSystem({
           ) : null}
 
           {/* User Content */}
-          {children}
+          {cameraFraming === "focus" ? (
+            <CameraBounds exclude>{children}</CameraBounds>
+          ) : (
+            children
+          )}
         </ThreeCanvas>
       </VisualCardBody>
     </CoordinateSceneContext>

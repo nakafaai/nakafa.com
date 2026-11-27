@@ -11,10 +11,11 @@ import {
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { GAS_COLORS } from "@repo/design-system/lib/material/gas";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { Array as Arr } from "effect";
 import type { Ref, RefObject } from "react";
 import { useImperativeHandle, useMemo, useRef } from "react";
 import type { Group, Mesh, MeshStandardMaterial } from "three";
-import { Shape } from "three";
+import { CatmullRomCurve3, Shape, Vector3 } from "three";
 
 /** The stand the cylinder stands on, in metres: a steel block with a plate on top that heats or cools the gas. */
 const STAND = { height: 0.03, plate: 0.062, width: 0.15 } as const;
@@ -260,6 +261,138 @@ export function Thermometer({
           [0, FLOOR - 0.008, CYLINDER.radius + 0.008],
         ]}
       />
+    </group>
+  );
+}
+
+/**
+ * The pressure gauge, in metres and radians: where it stands on the bench
+ * behind the cylinder's left shoulder, how high its dial sits on its stem,
+ * the dial's radius and depth, and the three quarters of a turn its needle
+ * sweeps from zero to the end of its scale.
+ */
+const GAUGE = {
+  depth: 0.016,
+  foot: [-0.135, 0, -0.03],
+  height: 0.215,
+  marks: 10,
+  radius: 0.036,
+  sweep: (3 * Math.PI) / 2,
+} as const;
+
+/** The angle of the dial's zero, down and to the left, from which its needle turns clockwise. */
+const GAUGE_ZERO = (5 * Math.PI) / 4;
+
+/** The angle the needle of the gauge stands at for a pressure, against the pressure at the end of its scale. */
+export function needleAngle(pressure: number, full: number) {
+  const share = Math.min(1, Math.max(0, pressure / full));
+  return GAUGE_ZERO - share * GAUGE.sweep - Math.PI / 2;
+}
+
+/**
+ * An analog pressure gauge on a brass stem, piped to the cap under the gas
+ * by a copper tube: a brass case with a chromed bezel, a white dial marked
+ * in ten steps with a finer mark between each, a red needle on a brass hub,
+ * and a glass over it. A scene turns the needle through `needle`.
+ */
+export function PressureGauge({ needle }: { readonly needle: Ref<Group> }) {
+  const pipe = useMemo(
+    () =>
+      new CatmullRomCurve3([
+        new Vector3(-(CYLINDER.radius + 0.006), FLOOR - 0.006, 0),
+        new Vector3(-0.085, FLOOR - 0.012, -0.004),
+        new Vector3(-0.118, 0.022, -0.022),
+        new Vector3(GAUGE.foot[0], 0.03, GAUGE.foot[2]),
+      ]),
+    []
+  );
+  const face = GAUGE.depth / 2 + 0.0006;
+
+  return (
+    <group>
+      <mesh castShadow>
+        <tubeGeometry args={[pipe, 40, 0.0024, 12, false]} />
+        <MetalMaterial color={INSTRUMENT_COLORS.copper} roughness={0.28} />
+      </mesh>
+      <group position={GAUGE.foot}>
+        <mesh castShadow position={[0, 0.004, 0]} receiveShadow>
+          <cylinderGeometry args={[0.024, 0.027, 0.008, 40]} />
+          <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.4} />
+        </mesh>
+        <mesh castShadow position={[0, (GAUGE.height - GAUGE.radius) / 2, 0]}>
+          <cylinderGeometry
+            args={[0.0045, 0.0045, GAUGE.height - GAUGE.radius, 20]}
+          />
+          <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.3} />
+        </mesh>
+        <mesh castShadow position={[0, GAUGE.height - GAUGE.radius - 0.004, 0]}>
+          <cylinderGeometry args={[0.008, 0.008, 0.012, 6]} />
+          <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.36} />
+        </mesh>
+        <group position={[0, GAUGE.height, 0]} rotation={[0, 0.3, 0]}>
+          <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry
+              args={[GAUGE.radius, GAUGE.radius, GAUGE.depth, 64]}
+            />
+            <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.34} />
+          </mesh>
+          <mesh position={[0, 0, GAUGE.depth / 2]}>
+            <torusGeometry args={[GAUGE.radius - 0.002, 0.0028, 16, 72]} />
+            <MetalMaterial
+              color={INSTRUMENT_COLORS.platinum}
+              roughness={0.16}
+            />
+          </mesh>
+          <mesh position={[0, 0, face]}>
+            <circleGeometry args={[GAUGE.radius - 0.004, 64]} />
+            <meshStandardMaterial
+              color={INSTRUMENT_COLORS.dialFace}
+              roughness={0.7}
+            />
+          </mesh>
+          {Arr.makeBy(GAUGE.marks * 2 + 1, (index) => {
+            const whole = index % 2 === 0;
+            const angle =
+              GAUGE_ZERO - (index / (GAUGE.marks * 2)) * GAUGE.sweep;
+            const length = whole ? 0.0062 : 0.0034;
+            const reach = GAUGE.radius - 0.0065 - length / 2;
+            return (
+              <mesh
+                key={index}
+                position={[
+                  Math.cos(angle) * reach,
+                  Math.sin(angle) * reach,
+                  face + 0.0002,
+                ]}
+                rotation={[0, 0, angle - Math.PI / 2]}
+              >
+                <planeGeometry args={[whole ? 0.0013 : 0.0007, length]} />
+                <meshBasicMaterial
+                  color={INSTRUMENT_COLORS.graphite}
+                  toneMapped={false}
+                />
+              </mesh>
+            );
+          })}
+          <group position={[0, 0, face + 0.0012]} ref={needle}>
+            <mesh position={[0, 0.0095, 0]}>
+              <planeGeometry args={[0.0016, 0.031]} />
+              <meshBasicMaterial
+                color={INSTRUMENT_COLORS.dialNeedle}
+                toneMapped={false}
+              />
+            </mesh>
+          </group>
+          <mesh position={[0, 0, face + 0.002]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.0034, 0.0034, 0.003, 24]} />
+            <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.25} />
+          </mesh>
+          <mesh position={[0, 0, GAUGE.depth / 2 + 0.0034]}>
+            <circleGeometry args={[GAUGE.radius - 0.003, 64]} />
+            <GlassMaterial color={BENCH_COLORS.glass} opacity={0.1} />
+          </mesh>
+        </group>
+      </group>
     </group>
   );
 }

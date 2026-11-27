@@ -30,6 +30,9 @@ import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
+/** The step of the elevation slider, which the play action sweeps by. */
+const ELEVATION_STEP = 1;
+
 export function VectorParallelepipedLab({
   configurations,
   description,
@@ -128,19 +131,20 @@ export function VectorParallelepipedLab({
             min={elevation.min}
             onValueChange={setElev}
             readout={<InlineMath math={quantity(elev, "^\\circ", 0)} />}
-            step={1}
+            step={ELEVATION_STEP}
             value={elev}
           />
         </VisualCardToolbar>
 
         <CoordinateSystem
           aria-label={labels.view}
-          cameraPosition={[5.2, 3.8, 5.4]}
-          cameraTarget={[1.0, 0.7, 0.7]}
+          cameraFraming="focus"
+          cameraPosition={[4.6, 3.4, 6.2]}
+          cameraTarget={[1.4, 0.6, -0.6]}
           focus={{
-            x: { max: 3.2, min: -0.4 },
-            y: { max: 2.2, min: -0.4 },
-            z: { max: 2.4, min: -0.4 },
+            x: { max: 3.6, min: -0.2 },
+            y: { max: 1.7, min: -0.2 },
+            z: { max: 0.2, min: -2.2 },
           }}
           showZAxis
           ticks
@@ -150,6 +154,13 @@ export function VectorParallelepipedLab({
               configuration={active}
               elevation={elev}
               parts={labels.parts}
+              sweep={{
+                initial: elevation.value,
+                max: elevation.max,
+                min: elevation.min,
+                onValue: setElev,
+                step: ELEVATION_STEP,
+              }}
             />
           </Suspense>
         </CoordinateSystem>

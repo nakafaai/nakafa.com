@@ -1,18 +1,40 @@
 import { Line } from "@react-three/drei";
 import type { CurvePair } from "@repo/design-system/components/contents/mathematics/enclose/model";
-import { sampleCurvePair } from "@repo/design-system/components/contents/mathematics/enclose/model";
-import { ThreeLabel } from "@repo/design-system/components/three/label";
+import {
+  evaluateAreaBetweenCurves,
+  sampleCurvePair,
+} from "@repo/design-system/components/contents/mathematics/enclose/model";
+import { useCalculusColors } from "@repo/design-system/components/contents/mathematics/palette";
+import { ParameterSweep } from "@repo/design-system/components/contents/mathematics/sweep";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { LineEquation } from "@repo/design-system/components/three/line";
+import { GraphMarker } from "@repo/design-system/components/three/marker";
 import { Polygon } from "@repo/design-system/components/three/polygon";
-import { CALCULUS_COLORS } from "@repo/design-system/lib/material/calculus";
+import { GraphTag } from "@repo/design-system/components/three/tag";
 import { Array as Arr } from "effect";
+import type { ComponentProps } from "react";
 import { useMemo } from "react";
 
-const CURVE_XS = Arr.makeBy(41, (i) => i * 0.05);
+/**
+ * World units of one mathematical unit on each axis. The lab passes the same
+ * scale to its coordinate system, so every tick reads the true value.
+ */
+export const ENCLOSE_SCALE = { x: 2, y: 1.4, z: 1 } as const;
+/** The interval both curves are drawn on. */
+const DOMAIN = { max: 2, min: 0 };
+const SAMPLES = 160;
+/** How close two curves stand, in mathematical units, to count as meeting. */
+const MEETING = 0.01;
+
+/** A point of the plane in world units, from its mathematical coordinates. */
+function place(x: number, y: number, z: number) {
+  return { x: x * ENCLOSE_SCALE.x, y: y * ENCLOSE_SCALE.y, z };
+}
 
 export function AreaBetweenCurvesScene({
   pair,
   parts,
+  sweep,
   upperBound,
 }: {
   readonly pair: CurvePair;
@@ -26,129 +48,146 @@ export function AreaBetweenCurvesScene({
       string
     >
   >;
+  readonly sweep: Omit<ComponentProps<typeof ParameterSweep>, "value">;
   readonly upperBound: number;
 }) {
-  const bound = Math.min(2, Math.max(0.15, upperBound));
+  const colors = useCalculusColors();
+  const quantity = useQuantity();
+  const bound = Math.min(DOMAIN.max, Math.max(DOMAIN.min, upperBound));
   const edge = sampleCurvePair(pair, bound);
+  const metrics = evaluateAreaBetweenCurves(pair, bound);
 
-  const upperPoints = useMemo(
-    () =>
-      Arr.map(CURVE_XS, (x) => ({
-        x: x * 2,
-        y: sampleCurvePair(pair, x).upper * 1.4,
-        z: 0.04,
-      })),
-    [pair]
-  );
-
-  const lowerPoints = useMemo(
-    () =>
-      Arr.map(CURVE_XS, (x) => ({
-        x: x * 2,
-        y: sampleCurvePair(pair, x).lower * 1.4,
-        z: 0.04,
-      })),
-    [pair]
-  );
-
-  const shadedVertices = useMemo(() => {
-    const sampleCount = 20;
-    const top = Arr.makeBy(sampleCount + 1, (i) => {
-      const x = (i / sampleCount) * bound;
-      return { x: x * 2, y: sampleCurvePair(pair, x).upper * 1.4, z: 0 };
+  const curves = useMemo(() => {
+    const samples = Arr.makeBy(SAMPLES + 1, (i) => {
+      const x = DOMAIN.min + (i / SAMPLES) * (DOMAIN.max - DOMAIN.min);
+      return { x, ...sampleCurvePair(pair, x) };
     });
-    const bottom = Arr.reverse(
-      Arr.makeBy(sampleCount + 1, (i) => {
-        const x = (i / sampleCount) * bound;
-        return { x: x * 2, y: sampleCurvePair(pair, x).lower * 1.4, z: 0 };
-      })
-    );
-    return [...top, ...bottom];
-  }, [pair, bound]);
+    return {
+      lower: Arr.map(samples, ({ lower, x }) => place(x, lower, 0.02)),
+      upper: Arr.map(samples, ({ upper, x }) => place(x, upper, 0.02)),
+    };
+  }, [pair]);
+
+  const shaded = useMemo(() => {
+    const samples = Arr.makeBy(SAMPLES + 1, (i) => {
+      const x = DOMAIN.min + (i / SAMPLES) * (bound - DOMAIN.min);
+      return { x, ...sampleCurvePair(pair, x) };
+    });
+    return [
+      ...Arr.map(samples, ({ upper, x }) => place(x, upper, 0)),
+      ...Arr.reverse(Arr.map(samples, ({ lower, x }) => place(x, lower, 0))),
+    ];
+  }, [bound, pair]);
+
+  // Only the ends where the two curves truly meet carry a pin.
+  const pins = Arr.filter(
+    Arr.map([DOMAIN.min, DOMAIN.max], (x) => ({
+      x,
+      ...sampleCurvePair(pair, x),
+    })),
+    (end) => Math.abs(end.upper - end.lower) < MEETING
+  );
+  const start = sampleCurvePair(pair, DOMAIN.min);
+  const end = sampleCurvePair(pair, DOMAIN.max);
+  const middle = sampleCurvePair(pair, bound / 2);
+  const top = place(bound, edge.upper, 0.06);
+  const bottom = place(bound, edge.lower, 0.06);
+  const upperEnd = place(DOMAIN.max, end.upper, 0);
+  const lowerEnd = place(DOMAIN.max, end.lower, 0);
+  const centre = place(bound / 2, middle.upper, 0.04);
+  const firstPin = place(DOMAIN.min, start.lower, 0.1);
 
   return (
     <group>
-      {/* Upper and lower smooth curves */}
+      <ParameterSweep {...sweep} value={upperBound} />
+      <Polygon color={colors.plane} opacity={0.22} vertices={shaded} />
       <LineEquation
-        color={CALCULUS_COLORS.cobaltCurve}
-        lineWidth={3}
-        points={upperPoints}
+        color={colors.curve}
+        lineWidth={3.2}
+        points={curves.upper}
         showPoints={false}
-        smooth
       />
       <LineEquation
-        color={CALCULUS_COLORS.emeraldSlope}
-        lineWidth={3}
-        points={lowerPoints}
+        color={colors.slope}
+        lineWidth={3.2}
+        points={curves.lower}
         showPoints={false}
-        smooth
       />
-      {/* Shaded enclosed polygon */}
-      <Polygon
-        color={CALCULUS_COLORS.cyanPlane}
-        opacity={0.32}
-        vertices={shadedVertices}
-      />
-      {/* Active vertical strip at x = bound */}
+      {/* The strip f(b) - g(b) at the moving bound */}
       <Line
-        color={CALCULUS_COLORS.amberAccent}
-        lineWidth={4}
+        color={colors.accent}
+        lineWidth={3.4}
         points={[
-          [bound * 2, edge.lower * 1.4, 0.08],
-          [bound * 2, edge.upper * 1.4, 0.08],
+          [bottom.x, bottom.y, bottom.z],
+          [top.x, top.y, top.z],
         ]}
       />
-      {/* Intersection pins */}
-      <mesh position={[0, sampleCurvePair(pair, 0).lower * 1.4, 0.08]}>
-        <sphereGeometry args={[0.09, 14, 14]} />
-        <meshBasicMaterial
-          color={CALCULUS_COLORS.roseAlert}
-          toneMapped={false}
+      <GraphMarker
+        color={colors.accent}
+        position={[top.x, top.y, 0.08]}
+        radius={0.06}
+      />
+      <GraphMarker
+        color={colors.accent}
+        position={[bottom.x, bottom.y, 0.08]}
+        radius={0.06}
+      />
+      {Arr.map(pins, (pin) => {
+        const point = place(pin.x, pin.lower, 0.08);
+        return (
+          <GraphMarker
+            color={colors.alert}
+            key={pin.x}
+            position={[point.x, point.y, point.z]}
+            radius={0.075}
+          />
+        );
+      })}
+      <GraphTag
+        anchorX="left"
+        anchorY="bottom"
+        color={colors.curve}
+        math="y = f(x)"
+        name={parts.upperCurve}
+        position={[upperEnd.x, upperEnd.y, 0]}
+      />
+      <GraphTag
+        anchorX="left"
+        anchorY="top"
+        color={colors.slope}
+        math="y = g(x)"
+        name={parts.lowerCurve}
+        position={[lowerEnd.x, lowerEnd.y, 0]}
+      />
+      <GraphTag
+        anchorX="right"
+        anchorY="bottom"
+        color={colors.plane}
+        gap={0.12}
+        math={`A = ${quantity(metrics.enclosedArea, "", 2)}`}
+        name={parts.shadedRibbon}
+        position={[centre.x, centre.y, centre.z]}
+      />
+      <GraphTag
+        anchorX="right"
+        anchorY="bottom"
+        color={colors.accent}
+        gap={0.12}
+        math={`f - g = ${quantity(metrics.gapAtBound, "", 2)}`}
+        name={parts.verticalStrip}
+        position={[top.x, top.y, 0.1]}
+      />
+      {Arr.isReadonlyArrayNonEmpty(pins) ? (
+        <GraphTag
+          anchorX="left"
+          anchorY="top"
+          color={colors.alert}
+          gap={0.36}
+          math="f(x) = g(x)"
+          name={parts.intersectionPins}
+          position={[firstPin.x, 0, firstPin.z]}
         />
-      </mesh>
-      <mesh position={[4, sampleCurvePair(pair, 2).lower * 1.4, 0.08]}>
-        <sphereGeometry args={[0.09, 14, 14]} />
-        <meshBasicMaterial
-          color={CALCULUS_COLORS.roseAlert}
-          toneMapped={false}
-        />
-      </mesh>
-      {/* Labels */}
-      <ThreeLabel
-        color={CALCULUS_COLORS.cobaltCurve}
-        fontSize="compact"
-        position={[2.0, 2.35, 0.08]}
-      >
-        <span>{parts.upperCurve}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={CALCULUS_COLORS.emeraldSlope}
-        fontSize="compact"
-        position={[2.0, 0.12, 0.08]}
-      >
-        <span>{parts.lowerCurve}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={CALCULUS_COLORS.cyanPlane}
-        fontSize="compact"
-        position={[bound, 1.15, 0.1]}
-      >
-        <span>{parts.shadedRibbon}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={CALCULUS_COLORS.amberAccent}
-        fontSize="compact"
-        position={[bound * 2 + 0.25, edge.upper * 1.4 + 0.25, 0.1]}
-      >
-        <span>{parts.verticalStrip}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        color={CALCULUS_COLORS.roseAlert}
-        fontSize="compact"
-        position={[-0.25, 0.55, 0.1]}
-      >
-        <span>{parts.intersectionPins}</span>
-      </ThreeLabel>
+      ) : null}
     </group>
   );
 }

@@ -1,58 +1,38 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
-import {
-  BOARD,
-  PaperBoard,
-} from "@repo/design-system/components/contents/physics/thermodynamics/gas-process/board";
 import type { GasMoment } from "@repo/design-system/components/contents/physics/thermodynamics/gas-process/cylinder";
 import {
   momentAt,
   PLAY_SECONDS,
   playShare,
 } from "@repo/design-system/components/contents/physics/thermodynamics/gas-process/cylinder";
-import type { Axes } from "@repo/design-system/components/contents/physics/thermodynamics/gas-process/diagram";
-import { endAt } from "@repo/design-system/components/contents/physics/thermodynamics/gas-process/diagram";
+import { SAMPLES } from "@repo/design-system/components/contents/physics/thermodynamics/gas-process/diagram";
 import type {
-  EndRange,
   GasProcess,
   GasState,
 } from "@repo/design-system/components/contents/physics/thermodynamics/gas-process/gas";
-import { PlotMarks } from "@repo/design-system/components/contents/physics/thermodynamics/gas-process/plot";
 import { GasRig } from "@repo/design-system/components/contents/physics/thermodynamics/gas-process/rig";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { useTimeline } from "@repo/design-system/components/contents/simulation/timeline";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
-import type { ReactNode, RefObject } from "react";
-import { useCallback, useRef } from "react";
+import type { RefObject } from "react";
+import { useRef } from "react";
 
 /**
- * Where the cylinder stands on the bench and at what size, where the
- * board's plot has its origin, and how long an energy arrow grows, in
- * metres. A wide card sets them side by side; a narrow one raises the board
- * on taller legs behind the cylinder's shoulder and sets a smaller cylinder
- * before it, so the two stack across the square and the diagram stays
- * large.
+ * How large the apparatus stands and how long an energy arrow grows, in
+ * metres. A narrow card stands a little farther back, so the cylinder, its
+ * gauge and its thermometer all stay in the square.
  */
 const PLACES = {
-  narrow: {
-    arrow: 0.1,
-    board: [-0.072, 0.315, -0.1],
-    rig: [-0.17, 0, 0.06],
-    size: 0.8,
-  },
-  wide: {
-    arrow: 0.14,
-    board: [0.0, 0.14, -0.05],
-    rig: [-0.24, 0, 0.02],
-    size: 1,
-  },
+  narrow: { arrow: 0.1, size: 1 },
+  wide: { arrow: 0.12, size: 1 },
 } as const;
 
 /** Where the camera looks and how far back it stands. */
 const VIEW = {
-  narrow: { distance: 1.12, target: [0.0, 0.3, 0] },
-  wide: { distance: 0.9, target: [0.0, 0.22, 0] },
+  narrow: { distance: 1, target: [0.01, 0.245, 0] },
+  wide: { distance: 0.88, target: [0.01, 0.235, 0] },
 } as const;
 
 /** How steeply the camera looks down on the bench, in radians. */
@@ -90,36 +70,35 @@ function ProcessClock({
 }
 
 /**
- * The gas process lab on a chemistry bench: the cylinder of gas on its
- * stand on the left, and on the right the board with its p-V diagram, on
- * which the learner presses or drags to set where the process ends.
+ * The gas process lab on a chemistry bench, and nothing else in the scene:
+ * the cylinder of gas on its stand with its piston, its pressure gauge and
+ * its thermometer, and round it what holds the process. Its p-V diagram
+ * stands under the scene, in the footer of the card.
  */
 export function GasProcessScene({
-  axes,
   end,
+  fullPressure,
   gamma,
   kelvin,
-  names,
-  onEnd,
+  largest,
+  onShare,
   process,
-  range,
   scale,
   span,
   start,
-  tick,
 }: {
-  readonly axes: Axes;
   readonly end: GasState;
+  /** The pressure the gauge reads at the end of its dial. */
+  readonly fullPressure: number;
   readonly gamma: number;
   readonly kelvin: (temperature: number) => string;
-  readonly names: { readonly pressure: ReactNode; readonly volume: ReactNode };
-  readonly onEnd: (value: number) => void;
+  /** The volume the tallest column of gas holds. */
+  readonly largest: number;
+  readonly onShare: (share: number) => void;
   readonly process: GasProcess;
-  readonly range: EndRange;
   readonly scale: number;
   readonly span: { readonly high: number; readonly low: number };
   readonly start: GasState;
-  readonly tick: (value: number) => string;
 }) {
   const now = useRef<GasMoment>(
     momentAt(process, { end, start }, gamma, { playing: false, share: 1 })
@@ -129,11 +108,16 @@ export function GasProcessScene({
     1.2
   );
   const places = narrow ? PLACES.narrow : PLACES.wide;
-  const onSpot = useCallback(
-    (spot: { readonly x: number; readonly y: number }) =>
-      onEnd(endAt(process, range, axes, BOARD.plot, spot)),
-    [axes, onEnd, process, range]
-  );
+  const told = useRef(1);
+  // The diagram under the scene follows the gas in the steps its path is drawn in, not in every frame.
+  // The clock is a child, so its frame has already written the moment this one reads.
+  useFrame(() => {
+    const step = Math.round(now.current.share * SAMPLES) / SAMPLES;
+    if (step !== told.current) {
+      told.current = step;
+      onShare(step);
+    }
+  });
   const final = momentAt(process, { end, start }, gamma, {
     playing: false,
     share: 1,
@@ -152,11 +136,12 @@ export function GasProcessScene({
       <group position={[-0.7, 0, 0]}>
         <LabBench width={2.6} />
       </group>
-      <group position={places.rig} scale={places.size}>
+      <group scale={places.size}>
         <GasRig
+          fullPressure={fullPressure}
           heatShown={Math.abs(final.heat) > scale * 1e-9}
           kelvin={kelvin}
-          largest={axes.volume.maximum}
+          largest={largest}
           longest={places.arrow}
           now={now}
           process={process}
@@ -166,28 +151,11 @@ export function GasProcessScene({
           workShown={Math.abs(final.work) > scale * 1e-9}
         />
       </group>
-      <group position={places.board}>
-        <PaperBoard
-          axes={axes}
-          names={names}
-          rise={places.board[1]}
-          tick={tick}
-        />
-        <PlotMarks
-          axes={axes}
-          end={end}
-          gamma={gamma}
-          now={now}
-          onSpot={onSpot}
-          process={process}
-          start={start}
-        />
-      </group>
     </group>
   );
 }
 
-/** Looks at the cylinder and the board from the front, a little above the bench; farther back on a narrow card. */
+/** Looks at the apparatus from the front, a little above the bench; farther back on a narrow card. */
 function GasCamera({ narrow }: { readonly narrow: boolean }) {
   const { distance, target } = narrow ? VIEW.narrow : VIEW.wide;
   return (

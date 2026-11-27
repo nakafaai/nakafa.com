@@ -1,17 +1,17 @@
 import type { RectifierMode } from "@repo/design-system/components/contents/physics/rectifier/model";
 import { sampleRectifierWave } from "@repo/design-system/components/contents/physics/rectifier/model";
+import { TraceChart } from "@repo/design-system/components/contents/simulation/trace";
 import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 
-const WIDTH = 200;
-const HEIGHT = 84;
-const MID = HEIGHT / 2;
+/** How many points each wave is drawn through over its two periods. */
+const STEPS = 128;
+/** The phase the plot covers, in half turns, so its axis marks every half period. */
+const HALF_TURNS = 4;
 
-const xOf = (phase: number) => (phase / (Math.PI * 4)) * WIDTH;
-const yOf = (val: number) => MID - val * (MID - 8);
-
+/** The alternating input of the rectifier and the output its diodes leave of it, over two periods. */
 export function RectifierTrace({
   inputLabel,
   mode,
@@ -21,82 +21,41 @@ export function RectifierTrace({
   readonly mode: RectifierMode;
   readonly outputLabel: ReactNode;
 }) {
-  const samples = useMemo(() => sampleRectifierWave(mode, 64), [mode]);
-
-  const inputPoints = useMemo(
+  const data = useMemo(
     () =>
-      Arr.join(
-        Arr.map(samples, (pt) => `${xOf(pt.phase)},${yOf(pt.input)}`),
-        " "
-      ),
-    [samples]
-  );
-  const outputPoints = useMemo(
-    () =>
-      Arr.join(
-        Arr.map(samples, (pt) => `${xOf(pt.phase)},${yOf(pt.output)}`),
-        " "
-      ),
-    [samples]
+      Arr.map(sampleRectifierWave(mode, STEPS), (point) => ({
+        input: point.input,
+        output: point.output,
+        turns: point.phase / Math.PI,
+      })),
+    [mode]
   );
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="text-muted-foreground flex flex-wrap justify-between gap-x-4 text-xs">
-        <span className="flex items-center gap-1.5">
-          <span
-            aria-hidden="true"
-            className="size-2 rounded-full"
-            style={{ backgroundColor: QUANTUM_COLORS.acWave }}
-          />
-          {inputLabel}
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span
-            aria-hidden="true"
-            className="size-2 rounded-full"
-            style={{ backgroundColor: QUANTUM_COLORS.dcWave }}
-          />
-          {outputLabel}
-        </span>
-      </div>
-      <div className="relative h-24 px-1 pb-1">
-        <div className="border-border relative h-full border-s border-b">
-          <svg
-            aria-hidden="true"
-            className="absolute inset-0 size-full overflow-visible"
-            preserveAspectRatio="none"
-            viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-          >
-            <line
-              className="stroke-border"
-              strokeDasharray="3 3"
-              strokeWidth={1}
-              vectorEffect="non-scaling-stroke"
-              x1={0}
-              x2={WIDTH}
-              y1={MID}
-              y2={MID}
-            />
-            <polyline
-              fill="none"
-              points={inputPoints}
-              stroke={QUANTUM_COLORS.acWave}
-              strokeOpacity={0.55}
-              strokeWidth={1.6}
-              vectorEffect="non-scaling-stroke"
-            />
-            <polyline
-              fill="none"
-              points={outputPoints}
-              stroke={QUANTUM_COLORS.dcWave}
-              strokeLinejoin="round"
-              strokeWidth={2.4}
-              vectorEffect="non-scaling-stroke"
-            />
-          </svg>
-        </div>
-      </div>
-    </div>
+    <TraceChart
+      data={data}
+      series={[
+        {
+          color: QUANTUM_COLORS.acWave,
+          curve: "linear",
+          dashed: true,
+          key: "input",
+          label: inputLabel,
+          width: 1.75,
+        },
+        {
+          color: QUANTUM_COLORS.dcWave,
+          curve: "linear",
+          key: "output",
+          label: outputLabel,
+        },
+      ]}
+      x={{
+        domain: [0, HALF_TURNS],
+        key: "turns",
+        ticks: Arr.range(0, HALF_TURNS),
+      }}
+      y={{ domain: [-1.2, 1.2], ticks: [-1, 0, 1] }}
+    />
   );
 }
