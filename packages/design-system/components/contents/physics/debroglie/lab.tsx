@@ -118,7 +118,7 @@ export function DeBroglieMatterWaveLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.5} setting="lab">
+        <ScienceStage floor={0} reach={2.5} setting="dark">
           <Suspense fallback={null}>
             <DeBroglieScene
               diffractionRadius={reading.diffractionRadius}
