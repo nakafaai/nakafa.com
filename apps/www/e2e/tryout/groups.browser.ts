@@ -17,9 +17,12 @@ const EXAM_CARD = /^View options /u;
 const SUBJECT_CARD = /^View sets /u;
 /** The country's design, which only its own page's metadata names. */
 const GERMANY_DESIGN = /\/open-graph\/tryout\/germany\/en-index\.png$/u;
-/** The Darmstadt Mathematics test's English design, which its page shares in English. */
+/** The Darmstadt Mathematics test in German, the one locale its design is lettered in. */
+const DARMSTADT_GERMAN =
+  "/de/try-out/deutschland/aufnahmepruefung/studienkolleg-der-tu-darmstadt/mathematik";
+/** The Darmstadt Mathematics test's German design, which its German page shares. */
 const DARMSTADT_MATHEMATICS =
-  /\/open-graph\/tryout\/germany\/entrance-examination\/en-tu-darmstadt-mathematics\.png$/u;
+  /\/open-graph\/tryout\/germany\/entrance-examination\/de-tu-darmstadt-mathematics\.png$/u;
 /** The paths a page's card links of one kind open, in order. */
 function cardPaths(page: Page, name: RegExp) {
   return page
@@ -104,7 +107,8 @@ test("reaches every exam's set table in at most two clicks from its country", as
 
 /**
  * SNBT, TKA and the Aufnahmeprüfung each have their own exam artwork. Germany
- * and the Darmstadt Mathematics test each keep their own share image.
+ * keeps its own share image, and the Darmstadt Mathematics test shares its
+ * German design on its German page.
  */
 test("draws each exam card with its own design", async ({ page }) => {
   await visit(page, INDONESIA);
@@ -119,7 +123,7 @@ test("draws each exam card with its own design", async ({ page }) => {
     GERMANY_DESIGN
   );
 
-  await visit(page, DARMSTADT);
+  await visit(page, DARMSTADT_GERMAN);
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
     "content",
     DARMSTADT_MATHEMATICS

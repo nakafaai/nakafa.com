@@ -1,53 +1,138 @@
 import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
-import type { LearningProgramKey } from "@nakafa/aksara-contracts/program/spec";
-import { Array as Arr, Match, Option } from "effect";
+import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import type { Locale } from "use-intl";
-import { resolveNamedArtwork, resolveSocialArtwork } from "@/lib/og/artwork";
+import { resolveCardArtwork, resolveSocialArtwork } from "@/lib/og/artwork";
 import { getOgUrl } from "@/lib/seo/social";
 
-type CurriculumArtworkRoute = Pick<
+type CurriculumArtworkRoute = Pick<CurriculumRoute, "nodeKey">;
+
+type CurriculumSocialImageRoute = Pick<
   CurriculumRoute,
-  "level" | "materialDomain" | "nodeKey" | "programKey"
+  "level" | "nodeKey" | "publicPath"
 >;
 
-type CurriculumSocialImageRoute = Pick<CurriculumRoute, "level" | "publicPath">;
+/** The design of one card, and the locales whose label it reads when not all of the design's readers do. */
+const CurriculumCardArtworkSchema = Schema.Struct({
+  identity: Schema.String,
+  locales: Schema.optionalKey(Schema.Array(Schema.String)),
+});
+
+const MATHEMATICS = { identity: "subject/mathematics" } as const;
+const PHYSICS = { identity: "subject/physics" } as const;
+const CHEMISTRY = { identity: "subject/chemistry" } as const;
+const BIOLOGY = { identity: "subject/biology" } as const;
 
 /**
- * The artwork names of what a curriculum route is, the nearest first: a program
- * root names its program, a class or a stage its own node, and a subject or a
- * course its own node, then the subject its lessons teach. So a subject with a
- * design of its own, such as Additional Mathematics, draws it, and its sibling
- * keeps the design of the subject they share. A unit, a topic or a lesson is a
- * part of a subject, not the subject, so it names none. Every curriculum
- * reaches its artwork this way, and a design added under one of these names
- * reaches every route it fits without a list to keep.
+ * The design of each curriculum card whose lettering reads the card's label,
+ * by the card's node key. A card that is not listed draws its tile: a course
+ * such as "Mathematik im T-Kurs" or "Biology 0610" names more than the plain
+ * subject design says, so it waits for a design of its own. A new node draws
+ * its tile until its design is reviewed and listed here.
  */
-function artworkNamesOf(route: CurriculumArtworkRoute) {
-  return Match.value(route.level).pipe(
-    Match.when("track", () => [`curriculum/${route.programKey}`]),
-    Match.whenOr("class", "stage", () => [`grade/${route.nodeKey}`]),
-    Match.whenOr("subject", "course", () => [
-      `subject/${route.nodeKey}`,
-      ...Arr.map(
-        Arr.fromOption(Option.fromUndefinedOr(route.materialDomain)),
-        (domain) => `subject/${domain}`
-      ),
-    ]),
-    Match.orElse(() => Arr.empty<string>())
+const CURRICULUM_CARD_ARTWORK = {
+  "cambridge-international:root": {
+    identity: "curriculum/cambridge-international",
+  },
+  "class-10": { identity: "grade/class-10" },
+  "class-10-biology": BIOLOGY,
+  "class-10-chemistry": CHEMISTRY,
+  "class-10-mathematics": MATHEMATICS,
+  "class-10-physics": PHYSICS,
+  "class-11": { identity: "grade/class-11" },
+  "class-11-biology": BIOLOGY,
+  "class-11-chemistry": CHEMISTRY,
+  "class-11-mathematics": MATHEMATICS,
+  "class-11-physics": PHYSICS,
+  "class-12": { identity: "grade/class-12" },
+  "class-12-chemistry": CHEMISTRY,
+  "class-12-mathematics": MATHEMATICS,
+  "class-12-physics": PHYSICS,
+  "form-4": { identity: "grade/form-4" },
+  "form-4-additional-mathematics": {
+    identity: "subject/additional-mathematics",
+    locales: ["en"],
+  },
+  "form-4-biology": BIOLOGY,
+  "form-4-chemistry": CHEMISTRY,
+  "form-4-mathematics": MATHEMATICS,
+  "form-4-physics": PHYSICS,
+  "form-5": { identity: "grade/form-5" },
+  "form-5-additional-mathematics": {
+    identity: "subject/additional-mathematics",
+    locales: ["en"],
+  },
+  "form-5-biology": BIOLOGY,
+  "form-5-chemistry": CHEMISTRY,
+  "form-5-mathematics": MATHEMATICS,
+  "form-5-physics": PHYSICS,
+  hannover: { identity: "grade/hannover" },
+  "high-school": { identity: "grade/high-school" },
+  "high-school-mathematics": MATHEMATICS,
+  "high-school-science": { identity: "subject/science" },
+  "introductory-phase-biology": BIOLOGY,
+  "introductory-phase-chemistry": CHEMISTRY,
+  "introductory-phase-mathematics": MATHEMATICS,
+  "introductory-phase-physics": PHYSICS,
+  "kssm:root": { identity: "curriculum/kssm" },
+  "merdeka:root": { identity: "curriculum/merdeka" },
+  "qualification-phase-1-chemistry": CHEMISTRY,
+  "qualification-phase-1-mathematics": MATHEMATICS,
+  "qualification-phase-2-biology": BIOLOGY,
+  "qualification-phase-2-chemistry": CHEMISTRY,
+  "qualification-phase-2-mathematics": MATHEMATICS,
+  "qualification-phase-2-physics": PHYSICS,
+  "qualification-phase-3-chemistry": CHEMISTRY,
+  "qualification-phase-3-mathematics": MATHEMATICS,
+  "qualification-phase-3-physics": PHYSICS,
+  "qualification-phase-4-biology": BIOLOGY,
+  "qualification-phase-4-chemistry": CHEMISTRY,
+  "qualification-phase-4-mathematics": MATHEMATICS,
+  "qualification-phase-4-physics": PHYSICS,
+  sachsen: { identity: "grade/sachsen" },
+  secondary: { identity: "grade/secondary" },
+  "secondary-additional-mathematics": {
+    identity: "subject/additional-mathematics",
+  },
+  "secondary-biology": BIOLOGY,
+  "secondary-chemistry": CHEMISTRY,
+  "secondary-mathematics": MATHEMATICS,
+  "secondary-physics": PHYSICS,
+  "singapore-moe:root": { identity: "curriculum/singapore-moe" },
+  "tu-darmstadt": { identity: "grade/tu-darmstadt" },
+  "united-states:root": { identity: "curriculum/united-states" },
+  "upper-secondary": { identity: "grade/upper-secondary" },
+} as const satisfies Readonly<
+  Record<string, typeof CurriculumCardArtworkSchema.Type>
+>;
+
+/** The card designs read by any node key, so a node that is not listed finds none. */
+const curriculumCards: Readonly<
+  Record<
+    string,
+    (typeof CURRICULUM_CARD_ARTWORK)[keyof typeof CURRICULUM_CARD_ARTWORK]
+  >
+> = CURRICULUM_CARD_ARTWORK;
+
+/** The design of one curriculum card in the locale, or nothing when its card draws a tile. */
+function cardArtworkOf(locale: Locale, route: CurriculumArtworkRoute) {
+  return Option.filter(
+    Rec.get(curriculumCards, route.nodeKey),
+    (artwork) =>
+      !("locales" in artwork) || Arr.contains(artwork.locales, locale)
   );
 }
 
 /**
- * Resolves the card artwork of one curriculum route from what it is, or
- * nothing when no design names it yet, so its card draws its tile.
+ * Resolves the card artwork of one curriculum route, or nothing when no
+ * design reads its label in the locale yet, so its card draws its tile.
  */
 export function resolveCurriculumArtwork(
   locale: Locale,
   route: CurriculumArtworkRoute
 ) {
   return Option.getOrUndefined(
-    Arr.findFirst(artworkNamesOf(route), (name) =>
-      resolveNamedArtwork(name, locale)
+    Option.flatMapNullishOr(cardArtworkOf(locale, route), (artwork) =>
+      resolveCardArtwork(artwork.identity, locale)
     )
   );
 }
@@ -70,17 +155,20 @@ export function getCurriculumIndexSocialImage(
  */
 export function getCurriculumRouteSocialImage(
   locale: Locale,
-  programKey: LearningProgramKey,
   route: CurriculumSocialImageRoute
 ) {
-  const generated = getOgUrl(locale, route.publicPath);
-
   if (route.level !== "track") {
-    return generated;
+    return getOgUrl(locale, route.publicPath);
   }
 
-  return Option.getOrElse(
-    resolveNamedArtwork(`curriculum/${programKey}`, locale),
-    () => generated
-  );
+  return resolveSocialArtwork({
+    identity: Option.getOrUndefined(
+      Option.map(
+        Rec.get(curriculumCards, route.nodeKey),
+        (artwork) => artwork.identity
+      )
+    ),
+    locale,
+    publicPath: route.publicPath,
+  });
 }

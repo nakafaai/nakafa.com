@@ -2,6 +2,7 @@
 
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import {
   Array as Arr,
   Effect,
@@ -13,63 +14,81 @@ import {
 import { getAppSocialArtwork } from "@/lib/og/app";
 import {
   artworkSources,
+  resolveCardArtwork,
   resolveSocialArtwork,
   resolveStaticArtwork,
   toCardArtwork,
 } from "@/lib/og/artwork";
 
-const ARTWORK_FILENAME_PATTERN = /^(?:de|en|id|ms)-[a-z0-9-]+\.png$/u;
-
-/** Every file of the static inventory: each design in each locale it has a file for. */
-function staticArtworkPaths() {
-  return Arr.flatMap(Rec.toEntries(artworkSources), ([identity, locales]) =>
-    Arr.flatMap(locales, (locale) =>
-      Arr.fromNullishOr(resolveStaticArtwork(identity, locale))
+/** Every installed file of the inventory, once: each file a locale's readers see. */
+function listStaticArtwork() {
+  return Arr.dedupe(
+    Arr.flatMap(Rec.keys(artworkSources), (identity) =>
+      Arr.flatMap(ACTIVE_APP_LOCALE_CODES, (locale) =>
+        Arr.fromNullishOr(resolveCardArtwork(identity, locale))
+      )
     )
   );
 }
 
+const ARTWORK_FILENAME_PATTERN = /^(?:de|en|id|ms)-[a-z0-9-]+\.png$/u;
+
 describe("public artwork", () => {
-  it("prefers an exact locale and then the reviewed English default", () => {
+  it("draws a card only from a file whose lettering reads the locale's words", () => {
+    expect(resolveCardArtwork("subject/physics", "ms")).toBe(
+      "/open-graph/subject/ms-physics.png"
+    );
+    expect(resolveCardArtwork("subject/chemistry", "ms")).toBe(
+      "/open-graph/subject/id-chemistry.png"
+    );
+    expect(resolveCardArtwork("grade/upper-secondary", "ms")).toBeUndefined();
+    expect(
+      resolveCardArtwork("tryout/malaysia/spm/physics", "ms")
+    ).toBeUndefined();
+    expect(resolveCardArtwork(undefined, "ms")).toBeUndefined();
+  });
+
+  it("shares the English readers' file as the social image of a locale not drawn yet", () => {
+    expect(resolveStaticArtwork("grade/upper-secondary", "ms")).toBe(
+      "/open-graph/grade/en-upper-secondary.png"
+    );
     expect(resolveStaticArtwork("subject/physics", "de")).toBe(
       "/open-graph/subject/de-physics.png"
     );
-    expect(resolveStaticArtwork("curriculum/singapore-moe", "de")).toBe(
-      "/open-graph/curriculum/en-singapore-moe.png"
-    );
+    // The German Darmstadt mathematics design has no English lettering yet.
+    expect(
+      resolveSocialArtwork({
+        identity:
+          "tryout/germany/entrance-examination/tu-darmstadt-mathematics",
+        locale: "id",
+        publicPath: "try-out/jerman",
+      })
+    ).toBe("/id/og/image.png");
   });
 
-  it("gives every design an English file, the default of every locale without its own", () => {
-    const withoutEnglish = Arr.filter(
-      Rec.toEntries(artworkSources),
-      ([, locales]) => !Arr.contains(locales, "en")
+  it("reads every design in active locales only", () => {
+    const strays = Arr.flatMap(Rec.toEntries(artworkSources), ([, readers]) =>
+      Arr.filter(
+        [...Rec.keys(readers), ...Rec.values(readers)],
+        (locale) => !Arr.contains(ACTIVE_APP_LOCALE_CODES, locale)
+      )
     );
 
-    expect(withoutEnglish).toEqual([]);
-    // A design drawn in German alone shows English elsewhere.
-    expect(
-      resolveStaticArtwork(
-        "tryout/germany/entrance-examination/tu-darmstadt-mathematics",
-        "id"
-      )
-    ).toBe(
-      "/open-graph/tryout/germany/entrance-examination/en-tu-darmstadt-mathematics.png"
-    );
+    expect(strays).toEqual([]);
   });
 
   it("shows an exam's own name in its one design in every locale", () => {
-    for (const locale of ["en", "id", "de", "ms"] as const) {
+    for (const locale of ACTIVE_APP_LOCALE_CODES) {
       expect(
-        resolveStaticArtwork("tryout/germany/entrance-examination", locale)
+        resolveCardArtwork("tryout/germany/entrance-examination", locale)
       ).toBe("/open-graph/tryout/germany/en-entrance-examination.png");
-      expect(resolveStaticArtwork("tryout/indonesia/snbt", locale)).toBe(
+      expect(resolveCardArtwork("tryout/indonesia/snbt", locale)).toBe(
         "/open-graph/tryout/indonesia/en-snbt.png"
       );
     }
   });
 
   it("answers the home image when an identity has no artwork", () => {
-    expect(resolveStaticArtwork(undefined, "de")).toBeUndefined();
     expect(
       resolveSocialArtwork({
         identity: undefined,
@@ -88,6 +107,10 @@ describe("public artwork", () => {
     ).toBe("/open-graph/app/en-school.png");
     expect(
       getAppSocialArtwork({ key: "ask-nina", locale: "id", publicPath: "chat" })
+    ).toBe("/open-graph/app/id-ask-nina.png");
+    // Malay reads tanya Nina, the Indonesian lettering.
+    expect(
+      getAppSocialArtwork({ key: "ask-nina", locale: "ms", publicPath: "chat" })
     ).toBe("/open-graph/app/id-ask-nina.png");
     expect(
       getAppSocialArtwork({
@@ -126,7 +149,7 @@ describe("public artwork", () => {
       const path = yield* Path.Path;
       const artworkRoot = path.join(process.cwd(), "public");
 
-      const missing = yield* Effect.filter(staticArtworkPaths(), (file) =>
+      const missing = yield* Effect.filter(listStaticArtwork(), (file) =>
         Effect.map(
           fs.exists(path.join(artworkRoot, toCardArtwork(file))),
           (exists) => !exists
@@ -142,7 +165,7 @@ describe("public artwork", () => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const artworkRoot = path.join(process.cwd(), "public", "open-graph");
-      const manifestPaths = staticArtworkPaths();
+      const manifestPaths = listStaticArtwork();
       const entries = yield* fs.readDirectory(artworkRoot, { recursive: true });
       const filesystemPaths = Arr.filter(entries, (entry) =>
         entry.endsWith(".png")

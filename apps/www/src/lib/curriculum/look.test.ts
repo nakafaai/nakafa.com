@@ -128,7 +128,7 @@ describe("getCurriculumLooks", () => {
     expect(alone[1]).not.toMatchObject({ shift: 0 });
   });
 
-  it("gives a subject's artwork to its first route only, and a later route of it a tile of its family", () => {
+  it("draws each route's own artwork, and a later route of a subject without one a tile of its family", () => {
     const mathematics = subjectWith(
       "mathematics",
       "mathematics",
@@ -139,13 +139,16 @@ describe("getCurriculumLooks", () => {
       "mathematics",
       "secondary-additional-mathematics"
     );
-    const [art, tile] = getCurriculumLooks(
-      [mathematics, additional],
-      () => "mathematics.png"
+    const course = subjectWith("mathematics", "mathematics", "t-mathematics");
+    const [art, own, tile] = getCurriculumLooks(
+      [mathematics, additional, course],
+      (route) =>
+        route.nodeKey === "t-mathematics" ? undefined : `${route.nodeKey}.png`
     );
 
-    expect(art).toBe("mathematics.png");
-    expect(tile).toMatchObject({ seed: "secondary-additional-mathematics" });
+    expect(art).toBe("secondary-mathematics.png");
+    expect(own).toBe("secondary-additional-mathematics.png");
+    expect(tile).toMatchObject({ seed: "t-mathematics" });
     expect(getLessonIcons("mathematics")).toContainEqual(
       typeof tile === "string" ? undefined : tile?.icon
     );
