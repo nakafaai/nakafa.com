@@ -2,8 +2,7 @@ import { chanceAt } from "@repo/design-system/components/three/field/noise";
 import { Array as Arr, Order, Schema } from "effect";
 
 /** The two kinds of nucleon. */
-export const NucleonSchema = Schema.Literals(["neutron", "proton"]);
-export type Nucleon = typeof NucleonSchema.Type;
+const NucleonSchema = Schema.Literals(["neutron", "proton"]);
 
 /** One nucleon of a packed nucleus: its kind and where its middle is, in nucleon radii. */
 const PackedSchema = Schema.Struct({
