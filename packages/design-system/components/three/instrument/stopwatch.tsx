@@ -36,6 +36,7 @@ const FACE = CASE.thick / 2;
 
 /** The large figures of minutes and seconds, and the small ones of the hundredths. */
 const LARGE = { tall: 12.5, thick: 1.5, wide: 6.6 } as const;
+/** The small figures of the hundredths. */
 const SMALL = { tall: 8.6, thick: 1.1, wide: 4.6 } as const;
 
 /** Where each figure's middle stands on the display, with the size it is drawn at. */
@@ -79,6 +80,7 @@ const CASE_SHAPE = (() => {
   return shape;
 })();
 
+/** How the case is moulded from its outline: to its thickness, with a deep rounded edge. */
 const CASE_CUT = {
   bevelEnabled: true,
   bevelSegments: 8,

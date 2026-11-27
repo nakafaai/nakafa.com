@@ -55,7 +55,7 @@ function Block({
   );
 }
 
-/** The results board: a hardboard clipboard with its sprung steel clip, holding the printed dot plot. */
+/** The results board: a hardboard clipboard with its black sprung clip, holding the printed dot plot. */
 function Board({
   count,
   landed,
@@ -97,23 +97,21 @@ function Board({
         smoothness={4}
       >
         <SurfaceMaterial
-          bump={0.3}
-          color={INSTRUMENT_COLORS.satinChrome}
-          metalness={1}
+          coat={0.4}
+          color={INSTRUMENT_COLORS.gripPad}
           repeat={[6, 1]}
           roughness={0.5}
-          surface="brushed"
+          surface="paint"
         />
       </RoundedBox>
       <mesh castShadow position={[0, 123, 4]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[3.2, 3.2, 62, 24]} />
         <SurfaceMaterial
-          bump={0.3}
-          color={INSTRUMENT_COLORS.satinChrome}
-          metalness={1}
+          coat={0.4}
+          color={INSTRUMENT_COLORS.gripPad}
           repeat={[2, 6]}
           roughness={0.5}
-          surface="brushed"
+          surface="paint"
         />
       </mesh>
     </group>

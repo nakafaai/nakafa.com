@@ -7,11 +7,10 @@ function plain(value: number, digits: number) {
   return value.toFixed(digits);
 }
 
-/** The dots of a sheet: its round bands. */
+/** The dots of a sheet: its filled marks. */
 function dotsOf(times: readonly number[], shown: number) {
-  return Arr.filter(
-    plotSheet(times, shown, plain).marks,
-    (mark) => mark.kind === "band"
+  return Arr.flatMap(plotSheet(times, shown, plain).marks, (mark) =>
+    mark.kind === "band" ? [mark] : []
   );
 }
 
@@ -20,36 +19,30 @@ describe("stopwatch results sheet", () => {
     const dots = dotsOf([17.9, 17.9, 18], 3);
 
     expect(dots).toHaveLength(3);
-    expect(
-      Arr.map(dots, (dot) => (dot.kind === "band" ? dot.at[0] : 0))
-    ).toEqual([
-      expect.closeTo(-16.8, 5),
-      expect.closeTo(-16.8, 5),
-      expect.closeTo(16.8, 5),
-    ]);
-    expect(dots[1]?.kind === "band" && dots[1].at[1]).toBeCloseTo(
-      (dots[0]?.kind === "band" ? dots[0].at[1] : 0) + 6.3
-    );
+    expect(dots[0]?.at[0]).toBeCloseTo(-16.8, 9);
+    expect(dots[1]?.at[0]).toBeCloseTo(-16.8, 9);
+    expect(dots[2]?.at[0]).toBeCloseTo(16.8, 9);
+    expect((dots[1]?.at[1] ?? 0) - (dots[0]?.at[1] ?? 0)).toBeCloseTo(6.3, 9);
+    expect(dots[2]?.at[1]).toBe(dots[0]?.at[1]);
   });
 
   it("holds the latest dot back until its trial is over, then marks it", () => {
+    const landed = dotsOf([17.9, 18], 2);
+
     expect(dotsOf([17.9, 18], 1)).toHaveLength(1);
-    expect(dotsOf([17.9, 18], 2)[1]?.ink).not.toBe(
-      dotsOf([17.9, 18], 2)[0]?.ink
-    );
+    expect(landed).toHaveLength(2);
+    expect(landed[1]?.ink).not.toBe(landed[0]?.ink);
   });
 
-  it("numbers the scale every tenth of a second and keeps every mark on the sheet", () => {
-    const sheet = plotSheet([17.2, 18.9], 2, plain);
-    const numbers = Arr.filter(sheet.marks, (mark) => mark.kind === "text");
+  it("numbers the scale every tenth of a second and keeps every dot on the sheet", () => {
+    const numbers = Arr.flatMap(
+      plotSheet([17.2, 18.9], 2, plain).marks,
+      (mark) => (mark.kind === "text" ? [mark.text] : [])
+    );
+    const outside = dotsOf([17.2, 18.9], 2);
 
-    expect(
-      Arr.map(numbers, (mark) => (mark.kind === "text" ? mark.text : ""))
-    ).toEqual(["17.7", "17.8", "17.9", "18.0", "18.1", "18.2"]);
-    expect(
-      Arr.map(dotsOf([17.2, 18.9], 2), (dot) =>
-        dot.kind === "band" ? dot.at[0] : 0
-      )
-    ).toEqual([-84, 84]);
+    expect(numbers).toEqual(["17.7", "17.8", "17.9", "18.0", "18.1", "18.2"]);
+    expect(outside[0]?.at[0]).toBe(-84);
+    expect(outside[1]?.at[0]).toBe(84);
   });
 });

@@ -6,6 +6,7 @@ import {
 } from "@repo/design-system/components/three/instrument/plate";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
+import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { useMemo } from "react";
 import { Vector2 } from "three";
 
@@ -34,8 +35,18 @@ function turned(radius: number) {
  * slides under it, so the reading stays in view at every width.
  *
  * @param width - The cylinder's diameter, in millimetres
+ * @param main - The whole millimetres the vernier zero has passed
+ * @param line - The vernier line that meets a main mark
  */
-export function CaliperScene({ width }: { readonly width: number }) {
+export function CaliperScene({
+  line,
+  main,
+  width,
+}: {
+  readonly line: number;
+  readonly main: number;
+  readonly width: number;
+}) {
   const profile = useMemo(() => turned(width / 2), [width]);
 
   return (
@@ -47,7 +58,14 @@ export function CaliperScene({ width }: { readonly width: number }) {
         wide={[0.1, 0.52, 0.38]}
       />
       <Plate deep={260} wide={520}>
-        <Caliper hold="slide" reading={width}>
+        <Caliper
+          hold="slide"
+          pointed={{
+            line: [line, PLOT_COLORS.fuchsia],
+            main: [main, PLOT_COLORS.teal],
+          }}
+          reading={width}
+        >
           <mesh
             castShadow
             position={[width / 2, -Math.max(width / 2 + 1.5, DEEP), -1]}

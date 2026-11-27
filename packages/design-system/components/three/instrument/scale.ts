@@ -5,7 +5,7 @@ import { Array as Arr } from "effect";
  * The graduations of a precision instrument, as geometry. Every mark is one
  * thin ink-filled groove placed where its number says, so a reading can be
  * read off the drawn scale: a main scale against its vernier, a sleeve
- * against its thimble, a hand against its dial. Instruments are modelled in
+ * against its thimble. Instruments are modelled in
  * millimetres and drawn at `MILLIMETRE` scene units each.
  */
 
@@ -57,37 +57,6 @@ export function straightMarks(scale: {
         scale.face + INK / 2,
       ],
       scale: [scale.width, length, INK],
-    };
-  });
-}
-
-/**
- * The marks of a round dial on a face that looks along +z: mark `index`
- * stands `from + index * step` radians clockwise from twelve o'clock and
- * grows inward from `radius`.
- */
-export function dialMarks(dial: {
-  readonly count: number;
-  readonly every: Every;
-  readonly face: number;
-  readonly from: number;
-  readonly lengths: Lengths;
-  readonly radius: number;
-  readonly step: number;
-  readonly width: number;
-}): readonly Placement[] {
-  return Arr.makeBy(dial.count, (index) => {
-    const length = markLength(index, dial.every, dial.lengths);
-    const angle = dial.from + index * dial.step;
-    const reach = dial.radius - length / 2;
-    return {
-      position: [
-        Math.sin(angle) * reach,
-        Math.cos(angle) * reach,
-        dial.face + INK / 2,
-      ],
-      rotation: [0, 0, -angle],
-      scale: [dial.width, length, INK],
     };
   });
 }
@@ -162,14 +131,6 @@ export function rimMarks(rim: {
       scale: [length, rim.width, INK],
     };
   });
-}
-
-/**
- * How far a hand has turned clockwise from twelve o'clock, in radians, on a
- * dial that one turn of the hand sweeps `full` of.
- */
-export function handTurn(value: number, full: number) {
-  return (value / full) * 2 * Math.PI;
 }
 
 /**

@@ -1,9 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   barrelMarks,
-  dialMarks,
   eased,
-  handTurn,
   markLength,
   rimAngle,
   rimMarks,
@@ -48,23 +46,6 @@ describe("instrument scale", () => {
     expect(down[1]?.position[1]).toBeCloseTo(2.5, 12);
   });
 
-  it("stands dial marks clockwise from twelve o'clock", () => {
-    const marks = dialMarks({
-      count: 60,
-      every: [5, 5],
-      face: 0,
-      from: 0,
-      lengths: [2, 2, 1],
-      radius: 20,
-      step: (2 * Math.PI) / 60,
-      width: 0.2,
-    });
-    expect(marks[0]?.position[0]).toBeCloseTo(0, 12);
-    expect(marks[0]?.position[1]).toBeCloseTo(19, 12);
-    expect(marks[15]?.position[0]).toBeCloseTo(19, 12);
-    expect(marks[15]?.rotation?.[2]).toBeCloseTo(-Math.PI / 2, 12);
-  });
-
   it("wraps barrel marks from the datum line to either side", () => {
     const above = barrelMarks({
       count: 26,
@@ -107,11 +88,6 @@ describe("instrument scale", () => {
     expect(marks[0]?.position[1]).toBeCloseTo(0, 12);
     expect(marks[0]?.position[2]).toBeGreaterThan(6);
     expect(marks[0]?.rotation?.[1]).toBe(-0.5);
-  });
-
-  it("turns a hand in proportion to its value", () => {
-    expect(handTurn(15, 60)).toBeCloseTo(Math.PI / 2, 12);
-    expect(handTurn(90, 60)).toBeCloseTo(3 * Math.PI, 12);
   });
 
   it("eases toward a target and lands on it", () => {

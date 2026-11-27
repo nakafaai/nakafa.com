@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Quaternion, Vector3 } from "three";
 
+/** A place beside the object, in the units of the group the extent is drawn in. */
 type Point = readonly [number, number, number];
 
 /** The direction an unturned arrow points in. */

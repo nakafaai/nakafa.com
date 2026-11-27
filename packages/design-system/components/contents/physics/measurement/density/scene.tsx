@@ -12,6 +12,7 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Match } from "effect";
 
+/** One of the materials a block is cut from. */
 type Material = typeof MaterialSchema.Type;
 
 /** The block's sides, in millimetres: along the dial, up, and toward the reader. */
@@ -49,9 +50,9 @@ function Stock({ material }: { readonly material: Material }) {
       <SurfaceMaterial
         bump={0.4}
         color={INSTRUMENT_COLORS.brass}
-        metalness={1}
+        metalness={0.7}
         repeat={[5, 5]}
-        roughness={0.3}
+        roughness={0.36}
         surface="brushed"
       />
     ))
@@ -69,9 +70,9 @@ export function BlockScene({ material }: { readonly material: Material }) {
   return (
     <group>
       <ReadingCamera
-        narrow={[0.6, 2, 4]}
-        target={[0, 0.9, 0]}
-        wide={[0.55, 1.8, 2.6]}
+        narrow={[0.6, 1.9, 4]}
+        target={[0, 0.82, 0]}
+        wide={[0.55, 1.75, 2.95]}
       />
       <Balance
         full={500}

@@ -43,6 +43,35 @@ export function Marks({
 }
 
 /**
+ * The marks a reading is taken at, picked out in the lesson's colour: the
+ * vernier line that meets a main mark, the division on the datum line. They
+ * glow a little, so they read as a pointer laid on the scale and never as
+ * the instrument's own ink.
+ *
+ * @param placements - The marks to pick out, from the scale builders
+ * @param color - The lesson's colour for this part of the reading
+ */
+export function Pointers({
+  color,
+  placements,
+}: {
+  readonly color: string;
+  readonly placements: readonly Placement[];
+}) {
+  return (
+    <Repeat placements={placements} shadows={false}>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial
+        color={color}
+        emissive={color}
+        emissiveIntensity={0.6}
+        roughness={0.5}
+      />
+    </Repeat>
+  );
+}
+
+/**
  * One numeral or legend engraved beside a scale, `height` tall, centred on
  * `at` and lying in the plane its `turn` gives.
  *

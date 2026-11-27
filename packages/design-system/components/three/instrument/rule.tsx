@@ -43,6 +43,7 @@ function stripShape(long: number) {
   return shape;
 }
 
+/** How the strip is cut from its outline: to its thickness, with a fine chamfer. */
 const STRIP_CUT = {
   bevelEnabled: true,
   bevelOffset: -0.12,

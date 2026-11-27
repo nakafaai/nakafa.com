@@ -83,7 +83,7 @@ export function MicrometerScrewLab({
       >
         <ScienceStage floor={0} reach={1.1} setting="lab">
           <Suspense fallback={null}>
-            <GaugeScene thickness={reading} />
+            <GaugeScene sleeve={sleeve} thickness={reading} />
           </Suspense>
         </ScienceStage>
       </VisualCardBody>

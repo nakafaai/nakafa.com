@@ -3,6 +3,7 @@ import { useGlide } from "@repo/design-system/components/three/instrument/glide"
 import {
   Marks,
   Numeral,
+  Pointers,
 } from "@repo/design-system/components/three/instrument/ink";
 import {
   barrelMarks,
@@ -11,7 +12,6 @@ import {
   rimMarks,
 } from "@repo/design-system/components/three/instrument/scale";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
-import { getColor } from "@repo/design-system/lib/color";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -71,6 +71,7 @@ const FRAME_SHAPE = (() => {
   return shape;
 })();
 
+/** How the frame is cut from its outline: to its thickness, with rounded edges. */
 const FRAME_CUT = {
   bevelEnabled: true,
   bevelOffset: -0.9,
@@ -100,6 +101,7 @@ const WHOLE_MARKS = barrelMarks({
   step: 1,
   width: 0.13,
 });
+/** The half millimetres below the datum line. */
 const HALF_MARKS = barrelMarks({
   count: RANGE,
   every: [5, 5],
@@ -121,8 +123,19 @@ const RIM_MARKS = rimMarks({
   width: 0.13,
 });
 
+/** The mark on the datum line where the rim of the thimble is read. */
+const RIM_POINTER = rimMarks({
+  count: 1,
+  every: [5, 5],
+  lengths: [3.6, 3.6, 3.6],
+  radius: EDGE + 0.05,
+  slope: SLOPE,
+  width: 0.3,
+});
+
 /** The numerals of the sleeve, every five millimetres, and of the rim, every five divisions. */
 const SLEEVE_NUMERALS = Arr.makeBy(RANGE / 5 + 1, (index) => index * 5);
+/** The numerals of the rim, every five divisions. */
 const RIM_NUMERALS = Arr.makeBy(DIVISIONS / 5, (index) => index * 5);
 
 /** How far around the sleeve its numerals stand from the datum line. */
@@ -135,7 +148,7 @@ function Chrome({ knurled = false }: { readonly knurled?: boolean }) {
       color={INSTRUMENT_COLORS.satinChrome}
       metalness={1}
       repeat={knurled ? [14, 4] : [3, 1]}
-      roughness={knurled ? 0.36 : 0.34}
+      roughness={knurled ? 0.36 : 0.44}
       surface={knurled ? "knurl" : "brushed"}
     />
   );
@@ -184,20 +197,28 @@ function Turned({
  *
  * @param reading - The gap between the anvil and the spindle, in millimetres
  * @param pitch - How far one turn of the thimble moves the spindle
+ * @param pointed - The two parts of the reading to pick out, each in its colour: the sleeve mark at `sleeve` millimetres and the thimble division on the datum line
  */
 export function Micrometer({
   children,
   pitch = 0.5,
+  pointed,
   reading,
 }: {
   readonly children?: ReactNode;
   readonly pitch?: number;
+  readonly pointed?: {
+    readonly sleeve: readonly [millimetres: number, color: string];
+    readonly thimble: string;
+  };
   readonly reading: number;
 }) {
   const thimble = useRef<Group>(null);
+  const rim = useRef<Group>(null);
 
   useGlide(reading, GLIDE, (travel) => {
     thimble.current?.position.setX(SLEEVE.zero + travel);
+    rim.current?.position.setX(SLEEVE.zero + travel);
     thimble.current?.rotation.set(
       FACING + (travel / pitch) * 2 * Math.PI,
       0,
@@ -242,7 +263,7 @@ export function Micrometer({
         <Numeral
           at={[13, -30, FRAME / 2 + 0.37]}
           height={2.6}
-          ink={getColor("ZINC", 300)}
+          ink={INSTRUMENT_COLORS.caseLegend}
           text="0-25 mm"
         />
         <Turned from={-4.4} radius={SPINDLE} to={-0.9}>
@@ -277,6 +298,26 @@ export function Micrometer({
           ))}
         </group>
         {children}
+        {pointed ? (
+          <group rotation={[FACING, 0, 0]}>
+            <Pointers
+              color={pointed.sleeve[1]}
+              placements={barrelMarks({
+                count: 1,
+                every: [5, 5],
+                lengths: [2.7, 2.7, 2.7],
+                radius: SLEEVE.radius + 0.04,
+                side: Number.isInteger(pointed.sleeve[0]) ? 1 : -1,
+                start: SLEEVE.zero + pointed.sleeve[0],
+                step: 1,
+                width: 0.3,
+              })}
+            />
+            <group ref={rim}>
+              <Pointers color={pointed.thimble} placements={RIM_POINTER} />
+            </group>
+          </group>
+        ) : null}
         <group ref={thimble}>
           <Turned from={-SLEEVE.zero + 0.9} radius={SPINDLE} to={0}>
             <Chrome />

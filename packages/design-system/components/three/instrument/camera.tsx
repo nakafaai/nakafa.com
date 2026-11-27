@@ -2,6 +2,7 @@ import { useThree } from "@react-three/fiber";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 
+/** A place in the scene. */
 type Point = readonly [number, number, number];
 
 /**

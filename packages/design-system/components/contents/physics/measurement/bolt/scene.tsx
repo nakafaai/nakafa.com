@@ -27,6 +27,7 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Match } from "effect";
 
+/** One of the quantities the lab shows. */
 type Quantity = typeof BoltQuantitySchema.Type;
 
 /** The shank's radius, in millimetres. */

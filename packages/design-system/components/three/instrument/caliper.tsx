@@ -3,6 +3,7 @@ import { useGlide } from "@repo/design-system/components/three/instrument/glide"
 import {
   Marks,
   Numeral,
+  Pointers,
 } from "@repo/design-system/components/three/instrument/ink";
 import {
   MILLIMETRE,
@@ -120,8 +121,11 @@ const PLATE_SHAPE = (() => {
   return shape;
 })();
 
+/** How the beam, the jaws and the vernier plate are cut: each to its thickness, with its chamfer. */
 const BEAM_CUT = cut(BEAM.thick, 0.22);
+/** The cut of the sliding jaw and nib. */
 const JAW_CUT = cut(BEAM.thick, 0.22);
+/** The cut of the thin vernier plate. */
 const PLATE_CUT = cut(PLATE, 0.05);
 
 /** The main scale: a mark every millimetre, longer at every fifth and tenth. */
@@ -187,16 +191,22 @@ function Steel() {
  * @param reading - The opening between the jaws, in millimetres
  * @param divisions - How many divisions the vernier has
  * @param hold - Which part stays in place
+ * @param pointed - The two marks of the reading to pick out, each in its colour: the main mark at `main` millimetres and the vernier line `line`
  */
 export function Caliper({
   children,
   divisions = 10,
   hold = "beam",
+  pointed,
   reading,
 }: {
   readonly children?: ReactNode;
   readonly divisions?: number;
   readonly hold?: "beam" | "slide";
+  readonly pointed?: {
+    readonly line: readonly [index: number, color: string];
+    readonly main: readonly [millimetres: number, color: string];
+  };
   readonly reading: number;
 }) {
   const beam = useRef<Group>(null);
@@ -231,6 +241,21 @@ export function Caliper({
           <Steel />
         </mesh>
         <Marks placements={MAIN_MARKS} />
+        {pointed ? (
+          <Pointers
+            color={pointed.main[1]}
+            placements={[
+              {
+                position: [
+                  ZERO + pointed.main[0],
+                  EDGE + 2.2,
+                  BEAM.thick + 0.07,
+                ],
+                scale: [0.3, 4.4, 0.05],
+              },
+            ]}
+          />
+        ) : null}
         {Arr.map(CENTIMETRES, (centimetre) => (
           <Numeral
             at={[ZERO + centimetre * 10, EDGE + 6.3, BEAM.thick + 0.02]}
@@ -309,6 +334,21 @@ export function Caliper({
           <Chrome />
         </RoundedBox>
         <Marks placements={vernier} />
+        {pointed ? (
+          <Pointers
+            color={pointed.line[1]}
+            placements={[
+              {
+                position: [
+                  ZERO + pointed.line[0] * step,
+                  EDGE - 1.5,
+                  BEAM.thick + PLATE + 0.07,
+                ],
+                scale: [0.3, 3, 0.05],
+              },
+            ]}
+          />
+        ) : null}
         <Numeral
           at={[ZERO, EDGE - 4.2, BEAM.thick + PLATE + 0.02]}
           height={1.5}
