@@ -91,4 +91,19 @@ export const BIOLOGY_COLORS = {
   stemPith: "#ebe3c0",
   stemXylem: "#b8323e",
   stemPhloem: "#e5a935",
+
+  // Gametogenesis reproductive tissues, oocyte zona pellucida, and sperm ultrastructure
+  tissuePink: "#d98b88",
+  tissueDeep: "#a65558",
+  tubuleLumen: "#e6c3b0",
+  leydigAmber: "#d99d43",
+  follicleFluid: "#b8dce8",
+  luteumGold: "#d9a93b",
+  zonaPellucida: "#f0e6d2",
+  coronaCell: "#e6b89c",
+  oocyteYolk: "#f5dfb8",
+  acrosomeGold: "#e0a52c",
+  spermHeadBlue: "#4874b5",
+  midpieceCopper: "#c96238",
+  flagellumIvory: "#d8d4c8",
 } as const;

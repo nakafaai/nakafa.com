@@ -1,6 +1,20 @@
 import { useFrame, useThree } from "@react-three/fiber";
+import {
+  CholesterolMolecule,
+  PhospholipidBilayer,
+  WaterMolecules,
+} from "@repo/design-system/components/contents/biology/bilayer";
+import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
+import {
+  GlycanChain,
+  TransmembraneChannel,
+} from "@repo/design-system/components/contents/biology/membrane";
 import type { MembraneComponent } from "@repo/design-system/components/contents/biology/mosaic/model";
 import { evaluateMembraneFluidity } from "@repo/design-system/components/contents/biology/mosaic/model";
+import {
+  BiologyBenchSurface,
+  SpecimenPedestal,
+} from "@repo/design-system/components/contents/biology/workbench";
 import {
   SimulationTicker,
   simulationStep,
@@ -8,11 +22,27 @@ import {
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
+import {
+  useVisualReset,
+  useVisualScene,
+  useVisualStop,
+} from "@repo/design-system/components/visual/card";
 import { HOMEOSTASIS_COLORS } from "@repo/design-system/lib/material/homeostasis";
-import { Array as Arr } from "effect";
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 import type { Group } from "three";
+
+const PROTEIN_CUTOUT = [{ radius: 0.28, x: 0, z: 0 }] as const;
+
+const AQUEOUS_WATER: readonly (readonly [number, number, number])[] = [
+  [-0.96, 1.06, 0.14],
+  [-0.44, 1.12, -0.18],
+  [0.64, 1.08, 0.22],
+  [1.04, 1.02, -0.1],
+  [-0.86, 0.18, 0.18],
+  [-0.24, 0.16, -0.14],
+  [0.54, 0.18, 0.2],
+  [0.98, 0.2, -0.12],
+];
 
 function MosaicCamera() {
   const narrow = isNarrowThreeScene(
@@ -21,10 +51,10 @@ function MosaicCamera() {
   );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0, 1.6, 3.4] : [0, 1.35, 2.75]}
-      cameraTarget={[0, 0.56, 0]}
+      cameraPosition={narrow ? [0, 1.66, 3.85] : [0, 1.38, 3.28]}
+      cameraTarget={[0, 0.62, 0]}
       fov={38}
-      maxDistance={5.8}
+      maxDistance={6.2}
       minDistance={1.4}
     />
   );
@@ -50,18 +80,22 @@ export function FluidMosaicScene({
   readonly temperatureC: number;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
+  const invalidate = useThree((state) => state.invalidate);
+  const ink = useLabelInk();
   const bilayerRef = useRef<Group>(null);
   const phaseRef = useRef(0);
   const fluidity = evaluateMembraneFluidity(temperatureC);
 
-  const phospholipids = useMemo(
-    () =>
-      Arr.makeBy(10, (index) => ({
-        id: `pl-${index}`,
-        x: -1.08 + index * 0.24,
-      })),
-    []
-  );
+  const rewind = () => {
+    phaseRef.current = 0;
+    if (bilayerRef.current !== null) {
+      bilayerRef.current.position.set(0, 0, 0);
+    }
+    invalidate();
+  };
+
+  useVisualStop(rewind);
+  useVisualReset(rewind);
 
   useFrame((_, delta) => {
     if (!playing || bilayerRef.current === null) {
@@ -70,157 +104,125 @@ export function FluidMosaicScene({
     phaseRef.current += simulationStep(delta) * fluidity.lateralWaveSpeed;
     bilayerRef.current.position.x =
       Math.sin(phaseRef.current) * fluidity.lateralWaveAmplitude;
+    bilayerRef.current.position.y =
+      Math.cos(phaseRef.current * 1.4) * fluidity.lateralWaveAmplitude * 0.35;
   });
 
-  const highlight = (target: MembraneComponent) =>
-    component === target ? 1 : 0.52;
+  const focusOpacity = (target: MembraneComponent) =>
+    component === target ? 1 : 0.42;
 
   return (
     <group>
       <SimulationTicker running={playing} />
       <MosaicCamera />
+      <BiologyBenchSurface radius={14} y={0} />
+      <SpecimenPedestal depth={0.94} height={0.055} width={2.48} />
+
       <group ref={bilayerRef}>
-        {/* Phospholipid bilayer */}
-        {Arr.map(phospholipids, (unit) => (
-          <group key={unit.id} position={[unit.x, 0.54, 0]}>
-            <mesh position={[0, 0.17, 0]}>
-              <sphereGeometry args={[0.068, 12, 10]} />
-              <meshStandardMaterial
-                color={HOMEOSTASIS_COLORS.bilayerHead}
-                opacity={highlight("phospholipid")}
-                roughness={0.4}
-                transparent
-              />
-            </mesh>
-            <mesh position={[0, -0.17, 0]}>
-              <sphereGeometry args={[0.068, 12, 10]} />
-              <meshStandardMaterial
-                color={HOMEOSTASIS_COLORS.bilayerHead}
-                opacity={highlight("phospholipid")}
-                roughness={0.4}
-                transparent
-              />
-            </mesh>
-            <mesh position={[-0.02, 0, 0]}>
-              <cylinderGeometry args={[0.015, 0.015, 0.26, 8]} />
-              <meshStandardMaterial
-                color={HOMEOSTASIS_COLORS.bilayerTail}
-                opacity={highlight("phospholipid")}
-                transparent
-              />
-            </mesh>
-            <mesh position={[0.02, 0, 0]}>
-              <cylinderGeometry args={[0.015, 0.015, 0.26, 8]} />
-              <meshStandardMaterial
-                color={HOMEOSTASIS_COLORS.bilayerTail}
-                opacity={highlight("phospholipid")}
-                transparent
-              />
-            </mesh>
-          </group>
-        ))}
+        {/* High-detail 3D multi-row amphipathic phospholipid bilayer */}
+        <PhospholipidBilayer
+          cols={11}
+          cutouts={PROTEIN_CUTOUT}
+          opacity={focusOpacity("phospholipid")}
+          rows={3}
+          spacingX={0.21}
+          spacingZ={0.2}
+          yCenter={0.62}
+        />
 
-        {/* Cholesterol rings nestled between hydrophobic tails */}
-        <mesh castShadow position={[-0.48, 0.54, 0.08]}>
-          <boxGeometry args={[0.09, 0.22, 0.09]} />
-          <meshStandardMaterial
-            color={HOMEOSTASIS_COLORS.cholesterol}
-            opacity={highlight("cholesterol")}
-            roughness={0.35}
-            transparent
-          />
-        </mesh>
-        <mesh castShadow position={[0.48, 0.54, 0.08]}>
-          <boxGeometry args={[0.09, 0.22, 0.09]} />
-          <meshStandardMaterial
-            color={HOMEOSTASIS_COLORS.cholesterol}
-            opacity={highlight("cholesterol")}
-            roughness={0.35}
-            transparent
-          />
-        </mesh>
+        {/* Planar 4-ring cholesterol molecules tucked between hydrophobic tails */}
+        <CholesterolMolecule
+          opacity={focusOpacity("cholesterol")}
+          position={[-0.52, 0.65, 0.24]}
+          rotation={[0.08, 0.25, 0.06]}
+        />
+        <CholesterolMolecule
+          opacity={focusOpacity("cholesterol")}
+          position={[0.54, 0.6, 0.22]}
+          rotation={[-0.06, -0.32, -0.05]}
+        />
+        <CholesterolMolecule
+          opacity={focusOpacity("cholesterol")}
+          position={[-0.78, 0.59, -0.12]}
+          rotation={[0.05, 0.18, -0.08]}
+        />
 
-        {/* Transmembrane integral protein */}
-        <mesh castShadow position={[0, 0.54, 0]}>
-          <cylinderGeometry args={[0.17, 0.17, 0.56, 20]} />
-          <meshStandardMaterial
-            color={HOMEOSTASIS_COLORS.channelProtein}
-            opacity={highlight("integralProtein")}
-            roughness={0.38}
-            transparent
-          />
-        </mesh>
+        {/* Sculpted 6-helix transmembrane integral channel protein */}
+        <TransmembraneChannel
+          accentColor={HOMEOSTASIS_COLORS.helixBeta}
+          color={HOMEOSTASIS_COLORS.helixAlpha}
+          height={0.62}
+          opacity={focusOpacity("integralProtein")}
+          position={[0, 0.62, 0]}
+          radius={0.165}
+        />
 
-        {/* Glycoprotein carbohydrate antenna on integral protein */}
-        <group position={[0.06, 0.9, 0]}>
-          <mesh position={[0, 0, 0]}>
-            <octahedronGeometry args={[0.055, 0]} />
-            <meshStandardMaterial
-              color={HOMEOSTASIS_COLORS.glycoprotein}
-              opacity={highlight("glycoprotein")}
-              transparent
-            />
-          </mesh>
-          <mesh position={[0.09, 0.08, 0]}>
-            <octahedronGeometry args={[0.05, 0]} />
-            <meshStandardMaterial
-              color={HOMEOSTASIS_COLORS.glycoprotein}
-              opacity={highlight("glycoprotein")}
-              transparent
-            />
-          </mesh>
-        </group>
+        {/* Branched glycoprotein oligosaccharide chain on integral protein */}
+        <GlycanChain
+          branched
+          color={HOMEOSTASIS_COLORS.glycanHex}
+          opacity={focusOpacity("glycoprotein")}
+          position={[0.06, 0.94, 0.04]}
+        />
 
-        {/* Glycolipid chain on outer phospholipid head */}
-        <mesh position={[-0.84, 0.84, 0]}>
-          <octahedronGeometry args={[0.052, 0]} />
-          <meshStandardMaterial
-            color={HOMEOSTASIS_COLORS.glycolipid}
-            roughness={0.35}
-          />
-        </mesh>
+        {/* Glycolipid carbohydrate antenna anchored to an outer phospholipid head */}
+        <GlycanChain
+          branched={false}
+          color={HOMEOSTASIS_COLORS.glycanBranch}
+          opacity={focusOpacity("glycoprotein")}
+          position={[-0.84, 0.88, 0.12]}
+        />
+
+        {/* Surrounding aqueous water molecules */}
+        <WaterMolecules positions={AQUEOUS_WATER} />
       </group>
 
-      {/* Labels */}
+      {/* Non-overlapping adaptive-ink labels */}
       <ThreeLabel
-        color={HOMEOSTASIS_COLORS.labelInk}
+        anchorY="bottom"
+        color={ink}
         fontSize="compact"
-        position={[-1.0, 1.02, 0]}
+        position={[-0.86, 1.18, 0.12]}
       >
         <span>{parts.glycolipid}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={HOMEOSTASIS_COLORS.labelInk}
+        anchorY="bottom"
+        color={ink}
         fontSize="compact"
-        position={[0.28, 1.12, 0]}
+        position={[0.16, 1.28, 0.05]}
       >
         <span>{parts.glycoprotein}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={HOMEOSTASIS_COLORS.labelInk}
+        anchorY="bottom"
+        color={ink}
         fontSize="compact"
-        position={[0.88, 0.92, 0]}
+        position={[0.88, 1.0, 0.12]}
       >
         <span>{parts.hydrophilicHead}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={HOMEOSTASIS_COLORS.labelInk}
+        anchorY="top"
+        color={ink}
         fontSize="compact"
-        position={[0.88, 0.54, 0.2]}
+        position={[0.88, 0.24, 0.28]}
       >
         <span>{parts.hydrophobicTail}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={HOMEOSTASIS_COLORS.labelInk}
+        anchorY="top"
+        color={ink}
         fontSize="compact"
-        position={[-0.68, 0.2, 0.22]}
+        position={[-0.66, 0.24, 0.34]}
       >
         <span>{parts.cholesterol}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={HOMEOSTASIS_COLORS.labelInk}
+        anchorY="top"
+        color={ink}
         fontSize="compact"
-        position={[0.08, 0.14, 0.24]}
+        position={[0.04, 0.18, 0.36]}
       >
         <span>{parts.integralProtein}</span>
       </ThreeLabel>
