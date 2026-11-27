@@ -9,6 +9,7 @@ describe("surfaceMaps", () => {
     expect(surfaceMaps("paint")).toBe(first);
     expect(first.tone.wrapS).toBe(RepeatWrapping);
     expect(first.tone.colorSpace).toBe(SRGBColorSpace);
-    expect(first.roughness.colorSpace).not.toBe(SRGBColorSpace);
+    expect(first.finish.colorSpace).not.toBe(SRGBColorSpace);
+    expect(first.normal.colorSpace).not.toBe(SRGBColorSpace);
   });
 });

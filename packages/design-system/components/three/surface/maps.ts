@@ -23,7 +23,7 @@ function tileTexture(pixels: Uint8ClampedArray, color: boolean) {
   texture.magFilter = LinearFilter;
   texture.minFilter = LinearMipmapLinearFilter;
   texture.generateMipmaps = true;
-  texture.anisotropy = 4;
+  texture.anisotropy = 8;
   if (color) {
     texture.colorSpace = SRGBColorSpace;
   }
@@ -31,21 +31,21 @@ function tileTexture(pixels: Uint8ClampedArray, color: boolean) {
   return texture;
 }
 
-/** Paints one surface's tone, roughness and relief tiles. */
+/** Paints one surface's tone, normal and finish tiles. */
 function paintMaps(surface: Surface) {
-  const { height, roughness, tone } = paintDetail(surface, TILE);
+  const { finish, normal, tone } = paintDetail(surface, TILE);
   return {
-    bump: tileTexture(height, false),
-    roughness: tileTexture(roughness, false),
+    finish: tileTexture(finish, false),
+    normal: tileTexture(normal, false),
     tone: tileTexture(tone, true),
   };
 }
 
 /**
  * The detail textures of one surface, painted once and then shared: its tone
- * multiplies an object's colour, its roughness map varies the shine, and its
- * relief bumps the light. Each tile repeats, so a material sets its own
- * repeat on a clone that shares the painted image.
+ * multiplies an object's colour, its normals bend the light over its relief,
+ * and its finish varies the shine and shades its pits. Each tile repeats, so
+ * a material sets its own repeat on a clone that shares the painted image.
  */
 export function surfaceMaps(surface: Surface) {
   const known = MutableHashMap.get(PAINTED, surface);
