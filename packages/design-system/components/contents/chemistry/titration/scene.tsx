@@ -11,6 +11,10 @@ import {
   Stand,
 } from "@repo/design-system/components/three/apparatus/stand";
 import {
+  TILE_HEIGHT,
+  Tile,
+} from "@repo/design-system/components/three/apparatus/tile";
+import {
   BURETTE,
   meniscusOf,
 } from "@repo/design-system/components/three/apparatus/tube";
@@ -18,8 +22,6 @@ import { Vessel } from "@repo/design-system/components/three/apparatus/vessel";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 
 /** The burette's capacity in cm³. */
@@ -35,9 +37,6 @@ const TIP_END = 0.154;
 const ROD = [-0.11, -0.04] as const;
 const ROD_HEIGHT = 0.72;
 const GRIP = 0.62;
-
-/** The white tile on the stand's base that the flask stands on, so its colour reads against white. */
-const TILE_HEIGHT = 0.006;
 
 /**
  * What the camera frames, in metres: the stand's base, the tile and the
@@ -101,20 +100,9 @@ export function TitrationScene({
           holds={[{ at: [0, GRIP, AXIS_Z], radius: BURETTE.radius }]}
         />
         <group position={[0, 0, AXIS_Z]}>
-          <mesh
-            castShadow
-            position={[0, STAND_TOP + TILE_HEIGHT / 2, 0]}
-            receiveShadow
-          >
-            <boxGeometry args={[0.11, TILE_HEIGHT, 0.11]} />
-            <SurfaceMaterial
-              coat={0.7}
-              color={BENCH_COLORS.ceramicTile}
-              repeat={[2, 2]}
-              roughness={0.4}
-              surface="ceramic"
-            />
-          </mesh>
+          <group position={[0, STAND_TOP, 0]}>
+            <Tile side={0.11} />
+          </group>
           <group position={[0, STAND_TOP + TILE_HEIGHT, 0]}>
             <Vessel
               capacity={250}

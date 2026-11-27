@@ -1,3 +1,4 @@
+import { SaltBridge } from "@repo/design-system/components/three/apparatus/bridge";
 import { Lead } from "@repo/design-system/components/three/apparatus/lead";
 import {
   METER_POSTS,
@@ -6,16 +7,13 @@ import {
 import type { Lead as LeadAsk } from "@repo/design-system/components/three/apparatus/route";
 import { routeOf } from "@repo/design-system/components/three/apparatus/route";
 import {
-  Borosilicate,
-  Vessel,
-} from "@repo/design-system/components/three/apparatus/vessel";
-import { Sweep } from "@repo/design-system/components/three/form/part";
+  TILE_HEIGHT,
+  Tile,
+} from "@repo/design-system/components/three/apparatus/tile";
+import { Vessel } from "@repo/design-system/components/three/apparatus/vessel";
 import type { Path } from "@repo/design-system/components/three/form/path";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { LABWARE_COLORS } from "@repo/design-system/lib/material/labware";
-import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
-import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
 import { ExtrudeGeometry, Shape } from "three";
 
@@ -29,8 +27,6 @@ export const CATHODE_X = RIGHT_BEAKER_X + 0.02;
 export const METER_Z = 0.2;
 const METER_SCALE = 1.2;
 
-/** The ceramic tile each beaker stands on, and the height of an electrode's top edge, where its lead clips on. */
-const TILE = 0.008;
 const PLATE = { half: 0.055, middle: 0.083 } as const;
 const PLATE_TOP = PLATE.middle + PLATE.half;
 
@@ -111,17 +107,8 @@ export function HalfCellBeaker({
 }) {
   return (
     <group position={[x, 0, BEAKER_Z]}>
-      <mesh castShadow position={[0, TILE / 2, 0]} receiveShadow>
-        <boxGeometry args={[0.126, TILE, 0.126]} />
-        <SurfaceMaterial
-          coat={0.7}
-          color={BENCH_COLORS.ceramicTile}
-          repeat={[2, 2]}
-          roughness={0.4}
-          surface="ceramic"
-        />
-      </mesh>
-      <group position={[0, TILE, 0]}>
+      <Tile side={0.126} />
+      <group position={[0, TILE_HEIGHT, 0]}>
         <Vessel
           capacity={400}
           holds={{ color: liquidColor, strength, volume: 250 }}
@@ -163,36 +150,7 @@ export function ElectrodeAssembly({
 
 /** Curved borosilicate inverted U-tube salt bridge with inner KNO3 agar gel and cotton-wool plugs. */
 export function InvertedUTubeBridge() {
-  return (
-    <group>
-      <mesh renderOrder={1}>
-        <Sweep path={SALT_BRIDGE} radius={0.0074} />
-        <meshPhysicalMaterial
-          color={PROCESS_COLORS.saltBridgeWhite}
-          depthWrite={false}
-          opacity={0.5}
-          roughness={0.5}
-          transparent
-        />
-      </mesh>
-      <mesh castShadow renderOrder={2}>
-        <Sweep ends="open" path={SALT_BRIDGE} radius={0.0096} />
-        <Borosilicate />
-      </mesh>
-      {Arr.map([LEFT_LEG, RIGHT_LEG] as const, (tipX) => (
-        <mesh key={tipX} position={[tipX, 0.046, BEAKER_Z]} scale={[1, 1.5, 1]}>
-          <sphereGeometry args={[0.0078, 20, 14]} />
-          <SurfaceMaterial
-            bump={1}
-            color={PROCESS_COLORS.ceramicIvory}
-            repeat={[2, 2]}
-            roughness={1}
-            surface="cloth"
-          />
-        </mesh>
-      ))}
-    </group>
-  );
+  return <SaltBridge path={SALT_BRIDGE} radius={0.0096} />;
 }
 
 /**

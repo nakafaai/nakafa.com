@@ -13,19 +13,17 @@ import { getElectrolysisColors } from "@repo/design-system/components/contents/c
 import type { Metal } from "@repo/design-system/components/contents/chemistry/voltaic/cell";
 import { halfCell } from "@repo/design-system/components/contents/chemistry/voltaic/cell";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { SaltBridge } from "@repo/design-system/components/three/apparatus/bridge";
 import { Lead } from "@repo/design-system/components/three/apparatus/lead";
 import {
   METER_POSTS,
   Readout,
 } from "@repo/design-system/components/three/apparatus/meter";
 import type { Lead as LeadAsk } from "@repo/design-system/components/three/apparatus/route";
-import { Borosilicate } from "@repo/design-system/components/three/apparatus/vessel";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
-import { Sweep } from "@repo/design-system/components/three/form/part";
 import type { Path } from "@repo/design-system/components/three/form/path";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { getColor } from "@repo/design-system/lib/color";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
@@ -140,7 +138,7 @@ export function ChemicalCellScene({
         <CameraBounds bounds={FRAME}>
           <group scale={BENCH}>
             {children}
-            <SaltBridge />
+            <SaltBridge path={BRIDGE} radius={BRIDGE_RADIUS} />
           </group>
           <group position={METER.at} scale={METER.scale}>
             <Readout
@@ -237,41 +235,3 @@ const BRIDGE: Path = {
     [BRIDGE_X, BRIDGE_DIP, 0],
   ],
 };
-
-/**
- * A salt bridge: an inverted glass U-tube bent in two smooth elbows, filled
- * with pale agar jelly of potassium nitrate and stopped with a cotton plug
- * at each end, a leg dipping into the solution of each beaker.
- */
-function SaltBridge() {
-  return (
-    <group>
-      <mesh renderOrder={1}>
-        <Sweep path={BRIDGE} radius={BRIDGE_RADIUS * 0.78} />
-        <meshPhysicalMaterial
-          color={BENCH_COLORS.agar}
-          depthWrite={false}
-          opacity={0.6}
-          roughness={0.5}
-          transparent
-        />
-      </mesh>
-      <mesh castShadow renderOrder={2}>
-        <Sweep ends="open" path={BRIDGE} radius={BRIDGE_RADIUS} />
-        <Borosilicate />
-      </mesh>
-      {Arr.map([-BRIDGE_X, BRIDGE_X], (x) => (
-        <mesh key={x} position={[x, BRIDGE_DIP + 0.03, 0]} scale={[1, 1.5, 1]}>
-          <sphereGeometry args={[BRIDGE_RADIUS * 0.8, 24, 16]} />
-          <SurfaceMaterial
-            bump={1}
-            color={BENCH_COLORS.ptfe}
-            repeat={[2, 2]}
-            roughness={1}
-            surface="cloth"
-          />
-        </mesh>
-      ))}
-    </group>
-  );
-}

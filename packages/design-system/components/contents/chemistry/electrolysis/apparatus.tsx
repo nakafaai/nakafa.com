@@ -11,6 +11,7 @@ import {
   BENCH_LABEL_OUTLINE,
 } from "@repo/design-system/components/contents/chemistry/label";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { Bubble } from "@repo/design-system/components/three/apparatus/bubble";
 import {
   boreAt,
   levelOf,
@@ -188,19 +189,7 @@ export function Bubbles({ color }: { readonly color: string }) {
     <CameraBounds exclude>
       <group ref={group}>
         {Arr.map(BUBBLES, (radius, index) => (
-          <mesh key={String(index)}>
-            <sphereGeometry args={[radius, 16, 12]} />
-            <meshPhysicalMaterial
-              clearcoat={1}
-              clearcoatRoughness={0.05}
-              color={color}
-              depthWrite={false}
-              ior={1.333}
-              opacity={0.34}
-              roughness={0.04}
-              transparent
-            />
-          </mesh>
+          <Bubble color={color} key={String(index)} radius={radius} />
         ))}
       </group>
     </CameraBounds>

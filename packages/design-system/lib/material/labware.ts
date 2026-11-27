@@ -44,6 +44,11 @@ export const LABWARE_COLORS = {
   packPanel: "#22262b",
   // The white PTFE of a burette's stopcock key.
   ptfe: "#f1f0ea",
+  // The pale agar jelly of a salt bridge and the cotton wool that plugs it.
+  agar: "#efe7cf",
+  cotton: "#f3f1ea",
+  // The glaze of a white tile.
+  tile: "#e4ddd2",
   // The red rubber of tubing and a bung, and the black rubber of a foot.
   rubber: "#17181a",
   rubberRed: "#8f3a2c",
