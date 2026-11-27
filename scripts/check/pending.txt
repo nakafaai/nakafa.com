@@ -201,10 +201,8 @@ packages/design-system/components/contents/physics/kinematics/vacuum
 packages/design-system/components/contents/physics/kinematics/velocity-speed
 packages/design-system/components/contents/physics/kinematics/vertical-movement
 packages/design-system/components/contents/physics/kinematics/wheel
-packages/design-system/components/contents/physics/measurement/bolt
 packages/design-system/components/contents/physics/measurement/density
 packages/design-system/components/contents/physics/measurement/dimension
-packages/design-system/components/contents/physics/measurement/micrometer
 packages/design-system/components/contents/physics/measurement/stopwatch
 packages/design-system/components/contents/physics/measurement/tools
 packages/design-system/components/contents/physics/measurement/vernier
