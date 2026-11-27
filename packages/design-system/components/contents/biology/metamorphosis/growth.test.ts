@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   clampTime,
   growthAt,
-  lengthCurvePoints,
+  growthRecord,
 } from "@repo/design-system/components/contents/biology/metamorphosis/growth";
 
 describe("clampTime and growthAt", () => {
@@ -29,9 +29,14 @@ describe("clampTime and growthAt", () => {
   });
 });
 
-describe("lengthCurvePoints", () => {
-  it("produces 36 stepped curve vertices for both insects", () => {
-    expect(lengthCurvePoints("grasshopper")).toHaveLength(36);
-    expect(lengthCurvePoints("butterfly")).toHaveLength(36);
+describe("growthRecord", () => {
+  it("records length in steps and mass between them at every percent of the life cycle", () => {
+    const record = growthRecord("grasshopper");
+    expect(record).toHaveLength(101);
+    expect(record[0]).toStrictEqual({ length: 5, mass: 8, x: 0 });
+    expect(record[100]).toStrictEqual({ length: 42, mass: 928, x: 100 });
+    expect(record[20]?.length).toBe(record[21]?.length);
+    expect(record[21]?.mass).toBeGreaterThan(record[20]?.mass ?? 0);
+    expect(growthRecord("butterfly")[100]?.length).toBe(32);
   });
 });

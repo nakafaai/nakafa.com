@@ -27,3 +27,83 @@ Open-Source 3D Fauna Reference Models
    License: Creative Commons Zero v1.0 Universal (CC0-1.0)
    License URL: https://creativecommons.org/publicdomain/zero/1.0/
    Processing: Stripped unused skins, animations, JOINTS_0, WEIGHTS_0, then gltf-transform dedup, flatten, weld, prune
+
+5. cc0-migratory-locust.glb
+   Title: Migratory Locust, Locusta migratoria, male (ffish.asia / floraZia.com photogrammetry scan)
+   Source: https://sketchfab.com/3d-models/cc0-migratory-locust-l-migratoria-b63750b883b446358265beca24b566bf
+   License: Creative Commons Zero v1.0 Universal (CC0-1.0)
+   License URL: https://creativecommons.org/publicdomain/zero/1.0/
+   Processing: gltf-transform: removed the colour-chart cube, unlit to PBR, weld, simplify (33k triangles), quantize, 1024px WebP texture
+
+6. ccby-monarch-butterfly.glb
+   Title: Monarch Butterfly, Virginia Tech Insect Collection, catalogue VTU_ESC_000004
+   Author: Photos and model by Maureen Saverot, University Libraries at Virginia Tech, Department of Entomology
+   Source: https://sketchfab.com/3d-models/monarch-butterfly-3a5fc9a496cb402297ffdb6700d2ab60
+   License: Creative Commons Attribution 4.0 International (CC-BY-4.0)
+   License URL: https://creativecommons.org/licenses/by/4.0/
+   Processing: gltf-transform: unlit to PBR, weld, simplify (27k triangles), quantize, 1024px WebP texture
+
+7. cc0-housefly.glb
+   Title: Musca domestica, house fly (DISC3D scan)
+   Author: Digital Archive of Natural History (DiNArDa)
+   Source: https://sketchfab.com/3d-models/musca-domestica-157900941156422fbd9dcdfc38a3be19
+   License: Creative Commons Zero v1.0 Universal (CC0-1.0)
+   License URL: https://creativecommons.org/publicdomain/zero/1.0/
+   Processing: gltf-transform: specular-glossiness to metal-rough, weld, simplify (12k triangles), quantize, 512px WebP texture
+
+8. ccby-pitcher-plant.glb
+   Title: White-topped Pitcher plant, Sarracenia leucophylla
+   Author: Libraries of Life; 3-D imaging by Austin Mast, Harold Mast and Anne Basham
+   Source: https://sketchfab.com/3d-models/white-topped-pitcher-plant-639d6edef0ca4f8897fe6dd994ca5d73
+   License: Creative Commons Attribution 4.0 International (CC-BY-4.0)
+   License URL: https://creativecommons.org/licenses/by/4.0/
+   Processing: gltf-transform: weld, quantize, 1024px WebP texture
+
+9. ccby-moth-orchid.glb
+   Title: Orchid, Phalaenopsis flower spike
+   Author: Rigsters
+   Source: https://sketchfab.com/3d-models/orchid-ed453cd6b12f4dfa8d4f3dcf68c97cf1
+   License: Creative Commons Attribution 4.0 International (CC-BY-4.0)
+   License URL: https://creativecommons.org/licenses/by/4.0/
+   Processing: gltf-transform: base colour only, opaque, weld, simplify (22k triangles), quantize, 1024px WebP texture
+
+
+10. ccby-tiger.glb
+   Title: tiger walk v02
+   Author: shahabahmed
+   Source: https://sketchfab.com/3d-models/733afd855f5d4c378f041cc89e231770
+   License: Creative Commons Attribution 4.0 International (CC-BY-4.0)
+   License URL: https://creativecommons.org/licenses/by/4.0/
+   Processing: gltf-transform: animation removed (rig kept in its first pose), alpha mask, weld, quantize, 1024px WebP texture
+
+11. ccby-leopard.glb
+   Title: leopard
+   Author: dinomaster
+   Source: https://sketchfab.com/3d-models/2528ea73ca62461c9b300a1ff216521e
+   License: Creative Commons Attribution 4.0 International (CC-BY-4.0)
+   License URL: https://creativecommons.org/licenses/by/4.0/
+   Processing: Changed. The base colour texture is replaced by a coat painted in code from each surface point (golden fur, broken black rosettes, white underside); then gltf-transform join, weld, quantize, 1024px WebP texture
+
+12. ccby-leopard-cat.glb
+   Title: leopard
+   Author: dinomaster
+   Source: https://sketchfab.com/3d-models/2528ea73ca62461c9b300a1ff216521e
+   License: Creative Commons Attribution 4.0 International (CC-BY-4.0)
+   License URL: https://creativecommons.org/licenses/by/4.0/
+   Processing: Changed. The same mesh with a leopard cat coat painted in code (tawny fur, solid black spots, striped crown, white underside); then gltf-transform join, weld, quantize, 1024px WebP texture
+
+13. ccby-sun-bear.glb
+   Title: Bear
+   Author: Nyilonelycompany
+   Source: https://sketchfab.com/3d-models/ce0d5eb86cf5459bb6bd20244cb44b27
+   License: Creative Commons Attribution 4.0 International (CC-BY-4.0)
+   License URL: https://creativecommons.org/licenses/by/4.0/
+   Processing: Changed. The brown fur texture is recoloured in code to a sun bear coat (black fur keeping the fur detail, pale muzzle, ochre chest crescent); the rig is baked into its standing pose and removed; then gltf-transform weld, quantize, 1024px WebP texture
+
+14. ccby-malayan-tapir.glb
+   Title: Baby Tapir
+   Author: pandalog
+   Source: https://sketchfab.com/3d-models/eb47c254025943f1b234355d368f8611
+   License: Creative Commons Attribution 4.0 International (CC-BY-4.0)
+   License URL: https://creativecommons.org/licenses/by/4.0/
+   Processing: Changed. The calf's striped texture is replaced by the adult Malayan tapir coat painted in code (black head, shoulders and legs, white saddle, white ear rims); then gltf-transform join, weld, quantize, 1024px WebP texture

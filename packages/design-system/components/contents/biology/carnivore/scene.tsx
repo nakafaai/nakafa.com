@@ -1,16 +1,17 @@
+import { useGLTF } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
+import {
+  CC0_HOUSEFLY_ASSET,
+  CCBY_MOTH_ORCHID_ASSET,
+  CCBY_PITCHER_PLANT_ASSET,
+} from "@repo/design-system/components/contents/biology/assets";
 import type { SpecialNutritionMode } from "@repo/design-system/components/contents/biology/carnivore/model";
 import { evaluateSpecialNutrition } from "@repo/design-system/components/contents/biology/carnivore/model";
 import { useCarnivoreGeometries } from "@repo/design-system/components/contents/biology/carnivore/specimens";
-import { usePitcherTextures } from "@repo/design-system/components/contents/biology/carnivore/textures";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
-import { HoverflyPrey } from "@repo/design-system/components/contents/biology/entomology";
-import {
-  useLeafTextures,
-  usePetalTextures,
-  useStemTextures,
-} from "@repo/design-system/components/contents/biology/foliage";
+import { useLeafTextures } from "@repo/design-system/components/contents/biology/foliage";
 import { BotanicalPot } from "@repo/design-system/components/contents/biology/planter";
+import { LivingSpecimen } from "@repo/design-system/components/contents/biology/specimen";
 import {
   SimulationTicker,
   simulationStep,
@@ -31,13 +32,15 @@ import { useRef } from "react";
 import type { Group } from "three";
 import { DoubleSide } from "three";
 
-const INSECT_HOME = [0.46, 1.3, 0.16] as const;
+const INSECT_HOME = [0.36, 1.52, 0.16] as const;
+/** Where the tallest pitcher opens, the point the fly spirals down to. */
+const TRAP_MOUTH = [0.08, 1.2, 0.02] as const;
 
-const BASAL_LEAVES = [
-  { id: "bl1", rot: [0.1, 2.85, 0.22] as const, scale: 1.02 },
-  { id: "bl2", rot: [0.14, 1.65, 0.3] as const, scale: 0.9 },
-  { id: "bl3", rot: [0.12, -2.25, 0.26] as const, scale: 0.86 },
-  { id: "bl4", rot: [0.16, -0.75, 0.34] as const, scale: 0.78 },
+/** Three pitchers of one clump, each a trap leaf rising from the rhizome and leaning its own way. */
+const TRUMPETS = [
+  { at: [0.02, 0.02], extent: 1.04, id: "t1", lean: [0.04, -0.07], yaw: 0.3 },
+  { at: [-0.09, 0.05], extent: 0.8, id: "t2", lean: [0.16, 0.22], yaw: 2.3 },
+  { at: [0.04, -0.09], extent: 0.66, id: "t3", lean: [-0.24, -0.2], yaw: 4.2 },
 ] as const;
 
 const HAUSTORIA_OFFSETS = [
@@ -46,7 +49,6 @@ const HAUSTORIA_OFFSETS = [
 ] as const;
 
 const ORCHID_LEAF_ANGLES = [-2.5, -1.7, -0.8, 0.35, 1.35, 2.3] as const;
-const ORCHID_PETAL_ANGLES = [0, 1.25, 2.5, 3.75, 5.0] as const;
 
 function CarnivoreCamera() {
   const narrow = isNarrowThreeScene(
@@ -65,11 +67,9 @@ function CarnivoreCamera() {
 }
 
 function PitcherSpecimen({
-  geos,
   insectLabel,
   trapLabel,
 }: {
-  readonly geos: ReturnType<typeof useCarnivoreGeometries>;
   readonly insectLabel: string;
   readonly trapLabel: string;
 }) {
@@ -77,9 +77,6 @@ function PitcherSpecimen({
   const ink = useLabelInk();
   const insectRef = useRef<Group>(null);
   const phaseRef = useRef(0);
-  const pitcherTex = usePitcherTextures();
-  const leafTex = useLeafTextures("healthy");
-  const stemTex = useStemTextures();
 
   const resetInsect = () => {
     phaseRef.current = 0;
@@ -100,140 +97,50 @@ function PitcherSpecimen({
     if (!playing || insectRef.current === null) {
       return;
     }
-    phaseRef.current += simulationStep(delta) * 0.95;
+    phaseRef.current += simulationStep(delta) * 0.32;
     const t = phaseRef.current % 1;
-    const angle = t * Math.PI * 2;
-    const hoverX = 0.24 + Math.cos(angle) * 0.22;
-    const hoverY = 1.28 - t * 0.48 + Math.sin(angle * 2) * 0.03;
-    const hoverZ = 0.1 + Math.sin(angle) * 0.14;
-    insectRef.current.position.set(hoverX, hoverY, hoverZ);
-    insectRef.current.rotation.set(0.1, -angle - Math.PI * 0.65, 0.06);
+    const angle = t * Math.PI * 6;
+    const reach = 0.3 * (1 - t * 0.82);
+    insectRef.current.position.set(
+      TRAP_MOUTH[0] + Math.cos(angle) * reach,
+      INSECT_HOME[1] - t * (INSECT_HOME[1] - TRAP_MOUTH[1]),
+      TRAP_MOUTH[2] + Math.sin(angle) * reach
+    );
+    insectRef.current.rotation.set(0.1, -angle - Math.PI / 2, 0.06);
   });
 
   return (
     <group>
-      <group position={[-0.24, 0, -0.04]}>
-        <BotanicalPot height={0.28} mossy seed={11} topRadius={0.28} />
-        <group position={[0, 0.26, 0]}>
-          {Arr.map(BASAL_LEAVES, (lf) => (
-            <mesh
-              castShadow
-              geometry={geos.basalLeaf}
-              key={lf.id}
-              receiveShadow
-              rotation={[lf.rot[0], lf.rot[1], lf.rot[2]]}
-              scale={lf.scale}
-            >
-              <meshPhysicalMaterial
-                bumpMap={leafTex.bumpMap}
-                bumpScale={0.014}
-                clearcoat={0.28}
-                clearcoatRoughness={0.36}
-                map={leafTex.map}
-                roughness={0.5}
-                roughnessMap={leafTex.roughnessMap}
-                side={DoubleSide}
-              />
-            </mesh>
-          ))}
-        </group>
-      </group>
-      <mesh castShadow geometry={geos.tendril} receiveShadow>
-        <meshPhysicalMaterial
-          bumpMap={stemTex.bumpMap}
-          bumpScale={0.01}
-          map={stemTex.map}
-          roughness={0.56}
-        />
-      </mesh>
-      <group position={[0.16, 0.32, 0.02]}>
-        <mesh castShadow geometry={geos.pitcher} receiveShadow>
-          <meshPhysicalMaterial
-            bumpMap={pitcherTex.bodyBump}
-            bumpScale={0.016}
-            clearcoat={0.46}
-            clearcoatRoughness={0.28}
-            map={pitcherTex.bodyMap}
-            roughness={0.44}
-            side={DoubleSide}
-          />
-        </mesh>
-        <mesh geometry={geos.cutawayGlass}>
-          <meshPhysicalMaterial
-            clearcoat={0.6}
-            color={SPECIMEN_COLORS.pitcherCutaway}
-            depthWrite={false}
-            opacity={0.24}
-            roughness={0.22}
-            side={DoubleSide}
-            transparent
-          />
-        </mesh>
-        <mesh geometry={geos.digestiveFluid}>
-          <meshPhysicalMaterial
-            clearcoat={0.92}
-            clearcoatRoughness={0.08}
-            color={SPECIMEN_COLORS.pitcherFluid}
-            ior={1.34}
-            opacity={0.72}
-            roughness={0.14}
-            transparent
-          />
-        </mesh>
-        <mesh castShadow geometry={geos.peristome} position={[0, 0.77, 0]}>
-          <meshPhysicalMaterial
-            bumpMap={pitcherTex.rimBump}
-            bumpScale={0.024}
-            clearcoat={0.85}
-            clearcoatRoughness={0.12}
-            map={pitcherTex.rimMap}
-            roughness={0.24}
-          />
-        </mesh>
-        <mesh castShadow geometry={geos.lidNeck}>
-          <meshPhysicalMaterial
-            bumpMap={stemTex.bumpMap}
-            bumpScale={0.01}
-            map={stemTex.map}
-            roughness={0.48}
-          />
-        </mesh>
-        <mesh castShadow geometry={geos.dorsalSpur}>
-          <meshStandardMaterial
-            color={SPECIMEN_COLORS.pitcherSpur}
-            roughness={0.54}
-          />
-        </mesh>
-        <mesh
-          castShadow
-          geometry={geos.lid}
-          position={[0, 0.93, -0.17]}
-          receiveShadow
-          rotation={[-0.28, 0, 0]}
+      <BotanicalPot height={0.28} mossy seed={11} topRadius={0.3} />
+      {Arr.map(TRUMPETS, (trumpet) => (
+        <group
+          key={trumpet.id}
+          position={[trumpet.at[0], 0.2, trumpet.at[1]]}
+          rotation={[trumpet.lean[0], trumpet.yaw, trumpet.lean[1]]}
         >
-          <meshPhysicalMaterial
-            bumpMap={leafTex.bumpMap}
-            bumpScale={0.014}
-            clearcoat={0.34}
-            clearcoatRoughness={0.34}
-            map={pitcherTex.lidMap}
-            roughness={0.46}
-            side={DoubleSide}
+          <LivingSpecimen
+            extent={trumpet.extent}
+            heading={0}
+            path={CCBY_PITCHER_PLANT_ASSET.path}
+            phase={trumpet.yaw}
           />
-        </mesh>
-      </group>
+        </group>
+      ))}
       <group
         position={[INSECT_HOME[0], INSECT_HOME[1], INSECT_HOME[2]]}
         ref={insectRef}
         rotation={[0.08, -2.6, 0.05]}
-        scale={1.55}
       >
-        <HoverflyPrey playing={playing} />
+        <LivingSpecimen
+          extent={0.2}
+          heading={0}
+          path={CC0_HOUSEFLY_ASSET.path}
+        />
       </group>
-      <ThreeLabel color={ink} fontSize="compact" position={[-0.68, 0.78, 0.08]}>
+      <ThreeLabel color={ink} fontSize="compact" position={[-0.62, 0.74, 0.08]}>
         <span>{trapLabel}</span>
       </ThreeLabel>
-      <ThreeLabel color={ink} fontSize="compact" position={[0.96, 1.38, 0.08]}>
+      <ThreeLabel color={ink} fontSize="compact" position={[0.74, 1.5, 0.08]}>
         <span>{insectLabel}</span>
       </ThreeLabel>
     </group>
@@ -305,7 +212,6 @@ function EpiphyticSpecimen({
 }) {
   const ink = useLabelInk();
   const orchidLeafTex = useLeafTextures("orchid");
-  const orchidPetalTex = usePetalTextures("orchid");
 
   return (
     <group>
@@ -351,37 +257,12 @@ function EpiphyticSpecimen({
           </mesh>
         ))}
       </group>
-      <mesh castShadow geometry={geos.flowerStem}>
-        <meshStandardMaterial
-          color={SPECIMEN_COLORS.orchidStem}
-          roughness={0.5}
+      <group position={[0.08, 0.55, 0.04]} rotation={[0.1, -0.5, -0.1]}>
+        <LivingSpecimen
+          extent={0.44}
+          heading={0}
+          path={CCBY_MOTH_ORCHID_ASSET.path}
         />
-      </mesh>
-      <group position={[0.15, 0.96, 0.08]} rotation={[0.28, 0.1, 0]}>
-        {Arr.map(ORCHID_PETAL_ANGLES, (ang) => (
-          <mesh
-            castShadow
-            geometry={geos.orchidPetal}
-            key={`op-${ang}`}
-            rotation={[Math.PI / 2, ang, 0.2]}
-          >
-            <meshPhysicalMaterial
-              bumpMap={orchidPetalTex.bumpMap}
-              bumpScale={0.008}
-              map={orchidPetalTex.map}
-              roughness={0.44}
-              side={DoubleSide}
-            />
-          </mesh>
-        ))}
-        <mesh position={[0, -0.02, 0.028]} scale={[0.9, 1.15, 0.7]}>
-          <sphereGeometry args={[0.036, 14, 10]} />
-          <meshPhysicalMaterial
-            clearcoat={0.4}
-            color={SPECIMEN_COLORS.orchidLabellum}
-            roughness={0.38}
-          />
-        </mesh>
       </group>
       {Arr.map(geos.aerialRoots, (strand) => (
         <mesh castShadow geometry={strand.geo} key={strand.id}>
@@ -424,7 +305,6 @@ export function CarnivorousPlantScene({
       <CarnivoreCamera />
       {profile.trapsInsects ? (
         <PitcherSpecimen
-          geos={geos}
           insectLabel={parts.insect}
           trapLabel={parts.trapLeaf}
         />
@@ -446,3 +326,6 @@ export function CarnivorousPlantScene({
     </group>
   );
 }
+
+useGLTF.preload(CCBY_PITCHER_PLANT_ASSET.path);
+useGLTF.preload(CC0_HOUSEFLY_ASSET.path);

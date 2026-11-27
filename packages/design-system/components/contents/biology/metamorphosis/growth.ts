@@ -124,17 +124,19 @@ export function growthAt(insect: Insect, time: number): GrowthSnapshot {
   };
 }
 
-/** 3D chart line segments for the stepped exoskeleton length curve. */
-export function lengthCurvePoints(
-  insect: Insect
-): readonly (readonly [number, number, number])[] {
-  return Arr.makeBy(36, (index) => {
-    const t = index / 35;
-    const snap = growthAt(insect, t);
-    return [
-      -0.85 + t * 1.7,
-      0.56 + (snap.lengthMm / 45) * 0.48,
-      -0.22,
-    ] as const;
+/** How many samples the growth record is drawn through. */
+const RECORD_SAMPLES = 101;
+
+/**
+ * The body length and the body mass through the whole life cycle, one row per
+ * percent of it: `x` is the time in percent, `length` the length in
+ * millimetres and `mass` the mass in milligrams. The length rises in steps,
+ * one at every moult, since an exoskeleton only grows when it is shed, while
+ * the mass rises between the moults as the insect feeds.
+ */
+export function growthRecord(insect: Insect) {
+  return Arr.makeBy(RECORD_SAMPLES, (index) => {
+    const snap = growthAt(insect, index / (RECORD_SAMPLES - 1));
+    return { length: snap.lengthMm, mass: snap.massMg, x: index };
   });
 }

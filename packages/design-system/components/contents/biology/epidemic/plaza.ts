@@ -47,35 +47,16 @@ function context(sketch: p5) {
   return drawing instanceof CanvasRenderingContext2D ? drawing : undefined;
 }
 
-/**
- * Where the square and the graph go: side by side on a wide card, the
- * square on the left filling the height; stacked on a narrow one, the square
- * over the graph. The square keeps its 60 m by 40 m shape either way.
- */
-export function layoutOf(sketch: p5) {
-  const wide = sketch.width > sketch.height * 1.3;
-  const plazaWidth = wide ? sketch.width * 0.64 : sketch.width;
-  const plazaHeight = wide ? sketch.height : sketch.height * 0.72;
-  return {
-    graphBottom: wide ? sketch.height * 0.88 : sketch.height - 10,
-    graphLeft: wide ? plazaWidth + 16 : 12,
-    graphTop: wide ? sketch.height * 0.12 : sketch.height * 0.75,
-    plazaHeight,
-    plazaWidth,
-  };
-}
-
-/** How the square's metres map onto its part of the canvas. */
+/** How the square's metres map onto the canvas, which the square and its lawn fill. */
 export function squareFrame(sketch: p5) {
-  const { plazaHeight, plazaWidth } = layoutOf(sketch);
   const scale = Math.min(
-    plazaWidth / (SQUARE.width + 6),
-    plazaHeight / (SQUARE.depth + 6)
+    sketch.width / (SQUARE.width + 6),
+    sketch.height / (SQUARE.depth + 6)
   );
   return {
     scale,
-    x: (metres: number) => plazaWidth / 2 + metres * scale,
-    y: (metres: number) => plazaHeight / 2 + metres * scale,
+    x: (metres: number) => sketch.width / 2 + metres * scale,
+    y: (metres: number) => sketch.height / 2 + metres * scale,
   };
 }
 
@@ -92,10 +73,8 @@ export function createPlaza() {
         drawing.globalAlpha = 0.93;
       }
       canopies(sketch, "canopies", (layer) => {
-        withinPlaza(layer, () => {
-          const frame = squareFrame(layer);
-          paintCanopies(layer, frame.x(0), frame.y(0), frame.scale);
-        });
+        const frame = squareFrame(layer);
+        paintCanopies(layer, frame.x(0), frame.y(0), frame.scale);
       });
       drawing?.restore();
     },
@@ -110,28 +89,13 @@ export function createPlaza() {
 /** The lawn, the paving, the tree shadows, the fountain and the light over them. */
 function paintGround(layer: p5) {
   const frame = squareFrame(layer);
-  const { plazaHeight, plazaWidth } = layoutOf(layer);
-  withinPlaza(layer, () => {
-    paintLawn(layer, plazaWidth, plazaHeight, frame.scale);
-    paintPavers(layer, frame);
-    paintRing(layer, frame);
-    paintBorder(layer, frame);
-    paintTreeShadows(layer, frame.x(0), frame.y(0), frame.scale);
-    paintFountain(layer, frame);
-    paintSun(layer, plazaWidth, plazaHeight);
-  });
-}
-
-/** Paints with the square's part of the canvas as a clip, so nothing spills onto the graph. */
-function withinPlaza(layer: p5, paint: () => void) {
-  const { plazaHeight, plazaWidth } = layoutOf(layer);
-  layer.push();
-  const drawing = context(layer);
-  drawing?.beginPath();
-  drawing?.rect(0, 0, plazaWidth, plazaHeight);
-  drawing?.clip();
-  paint();
-  layer.pop();
+  paintLawn(layer, layer.width, layer.height, frame.scale);
+  paintPavers(layer, frame);
+  paintRing(layer, frame);
+  paintBorder(layer, frame);
+  paintTreeShadows(layer, frame.x(0), frame.y(0), frame.scale);
+  paintFountain(layer, frame);
+  paintSun(layer, layer.width, layer.height);
 }
 
 /** A mown lawn: grass in faint mowing stripes, flecked lighter and darker. */
