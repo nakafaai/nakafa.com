@@ -1,12 +1,11 @@
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import { Bearing } from "@repo/design-system/components/three/instrument/bearing";
 import { Micrometer } from "@repo/design-system/components/three/instrument/micrometer";
 import {
   PLATE_TOP,
   Plate,
 } from "@repo/design-system/components/three/instrument/plate";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
-import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 
 /** Where the gauge lies on the plate, in scene units. */
@@ -59,16 +58,9 @@ export function GaugeScene({
               }}
               reading={thickness}
             >
-              <mesh castShadow position={[thickness / 2, 0, 0]} receiveShadow>
-                <sphereGeometry args={[thickness / 2, 64, 48]} />
-                <SurfaceMaterial
-                  color={CAR_COLORS.chrome}
-                  metalness={1}
-                  repeat={[2, 2]}
-                  roughness={0.12}
-                  surface="brushed"
-                />
-              </mesh>
+              <group position={[thickness / 2, 0, 0]}>
+                <Bearing diameter={thickness} />
+              </group>
             </Micrometer>
           </group>
         </Plate>

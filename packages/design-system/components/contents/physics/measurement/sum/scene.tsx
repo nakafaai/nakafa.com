@@ -7,6 +7,7 @@ import {
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { Turn } from "@repo/design-system/components/three/form/part";
+import { Band } from "@repo/design-system/components/three/instrument/region";
 import { Rule } from "@repo/design-system/components/three/instrument/rule";
 import { MILLIMETRE } from "@repo/design-system/components/three/instrument/scale";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
@@ -83,27 +84,6 @@ function Rod({
   );
 }
 
-/** A glowing mark in the lesson's colour, see-through when it is a band. */
-function Glow({
-  color,
-  opacity,
-}: {
-  readonly color: string;
-  readonly opacity: number;
-}) {
-  return (
-    <meshStandardMaterial
-      color={color}
-      depthWrite={opacity === 1}
-      emissive={color}
-      emissiveIntensity={0.5}
-      opacity={opacity}
-      roughness={0.5}
-      transparent={opacity < 1}
-    />
-  );
-}
-
 /**
  * An iron rod and a copper rod laid end to end along a steel rule, seen
  * close on the joined end, which is marked: the band where it may really lie, which the coarser
@@ -148,18 +128,23 @@ export function JoinScene({ tool }: { readonly tool: Tool }) {
             />
           </Rod>
           <group scale={MILLIMETRE}>
-            <mesh position={[raw * 10, 7, -1]}>
-              <boxGeometry args={[spread * 20, 14, 22]} />
-              <Glow color={PLOT_COLORS.teal} opacity={0.4} />
-            </mesh>
-            <mesh position={[raw * 10, 7.5, -1]}>
-              <boxGeometry args={[0.07, 15, 23]} />
-              <Glow color={PLOT_COLORS.violet} opacity={1} />
-            </mesh>
-            <mesh position={[reported * 10, 1, 4.6]}>
-              <boxGeometry args={[0.3, 0.16, 9.2]} />
-              <Glow color={PLOT_COLORS.fuchsia} opacity={1} />
-            </mesh>
+            <Band
+              at={[raw * 10, 7, -1]}
+              color={PLOT_COLORS.teal}
+              size={[spread * 20, 14, 22]}
+            />
+            <Band
+              at={[raw * 10, 7.5, -1]}
+              color={PLOT_COLORS.violet}
+              size={[0.07, 15, 23]}
+              solid
+            />
+            <Band
+              at={[reported * 10, 1, 4.6]}
+              color={PLOT_COLORS.fuchsia}
+              size={[0.3, 0.16, 9.2]}
+              solid
+            />
           </group>
         </group>
       </CameraBounds>
