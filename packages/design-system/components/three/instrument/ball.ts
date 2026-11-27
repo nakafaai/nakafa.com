@@ -8,7 +8,12 @@ import { Array as Arr } from "effect";
  */
 
 /** The stud, in scene units: how wide its shoulder and its neck are, and how far each stands over its seat on the ball. */
-const STUD = { neck: 0.016, rise: 0.062, shoulder: 0.028, wide: 0.034 } as const;
+const STUD = {
+  neck: 0.016,
+  rise: 0.062,
+  shoulder: 0.028,
+  wide: 0.034,
+} as const;
 
 /** How many chords the ball's outline is drawn with, from its bottom to the stud. */
 const CHORDS = 16;

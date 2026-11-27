@@ -24,6 +24,9 @@ describe("pendulum bob outline", () => {
 
   it("rises the same stud over a larger ball's higher seat", () => {
     expect(studTop(0.27)).toBeGreaterThan(studTop(0.19));
-    expect(studTop(0.19)).toBeCloseTo(Math.sqrt(0.19 ** 2 - 0.034 ** 2) + 0.062, 12);
+    expect(studTop(0.19)).toBeCloseTo(
+      Math.sqrt(0.19 ** 2 - 0.034 ** 2) + 0.062,
+      12
+    );
   });
 });

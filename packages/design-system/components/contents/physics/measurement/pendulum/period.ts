@@ -54,7 +54,8 @@ export function pendulumPeriod(length: number, mass: number) {
  */
 export function swingAngle(length: number, time: number) {
   return (
-    SWING * Math.cos((2 * Math.PI * time) / pendulumPeriod(length, BOBS.brass.mass))
+    SWING *
+    Math.cos((2 * Math.PI * time) / pendulumPeriod(length, BOBS.brass.mass))
   );
 }
 

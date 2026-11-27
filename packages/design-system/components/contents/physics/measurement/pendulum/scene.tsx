@@ -39,17 +39,26 @@ const WIDE = 2 * (APART + swingReach(STRING_RANGE.max) * 1000 + 70);
 const REACH = 190;
 
 /**
- * What the camera frames at every width, in scene units: the whole gantry
- * with its feet, and with it every place a bob swings through.
+ * What the camera frames at every width for strings `length` metres long,
+ * in scene units: the crossbar between the two rods, and under it every
+ * place a bob swings through, down to just under the bobs. On a short
+ * string the feet of the stands run out of the picture, so the bobs stay as
+ * large as the string allows.
  */
-const RIG = {
-  x: {
-    max: (WIDE / 2 + 130) * MILLIMETRE,
-    min: (-WIDE / 2 - 130) * MILLIMETRE,
-  },
-  y: { max: (RISE + 70) * MILLIMETRE, min: 0 },
-  z: { max: 40 * MILLIMETRE, min: (-REACH - 40) * MILLIMETRE },
-} as const;
+function frameOf(length: number) {
+  return {
+    x: {
+      max: (WIDE / 2 + 30) * MILLIMETRE,
+      min: (-WIDE / 2 - 30) * MILLIMETRE,
+    },
+    y: {
+      max: (RISE + 60) * MILLIMETRE,
+      min:
+        (RISE - length * 1000 - bobRadius("wood") * 1000 - CLEAR) * MILLIMETRE,
+    },
+    z: { max: 40 * MILLIMETRE, min: (-REACH - 40) * MILLIMETRE },
+  };
+}
 
 /** What a bob is turned or cast from: pale wood, polished brass, or dull lead. */
 function Stuff({ kind }: { readonly kind: Kind }) {
@@ -112,20 +121,23 @@ export function SwingScene({ length }: { readonly length: number }) {
         framing="content"
         maxPolarAngle={Math.PI * 0.49}
       />
-      <CameraBounds bounds={RIG}>
+      <CameraBounds bounds={frameOf(length)}>
         <Gantry reach={REACH} rise={RISE} wide={WIDE}>
-        {Arr.map(BobSchema.literals, (kind, index) => (
-          <group key={kind} position={[(index - 1) * APART * MILLIMETRE, 0, 0]}>
-            <Bob
-              cord={length * 1000}
-              radius={bobRadius(kind) * 1000}
-              round={BAR}
-              swing={() => angle.current}
+          {Arr.map(BobSchema.literals, (kind, index) => (
+            <group
+              key={kind}
+              position={[(index - 1) * APART * MILLIMETRE, 0, 0]}
             >
-              <Stuff kind={kind} />
-            </Bob>
-          </group>
-        ))}
+              <Bob
+                cord={length * 1000}
+                radius={bobRadius(kind) * 1000}
+                round={BAR}
+                swing={() => angle.current}
+              >
+                <Stuff kind={kind} />
+              </Bob>
+            </group>
+          ))}
         </Gantry>
       </CameraBounds>
     </group>
