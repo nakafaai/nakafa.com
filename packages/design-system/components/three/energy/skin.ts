@@ -1,7 +1,5 @@
+import { Array as Arr } from "effect";
 import { BufferGeometry, Float32BufferAttribute } from "three";
-
-/** One point of a skin, in the part's own space. */
-type SkinPoint = readonly [x: number, y: number, z: number];
 
 /**
  * A smooth skin stretched over a row of rings, as a boat builder planks a
@@ -20,28 +18,34 @@ type SkinPoint = readonly [x: number, y: number, z: number];
 export function skin(
   rings: number,
   around: number,
-  at: (along: number, round: number) => SkinPoint
+  at: (
+    along: number,
+    round: number
+  ) => readonly [x: number, y: number, z: number]
 ) {
-  const positions: number[] = [];
-  const places: number[] = [];
-  const faces: number[] = [];
   const row = around + 1;
-  for (let ring = 0; ring <= rings; ring += 1) {
-    for (let step = 0; step <= around; step += 1) {
-      positions.push(...at(ring / rings, step / around));
-      places.push(step / around, ring / rings);
-    }
-  }
-  for (let ring = 0; ring < rings; ring += 1) {
-    for (let step = 0; step < around; step += 1) {
+  const places = Arr.flatMap(Arr.range(0, rings), (ring) =>
+    Arr.map(Arr.range(0, around), (step) => [step / around, ring / rings])
+  );
+  const faces = Arr.flatMap(Arr.range(0, rings - 1), (ring) =>
+    Arr.flatMap(Arr.range(0, around - 1), (step) => {
       const near = ring * row + step;
       const far = near + row;
-      faces.push(near, near + 1, far, near + 1, far + 1, far);
-    }
-  }
+      return [near, near + 1, far, near + 1, far + 1, far];
+    })
+  );
   const geometry = new BufferGeometry();
-  geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
-  geometry.setAttribute("uv", new Float32BufferAttribute(places, 2));
+  geometry.setAttribute(
+    "position",
+    new Float32BufferAttribute(
+      Arr.flatMap(places, ([round, along]) => at(along, round)),
+      3
+    )
+  );
+  geometry.setAttribute(
+    "uv",
+    new Float32BufferAttribute(Arr.flatten(places), 2)
+  );
   geometry.setIndex(faces);
   geometry.computeVertexNormals();
   return geometry;

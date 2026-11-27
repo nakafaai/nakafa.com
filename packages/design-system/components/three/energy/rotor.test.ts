@@ -6,6 +6,7 @@ import {
   streamRadius,
   windShare,
 } from "@repo/design-system/components/three/energy/rotor";
+import { Array as Arr, Option } from "effect";
 
 describe("rotorRate", () => {
   it("runs the tips at seven times the wind speed", () => {
@@ -43,8 +44,9 @@ describe("spinnerProfile", () => {
     expect(profile[0]?.[0]).toBe(0.05);
     expect(profile[0]?.[1]).toBeCloseTo(-0.06, 9);
     expect(profile[1]).toEqual([0.05, 0]);
-    expect(profile.at(-1)?.[0]).toBeCloseTo(0, 9);
-    expect(profile.at(-1)?.[1]).toBeCloseTo(0.08, 9);
+    const nose = Option.getOrThrow(Arr.last(profile));
+    expect(nose[0]).toBeCloseTo(0, 9);
+    expect(nose[1]).toBeCloseTo(0.08, 9);
     expect(ROTOR.hub).toBeGreaterThan(1);
   });
 });

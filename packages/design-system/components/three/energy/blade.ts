@@ -119,7 +119,7 @@ const AROUND = 40;
  */
 export function bladeGeometry(length: number) {
   return skin(SECTIONS, AROUND, (along, round) => {
-    const [x, y, z] = bladePoint(along, round);
+    const [x, y, z] = bladePoint(along, 1 - round);
     return [x * length, y * length, z * length];
   });
 }

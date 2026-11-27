@@ -14,7 +14,7 @@ import { Turbine } from "@repo/design-system/components/three/energy/turbine";
 import { Sea } from "@repo/design-system/components/three/stage/sea";
 import { useGround } from "@repo/design-system/components/three/stage/terrain";
 import { Array as Arr } from "effect";
-import { useEffect, useMemo } from "react";
+import { Suspense, useEffect, useMemo } from "react";
 
 /** How wide one tile of the ground's texture lies, in scene units. */
 const TILE = 1;
@@ -59,7 +59,7 @@ function Rise({
  * speed, which sets how fast the rotor turns.
  */
 export function WindScene({ site }: { readonly site: Site }) {
-  const { sea } = SITE_GROUND[site];
+  const place = SITE_GROUND[site];
 
   return (
     <group>
@@ -69,7 +69,11 @@ export function WindScene({ site }: { readonly site: Site }) {
         {Arr.map(SITE_RISES[site], (rise) => (
           <Rise key={rise.at[0]} rise={rise} site={site} />
         ))}
-        {sea === undefined ? null : <Sea level={sea} swell={1.8} />}
+        {"sea" in place ? (
+          <Suspense fallback={null}>
+            <Sea level={place.sea} swell={1.8} />
+          </Suspense>
+        ) : null}
       </CameraBounds>
     </group>
   );

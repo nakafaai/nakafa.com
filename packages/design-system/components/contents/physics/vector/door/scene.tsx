@@ -126,20 +126,20 @@ export function DoorScene({
             FRONT - drawn.force[1],
           ]}
           label={[
-            drawn.hand[0] - drawn.force[0] * 1.12,
-            HANDLE.height + 0.3,
-            FRONT - drawn.force[1] * 1.12,
+            drawn.hand[0] - drawn.force[0] * 1.15,
+            HANDLE.height + 0.34,
+            FRONT - drawn.force[1] * 1.15,
           ]}
           math="\vec F"
           vector={[drawn.force[0], 0, drawn.force[1]]}
         />
         <Vector
           color={PLOT_COLORS.teal}
-          from={[drawn.hand[0], HANDLE.height + 0.18, FRONT - drawn.square[1]]}
+          from={[drawn.hand[0], HANDLE.height + 0.1, FRONT - drawn.square[1]]}
           label={[
-            drawn.hand[0] + 0.16,
-            HANDLE.height + 0.06,
-            FRONT - drawn.square[1] * 0.6,
+            drawn.hand[0] + 0.2,
+            HANDLE.height - 0.14,
+            FRONT - drawn.square[1] * 0.45,
           ]}
           math="F\sin\theta"
           vector={[0, 0, drawn.square[1]]}

@@ -37,11 +37,7 @@ describe("the sites", () => {
   });
 
   it("put the sea between the coast's turbine and the wind", () => {
-    const upwind = landHeight(
-      BEACH.land,
-      2 - BEACH.at[0],
-      4.5 - BEACH.at[2]
-    );
+    const upwind = landHeight(BEACH.land, 2 - BEACH.at[0], 4.5 - BEACH.at[2]);
     expect(upwind).toBeLessThan(SITE_GROUND.coast.sea);
   });
 

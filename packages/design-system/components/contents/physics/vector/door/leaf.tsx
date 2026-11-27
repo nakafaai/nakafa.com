@@ -173,9 +173,7 @@ export function Leaf({ width }: { readonly width: number }) {
           </RoundedBox>
         </group>
       ))}
-      <group
-        position={[width - HANDLE.inset, HANDLE.height, DOOR.thick / 2]}
-      >
+      <group position={[width - HANDLE.inset, HANDLE.height, DOOR.thick / 2]}>
         <Lever />
       </group>
       <group
@@ -216,8 +214,8 @@ export function Doorway({ width }: { readonly width: number }) {
             <boxGeometry args={[side.wide, WALL.height, WALL.thick]} />
             <SurfaceMaterial
               color={ENERGY_COLORS.wallPlaster}
-              repeat={[side.wide * 1.5, WALL.height * 1.5]}
-              surface="concrete"
+              roughness={0.92}
+              surface="paint"
             />
           </mesh>
           {Arr.map([-1, 1], (face) => (
@@ -242,8 +240,8 @@ export function Doorway({ width }: { readonly width: number }) {
         <boxGeometry args={[lead, WALL.height - head, WALL.thick]} />
         <SurfaceMaterial
           color={ENERGY_COLORS.wallPlaster}
-          repeat={[lead * 1.5, 1]}
-          surface="concrete"
+          roughness={0.92}
+          surface="paint"
         />
       </mesh>
       {Arr.map([-LINING / 2, width + LINING / 2], (x) => (

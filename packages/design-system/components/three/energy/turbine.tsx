@@ -7,6 +7,7 @@ import {
   nacelleGeometry,
 } from "@repo/design-system/components/three/energy/nacelle";
 import {
+  ROTOR,
   rotorRate,
   spinnerProfile,
 } from "@repo/design-system/components/three/energy/rotor";
@@ -28,19 +29,17 @@ import { useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
 import { LatheGeometry, Vector2 } from "three";
 
-/**
- * Every measure of the turbine for a rotor of radius 1: a hub two radii up,
- * as an 80 m rotor stands on an 80 m tower, on a tower 4.2 m wide at its
- * foot.
- */
-const HUB_HEIGHT = 2;
+/** The height of the concrete foundation that shows above the ground, for a rotor of radius 1. */
 const PLINTH = 0.02;
-const TOWER_TOP = HUB_HEIGHT - NACELLE.tall - 0.012;
+
+/** Where the tower ends under the nacelle's yaw bearing. */
+const TOWER_TOP = ROTOR.hub - NACELLE.tall - 0.012;
+
+/** The tower's radius at its foot and under the nacelle: 4.2 m and 2.5 m for an 80 m rotor. */
 const FOOT_RADIUS = 0.052;
 const TOP_RADIUS = 0.031;
 
-/** How far the rotor's plane stands upwind of the tower's axis, and where the nacelle's front face is. */
-const OVERHANG = 0.15;
+/** How far upwind of the tower's axis the nacelle's front face stands. */
 const NACELLE_FRONT = 0.085;
 
 /** The spinner's radius and the length of its nose. */
@@ -193,7 +192,7 @@ function Nacelle({ wind }: { readonly wind: number }) {
   });
 
   return (
-    <group position={[0, HUB_HEIGHT, 0]}>
+    <group position={[0, ROTOR.hub, 0]}>
       <mesh castShadow position={[0, -NACELLE.tall - 0.005, 0]}>
         <cylinderGeometry
           args={[TOP_RADIUS * 1.12, TOP_RADIUS * 1.12, 0.014, 48]}
@@ -294,7 +293,7 @@ function Rotor({ rate }: { readonly rate: number }) {
   });
 
   return (
-    <group position={[0, HUB_HEIGHT, OVERHANG]} ref={rotor}>
+    <group position={[0, ROTOR.hub, ROTOR.overhang]} ref={rotor}>
       <mesh castShadow geometry={spinner} rotation={[Math.PI / 2, 0, 0]}>
         <Coat across={2} along={1} />
       </mesh>

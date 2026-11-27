@@ -3,7 +3,7 @@ import {
   towerProfile,
   towerRadius,
 } from "@repo/design-system/components/three/energy/tower";
-import { Array as Arr, Order } from "effect";
+import { Array as Arr, Option, Order } from "effect";
 
 describe("towerRadius", () => {
   it("tapers evenly from the foot to the top", () => {
@@ -18,7 +18,7 @@ describe("towerProfile", () => {
     const profile = towerProfile(80, 2.1, 1.25);
     const heights = Arr.map(profile, ([, height]) => height);
     expect(heights[0]).toBe(0);
-    expect(heights.at(-1)).toBe(80);
+    expect(Option.getOrThrow(Arr.last(heights))).toBe(80);
     expect(heights).toEqual(Arr.sort(heights, Order.Number));
   });
 

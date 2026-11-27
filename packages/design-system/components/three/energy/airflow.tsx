@@ -11,7 +11,6 @@ import {
   useVisualStop,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
-import { Array as Arr } from "effect";
 import { useLayoutEffect, useMemo, useRef } from "react";
 import type { InstancedMesh } from "three";
 import { Object3D } from "three";
@@ -23,22 +22,60 @@ const STREAKS = 54;
 const UPWIND = 2.2;
 const BEHIND = 2.8;
 
-/** How far from the rotor's axis the outermost streak crosses the rotor's plane, in rotor radii. */
+/** How far from the rotor's axis the innermost and the outermost streak cross the rotor's plane, in rotor radii. */
+const NEAREST = 0.12;
 const WIDEST = 1.45;
 
 /** The length of a streak in the free wind and its thickness, in rotor radii. */
 const LENGTH = 0.24;
-const THICKNESS = 0.0045;
+const THICKNESS = 0.013;
 
-/** Where each streak crosses the rotor's plane, and where along the wind it starts. */
-const SEEDS = Arr.makeBy(STREAKS, (streak) => ({
-  angle: chanceAt(streak, 2, 13) * 2 * Math.PI,
-  radius: 0.12 + Math.sqrt(chanceAt(streak, 1, 11)) * (WIDEST - 0.12),
-  start: UPWIND - chanceAt(streak, 3, 17) * (UPWIND + BEHIND),
-}));
+/** Over what distance a streak grows in as it enters and thins out as it leaves, in rotor radii. */
+const FADE = 0.5;
+
+/** How far from the axis each streak crosses the rotor's plane, at what angle round it, and where along the wind it starts. */
+const RADII = Float32Array.from(
+  { length: STREAKS },
+  (_, streak) =>
+    NEAREST + Math.sqrt(chanceAt(streak, 1, 11)) * (WIDEST - NEAREST)
+);
+const ANGLES = Float32Array.from(
+  { length: STREAKS },
+  (_, streak) => chanceAt(streak, 2, 13) * 2 * Math.PI
+);
+const STARTS = Float32Array.from(
+  { length: STREAKS },
+  (_, streak) => UPWIND - chanceAt(streak, 3, 17) * (UPWIND + BEHIND)
+);
 
 /** The object every streak is placed through, reused so a frame allocates nothing. */
 const PLACER = new Object3D();
+
+/** The share of the free wind's speed a streak keeps where it is: the air through the rotor slows, the air round it does not. */
+function paceAt(streak: number, downstream: number) {
+  return RADII[streak] < 1 ? windShare(downstream) : 1;
+}
+
+/** Writes where every streak stands into the instances, from how far downwind each one has drifted. */
+function placeStreaks(streaks: InstancedMesh, upwind: Float32Array) {
+  for (let streak = 0; streak < STREAKS; streak += 1) {
+    const downstream = -upwind[streak];
+    const away = streamRadius(RADII[streak], downstream);
+    const shown = Math.max(
+      0,
+      Math.min(1, (UPWIND + downstream) / FADE, (BEHIND - downstream) / FADE)
+    );
+    PLACER.position.set(
+      Math.cos(ANGLES[streak]) * away,
+      ROTOR.hub + Math.sin(ANGLES[streak]) * away,
+      ROTOR.overhang - downstream
+    );
+    PLACER.scale.set(shown, shown, paceAt(streak, downstream));
+    PLACER.updateMatrix();
+    streaks.setMatrixAt(streak, PLACER.matrix);
+  }
+  streaks.instanceMatrix.needsUpdate = true;
+}
 
 /**
  * The wind through a turbine's rotor, shown as a wind tunnel shows it with
@@ -62,59 +99,29 @@ export function Airflow({
 }) {
   const mesh = useRef<InstancedMesh>(null);
   const playing = useVisualScene((card) => card.playing, true);
-  const places = useMemo(
-    () => Float32Array.from(Arr.map(SEEDS, (seed) => seed.start)),
-    []
-  );
+  const upwind = useMemo(() => Float32Array.from(STARTS), []);
 
-  const place = () => {
-    const streaks = mesh.current;
-    if (streaks === null) {
-      return;
+  useLayoutEffect(() => {
+    if (mesh.current) {
+      placeStreaks(mesh.current, upwind);
     }
-    for (let streak = 0; streak < STREAKS; streak += 1) {
-      const seed = SEEDS[streak];
-      const downstream = -(places[streak] ?? 0);
-      const inside = seed !== undefined && seed.radius < 1;
-      const share = inside ? windShare(downstream) : 1;
-      const away = streamRadius(seed?.radius ?? 0, downstream);
-      const angle = seed?.angle ?? 0;
-      const edge = Math.min(
-        1,
-        (UPWIND + downstream) / 0.5,
-        (BEHIND - downstream) / 0.5
-      );
-      PLACER.position.set(
-        Math.cos(angle) * away,
-        ROTOR.hub + Math.sin(angle) * away,
-        ROTOR.overhang - downstream
-      );
-      PLACER.scale.set(Math.max(0, edge), Math.max(0, edge), share);
-      PLACER.updateMatrix();
-      streaks.setMatrixAt(streak, PLACER.matrix);
-    }
-    streaks.instanceMatrix.needsUpdate = true;
-  };
-
-  useLayoutEffect(place);
+  }, [upwind]);
   useVisualStop(() => {
-    Arr.forEach(SEEDS, (seed, streak) => {
-      places[streak] = seed.start;
-    });
-    place();
+    upwind.set(STARTS);
+    if (mesh.current) {
+      placeStreaks(mesh.current, upwind);
+    }
   });
   useFrame((_, delta) => {
-    if (!playing) {
+    if (!(playing && mesh.current)) {
       return;
     }
     const step = (simulationStep(delta) * wind) / metres;
     for (let streak = 0; streak < STREAKS; streak += 1) {
-      const at = places[streak] ?? 0;
-      const inside = (SEEDS[streak]?.radius ?? 0) < 1;
-      const next = at - step * (inside ? windShare(-at) : 1);
-      places[streak] = next < -BEHIND ? UPWIND : next;
+      const next = upwind[streak] - step * paceAt(streak, -upwind[streak]);
+      upwind[streak] = next < -BEHIND ? UPWIND : next;
     }
-    place();
+    placeStreaks(mesh.current, upwind);
   });
 
   return (

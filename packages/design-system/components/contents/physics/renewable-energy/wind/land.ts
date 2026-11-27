@@ -1,6 +1,6 @@
 import type { Site } from "@repo/design-system/components/contents/physics/renewable-energy/wind/site";
 import { fractalAt } from "@repo/design-system/components/three/field/noise";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { BufferGeometry, Float32BufferAttribute } from "three";
 
 /**
@@ -54,23 +54,23 @@ export const SITE_RISES = {
   ],
 } as const satisfies Record<Site, readonly (typeof RiseSchema.Type)[]>;
 
+/** What lies under one site: its ground, the floor the stage lays it at, and the level of its sea. */
+const PlaceSchema = Schema.Struct({
+  floor: Schema.optionalKey(Schema.Finite),
+  ground: Schema.Literals(["grass", "sand"]),
+  sea: Schema.optionalKey(Schema.Finite),
+});
+
 /**
- * What the stage lays under each site: the valley's floor at the turbine's
- * foot, the plain below the hill's crown, and nothing under the coast, where
- * the sea stands just below the beach.
+ * What lies under each site: the ground the stage lays at the valley's floor
+ * and on the plain below the hill's crown, and the sea that stands just
+ * below the coast's beach, where the stage lays no ground at all.
  */
 export const SITE_GROUND = {
-  coast: { floor: undefined, ground: "sand", sea: -0.14 },
-  hill: { floor: -1.15, ground: "grass", sea: undefined },
-  valley: { floor: 0, ground: "grass", sea: undefined },
-} as const satisfies Record<
-  Site,
-  {
-    readonly floor: number | undefined;
-    readonly ground: "grass" | "sand";
-    readonly sea: number | undefined;
-  }
->;
+  coast: { ground: "sand", sea: -0.14 },
+  hill: { floor: -1.15, ground: "grass" },
+  valley: { floor: 0, ground: "grass" },
+} as const satisfies Record<Site, typeof PlaceSchema.Type>;
 
 /** The height of a rise at a place `x`, `z` from its middle, 0 on its plateau. */
 export function landHeight(land: Land, x: number, z: number) {
@@ -116,29 +116,39 @@ export function ringShare(land: Land, ring: number) {
  * width so a ground texture can repeat over it at its real size.
  */
 export function landGeometry(land: Land) {
-  const positions: number[] = [];
-  const places: number[] = [];
-  const faces: number[] = [];
   const row = SPOKES + 1;
-  for (let ring = 0; ring <= RINGS; ring += 1) {
-    for (let spoke = 0; spoke <= SPOKES; spoke += 1) {
+  const spots = Arr.flatMap(Arr.range(0, RINGS), (ring) =>
+    Arr.map(Arr.range(0, SPOKES), (spoke) => {
       const turn = (spoke / SPOKES) * 2 * Math.PI;
-      const x = Math.cos(turn) * ringShare(land, ring) * land.radius;
-      const z = Math.sin(turn) * ringShare(land, ring) * land.radius;
-      positions.push(x, landHeight(land, x, z), z);
-      places.push(x / (2 * land.radius) + 0.5, z / (2 * land.radius) + 0.5);
-    }
-  }
-  for (let ring = 0; ring < RINGS; ring += 1) {
-    for (let spoke = 0; spoke < SPOKES; spoke += 1) {
+      const out = ringShare(land, ring) * land.radius;
+      return [Math.cos(turn) * out, Math.sin(turn) * out] as const;
+    })
+  );
+  const faces = Arr.flatMap(Arr.range(0, RINGS - 1), (ring) =>
+    Arr.flatMap(Arr.range(0, SPOKES - 1), (spoke) => {
       const near = ring * row + spoke;
       const far = near + row;
-      faces.push(near, near + 1, far, near + 1, far + 1, far);
-    }
-  }
+      return [near, near + 1, far, near + 1, far + 1, far];
+    })
+  );
   const geometry = new BufferGeometry();
-  geometry.setAttribute("position", new Float32BufferAttribute(positions, 3));
-  geometry.setAttribute("uv", new Float32BufferAttribute(places, 2));
+  geometry.setAttribute(
+    "position",
+    new Float32BufferAttribute(
+      Arr.flatMap(spots, ([x, z]) => [x, landHeight(land, x, z), z]),
+      3
+    )
+  );
+  geometry.setAttribute(
+    "uv",
+    new Float32BufferAttribute(
+      Arr.flatMap(spots, ([x, z]) => [
+        x / (2 * land.radius) + 0.5,
+        z / (2 * land.radius) + 0.5,
+      ]),
+      2
+    )
+  );
   geometry.setIndex(faces);
   geometry.computeVertexNormals();
   return geometry;
