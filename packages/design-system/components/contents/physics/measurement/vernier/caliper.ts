@@ -12,9 +12,6 @@ export const VERNIER_DIVISIONS = 10;
 /** The smallest change the caliper resolves, in millimetres. */
 export const VERNIER_RESOLUTION = 1 / VERNIER_DIVISIONS;
 
-/** The length of one vernier division, in millimetres: one main division less one resolution. */
-export const VERNIER_STEP = (VERNIER_DIVISIONS - 1) / VERNIER_DIVISIONS;
-
 /** The narrowest and widest objects the lab measures, in millimetres. */
 export const CALIPER_RANGE = { max: 45, min: 5 } as const;
 
@@ -32,12 +29,4 @@ export function vernierReading(width: number) {
     main,
     reading: tenths / VERNIER_DIVISIONS,
   };
-}
-
-/**
- * Where vernier line `index` stands on the main scale, in millimetres, with
- * the vernier zero at `zero`.
- */
-export function vernierMark(zero: number, index: number) {
-  return zero + index * VERNIER_STEP;
 }

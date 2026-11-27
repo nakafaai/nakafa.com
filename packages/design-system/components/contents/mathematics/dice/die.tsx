@@ -4,6 +4,7 @@ import {
   DIE,
   pipPlacements,
 } from "@repo/design-system/components/contents/mathematics/dice/faces";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { DICE_COLORS } from "@repo/design-system/lib/material/dice";
 import { Array as Arr } from "effect";
 import type { Ref } from "react";
@@ -110,13 +111,7 @@ export function Die({
         receiveShadow
         smoothness={10}
       >
-        <meshPhysicalMaterial
-          clearcoat={1}
-          clearcoatRoughness={0.06}
-          color={body}
-          ior={1.56}
-          roughness={0.22}
-        />
+        <Matter color={body} of="epoxy" />
       </RoundedBox>
       <Instances placements={PIPS}>
         <primitive attach="geometry" object={dish} />

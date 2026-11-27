@@ -3,10 +3,7 @@ import { useLabelInk } from "@repo/design-system/components/contents/biology/cel
 import { KaryotypeDisplay } from "@repo/design-system/components/contents/biology/chromatin";
 import type { HumanPattern } from "@repo/design-system/components/contents/biology/pedigree/model";
 import { evaluatePedigreeTree } from "@repo/design-system/components/contents/biology/pedigree/model";
-import {
-  BiologyBenchSurface,
-  MolecularStick,
-} from "@repo/design-system/components/contents/biology/workbench";
+import { MolecularStick } from "@repo/design-system/components/contents/biology/workbench";
 import {
   SimulationTicker,
   simulationStep,
@@ -254,7 +251,6 @@ export function PedigreeSexLinkedScene({
     <group>
       <SimulationTicker running={playing} />
       <PedigreeCamera />
-      <BiologyBenchSurface radius={14} y={0} />
 
       <group ref={tableRef}>
         {/* Illuminated glass-and-brass genetics light-table stand */}

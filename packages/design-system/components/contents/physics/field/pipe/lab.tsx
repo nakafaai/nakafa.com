@@ -60,7 +60,7 @@ export function MagnetPipeLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={3} setting="lab">
+        <ScienceStage floor={0} ground="epoxy" reach={3} setting="lab">
           <Suspense fallback={null}>
             <MagnetPipeScene longest={times.copper} />
           </Suspense>

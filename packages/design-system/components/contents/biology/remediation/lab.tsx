@@ -124,7 +124,12 @@ export function PhytoremediationLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.5} setting="lab">
+        <ScienceStage
+          floor={0}
+          ground={reading.isAquatic ? "sand" : "soil"}
+          reach={2.5}
+          setting="lab"
+        >
           <Suspense fallback={null}>
             <PhytoremediationScene
               harvests={cycles}

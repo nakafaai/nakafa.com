@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Gauge } from "@repo/design-system/components/contents/physics/bench/gauge";
 import { Vector } from "@repo/design-system/components/contents/physics/bench/vector";
@@ -7,18 +6,12 @@ import { Tube } from "@repo/design-system/components/contents/physics/bench/vess
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import {
-  GlassMaterial,
-  LiquidMaterial,
-  MetalMaterial,
-} from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import {
   useVisualScene,
   useVisualStop,
 } from "@repo/design-system/components/visual/card";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
-import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
 import { Array as Arr } from "effect";
 import { useRef } from "react";
 import type { Group, Mesh } from "three";
@@ -111,35 +104,32 @@ export function HydraulicJackScene({
         target={[-0.1, 0.9, 0]}
         wide={[0.3, 1.7, 4.6]}
       />
-      <SeamlessBenchSurface />
       <mesh castShadow position={[-0.18, FOOT / 2, 0]} receiveShadow>
         <boxGeometry args={[3.3, FOOT, 1.36]} />
-        <meshPhysicalMaterial
-          clearcoat={0.4}
-          clearcoatRoughness={0.4}
-          color={APPARATUS_COLORS.caseSteel}
-          metalness={0.5}
-          roughness={0.45}
-        />
+        <Matter color={APPARATUS_COLORS.caseSteel} of="enamel" />
       </mesh>
       <mesh
         position={[(SMALL_X + LARGE_X) / 2, FOOT + 0.09, 0.42]}
         rotation={[0, 0, Math.PI / 2]}
       >
         <cylinderGeometry args={[0.07, 0.07, LARGE_X - SMALL_X, 28, 1, true]} />
-        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.24} />
+        <Matter of="glass" opacity={0.24} />
       </mesh>
       <mesh
         position={[(SMALL_X + LARGE_X) / 2, FOOT + 0.09, 0.42]}
         rotation={[0, 0, Math.PI / 2]}
       >
         <cylinderGeometry args={[0.056, 0.056, LARGE_X - SMALL_X, 24]} />
-        <LiquidMaterial color={APPARATUS_COLORS.hydraulicOil} opacity={0.72} />
+        <Matter
+          color={APPARATUS_COLORS.hydraulicOil}
+          of="liquid"
+          opacity={0.72}
+        />
       </mesh>
       {Arr.map([SMALL_X, LARGE_X] as const, (x) => (
         <mesh castShadow key={x} position={[x, FOOT + 0.09, 0.42]}>
           <boxGeometry args={[0.2, 0.2, 0.2]} />
-          <MetalMaterial color={QUANTUM_COLORS.brass} roughness={0.3} />
+          <Matter of="brass" />
         </mesh>
       ))}
       <group ref={specks}>
@@ -153,11 +143,7 @@ export function HydraulicJackScene({
             ]}
           >
             <sphereGeometry args={[0.014, 10, 8]} />
-            <meshStandardMaterial
-              color={APPARATUS_COLORS.tracer}
-              emissive={APPARATUS_COLORS.lampHalo}
-              emissiveIntensity={1.2}
-            />
+            <Matter color={APPARATUS_COLORS.lampHalo} glow={0.6} of="light" />
           </mesh>
         ))}
       </group>
@@ -176,8 +162,9 @@ export function HydraulicJackScene({
           scale={[1, SMALL_REST - FOOT, 1]}
         >
           <cylinderGeometry args={[smallRadius, smallRadius, 1, 28]} />
-          <LiquidMaterial
+          <Matter
             color={APPARATUS_COLORS.hydraulicOil}
+            of="liquid"
             opacity={0.72}
           />
         </mesh>
@@ -186,22 +173,15 @@ export function HydraulicJackScene({
             <cylinderGeometry
               args={[smallRadius - 0.004, smallRadius - 0.004, 0.06, 28]}
             />
-            <MetalMaterial
-              color={QUANTUM_COLORS.pistonMetal}
-              roughness={0.25}
-            />
+            <Matter finish="machined" of="steel" />
           </mesh>
           <mesh castShadow position={[0, 0.42, 0]}>
             <cylinderGeometry args={[0.022, 0.022, 0.74, 14]} />
-            <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.2} />
+            <Matter of="nickel" />
           </mesh>
           <mesh castShadow position={[0, 0.8, 0]}>
             <cylinderGeometry args={[0.13, 0.13, 0.04, 28]} />
-            <meshPhysicalMaterial
-              clearcoat={0.4}
-              color={APPARATUS_COLORS.bakelite}
-              roughness={0.45}
-            />
+            <Matter of="bakelite" />
           </mesh>
           <Vector
             color={APPARATUS_COLORS.weightArrow}
@@ -221,8 +201,9 @@ export function HydraulicJackScene({
           scale={[1, LARGE_REST - FOOT, 1]}
         >
           <cylinderGeometry args={[LARGE_RADIUS, LARGE_RADIUS, 1, 48]} />
-          <LiquidMaterial
+          <Matter
             color={APPARATUS_COLORS.hydraulicOil}
+            of="liquid"
             opacity={0.72}
           />
         </mesh>
@@ -231,21 +212,14 @@ export function HydraulicJackScene({
             <cylinderGeometry
               args={[LARGE_RADIUS - 0.006, LARGE_RADIUS - 0.006, 0.1, 48]}
             />
-            <MetalMaterial
-              color={QUANTUM_COLORS.pistonMetal}
-              roughness={0.25}
-            />
+            <Matter finish="machined" of="steel" />
           </mesh>
           {Arr.map(WEIGHTS, (y, index) => (
             <mesh castShadow key={y} position={[0, y + 0.07, 0]}>
               <cylinderGeometry
                 args={[0.46 - index * 0.07, 0.48 - index * 0.07, 0.15, 40]}
               />
-              <meshStandardMaterial
-                color={APPARATUS_COLORS.caseDark}
-                metalness={0.7}
-                roughness={0.5}
-              />
+              <Matter of="iron" />
             </mesh>
           ))}
         </group>

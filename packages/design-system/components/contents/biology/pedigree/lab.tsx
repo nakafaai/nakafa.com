@@ -113,7 +113,7 @@ export function PedigreeSexLinkedLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.5} setting="lab">
+        <ScienceStage floor={0} ground="epoxy" reach={2.5} setting="lab">
           <Suspense fallback={null}>
             <PedigreeSexLinkedScene parts={labels.parts} pattern={active} />
           </Suspense>

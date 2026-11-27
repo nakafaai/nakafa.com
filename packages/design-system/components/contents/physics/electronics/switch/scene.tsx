@@ -1,4 +1,3 @@
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { OakBoard } from "@repo/design-system/components/contents/physics/bench/board";
 import { Bulb } from "@repo/design-system/components/contents/physics/bench/bulb";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
@@ -12,10 +11,11 @@ import {
 } from "@repo/design-system/components/contents/physics/electronics/parts";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
+import { Shine } from "@repo/design-system/components/three/matter/shine";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
 import type { ReactNode } from "react";
-import { AdditiveBlending, DoubleSide } from "three";
+import { DoubleSide } from "three";
 
 const LDR_AT = [-0.25, 0, 0.2] as const;
 const LAMP_HEIGHT = 0.95;
@@ -65,11 +65,11 @@ export function Lamp({ light }: { readonly light: number }) {
     <group position={LDR_AT}>
       <mesh castShadow position={[-0.42, 0.015, 0]}>
         <cylinderGeometry args={[0.13, 0.15, 0.03, 32]} />
-        <MetalMaterial color={APPARATUS_COLORS.caseSteel} roughness={0.4} />
+        <Matter of="steel" />
       </mesh>
       <mesh castShadow position={[-0.42, LAMP_HEIGHT / 2 + 0.06, 0]}>
         <cylinderGeometry args={[0.014, 0.014, LAMP_HEIGHT + 0.12, 12]} />
-        <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.25} />
+        <Matter of="nickel" />
       </mesh>
       <mesh
         castShadow
@@ -77,45 +77,40 @@ export function Lamp({ light }: { readonly light: number }) {
         rotation={[0, 0, Math.PI / 2]}
       >
         <cylinderGeometry args={[0.014, 0.014, 0.42, 12]} />
-        <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.25} />
+        <Matter of="nickel" />
       </mesh>
       <mesh castShadow position={[0, LAMP_HEIGHT, 0]}>
         <coneGeometry args={[0.2, 0.24, 36, 1, true]} />
-        <meshPhysicalMaterial
-          clearcoat={0.6}
+        <Matter
           color={APPARATUS_COLORS.caseDark}
-          metalness={0.4}
-          roughness={0.35}
+          of="enamel"
           side={DoubleSide}
         />
       </mesh>
       <mesh position={[0, LAMP_HEIGHT - 0.06, 0]}>
         <sphereGeometry args={[0.07, 24, 18]} />
-        <meshStandardMaterial
-          color={APPARATUS_COLORS.lampGlass}
-          emissive={APPARATUS_COLORS.lampHalo}
-          emissiveIntensity={0.05 + light * 6}
-          roughness={0.3}
+        <Matter
+          color={APPARATUS_COLORS.lampHalo}
+          glow={0.03 + light * 3}
+          of="glass"
+          opacity={0.92}
+        />
+        <Shine
+          color={APPARATUS_COLORS.lampHalo}
+          glow={0.03 + light * 3}
+          of="glass"
         />
       </mesh>
       <mesh position={[0, (LAMP_HEIGHT - 0.12) / 2, 0]}>
         <coneGeometry args={[0.36, LAMP_HEIGHT - 0.12, 36, 1, true]} />
-        <meshBasicMaterial
-          blending={AdditiveBlending}
+        <Matter
           color={APPARATUS_COLORS.lampHalo}
-          depthWrite={false}
+          glow={0.5}
+          of="light"
           opacity={light * 0.16}
           side={DoubleSide}
-          toneMapped={false}
-          transparent
         />
       </mesh>
-      <pointLight
-        color={APPARATUS_COLORS.lampHalo}
-        distance={2}
-        intensity={light * 1.4}
-        position={[0, LAMP_HEIGHT - 0.2, 0]}
-      />
     </group>
   );
 }
@@ -145,7 +140,6 @@ export function TransistorSwitchScene({
         target={[-0.1, 0.3, 0]}
         wide={[-0.1, 2.4, 3.95]}
       />
-      <SeamlessBenchSurface />
       <group position={[-0.1, 0, 0]}>
         <OakBoard depth={2} width={3.1} />
       </group>

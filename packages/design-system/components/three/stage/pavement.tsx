@@ -3,14 +3,20 @@ import { useStage } from "@repo/design-system/components/three/stage/context";
 import {
   paintDashes,
   paintVerge,
-} from "@repo/design-system/components/three/stage/grain";
-import { pathStrip } from "@repo/design-system/components/three/stage/strip";
+} from "@repo/design-system/components/three/stage/marks";
+import { drape } from "@repo/design-system/components/three/stage/relief";
 import {
+  densePath,
+  pathStrip,
+} from "@repo/design-system/components/three/stage/strip";
+import {
+  GROUND_REACHES,
+  GroundMaterial,
   groundTexture,
   HORIZON_FADE_INNER,
   HORIZON_FADE_OUTER,
-  useGround,
   useHorizonFade,
+  useRelief,
 } from "@repo/design-system/components/three/stage/terrain";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
@@ -38,32 +44,51 @@ function verge(from: number) {
 }
 
 /**
- * The mesh of one band of the pavement: the strip a path sweeps between two
- * offsets to its side. It is freed with the component that asked for it.
+ * A path with enough places along it that a band built on it follows
+ * rolling ground: no leg is longer than one step of the ground's own mesh.
  */
-function useBand(
+export function useWay(path: readonly Place[], closed: boolean) {
+  const { profile, reach } = useStage();
+
+  return useMemo(
+    () =>
+      densePath(path, closed, (GROUND_REACHES * reach) / profile.landSpokes),
+    [closed, path, profile, reach]
+  );
+}
+
+/**
+ * The mesh of one band on the ground: the strip a path sweeps between two
+ * offsets to its side, laid on the ground's relief. It is freed with the
+ * component that asked for it.
+ */
+export function useBand(
   path: readonly Place[],
   closed: boolean,
   from: number,
   to: number
 ) {
+  const heightAt = useRelief();
   const geometry = useMemo(() => {
     const strip = pathStrip(path, closed, from, to);
     const band = new BufferGeometry();
-    band.setAttribute("position", new BufferAttribute(strip.positions, 3));
+    band.setAttribute(
+      "position",
+      new BufferAttribute(drape(strip.positions, heightAt), 3)
+    );
     band.setAttribute("uv", new BufferAttribute(strip.uvs, 2));
     band.setIndex(strip.indices);
     band.computeVertexNormals();
     return band;
-  }, [closed, from, path, to]);
+  }, [closed, from, heightAt, path, to]);
 
   useEffect(() => () => geometry.dispose(), [geometry]);
 
   return geometry;
 }
 
-/** One band of the pavement at its layer above the floor. The caller composes its material. */
-function Band({
+/** One band on the ground at its layer above the floor. The caller composes its material. */
+export function Band({
   children,
   geometry,
   layer,
@@ -86,11 +111,35 @@ function Band({
   );
 }
 
+/** The paint of a road line, drawn nearer the camera than the asphalt under it. */
+function Paint({ dashes }: { readonly dashes?: ReturnType<typeof verge> }) {
+  const { reach } = useStage();
+  const horizonFade = useHorizonFade(
+    HORIZON_FADE_INNER * reach,
+    HORIZON_FADE_OUTER * reach
+  );
+
+  return (
+    <meshStandardMaterial
+      alphaMap={dashes ?? null}
+      alphaTest={dashes === undefined ? 0 : 0.5}
+      color={getColor("ZINC", 100)}
+      depthWrite={false}
+      polygonOffset
+      polygonOffsetFactor={-3}
+      polygonOffsetUnits={-12}
+      ref={horizonFade}
+      roughness={0.7}
+      transparent
+    />
+  );
+}
+
 /**
- * Asphalt along any path on the lab's ground, built as `Road` is: a gravel
- * shoulder that fades into the ground on both sides, the asphalt, its two
- * edge lines and its dashed centre line. The camera leaves it out when it
- * frames the lab.
+ * Asphalt along any path on the lab's ground: a gravel shoulder that fades
+ * into the ground on both sides, the asphalt, its two edge lines and its
+ * dashed centre line, all laid on the ground's relief. The camera leaves it
+ * out when it frames the lab.
  *
  * @param path - The places the middle of the pavement passes
  * @param closed - Whether the path returns to its start
@@ -111,8 +160,6 @@ export function Pavement({
   readonly spacing: number;
   readonly width: number;
 }) {
-  const asphalt = useGround("asphalt", [1 / (width * 0.8), 1.25]);
-  const shoulder = useGround("soil", [1 / (width * 0.5), 0.7]);
   const marks = useMemo(
     () => ({
       dashes: groundTexture(paintDashes(64, dash / spacing), 64, 1, [
@@ -134,26 +181,16 @@ export function Pavement({
     [marks]
   );
 
-  const { reach } = useStage();
-  const horizonFade = useHorizonFade(
-    HORIZON_FADE_INNER * reach,
-    HORIZON_FADE_OUTER * reach
-  );
-  const paint = getColor("ZINC", 100);
+  const way = useWay(path, closed);
   const edge = width / 2 - LINE_WIDTH * 1.6;
   const bands = {
-    near: useBand(path, closed, -width * 0.85, -width * 0.5),
-    far: useBand(path, closed, width * 0.5, width * 0.85),
-    asphaltBand: useBand(path, closed, -width / 2, width / 2),
-    dashes: useBand(path, closed, -LINE_WIDTH / 2, LINE_WIDTH / 2),
-    farLine: useBand(
-      path,
-      closed,
-      edge - LINE_WIDTH / 2,
-      edge + LINE_WIDTH / 2
-    ),
+    near: useBand(way, closed, -width * 0.85, -width * 0.5),
+    far: useBand(way, closed, width * 0.5, width * 0.85),
+    asphaltBand: useBand(way, closed, -width / 2, width / 2),
+    dashes: useBand(way, closed, -LINE_WIDTH / 2, LINE_WIDTH / 2),
+    farLine: useBand(way, closed, edge - LINE_WIDTH / 2, edge + LINE_WIDTH / 2),
     nearLine: useBand(
-      path,
+      way,
       closed,
       -edge - LINE_WIDTH / 2,
       -edge + LINE_WIDTH / 2
@@ -163,88 +200,38 @@ export function Pavement({
   return (
     <CameraBounds exclude>
       <Band geometry={bands.near} layer={1}>
-        <meshStandardMaterial
+        <GroundMaterial
           alphaMap={marks.inner}
-          bumpMap={shoulder.bump}
-          bumpScale={0.8}
           depthWrite={false}
-          map={shoulder.map}
-          polygonOffset
-          polygonOffsetFactor={-1}
-          polygonOffsetUnits={-4}
-          ref={horizonFade}
-          roughness={0.96}
-          transparent
+          kind="soil"
+          layer={1}
+          repeat={[1 / (width * 0.5), 0.7]}
         />
       </Band>
       <Band geometry={bands.far} layer={1}>
-        <meshStandardMaterial
+        <GroundMaterial
           alphaMap={marks.outer}
-          bumpMap={shoulder.bump}
-          bumpScale={0.8}
           depthWrite={false}
-          map={shoulder.map}
-          polygonOffset
-          polygonOffsetFactor={-1}
-          polygonOffsetUnits={-4}
-          ref={horizonFade}
-          roughness={0.96}
-          transparent
+          kind="soil"
+          layer={1}
+          repeat={[1 / (width * 0.5), 0.7]}
         />
       </Band>
       <Band geometry={bands.asphaltBand} layer={2}>
-        <meshStandardMaterial
-          aoMap={asphalt.patches}
-          aoMapIntensity={0.8}
-          bumpMap={asphalt.bump}
-          bumpScale={0.35}
-          depthWrite
-          map={asphalt.map}
-          polygonOffset
-          polygonOffsetFactor={-2}
-          polygonOffsetUnits={-8}
-          ref={horizonFade}
-          roughness={0.86}
-          transparent
+        <GroundMaterial
+          kind="asphalt"
+          layer={2}
+          repeat={[1 / (width * 0.8), 1.25]}
         />
       </Band>
       <Band geometry={bands.dashes} layer={3}>
-        <meshStandardMaterial
-          alphaMap={marks.dashes}
-          alphaTest={0.5}
-          color={paint}
-          depthWrite={false}
-          polygonOffset
-          polygonOffsetFactor={-3}
-          polygonOffsetUnits={-12}
-          ref={horizonFade}
-          roughness={0.7}
-          transparent
-        />
+        <Paint dashes={marks.dashes} />
       </Band>
       <Band geometry={bands.farLine} layer={3}>
-        <meshStandardMaterial
-          color={paint}
-          depthWrite={false}
-          polygonOffset
-          polygonOffsetFactor={-3}
-          polygonOffsetUnits={-12}
-          ref={horizonFade}
-          roughness={0.7}
-          transparent
-        />
+        <Paint />
       </Band>
       <Band geometry={bands.nearLine} layer={3}>
-        <meshStandardMaterial
-          color={paint}
-          depthWrite={false}
-          polygonOffset
-          polygonOffsetFactor={-3}
-          polygonOffsetUnits={-12}
-          ref={horizonFade}
-          roughness={0.7}
-          transparent
-        />
+        <Paint />
       </Band>
     </CameraBounds>
   );

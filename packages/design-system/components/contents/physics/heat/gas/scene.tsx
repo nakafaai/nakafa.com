@@ -1,18 +1,16 @@
 import { useFrame } from "@react-three/fiber";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Gauge } from "@repo/design-system/components/contents/physics/bench/gauge";
-import { nichromeColor } from "@repo/design-system/components/contents/physics/bench/resistor";
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
 import { Tube } from "@repo/design-system/components/contents/physics/bench/vessel";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
+import { Shine } from "@repo/design-system/components/three/matter/shine";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
-import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
 import { Array as Arr } from "effect";
 import { useMemo, useRef } from "react";
 import type { Group } from "three";
@@ -138,66 +136,43 @@ export function GasPistonScene({
         target={[0.3, 1.15, 0]}
         wide={[0.9, 1.7, 5.5]}
       />
-      <SeamlessBenchSurface />
       <mesh castShadow position={[0, 0.05, 0]} receiveShadow>
         <boxGeometry args={[1.5, 0.1, 1.3]} />
-        <meshPhysicalMaterial
-          clearcoat={0.4}
-          color={APPARATUS_COLORS.caseSteel}
-          roughness={0.5}
-        />
+        <Matter color={APPARATUS_COLORS.caseSteel} of="enamel" />
       </mesh>
       <mesh position={[0, 0.115, 0]} receiveShadow>
         <cylinderGeometry args={[0.6, 0.6, 0.03, 48]} />
-        <meshStandardMaterial
-          color={heated ? nichromeColor(0.55) : APPARATUS_COLORS.bakelite}
-          emissive={
-            heated ? APPARATUS_COLORS.nichromeWarm : APPARATUS_COLORS.bakelite
-          }
-          emissiveIntensity={heated ? 1.1 : 0}
-          roughness={0.7}
-        />
+        <Matter glow={heated ? 0.8 : 0} of="iron" />
+        <Shine glow={heated ? 0.8 : 0} of="iron" position={[0, 0.05, 0]} />
       </mesh>
       <mesh castShadow position={[0, 0.165, 0]}>
         <cylinderGeometry args={[BORE + 0.05, BORE + 0.05, 0.07, 48]} />
-        <MetalMaterial color={APPARATUS_COLORS.caseSteel} roughness={0.36} />
+        <Matter of="steel" />
       </mesh>
       <group ref={swarm}>
         {Arr.map(molecules, (molecule) => (
           <mesh key={molecule.key}>
             <sphereGeometry args={[SIZE, 14, 10]} />
-            <meshStandardMaterial
-              color={tint}
-              emissive={tint}
-              emissiveIntensity={0.35}
-              roughness={0.35}
-            />
+            <Matter color={tint} glow={0.17} of="enamel" />
           </mesh>
         ))}
       </group>
       <group position={[0, FLOOR + CHAMBER * volume, 0]} ref={piston}>
         <mesh castShadow position={[0, 0.05, 0]}>
           <cylinderGeometry args={[BORE - 0.006, BORE - 0.006, 0.1, 48]} />
-          <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.3} />
+          <Matter of="nickel" />
         </mesh>
         <mesh position={[0, 0.05, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <torusGeometry args={[BORE - 0.012, 0.016, 10, 48]} />
-          <meshStandardMaterial
-            color={APPARATUS_COLORS.rubberFoot}
-            roughness={0.85}
-          />
+          <Matter of="rubber" />
         </mesh>
         <mesh castShadow position={[0, 0.6, 0]}>
           <cylinderGeometry args={[0.035, 0.035, 1, 16]} />
-          <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.22} />
+          <Matter of="nickel" />
         </mesh>
         <mesh castShadow position={[0, 1.13, 0]}>
           <cylinderGeometry args={[0.2, 0.2, 0.06, 32]} />
-          <meshPhysicalMaterial
-            clearcoat={0.5}
-            color={APPARATUS_COLORS.bakelite}
-            roughness={0.4}
-          />
+          <Matter of="bakelite" />
         </mesh>
       </group>
       <Tube bottom={FLOOR} height={CHAMBER + 0.5} radius={BORE} />
@@ -207,7 +182,7 @@ export function GasPistonScene({
         rotation={[0, 0, Math.PI / 2]}
       >
         <cylinderGeometry args={[0.03, 0.03, 0.56, 14]} />
-        <MetalMaterial color={QUANTUM_COLORS.brass} roughness={0.3} />
+        <Matter of="brass" />
       </mesh>
       <group position={[1.06, 0.14, 0.2]}>
         <Gauge share={pressure / full}>

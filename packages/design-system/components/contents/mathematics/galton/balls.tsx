@@ -19,7 +19,7 @@ import {
 } from "@repo/design-system/components/contents/mathematics/galton/run";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { useTimeline } from "@repo/design-system/components/contents/simulation/timeline";
-import { GALTON_COLORS } from "@repo/design-system/lib/material/galton";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
 import { useLayoutEffect, useMemo, useRef } from "react";
@@ -143,12 +143,7 @@ export function GaltonBalls({
         ref={marks}
       >
         <boxGeometry args={[MARK.width, MARK.height, 0.0012]} />
-        <meshStandardMaterial
-          color={PLOT_COLORS.pink}
-          emissive={PLOT_COLORS.pink}
-          emissiveIntensity={0.35}
-          roughness={0.45}
-        />
+        <Matter color={PLOT_COLORS.pink} glow={0.17} of="enamel" />
       </instancedMesh>
     </group>
   );
@@ -156,13 +151,5 @@ export function GaltonBalls({
 
 /** Polished bearing steel, mirror bright under the studio's lights. */
 function SteelMaterial() {
-  return (
-    <meshPhysicalMaterial
-      clearcoat={0.6}
-      clearcoatRoughness={0.05}
-      color={GALTON_COLORS.ball}
-      metalness={1}
-      roughness={0.08}
-    />
-  );
+  return <Matter finish="polished" of="steel" />;
 }

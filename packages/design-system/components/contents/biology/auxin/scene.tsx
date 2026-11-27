@@ -6,7 +6,6 @@ import {
 } from "@repo/design-system/components/contents/biology/auxin/parts";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import { TerracottaPot } from "@repo/design-system/components/contents/biology/seedling";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import {
   SimulationTicker,
   simulationStep,
@@ -89,7 +88,6 @@ export function AuxinAgarBendScene({
     <group>
       <SimulationTicker running={playing} />
       <AuxinCamera />
-      <SeamlessBenchSurface radius={14} y={0} />
       <TerracottaPot position={[0, 0, 0]} scale={1.08} />
       <ColeoptileCutaway bendRad={bendRad} />
       <DirectionalBrassLamp position={[0.98, 0, -0.08]} />

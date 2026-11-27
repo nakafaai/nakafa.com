@@ -1,13 +1,11 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import type { QuotientDirection } from "@repo/design-system/components/contents/chemistry/quotient/model";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import {
   SimulationTicker,
   simulationStep,
 } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { Turn } from "@repo/design-system/components/three/form/part";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
@@ -196,9 +194,6 @@ export function QuotientBalanceScene({
     <group>
       <SimulationTicker running={playing} />
       <QuotientCamera />
-      <CameraBounds exclude>
-        <SeamlessBenchSurface radius={16} y={0} />
-      </CameraBounds>
 
       {/* The sealed reaction vessel: a bell jar on its base, holding the gas mixture. */}
       <group position={[-0.92, 0, 0]}>

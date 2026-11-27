@@ -13,7 +13,7 @@ import {
   marksAlong,
 } from "@repo/design-system/components/contents/mathematics/logic/route";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { LOGIC_COLORS } from "@repo/design-system/lib/material/logic";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo, useRef } from "react";
@@ -47,7 +47,7 @@ function CrocodileClip({ color }: { readonly color: string }) {
           rotation={[0, 0, side * 0.1]}
         >
           <boxGeometry args={[0.0136, 0.0008, 0.0042]} />
-          <MetalMaterial color={LOGIC_COLORS.clipSteel} roughness={0.28} />
+          <Matter of="steel" />
         </mesh>
       ))}
       <mesh
@@ -56,12 +56,7 @@ function CrocodileClip({ color }: { readonly color: string }) {
         rotation={[0, 0, Math.PI / 2]}
       >
         <cylinderGeometry args={[0.0022, 0.0033, CLIP.length - 0.0125, 18]} />
-        <meshPhysicalMaterial
-          clearcoat={0.5}
-          clearcoatRoughness={0.3}
-          color={color}
-          roughness={0.4}
-        />
+        <Matter color={color} of="plastic" />
       </mesh>
     </group>
   );
@@ -87,12 +82,7 @@ export function Lead({
   return (
     <group>
       <mesh castShadow geometry={geometry} receiveShadow>
-        <meshPhysicalMaterial
-          clearcoat={0.5}
-          clearcoatRoughness={0.25}
-          color={shade}
-          roughness={0.38}
-        />
+        <Matter color={shade} of="plastic" />
       </mesh>
       {Arr.map(["from", "to"] as const, (end) => {
         const pose = clipPose(layout, index, end);
@@ -159,12 +149,7 @@ export function CurrentMarks({
       <SimulationTicker running={live.length > 0} />
       <instancedMesh args={[undefined, undefined, MAX_MARKS]} ref={marks}>
         <sphereGeometry args={[0.0009, 10, 8]} />
-        <meshStandardMaterial
-          color={LOGIC_COLORS.current}
-          emissive={LOGIC_COLORS.current}
-          emissiveIntensity={2.4}
-          toneMapped={false}
-        />
+        <Matter color={LOGIC_COLORS.current} glow={1.2} of="light" />
       </instancedMesh>
     </>
   );

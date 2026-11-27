@@ -2,6 +2,7 @@ import { ContactShadows } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { useStage } from "@repo/design-system/components/three/stage/context";
+import { GROUNDS } from "@repo/design-system/components/three/stage/land";
 import { Terrain } from "@repo/design-system/components/three/stage/terrain";
 
 /** How far the shadow-catching ground spreads, in reaches of the lab. */
@@ -25,7 +26,12 @@ function ShadowClear() {
   return null;
 }
 
-/** The unseen floor of a lab that names no ground: it shows only the key light's shadows on the backdrop. */
+/**
+ * The unseen floor that shows only the key light's shadows. A lab that names
+ * no ground has it alone, over the backdrop. A top inside a room has it over
+ * its own surface, where the room's soft light alone would leave that shadow
+ * too pale to read.
+ */
 function Catcher() {
   const { floor = 0, reach } = useStage();
 
@@ -45,9 +51,10 @@ function Catcher() {
 }
 
 /**
- * The floor a lab stands on, when it names one. A lab that names what its
- * ground is made of stands on that ground, drawn as far as the haze. A lab
- * that names only the height gets an unseen shadow catcher.
+ * The floor a lab stands on, when it names one. A lab that names what it
+ * stands on gets that ground: open land as far as the haze, or a bench or
+ * table top that dissolves into the room, under the shadow catcher. A lab
+ * that names only the height gets the shadow catcher alone.
  *
  * Static desktop and capable mobile labs bake soft contact shadows once
  * (`frames={1}`) so they add zero per-frame render passes after frame one.
@@ -63,10 +70,12 @@ export function Ground() {
   }
 
   const bakeContactShadows = (tier === "full" || tier === "light") && !animated;
+  const catches = ground === undefined || GROUNDS[ground].indoor;
 
   return (
     <>
-      {ground === undefined ? <Catcher /> : <Terrain kind={ground} />}
+      {ground === undefined ? null : <Terrain kind={ground} />}
+      {catches ? <Catcher /> : null}
       {bakeContactShadows ? (
         <>
           <ShadowClear />

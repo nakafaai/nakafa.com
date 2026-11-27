@@ -72,6 +72,38 @@ export function pathStrip(
   return { indices, length: travelled, positions, uvs };
 }
 
+/**
+ * A path with places added along its legs, so no leg is longer than `step`:
+ * a strip built on it bends with the ground under it. The path keeps its
+ * shape, and a closed one still returns from its last place to its first.
+ */
+export function densePath(
+  path: readonly Place[],
+  closed: boolean,
+  step: number
+) {
+  const legs = closed ? path.length : path.length - 1;
+  const places = Arr.flatMap(
+    Arr.makeBy(legs, (index) => index),
+    (index) => {
+      const from = path[index];
+      const to = path[(index + 1) % path.length];
+      const pieces = Math.max(
+        1,
+        Math.ceil(Math.hypot(to[0] - from[0], to[1] - from[1]) / step)
+      );
+      return Arr.makeBy(
+        pieces,
+        (piece): Place => [
+          from[0] + ((to[0] - from[0]) * piece) / pieces,
+          from[1] + ((to[1] - from[1]) * piece) / pieces,
+        ]
+      );
+    }
+  );
+  return closed ? places : Arr.append(places, path[legs]);
+}
+
 /** The places of a circle of one radius around the middle, as a closed path of `steps` legs. */
 export function circlePath(radius: number, steps: number) {
   return Arr.makeBy(steps, (index): Place => {

@@ -107,7 +107,7 @@ export function BundleCountLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={REACH} setting="lab">
+        <ScienceStage floor={0} ground="oak" reach={REACH} setting="lab">
           <Suspense fallback={null}>
             <BundleScene base={base} count={shown} showReadout={showReadout} />
           </Suspense>

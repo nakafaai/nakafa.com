@@ -135,7 +135,7 @@ export function SeaNameLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={-0.02} reach={3.4} setting="sky">
+        <ScienceStage floor={-0.02} ground="sand" reach={3.4} setting="sky">
           <Suspense fallback={null}>
             <SeaNameScene
               animals={animals}

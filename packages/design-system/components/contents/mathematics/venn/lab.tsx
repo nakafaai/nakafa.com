@@ -135,7 +135,7 @@ export function VennSortLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={REACH} setting="studio">
+        <ScienceStage floor={0} ground="walnut" reach={REACH} setting="studio">
           <Suspense fallback={null}>
             <VennScene
               objects={Arr.map(objects, (each) => each.object)}

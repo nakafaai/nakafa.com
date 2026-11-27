@@ -182,7 +182,7 @@ export function ArgumentChainLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={REACH} setting="studio">
+        <ScienceStage floor={0} ground="walnut" reach={REACH} setting="studio">
           <PlayArrangements
             list={arrangements(seats, hand.length)}
             onArrange={setSeats}

@@ -33,13 +33,11 @@ import {
   sweepEnd,
 } from "@repo/design-system/components/contents/mathematics/counterexample/sweep";
 import { TileModel } from "@repo/design-system/components/contents/mathematics/counterexample/tile";
-import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { useTimeline } from "@repo/design-system/components/contents/simulation/timeline";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { COUNTEREXAMPLE_COLORS } from "@repo/design-system/lib/material/counterexample";
-import { TABLE_COLORS } from "@repo/design-system/lib/material/table";
 import { Array as Arr, Option } from "effect";
 import { useMemo, useRef, useState } from "react";
 import type { Color, Group } from "three";
@@ -182,7 +180,6 @@ export function CounterexampleScene({
     <group>
       <SimulationTicker running={playing} />
       <CounterexampleCamera depth={board.depth} width={board.width} />
-      <StudioTable color={TABLE_COLORS.maple} />
       <FeltBoard size={board} />
       {sorting ? <CaseCells sort={sort} /> : null}
       <group position={[0, 0, cardZ]}>

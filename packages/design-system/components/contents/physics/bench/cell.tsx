@@ -1,10 +1,9 @@
 import { Post } from "@repo/design-system/components/contents/physics/bench/lead";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { getColor } from "@repo/design-system/lib/color";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
-import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useEffect, useMemo } from "react";
@@ -56,16 +55,12 @@ export function DryCell() {
     <group>
       <mesh castShadow position={[0, 0.02, 0]} receiveShadow>
         <boxGeometry args={[0.98, 0.04, 0.3]} />
-        <meshPhysicalMaterial
-          clearcoat={0.4}
-          color={APPARATUS_COLORS.bakelite}
-          roughness={0.42}
-        />
+        <Matter of="bakelite" />
       </mesh>
       {Arr.map([-0.34, 0.34] as const, (x) => (
         <mesh castShadow key={x} position={[x, 0.11, 0]}>
           <boxGeometry args={[0.012, 0.18, 0.2]} />
-          <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.3} />
+          <Matter of="nickel" />
         </mesh>
       ))}
       <group position={[0, 0.15, 0]} rotation={[0, 0, -Math.PI / 2]}>
@@ -82,15 +77,15 @@ export function DryCell() {
         </mesh>
         <mesh position={[0, 0.284, 0]}>
           <cylinderGeometry args={[0.1, 0.105, 0.012, 40]} />
-          <MetalMaterial color={APPARATUS_COLORS.cellCap} roughness={0.26} />
+          <Matter of="nickel" />
         </mesh>
         <mesh position={[0, 0.305, 0]}>
           <cylinderGeometry args={[0.032, 0.036, 0.034, 24]} />
-          <MetalMaterial color={APPARATUS_COLORS.cellCap} roughness={0.2} />
+          <Matter of="nickel" />
         </mesh>
         <mesh position={[0, -0.284, 0]}>
           <cylinderGeometry args={[0.105, 0.1, 0.012, 40]} />
-          <MetalMaterial color={APPARATUS_COLORS.cellCap} roughness={0.3} />
+          <Matter of="nickel" />
         </mesh>
       </group>
       <Post color={APPARATUS_COLORS.leadRed} position={CELL_POSTS[0]} />
@@ -123,38 +118,21 @@ export function Supply({
     <group>
       <mesh castShadow position={[0, 0.2, 0]} receiveShadow>
         <boxGeometry args={[0.72, 0.38, 0.5]} />
-        <meshPhysicalMaterial
-          clearcoat={0.5}
-          clearcoatRoughness={0.3}
-          color={APPARATUS_COLORS.caseEnamel}
-          metalness={0.1}
-          roughness={0.4}
-        />
+        <Matter color={APPARATUS_COLORS.caseEnamel} of="enamel" />
       </mesh>
       {Arr.map(VENTS, (y) => (
         <mesh key={y} position={[0.362, 0.22 + y, 0]}>
           <boxGeometry args={[0.004, 0.018, 0.34]} />
-          <meshStandardMaterial
-            color={APPARATUS_COLORS.caseDark}
-            roughness={0.7}
-          />
+          <Matter color={APPARATUS_COLORS.caseDark} of="paint" />
         </mesh>
       ))}
       <mesh position={[0, 0.2, 0.252]}>
         <boxGeometry args={[0.66, 0.32, 0.008]} />
-        <meshStandardMaterial
-          color={APPARATUS_COLORS.caseDark}
-          roughness={0.5}
-        />
+        <Matter color={APPARATUS_COLORS.caseDark} of="anodised" />
       </mesh>
       <mesh position={[-0.14, 0.27, 0.258]}>
         <boxGeometry args={[0.3, 0.12, 0.006]} />
-        <meshStandardMaterial
-          color={BENCH_COLORS.lcd}
-          emissive={BENCH_COLORS.lcdGlow}
-          emissiveIntensity={0.7}
-          roughness={0.2}
-        />
+        <Matter color={BENCH_COLORS.lcdGlow} glow={0.35} of="epoxy" />
       </mesh>
       <group
         position={[-0.14, 0.12, 0.262]}
@@ -162,37 +140,29 @@ export function Supply({
       >
         <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.055, 0.062, 0.05, 28]} />
-          <meshPhysicalMaterial
-            clearcoat={0.4}
-            color={APPARATUS_COLORS.bakelite}
-            roughness={0.5}
-          />
+          <Matter of="bakelite" />
         </mesh>
         <mesh position={[0.036, 0, 0.027]}>
           <boxGeometry args={[0.034, 0.008, 0.004]} />
-          <meshStandardMaterial
-            color={APPARATUS_COLORS.porcelain}
-            roughness={0.4}
-          />
+          <Matter color={APPARATUS_COLORS.caseEnamel} of="enamel" />
         </mesh>
       </group>
       {Arr.map(SUPPLY_SOCKETS, ([x, y, z], index) => (
         <group key={x} position={[x, y, z - 0.01]}>
           <mesh rotation={[Math.PI / 2, 0, 0]}>
             <cylinderGeometry args={[0.036, 0.036, 0.03, 24]} />
-            <meshPhysicalMaterial
-              clearcoat={0.5}
+            <Matter
               color={
                 index === 0
                   ? APPARATUS_COLORS.leadRed
                   : APPARATUS_COLORS.leadBlack
               }
-              roughness={0.4}
+              of="plastic"
             />
           </mesh>
           <mesh position={[0, 0, 0.012]} rotation={[Math.PI / 2, 0, 0]}>
             <cylinderGeometry args={[0.016, 0.016, 0.012, 16]} />
-            <MetalMaterial color={QUANTUM_COLORS.brass} roughness={0.3} />
+            <Matter of="brass" />
           </mesh>
         </group>
       ))}

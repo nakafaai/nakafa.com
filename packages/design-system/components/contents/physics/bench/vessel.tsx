@@ -1,10 +1,5 @@
 import { Turn } from "@repo/design-system/components/three/form/part";
-import {
-  GlassMaterial,
-  LiquidMaterial,
-} from "@repo/design-system/components/three/physical";
-import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 
@@ -54,14 +49,11 @@ export function Tank({
         <boxGeometry
           args={[width + PANE * 2 + 0.02, 0.016, depth + PANE * 2 + 0.02]}
         />
-        <meshStandardMaterial
-          color={APPARATUS_COLORS.rubberFoot}
-          roughness={0.8}
-        />
+        <Matter of="rubber" />
       </mesh>
       <mesh position={[0, 0.016 + PANE / 2, 0]} renderOrder={2}>
         <boxGeometry args={[width, PANE, depth]} />
-        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.16} />
+        <Matter of="glass" opacity={0.16} />
       </mesh>
       {Arr.map(panes, (pane) => (
         <mesh
@@ -71,7 +63,7 @@ export function Tank({
           renderOrder={3}
         >
           <boxGeometry args={[pane.size[0], pane.size[1], pane.size[2]]} />
-          <GlassMaterial color={BENCH_COLORS.glass} opacity={0.1} />
+          <Matter of="glass" opacity={0.1} />
         </mesh>
       ))}
     </group>
@@ -93,7 +85,7 @@ export function TankLiquid({
   return (
     <mesh position={[0, 0.016 + PANE + level / 2, 0]} renderOrder={1}>
       <boxGeometry args={[width - 0.004, level, depth - 0.004]} />
-      <LiquidMaterial color={color} opacity={0.4} />
+      <Matter color={color} of="liquid" opacity={0.4} />
     </mesh>
   );
 }
@@ -117,7 +109,7 @@ export function Tube({
         <cylinderGeometry
           args={[radius + 0.012, radius + 0.012, height, 40, 1, true]}
         />
-        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.22} />
+        <Matter of="glass" />
       </mesh>
       <mesh
         position={[0, height, 0]}
@@ -125,7 +117,7 @@ export function Tube({
         rotation={[Math.PI / 2, 0, 0]}
       >
         <torusGeometry args={[radius + 0.012, 0.008, 10, 40]} />
-        <GlassMaterial color={BENCH_COLORS.glassEdge} opacity={0.5} />
+        <Matter of="glass" opacity={0.5} />
       </mesh>
     </group>
   );
@@ -167,7 +159,7 @@ export function Column({
   return (
     <mesh renderOrder={1}>
       <Turn profile={points} />
-      <LiquidMaterial color={color} opacity={opacity} />
+      <Matter color={color} of="liquid" opacity={opacity} />
     </mesh>
   );
 }

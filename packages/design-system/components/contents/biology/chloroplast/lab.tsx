@@ -189,7 +189,7 @@ export function ChloroplastStageLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.3} setting="lab">
+        <ScienceStage floor={0} ground="epoxy" reach={2.3} setting="lab">
           <Suspense fallback={null}>
             <ChloroplastScene
               parts={labels.parts}

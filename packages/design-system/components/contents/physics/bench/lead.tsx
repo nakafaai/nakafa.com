@@ -1,9 +1,8 @@
 import { useFrame } from "@react-three/fiber";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
-import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo, useRef } from "react";
 import type { Group } from "three";
@@ -70,24 +69,14 @@ export function Lead({
   return (
     <group>
       <mesh castShadow geometry={tube} receiveShadow>
-        <meshPhysicalMaterial
-          clearcoat={0.35}
-          clearcoatRoughness={0.4}
-          color={color}
-          roughness={0.48}
-        />
+        <Matter color={color} of="plastic" />
       </mesh>
       {flow !== 0 && playing ? (
         <group ref={markers}>
           {Arr.makeBy(count, (index) => (
             <mesh key={index} position={curve.getPointAt(index / count)}>
               <sphereGeometry args={[radius * 1.12, 12, 10]} />
-              <meshStandardMaterial
-                color={APPARATUS_COLORS.filamentWhite}
-                emissive={APPARATUS_COLORS.lampHalo}
-                emissiveIntensity={1.8}
-                roughness={0.3}
-              />
+              <Matter color={APPARATUS_COLORS.lampHalo} of="light" />
             </mesh>
           ))}
         </group>
@@ -111,15 +100,15 @@ export function Post({
     <group position={position}>
       <mesh castShadow position={[0, 0.012, 0]}>
         <cylinderGeometry args={[0.042, 0.046, 0.024, 6]} />
-        <MetalMaterial color={QUANTUM_COLORS.brass} roughness={0.3} />
+        <Matter of="brass" />
       </mesh>
       <mesh castShadow position={[0, 0.06, 0]}>
         <cylinderGeometry args={[0.016, 0.016, 0.1, 14]} />
-        <MetalMaterial color={QUANTUM_COLORS.brass} roughness={0.24} />
+        <Matter of="brass" />
       </mesh>
       <mesh castShadow position={[0, 0.082, 0]}>
         <cylinderGeometry args={[0.038, 0.034, 0.05, 18]} />
-        <meshPhysicalMaterial clearcoat={0.5} color={color} roughness={0.42} />
+        <Matter color={color} of="plastic" />
       </mesh>
     </group>
   );

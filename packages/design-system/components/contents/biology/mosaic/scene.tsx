@@ -11,10 +11,7 @@ import {
 } from "@repo/design-system/components/contents/biology/membrane";
 import type { MembraneComponent } from "@repo/design-system/components/contents/biology/mosaic/model";
 import { evaluateMembraneFluidity } from "@repo/design-system/components/contents/biology/mosaic/model";
-import {
-  BiologyBenchSurface,
-  SpecimenPedestal,
-} from "@repo/design-system/components/contents/biology/workbench";
+import { SpecimenPedestal } from "@repo/design-system/components/contents/biology/workbench";
 import {
   SimulationTicker,
   simulationStep,
@@ -115,7 +112,6 @@ export function FluidMosaicScene({
     <group>
       <SimulationTicker running={playing} />
       <MosaicCamera />
-      <BiologyBenchSurface radius={14} y={0} />
       <SpecimenPedestal depth={0.94} height={0.055} width={2.48} />
 
       <group ref={bilayerRef}>

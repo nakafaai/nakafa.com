@@ -135,7 +135,7 @@ export function SpecimenDrawingLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={1.5} setting="studio">
+        <ScienceStage floor={0} ground="epoxy" reach={1.5} setting="studio">
           <Suspense fallback={null}>
             <DrawingScene
               boundaryLabel={boundaryLabel}

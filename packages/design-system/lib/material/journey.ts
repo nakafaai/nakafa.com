@@ -11,9 +11,7 @@ import { PLOT_COLORS } from "@repo/design-system/lib/plot";
  * every lesson.
  */
 export const JOURNEY_COLORS = {
-  // The table, the diorama's frame, and its flocked land from the verge to the hilltops.
-  table: "#8d6a48",
-  frame: "#5d3d27",
+  // The diorama's flocked land from the verge to the hilltops.
   grass: "#6f8f4a",
   meadow: "#8a9c52",
   hill: "#4f7437",
@@ -24,7 +22,6 @@ export const JOURNEY_COLORS = {
   post: "#f2f1ec",
   shelter: "#d6e2e8",
   roof: "#2f6f8f",
-  pole: "#5b6168",
   sign: "#1f6fb5",
   // Roadside trees.
   trunk: "#6b4a2f",
@@ -39,9 +36,8 @@ export const JOURNEY_COLORS = {
   // The rise and run drawn on the leg in focus, and the mark where two travellers meet.
   slope: PLOT_COLORS.slate,
   meeting: PLOT_COLORS.pink,
-  // Glass, tyres, and the rider's jacket and helmet.
+  // Glass, and the rider's jacket and helmet.
   glass: "#2a3540",
-  tyre: "#1c1c1e",
   rider: "#3a4a5c",
   helmet: "#f4f4f1",
 } as const;

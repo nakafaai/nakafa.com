@@ -19,9 +19,7 @@ import {
   Rail,
   Tray,
 } from "@repo/design-system/components/contents/mathematics/argument/rail";
-import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { TABLE_COLORS } from "@repo/design-system/lib/material/table";
 import { Array as Arr, Option } from "effect";
 
 /** The camera's vertical field of view, in degrees: narrow, so the cards stay square on. */
@@ -60,7 +58,6 @@ export function ArgumentScene({
   return (
     <group>
       <ArgumentCamera />
-      <StudioTable color={TABLE_COLORS.walnut} />
       <Rail names={names}>
         <Lamp lit={lit} />
       </Rail>

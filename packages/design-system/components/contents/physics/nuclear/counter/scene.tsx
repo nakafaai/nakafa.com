@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Lead } from "@repo/design-system/components/contents/physics/bench/lead";
 import {
@@ -12,12 +11,11 @@ import { hashUnit } from "@repo/design-system/components/contents/simulation/gra
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
-import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
 import { Array as Arr } from "effect";
 import { useMemo, useRef } from "react";
-import type { Group, MeshStandardMaterial } from "three";
+import type { Group, MeshPhysicalMaterial } from "three";
 import { Vector3 } from "three";
 
 /** Seconds the whole record plays over, and how long it rests on its end. */
@@ -88,7 +86,7 @@ export function HalfLifeCounterScene({
   const elapsed = useRef(0);
   const swarm = useRef<Group>(null);
   const strays = useRef<Group>(null);
-  const lamp = useRef<MeshStandardMaterial>(null);
+  const lamp = useRef<MeshPhysicalMaterial>(null);
   const flights = useMemo(
     () =>
       Arr.makeBy(PARTICLES, (index) => {
@@ -176,15 +174,14 @@ export function HalfLifeCounterScene({
         target={[0.25, 0.55, 0.1]}
         wide={[0.5, 1.7, 4.9]}
       />
-      <SeamlessBenchSurface />
       <group position={[SOURCE, 0, 0]}>
         <mesh castShadow position={[-0.08, 0.02, 0]} receiveShadow>
           <cylinderGeometry args={[0.24, 0.26, 0.04, 40]} />
-          <MetalMaterial color={APPARATUS_COLORS.caseSteel} roughness={0.42} />
+          <Matter of="steel" />
         </mesh>
         <mesh castShadow position={[-0.08, AXIS / 2, 0]}>
           <cylinderGeometry args={[0.025, 0.025, AXIS, 16]} />
-          <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.26} />
+          <Matter of="nickel" />
         </mesh>
         <mesh
           castShadow
@@ -192,18 +189,15 @@ export function HalfLifeCounterScene({
           rotation={[0, 0, Math.PI / 2]}
         >
           <cylinderGeometry args={[0.13, 0.13, 0.16, 40]} />
-          <MetalMaterial color={QUANTUM_COLORS.brass} roughness={0.3} />
+          <Matter of="brass" />
         </mesh>
         <mesh position={[0.022, AXIS, 0]} rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[0.1, 0.1, 0.006, 32]} />
-          <meshStandardMaterial
-            color={APPARATUS_COLORS.sourceHolder}
-            roughness={0.5}
-          />
+          <Matter color={APPARATUS_COLORS.sourceHolder} of="enamel" />
         </mesh>
         <mesh position={[0.027, AXIS, 0]} rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[0.045, 0.045, 0.006, 24]} />
-          <MetalMaterial color={APPARATUS_COLORS.sourceFoil} roughness={0.2} />
+          <Matter of="nickel" />
         </mesh>
       </group>
       <group position={[WINDOW, 0, 0]}>
@@ -215,21 +209,17 @@ export function HalfLifeCounterScene({
           <cylinderGeometry
             args={[TUBE.radius, TUBE.radius, TUBE.length, 48]}
           />
-          <MetalMaterial color={QUANTUM_COLORS.brass} roughness={0.26} />
+          <Matter of="brass" />
         </mesh>
         <mesh position={[-0.004, AXIS, 0]} rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry
             args={[TUBE.radius - 0.02, TUBE.radius - 0.02, 0.008, 40]}
           />
-          <meshPhysicalMaterial
-            clearcoat={1}
-            color={APPARATUS_COLORS.mica}
-            roughness={0.18}
-          />
+          <Matter of="mica" />
         </mesh>
         <mesh position={[0, AXIS, 0]} rotation={[0, Math.PI / 2, 0]}>
           <torusGeometry args={[TUBE.radius, 0.016, 12, 48]} />
-          <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.24} />
+          <Matter of="nickel" />
         </mesh>
         <mesh
           castShadow
@@ -237,37 +227,26 @@ export function HalfLifeCounterScene({
           rotation={[0, 0, Math.PI / 2]}
         >
           <cylinderGeometry args={[0.07, TUBE.radius, 0.1, 32]} />
-          <meshPhysicalMaterial
-            clearcoat={0.5}
-            color={APPARATUS_COLORS.bakelite}
-            roughness={0.4}
-          />
+          <Matter of="bakelite" />
         </mesh>
         <mesh position={[TUBE.length * 0.72, AXIS + TUBE.radius + 0.012, 0]}>
           <sphereGeometry args={[0.028, 16, 12]} />
-          <meshStandardMaterial
+          <Matter
             color={APPARATUS_COLORS.counterLed}
-            emissive={APPARATUS_COLORS.counterLed}
-            emissiveIntensity={0.05}
+            glow={0.025}
+            of="epoxy"
             ref={lamp}
-            roughness={0.3}
           />
         </mesh>
         {Arr.map([0.25, 0.9] as const, (x) => (
           <group key={x} position={[x, 0, 0]}>
             <mesh castShadow position={[0, 0.02, 0]} receiveShadow>
               <boxGeometry args={[0.2, 0.04, 0.5]} />
-              <MetalMaterial
-                color={APPARATUS_COLORS.caseSteel}
-                roughness={0.42}
-              />
+              <Matter of="steel" />
             </mesh>
             <mesh castShadow position={[0, (AXIS - TUBE.radius) / 2, 0]}>
               <boxGeometry args={[0.07, AXIS - TUBE.radius, 0.2]} />
-              <MetalMaterial
-                color={APPARATUS_COLORS.caseSteel}
-                roughness={0.42}
-              />
+              <Matter of="steel" />
             </mesh>
           </group>
         ))}
@@ -276,11 +255,7 @@ export function HalfLifeCounterScene({
         {Arr.map(flights, (flight) => (
           <mesh key={flight.key} scale={[0.07, 0.012, 0.012]}>
             <sphereGeometry args={[1, 10, 8]} />
-            <meshStandardMaterial
-              color={APPARATUS_COLORS.betaTrack}
-              emissive={APPARATUS_COLORS.betaTrack}
-              emissiveIntensity={1.6}
-            />
+            <Matter color={APPARATUS_COLORS.betaTrack} glow={0.8} of="light" />
           </mesh>
         ))}
       </group>
@@ -288,10 +263,10 @@ export function HalfLifeCounterScene({
         {Arr.map(crossings, (crossing) => (
           <mesh key={crossing.key}>
             <sphereGeometry args={[0.016, 10, 8]} />
-            <meshStandardMaterial
+            <Matter
               color={APPARATUS_COLORS.neutronFree}
-              emissive={APPARATUS_COLORS.neutronFree}
-              emissiveIntensity={1.2}
+              glow={0.6}
+              of="light"
             />
           </mesh>
         ))}

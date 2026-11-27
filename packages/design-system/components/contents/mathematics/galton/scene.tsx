@@ -23,24 +23,12 @@ import {
   PIN_RADIUS,
   pinPoints,
 } from "@repo/design-system/components/contents/mathematics/galton/board";
-import { woodGrain } from "@repo/design-system/components/contents/mathematics/galton/wood";
-import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { GlassMaterial } from "@repo/design-system/components/three/physical";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { GALTON_COLORS } from "@repo/design-system/lib/material/galton";
-import { TABLE_COLORS } from "@repo/design-system/lib/material/table";
 import { Array as Arr } from "effect";
-import { useEffect, useMemo } from "react";
-import type { Texture } from "three";
-import {
-  DataTexture,
-  LinearFilter,
-  RepeatWrapping,
-  Shape,
-  SRGBColorSpace,
-  Vector2,
-} from "three";
+import { useMemo } from "react";
+import { Shape, Vector2 } from "three";
 
 /** The frame's rails: 20 mm wide, the top rail 25 mm and the base rail 30 mm tall. */
 const RAIL = 0.02;
@@ -85,7 +73,6 @@ export function GaltonScene({
   const pose = useMemo(() => boardPose(p), [p]);
   return (
     <group>
-      <StudioTable color={TABLE_COLORS.maple} />
       <group position={[pose.pivot, 0, 0]} rotation={[0, 0, pose.angle]}>
         <group position={[-pose.pivot, 0, 0]}>
           <Frame />
@@ -104,7 +91,7 @@ export function GaltonScene({
             <boxGeometry
               args={[2 * INNER_HALF, INNER_TOP - BIN_FLOOR, GLASS]}
             />
-            <GlassMaterial color={GALTON_COLORS.glass} opacity={0.14} />
+            <Matter of="glass" opacity={0.14} />
           </mesh>
         </group>
       </group>
@@ -115,8 +102,6 @@ export function GaltonScene({
 
 /** The walnut frame on its two feet, and the painted backboard inside it. */
 function Frame() {
-  const along = useGrain(false);
-  const upright = useGrain(true);
   const outer = INNER_HALF + RAIL;
   const top = INNER_TOP + TOP_RAIL;
   const sides = top - FOOT_HEIGHT;
@@ -128,13 +113,7 @@ function Frame() {
         receiveShadow
       >
         <boxGeometry args={[2 * outer - 0.004, sides - 0.004, BACK]} />
-        <SurfaceMaterial
-          bump={0.004}
-          color={GALTON_COLORS.backboard}
-          repeat={[3, 5]}
-          roughness={0.7}
-          surface="paint"
-        />
+        <Matter color={GALTON_COLORS.backboard} of="paint" />
       </mesh>
       {Arr.map([-1, 1] as const, (side) => (
         <group key={side}>
@@ -149,7 +128,7 @@ function Frame() {
             radius={0.003}
             receiveShadow
           >
-            <Walnut grain={upright} />
+            <Matter of="walnut" />
           </RoundedBox>
           <RoundedBox
             args={[FOOT_WIDTH, FOOT_HEIGHT, FOOT_DEPTH]}
@@ -158,7 +137,7 @@ function Frame() {
             radius={0.004}
             receiveShadow
           >
-            <Walnut grain={along} />
+            <Matter of="walnut" />
           </RoundedBox>
         </group>
       ))}
@@ -169,7 +148,7 @@ function Frame() {
         radius={0.003}
         receiveShadow
       >
-        <Walnut grain={along} />
+        <Matter of="walnut" />
       </RoundedBox>
       <RoundedBox
         args={[2 * INNER_HALF, TOP_RAIL, DEPTH]}
@@ -178,68 +157,15 @@ function Frame() {
         radius={0.003}
         receiveShadow
       >
-        <Walnut grain={along} />
+        <Matter of="walnut" />
       </RoundedBox>
     </group>
   );
 }
 
-/**
- * A wood grain texture whose lines run along a face's width, or turned to
- * run along its height for an upright rail, repeated `repeat` times over a
- * face's texture coordinates (a shape's own geometry measures them in
- * metres). It is built once from the deterministic grain field and freed
- * with the scene.
- */
-function useGrain(turned: boolean, repeat = 1) {
-  const texture = useMemo(() => {
-    const width = 256;
-    const height = 64;
-    const shades = woodGrain(width, height);
-    const data = new Uint8Array(width * height * 4);
-    Arr.forEach(Arr.range(0, width * height - 1), (index) => {
-      const value = Math.round((shades[index] ?? 1) * 255);
-      data.set([value, value, value, 255], index * 4);
-    });
-    const grain = new DataTexture(data, width, height);
-    grain.wrapS = RepeatWrapping;
-    grain.wrapT = RepeatWrapping;
-    grain.magFilter = LinearFilter;
-    grain.minFilter = LinearFilter;
-    grain.repeat.set(repeat, repeat);
-    grain.colorSpace = SRGBColorSpace;
-    grain.center.set(0.5, 0.5);
-    grain.rotation = turned ? Math.PI / 2 : 0;
-    grain.needsUpdate = true;
-    return grain;
-  }, [repeat, turned]);
-  useEffect(() => () => texture.dispose(), [texture]);
-  return texture;
-}
-
-/** Oiled walnut: a soft sheen over a dark, open grain. */
-function Walnut({ grain }: { readonly grain: Texture }) {
-  return (
-    <meshPhysicalMaterial
-      clearcoat={0.35}
-      clearcoatRoughness={0.45}
-      color={GALTON_COLORS.walnut}
-      map={grain}
-      roughness={0.6}
-    />
-  );
-}
-
 /** Light maple, for the hopper floor and the dividers: strips so thin that their grain does not show. */
 function Maple() {
-  return (
-    <meshPhysicalMaterial
-      clearcoat={0.3}
-      clearcoatRoughness={0.4}
-      color={GALTON_COLORS.maple}
-      roughness={0.5}
-    />
-  );
+  return <Matter of="maple" />;
 }
 
 /** The hopper's floor: two maple slats falling at 30 degrees from the frame's sides to the outlet. */
@@ -300,13 +226,7 @@ function Pins({ rows }: { readonly rows: number }) {
   return (
     <Instances placements={placements}>
       <latheGeometry args={[PIN_PROFILE, 28]} />
-      <meshPhysicalMaterial
-        clearcoat={0.6}
-        clearcoatRoughness={0.1}
-        color={GALTON_COLORS.pin}
-        metalness={1}
-        roughness={0.18}
-      />
+      <Matter finish="polished" of="brass" />
     </Instances>
   );
 }
@@ -357,14 +277,7 @@ function Bins({ rows }: { readonly rows: number }) {
 
 /** Oak, the wedge's wood. */
 function Oak() {
-  const grain = useGrain(false, 12);
-  return (
-    <meshStandardMaterial
-      color={GALTON_COLORS.oak}
-      map={grain}
-      roughness={0.7}
-    />
-  );
+  return <Matter of="oak" />;
 }
 
 /** The oak wedge under the raised foot of a leaning board, its top along the foot's sole. */

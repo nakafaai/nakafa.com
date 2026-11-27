@@ -1,4 +1,5 @@
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { Quaternion, Vector3 } from "three";
@@ -46,21 +47,11 @@ export function Vector({
       <group position={from} quaternion={turn}>
         <mesh position={[0, (length - head) / 2, 0]}>
           <cylinderGeometry args={[0.014, 0.014, length - head, 14]} />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={0.45}
-            roughness={0.4}
-          />
+          <Matter color={color} glow={0.22} of="enamel" />
         </mesh>
         <mesh position={[0, length - head / 2, 0]}>
           <coneGeometry args={[0.04, head, 20]} />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={0.45}
-            roughness={0.4}
-          />
+          <Matter color={color} glow={0.22} of="enamel" />
         </mesh>
       </group>
       <Tag

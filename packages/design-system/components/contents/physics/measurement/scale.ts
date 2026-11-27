@@ -75,17 +75,3 @@ export function steelStops(shade = 0) {
     [1, mix(dark, light, 0.35)],
   ] as const;
 }
-
-/**
- * The gradient of a brass or copper cylinder seen from the side, lit from
- * the upper left, run across its width.
- */
-export function brassStops(base: string) {
-  return [
-    [0, mix(base, getColor("BLACK"), 0.45)],
-    [0.22, mix(base, getColor("WHITE"), 0.45)],
-    [0.4, base],
-    [0.85, mix(base, getColor("BLACK"), 0.35)],
-    [1, mix(base, getColor("BLACK"), 0.6)],
-  ] as const;
-}

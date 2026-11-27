@@ -2,11 +2,20 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   VERNIER_DIVISIONS,
   VERNIER_RESOLUTION,
-  VERNIER_STEP,
-  vernierMark,
   vernierReading,
 } from "@repo/design-system/components/contents/physics/measurement/vernier/caliper";
 import { Array as Arr } from "effect";
+
+/** The length of one vernier division, in millimetres: one main division less one resolution. */
+const VERNIER_STEP = (VERNIER_DIVISIONS - 1) / VERNIER_DIVISIONS;
+
+/**
+ * Where vernier line `index` stands on the main scale, in millimetres, with
+ * the vernier zero at `zero`.
+ */
+function vernierMark(zero: number, index: number) {
+  return zero + index * VERNIER_STEP;
+}
 
 /**
  * How far vernier line `index` misses the nearest main mark, in millimetres.

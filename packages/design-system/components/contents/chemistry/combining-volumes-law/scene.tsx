@@ -18,7 +18,6 @@ import {
   ChemistryParticleLabel,
   getChemistryParticleLabelPosition,
 } from "@repo/design-system/components/contents/chemistry/label";
-import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { useSimulationClock } from "@repo/design-system/components/contents/simulation/clock";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow";
@@ -124,9 +123,6 @@ export function CombiningVolumesScene({
       value={{ colors, volumeUnit: labels.volumeUnit }}
     >
       <group position={[0, 0.08, 0]} scale={SCENE_SCALE}>
-        <CameraBounds exclude>
-          <SeamlessBenchSurface radius={20} y={TUBE_BASE_Y} />
-        </CameraBounds>
         <ThreeLabel
           anchorY="bottom"
           color={colors.text}
