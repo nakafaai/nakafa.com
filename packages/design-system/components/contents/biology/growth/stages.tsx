@@ -28,12 +28,27 @@ const PAN_PROFILE = [
   [0.572, 0.14],
 ] as const;
 
-/** The plant each life cycle is drawn as, and the scale at which its full growth reaches the top of the ruler. */
-const PLANTS = {
+/** The plant each life cycle is drawn as, and the scale at which its full growth reaches the top of the stake. */
+export const PLANTS = {
   annual: { habit: "herb", scale: 0.85 },
   biennial: { habit: "biennial", scale: 0.85 },
   perennial: { habit: "sapling", scale: 1.25 },
 } as const;
+
+/** How high the soil in the seed pan lies, where the plant roots and the stake's zero mark sits. */
+export const SOIL_LEVEL = 0.235;
+
+/** The seed as it lies on the soil before it roots: a plump bean turned about its long axis. */
+const SEED_PROFILE = [
+  [0, -0.04],
+  [0.018, -0.036],
+  [0.03, -0.024],
+  [0.036, -0.006],
+  [0.035, 0.012],
+  [0.028, 0.028],
+  [0.016, 0.038],
+  [0, 0.041],
+] as const;
 
 /** How many steps the growth of the plant is drawn in, so it is rebuilt a few dozen times and not every frame. */
 const STEPS = 56;
@@ -81,15 +96,15 @@ export function GrowthPlantSpecimen({
   const stage = Math.round(dryMass * STEPS) / STEPS;
 
   return (
-    <group position={[0, 0.235, 0]}>
+    <group position={[0, SOIL_LEVEL, 0]}>
       {dryMass < 0.26 ? (
         <mesh
           castShadow
-          position={[0.05, 0.012, 0.05]}
-          rotation={[0.3, 0.4, 0.5]}
-          scale={[1.4, 0.8, 0.95]}
+          position={[0.05, 0.016, 0.05]}
+          rotation={[0.3, 0.4, 1.45]}
+          scale={[1, 1, 0.78]}
         >
-          <icosahedronGeometry args={[0.04, 4]} />
+          <Turn profile={SEED_PROFILE} />
           <SurfaceMaterial
             bump={0.8}
             coat={0.3}

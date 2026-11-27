@@ -9,6 +9,7 @@ import {
   sectionCells,
 } from "@repo/design-system/components/three/flora/tissue";
 import { Turn } from "@repo/design-system/components/three/form/part";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { FLORA_COLORS } from "@repo/design-system/lib/material/flora";
 import { Array as Arr } from "effect";
@@ -64,6 +65,16 @@ const BULB_PROFILE = [
   [0.03, 0.106],
   [0.014, 0.115],
   [0, 0.117],
+] as const;
+
+/** The knurled socket the bulb screws into, above the bulb's cap. */
+const SOCKET_PROFILE = [
+  [0, -0.055],
+  [0.02, -0.055],
+  [0.022, -0.052],
+  [0.022, -0.008],
+  [0.02, -0.005],
+  [0, -0.005],
 ] as const;
 
 /** How many ribs the flexible arm of the lamp has. */
@@ -185,16 +196,15 @@ export function DirectionalBrassLamp({
         </mesh>
         <mesh scale={0.985}>
           <Turn profile={SHADE_PROFILE} />
-          <meshPhysicalMaterial
+          <Matter
             color={FLORA_COLORS.lampInner}
-            emissive={FLORA_COLORS.lampGlow}
-            emissiveIntensity={0.55}
-            roughness={0.5}
+            glow={0.3}
+            of="enamel"
             side={BackSide}
           />
         </mesh>
-        <mesh position={[0, -0.03, 0]}>
-          <cylinderGeometry args={[0.022, 0.022, 0.05, 24]} />
+        <mesh>
+          <Turn profile={SOCKET_PROFILE} />
           <SurfaceMaterial
             color={FLORA_COLORS.lampSteel}
             metalness={1}
@@ -205,12 +215,7 @@ export function DirectionalBrassLamp({
         </mesh>
         <mesh position={[0, -0.006, 0]}>
           <Turn profile={BULB_PROFILE} />
-          <meshPhysicalMaterial
-            color={FLORA_COLORS.lampGlow}
-            emissive={FLORA_COLORS.lampGlow}
-            emissiveIntensity={2.6}
-            roughness={0.08}
-          />
+          <Matter color={FLORA_COLORS.lampGlow} glow={1} of="light" />
         </mesh>
       </group>
     </group>
@@ -322,16 +327,11 @@ export function ColeoptileCutaway({
       <Cells cells={cells} depth={DEPTH} tones={COLEOPTILE_TONES} />
       <group position={[top.x, top.y, 0]} rotation={[0, 0, -top.lean]}>
         <mesh castShadow geometry={block} position={[-0.045, 0.045, 0.01]}>
-          <meshPhysicalMaterial
-            clearcoat={1}
-            clearcoatRoughness={0.1}
+          <Matter
             color={FLORA_COLORS.agarGel}
-            emissive={FLORA_COLORS.agarGel}
-            emissiveIntensity={0.22}
-            ior={1.34}
-            opacity={0.88}
-            roughness={0.16}
-            transparent
+            glow={0.12}
+            of="epoxy"
+            opacity={0.9}
           />
         </mesh>
       </group>

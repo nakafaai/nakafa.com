@@ -1,19 +1,19 @@
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { evaluateAuxinBend } from "@repo/design-system/components/contents/biology/auxin/model";
 import {
   ColeoptileCutaway,
   DirectionalBrassLamp,
 } from "@repo/design-system/components/contents/biology/auxin/parts";
-import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
-import { TerracottaPot } from "@repo/design-system/components/contents/biology/seedling";
+import { Leader } from "@repo/design-system/components/contents/biology/leader";
 import {
   SimulationTicker,
   simulationStep,
 } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
+import { Pot } from "@repo/design-system/components/three/flora/pot";
+import { Turn } from "@repo/design-system/components/three/form/part";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import {
   useVisualReset,
   useVisualScene,
@@ -34,12 +34,28 @@ const SUBJECT = {
   z: { max: 0.05, min: -0.05 },
 } as const;
 
-/** Whether the lab is shown on a narrow screen, where a label that would touch its subject is left out. */
-function useNarrow() {
-  return isNarrowThreeScene(
-    useThree((state) => state.size),
-    1.2
-  );
+/** One auxin marker, a bead turned from its half outline. */
+const BEAD = Arr.makeBy(9, (step) => {
+  const angle = (step / 8) * Math.PI;
+  return [0.011 * Math.sin(angle), -0.011 * Math.cos(angle)] as const;
+});
+
+/** Where on the shoot `share` of the way up it lies, at the middle of its girth, when it is bent `bendRad`. */
+function shootAt(bendRad: number, share: number) {
+  const turned = bendRad * share * share;
+  return [
+    Math.sin(turned) * 0.52 * share,
+    0.3 + share * 0.94 * Math.cos(turned * 0.55),
+  ] as const;
+}
+
+/** Where an auxin marker is `frac` of the way down the shaded flank, from the tip. */
+function markerAt(bendRad: number, frac: number) {
+  const theta = bendRad * frac * frac;
+  return [
+    Math.sin(theta) * 0.52 * frac - 0.055,
+    0.32 + frac * 0.9 * Math.cos(theta * 0.55),
+  ] as const;
 }
 
 function AuxinCamera() {
@@ -66,12 +82,13 @@ export function AuxinAgarBendScene({
   >;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
-  const ink = useLabelInk();
-  const narrow = useNarrow();
   const dotsRef = useRef<Group>(null);
   const phaseRef = useRef(0);
   const reading = evaluateAuxinBend(auxinLevel);
   const bendRad = (reading.bendDegrees * Math.PI) / 180;
+  const top = shootAt(bendRad, 1);
+  const middle = shootAt(bendRad, 0.6);
+  const dot = markerAt(bendRad, 0.35);
 
   const rewind = useCallback(() => {
     phaseRef.current = 0;
@@ -89,10 +106,7 @@ export function AuxinAgarBendScene({
     phaseRef.current = (phaseRef.current + simulationStep(delta) * 0.55) % 1;
     Arr.forEach(dotsRef.current.children, (child, idx) => {
       const offset = AUXIN_DROPS[idx] ?? 0;
-      const frac = 1 - ((phaseRef.current + offset) % 1);
-      const theta = bendRad * frac * frac;
-      const x = Math.sin(theta) * 0.52 * frac - 0.055;
-      const y = 0.32 + frac * 0.9 * Math.cos(theta * 0.55);
+      const [x, y] = markerAt(bendRad, 1 - ((phaseRef.current + offset) % 1));
       child.position.set(x, y, 0.075);
     });
   });
@@ -102,7 +116,9 @@ export function AuxinAgarBendScene({
       <SimulationTicker running={playing} />
       <AuxinCamera />
       <CameraBounds bounds={SUBJECT}>
-        <TerracottaPot position={[0, 0, 0]} scale={1.08} />
+        <group scale={1.08}>
+          <Pot />
+        </group>
         <DirectionalBrassLamp position={[0.98, 0, -0.08]} />
         <ColeoptileCutaway
           bendRad={bendRad}
@@ -112,70 +128,48 @@ export function AuxinAgarBendScene({
         {/* Diffusing IAA auxin molecules migrating down the shaded flank */}
         <group ref={dotsRef}>
           {Arr.map(AUXIN_DROPS, (offset) => {
-            const frac = 1 - offset;
-            const theta = bendRad * frac * frac;
-            const x = Math.sin(theta) * 0.52 * frac - 0.055;
-            const y = 0.32 + frac * 0.9 * Math.cos(theta * 0.55);
+            const [x, y] = markerAt(bendRad, 1 - offset);
             return (
               <mesh key={offset} position={[x, y, 0.075]}>
-                <icosahedronGeometry args={[0.011, 2]} />
-                <meshStandardMaterial
-                  color={BOTANY_COLORS.auxinDot}
-                  emissive={BOTANY_COLORS.agarGlow}
-                  emissiveIntensity={1.4}
-                  roughness={0.22}
-                />
+                <Turn profile={BEAD} />
+                <Matter color={BOTANY_COLORS.auxinDot} glow={0.7} of="light" />
               </mesh>
             );
           })}
         </group>
       </CameraBounds>
 
-      {/* Clean non-overlapping theme-aware labels */}
-      <ThreeLabel
-        anchorX="right"
-        color={ink}
-        fontSize="compact"
-        position={[-0.22, 1.38, 0]}
-        visible={!narrow}
+      <Leader
+        anchorY="bottom"
+        at={[top[0] - 0.12, top[1] + 0.24, 0]}
+        to={[top[0] - 0.05, top[1] + 0.08, 0.06]}
       >
         <span>{parts.agarBlock}</span>
-      </ThreeLabel>
-      <ThreeLabel
+      </Leader>
+      <Leader
         anchorX="right"
-        color={ink}
-        fontSize="compact"
-        position={[-0.4, 0.96, 0]}
-        visible={!narrow}
+        at={[middle[0] - 0.24, middle[1] + 0.04, 0]}
+        to={[middle[0] - 0.11, middle[1], 0.04]}
       >
         <span>{parts.shadedSide}</span>
-      </ThreeLabel>
-      <ThreeLabel
+      </Leader>
+      <Leader
         anchorX="right"
-        color={ink}
-        fontSize="compact"
-        position={[-0.4, 0.56, 0]}
-        visible={!narrow}
+        at={[dot[0] - 0.2, dot[1] - 0.04, 0]}
+        to={[dot[0] - 0.014, dot[1], 0.075]}
       >
         <span>{parts.auxinDot}</span>
-      </ThreeLabel>
-      <ThreeLabel
+      </Leader>
+      <Leader
         anchorX="left"
-        color={ink}
-        fontSize="compact"
-        position={[0.42, 0.9, 0]}
+        at={[middle[0] + 0.24, middle[1] + 0.04, 0]}
+        to={[middle[0] + 0.11, middle[1], 0.04]}
       >
         <span>{parts.litSide}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        anchorX="left"
-        color={ink}
-        fontSize="compact"
-        position={[0.46, 0.44, 0]}
-        visible={!narrow}
-      >
+      </Leader>
+      <Leader anchorX="left" at={[0.24, 0.5, 0]} to={[0.1, 0.48, 0.06]}>
         <span>{parts.coleoptile}</span>
-      </ThreeLabel>
+      </Leader>
     </group>
   );
 }

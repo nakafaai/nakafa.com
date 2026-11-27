@@ -1,4 +1,5 @@
 import { cellsOf } from "@repo/design-system/components/three/flora/solid";
+import { ZONES } from "@repo/design-system/components/three/flora/tissue";
 import { FLORA_COLORS } from "@repo/design-system/lib/material/flora";
 import { useEffect, useMemo } from "react";
 import { MeshPhysicalMaterial, SphereGeometry } from "three";
@@ -9,19 +10,23 @@ import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeom
  * `sectionCells` and `bendCells` give) stands out of the cut face as a walled
  * body with its vacuole and its stained nucleus, hundreds of them in four
  * draw calls. `tones` colours the living body of a cell by its zone: cap,
- * division, elongation and mature.
+ * division, elongation and mature. Naming a zone as `lit` marks it on the
+ * specimen: its cells keep their colour and the rest fade.
  *
  * @param cells - Where every cell is, as `CELL_STRIDE` numbers each
  * @param depth - How far the cells stand out of the cut face
+ * @param lit - The zone to mark, when one is selected
  * @param tones - The colour of a cell's body in each of the four zones
  */
 export function Cells({
   cells,
   depth,
+  lit,
   tones,
 }: {
   readonly cells: readonly number[];
   readonly depth: number;
+  readonly lit?: keyof typeof ZONES | undefined;
   readonly tones: readonly [string, string, string, string];
 }) {
   const built = useMemo(() => {
@@ -56,9 +61,18 @@ export function Cells({
       ball,
       box,
       materials,
-      meshes: cellsOf({ ball, box, cells, depth, materials, tones }),
+      meshes: cellsOf({
+        ball,
+        box,
+        cells,
+        depth,
+        dim: FLORA_COLORS.cellFaded,
+        lit: lit === undefined ? undefined : ZONES[lit],
+        materials,
+        tones,
+      }),
     };
-  }, [cells, depth, tones]);
+  }, [cells, depth, lit, tones]);
 
   useEffect(
     () => () => {

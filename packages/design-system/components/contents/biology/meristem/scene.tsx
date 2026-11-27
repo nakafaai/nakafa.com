@@ -1,5 +1,5 @@
-import { useFrame, useThree } from "@react-three/fiber";
-import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
+import { useFrame } from "@react-three/fiber";
+import { Leader } from "@repo/design-system/components/contents/biology/leader";
 import type {
   GrowthMode,
   PlantOrgan,
@@ -19,14 +19,11 @@ import {
 } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import {
   useVisualReset,
   useVisualScene,
   useVisualStop,
 } from "@repo/design-system/components/visual/card";
-import { FOLIAGE_COLORS } from "@repo/design-system/lib/material/foliage";
 import { createContext, use, useCallback, useMemo, useRef } from "react";
 import type { Group } from "three";
 
@@ -75,13 +72,16 @@ const ORGAN_ROOM = {
   y: { max: 1.46, min: 0 },
   z: { max: 0.05, min: -0.05 },
 } as const;
-/** Whether the lab is shown on a narrow screen, where a label that would touch its subject is left out. */
-function useNarrow() {
-  return isNarrowThreeScene(
-    useThree((state) => state.size),
-    1.2
-  );
-}
+
+/** The zone of the engine's cell files that each zone of the lab's model lights up. */
+const LIT_ZONES = {
+  differentiation: "mature",
+  division: "division",
+  elongation: "elongation",
+} as const;
+
+/** How far in front of the cut face a leader ends, so it stops on the cells and not inside them. */
+const FACE = 0.05;
 
 function MeristemCamera() {
   return (
@@ -94,82 +94,66 @@ function MeristemCamera() {
   );
 }
 
+/**
+ * The tip of a root or shoot cut along its length. The zone the reader has
+ * chosen is marked on the specimen itself: its cells keep their full colour
+ * and the cells of every other zone fade.
+ */
 function PrimaryApexView() {
   const { organ, parts, position } = use(MeristemSceneContext);
-  const ink = useLabelInk();
-  const narrow = useNarrow();
-  const scan = evaluatePrimaryZone(position);
-  const isRoot = organ === "root";
-  const scanY = isRoot ? scan.axisY - 0.05 : 1.58 - scan.axisY;
+  const lit = LIT_ZONES[evaluatePrimaryZone(position).zone];
+
+  if (organ === "root") {
+    return (
+      <group>
+        <CameraBounds bounds={ORGAN_ROOM}>
+          <RootApexCutaway lit={lit} />
+        </CameraBounds>
+        <Leader anchorX="right" at={[-0.2, 0.05, 0]} to={[-0.07, 0.07, FACE]}>
+          <span>{parts.rootCap}</span>
+        </Leader>
+        <Leader anchorY="bottom" at={[0.5, 1.46, 0]} to={[0.44, 1.2, -0.12]}>
+          <span>{parts.rootHair}</span>
+        </Leader>
+        <Leader anchorX="left" at={[0.36, 0.34, 0]} to={[0.12, 0.34, FACE]}>
+          <span>{parts.apicalMeristem}</span>
+        </Leader>
+        <Leader anchorX="right" at={[-0.36, 0.78, 0]} to={[-0.12, 0.78, FACE]}>
+          <span>{parts.vacuole}</span>
+        </Leader>
+      </group>
+    );
+  }
 
   return (
     <group>
       <CameraBounds bounds={ORGAN_ROOM}>
-        {isRoot ? <RootApexCutaway /> : <ShootApexCutaway />}
-
-        {/* Translucent holographic zone scanner ring */}
-        <mesh position={[0, scanY, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[0.38, 0.018, 12, 40]} />
-          <meshStandardMaterial
-            color={FOLIAGE_COLORS.scanRing}
-            emissive={FOLIAGE_COLORS.scanRing}
-            emissiveIntensity={0.45}
-            opacity={0.82}
-            roughness={0.22}
-            transparent
-          />
-        </mesh>
-
-        {isRoot ? (
-          <>
-            <ThreeLabel
-              anchorX="right"
-              color={ink}
-              fontSize="compact"
-              position={[-0.46, 0.16, 0]}
-              visible={!narrow}
-            >
-              <span>{parts.rootCap}</span>
-            </ThreeLabel>
-            <ThreeLabel
-              anchorX="left"
-              color={ink}
-              fontSize="compact"
-              position={[0.66, 0.86, 0]}
-              visible={!narrow}
-            >
-              <span>{parts.rootHair}</span>
-            </ThreeLabel>
-          </>
-        ) : null}
-        <ThreeLabel
-          anchorX="left"
-          color={ink}
-          fontSize="compact"
-          position={[0.52, isRoot ? 0.44 : 1.44, 0]}
-          visible={!narrow}
-        >
-          <span>{parts.apicalMeristem}</span>
-        </ThreeLabel>
-        <ThreeLabel
-          anchorX="right"
-          color={ink}
-          fontSize="compact"
-          position={[-0.48, 0.84, 0.08]}
-          visible={!narrow}
-        >
-          <span>{parts.vacuole}</span>
-        </ThreeLabel>
+        <ShootApexCutaway lit={lit} />
       </CameraBounds>
+      <Leader anchorY="bottom" at={[0.2, 1.6, 0]} to={[0.04, 1.32, FACE]}>
+        <span>{parts.apicalMeristem}</span>
+      </Leader>
+      <Leader anchorX="right" at={[-0.36, 0.7, 0]} to={[-0.12, 0.7, FACE]}>
+        <span>{parts.vacuole}</span>
+      </Leader>
     </group>
   );
 }
 
+/** A point on the sawn face of the log, `reach` out from the pith and `turn` from the right toward the reader. */
+function onFace(reach: number, turn: number) {
+  return [reach * Math.cos(turn), 0.556, reach * Math.sin(turn)] as const;
+}
+
+/**
+ * The sawn log with its labels in a column beside it. The higher a label
+ * stands, the farther back on the face is the part it names, so no two
+ * leaders cross and none crosses a label.
+ */
 function SecondaryTrunkView() {
   const { parts, years } = use(MeristemSceneContext);
-  const ink = useLabelInk();
-  const narrow = useNarrow();
   const cross = evaluateSecondaryGrowth(years);
+  const column = cross.outerRadius + 0.1;
 
   return (
     <group>
@@ -186,44 +170,41 @@ function SecondaryTrunkView() {
           xylemRadius={cross.xylemRadius}
         />
       </CameraBounds>
-      <ThreeLabel color={ink} fontSize="compact" position={[0, 1.02, 0]}>
+      <Leader
+        anchorX="left"
+        at={[column, 0.98, 0]}
+        to={onFace(cross.xylemRadius * 0.55, -1)}
+      >
         <span>{parts.annualRing}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        anchorX="right"
-        color={ink}
-        fontSize="compact"
-        position={[-0.06, 0.88, 0]}
-        visible={!narrow}
-      >
-        <span>{parts.vascularCambium}</span>
-      </ThreeLabel>
-      <ThreeLabel
+      </Leader>
+      <Leader
         anchorX="left"
-        color={ink}
-        fontSize="compact"
-        position={[0.06, 0.74, 0]}
-        visible={!narrow}
-      >
-        <span>{parts.corkCambium}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        anchorX="left"
-        color={ink}
-        fontSize="compact"
-        position={[0.06, 0.88, 0]}
+        at={[column, 0.84, 0]}
+        to={onFace(cross.xylemRadius * 0.78, -0.45)}
       >
         <span>{parts.secondaryXylem}</span>
-      </ThreeLabel>
-      <ThreeLabel
-        anchorX="right"
-        color={ink}
-        fontSize="compact"
-        position={[-0.06, 0.74, 0]}
-        visible={!narrow}
+      </Leader>
+      <Leader
+        anchorX="left"
+        at={[column, 0.7, 0]}
+        to={onFace(cross.xylemRadius, -0.1)}
+      >
+        <span>{parts.vascularCambium}</span>
+      </Leader>
+      <Leader
+        anchorX="left"
+        at={[column, 0.56, 0]}
+        to={onFace(cross.xylemRadius + 0.035, 0.3)}
       >
         <span>{parts.secondaryPhloem}</span>
-      </ThreeLabel>
+      </Leader>
+      <Leader
+        anchorX="left"
+        at={[column, 0.42, 0]}
+        to={onFace(cross.outerRadius - 0.03, 0.62)}
+      >
+        <span>{parts.corkCambium}</span>
+      </Leader>
     </group>
   );
 }

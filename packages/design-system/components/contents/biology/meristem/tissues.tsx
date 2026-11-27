@@ -1,33 +1,27 @@
 import { chanceAt } from "@repo/design-system/components/three/field/noise";
 import { Cells } from "@repo/design-system/components/three/flora/cells";
+import { Disc } from "@repo/design-system/components/three/flora/disc";
 import {
   joinMeshes,
   limbMesh,
   smoothPath,
 } from "@repo/design-system/components/three/flora/limb";
 import { solidOf } from "@repo/design-system/components/three/flora/solid";
-import type { Section } from "@repo/design-system/components/three/flora/tissue";
+import type {
+  Section,
+  ZONES,
+} from "@repo/design-system/components/three/flora/tissue";
 import {
   sectionCells,
   sectionWidth,
 } from "@repo/design-system/components/three/flora/tissue";
-import { paintDisc } from "@repo/design-system/components/three/flora/wood";
 import { Turn } from "@repo/design-system/components/three/form/part";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { FLORA_COLORS } from "@repo/design-system/lib/material/flora";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
-import {
-  CatmullRomCurve3,
-  Color,
-  DataTexture,
-  DoubleSide,
-  LinearFilter,
-  LinearMipmapLinearFilter,
-  SRGBColorSpace,
-  TubeGeometry,
-  Vector3,
-} from "three";
+import { CatmullRomCurve3, DoubleSide, TubeGeometry, Vector3 } from "three";
 
 /** How far the cells stand out of the face an organ is cut along. */
 const DEPTH = 0.034;
@@ -205,13 +199,7 @@ function Vessel({
   return (
     <group position={[x, 0, DEPTH + 0.012]}>
       <mesh geometry={tube}>
-        <meshPhysicalMaterial
-          clearcoat={0.6}
-          color={FLORA_COLORS.vesselWall}
-          opacity={0.72}
-          roughness={0.3}
-          transparent
-        />
+        <Matter color={FLORA_COLORS.vesselWall} of="lacquer" opacity={0.72} />
       </mesh>
       <mesh castShadow geometry={spiral}>
         <SurfaceMaterial
@@ -232,21 +220,29 @@ function Vessel({
  * (some caught with their chromosomes in a plate), the cells that lengthen as
  * their vacuoles swell, and the grown zone with its vessels and root hairs.
  */
-export function RootApexCutaway() {
+export function RootApexCutaway({
+  lit,
+}: {
+  readonly lit?: keyof typeof ZONES | undefined;
+}) {
   const cells = useMemo(() => sectionCells(ROOT), []);
   const hairs = useRootHairs();
 
   return (
     <group>
       <Skin color={FLORA_COLORS.rootSkin} section={ROOT} />
-      <Cells cells={cells} depth={DEPTH} tones={ROOT_TONES} />
+      <Cells cells={cells} depth={DEPTH} lit={lit} tones={ROOT_TONES} />
       <Vessel from={0.78} turns={9} x={-0.028} />
       <Vessel from={0.98} turns={16} x={0.028} />
       <mesh castShadow geometry={hairs}>
-        <meshPhysicalMaterial
-          clearcoat={0.6}
+        <SurfaceMaterial
+          bump={0.2}
+          coat={0.6}
           color={FLORA_COLORS.rootHair}
+          repeat={[1, 4]}
           roughness={0.35}
+          surface="tissue"
+          wet
         />
       </mesh>
     </group>
@@ -316,14 +312,18 @@ function usePrimordia() {
  * very top, the leaf primordia it has just made arching over it, and below
  * it the cells that lengthen and push the tip upward.
  */
-export function ShootApexCutaway() {
+export function ShootApexCutaway({
+  lit,
+}: {
+  readonly lit?: keyof typeof ZONES | undefined;
+}) {
   const cells = useMemo(() => sectionCells(SHOOT), []);
   const horns = usePrimordia();
 
   return (
     <group position={[0, 1.42, 0]} rotation={[0, 0, Math.PI]}>
       <Skin color={FLORA_COLORS.shootSkin} section={SHOOT} />
-      <Cells cells={cells} depth={DEPTH} tones={SHOOT_TONES} />
+      <Cells cells={cells} depth={DEPTH} lit={lit} tones={SHOOT_TONES} />
       <mesh castShadow geometry={horns} receiveShadow scale={[1, 1, 0.55]}>
         <SurfaceMaterial
           bump={0.5}
@@ -335,43 +335,6 @@ export function ShootApexCutaway() {
       </mesh>
     </group>
   );
-}
-
-/** The colour of one palette entry as red, green and blue from 0 to 255, in the space an image is stored in. */
-function inkOf(color: string) {
-  const { b, g, r } = new Color(color).convertLinearToSRGB();
-  return [r * 255, g * 255, b * 255] as const;
-}
-
-const DISC_INKS = {
-  cambium: inkOf(FLORA_COLORS.cambiumWet),
-  cork: inkOf(FLORA_COLORS.corkOuter),
-  early: inkOf(FLORA_COLORS.woodEarly),
-  heart: inkOf(FLORA_COLORS.woodHeart),
-  late: inkOf(FLORA_COLORS.woodLate),
-  phloem: inkOf(FLORA_COLORS.phloemInner),
-  pith: inkOf(FLORA_COLORS.woodPith),
-};
-
-/** The sawn face of a stem of `ringCount` years as a texture, painted once per age. */
-function useDiscFace(ringCount: number, wood: number) {
-  const face = useMemo(() => {
-    const size = 448;
-    const texture = new DataTexture(
-      paintDisc({ inks: DISC_INKS, rings: ringCount, seed: 5, size, wood }),
-      size,
-      size
-    );
-    texture.colorSpace = SRGBColorSpace;
-    texture.magFilter = LinearFilter;
-    texture.minFilter = LinearMipmapLinearFilter;
-    texture.generateMipmaps = true;
-    texture.anisotropy = 8;
-    texture.needsUpdate = true;
-    return texture;
-  }, [ringCount, wood]);
-  useEffect(() => () => face.dispose(), [face]);
-  return face;
 }
 
 /**
@@ -389,7 +352,6 @@ export function SecondaryWoodCrossSection({
   readonly ringCount: number;
   readonly xylemRadius: number;
 }) {
-  const face = useDiscFace(ringCount, xylemRadius / outerRadius);
   const bark = useMemo(
     () =>
       solidOf(
@@ -419,19 +381,13 @@ export function SecondaryWoodCrossSection({
           surface="bark"
         />
       </mesh>
-      <mesh
-        position={[0, 0.556, 0]}
-        receiveShadow
-        rotation={[-Math.PI / 2, 0, 0]}
-      >
-        <circleGeometry args={[outerRadius * 0.985, 96]} />
-        <meshPhysicalMaterial
-          bumpMap={face}
-          bumpScale={0.6}
-          map={face}
-          roughness={0.72}
+      <group position={[0, 0.556, 0]}>
+        <Disc
+          radius={outerRadius * 0.985}
+          rings={ringCount}
+          wood={xylemRadius / outerRadius}
         />
-      </mesh>
+      </group>
     </group>
   );
 }

@@ -91,6 +91,7 @@ describe("cellsOf", () => {
     box: new BoxGeometry(),
     cells: [...dividing, ...resting, ...grown],
     depth: 0.04,
+    dim: "#000000",
     materials: {
       body: new MeshBasicMaterial(),
       nucleus: new MeshBasicMaterial(),
@@ -105,6 +106,33 @@ describe("cellsOf", () => {
     expect(instanceAt(meshes.walls, 2).size.y).toBeCloseTo(0.4);
     expect(instanceAt(meshes.bodies, 2).size.x).toBeLessThan(0.1);
     expect(instanceAt(meshes.bodies, 2).place.x).toBeCloseTo(0.4);
+  });
+
+  it("keeps the colour of the zone that is lit and fades every other zone", () => {
+    const marked = cellsOf({
+      ball: new SphereGeometry(0.5),
+      box: new BoxGeometry(),
+      cells: [...resting, ...grown],
+      depth: 0.04,
+      dim: "#000000",
+      lit: ZONES.division,
+      materials: {
+        body: new MeshBasicMaterial(),
+        nucleus: new MeshBasicMaterial(),
+        vacuole: new MeshBasicMaterial(),
+        wall: new MeshBasicMaterial(),
+      },
+      tones: ["#ff0000", "#00ff00", "#0000ff", "#ffffff"],
+    });
+    const lit = new Color();
+    const unlit = new Color();
+    const plain = new Color();
+    marked.bodies.getColorAt(0, lit);
+    marked.bodies.getColorAt(1, unlit);
+    meshes.bodies.getColorAt(2, plain);
+
+    expect(lit.g).toBeGreaterThan(0.85);
+    expect(unlit.r).toBeLessThan(plain.r * 0.5);
   });
 
   it("tints a cell's body by the zone it lies in", () => {

@@ -56,6 +56,24 @@ export function sectionWidth(section: Section, along: number) {
   return section.radius * Math.sqrt(Math.max(0, 1 - short * short));
 }
 
+/** The share of the full width below which the dome is too narrow to hold a file of cells. */
+const NARROW = 0.3;
+
+/** The most a cell on the flank of the dome is drawn out along its file, beside its height along the axis. */
+const DRAWN = 2.4;
+
+/** How fast the half-width of the axis opens at `along` from its tip: steep on the dome, nothing behind it. */
+function sectionSlope(section: Section, along: number) {
+  if (along >= section.apex) {
+    return 0;
+  }
+  const short = 1 - along / section.apex;
+  return (
+    (section.radius * short) /
+    (section.apex * Math.sqrt(Math.max(1e-6, 1 - short * short)))
+  );
+}
+
 /** What a cell is like at one place of the axis: its zone, height, vacuole and nucleus. */
 function cellAt(section: Section, across: number, along: number) {
   const flank = 1 - section.skew * across;
@@ -98,16 +116,22 @@ function cellAt(section: Section, across: number, along: number) {
 /**
  * Every cell of a section, as `CELL_STRIDE` numbers each, with the tip of the
  * axis at the origin and the axis along +y. Each file stacks its cells from
- * the dome of the tip to the far end: small and dense where they divide, then
- * longer and longer with a growing vacuole, then full grown. No two cells are
- * the same height, so the files never line up into a grid.
+ * the tip to the far end: small and dense where they divide, then longer and
+ * longer with a growing vacuole, then full grown. On the dome the files run
+ * together toward the tip as they do in a real apex, each cell narrowing and
+ * turning with its file, so the cells of the outermost files lie along the
+ * curved outline and the organ has no stepped edge. No two cells are the
+ * same height, so the files never line up into a grid.
  */
 export function sectionCells(section: Section) {
   const wide = (2 * section.radius) / section.files;
   return Arr.flatMap(Arr.range(0, section.files - 1), (file) => {
     const across = ((file + 0.5) / section.files) * 2 - 1;
     const cells = Arr.unfold(
-      { from: domeAt(section, across), index: 0 },
+      {
+        from: section.apex * (1 - Math.sqrt(1 - NARROW * NARROW)),
+        index: 0,
+      },
       ({ from, index }) => {
         const left = section.length - from;
         if (left < section.short * 0.5) {
@@ -116,13 +140,16 @@ export function sectionCells(section: Section) {
         const chance = chanceAt(file, index, section.seed);
         const cell = cellAt(section, across, from);
         const height = Math.min(left, cell.height * (0.78 + 0.44 * chance));
+        const middle = from + height / 2;
+        const share = sectionWidth(section, middle) / section.radius;
+        const lean = Math.atan(across * sectionSlope(section, middle));
         return Option.some([
           [
-            across * section.radius,
-            from + height / 2,
-            0,
-            wide,
-            height,
+            across * section.radius * share,
+            middle,
+            -lean,
+            wide * share,
+            height * Math.min(DRAWN, 1 / Math.cos(lean)),
             cell.vacuole,
             cell.nucleus,
             cell.zone,
@@ -139,7 +166,8 @@ export function sectionCells(section: Section) {
 /**
  * The cells of a straight section laid along a bent `path` in the plane of
  * the cut: each keeps its distance from the tip and from the middle of the
- * axis and turns with the axis, so a bending shoot carries its cells with it.
+ * axis and turns with the axis on top of its own turn, so a bending shoot
+ * carries its cells with it.
  */
 export function bendCells(
   cells: readonly number[],
@@ -165,7 +193,7 @@ export function bendCells(
     return [
       start[0] + Number(heading[0]) * past + Number(heading[1]) * across,
       start[1] + Number(heading[1]) * past - Number(heading[0]) * across,
-      -Math.atan2(Number(heading[0]), Number(heading[1])),
+      Number(cell[2]) - Math.atan2(Number(heading[0]), Number(heading[1])),
       ...Arr.drop(cell, 3),
     ];
   });

@@ -94,13 +94,17 @@ const OUT = new Vector3(0, 0, 1);
  * zone from `tones`, the vacuole that swells as it grows and its nucleus,
  * which lies against the wall once the vacuole fills the cell and flattens
  * into a plate of chromosomes in a cell caught dividing. `depth` is how far
- * the cells stand out of the cut face.
+ * the cells stand out of the cut face. When one zone is `lit`, its cells keep
+ * their full colour and the bodies of every other zone fade toward `dim`, so
+ * the zone is marked on the specimen itself.
  */
 export function cellsOf({
   ball,
   box,
   cells,
   depth,
+  dim,
+  lit,
   materials,
   tones,
 }: {
@@ -108,6 +112,8 @@ export function cellsOf({
   readonly box: BufferGeometry;
   readonly cells: readonly number[];
   readonly depth: number;
+  readonly dim: string;
+  readonly lit?: number | undefined;
   readonly materials: {
     readonly body: Material;
     readonly nucleus: Material;
@@ -126,6 +132,7 @@ export function cellsOf({
   const place = new Vector3();
   const size = new Vector3();
   const tint = new Color();
+  const faded = new Color(dim);
   for (let index = 0; index < count; index += 1) {
     const at = index * CELL_STRIDE;
     const x = Number(cells[at]);
@@ -152,7 +159,10 @@ export function cellsOf({
     bodies.setMatrixAt(index, matrix);
     bodies.setColorAt(
       index,
-      tint.set(String(tones[zone])).multiplyScalar(0.9 + 0.2 * chance)
+      tint
+        .set(String(tones[zone]))
+        .multiplyScalar(0.9 + 0.2 * chance)
+        .lerp(faded, lit === undefined || lit === zone ? 0 : 0.62)
     );
     const swollen = vacuole > 0.15 ? 1 : 0;
     matrix.compose(

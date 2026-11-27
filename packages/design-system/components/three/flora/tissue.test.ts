@@ -66,24 +66,69 @@ describe("sectionWidth", () => {
 
 describe("sectionCells", () => {
   const cells = cellsOf(sectionCells(ROOT));
+  const outermost = Arr.reduce(cells, 0, (most, cell) =>
+    Math.max(most, cell.x)
+  );
 
-  it("keeps every cell inside the organ", () => {
+  it("keeps the middle of every cell inside the curved outline of the organ", () => {
     for (const cell of cells) {
-      expect(Math.abs(cell.x) + cell.width / 2).toBeLessThanOrEqual(
-        ROOT.radius + 1e-9
-      );
-      expect(cell.y - cell.height / 2).toBeGreaterThanOrEqual(-1e-9);
-      expect(cell.y + cell.height / 2).toBeLessThanOrEqual(ROOT.length + 1e-9);
+      expect(Math.abs(cell.x)).toBeLessThan(sectionWidth(ROOT, cell.y));
+      expect(cell.y).toBeGreaterThan(0);
+      expect(cell.y).toBeLessThan(ROOT.length);
     }
   });
 
-  it("stacks each file from the dome of the tip without a gap", () => {
-    const file = Arr.filter(cells, (cell) => cell.x === cells[0]?.x);
-    const across = Number(cells[0]?.x) / ROOT.radius;
+  it("runs the files together toward the tip, each cell narrowing with its file", () => {
+    const flank = Arr.filter(cells, (cell) => cell.x > 0 && cell.angle < -0.2);
+    const behind = Arr.filter(cells, (cell) => cell.y > ROOT.apex + 0.1);
 
-    expect(Number(file[0]?.y) - Number(file[0]?.height) / 2).toBeCloseTo(
-      domeAt(ROOT, across)
+    expect(flank.length).toBeGreaterThan(3);
+    for (const cell of flank) {
+      expect(cell.y).toBeLessThan(ROOT.apex);
+      expect(cell.width).toBeLessThan((2 * ROOT.radius) / ROOT.files);
+    }
+    for (const cell of behind) {
+      expect(cell.angle).toBeCloseTo(0);
+      expect(cell.width).toBeCloseTo((2 * ROOT.radius) / ROOT.files);
+    }
+  });
+
+  it("lays the cells of the outermost file along the outline, so the edge has no steps", () => {
+    const edge = Arr.filter(
+      cells,
+      (cell) => cell.y < ROOT.apex * 0.8 && cell.x > 0 && cell.angle < 0
     );
+    const outer = Arr.filter(
+      edge,
+      (cell) => cell.x > sectionWidth(ROOT, cell.y) * 0.8
+    );
+
+    expect(outer.length).toBeGreaterThan(2);
+    for (const cell of outer) {
+      const step = 0.001;
+      const outline = Math.atan2(
+        sectionWidth(ROOT, cell.y + step) - sectionWidth(ROOT, cell.y - step),
+        2 * step
+      );
+      expect(-cell.angle).toBeGreaterThan(outline * 0.75);
+      expect(-cell.angle).toBeLessThanOrEqual(outline + 1e-9);
+    }
+  });
+
+  it("mirrors the two flanks of the organ", () => {
+    const left = Arr.filter(cells, (cell) => cell.x < 0 && cell.y < ROOT.apex);
+    const tilted = Arr.filter(left, (cell) => cell.angle > 0.2);
+
+    expect(tilted.length).toBeGreaterThan(3);
+  });
+
+  it("stacks each file along the axis without a gap", () => {
+    const file = Arr.filter(
+      cells,
+      (cell) => cell.y > ROOT.apex && cell.x === outermost
+    );
+
+    expect(file.length).toBeGreaterThan(3);
     for (const [cell, before] of Arr.zip(Arr.drop(file, 1), file)) {
       expect(cell.y - cell.height / 2).toBeCloseTo(
         before.y + before.height / 2
@@ -117,8 +162,11 @@ describe("sectionCells", () => {
   it("gives no two neighbouring cells of a file the same height", () => {
     const grown = Arr.filter(
       cells,
-      (cell) => cell.zone === ZONES.mature && cell.x === cells[0]?.x
+      (cell) =>
+        cell.zone === ZONES.mature && cell.x === outermost
     );
+
+    expect(grown.length).toBeGreaterThan(1);
 
     expect(grown[0]?.height).not.toBe(grown[1]?.height);
   });
@@ -157,6 +205,19 @@ describe("bendCells", () => {
     expect(y).toBeCloseTo(1.5);
     expect(angle).toBeCloseTo(0);
     expect(rest).toEqual(Arr.drop(cell, 3));
+  });
+
+  it("adds the turn of the axis to the turn a cell already has", () => {
+    const [, , angle] = bendCells(
+      [0.1, 1.5, 0.3, ...Arr.drop(cell, 3)],
+      [
+        [0, 0, 0],
+        [0, 1, 0],
+        [1, 1, 0],
+      ]
+    );
+
+    expect(angle).toBeCloseTo(0.3 - Math.PI / 2);
   });
 
   it("carries a cell around a bend and turns it with the axis", () => {
