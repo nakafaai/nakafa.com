@@ -4,6 +4,7 @@ import {
   aside,
   cross,
   dot,
+  grown,
   length,
   screw,
   sub,
@@ -47,5 +48,25 @@ describe("screw", () => {
     expect(x).toBeCloseTo(0, 9);
     expect(y).toBeCloseTo(1, 9);
     expect(z).toBe(3);
+  });
+});
+
+describe("grown", () => {
+  it("puts an atom cis or trans by its torsion", () => {
+    const place = (torsion: number) =>
+      grown([1, 0, 0], [0, 0, 0], [0, 1, 0], 2, Math.PI / 2, torsion);
+    const cis = place(0);
+    expect(cis[0]).toBeCloseTo(1, 9);
+    expect(cis[1]).toBeCloseTo(2, 9);
+    const trans = place(Math.PI);
+    expect(trans[1]).toBeCloseTo(-2, 9);
+    expect(Math.abs(place(Math.PI / 2)[2])).toBeCloseTo(2, 9);
+  });
+
+  it("keeps the bond length and the bond angle", () => {
+    const atom = grown([1, 0, 0], [0, 0, 0], [0, 1, 0], 1.5, 2, 1);
+    const bond = sub(atom, [1, 0, 0]);
+    expect(length(bond)).toBeCloseTo(1.5, 9);
+    expect(dot(unit(bond), [-1, 0, 0])).toBeCloseTo(Math.cos(2), 9);
   });
 });
