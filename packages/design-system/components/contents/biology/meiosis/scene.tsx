@@ -1,5 +1,16 @@
 import { useFrame, useThree } from "@react-three/fiber";
+import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
+import { MetaphaseChromosome } from "@repo/design-system/components/contents/biology/chromatin";
 import type { MeiosisStage } from "@repo/design-system/components/contents/biology/meiosis/model";
+import {
+  CrossingOverView,
+  FertilisationView,
+  SpindleApparatus,
+} from "@repo/design-system/components/contents/biology/meiosis/stages";
+import {
+  BiologyBenchSurface,
+  SlideStage,
+} from "@repo/design-system/components/contents/biology/workbench";
 import {
   SimulationTicker,
   simulationStep,
@@ -7,7 +18,11 @@ import {
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
+import {
+  useVisualReset,
+  useVisualScene,
+  useVisualStop,
+} from "@repo/design-system/components/visual/card";
 import { GENETICS_COLORS } from "@repo/design-system/lib/material/genetics";
 import { Array as Arr, Match } from "effect";
 import { useMemo, useRef } from "react";
@@ -20,12 +35,73 @@ function MeiosisCamera() {
   );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0, 1.5, 3.35] : [0, 1.28, 2.7]}
-      cameraTarget={[0, 0.62, 0]}
+      cameraPosition={narrow ? [0, 1.56, 3.68] : [0, 1.28, 3.08]}
+      cameraTarget={[0, 0.64, 0]}
       fov={38}
-      maxDistance={5.8}
+      maxDistance={6}
       minDistance={1.4}
     />
+  );
+}
+
+function AssortmentPair({
+  flipped,
+  index,
+  y,
+}: {
+  readonly flipped: boolean;
+  readonly index: number;
+  readonly y: number;
+}) {
+  const leftPalette = flipped
+    ? {
+        accent: GENETICS_COLORS.paternalBlue,
+        band: GENETICS_COLORS.paternalDark,
+        base: GENETICS_COLORS.paternalLight,
+      }
+    : {
+        accent: GENETICS_COLORS.maternalRose,
+        band: GENETICS_COLORS.maternalDark,
+        base: GENETICS_COLORS.maternalLight,
+      };
+  const rightPalette = flipped
+    ? {
+        accent: GENETICS_COLORS.maternalRose,
+        band: GENETICS_COLORS.maternalDark,
+        base: GENETICS_COLORS.maternalLight,
+      }
+    : {
+        accent: GENETICS_COLORS.paternalBlue,
+        band: GENETICS_COLORS.paternalDark,
+        base: GENETICS_COLORS.paternalLight,
+      };
+  return (
+    <group position={[0, y, 0]}>
+      <MetaphaseChromosome
+        accentColor={leftPalette.accent}
+        bandColor={leftPalette.band}
+        baseColor={leftPalette.base}
+        pLength={0.12}
+        position={[-0.18, 0, 0]}
+        qLength={0.16}
+        radius={0.032}
+        rotation={[0, 0, Math.PI / 2]}
+        seed={index + 2}
+        splay={0.22}
+      />
+      <MetaphaseChromosome
+        accentColor={rightPalette.accent}
+        bandColor={rightPalette.band}
+        baseColor={rightPalette.base}
+        pLength={0.12}
+        position={[0.18, 0, 0]}
+        qLength={0.16}
+        radius={0.032}
+        rotation={[0, 0, -Math.PI / 2]}
+        seed={index + 9}
+        splay={0.22}
+      />
+    </group>
   );
 }
 
@@ -48,6 +124,8 @@ export function MeiosisShufflingScene({
   readonly stage: MeiosisStage;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
+  const invalidate = useThree((state) => state.invalidate);
+  const ink = useLabelInk();
   const groupRef = useRef<Group>(null);
   const phaseRef = useRef(0);
 
@@ -57,138 +135,88 @@ export function MeiosisShufflingScene({
     [displayPairs]
   );
 
+  const rewind = () => {
+    phaseRef.current = 0;
+    if (groupRef.current !== null) {
+      groupRef.current.rotation.set(0, 0, 0);
+    }
+    invalidate();
+  };
+
+  useVisualStop(rewind);
+  useVisualReset(rewind);
+
   useFrame((_, delta) => {
     if (!playing || groupRef.current === null) {
       return;
     }
-    phaseRef.current += simulationStep(delta) * 1.1;
-    groupRef.current.rotation.y = Math.sin(phaseRef.current) * 0.25;
+    phaseRef.current += simulationStep(delta) * 0.95;
+    groupRef.current.rotation.y = Math.sin(phaseRef.current) * 0.24;
   });
 
   return (
     <group>
       <SimulationTicker running={playing} />
       <MeiosisCamera />
+      <BiologyBenchSurface radius={14} y={0} />
+      <SlideStage position={[0, 0, 0]} radius={1.08} />
+
       <group ref={groupRef}>
-        {stage === "crossingOver" ? (
-          <group position={[0, 0.62, 0]}>
-            {/* Maternal homologue (left) */}
-            <mesh castShadow position={[-0.18, 0, 0]} rotation={[0, 0, -0.18]}>
-              <capsuleGeometry args={[0.055, 0.62, 8, 12]} />
-              <meshStandardMaterial color={GENETICS_COLORS.maternalRose} />
-            </mesh>
-            {/* Paternal homologue (right) crossing at chiasma */}
-            <mesh castShadow position={[0.18, 0, 0]} rotation={[0, 0, 0.18]}>
-              <capsuleGeometry args={[0.055, 0.62, 8, 12]} />
-              <meshStandardMaterial color={GENETICS_COLORS.paternalBlue} />
-            </mesh>
-            {/* Recombinant swapped tips */}
-            <mesh position={[-0.08, -0.34, 0.02]}>
-              <sphereGeometry args={[0.06, 12, 10]} />
-              <meshStandardMaterial color={GENETICS_COLORS.paternalBlue} />
-            </mesh>
-            <mesh position={[0.08, -0.34, 0.02]}>
-              <sphereGeometry args={[0.06, 12, 10]} />
-              <meshStandardMaterial color={GENETICS_COLORS.maternalRose} />
-            </mesh>
-            {/* Chiasma overlap point */}
-            <mesh position={[0, -0.18, 0.06]}>
-              <sphereGeometry args={[0.072, 14, 12]} />
-              <meshStandardMaterial
-                color={GENETICS_COLORS.chiasmaGlow}
-                emissive={GENETICS_COLORS.chiasmaGlow}
-                emissiveIntensity={0.35}
-              />
-            </mesh>
-            {/* Centromeres */}
-            <mesh position={[-0.22, 0.14, 0.04]}>
-              <sphereGeometry args={[0.065, 12, 10]} />
-              <meshStandardMaterial color={GENETICS_COLORS.centromereGold} />
-            </mesh>
-            <mesh position={[0.22, 0.14, 0.04]}>
-              <sphereGeometry args={[0.065, 12, 10]} />
-              <meshStandardMaterial color={GENETICS_COLORS.centromereGold} />
-            </mesh>
-          </group>
-        ) : null}
+        {stage === "crossingOver" ? <CrossingOverView /> : null}
 
         {stage === "independentAssortment" ? (
           <group>
+            <SpindleApparatus position={[0, 0.68, 0]} span={1.72} />
+            <mesh position={[0, 0.68, 0]} rotation={[0, Math.PI / 2, 0]}>
+              <ringGeometry args={[0.42, 0.44, 48]} />
+              <meshBasicMaterial
+                color={GENETICS_COLORS.spindleFiber}
+                opacity={0.32}
+                transparent
+              />
+            </mesh>
             {Arr.map(pairIndices, (index) => {
-              const x = -0.6 + (index / Math.max(1, displayPairs - 1)) * 1.2;
-              const flipped = index % 2 === 1;
+              const y =
+                displayPairs === 1
+                  ? 0.68
+                  : 0.34 + (index / (displayPairs - 1)) * 0.68;
               return (
-                <group
+                <AssortmentPair
+                  flipped={index % 2 === 1}
+                  index={index}
                   key={`pair-${index}`}
-                  position={[displayPairs === 1 ? 0 : x, 0.62, 0]}
-                >
-                  <mesh position={[0, 0.2, 0]}>
-                    <capsuleGeometry args={[0.05, 0.24, 6, 10]} />
-                    <meshStandardMaterial
-                      color={
-                        flipped
-                          ? GENETICS_COLORS.paternalBlue
-                          : GENETICS_COLORS.maternalRose
-                      }
-                    />
-                  </mesh>
-                  <mesh position={[0, -0.2, 0]}>
-                    <capsuleGeometry args={[0.05, 0.24, 6, 10]} />
-                    <meshStandardMaterial
-                      color={
-                        flipped
-                          ? GENETICS_COLORS.maternalRose
-                          : GENETICS_COLORS.paternalBlue
-                      }
-                    />
-                  </mesh>
-                </group>
+                  y={y}
+                />
               );
             })}
           </group>
         ) : null}
 
-        {stage === "randomFertilisation" ? (
-          <group position={[0, 0.62, 0]}>
-            <mesh castShadow position={[-0.42, 0, 0]}>
-              <sphereGeometry args={[0.2, 16, 14]} />
-              <meshStandardMaterial
-                color={GENETICS_COLORS.maternalRose}
-                opacity={0.82}
-                transparent
-              />
-            </mesh>
-            <mesh castShadow position={[0.42, 0, 0]}>
-              <sphereGeometry args={[0.14, 14, 12]} />
-              <meshStandardMaterial color={GENETICS_COLORS.paternalBlue} />
-            </mesh>
-            <mesh position={[0, 0, 0]}>
-              <sphereGeometry args={[0.12, 14, 12]} />
-              <meshStandardMaterial color={GENETICS_COLORS.gameteCyan} />
-            </mesh>
-          </group>
-        ) : null}
+        {stage === "randomFertilisation" ? <FertilisationView /> : null}
       </group>
 
-      {/* Labels */}
+      {/* Non-clipping adaptive-ink labels */}
       <ThreeLabel
-        color={GENETICS_COLORS.labelInk}
+        anchorY="bottom"
+        color={ink}
         fontSize="compact"
-        position={[-0.82, 0.94, 0]}
+        position={[-0.64, 1.22, 0]}
       >
         <span>{parts.maternalChromatid}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={GENETICS_COLORS.labelInk}
+        anchorY="bottom"
+        color={ink}
         fontSize="compact"
-        position={[0.82, 0.94, 0]}
+        position={[0.64, 1.22, 0]}
       >
         <span>{parts.paternalChromatid}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={GENETICS_COLORS.labelInk}
+        anchorY="top"
+        color={ink}
         fontSize="compact"
-        position={[0, 0.2, 0.28]}
+        position={[0, 0.24, 0.34]}
       >
         <span>
           {Match.value(stage).pipe(

@@ -1,44 +1,49 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import type {
   Condition,
   Level,
 } from "@repo/design-system/components/contents/biology/protein/folding";
 import { polypeptideBeads } from "@repo/design-system/components/contents/biology/protein/folding";
-import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
+import {
+  buildStabilisingBonds,
+  buildSubunitChains,
+  DenaturationEnvironment,
+  HaemProstheticGroup,
+  QUATERNARY_HAEMS,
+  SUBUNIT_COLORS,
+  SubunitRibbon,
+} from "@repo/design-system/components/contents/biology/protein/structure";
+import {
+  BiologyBenchSurface,
+  MolecularStick,
+  SlideStage,
+} from "@repo/design-system/components/contents/biology/workbench";
+import {
+  SimulationTicker,
+  simulationStep,
+} from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { ATOM_COLORS } from "@repo/design-system/lib/material/atom";
-import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
-import { LABORATORY_COLORS } from "@repo/design-system/lib/material/laboratory";
+import {
+  useVisualReset,
+  useVisualScene,
+  useVisualStop,
+} from "@repo/design-system/components/visual/card";
+import { GENETICS_COLORS } from "@repo/design-system/lib/material/genetics";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo, useRef } from "react";
 import type { Group } from "three";
-import { BufferGeometry, Vector3 } from "three";
 
-const CAMERA_POSITION: readonly [number, number, number] = [0, 0.88, 2.2];
-const CAMERA_TARGET: readonly [number, number, number] = [0, 0.56, 0];
-
-const SUBUNIT_COLORS = [
-  PLOT_COLORS.teal,
-  PLOT_COLORS.violet,
-  PLOT_COLORS.amber,
-  PLOT_COLORS.pink,
-] as const;
-
-const QUATERNARY_HAEMS: readonly (readonly [number, number, number])[] = [
-  [-0.32, 0.78, 0.12],
-  [0.32, 0.78, -0.12],
-  [-0.32, 0.36, -0.12],
-  [0.32, 0.36, 0.12],
-];
+const CAMERA_POSITION: readonly [number, number, number] = [0, 0.9, 2.35];
+const CAMERA_TARGET: readonly [number, number, number] = [0, 0.58, 0];
 
 /**
- * 3D polypeptide scene morphing across primary, secondary (alpha-helix and
- * beta-sheet), tertiary globule, and quaternary 4-subunit haemoglobin, plus
- * thermal/acid denaturation uncoiling with covalent peptide backbone intact.
+ * 3D polypeptide workbench morphing across primary chain, secondary alpha-helix
+ * and pleated beta-sheet with hydrogen bonds, tertiary globule with disulfide
+ * bridges and porphyrin haem, and quaternary 4-subunit haemoglobin, plus
+ * thermal and acidic denaturation.
  */
 export function ProteinScene({
   condition,
@@ -52,6 +57,7 @@ export function ProteinScene({
   >;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
+  const invalidate = useThree((state) => state.invalidate);
   const ink = useLabelInk();
   const rootRef = useRef<Group>(null);
   const clock = useRef(0);
@@ -60,23 +66,26 @@ export function ProteinScene({
     () => polypeptideBeads(level, condition),
     [condition, level]
   );
+  const subunitChains = useMemo(
+    () => buildSubunitChains(beads, level, condition),
+    [beads, condition, level]
+  );
+  const hBondPairs = useMemo(
+    () => buildStabilisingBonds(beads, level, condition),
+    [beads, condition, level]
+  );
 
-  const peptideGeo = useMemo(() => {
-    const pts = Arr.flatMap(beads, (a, i) => {
-      const b = beads[i + 1];
-      return b === undefined || a.subunit !== b.subunit
-        ? []
-        : [
-            new Vector3(a.position[0], a.position[1], a.position[2]),
-            new Vector3(b.position[0], b.position[1], b.position[2]),
-          ];
-    });
-    const geometry = new BufferGeometry();
-    geometry.setFromPoints(pts);
-    return geometry;
-  }, [beads]);
+  const rewind = () => {
+    clock.current = 0;
+    if (rootRef.current !== null) {
+      rootRef.current.rotation.set(0, 0, 0);
+      rootRef.current.position.set(0, 0, 0);
+    }
+    invalidate();
+  };
 
-  useEffect(() => () => peptideGeo.dispose(), [peptideGeo]);
+  useVisualStop(rewind);
+  useVisualReset(rewind);
 
   useFrame((_, delta) => {
     if (!playing || rootRef.current === null) {
@@ -84,129 +93,134 @@ export function ProteinScene({
     }
     clock.current += simulationStep(delta);
     if (condition === "normal") {
-      rootRef.current.rotation.y = Math.sin(clock.current * 0.7) * 0.35;
+      rootRef.current.rotation.y = Math.sin(clock.current * 0.65) * 0.35;
       rootRef.current.position.y = 0;
     } else {
-      rootRef.current.rotation.y = Math.sin(clock.current * 5) * 0.04;
-      rootRef.current.position.y = Math.sin(clock.current * 11) * 0.018;
+      rootRef.current.rotation.y = Math.sin(clock.current * 4.5) * 0.05;
+      rootRef.current.position.y = Math.sin(clock.current * 10) * 0.016;
     }
   });
 
-  const showHaem =
-    condition === "normal" && (level === "tertiary" || level === "quaternary");
+  const isNormal = condition === "normal";
+  const showHaem = isNormal && (level === "tertiary" || level === "quaternary");
+  const isTertiary = level === "tertiary";
+  const ribbonRadius = level === "primary" || !isNormal ? 0.022 : 0.036;
+  const bondColor = isTertiary
+    ? GENETICS_COLORS.disulfideGold
+    : GENETICS_COLORS.hBondCyan;
 
   return (
     <group>
+      <SimulationTicker running={playing} />
       <CameraControls
         cameraPosition={CAMERA_POSITION}
         cameraTarget={CAMERA_TARGET}
         fov={38}
       />
 
-      <mesh position={[0, -0.02, 0]} receiveShadow>
-        <boxGeometry args={[2.1, 0.04, 1.0]} />
-        <meshStandardMaterial
-          color={LABORATORY_COLORS.worktop}
-          roughness={0.65}
-        />
-      </mesh>
+      <BiologyBenchSurface radius={12} y={0} />
+      <SlideStage position={[0, 0, 0]} radius={0.96} />
 
       <group ref={rootRef}>
-        {Arr.map(beads, (bead) => (
+        {Arr.map(subunitChains, (chain) => (
+          <SubunitRibbon
+            color={chain.color}
+            key={`chain-${chain.subunit}`}
+            points={chain.points}
+            radius={ribbonRadius}
+          />
+        ))}
+
+        {Arr.map(beads, (bead, idx) => (
           <mesh castShadow key={bead.id} position={bead.position}>
-            <sphereGeometry args={[0.056, 16, 16]} />
-            <meshStandardMaterial
-              color={SUBUNIT_COLORS[bead.subunit % SUBUNIT_COLORS.length]}
-              roughness={0.4}
+            <sphereGeometry
+              args={[level === "primary" ? 0.054 : 0.044, 18, 16]}
+            />
+            <meshPhysicalMaterial
+              clearcoat={0.72}
+              clearcoatRoughness={0.2}
+              color={
+                SUBUNIT_COLORS[bead.subunit % SUBUNIT_COLORS.length] ??
+                PLOT_COLORS.teal
+              }
+              roughness={0.28 + (idx % 3) * 0.05}
             />
           </mesh>
         ))}
 
-        {/* Covalent peptide backbone always stays connected */}
-        <lineSegments geometry={peptideGeo}>
-          <lineBasicMaterial color={LABORATORY_COLORS.steel} />
-        </lineSegments>
+        {Arr.map(hBondPairs, (bond) => (
+          <MolecularStick
+            color={bondColor}
+            emissive={bondColor}
+            emissiveIntensity={0.4}
+            end={bond.end}
+            key={bond.id}
+            opacity={isTertiary ? 1 : 0.72}
+            radius={isTertiary ? 0.014 : 0.008}
+            start={bond.start}
+          />
+        ))}
 
-        {/* Haem prosthetic groups (red porphyrin disc + iron ion) */}
-        {showHaem && level === "tertiary" && (
-          <mesh position={[0, 0.58, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.1, 0.1, 0.028, 16]} />
-            <meshStandardMaterial color={BIOLOGY_COLORS.blood} />
-          </mesh>
-        )}
-        {showHaem &&
-          level === "quaternary" &&
-          Arr.map(QUATERNARY_HAEMS, ([x, y, z]) => (
-            <mesh
-              key={`${x}-${y}-${z}`}
-              position={[x, y, z]}
-              rotation={[Math.PI / 2, 0, 0]}
-            >
-              <cylinderGeometry args={[0.072, 0.072, 0.024, 16]} />
-              <meshStandardMaterial color={BIOLOGY_COLORS.blood} />
-            </mesh>
-          ))}
+        {showHaem && isTertiary ? (
+          <HaemProstheticGroup position={[0, 0.58, 0.04]} scale={1.15} />
+        ) : null}
+        {showHaem && level === "quaternary"
+          ? Arr.map(QUATERNARY_HAEMS, (pos) => (
+              <HaemProstheticGroup
+                key={`haem-${pos[0]}-${pos[1]}-${pos[2]}`}
+                position={pos}
+                scale={0.85}
+              />
+            ))
+          : null}
 
-        {/* Denaturing environment markers: acid H+ ions or heat glow */}
-        {condition === "acid" &&
-          Arr.map([-0.6, -0.2, 0.25, 0.65] as const, (x) => (
-            <mesh key={x} position={[x, 0.92, 0.15]}>
-              <sphereGeometry args={[0.032, 12, 12]} />
-              <meshStandardMaterial color={ATOM_COLORS.cpkHydrogen} />
-            </mesh>
-          ))}
-        {condition === "heated" && (
-          <mesh position={[0, 0.08, 0]}>
-            <cylinderGeometry args={[0.62, 0.68, 0.04, 24]} />
-            <meshStandardMaterial
-              color={LABORATORY_COLORS.flame}
-              emissive={LABORATORY_COLORS.flame}
-              emissiveIntensity={0.65}
-            />
-          </mesh>
-        )}
+        <DenaturationEnvironment condition={condition} />
       </group>
 
-      {condition === "normal" && level === "primary" && (
+      {isNormal && level === "primary" ? (
         <ThreeLabel
           anchorY="bottom"
           color={ink}
+          fontSize="compact"
           gap={0.04}
-          position={[0, 0.72, 0]}
+          position={[0, 0.76, 0]}
         >
           {parts.chain}
         </ThreeLabel>
-      )}
-      {condition === "normal" && level === "secondary" && (
+      ) : null}
+      {isNormal && level === "secondary" ? (
         <group>
           <ThreeLabel
             anchorY="bottom"
             color={ink}
+            fontSize="compact"
             gap={0.04}
-            position={[-0.45, 0.84, 0]}
+            position={[-0.45, 0.9, 0]}
           >
             {parts.helix}
           </ThreeLabel>
           <ThreeLabel
             anchorY="bottom"
             color={ink}
+            fontSize="compact"
             gap={0.04}
-            position={[0.48, 0.84, 0]}
+            position={[0.48, 0.9, 0]}
           >
             {parts.sheet}
           </ThreeLabel>
         </group>
-      )}
-      {showHaem && (
+      ) : null}
+      {showHaem ? (
         <ThreeLabel
           anchorY="bottom"
           color={ink}
+          fontSize="compact"
           gap={0.04}
-          position={[0, 0.94, 0]}
+          position={[0, 1.04, 0]}
         >
           {parts.haem}
         </ThreeLabel>
-      )}
+      ) : null}
     </group>
   );
 }
