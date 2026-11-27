@@ -1,3 +1,4 @@
+import { createPrintedLabelTexture } from "@repo/design-system/components/contents/biology/fixtures";
 import {
   AUTOCLAVE,
   BOTTLE,
@@ -9,7 +10,16 @@ import {
   SINK,
   TRAY,
 } from "@repo/design-system/components/contents/biology/waste/station";
+import {
+  latheProfile,
+  liquidMeniscus,
+} from "@repo/design-system/components/contents/chemistry/glassware";
+import { LiquidMaterial } from "@repo/design-system/components/three/physical";
+import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { LABORATORY_COLORS } from "@repo/design-system/lib/material/laboratory";
+import { Array as Arr } from "effect";
+import { useEffect, useMemo } from "react";
+import { DoubleSide } from "three";
 
 /** Undermount laboratory sink with swan-neck chrome tap. */
 export function SinkModel({ running }: { readonly running: boolean }) {
@@ -62,43 +72,157 @@ export function SinkModel({ running }: { readonly running: boolean }) {
   );
 }
 
-/** 2.5 L amber Winchester chemical waste bottle with a funnel in its neck. */
+const WINCHESTER_PROFILE = latheProfile([
+  [0.001, 0],
+  [BOTTLE.radius * 0.9, 0],
+  [BOTTLE.radius, 0.012],
+  [BOTTLE.radius, BOTTLE.height * 0.62],
+  [BOTTLE.radius * 0.88, BOTTLE.height * 0.74],
+  [BOTTLE.radius * 0.42, BOTTLE.height * 0.86],
+  [BOTTLE.neck * 1.15, BOTTLE.height * 0.92],
+  [BOTTLE.neck * 1.15, BOTTLE.height * 0.97],
+  [BOTTLE.neck * 1.38, BOTTLE.height * 0.985],
+  [BOTTLE.neck * 1.32, BOTTLE.height],
+]);
+
+const WINCHESTER_LIQUID = latheProfile([
+  [0.001, 0.01],
+  [BOTTLE.radius * 0.91, 0.01],
+  ...liquidMeniscus(BOTTLE.radius * 0.91, BOTTLE.height * 0.46),
+  [0.001, BOTTLE.height * 0.46],
+]);
+
+const FUNNEL_PROFILE = latheProfile([
+  [0.007, -FUNNEL.stem],
+  [0.0085, 0.004],
+  [FUNNEL.radius, 0.005 + FUNNEL.cone],
+  [FUNNEL.radius * 1.04, 0.005 + FUNNEL.cone + 0.004],
+  [FUNNEL.radius * 0.96, 0.005 + FUNNEL.cone + 0.004],
+  [0.006, 0.004],
+  [0.0055, -FUNNEL.stem],
+]);
+
+const CAP_FLUTES = Arr.range(0, 15);
+
+/** 2.5 L lathed amber borosilicate Winchester chemical waste bottle with funnel, fluted cap, meniscus, and hazard label. */
 export function ChemicalBottle() {
   const [x, , z] = BOTTLE.at;
+  const labelTex = useMemo(
+    () =>
+      createPrintedLabelTexture({
+        accentColor: LABORATORY_COLORS.fireRed,
+        badge: "HAZARDOUS CHEMICAL WASTE",
+        subtitle: "ORGANIC SOLVENTS",
+        title: "WASTE 2.5 L",
+      }),
+    []
+  );
+  useEffect(() => () => labelTex?.dispose(), [labelTex]);
+
   return (
     <group position={[x, 0, z]}>
-      <mesh castShadow position={[0, (BOTTLE.height - 0.05) / 2, 0]}>
+      {/* Internal spent-solvent liquid with concave meniscus */}
+      <mesh>
+        <latheGeometry args={[WINCHESTER_LIQUID, 40]} />
+        <LiquidMaterial color={LABORATORY_COLORS.amberGlass} opacity={0.78} />
+      </mesh>
+      {/* Heavy amber glass base */}
+      <mesh position={[0, 0.006, 0]}>
         <cylinderGeometry
-          args={[BOTTLE.radius, BOTTLE.radius, BOTTLE.height - 0.05, 24]}
+          args={[BOTTLE.radius * 0.94, BOTTLE.radius * 0.9, 0.012, 32]}
         />
         <meshPhysicalMaterial
+          clearcoat={1}
           color={LABORATORY_COLORS.amberGlass}
-          opacity={0.85}
-          roughness={0.2}
+          opacity={0.86}
+          roughness={0.08}
           transparent
         />
       </mesh>
-      <mesh castShadow position={[0, BOTTLE.height - 0.025, 0]}>
-        <cylinderGeometry
-          args={[BOTTLE.neck, BOTTLE.radius * 0.65, 0.05, 20]}
-        />
+      {/* Lathed amber borosilicate Winchester body */}
+      <mesh castShadow renderOrder={2}>
+        <latheGeometry args={[WINCHESTER_PROFILE, 44]} />
         <meshPhysicalMaterial
+          clearcoat={1}
+          clearcoatRoughness={0.05}
           color={LABORATORY_COLORS.amberGlass}
-          opacity={0.85}
-          roughness={0.2}
+          depthWrite={false}
+          ior={1.473}
+          metalness={0}
+          opacity={0.62}
+          roughness={0.06}
+          side={DoubleSide}
           transparent
         />
       </mesh>
-      <mesh
-        castShadow
-        position={[0, BOTTLE.height + 0.005 + FUNNEL.cone / 2, 0]}
-      >
-        <cylinderGeometry args={[FUNNEL.radius, 0.008, FUNNEL.cone, 20]} />
-        <meshStandardMaterial
+      {/* Crisp wrapped chemical-waste hazard label */}
+      {labelTex === null ? null : (
+        <mesh
+          position={[0, BOTTLE.height * 0.34, 0]}
+          rotation={[0, -Math.PI * 0.45, 0]}
+        >
+          <cylinderGeometry
+            args={[
+              BOTTLE.radius + 0.0012,
+              BOTTLE.radius + 0.0012,
+              BOTTLE.height * 0.36,
+              28,
+              1,
+              true,
+              0,
+              Math.PI * 0.9,
+            ]}
+          />
+          <meshStandardMaterial
+            map={labelTex}
+            polygonOffset
+            polygonOffsetFactor={-1}
+            roughness={0.82}
+          />
+        </mesh>
+      )}
+      {/* Molded polypropylene funnel seated in the bottle neck */}
+      <mesh castShadow position={[0, BOTTLE.height, 0]}>
+        <latheGeometry args={[FUNNEL_PROFILE, 32]} />
+        <meshPhysicalMaterial
+          clearcoat={0.45}
           color={LABORATORY_COLORS.polystyrene}
-          roughness={0.3}
+          roughness={0.28}
+          side={DoubleSide}
         />
       </mesh>
+      {/* Fluted GL45 screw cap resting beside the Winchester bottle while funnel is in use */}
+      <group position={[BOTTLE.radius + 0.028, 0.013, 0.032]}>
+        <mesh castShadow receiveShadow>
+          <cylinderGeometry args={[0.019, 0.019, 0.024, 24]} />
+          <meshStandardMaterial
+            color={BENCH_COLORS.bottleCap}
+            roughness={0.54}
+          />
+        </mesh>
+        <mesh position={[0, -0.012, 0]}>
+          <cylinderGeometry args={[0.0205, 0.0205, 0.004, 24]} />
+          <meshStandardMaterial
+            color={LABORATORY_COLORS.fireRed}
+            roughness={0.48}
+          />
+        </mesh>
+        {Arr.map(CAP_FLUTES, (idx) => {
+          const angle = (idx / CAP_FLUTES.length) * Math.PI * 2;
+          return (
+            <mesh
+              key={idx}
+              position={[Math.cos(angle) * 0.0192, 0, Math.sin(angle) * 0.0192]}
+            >
+              <cylinderGeometry args={[0.0011, 0.0011, 0.021, 6]} />
+              <meshStandardMaterial
+                color={BENCH_COLORS.bottleCapRib}
+                roughness={0.62}
+              />
+            </mesh>
+          );
+        })}
+      </group>
     </group>
   );
 }
