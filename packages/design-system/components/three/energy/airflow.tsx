@@ -27,8 +27,8 @@ const NEAREST = 0.12;
 const WIDEST = 1.45;
 
 /** The length of a streak in the free wind and its thickness, in rotor radii. */
-const LENGTH = 0.24;
-const THICKNESS = 0.013;
+const LENGTH = 0.38;
+const THICKNESS = 0.008;
 
 /** Over what distance a streak grows in as it enters and thins out as it leaves, in rotor radii. */
 const FADE = 0.5;
@@ -135,7 +135,7 @@ export function Airflow({
         <meshBasicMaterial
           color={getColor("WHITE")}
           depthWrite={false}
-          opacity={0.62}
+          opacity={0.55}
           transparent
         />
       </instancedMesh>

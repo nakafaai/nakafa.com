@@ -17,6 +17,7 @@ import {
 import { FixedArrow } from "@repo/design-system/components/contents/physics/vector/solid/arrow";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import type { CoordinateTuple } from "@repo/design-system/components/three/frame";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
@@ -108,13 +109,15 @@ export function DoorScene({
 
   return (
     <group>
-      <Doorway width={door.width} />
+      <CameraBounds exclude>
+        <Doorway width={door.width} />
+      </CameraBounds>
       <group ref={leaf}>
         <Leaf width={door.width} />
         <Vector
           color={PLOT_COLORS.slate}
           from={[0, HANDLE.height + 0.18, FRONT]}
-          label={[arm / 2, HANDLE.height + 0.3, FRONT]}
+          label={[arm / 4, HANDLE.height + 0.32, FRONT]}
           math="\vec r"
           vector={[drawn.hand[0], 0, 0]}
         />
@@ -126,9 +129,9 @@ export function DoorScene({
             FRONT - drawn.force[1],
           ]}
           label={[
-            drawn.hand[0] - drawn.force[0] * 1.15,
-            HANDLE.height + 0.34,
-            FRONT - drawn.force[1] * 1.15,
+            drawn.hand[0] - drawn.force[0] * 0.6,
+            HANDLE.height + 0.36,
+            FRONT - drawn.force[1] * 0.6,
           ]}
           math="\vec F"
           vector={[drawn.force[0], 0, drawn.force[1]]}

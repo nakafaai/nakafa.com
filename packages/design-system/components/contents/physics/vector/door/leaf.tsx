@@ -3,7 +3,7 @@ import type { Placement } from "@repo/design-system/components/three/repeat";
 import { Repeat } from "@repo/design-system/components/three/repeat";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
-import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
+import { DOOR_COLORS } from "@repo/design-system/lib/material/door";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { Array as Arr } from "effect";
@@ -12,7 +12,7 @@ import { CatmullRomCurve3, TubeGeometry, Vector3 } from "three";
 
 /** The door's height and thickness, the wall's thickness and height, in metres. */
 export const DOOR = { height: 2.03, thick: 0.04 } as const;
-const WALL = { height: 2.5, left: 1.5, right: 1.7, thick: 0.11 } as const;
+const WALL = { height: 2.6, left: 3.2, right: 3.4, thick: 0.11 } as const;
 
 /** The gap the frame leaves round the door, and the thickness of the frame's lining. */
 const GAP = 0.003;
@@ -213,7 +213,7 @@ export function Doorway({ width }: { readonly width: number }) {
           >
             <boxGeometry args={[side.wide, WALL.height, WALL.thick]} />
             <SurfaceMaterial
-              color={ENERGY_COLORS.wallPlaster}
+              color={DOOR_COLORS.wallPaint}
               roughness={0.92}
               surface="paint"
             />
@@ -239,7 +239,7 @@ export function Doorway({ width }: { readonly width: number }) {
       >
         <boxGeometry args={[lead, WALL.height - head, WALL.thick]} />
         <SurfaceMaterial
-          color={ENERGY_COLORS.wallPlaster}
+          color={DOOR_COLORS.wallPaint}
           roughness={0.92}
           surface="paint"
         />
