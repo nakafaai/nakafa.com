@@ -15,10 +15,7 @@ import { useStage } from "@repo/design-system/components/three/stage/context";
 import { Sea } from "@repo/design-system/components/three/stage/sea";
 import {
   GROUND_REACHES,
-  HORIZON_FADE_INNER,
-  HORIZON_FADE_OUTER,
-  useGround,
-  useHorizonFade,
+  GroundMaterial,
 } from "@repo/design-system/components/three/stage/terrain";
 import { Array as Arr } from "effect";
 import { Suspense, useEffect, useMemo } from "react";
@@ -41,14 +38,6 @@ function Rise({
 }) {
   const { reach } = useStage();
   const tiles = (2 * GROUND_REACHES) / TILE_REACHES;
-  const { bump, map, patches } = useGround(SITE_GROUND[site].ground, [
-    tiles,
-    tiles,
-  ]);
-  const fade = useHorizonFade(
-    HORIZON_FADE_INNER * reach,
-    HORIZON_FADE_OUTER * reach
-  );
   const geometry = useMemo(
     () => landGeometry(rise, 2 * GROUND_REACHES * reach),
     [reach, rise]
@@ -63,18 +52,7 @@ function Rise({
       renderOrder={-10}
       userData={{ treatAsOpaque: true }}
     >
-      <meshStandardMaterial
-        aoMap={patches}
-        aoMapIntensity={1}
-        bumpMap={bump}
-        bumpScale={0.35}
-        depthWrite
-        map={map}
-        metalness={0}
-        ref={fade}
-        roughness={0.94}
-        transparent
-      />
+      <GroundMaterial kind={SITE_GROUND[site].ground} repeat={[tiles, tiles]} />
     </mesh>
   );
 }
