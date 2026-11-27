@@ -18,12 +18,12 @@ import {
   CROWN_INDEX,
   cellDrop,
 } from "@repo/design-system/components/three/optic/lens";
+import { Dot } from "@repo/design-system/components/three/optic/mark";
 import { Arrow, Lamp } from "@repo/design-system/components/three/optic/source";
 import { View } from "@repo/design-system/components/three/optic/view";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Option } from "effect";
-import { DoubleSide } from "three";
 
 /** How high above the benchtop the optical axis runs. */
 const AXIS = 1.5;
@@ -72,17 +72,9 @@ const FROM = [0, 0.55, 6] as const;
 function Mark({ at, name }: { readonly at: number; readonly name: string }) {
   return (
     <group position={[at, 0, 0]}>
-      <mesh position={[0, AXIS, 0]} renderOrder={12}>
-        <circleGeometry args={[0.032, 28]} />
-        <meshBasicMaterial
-          color={PLOT_COLORS.amber}
-          depthTest={false}
-          depthWrite={false}
-          side={DoubleSide}
-          toneMapped={false}
-          transparent
-        />
-      </mesh>
+      <group position={[0, AXIS, 0]}>
+        <Dot color={PLOT_COLORS.amber} size={0.032} />
+      </group>
       <Tag position={[0, 0.02, 0.36]}>
         <InlineMath math={name} />
       </Tag>

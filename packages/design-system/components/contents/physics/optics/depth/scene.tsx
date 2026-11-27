@@ -9,11 +9,13 @@ import {
 } from "@repo/design-system/components/contents/physics/optics/ray";
 import { Beam } from "@repo/design-system/components/three/optic/beam";
 import { Backboard } from "@repo/design-system/components/three/optic/bench";
+import { Coin } from "@repo/design-system/components/three/optic/coin";
 import { Lens } from "@repo/design-system/components/three/optic/glass";
 import {
   CROWN_INDEX,
   cellDrop,
 } from "@repo/design-system/components/three/optic/lens";
+import { Span } from "@repo/design-system/components/three/optic/mark";
 import { View } from "@repo/design-system/components/three/optic/view";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
@@ -21,7 +23,6 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
-import { Vector2 } from "three";
 
 /** The liquids the tank can hold, each in its own colour. */
 const LiquidSchema = Schema.Literals(["water", "oil", "glycerine", "alcohol"]);
@@ -65,70 +66,6 @@ const STAND = 0.86;
 
 /** The side the tank is read from: straight on, level with the liquid. */
 const FROM = [0, 0.35, 6] as const;
-
-/** The radius of the coin, and its turned outline: a raised rim round a struck face. */
-const COIN = 0.17;
-const COIN_PROFILE = Arr.map(
-  [
-    [0.0004, 0.014],
-    [COIN * 0.82, 0.014],
-    [COIN * 0.86, 0.02],
-    [COIN * 0.97, 0.02],
-    [COIN, 0.017],
-    [COIN, 0.003],
-    [COIN * 0.97, 0],
-    [0.0004, 0],
-  ] as const,
-  ([radius, along]) => new Vector2(radius, along)
-);
-
-/** The coin, or as a `ghost` the image of it an eye sees where no coin is. */
-function Coin({ ghost = false }: { readonly ghost?: boolean }) {
-  return (
-    <mesh castShadow={!ghost} renderOrder={ghost ? 6 : 0}>
-      <latheGeometry args={[COIN_PROFILE, 64]} />
-      <meshPhysicalMaterial
-        color={INSTRUMENT_COLORS.brass}
-        depthWrite={!ghost}
-        metalness={1}
-        opacity={ghost ? 0.4 : 1}
-        roughness={0.34}
-        transparent={ghost}
-      />
-    </mesh>
-  );
-}
-
-/** A measure beside the tank from `from` up to `to`: a line with a foot at each end, in `color`. */
-function Measure({
-  color,
-  from,
-  to,
-  x,
-}: {
-  readonly color: string;
-  readonly from: number;
-  readonly to: number;
-  readonly x: number;
-}) {
-  return (
-    <group position={[x, 0, DEEP / 2 + 0.04]}>
-      {Arr.map(
-        [
-          { at: (from + to) / 2, size: [0.014, to - from, 0.004] },
-          { at: from, size: [0.1, 0.014, 0.004] },
-          { at: to, size: [0.1, 0.014, 0.004] },
-        ] as const,
-        (bar) => (
-          <mesh key={bar.at} position={[0, bar.at, 0]}>
-            <boxGeometry args={bar.size} />
-            <meshBasicMaterial color={color} toneMapped={false} />
-          </mesh>
-        )
-      )}
-    </group>
-  );
-}
 
 /**
  * A coin on the floor of a glass tank under layers of liquid, seen straight
@@ -185,14 +122,10 @@ export function DepthScene({
         </group>
       ))}
       <group position={[0, FLOOR, 0]}>
-        <Coin />
+        <Coin color={INSTRUMENT_COLORS.brass} />
       </group>
       <group position={[0, image, 0]}>
-        <Coin ghost />
-        <mesh position={[0, 0.012, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[COIN * 1.12, 0.006, 8, 64]} />
-          <meshBasicMaterial color={PLOT_COLORS.amber} toneMapped={false} />
-        </mesh>
+        <Coin color={INSTRUMENT_COLORS.brass} ghost ring={PLOT_COLORS.amber} />
       </group>
       {Arr.map([-1, 1] as const, (side) => (
         <group key={side}>
@@ -227,18 +160,28 @@ export function DepthScene({
       <group position={[reach + STAND, 0, 0]}>
         <Stand height={eye + 0.03} reach={STAND - 0.05} tall={eye + 0.5} />
       </group>
-      <Measure
-        color={PLOT_COLORS.teal}
-        from={FLOOR}
-        to={surface}
-        x={WIDE / 2 + 0.16}
-      />
-      <Measure
-        color={PLOT_COLORS.amber}
-        from={image}
-        to={surface}
-        x={WIDE / 2 + 0.3}
-      />
+      <group
+        position={[WIDE / 2 + 0.16, FLOOR, DEEP / 2 + 0.04]}
+        rotation={[0, 0, Math.PI / 2]}
+      >
+        <Span
+          color={PLOT_COLORS.teal}
+          foot={0.1}
+          long={surface - FLOOR}
+          thick={0.014}
+        />
+      </group>
+      <group
+        position={[WIDE / 2 + 0.3, image, DEEP / 2 + 0.04]}
+        rotation={[0, 0, Math.PI / 2]}
+      >
+        <Span
+          color={PLOT_COLORS.amber}
+          foot={0.1}
+          long={surface - image}
+          thick={0.014}
+        />
+      </group>
     </View>
   );
 }

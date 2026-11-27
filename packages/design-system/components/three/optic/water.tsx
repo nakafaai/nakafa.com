@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import type { waveVectors } from "@repo/design-system/components/contents/physics/waves/tank/ripple";
 import { useSimulationClock } from "@repo/design-system/components/contents/simulation/clock";
 import { ECOLOGY_COLORS } from "@repo/design-system/lib/material/ecology";
 import { TOWN_COLORS } from "@repo/design-system/lib/material/town";
@@ -99,7 +98,10 @@ export function Water({
 }: {
   readonly deep: number;
   readonly period: number;
-  readonly vectors: ReturnType<typeof waveVectors>;
+  readonly vectors: {
+    readonly deep: readonly [number, number];
+    readonly shallow: readonly [number, number];
+  };
   readonly wide: number;
 }) {
   const clock = useSimulationClock();

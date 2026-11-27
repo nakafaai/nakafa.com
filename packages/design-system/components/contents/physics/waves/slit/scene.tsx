@@ -10,6 +10,7 @@ import {
   Rider,
   Screen,
 } from "@repo/design-system/components/three/optic/bench";
+import { Span } from "@repo/design-system/components/three/optic/mark";
 import {
   Fringes,
   SLIDE_DROP,
@@ -25,7 +26,6 @@ import { PrintFace } from "@repo/design-system/components/three/print/layer";
 import { usePrintNumber } from "@repo/design-system/components/three/print/number";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { Array as Arr } from "effect";
 import { useMemo } from "react";
 
 /** How high above the benchtop the optical axis runs. */
@@ -60,27 +60,6 @@ const FALL = (1.5 * FROM[1]) / Math.hypot(FROM[0], FROM[2]);
 
 /** How many scene units of slide one millimetre between the slits takes, so the slits visibly part. */
 const PARTING = 0.1;
-
-/** A measure along the front of the bench from the slits to the screen: the distance the fringes spread over. */
-function Throw({ long }: { readonly long: number }) {
-  return (
-    <group position={[SLITS_AT, 0.02, 0.42]}>
-      {Arr.map(
-        [
-          { at: long / 2, key: "span", size: [long, 0.012, 0.012] },
-          { at: 0, key: "slits", size: [0.012, 0.012, 0.12] },
-          { at: long, key: "screen", size: [0.012, 0.012, 0.12] },
-        ] as const,
-        (bar) => (
-          <mesh key={bar.key} position={[bar.at, 0, 0]}>
-            <boxGeometry args={bar.size} />
-            <meshBasicMaterial color={PLOT_COLORS.teal} toneMapped={false} />
-          </mesh>
-        )
-      )}
-    </group>
-  );
-}
 
 /**
  * Young's double slit on an optical bench: a laser lights two slits in a
@@ -177,7 +156,9 @@ export function SlitScene({
           wide={BAND.wide}
         />
       </group>
-      <Throw long={long} />
+      <group position={[SLITS_AT, 0.02, 0.42]} rotation={[Math.PI / 2, 0, 0]}>
+        <Span color={PLOT_COLORS.teal} foot={0.12} long={long} thick={0.012} />
+      </group>
     </View>
   );
 }
