@@ -3,12 +3,10 @@ import type {
   ShellModelSample,
   ShellModelShells,
 } from "@repo/design-system/components/contents/chemistry/shell-model/data";
-import { getShellModelSceneColors } from "@repo/design-system/components/contents/chemistry/shell-model/data";
 import { SceneSpinner } from "@repo/design-system/components/three/placeholder";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
 import { lazy } from "@repo/design-system/lib/lazy";
-import { useTheme } from "@repo/design-system/providers/theme";
 import { Suspense } from "react";
 
 /** The model loads once the lab asks for it, and its frame holds the place meanwhile. */
@@ -35,9 +33,6 @@ export function ShellModelCanvas({
   sample: ShellModelSample;
   shells: ShellModelShells;
 }) {
-  const resolvedTheme = useTheme((state) => state.resolvedTheme);
-  const sceneColors = getShellModelSceneColors(resolvedTheme);
-
   return (
     <VisualCardBody
       aria-label={ariaLabel}
@@ -46,7 +41,6 @@ export function ShellModelCanvas({
     >
       {live ? (
         <ShellModelProvider
-          colors={sceneColors}
           outerShellKey={outerShellKey}
           sample={sample}
           shells={shells}

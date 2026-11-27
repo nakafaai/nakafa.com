@@ -20,7 +20,7 @@ const NARROW_CANVAS_ASPECT_RATIO = 1.4;
  */
 export function ShellModelStage() {
   return (
-    <ScienceStage setting="studio">
+    <ScienceStage setting="space">
       <Suspense>
         <ResponsiveShellModelCamera />
         <ShellModelScene />
@@ -43,7 +43,7 @@ function ResponsiveShellModelCamera() {
     <CameraControls
       cameraPosition={cameraPosition}
       cameraTarget={CAMERA_TARGET}
-      fov={45}
+      fov={28}
       framing="content"
     />
   );
