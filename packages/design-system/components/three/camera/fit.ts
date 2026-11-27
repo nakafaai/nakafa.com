@@ -1,4 +1,5 @@
-import { Array as Arr } from "effect";
+import { resolveCameraFit } from "@repo/design-system/lib/geometry/camera/fit";
+import { Array as Arr, Effect } from "effect";
 import type { Box2, Box3, Vector3 } from "three";
 
 const DEFAULT_CAMERA_X = 12;
@@ -75,5 +76,22 @@ export function cameraFitKey(input: {
       (part) => String(part ?? "")
     ),
     ","
+  );
+}
+
+/**
+ * Fits finite scene bounds with fixed-pixel labels, falling back to geometry
+ * bounds alone when narrow viewports cannot satisfy every pixel label margin.
+ */
+export function resolveSafeCameraFit(
+  input: Parameters<typeof resolveCameraFit>[0]
+) {
+  return Effect.runSync(
+    resolveCameraFit(input).pipe(
+      Effect.catchTag("CameraLabelFitError", () =>
+        resolveCameraFit({ ...input, labels: [] })
+      ),
+      Effect.orDie
+    )
   );
 }

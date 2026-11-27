@@ -6,6 +6,7 @@ import {
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import { useMergedRef } from "@mantine/hooks";
+import { SceneFailure } from "@repo/design-system/components/three/failure";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   ButtonGroup,
@@ -22,6 +23,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type {
   VisualState,
@@ -275,12 +277,27 @@ function VisualCardToolbar(props: Omit<ComponentProps<"div">, "className">) {
   );
 }
 
+function VisualBodyFailure({
+  resetErrorBoundary,
+}: {
+  readonly resetErrorBoundary: () => void;
+}) {
+  return (
+    <div className="bg-card relative aspect-square size-full min-h-64 w-full sm:aspect-[1.43/1] [[data-fullscreen]_&]:aspect-auto [[data-fullscreen]_&]:size-full">
+      <SceneFailure onRestart={resetErrorBoundary} />
+    </div>
+  );
+}
+
 /**
  * The visual itself and nothing else: the scene, the chart, the diagram or the
  * sketch, edge to edge. A canvas or chart inside follows the body's size, which
- * takes the free height in full screen.
+ * takes the free height in full screen. An inner error boundary isolates any
+ * runtime failure inside this body frame so the card's header, toolbar, actions,
+ * and footer never flicker or collapse.
  */
 function VisualCardBody({
+  children,
   className,
   render,
   ...props
@@ -290,6 +307,11 @@ function VisualCardBody({
     {
       "data-slot": "visual-card-body",
       ...props,
+      children: (
+        <ErrorBoundary FallbackComponent={VisualBodyFailure}>
+          {children}
+        </ErrorBoundary>
+      ),
       className: cn(visualBodyVariants(), className),
     },
     render
