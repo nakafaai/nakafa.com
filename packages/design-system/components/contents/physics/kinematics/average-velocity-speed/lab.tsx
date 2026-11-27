@@ -144,9 +144,8 @@ export function AverageVelocitySpeedLab({
         <ScienceStage
           floor={0}
           frameloop="always"
-          ground="concrete"
           reach={TRACK_REACH}
-          setting="lab"
+          setting="studio"
         >
           <AverageMotionStage>
             <AverageMotionScene motion={motion} />

@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car";
+import { RoadCar } from "@repo/design-system/components/contents/physics/kinematics/car";
 import {
   formatRoundedMeterMath,
   formatRoundedSecondMath,
@@ -14,7 +14,6 @@ import {
   getUniformCircularMotionState,
   isUniformCircularMotionPeriod,
   UNIFORM_CIRCULAR_MOTION_CAMERA,
-  UNIFORM_CIRCULAR_MOTION_CAR_MODEL_PATH,
   UNIFORM_CIRCULAR_MOTION_COLORS,
   UNIFORM_CIRCULAR_MOTION_PERIODS,
   UNIFORM_CIRCULAR_MOTION_SCENE,
@@ -256,12 +255,7 @@ function CircularCar({ motion }: { motion: UniformCircularMotionState }) {
 }
 
 function CarModel() {
-  return (
-    <PhysicsCarModel
-      bodyColor={UNIFORM_CIRCULAR_MOTION_COLORS.carBody}
-      modelPath={UNIFORM_CIRCULAR_MOTION_CAR_MODEL_PATH}
-    />
-  );
+  return <RoadCar color={UNIFORM_CIRCULAR_MOTION_COLORS.carBody} />;
 }
 
 function getPointOnCircle(angle: number, radius: number) {

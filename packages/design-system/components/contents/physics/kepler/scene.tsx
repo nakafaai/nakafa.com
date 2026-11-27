@@ -174,7 +174,7 @@ const STARS = Arr.makeBy(140, (index) => {
     id: `s-${index}`,
     pos: [
       r * Math.sin(phi) * Math.cos(theta),
-      Math.abs(r * Math.cos(phi)) - 1.5,
+      r * Math.cos(phi),
       r * Math.sin(phi) * Math.sin(theta),
     ] as const,
     size: 0.016 + (index % 3) * 0.009,

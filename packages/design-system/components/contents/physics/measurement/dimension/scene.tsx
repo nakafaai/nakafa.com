@@ -52,7 +52,7 @@ export function DimensionScene({
   powerLabel: string;
 }) {
   return (
-    <group rotation={[-0.15, -0.45, 0]}>
+    <group position={[0, BLOCK_HEIGHT / 2, 0]}>
       <RoundedBox
         args={[BLOCK_WIDTH, BLOCK_HEIGHT, BLOCK_DEPTH]}
         castShadow
@@ -72,9 +72,10 @@ export function DimensionScene({
       {modeId === VOLUME_MODE_ID && <VolumeLayer colors={colors} />}
 
       <ThreeLabel
+        anchorY="bottom"
         color={colors.text}
         fontSize="display"
-        position={[0, 1.35, 1.05]}
+        position={[0, BLOCK_HEIGHT / 2 + 0.3, 0]}
       >
         <InlineMath math={powerLabel} />
       </ThreeLabel>
@@ -85,7 +86,7 @@ export function DimensionScene({
 /**
  * A steel tape measure pulled out along the front edge of the block: the
  * yellow blade with its black graduations, the brass hook over the far end,
- * and the case at the near end.
+ * and the case standing on the block at the near end.
  */
 function Tape() {
   return (
@@ -110,7 +111,7 @@ function Tape() {
       <RoundedBox
         args={[0.5, 0.5, 0.24]}
         castShadow
-        position={[-BLOCK_WIDTH / 2 - 0.28, 0.2, 0]}
+        position={[-BLOCK_WIDTH / 2 + 0.25, 0.25, 0]}
         radius={0.1}
         smoothness={4}
       >

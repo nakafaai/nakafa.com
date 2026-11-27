@@ -29,34 +29,18 @@ const DEFAULT_PROJECTILE_SCENARIO = {
 
 export const DEFAULT_PROJECTILE_SCENARIO_ID = DEFAULT_PROJECTILE_SCENARIO.id;
 
-export const PROJECTILE_ASSET_PATHS = {
-  ball: "/models/physics/kinematics/kenney-pirate-kit/cannon-ball.glb",
-  cannon: "/models/physics/kinematics/kenney-pirate-kit/cannon-mobile.glb",
-  flag: "/models/physics/kinematics/kenney-pirate-kit/flag-pirate-high.glb",
-  palm: "/models/physics/kinematics/kenney-pirate-kit/palm-bend.glb",
-  rock: "/models/physics/kinematics/kenney-pirate-kit/rocks-sand-a.glb",
-  sand: "/models/physics/kinematics/kenney-pirate-kit/patch-sand.glb",
-  sandFoliage:
-    "/models/physics/kinematics/kenney-pirate-kit/patch-sand-foliage.glb",
-  ship: "/models/physics/kinematics/kenney-pirate-kit/ship-pirate-small.glb",
-} as const;
-
-const PROJECTILE_BALL_SCALE = 0.34;
+/** The height of the gun's trunnions, where the shot's path starts. */
+const PROJECTILE_LAUNCH_HEIGHT = 0.34;
 
 export const PROJECTILE_SCENE = {
   animationSeconds: 4.2,
-  ballScale: PROJECTILE_BALL_SCALE,
   cameraFov: 39,
   cameraPosition: [2.7, 4.2, 12],
   cameraTarget: [2.7, 1.2, 0],
-  cannonRotationY: Math.PI / 2,
-  cannonScale: 0.72,
   ghostCount: 8,
-  launchOffset: [0.72, PROJECTILE_BALL_SCALE, 0] as const,
+  launchOffset: [0.72, PROJECTILE_LAUNCH_HEIGHT, 0] as const,
   maxPolarAngle: Math.PI / 2,
   pauseSeconds: 0.9,
-  shipOffset: [3, -0.035, -4] as const,
-  shipScale: 0.42,
   trailSampleCount: 54,
   worldScale: 0.055,
 } as const;

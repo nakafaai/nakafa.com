@@ -5,9 +5,6 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { Array as Arr, Number as Num, Option, Schema } from "effect";
 
-export const DISPLACEMENT_DISTANCE_CAR_MODEL_PATH =
-  "/models/physics/kinematics/kenney-car-kit/taxi.glb";
-
 export const DISPLACEMENT_DISTANCE_CASE_IDS = [
   "straight",
   "turn",

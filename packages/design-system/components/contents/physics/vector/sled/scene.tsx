@@ -165,15 +165,17 @@ function Sled() {
   );
 }
 
-/** One force arrow from the hitch with its symbol at the tip. */
+/** One force arrow from the hitch, with its symbol beside the arrow where `label` puts it. */
 function Pull({
   color,
   from,
+  label,
   math,
   vector,
 }: {
   readonly color: string;
   readonly from: CoordinateTuple;
+  readonly label: CoordinateTuple;
   readonly math: string;
   readonly vector: CoordinateTuple;
 }) {
@@ -186,19 +188,7 @@ function Pull({
         thickness={0.009}
         vector={vector}
       />
-      <ThreeLabel
-        color={color}
-        fontSize="reading"
-        position={[
-          from[0] +
-            vector[0] * (vector[0] === 0 ? 0 : 1.12) +
-            (vector[0] === 0 ? 0.2 : 0),
-          from[1] +
-            vector[1] * (vector[1] === 0 ? 0 : 1.12) +
-            (vector[1] === 0 ? -0.12 : 0),
-          0.3,
-        ]}
-      >
+      <ThreeLabel color={color} fontSize="reading" position={label}>
         <InlineMath math={math} />
       </ThreeLabel>
     </group>
@@ -251,18 +241,25 @@ export function SledScene({
         <Pull
           color={PLOT_COLORS.violet}
           from={[HITCH[0], HITCH[1], 0.02]}
+          label={[
+            HITCH[0] + along * 0.5 - Math.sin(turn) * 0.16,
+            HITCH[1] + up * 0.5 + Math.cos(turn) * 0.16,
+            0.3,
+          ]}
           math="\vec F"
           vector={[along, up, 0]}
         />
         <Pull
           color={PLOT_COLORS.teal}
           from={[HITCH[0], HITCH[1], 0.02]}
+          label={[HITCH[0] + along * 0.5, HITCH[1] - 0.14, 0.3]}
           math="F\cos\theta"
           vector={[along, 0, 0]}
         />
         <Pull
           color={PLOT_COLORS.amber}
           from={[HITCH[0] + along, HITCH[1], 0.02]}
+          label={[HITCH[0] + along + 0.3, HITCH[1] + up * 0.5, 0.3]}
           math="F\sin\theta"
           vector={[0, up, 0]}
         />

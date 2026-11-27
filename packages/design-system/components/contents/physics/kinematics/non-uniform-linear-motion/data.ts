@@ -29,9 +29,6 @@ const GlbbLabelsSchema = Schema.Struct({
 
 export type GlbbLabels = typeof GlbbLabelsSchema.Type;
 
-export const GLBB_TRAIN_MODEL_PATH =
-  "/models/physics/kinematics/kenney-train-kit/train-electric-bullet-a.glb";
-
 export const GLBB_COLORS = {
   trainBody: PLOT_COLORS.pink,
 } as const;
@@ -43,14 +40,14 @@ export const GLBB_SCENE = {
   cameraFov: 44,
   cameraPosition: [4.9, 2.3, 6.3],
   cameraTarget: [0, 0.08, 0],
+  narrowCameraPosition: [6.9, 3.2, 8.8],
   markerHeight: 0.05,
   markerRadius: 0.11,
-  markerSideOffset: -0.44,
+  markerSideOffset: 0.72,
   motionEndClearanceRatio: 0.22,
   railGap: 0.58,
   sleeperSpacing: 0.62,
   sleeperWidth: 0.11,
-  trainScale: 0.64,
   worldScale: 0.16,
 } as const;
 

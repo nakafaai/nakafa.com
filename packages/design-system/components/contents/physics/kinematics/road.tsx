@@ -5,6 +5,7 @@ import {
   hashUnit,
 } from "@repo/design-system/components/contents/simulation/grain";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { getColor } from "@repo/design-system/lib/color";
 import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Array as Arr, Schema } from "effect";
@@ -250,7 +251,7 @@ const LEAVES = [
 function crownOf(x: number, tree: number) {
   return Arr.map(Arr.range(0, CROWN_LUMPS - 1), (lump) => {
     const angle = (lump / CROWN_LUMPS) * Math.PI * 2 + hashUnit(tree, lump);
-    const spread = lump === 0 ? 0 : 1.2 + 1.3 * hashUnit(lump, tree + 7);
+    const spread = lump === 0 ? 0 : 0.9 + 1.7 * hashUnit(lump, tree + 7);
     return {
       color: LEAVES[(tree + lump) % LEAVES.length],
       key: `${x}-${lump}`,
@@ -259,25 +260,44 @@ function crownOf(x: number, tree: number) {
         4.1 + 0.9 * hashUnit(tree + 3, lump) - spread * 0.25,
         ROAD.side * 10 + Math.sin(angle) * spread,
       ] as const,
-      scale: 1.05 + 0.6 * hashUnit(lump + 11, tree),
+      scale: 0.85 + 0.6 * hashUnit(lump + 11, tree),
     };
   });
 }
 
-/** Roadside trees beyond the pavement: trunks and broad leafy crowns. */
+/**
+ * Roadside trees beyond the pavement: furrowed trunks and broad crowns of
+ * rounded leaf masses, mottled by a grain that breaks each mass into leaves.
+ */
 function Trees({ positions }: { readonly positions: readonly number[] }) {
+  const leaves = useMemo(() => {
+    const grain = createGrainTexture(1.5);
+    grain.repeat.set(5, 3);
+    return grain;
+  }, []);
+  useEffect(() => () => leaves.dispose(), [leaves]);
+
   return (
     <group>
       <Instances castShadow limit={Math.max(1, positions.length)}>
-        <cylinderGeometry args={[0.14, 0.26, 4, 10]} />
-        <meshStandardMaterial color={ROAD_COLORS.bark} roughness={1} />
+        <cylinderGeometry args={[0.14, 0.3, 4, 14]} />
+        <SurfaceMaterial
+          color={ROAD_COLORS.bark}
+          repeat={[2, 3]}
+          surface="bark"
+        />
         {Arr.map(positions, (x) => (
           <Instance key={x} position={[x, 2, ROAD.side * 10]} />
         ))}
       </Instances>
       <Instances castShadow limit={Math.max(1, positions.length) * CROWN_LUMPS}>
-        <icosahedronGeometry args={[1, 1]} />
-        <meshStandardMaterial roughness={0.95} />
+        <icosahedronGeometry args={[1, 3]} />
+        <meshStandardMaterial
+          bumpMap={leaves}
+          bumpScale={6}
+          map={leaves}
+          roughness={0.9}
+        />
         {Arr.flatMap(positions, (x, tree) =>
           Arr.map(crownOf(x, tree), (lump) => (
             <Instance

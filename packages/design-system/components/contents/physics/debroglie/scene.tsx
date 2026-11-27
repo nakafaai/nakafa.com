@@ -68,7 +68,7 @@ function DeBroglieCamera() {
   );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0.42, 1.7, 4.15] : [0.35, 1.42, 3.45]}
+      cameraPosition={narrow ? [0.52, 2.05, 5.1] : [0.35, 1.42, 3.45]}
       cameraTarget={[0.04, 0.64, 0]}
       fov={36}
       maxDistance={6.8}

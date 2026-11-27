@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car";
+import { RoadCar } from "@repo/design-system/components/contents/physics/kinematics/car";
 import { formatKeptZeroMeterMath } from "@repo/design-system/components/contents/physics/kinematics/math";
 import type {
   VelocitySpeedCaseId,
@@ -13,7 +13,6 @@ import {
   getVelocitySpeedState,
   isVelocitySpeedCaseId,
   VELOCITY_SPEED_CAMERA,
-  VELOCITY_SPEED_CAR_MODEL_PATH,
   VELOCITY_SPEED_CASE_IDS,
   VELOCITY_SPEED_COLORS,
   VELOCITY_SPEED_SCENE,
@@ -402,10 +401,7 @@ function AnimatedCar({ motion }: { motion: VelocitySpeedState }) {
       objectRef={groupRef}
     >
       <group scale={VELOCITY_SPEED_SCENE.carScale}>
-        <PhysicsCarModel
-          bodyColor={VELOCITY_SPEED_COLORS.carBody}
-          modelPath={VELOCITY_SPEED_CAR_MODEL_PATH}
-        />
+        <RoadCar color={VELOCITY_SPEED_COLORS.carBody} />
       </group>
     </CameraBounds>
   );

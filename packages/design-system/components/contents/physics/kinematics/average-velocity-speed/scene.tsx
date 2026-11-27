@@ -26,15 +26,20 @@ import type { Group } from "three";
 import { CatmullRomCurve3, Quaternion, Vector3 } from "three";
 
 const TRACK_Y = 0.18;
-const PAD_Y = 0.015;
+const PAD_Y = 0.01;
 const PAUSE_SECONDS = 0.8;
 const SAME_POINT_EPSILON = 0.001;
 const STANCHION_COUNT = 8;
 const UP_AXIS = new Vector3(0, 1, 0);
+/** The ball rides on both rails, so its centre sits where it touches the two of them. */
 const BALL_Y =
   TRACK_Y +
-  AVERAGE_VELOCITY_SPEED_SCENE.routeRadius +
-  AVERAGE_VELOCITY_SPEED_SCENE.ballRadius;
+  Math.sqrt(
+    (AVERAGE_VELOCITY_SPEED_SCENE.ballRadius +
+      AVERAGE_VELOCITY_SPEED_SCENE.railRadius) **
+      2 -
+      AVERAGE_VELOCITY_SPEED_SCENE.railOffset ** 2
+  );
 
 /** The lights and the camera of the average-motion scene. The lab draws its motion as children. */
 export function AverageMotionStage({ children }: { children: ReactNode }) {
@@ -63,25 +68,13 @@ export function AverageMotionScene({
 
   return (
     <group>
-      <TrackStanchions points={track.centerPoints} />
-      <RouteTube
-        color={AVERAGE_VELOCITY_SPEED_COLORS.route}
-        metallic={false}
-        points={track.centerPoints}
-        radius={AVERAGE_VELOCITY_SPEED_SCENE.routeRadius}
+      <TrackStanchions
+        left={track.leftRailPoints}
+        right={track.rightRailPoints}
       />
-      <RouteTube
-        color={AVERAGE_VELOCITY_SPEED_COLORS.rail}
-        metallic
-        points={track.leftRailPoints}
-        radius={AVERAGE_VELOCITY_SPEED_SCENE.railRadius}
-      />
-      <RouteTube
-        color={AVERAGE_VELOCITY_SPEED_COLORS.rail}
-        metallic
-        points={track.rightRailPoints}
-        radius={AVERAGE_VELOCITY_SPEED_SCENE.railRadius}
-      />
+      <RouteTape points={track.centerPoints} />
+      <Rail points={track.leftRailPoints} />
+      <Rail points={track.rightRailPoints} />
       <EndpointPads motion={motion} />
       <DisplacementGuide motion={motion} />
       <GhostBalls motion={motion} />
@@ -90,31 +83,51 @@ export function AverageMotionScene({
   );
 }
 
-/** Brushed-steel laboratory stanchions anchoring the roller track to the floor. */
-function TrackStanchions({ points }: { points: readonly WorldPoint2[] }) {
+/**
+ * The track's supports: a steel post on a foot under each cross tie, and the
+ * tie itself, which holds the two rails to their gauge.
+ */
+function TrackStanchions({
+  left,
+  right,
+}: {
+  left: readonly WorldPoint2[];
+  right: readonly WorldPoint2[];
+}) {
   const supports = useMemo(() => {
-    if (points.length < 2) {
+    if (left.length < 2) {
       return [];
     }
     return Arr.map(Arr.range(0, STANCHION_COUNT - 1), (index) => {
-      const i = Math.round(
-        (index / (STANCHION_COUNT - 1)) * (points.length - 1)
-      );
-      return { id: `stanchion-${index}`, point: points[i] ?? points[0] };
+      const i = Math.round((index / (STANCHION_COUNT - 1)) * (left.length - 1));
+      const near = left[i] ?? left[0];
+      const far = right[i] ?? right[0];
+      return {
+        id: `stanchion-${index}`,
+        turn: -Math.atan2(far.z - near.z, far.x - near.x),
+        x: (near.x + far.x) / 2,
+        z: (near.z + far.z) / 2,
+      };
     });
-  }, [points]);
+  }, [left, right]);
+  const tie = AVERAGE_VELOCITY_SPEED_SCENE.railOffset * 2 + 0.1;
+  const post = TRACK_Y - AVERAGE_VELOCITY_SPEED_SCENE.railRadius - 0.02;
 
   return (
     <group>
-      {Arr.map(supports, ({ id, point }) => (
-        <group key={id} position={[point.x, 0, point.z]}>
-          <mesh castShadow position={[0, TRACK_Y / 2, 0]} receiveShadow>
-            <cylinderGeometry args={[0.022, 0.026, TRACK_Y, 16]} />
+      {Arr.map(supports, ({ id, turn, x, z }) => (
+        <group key={id} position={[x, 0, z]} rotation={[0, turn, 0]}>
+          <mesh castShadow position={[0, post / 2, 0]} receiveShadow>
+            <cylinderGeometry args={[0.016, 0.02, post, 16]} />
             <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.34} />
           </mesh>
-          <mesh castShadow position={[0, 0.012, 0]} receiveShadow>
-            <cylinderGeometry args={[0.065, 0.075, 0.024, 24]} />
+          <mesh castShadow position={[0, 0.01, 0]} receiveShadow>
+            <cylinderGeometry args={[0.07, 0.08, 0.02, 24]} />
             <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.4} />
+          </mesh>
+          <mesh castShadow position={[0, post + 0.01, 0]} receiveShadow>
+            <boxGeometry args={[tie, 0.02, 0.05]} />
+            <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.36} />
           </mesh>
         </group>
       ))}
@@ -122,40 +135,61 @@ function TrackStanchions({ points }: { points: readonly WorldPoint2[] }) {
   );
 }
 
-function RouteTube({
-  color,
-  metallic,
-  points,
-  radius,
-}: {
-  color: string;
-  metallic: boolean;
-  points: readonly WorldPoint2[];
-  radius: number;
-}) {
-  const curve = useMemo(() => {
-    const vectors = Arr.map(
-      points,
-      (point) => new Vector3(point.x, TRACK_Y, point.z)
-    );
+/** The curve a row of route points runs along at `height`. */
+function routeCurve(points: readonly WorldPoint2[], height: number) {
+  return new CatmullRomCurve3(
+    Arr.map(points, (point) => new Vector3(point.x, height, point.z)),
+    false,
+    "centripetal",
+    0.35
+  );
+}
 
-    return new CatmullRomCurve3(vectors, false, "centripetal", 0.35);
-  }, [points]);
+/** One polished steel rail of the track. */
+function Rail({ points }: { points: readonly WorldPoint2[] }) {
+  const curve = useMemo(() => routeCurve(points, TRACK_Y), [points]);
 
   return (
     <mesh castShadow receiveShadow>
-      <tubeGeometry args={[curve, points.length * 2, radius, 20, false]} />
-      {metallic ? (
-        <MetalMaterial color={color} roughness={0.32} />
-      ) : (
-        <meshPhysicalMaterial
-          clearcoat={0.55}
-          clearcoatRoughness={0.14}
-          color={color}
-          metalness={0.12}
-          roughness={0.28}
-        />
-      )}
+      <tubeGeometry
+        args={[
+          curve,
+          points.length * 2,
+          AVERAGE_VELOCITY_SPEED_SCENE.railRadius,
+          16,
+          false,
+        ]}
+      />
+      <MetalMaterial
+        color={AVERAGE_VELOCITY_SPEED_COLORS.rail}
+        roughness={0.18}
+      />
+    </mesh>
+  );
+}
+
+/**
+ * The measured path: a strip of floor-marking tape laid under the track, so
+ * the distance the ball travels reads as a line on the floor.
+ */
+function RouteTape({ points }: { points: readonly WorldPoint2[] }) {
+  const curve = useMemo(() => routeCurve(points, 0), [points]);
+
+  return (
+    <mesh position={[0, 0.006, 0]} scale={[1, 0.03, 1]}>
+      <tubeGeometry
+        args={[
+          curve,
+          points.length * 2,
+          AVERAGE_VELOCITY_SPEED_SCENE.routeRadius,
+          8,
+          false,
+        ]}
+      />
+      <meshStandardMaterial
+        color={AVERAGE_VELOCITY_SPEED_COLORS.route}
+        roughness={0.7}
+      />
     </mesh>
   );
 }
@@ -184,13 +218,13 @@ function EndpointPads({ motion }: { motion: AverageVelocitySpeedState }) {
 function RoutePad({ color, point }: { color: string; point: WorldPoint2 }) {
   return (
     <group position={[point.x, PAD_Y, point.z]}>
-      <mesh castShadow receiveShadow>
-        <cylinderGeometry args={[0.34, 0.37, 0.03, 40]} />
+      <mesh receiveShadow>
+        <cylinderGeometry args={[0.3, 0.32, 0.02, 48]} />
         <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.38} />
       </mesh>
-      <mesh position={[0, 0.017, 0]} receiveShadow>
-        <cylinderGeometry args={[0.29, 0.29, 0.008, 40]} />
-        <meshPhysicalMaterial clearcoat={0.6} color={color} roughness={0.3} />
+      <mesh position={[0, 0.012, 0]} receiveShadow>
+        <cylinderGeometry args={[0.26, 0.26, 0.006, 48]} />
+        <meshStandardMaterial color={color} roughness={0.7} />
       </mesh>
     </group>
   );
@@ -272,29 +306,18 @@ function GhostBalls({ motion }: { motion: AverageVelocitySpeedState }) {
           const point = toWorldRoutePoint(sample);
 
           return (
-            <group key={elapsed} position={[point.x, BALL_Y, point.z]}>
-              <mesh scale={0.78 + index * 0.03}>
-                <sphereGeometry args={[0.14, 24, 16]} />
-                <meshPhysicalMaterial
-                  clearcoat={1}
-                  clearcoatRoughness={0.08}
-                  color={AVERAGE_VELOCITY_SPEED_COLORS.distance}
-                  depthWrite={false}
-                  opacity={0.34}
-                  roughness={0.14}
-                  transparent
-                />
-              </mesh>
-              <mesh scale={0.38}>
-                <sphereGeometry args={[0.14, 20, 14]} />
-                <meshStandardMaterial
-                  color={AVERAGE_VELOCITY_SPEED_COLORS.distance}
-                  emissive={AVERAGE_VELOCITY_SPEED_COLORS.distance}
-                  emissiveIntensity={0.35}
-                  roughness={0.25}
-                />
-              </mesh>
-            </group>
+            <mesh key={elapsed} position={[point.x, BALL_Y, point.z]}>
+              <sphereGeometry
+                args={[AVERAGE_VELOCITY_SPEED_SCENE.ballRadius, 32, 24]}
+              />
+              <meshStandardMaterial
+                color={AVERAGE_VELOCITY_SPEED_COLORS.ball}
+                depthWrite={false}
+                opacity={0.2}
+                roughness={0.6}
+                transparent
+              />
+            </mesh>
           );
         }
       )}
@@ -360,11 +383,11 @@ function RollingBall({ motion }: { motion: AverageVelocitySpeedState }) {
             args={[AVERAGE_VELOCITY_SPEED_SCENE.ballRadius, 40, 28]}
           />
           <meshPhysicalMaterial
-            clearcoat={0.9}
-            clearcoatRoughness={0.08}
+            clearcoat={1}
+            clearcoatRoughness={0.06}
             color={AVERAGE_VELOCITY_SPEED_COLORS.ball}
-            metalness={0.08}
-            roughness={0.18}
+            metalness={0}
+            roughness={0.25}
           />
         </mesh>
         <BallBand rotation={[Math.PI / 2, 0, 0]} />
@@ -383,15 +406,17 @@ function BallBand({
     <mesh rotation={rotation}>
       <torusGeometry
         args={[
-          AVERAGE_VELOCITY_SPEED_SCENE.ballRadius * 1.015,
-          AVERAGE_VELOCITY_SPEED_SCENE.ballRadius * 0.032,
+          AVERAGE_VELOCITY_SPEED_SCENE.ballRadius * 0.972,
+          AVERAGE_VELOCITY_SPEED_SCENE.ballRadius * 0.05,
           12,
           56,
         ]}
       />
-      <MetalMaterial
+      <meshPhysicalMaterial
+        clearcoat={1}
+        clearcoatRoughness={0.06}
         color={AVERAGE_VELOCITY_SPEED_COLORS.ballBand}
-        roughness={0.28}
+        roughness={0.25}
       />
     </mesh>
   );

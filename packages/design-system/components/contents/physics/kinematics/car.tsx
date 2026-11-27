@@ -1,56 +1,38 @@
-import { useGLTF } from "@react-three/drei";
-import { tintMaterial } from "@repo/design-system/components/three/material";
-import { Array as Arr, HashSet } from "effect";
-import { useMemo } from "react";
-import { Box3, Mesh, Vector3 } from "three";
+import type { SedanRig } from "@repo/design-system/components/contents/physics/kinematics/sedan";
+import {
+  SEDAN,
+  Sedan,
+} from "@repo/design-system/components/contents/physics/kinematics/sedan";
+import { useTravel } from "@repo/design-system/components/contents/physics/kinematics/travel";
+import { useRef } from "react";
+import type { Group } from "three";
 
-const COLORABLE_CAR_PART_NAMES = HashSet.make("body", "kart-oobi", "spoiler");
-const COLORABLE_CAR_MATERIAL_NAMES = HashSet.make("Body", "Red_Chasis");
+/**
+ * How long the car is on a lesson's road, in scene units. A lesson's road is
+ * drawn a few units wide, not at real size, so the real sedan is scaled down
+ * to sit in one of its lanes.
+ */
+const ROAD_CAR_LENGTH = 2.5;
 
-interface PhysicsCarModelProps {
-  bodyColor?: string;
-  modelPath: string;
-}
+/**
+ * The sedan on a lesson's road: scaled to the road's lane and facing +z, the
+ * way a lesson's route starts out. Its wheels turn by the distance it really
+ * moves, wherever a lab moves it.
+ *
+ * @param color - The car's paint, which a lab ties to its legend
+ */
+export function RoadCar({ color }: { readonly color: string }) {
+  const car = useRef<Group>(null);
+  const rig = useRef<SedanRig>(null);
+  useTravel(car, (distance) => rig.current?.roll(distance));
 
-export function PhysicsCarModel({
-  bodyColor,
-  modelPath,
-}: PhysicsCarModelProps) {
-  const { scene } = useGLTF(modelPath);
-  const car = useMemo(() => {
-    const clone = scene.clone(true);
-    const box = new Box3().setFromObject(clone);
-    clone.position.copy(new Vector3(0, -box.min.y, 0));
-
-    clone.traverse((child) => {
-      if (!(child instanceof Mesh)) {
-        return;
-      }
-
-      child.castShadow = true;
-      child.receiveShadow = true;
-
-      if (bodyColor && shouldTintCarPart(child)) {
-        child.material = tintMaterial(child.material, bodyColor);
-      }
-    });
-
-    return clone;
-  }, [bodyColor, scene]);
-
-  return <primitive object={car} />;
-}
-
-function shouldTintCarPart(mesh: Mesh) {
-  if (HashSet.has(COLORABLE_CAR_PART_NAMES, mesh.name)) {
-    return true;
-  }
-
-  const materials = Arr.isArray(mesh.material)
-    ? mesh.material
-    : [mesh.material];
-
-  return Arr.some(materials, (material) =>
-    HashSet.has(COLORABLE_CAR_MATERIAL_NAMES, material.name)
+  return (
+    <group
+      ref={car}
+      rotation={[0, -Math.PI / 2, 0]}
+      scale={ROAD_CAR_LENGTH / SEDAN.length}
+    >
+      <Sedan color={color} ref={rig} />
+    </group>
   );
 }

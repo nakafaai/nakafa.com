@@ -4,6 +4,7 @@ import {
   STOPWATCH_SECONDS_PER_ROTATION,
   TIME_SCENE_SCALE,
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
+import { Desk } from "@repo/design-system/components/contents/physics/measurement/tools/desk";
 import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/scene";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import type { Placement } from "@repo/design-system/components/three/repeat";
@@ -48,6 +49,9 @@ const MINOR_TICKS = ticks(1, 0.08);
  * every five, the crown, bow and side pusher on top, a red sweep hand with
  * its counterweight and centre cap, and a domed crystal over it all.
  */
+/** How far the case's back lies behind its middle, which rests on the desk. */
+const CASE_BACK = 0.15;
+
 export function TimeScene({
   colors,
   measurement,
@@ -58,10 +62,14 @@ export function TimeScene({
 
   return (
     <group
-      position={[0, 0.35, 0]}
-      rotation={[0.05, -0.25, 0]}
+      position={[0, CASE_BACK * TIME_SCENE_SCALE, 0]}
+      rotation={[-Math.PI / 2, 0, 0.22]}
       scale={TIME_SCENE_SCALE}
     >
+      {/* The watch lies on its back, so the desk is behind it along its own z. */}
+      <group rotation={[Math.PI / 2, 0, 0]}>
+        <Desk top={-CASE_BACK} />
+      </group>
       <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[1.3, 1.3, 0.3, 96]} />
         <SurfaceMaterial
@@ -178,9 +186,10 @@ export function TimeScene({
         />
       </mesh>
       <ThreeLabel
+        anchorY="top"
         color={colors.text}
         fontSize="display"
-        position={[0, -1.75, 0.25]}
+        position={[0, -1.62, 0]}
       >
         {reading}
       </ThreeLabel>
