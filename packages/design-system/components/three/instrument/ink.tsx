@@ -68,16 +68,17 @@ export function Numeral({
   const sheet = useMemo(
     () => ({
       height,
-      marks: [
-        words({ at: [0, 0], ink, size: height * EM, text, weight: 600 }),
-      ],
+      marks: [words({ at: [0, 0], ink, size: height * EM, text, weight: 600 })],
       width: height * (text.length * ADVANCE + 0.4),
     }),
     [height, ink, text]
   );
 
   return (
-    <group position={[at[0], at[1], at[2]]} rotation={[turn[0], turn[1], turn[2]]}>
+    <group
+      position={[at[0], at[1], at[2]]}
+      rotation={[turn[0], turn[1], turn[2]]}
+    >
       <PrintFace sheet={sheet} stock="engraving" />
     </group>
   );

@@ -105,11 +105,7 @@ export function Rule({ length }: { readonly length: number }) {
           text={`${centimetre}`}
         />
       ))}
-      <Numeral
-        at={[4, -20.5, STRIP.thick + 0.02]}
-        height={3}
-        text="cm"
-      />
+      <Numeral at={[4, -20.5, STRIP.thick + 0.02]} height={3} text="cm" />
     </group>
   );
 }

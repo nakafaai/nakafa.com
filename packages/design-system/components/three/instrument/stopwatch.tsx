@@ -256,7 +256,11 @@ export function Stopwatch({ seconds }: { readonly seconds: () => number }) {
           <Moulded color={INSTRUMENT_COLORS[pusher.color]} />
         </mesh>
       ))}
-      <mesh castShadow position={[0, CASE.tall / 2 + 9, 0]} rotation={[0, Math.PI / 2, 0]}>
+      <mesh
+        castShadow
+        position={[0, CASE.tall / 2 + 9, 0]}
+        rotation={[0, Math.PI / 2, 0]}
+      >
         <torusGeometry args={[3.4, 0.7, 12, 40]} />
         <SurfaceMaterial
           color={INSTRUMENT_COLORS.satinChrome}

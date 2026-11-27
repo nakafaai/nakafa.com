@@ -66,7 +66,10 @@ export function Extent({
           roughness={0.4}
         />
       </mesh>
-      <mesh position={[0, -length / 2 + head / 2, 0]} rotation={[Math.PI, 0, 0]}>
+      <mesh
+        position={[0, -length / 2 + head / 2, 0]}
+        rotation={[Math.PI, 0, 0]}
+      >
         <coneGeometry args={[weight * 2.6, head, 24]} />
         <meshStandardMaterial
           color={color}

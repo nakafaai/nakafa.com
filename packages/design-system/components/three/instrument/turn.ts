@@ -28,9 +28,7 @@ export function turnedSurface(
   const columns = around + 1;
   const positions = new Float32Array(stations.length * columns * 3);
   const coordinates = new Float32Array(stations.length * columns * 2);
-  const faces = new Uint32Array(
-    Math.max(stations.length - 1, 0) * around * 6
-  );
+  const faces = new Uint32Array(Math.max(stations.length - 1, 0) * around * 6);
   Arr.forEach(stations, (along, ring) => {
     for (let step = 0; step < columns; step += 1) {
       const angle = (step / around) * 2 * Math.PI;
@@ -61,10 +59,7 @@ export function turnedSurface(
 /** Evenly spaced stations from `from` to `to`, both ends included, `steps` apart at most. */
 export function stationsBetween(from: number, to: number, steps: number) {
   const count = Math.max(1, Math.ceil(Math.abs(to - from) / steps));
-  return Arr.makeBy(
-    count + 1,
-    (index) => from + ((to - from) * index) / count
-  );
+  return Arr.makeBy(count + 1, (index) => from + ((to - from) * index) / count);
 }
 
 /**

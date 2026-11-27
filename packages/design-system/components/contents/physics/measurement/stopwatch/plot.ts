@@ -35,9 +35,7 @@ const DOT = { radius: 2.9, step: 6.3 } as const;
 /** Where on the sheet a time stands along the scale, held inside it. */
 function placeOf(time: number) {
   const share = (time - SCALE.from) / (SCALE.to - SCALE.from);
-  return (
-    PAGE.left + Math.min(1, Math.max(0, share)) * (PAGE.right - PAGE.left)
-  );
+  return PAGE.left + Math.min(1, Math.max(0, share)) * (PAGE.right - PAGE.left);
 }
 
 /** The outline of the stretch of the scale between two times, in one ink, `tall` high. */
@@ -79,8 +77,7 @@ export function plotSheet(
     return {
       at: [placeOf(time), PAGE.base + DOT.radius + 0.8 + below * DOT.step],
       height: DOT.radius * 2,
-      ink:
-        index === times.length - 1 ? PLOT_COLORS.amber : PLOT_COLORS.orange,
+      ink: index === times.length - 1 ? PLOT_COLORS.amber : PLOT_COLORS.orange,
       kind: "band",
       radius: DOT.radius,
       width: DOT.radius * 2,
@@ -117,7 +114,12 @@ export function plotSheet(
         width: 0.4,
       },
       ...ruleMarks(
-        { from: [PAGE.left, PAGE.base], scale: SCALE, side: -1, to: [PAGE.right, PAGE.base] },
+        {
+          from: [PAGE.left, PAGE.base],
+          scale: SCALE,
+          side: -1,
+          to: [PAGE.right, PAGE.base],
+        },
         format,
         {
           ink: INSTRUMENT_COLORS.scaleInk,

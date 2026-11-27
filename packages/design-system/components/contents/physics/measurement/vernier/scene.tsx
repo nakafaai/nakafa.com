@@ -41,28 +41,28 @@ export function CaliperScene({ width }: { readonly width: number }) {
   return (
     <group>
       <ReadingCamera
-        surface={PLATE_TOP}
         narrow={[0.09, 0.7, 0.5]}
+        surface={PLATE_TOP}
         target={[0.09, 0, 0.03]}
         wide={[0.1, 0.52, 0.38]}
       />
       <Plate deep={260} wide={520}>
         <Caliper hold="slide" reading={width}>
-        <mesh
-          castShadow
-          position={[width / 2, -Math.max(width / 2 + 1.5, DEEP), -1]}
-          receiveShadow
-          rotation={[Math.PI / 2, 0, 0]}
-        >
-          <latheGeometry args={[profile, 96]} />
-          <SurfaceMaterial
-            color={INSTRUMENT_COLORS.brass}
-            metalness={1}
-            repeat={[6, 1]}
-            roughness={0.26}
-            surface="brushed"
-          />
-        </mesh>
+          <mesh
+            castShadow
+            position={[width / 2, -Math.max(width / 2 + 1.5, DEEP), -1]}
+            receiveShadow
+            rotation={[Math.PI / 2, 0, 0]}
+          >
+            <latheGeometry args={[profile, 96]} />
+            <SurfaceMaterial
+              color={INSTRUMENT_COLORS.brass}
+              metalness={1}
+              repeat={[6, 1]}
+              roughness={0.26}
+              surface="brushed"
+            />
+          </mesh>
         </Caliper>
       </Plate>
     </group>

@@ -263,17 +263,17 @@ export function Micrometer({
           <Marks placements={WHOLE_MARKS} />
           <Marks placements={HALF_MARKS} />
           {Arr.map(SLEEVE_NUMERALS, (millimetre) => (
-          <Numeral
-            at={[
-              SLEEVE.zero + millimetre,
-              (SLEEVE.radius + 0.03) * Math.cos(NUMERAL_ANGLE),
-              (SLEEVE.radius + 0.03) * Math.sin(NUMERAL_ANGLE),
-            ]}
-            height={2}
-            key={millimetre}
-            text={`${millimetre}`}
-            turn={[NUMERAL_ANGLE - Math.PI / 2, 0, 0]}
-          />
+            <Numeral
+              at={[
+                SLEEVE.zero + millimetre,
+                (SLEEVE.radius + 0.03) * Math.cos(NUMERAL_ANGLE),
+                (SLEEVE.radius + 0.03) * Math.sin(NUMERAL_ANGLE),
+              ]}
+              height={2}
+              key={millimetre}
+              text={`${millimetre}`}
+              turn={[NUMERAL_ANGLE - Math.PI / 2, 0, 0]}
+            />
           ))}
         </group>
         {children}
@@ -313,8 +313,10 @@ export function Micrometer({
             <Numeral
               at={[
                 THIMBLE.bevel + 2.4,
-                (THIMBLE.radius + 0.03) * Math.cos(rimAngle(division, DIVISIONS)),
-                (THIMBLE.radius + 0.03) * Math.sin(rimAngle(division, DIVISIONS)),
+                (THIMBLE.radius + 0.03) *
+                  Math.cos(rimAngle(division, DIVISIONS)),
+                (THIMBLE.radius + 0.03) *
+                  Math.sin(rimAngle(division, DIVISIONS)),
               ]}
               height={2.3}
               key={division}

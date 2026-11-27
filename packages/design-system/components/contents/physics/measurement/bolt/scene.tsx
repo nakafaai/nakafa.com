@@ -84,17 +84,17 @@ function Mark({ quantity }: { readonly quantity: Quantity }) {
       />
     )),
     Match.when("area", () => (
-      <mesh position={[SHANK_LENGTH + 0.6, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
+      <mesh
+        position={[SHANK_LENGTH + 0.6, 0, 0]}
+        rotation={[0, Math.PI / 2, 0]}
+      >
         <circleGeometry args={[SHANK, 64]} />
         <Tint color={PLOT_COLORS.fuchsia} />
       </mesh>
     )),
     Match.when("mass", () => null),
     Match.orElse(() => (
-      <mesh
-        position={[SHANK_LENGTH / 2, 0, 0]}
-        rotation={[0, 0, Math.PI / 2]}
-      >
+      <mesh position={[SHANK_LENGTH / 2, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[SHANK + 0.5, SHANK + 0.5, SHANK_LENGTH, 64]} />
         <Tint color={PLOT_COLORS.violet} />
       </mesh>
@@ -168,8 +168,8 @@ export function BoltScene({ quantity }: { readonly quantity: Quantity }) {
     <group>
       <ReadingCamera
         key="rule"
-        surface={PLATE_TOP}
         narrow={[-0.2, 1.02, 0.58]}
+        surface={PLATE_TOP}
         target={[-0.04, 0.04, -0.02]}
         wide={[-0.24, 0.66, 0.54]}
       />

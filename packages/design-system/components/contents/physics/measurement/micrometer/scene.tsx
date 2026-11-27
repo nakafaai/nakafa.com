@@ -18,24 +18,24 @@ export function GaugeScene({ thickness }: { readonly thickness: number }) {
   return (
     <group>
       <ReadingCamera
-        surface={PLATE_TOP}
         narrow={[0.18, 1, 0.33]}
+        surface={PLATE_TOP}
         target={[0.18, 0.09, -0.09]}
         wide={[0.18, 0.87, 0.27]}
       />
       <Plate deep={200} wide={300}>
         <group position={[-0.16, 0, -0.14]}>
           <Micrometer reading={thickness}>
-        <mesh castShadow position={[thickness / 2, 0, 0]} receiveShadow>
-          <sphereGeometry args={[thickness / 2, 64, 48]} />
-          <SurfaceMaterial
-            color={CAR_COLORS.chrome}
-            metalness={1}
-            repeat={[2, 2]}
-            roughness={0.12}
-            surface="brushed"
-          />
-        </mesh>
+            <mesh castShadow position={[thickness / 2, 0, 0]} receiveShadow>
+              <sphereGeometry args={[thickness / 2, 64, 48]} />
+              <SurfaceMaterial
+                color={CAR_COLORS.chrome}
+                metalness={1}
+                repeat={[2, 2]}
+                roughness={0.12}
+                surface="brushed"
+              />
+            </mesh>
           </Micrometer>
         </group>
       </Plate>
