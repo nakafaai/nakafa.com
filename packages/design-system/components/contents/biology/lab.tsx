@@ -89,6 +89,7 @@ export interface BiologySceneProps<
 export function BiologyLabFrame<Item extends BiologyLabItemProps>({
   defaultItemIndex = BIOLOGY_DEFAULT_ITEM_INDEX,
   description,
+  framing,
   labels,
   live = true,
   onItemIndexChange,
@@ -97,6 +98,8 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
   title,
   view = BIOLOGY_DEFAULT_VIEW,
 }: BiologyLabProps<Item> & {
+  /** `content` fits the camera to the scene's subjects instead of the authored pose. */
+  framing?: "content";
   scene: ComponentType<BiologySceneProps<Item>>;
   /** The place the lab's subject belongs in. */
   setting?: Place;
@@ -165,6 +168,7 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
           <Suspense fallback={<SceneSpinner />}>
             <BiologyStage
               colors={colors}
+              framing={framing}
               setting={setting}
               store={store}
               view={view}

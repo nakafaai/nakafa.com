@@ -39,6 +39,13 @@ const CUBE = 0.66;
 const REST_TURN = 5.45;
 const REST_TILT = -0.55;
 
+/**
+ * How far from the middle the two counts stand, as a share of the nucleus's
+ * radius: the near side of a ball this close to the camera looks wider than
+ * its radius, so the counts keep clear of it.
+ */
+const SIDE = 1.2;
+
 /** The dark of open space behind the nucleus, which outlines its labels, and how wide that outline is. */
 const BACKDROP = getColor("ZINC", 950);
 const OUTLINE = 0.012;
@@ -132,7 +139,7 @@ export function NuclideScene({
         fontSize={reach * 0.2}
         outlineColor={BACKDROP}
         outlineWidth={OUTLINE}
-        position={[-reach * 1.04, 0, 0]}
+        position={[-reach * SIDE, 0, 0]}
       >
         <InlineMath math={`p^+ = ${protons}`} />
       </ThreeLabel>
@@ -142,7 +149,7 @@ export function NuclideScene({
         fontSize={reach * 0.2}
         outlineColor={BACKDROP}
         outlineWidth={OUTLINE}
-        position={[reach * 1.04, 0, 0]}
+        position={[reach * SIDE, 0, 0]}
       >
         <InlineMath math={`n^0 = ${neutrons}`} />
       </ThreeLabel>
