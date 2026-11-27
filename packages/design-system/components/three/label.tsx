@@ -12,11 +12,12 @@ import type { Rgb } from "@repo/design-system/components/three/label/ink";
 import { readableInk } from "@repo/design-system/components/three/label/ink";
 import { SceneHtml } from "@repo/design-system/components/three/overlay";
 import { useRequired } from "@repo/design-system/hooks/required";
+import { getColor } from "@repo/design-system/lib/color";
 import { MutableHashMap } from "effect";
 import type { ComponentProps, ReactNode } from "react";
 import { createContext, useCallback, useEffect, useMemo, useRef } from "react";
 import type { Camera, Group, OrthographicCamera } from "three";
-import { Color, MathUtils, Vector3 } from "three";
+import { Color, MathUtils, SRGBColorSpace, Vector3 } from "three";
 
 function isOrthographicCamera(camera: Camera): camera is OrthographicCamera {
   return (
@@ -64,14 +65,6 @@ const LABEL_BASE_FONT_SIZE = 16;
  */
 const LABEL_HALO_EM = 0.18;
 
-/**
- * Formulas in a label draw once, at the size of the words around them. A label
- * is hidden from assistive technology, so KaTeX's MathML copy has no reader there
- * and never shows, whether or not the page loaded the KaTeX stylesheet, and
- * KaTeX's own 1.21em gives way to the label's size.
- */
-const LABEL_MATH_CLASS = "[&_.katex-mathml]:hidden [&_.katex]:text-[1em]!";
-
 /** A 1 by 1 canvas that turns any CSS color the browser knows into its sRGB channels. */
 let colorProbe: CanvasRenderingContext2D | null = null;
 
@@ -87,7 +80,7 @@ function readRgb(color: string): Rgb {
     return [0, 0, 0];
   }
   colorProbe.clearRect(0, 0, 1, 1);
-  colorProbe.fillStyle = "#000";
+  colorProbe.fillStyle = getColor("BLACK");
   colorProbe.fillStyle = color;
   colorProbe.fillRect(0, 0, 1, 1);
   const [red = 0, green = 0, blue = 0] = colorProbe.getImageData(
@@ -112,7 +105,9 @@ function paintInk(
   const backing =
     outline ?? getComputedStyle(content).getPropertyValue("--card");
   const [red, green, blue] = readableInk(readRgb(ink), readRgb(backing));
-  content.style.color = `rgb(${red} ${green} ${blue})`;
+  content.style.color = new Color()
+    .setRGB(red / 255, green / 255, blue / 255, SRGBColorSpace)
+    .getStyle();
 }
 
 /** Calls back whenever the root element changes its theme class or color scheme. */
@@ -403,7 +398,11 @@ export function ThreeLabel({
         <LabelHtml>
           <span
             aria-hidden="true"
-            className={LABEL_MATH_CLASS}
+            // A formula draws once, at the size of the words around it. The label is
+            // hidden from assistive technology, so KaTeX's MathML copy has no reader
+            // here and never shows, whether or not the page loaded the KaTeX
+            // stylesheet, and KaTeX's own 1.21em gives way to the label's size.
+            className="[&_.katex]:text-[1em]! [&_.katex-mathml]:hidden"
             ref={attachContent}
             style={{
               display: "inline-block",
