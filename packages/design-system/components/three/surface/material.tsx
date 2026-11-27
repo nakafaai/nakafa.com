@@ -4,14 +4,57 @@ import { useEffect, useMemo } from "react";
 import type { Side } from "three";
 import { FrontSide } from "three";
 
+/** How strongly a relief of 1 bends the light: the slope its normals are painted at. */
+const RELIEF = 1 / 0.6;
+
+/**
+ * The detail textures of one surface laid `across` by `along` tiles over a
+ * part's texture coordinates: clones that share the painted images, freed
+ * when the part goes away.
+ *
+ * @param surface - What the part is made of
+ * @param across - Tiles across the part's texture coordinates
+ * @param along - Tiles along the part's texture coordinates
+ */
+export function useSurfaceMaps(
+  surface: Surface,
+  across: number,
+  along: number
+) {
+  const maps = useMemo(() => {
+    const shared = surfaceMaps(surface);
+    const lay = (texture: typeof shared.tone) => {
+      const copy = texture.clone();
+      copy.repeat.set(across, along);
+      return copy;
+    };
+    return {
+      finish: lay(shared.finish),
+      normal: lay(shared.normal),
+      tone: lay(shared.tone),
+    };
+  }, [across, along, surface]);
+
+  useEffect(
+    () => () => {
+      maps.finish.dispose();
+      maps.normal.dispose();
+      maps.tone.dispose();
+    },
+    [maps]
+  );
+
+  return maps;
+}
+
 /**
  * A physically based material with the fine detail of a real surface:
  * painted steel with grime and scuffs, brushed metal, wood grain, a cloth
  * weave, pitted rubber or moulded plastic. The colour is the object's own;
- * the surface's tone, roughness and relief vary it across the object, so no
- * part reads as a flat, untextured shape. `repeat` is how many tiles cross
- * the part's texture coordinates in each direction, chosen so the detail
- * keeps its real size.
+ * the surface's tone, normals and finish vary it across the object, so no
+ * part reads as a flat, untextured shape, however close the camera comes.
+ * `repeat` is how many tiles cross the part's texture coordinates in each
+ * direction, chosen so the detail keeps its real size.
  *
  * @param attach - Where the material attaches, for a mesh with one material per group
  * @param surface - What the part is made of
@@ -44,58 +87,21 @@ export function SurfaceMaterial({
   readonly side?: Side;
   readonly surface: Surface;
 }) {
-  const [across, along] = repeat;
-  const maps = useMemo(() => {
-    const shared = surfaceMaps(surface);
-    const clone = (texture: typeof shared.tone) => {
-      const copy = texture.clone();
-      copy.repeat.set(across, along);
-      return copy;
-    };
-    return {
-      bump: clone(shared.bump),
-      roughness: clone(shared.roughness),
-      tone: clone(shared.tone),
-    };
-  }, [across, along, surface]);
-
-  useEffect(
-    () => () => {
-      maps.bump.dispose();
-      maps.roughness.dispose();
-      maps.tone.dispose();
-    },
-    [maps]
-  );
-
-  if (coat > 0) {
-    return (
-      <meshPhysicalMaterial
-        attach={attach}
-        bumpMap={maps.bump}
-        bumpScale={bump}
-        clearcoat={coat}
-        clearcoatRoughness={0.14}
-        color={color}
-        map={maps.tone}
-        metalness={metalness}
-        roughness={roughness}
-        roughnessMap={maps.roughness}
-        side={side}
-      />
-    );
-  }
+  const maps = useSurfaceMaps(surface, repeat[0], repeat[1]);
 
   return (
-    <meshStandardMaterial
+    <meshPhysicalMaterial
+      aoMap={maps.finish}
       attach={attach}
-      bumpMap={maps.bump}
-      bumpScale={bump}
+      clearcoat={coat}
+      clearcoatRoughness={0.14}
       color={color}
       map={maps.tone}
       metalness={metalness}
+      normalMap={maps.normal}
+      normalScale={[bump * RELIEF, bump * RELIEF]}
       roughness={roughness}
-      roughnessMap={maps.roughness}
+      roughnessMap={maps.finish}
       side={side}
     />
   );
