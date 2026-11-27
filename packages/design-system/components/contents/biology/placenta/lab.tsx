@@ -27,7 +27,7 @@ import { Suspense, useState } from "react";
 interface SubstanceCopy {
   readonly direction: NonNullable<ReactNode>;
   readonly how: NonNullable<ReactNode>;
-  readonly name: string;
+  readonly name: ReactNode;
 }
 
 interface PlacentaLabProps {

@@ -6,6 +6,8 @@ import type {
 import { evaluatePhIndicator } from "@repo/design-system/components/contents/chemistry/indicator/model";
 import { PhIndicatorScene } from "@repo/design-system/components/contents/chemistry/indicator/scene";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -49,7 +51,10 @@ export function PhIndicatorScaleLab({
     readonly sample: string;
     readonly samples: Readonly<
       Partial<
-        Record<PhSample, { readonly formula: ReactNode; readonly name: string }>
+        Record<
+          PhSample,
+          { readonly formula: ReactNode; readonly name: ReactNode }
+        >
       >
     >;
     readonly view: string;
@@ -59,6 +64,7 @@ export function PhIndicatorScaleLab({
 }) {
   const [selectedSample, setSelectedSample] = useState<PhSample>(samples[0]);
   const [selectedInd, setSelectedInd] = useState<IndicatorKind>(indicators[0]);
+  const quantity = useQuantity();
 
   const activeSample = Arr.contains(samples, selectedSample)
     ? selectedSample
@@ -153,7 +159,11 @@ export function PhIndicatorScaleLab({
           {labels.phValue === undefined ? null : (
             <VisualFactTabular
               label={labels.phValue}
-              value={`pH ${reading.ph.toFixed(1)}`}
+              value={
+                <InlineMath
+                  math={`\\mathrm{pH}\\ ${quantity(reading.ph, "", 1)}`}
+                />
+              }
             />
           )}
           {labels.classification === undefined ? null : (

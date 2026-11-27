@@ -44,7 +44,7 @@ export function AlloySlipPlaneLab({
           AlloyMetal,
           {
             readonly hardnessNote: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
             readonly structureNote: ReactNode;
           }
         >

@@ -42,7 +42,7 @@ export function MonohybridCrossLab({
           MonohybridCross,
           {
             readonly genotypeRatio: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
             readonly phenotypeRatio: ReactNode;
           }
         >

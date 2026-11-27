@@ -55,7 +55,10 @@ export function QrGramSchmidt3DLab({
     readonly step: string;
     readonly steps: Readonly<
       Partial<
-        Record<QrStep, { readonly name: string; readonly summary: ReactNode }>
+        Record<
+          QrStep,
+          { readonly name: ReactNode; readonly summary: ReactNode }
+        >
       >
     >;
     readonly view: string;

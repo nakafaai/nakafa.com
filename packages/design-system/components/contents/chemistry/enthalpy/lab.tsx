@@ -53,7 +53,7 @@ export function CalorimeterEnthalpyLab({
           EnthalpyReaction,
           {
             readonly enthalpySign: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
             readonly thermalNote: ReactNode;
           }
         >

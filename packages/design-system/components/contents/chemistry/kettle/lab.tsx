@@ -49,7 +49,7 @@ export function SaponificationKettleLab({
           SaponificationStep,
           {
             readonly chemicalChange: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
             readonly purpose: ReactNode;
           }
         >

@@ -42,7 +42,10 @@ export function PhloemTranslocationLab({
     readonly mode: string;
     readonly modes: Readonly<
       Partial<
-        Record<RingMode, { readonly name: string; readonly outcome: ReactNode }>
+        Record<
+          RingMode,
+          { readonly name: ReactNode; readonly outcome: ReactNode }
+        >
       >
     >;
     readonly parts: Readonly<

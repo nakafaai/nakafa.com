@@ -44,7 +44,7 @@ export function AvogadroGasVolumeLab({
       Partial<
         Record<
           GasCondition,
-          { readonly molarVolume: ReactNode; readonly name: string }
+          { readonly molarVolume: ReactNode; readonly name: ReactNode }
         >
       >
     >;
@@ -155,7 +155,7 @@ export function AvogadroGasVolumeLab({
           {labels.particleCount === undefined ? null : (
             <VisualFactTabular
               label={labels.particleCount}
-              value={reading.moleculesLabel}
+              value={<InlineMath math={reading.moleculesMath} />}
             />
           )}
         </VisualCardFacts>

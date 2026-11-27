@@ -46,7 +46,7 @@ export function AreaBetweenCurvesLab({
       Partial<
         Record<
           CurvePair,
-          { readonly formula: ReactNode; readonly name: string }
+          { readonly formula: ReactNode; readonly name: ReactNode }
         >
       >
     >;

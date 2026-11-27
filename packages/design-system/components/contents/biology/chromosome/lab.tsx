@@ -8,6 +8,8 @@ import {
 } from "@repo/design-system/components/contents/biology/chromosome/packing";
 import { ChromosomeScene } from "@repo/design-system/components/contents/biology/chromosome/scene";
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -64,6 +66,7 @@ export function ChromosomePackingLab({
 
   const width = widthNm(level);
   const lengthLabel = formatDnaLength(stretchedLengthMm(basePairs));
+  const quantity = useQuantity();
 
   return (
     <VisualCard>
@@ -114,7 +117,10 @@ export function ChromosomePackingLab({
 
       <VisualCardFooter>
         <VisualCardFacts>
-          <VisualFactTabular label={labels.width} value={`${width} nm`} />
+          <VisualFactTabular
+            label={labels.width}
+            value={<InlineMath math={quantity(width, "\\text{ nm}", 0)} />}
+          />
           {labels.length !== undefined && (
             <VisualFactTabular label={labels.length} value={lengthLabel} />
           )}

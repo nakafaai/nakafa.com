@@ -62,7 +62,7 @@ export function OptimizationBox3DLab({
       Partial<
         Record<
           BoxSheet,
-          { readonly dimensions: ReactNode; readonly name: string }
+          { readonly dimensions: ReactNode; readonly name: ReactNode }
         >
       >
     >;

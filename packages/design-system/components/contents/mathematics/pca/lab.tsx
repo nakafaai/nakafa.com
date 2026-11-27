@@ -62,7 +62,7 @@ export function PcaProjection3DLab({
       Partial<
         Record<
           PcaSubspace,
-          { readonly name: string; readonly summary: ReactNode }
+          { readonly name: ReactNode; readonly summary: ReactNode }
         >
       >
     >;
@@ -157,7 +157,11 @@ export function PcaProjection3DLab({
             {labels.varianceExplained === undefined ? null : (
               <VisualFactTabular
                 label={labels.varianceExplained}
-                value={`${reading.varianceExplainedPercent}%`}
+                value={
+                  <InlineMath
+                    math={quantity(reading.varianceExplainedPercent, "\\%", 0)}
+                  />
+                }
               />
             )}
             {labels.reconstructionError === undefined ? null : (

@@ -1,8 +1,8 @@
+import type { RingMode } from "@repo/design-system/components/contents/biology/phloem/model";
 import {
   BotanicalLeaf,
   FibrousRoots,
-} from "@repo/design-system/components/contents/biology/botanical";
-import type { RingMode } from "@repo/design-system/components/contents/biology/phloem/model";
+} from "@repo/design-system/components/contents/biology/seedling";
 import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
 import { FOLIAGE_COLORS } from "@repo/design-system/lib/material/foliage";
 import { Array as Arr } from "effect";

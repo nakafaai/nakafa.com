@@ -50,7 +50,7 @@ export function RiemannSumConvergenceLab({
       Partial<
         Record<
           RiemannCurve,
-          { readonly formula: ReactNode; readonly name: string }
+          { readonly formula: ReactNode; readonly name: ReactNode }
         >
       >
     >;

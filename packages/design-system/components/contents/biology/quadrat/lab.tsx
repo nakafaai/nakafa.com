@@ -51,7 +51,7 @@ export function QuadratSamplingLab({
       Partial<
         Record<
           QuadratOrganism,
-          { readonly habit: ReactNode; readonly name: string }
+          { readonly habit: ReactNode; readonly name: ReactNode }
         >
       >
     >;
@@ -194,7 +194,11 @@ export function QuadratSamplingLab({
           {labels.coverage === undefined ? null : (
             <VisualFactTabular
               label={labels.coverage}
-              value={`${reading.coveragePercent}%`}
+              value={
+                <InlineMath
+                  math={quantity(reading.coveragePercent, "\\%", 0)}
+                />
+              }
             />
           )}
         </VisualCardFacts>

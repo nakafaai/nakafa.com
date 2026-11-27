@@ -54,7 +54,7 @@ export function CondensationNylonLab({
           {
             readonly byproduct: ReactNode;
             readonly linkage: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
           }
         >
       >

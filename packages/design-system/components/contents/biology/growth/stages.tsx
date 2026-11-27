@@ -1,9 +1,9 @@
+import type { PlantLifeCycle } from "@repo/design-system/components/contents/biology/growth/model";
 import {
   BotanicalLeaf,
   createSoilTexture,
   FibrousRoots,
-} from "@repo/design-system/components/contents/biology/botanical";
-import type { PlantLifeCycle } from "@repo/design-system/components/contents/biology/growth/model";
+} from "@repo/design-system/components/contents/biology/seedling";
 import { hashUnit } from "@repo/design-system/components/contents/simulation/grain";
 import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
 import { FOLIAGE_COLORS } from "@repo/design-system/lib/material/foliage";

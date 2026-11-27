@@ -61,7 +61,7 @@ export function ThoraxDiaphragmLab({
       Partial<
         Record<
           BreathingPhase,
-          { readonly name: string; readonly summary: ReactNode }
+          { readonly name: ReactNode; readonly summary: ReactNode }
         >
       >
     >;
@@ -118,7 +118,7 @@ export function ThoraxDiaphragmLab({
           max={depth.max}
           min={depth.min}
           onValueChange={setBreathDepth}
-          readout={`${Math.round(breathDepth)}%`}
+          readout={<InlineMath math={quantity(breathDepth, "\\%", 0)} />}
           step={1}
           value={breathDepth}
         />

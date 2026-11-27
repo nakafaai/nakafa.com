@@ -1,13 +1,13 @@
 import {
-  BotanicalLeaf,
-  FibrousRoots,
-} from "@repo/design-system/components/contents/biology/botanical";
-import {
   createPrintedLabelTexture,
   LabeledVessel,
 } from "@repo/design-system/components/contents/biology/fixtures";
 import type { CultureSolution } from "@repo/design-system/components/contents/biology/mineral/model";
 import { evaluateCultureGrowth } from "@repo/design-system/components/contents/biology/mineral/model";
+import {
+  BotanicalLeaf,
+  FibrousRoots,
+} from "@repo/design-system/components/contents/biology/seedling";
 import {
   latheProfile,
   liquidMeniscus,

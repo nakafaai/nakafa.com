@@ -40,7 +40,7 @@ export function GlassCeramicLatticeLab({
         Record<
           SilicateMaterial,
           {
-            readonly name: string;
+            readonly name: ReactNode;
             readonly propertyNote: ReactNode;
             readonly useNote: ReactNode;
           }

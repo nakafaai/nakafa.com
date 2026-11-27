@@ -207,16 +207,12 @@ function NucleusDots({
     >
       <div className="flex max-w-sm flex-wrap justify-center gap-2">
         {Arr.map(protons, (protonIndex) => (
-          <ParticleDot
-            key={`proton-${protonIndex}`}
-            label="p^+"
-            type="proton"
-          />
+          <ParticleDot key={`proton-${protonIndex}`} math="p^+" type="proton" />
         ))}
         {Arr.map(neutrons, (neutronIndex) => (
           <ParticleDot
             key={`neutron-${neutronIndex}`}
-            label="n^0"
+            math="n^0"
             type="neutron"
           />
         ))}
@@ -229,15 +225,15 @@ function NucleusDots({
  * Renders one stable-size nucleus particle marker.
  */
 function ParticleDot({
-  label,
+  math,
   type,
 }: {
-  label: string;
+  math: string;
   type: NonNullable<VariantProps<typeof particleDotVariants>["type"]>;
 }) {
   return (
     <span aria-hidden className={particleDotVariants({ type })}>
-      <InlineMath math={label} />
+      <InlineMath math={math} />
     </span>
   );
 }

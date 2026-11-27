@@ -58,7 +58,7 @@ export function EigenTransform3DLab({
       Partial<
         Record<
           EigenTransform,
-          { readonly formula: ReactNode; readonly name: string }
+          { readonly formula: ReactNode; readonly name: ReactNode }
         >
       >
     >;

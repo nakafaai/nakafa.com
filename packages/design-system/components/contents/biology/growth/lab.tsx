@@ -7,6 +7,8 @@ import { PlantSpecimenScene } from "@repo/design-system/components/contents/biol
 import { PlantGrowthTrace } from "@repo/design-system/components/contents/biology/growth/trace";
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -42,7 +44,10 @@ export function PlantGrowthCurveLab({
     readonly dryMass: ReactNode;
     readonly phase?: ReactNode;
     readonly phases: Readonly<
-      Record<GrowthPhase, { readonly detail: ReactNode; readonly name: string }>
+      Record<
+        GrowthPhase,
+        { readonly detail: ReactNode; readonly name: ReactNode }
+      >
     >;
     readonly rate: ReactNode;
     readonly time: string;
@@ -55,6 +60,7 @@ export function PlantGrowthCurveLab({
 }) {
   const [selectedType, setSelectedType] = useState<PlantLifeCycle>(types[0]);
   const [time, setTime] = useState(35);
+  const quantity = useQuantity();
 
   const activeType = Arr.contains(types, selectedType)
     ? selectedType
@@ -105,7 +111,7 @@ export function PlantGrowthCurveLab({
           max={100}
           min={0}
           onValueChange={setTime}
-          readout={`${Math.round(time)}%`}
+          readout={<InlineMath math={quantity(time, "\\%", 0)} />}
           step={1}
           value={time}
         />
@@ -139,7 +145,9 @@ export function PlantGrowthCurveLab({
         <VisualCardFacts>
           <VisualFactTabular
             label={labels.dryMass}
-            value={`${Math.round(sample.dryMass * 100)}%`}
+            value={
+              <InlineMath math={quantity(sample.dryMass * 100, "\\%", 0)} />
+            }
           />
           <VisualFactTabular
             label={labels.rate}

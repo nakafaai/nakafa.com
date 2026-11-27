@@ -110,6 +110,7 @@ export function DnaHelixLab({
 }) {
   const [shown, setShown] = useState<"first" | "second">("first");
   const [share, setShare] = useState(copy ? 0.5 : 0);
+  const quantity = useQuantity();
   const first = useMemo(() => basesOf(sequence, nucleic), [nucleic, sequence]);
   const second = useMemo(
     () => (variant === undefined ? first : basesOf(variant, nucleic)),
@@ -158,7 +159,7 @@ export function DnaHelixLab({
               min={0}
               onValueChange={setShare}
               pauseOnChange
-              readout={`${Math.round(share * 100)}%`}
+              readout={<InlineMath math={quantity(share * 100, "\\%", 0)} />}
               step={0.01}
               value={share}
             />

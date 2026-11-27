@@ -1,10 +1,10 @@
+import { useGrassClump } from "@repo/design-system/components/contents/biology/flora";
+import type { RemediationPlant } from "@repo/design-system/components/contents/biology/remediation/model";
 import {
   BotanicalLeaf,
   createSoilTexture,
   FibrousRoots,
-} from "@repo/design-system/components/contents/biology/botanical";
-import { useGrassClump } from "@repo/design-system/components/contents/biology/flora";
-import type { RemediationPlant } from "@repo/design-system/components/contents/biology/remediation/model";
+} from "@repo/design-system/components/contents/biology/seedling";
 import {
   useGround,
   useHorizonFade,

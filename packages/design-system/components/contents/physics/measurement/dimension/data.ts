@@ -37,13 +37,13 @@ export const DIMENSION_MODES = {
   [AREA_MODE_ID]: {
     dimension: "[\\mathrm{L}]^2",
     formula: "A = p \\times l",
-    powerLabel: "[L]^2",
+    powerLabel: "[\\mathrm{L}]^2",
     unit: "\\text{m}^2",
   },
   [VOLUME_MODE_ID]: {
     dimension: "[\\mathrm{L}]^3",
     formula: "V = p \\times l \\times h",
-    powerLabel: "[L]^3",
+    powerLabel: "[\\mathrm{L}]^3",
     unit: "\\text{m}^3",
   },
 };

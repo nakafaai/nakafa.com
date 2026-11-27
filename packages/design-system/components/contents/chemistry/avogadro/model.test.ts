@@ -10,6 +10,6 @@ describe("avogadro molar gas volume model", () => {
     expect(stp.volumeDm3).toBe(22.4);
     expect(rtp.volumeDm3).toBe(24);
     expect(doubleRtp.volumeDm3).toBe(48);
-    expect(stp.moleculesLabel).toContain("6.02");
+    expect(stp.moleculesMath).toBe("6.02 \\times 10^{23}");
   });
 });

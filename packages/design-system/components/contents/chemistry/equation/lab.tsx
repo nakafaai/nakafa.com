@@ -23,6 +23,7 @@ import {
 import { MathLines } from "@repo/design-system/components/contents/chemistry/lines";
 import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -236,6 +237,7 @@ function ReactionCard({
 function ReactionSlider({ label }: { readonly label: string }) {
   const progress = useReactionState((state) => state.progress);
   const setProgress = useReactionState((state) => state.setProgress);
+  const quantity = useQuantity();
   const clamped = Math.min(1, Math.max(0, progress));
 
   return (
@@ -246,7 +248,7 @@ function ReactionSlider({ label }: { readonly label: string }) {
       min={0}
       onValueChange={setProgress}
       pauseOnChange
-      readout={`${Math.round(clamped * 100)}%`}
+      readout={<InlineMath math={quantity(clamped * 100, "\\%", 0)} />}
       step={0.01}
       value={clamped}
     />

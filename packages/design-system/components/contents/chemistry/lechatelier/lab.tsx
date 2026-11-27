@@ -81,7 +81,7 @@ export function LeChatelierLab({
           {
             readonly enthalpy: string;
             readonly equation: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
           }
         >
       >

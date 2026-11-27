@@ -50,7 +50,7 @@ export function GreenCatalystCycleLab({
           CatalysisMode,
           {
             readonly eFactor: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
             readonly recoveryNote: ReactNode;
           }
         >

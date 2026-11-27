@@ -2,7 +2,7 @@ import type { GardenPlant } from "@repo/design-system/components/contents/biolog
 import {
   BotanicalLeaf,
   createSoilTexture,
-} from "@repo/design-system/components/contents/biology/botanical";
+} from "@repo/design-system/components/contents/biology/seedling";
 import {
   GlassMaterial,
   MetalMaterial,

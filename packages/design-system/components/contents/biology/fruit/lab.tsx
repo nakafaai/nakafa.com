@@ -41,7 +41,7 @@ export function FruitSeedDispersalLab({
         Record<
           FruitType,
           {
-            readonly name: string;
+            readonly name: ReactNode;
             readonly origin: ReactNode;
             readonly structure: ReactNode;
           }

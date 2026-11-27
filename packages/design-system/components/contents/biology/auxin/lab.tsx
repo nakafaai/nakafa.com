@@ -104,7 +104,11 @@ export function AuxinAgarBendLab({
           {labels.elongation === undefined ? null : (
             <VisualFactTabular
               label={labels.elongation}
-              value={`${reading.elongationPercent}%`}
+              value={
+                <InlineMath
+                  math={quantity(reading.elongationPercent, "\\%", 0)}
+                />
+              }
             />
           )}
         </VisualCardFacts>

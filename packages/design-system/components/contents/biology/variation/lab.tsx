@@ -51,7 +51,7 @@ export function VariationDistributionLab({
           VariationKind,
           {
             readonly basis: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
             readonly shape: ReactNode;
           }
         >

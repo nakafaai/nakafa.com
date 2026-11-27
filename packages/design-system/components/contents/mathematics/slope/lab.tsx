@@ -45,7 +45,7 @@ export function DerivativeSlopeFieldLab({
       Partial<
         Record<
           SlopeCurve,
-          { readonly formula: ReactNode; readonly name: string }
+          { readonly formula: ReactNode; readonly name: ReactNode }
         >
       >
     >;

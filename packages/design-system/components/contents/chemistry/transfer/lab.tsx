@@ -20,6 +20,7 @@ import {
   useInvalidateOnChange,
 } from "@repo/design-system/components/contents/simulation/clock";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
@@ -99,6 +100,7 @@ export function IonFormationLab({
   const offered = Arr.filter(pairs, (id) => Schema.is(PairIdSchema)(id));
   const [chosen, setChosen] = useState<PairId | undefined>(undefined);
   const [progress, setProgress] = useState(0);
+  const quantity = useQuantity();
   const shown = Arr.findFirst(offered, (id) => id === chosen).pipe(
     Option.orElse(() => Arr.head(offered)),
     Option.getOrUndefined
@@ -157,7 +159,7 @@ export function IonFormationLab({
           min={0}
           onValueChange={setProgress}
           pauseOnChange
-          readout={`${Math.round(progress * 100)}%`}
+          readout={<InlineMath math={quantity(progress * 100, "\\%", 0)} />}
           step={0.01}
           value={progress}
         />

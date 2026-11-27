@@ -51,7 +51,7 @@ export function PedigreeSexLinkedLab({
         Record<
           HumanPattern,
           {
-            readonly name: string;
+            readonly name: ReactNode;
             readonly risk: ReactNode;
             readonly rule: ReactNode;
           }

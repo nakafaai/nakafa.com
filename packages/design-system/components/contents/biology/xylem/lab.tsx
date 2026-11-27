@@ -49,7 +49,7 @@ export function XylemCohesionLab({
       Partial<
         Record<
           LiftForce,
-          { readonly mechanism: ReactNode; readonly name: string }
+          { readonly mechanism: ReactNode; readonly name: ReactNode }
         >
       >
     >;

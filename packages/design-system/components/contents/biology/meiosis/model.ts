@@ -9,7 +9,7 @@ const MeiosisStageSchema = Schema.Literals([
 export type MeiosisStage = typeof MeiosisStageSchema.Type;
 
 const MeiosisReadingSchema = Schema.Struct({
-  combinationsLabel: Schema.String,
+  combinationsMath: Schema.String,
   gameteCombinations: Schema.Finite,
   zygoteCombinations: Schema.Finite,
 });
@@ -25,17 +25,20 @@ export function evaluateMeiosisCombinations(
   const n = Math.min(23, Math.max(1, Math.round(chromosomePairs)));
   const gameteCombinations = 2 ** n;
   const zygoteCombinations = gameteCombinations * gameteCombinations;
-  const combinationsLabel = Match.value(stage).pipe(
-    Match.when("crossingOver", () => `> 2^${n}`),
-    Match.when("independentAssortment", () => `2^${n} = ${gameteCombinations}`),
+  const combinationsMath = Match.value(stage).pipe(
+    Match.when("crossingOver", () => `> 2^{${n}}`),
+    Match.when(
+      "independentAssortment",
+      () => `2^{${n}} = ${gameteCombinations}`
+    ),
     Match.when(
       "randomFertilisation",
-      () => `2^${n} x 2^${n} = ${zygoteCombinations}`
+      () => `2^{${n}} \\times 2^{${n}} = ${zygoteCombinations}`
     ),
     Match.exhaustive
   );
   return {
-    combinationsLabel,
+    combinationsMath,
     gameteCombinations,
     zygoteCombinations,
   };

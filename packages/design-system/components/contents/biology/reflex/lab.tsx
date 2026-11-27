@@ -3,6 +3,8 @@ import { evaluateReflex } from "@repo/design-system/components/contents/biology/
 import { ReflexArcScene } from "@repo/design-system/components/contents/biology/reflex/scene";
 import { ViewReset } from "@repo/design-system/components/contents/biology/reset";
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
+import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -56,7 +58,7 @@ export function ReflexArcLab({
         Record<
           ReflexType,
           {
-            readonly name: string;
+            readonly name: ReactNode;
             readonly response: ReactNode;
             readonly stimulus: ReactNode;
           }
@@ -72,6 +74,7 @@ export function ReflexArcLab({
 }) {
   const [selected, setSelected] = useState<ReflexType>(reflexes[0]);
   const [step, setStep] = useState(25);
+  const quantity = useQuantity();
 
   const active = Arr.contains(reflexes, selected) ? selected : reflexes[0];
   const profile = evaluateReflex(active, step);
@@ -120,7 +123,7 @@ export function ReflexArcLab({
           max={100}
           min={0}
           onValueChange={setStep}
-          readout={`${Math.round(step)}%`}
+          readout={<InlineMath math={quantity(step, "\\%", 0)} />}
           step={1}
           value={step}
         />
@@ -157,16 +160,30 @@ export function ReflexArcLab({
             <VisualFact
               label={labels.pathway}
               value={
-                profile.hasRelay
-                  ? `${labels.parts.sensoryNeuron} -> ${labels.parts.relayNeuron} -> ${labels.parts.motorNeuron}`
-                  : `${labels.parts.sensoryNeuron} -> ${labels.parts.motorNeuron}`
+                profile.hasRelay ? (
+                  <span>
+                    {labels.parts.sensoryNeuron}{" "}
+                    <InlineMath math={"\\rightarrow"} />{" "}
+                    {labels.parts.relayNeuron}{" "}
+                    <InlineMath math={"\\rightarrow"} />{" "}
+                    {labels.parts.motorNeuron}
+                  </span>
+                ) : (
+                  <span>
+                    {labels.parts.sensoryNeuron}{" "}
+                    <InlineMath math={"\\rightarrow"} />{" "}
+                    {labels.parts.motorNeuron}
+                  </span>
+                )
               }
             />
           )}
           {labels.synapses === undefined ? null : (
             <VisualFactTabular
               label={labels.synapses}
-              value={`${profile.synapseCount}`}
+              value={
+                <InlineMath math={quantity(profile.synapseCount, "", 0)} />
+              }
             />
           )}
         </VisualCardFacts>

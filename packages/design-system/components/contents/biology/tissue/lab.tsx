@@ -56,7 +56,7 @@ export function PlantTissueAnatomyLab({
         Record<
           PlantTissue,
           {
-            readonly name: string;
+            readonly name: ReactNode;
             readonly role: ReactNode;
             readonly wall: ReactNode;
           }

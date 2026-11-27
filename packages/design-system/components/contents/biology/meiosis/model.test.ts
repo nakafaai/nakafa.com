@@ -8,7 +8,9 @@ describe("meiosis shuffling model", () => {
     const fert = evaluateMeiosisCombinations("randomFertilisation", 3);
 
     expect(cross.gameteCombinations).toBe(8);
-    expect(assort.combinationsLabel).toBe("2^3 = 8");
+    expect(cross.combinationsMath).toBe("> 2^{3}");
+    expect(assort.combinationsMath).toBe("2^{3} = 8");
+    expect(fert.combinationsMath).toBe("2^{3} \\times 2^{3} = 64");
     expect(fert.zygoteCombinations).toBe(64);
   });
 });

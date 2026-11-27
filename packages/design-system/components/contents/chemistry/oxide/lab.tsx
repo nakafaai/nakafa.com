@@ -44,7 +44,7 @@ export function PeriodThreeOxideLab({
           {
             readonly acidBaseNature: ReactNode;
             readonly bonding: ReactNode;
-            readonly name: string;
+            readonly name: ReactNode;
           }
         >
       >

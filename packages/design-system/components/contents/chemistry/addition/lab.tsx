@@ -48,7 +48,7 @@ export function AdditionPolymerChainLab({
         Record<
           AdditionMonomer,
           {
-            readonly name: string;
+            readonly name: ReactNode;
             readonly polymerName: ReactNode;
             readonly repeatUnit: ReactNode;
           }

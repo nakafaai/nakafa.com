@@ -54,7 +54,7 @@ export function SolidOfRevolutionLab({
       Partial<
         Record<
           RevolutionProfile,
-          { readonly formula: ReactNode; readonly name: string }
+          { readonly formula: ReactNode; readonly name: ReactNode }
         >
       >
     >;
