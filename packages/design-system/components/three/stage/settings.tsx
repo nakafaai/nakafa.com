@@ -1,6 +1,7 @@
 import { Environment, Sky, useEnvironment } from "@react-three/drei";
 import { Backdrop } from "@repo/design-system/components/three/stage/backdrop";
 import { useStage } from "@repo/design-system/components/three/stage/context";
+import { Distance } from "@repo/design-system/components/three/stage/distance";
 import { horizonColor } from "@repo/design-system/components/three/stage/horizon";
 import { Motes } from "@repo/design-system/components/three/stage/motes";
 import type { Place } from "@repo/design-system/components/three/stage/place";
@@ -56,9 +57,13 @@ const SUN_DISTANCE = 1.66;
  */
 const DARK_BACKDROP = 0.4;
 
-/** Where distant ground starts and finishes fading into the backdrop, in reaches. */
+/**
+ * Where distant ground starts and finishes fading into the haze, in reaches
+ * from the camera. It has faded completely well inside the ground the stage
+ * draws, so that ground never ends in view.
+ */
 const FOG_NEAR = 3;
-const FOG_FAR = 12;
+const FOG_FAR = 9;
 
 /** Reads whether the page shows its dark theme, which dims a backdrop. */
 export function useDark() {
@@ -207,7 +212,12 @@ function PhotoEnvironment({
         environmentRotation={[0, turn, 0]}
         map={texture}
       />
-      {haze === undefined ? null : <Haze color={haze} />}
+      {haze === undefined ? null : (
+        <>
+          <Haze color={haze} />
+          <Distance color={haze} />
+        </>
+      )}
     </>
   );
 }
@@ -318,6 +328,7 @@ export function FieldSetting() {
 export function SkySetting() {
   const { profile } = useStage();
   const dark = useDark();
+  const haze = dark ? getColor("SLATE", 700) : getColor("SLATE", 200);
 
   return (
     <>
@@ -347,7 +358,8 @@ export function SkySetting() {
         <ProceduralPhotoFallback file="sky" />
       )}
       <Sun direction={SKY_SUN} intensity={2.4} />
-      <Haze color={dark ? getColor("SLATE", 700) : getColor("SLATE", 200)} />
+      <Haze color={haze} />
+      <Distance color={haze} />
     </>
   );
 }
