@@ -162,7 +162,6 @@ export function CondensationNylonScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[-0.21, 0.278, RIG_Z]}
       >
         <span>{parts.monomerA}</span>
@@ -170,7 +169,6 @@ export function CondensationNylonScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[0.21, 0.278, RIG_Z]}
       >
         <span>{parts.monomerB}</span>
@@ -178,7 +176,6 @@ export function CondensationNylonScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[0, 0.335, RIG_Z]}
       >
         <span>
@@ -188,7 +185,6 @@ export function CondensationNylonScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[-0.195, 0.096, RIG_Z + 0.06]}
       >
         <span>{parts.polymerChain}</span>
@@ -196,7 +192,6 @@ export function CondensationNylonScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[0.165, 0.088, RIG_Z + 0.068]}
       >
         <span>{parts.waterByproduct}</span>

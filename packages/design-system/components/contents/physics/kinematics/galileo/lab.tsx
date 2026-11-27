@@ -258,8 +258,6 @@ function Bell({
       <ThreeLabel
         color={CAR_COLORS.tyre}
         fontSize={0.085}
-        maximumFontSize={13}
-        minimumFontSize={11}
         position={[0, bellTop + 0.14, 0.12]}
       >
         <span>{`${index + 1} s`}</span>

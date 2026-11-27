@@ -145,7 +145,6 @@ export function TileLabels({
           gap={0.003}
           key={serum}
           maximumFontSize={16}
-          minimumFontSize={12}
           position={[columnX(column), TILE.height, TILE.length / 2 + 0.004]}
         >
           {sera[serum]}
@@ -159,7 +158,6 @@ export function TileLabels({
           gap={0.003}
           key={name}
           maximumFontSize={16}
-          minimumFontSize={12}
           position={[
             -TILE.width / 2 - 0.004,
             TILE.height,

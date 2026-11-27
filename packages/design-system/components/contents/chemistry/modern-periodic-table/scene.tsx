@@ -332,7 +332,6 @@ function PeriodicTileLabel({
       color={color}
       fontSize={fontSize}
       maximumFontSize={16}
-      minimumFontSize={10}
       outlineColor={outlineColor}
       outlineWidth={TILE_LABEL_OUTLINE_WIDTH}
       position={position}

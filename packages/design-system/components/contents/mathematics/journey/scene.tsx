@@ -44,9 +44,6 @@ const ELEVATION = { narrow: 0.95, wide: 0.72 } as const;
 /** How far the learner may swing the camera round the diorama to either side, in radians. */
 const SWING = 0.9;
 
-/** The largest a name or a kilometre mark is drawn on a narrow card and on a wide one, in pixels. */
-const NAME_SIZE = { narrow: 12, wide: 14 } as const;
-
 /**
  * The journey as a road diorama on a table: the model road from left to
  * right with a post at every kilometre mark, its bus stops and trees behind
@@ -87,7 +84,6 @@ export function JourneyScene({
   const clock = useRef(startClock(minute, last));
   const shown = useRef(Math.floor(minute));
   const ran = useRef(false);
-  const labelSize = narrow ? NAME_SIZE.narrow : NAME_SIZE.wide;
 
   useLayoutEffect(() => {
     if (!playing) {
@@ -142,8 +138,6 @@ export function JourneyScene({
             color={ink}
             fontSize={0.03}
             key={km}
-            maximumFontSize={labelSize}
-            minimumFontSize={10}
             position={[VERGE + 0.012, BASE + 0.002, roadZ(axis.top, km)]}
           >
             <InlineMath math={quantity(km, unitTex(units.distance), 1)} />
@@ -155,8 +149,6 @@ export function JourneyScene({
             color={ink}
             fontSize={0.032}
             key={stop.name}
-            maximumFontSize={labelSize}
-            minimumFontSize={10}
             position={[-VERGE, BASE + 0.036, roadZ(axis.top, stop.at)]}
           >
             {stop.name}

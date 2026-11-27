@@ -287,7 +287,6 @@ function MarkerLabel({
       color={colors.markerText}
       fontSize={fontSize}
       maximumFontSize={18}
-      minimumFontSize={12}
       outlineColor={colors.markerTextOutline}
       outlineWidth={MARKER_LABEL_OUTLINE_WIDTH}
       position={position}

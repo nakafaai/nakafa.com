@@ -243,22 +243,20 @@ export function QuotientBalanceScene({
           <GlassMaterial color={EQUILIBRIUM_COLORS.vesselGlass} opacity={0.2} />
         </mesh>
         <ThreeLabel
-          anchorX="left"
           anchorY="bottom"
           color={EQUILIBRIUM_COLORS.reactant}
           fontSize="compact"
-          maximumFontSize={14}
-          position={[-0.5, 1.58, 0]}
+          gap={0.012}
+          position={[0.2, 1.48, 0]}
         >
           {reactantLabel}
         </ThreeLabel>
         <ThreeLabel
-          anchorX="left"
-          anchorY="bottom"
+          anchorY="top"
           color={EQUILIBRIUM_COLORS.product}
           fontSize="compact"
-          maximumFontSize={14}
-          position={[-0.5, 1.36, 0]}
+          gap={0.012}
+          position={[0.2, 1.48, 0]}
         >
           {productLabel}
         </ThreeLabel>
@@ -349,8 +347,8 @@ export function QuotientBalanceScene({
               <ThreeLabel
                 anchorY="bottom"
                 color={EQUILIBRIUM_COLORS.labelInk}
-                fontSize="compact"
-                maximumFontSize={18}
+                maximumFontSize={26}
+                minimumFontSize={22}
                 position={[0, 0.1, 0]}
               >
                 <InlineMath math={pan.name} />

@@ -25,7 +25,6 @@ export function Tag({
       color={ink}
       fontSize="compact"
       maximumFontSize={15}
-      minimumFontSize={12}
       position={position}
     >
       <span>{children}</span>

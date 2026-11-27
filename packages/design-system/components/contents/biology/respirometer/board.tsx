@@ -213,7 +213,6 @@ function Scale({
           fontSize={0.005}
           key={mm}
           maximumFontSize={15}
-          minimumFontSize={11}
           outlineColor={RESPIROMETER_COLORS.board}
           outlineWidth={0.0008}
           position={[along(mm), side * (BASELINE + 0.0072), 0.0002]}
@@ -228,7 +227,6 @@ function Scale({
         color={RESPIROMETER_COLORS.ink}
         fontSize={0.005}
         maximumFontSize={15}
-        minimumFontSize={11}
         outlineColor={RESPIROMETER_COLORS.board}
         outlineWidth={0.0008}
         position={[along(to) - 0.012, side * (BASELINE + 0.0072), 0.0002]}

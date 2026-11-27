@@ -274,7 +274,6 @@ export function HaberConverterScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[CONVERTER_X, 0.555, RIG_Z]}
       >
         <span>{parts.recyclePipe}</span>
@@ -282,7 +281,6 @@ export function HaberConverterScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[CONDENSER_X, 0.485, RIG_Z + 0.05]}
       >
         <span>{parts.coolingCondenser}</span>
@@ -290,7 +288,6 @@ export function HaberConverterScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[COMPRESSOR_X, 0.032, RIG_Z + 0.165]}
       >
         <span>{parts.compressor}</span>
@@ -298,7 +295,6 @@ export function HaberConverterScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[CONVERTER_X, 0.032, RIG_Z + 0.165]}
       >
         <span>{parts.ironCatalystBed}</span>
@@ -306,7 +302,6 @@ export function HaberConverterScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[CONDENSER_X, 0.032, RIG_Z + 0.165]}
       >
         <span>{parts.liquidAmmonia}</span>

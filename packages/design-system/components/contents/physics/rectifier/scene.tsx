@@ -303,49 +303,19 @@ export function RectifierScene({
       </mesh>
 
       {/* Compact non-overlapping labels well inside viewport */}
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={12}
-        minimumFontSize={10}
-        position={[-1.35, 0.56, 0.1]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[-1.35, 0.56, 0.1]}>
         <span>{parts.acSource}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={12}
-        minimumFontSize={10}
-        position={[-0.36, 0.42, 0]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[-0.36, 0.42, 0]}>
         <span>{parts.diodeBridge}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={12}
-        minimumFontSize={10}
-        position={[0.2, 0.68, -0.26]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[0.2, 0.68, -0.26]}>
         <span>{parts.capacitor}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={12}
-        minimumFontSize={10}
-        position={[0.26, 0.12, 0.72]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[0.26, 0.12, 0.72]}>
         <span>{parts.loadResistor}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={12}
-        minimumFontSize={10}
-        position={[1.36, 0.68, 0]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[1.36, 0.68, 0]}>
         <span>{parts.oscilloscope}</span>
       </ThreeLabel>
     </group>

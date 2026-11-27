@@ -354,7 +354,6 @@ export function CollisionVesselScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[BEAKER_X, 0.228, BEAKER_Z]}
       >
         <span>{parts.vessel}</span>
@@ -363,7 +362,6 @@ export function CollisionVesselScene({
         anchorX="left"
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[BEAKER_X + 0.066, 0.118, BEAKER_Z + 0.03]}
       >
         <span>{parts.reactants}</span>
@@ -372,7 +370,6 @@ export function CollisionVesselScene({
         anchorX="left"
         color={labelInk}
         fontSize="compact"
-        maximumFontSize={14}
         position={[BEAKER_X + 0.066, 0.166, BEAKER_Z + 0.03]}
       >
         <span>{parts.products}</span>

@@ -345,46 +345,20 @@ export function GasLawScene({
       <ThreeLabel
         color={ink}
         fontSize="compact"
-        maximumFontSize={13}
-        minimumFontSize={11}
         position={[0, pistonY + 0.78, 0]}
       >
         <span>{parts.piston}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={13}
-        minimumFontSize={11}
-        position={[-0.84, 0.84, 0]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[-0.84, 0.84, 0]}>
         <span>{parts.cylinder}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={13}
-        minimumFontSize={11}
-        position={[0.78, 0.88, 0.1]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[0.78, 0.88, 0.1]}>
         <span>{parts.gauge}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={13}
-        minimumFontSize={11}
-        position={[-0.96, 0.14, 0.25]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[-0.96, 0.14, 0.25]}>
         <span>{parts.heater}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        maximumFontSize={13}
-        minimumFontSize={11}
-        position={[0.04, 0.56, 0.56]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[0.04, 0.56, 0.56]}>
         <span>{parts.molecules}</span>
       </ThreeLabel>
     </group>
