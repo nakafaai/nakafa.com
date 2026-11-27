@@ -1,34 +1,46 @@
 import { Instance, Instances } from "@react-three/drei";
+import { useFrame, useThree } from "@react-three/fiber";
 import { grainTexture } from "@repo/design-system/components/contents/physics/kinematics/grain";
-import { Trees } from "@repo/design-system/components/contents/physics/kinematics/roadside";
 import type { Surface } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/friction";
+import { roomyLabels } from "@repo/design-system/components/contents/physics/kinematics/ticks";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { paintVerge } from "@repo/design-system/components/three/stage/grain";
+import { groundTexture } from "@repo/design-system/components/three/stage/terrain";
 import { getColor } from "@repo/design-system/lib/color";
 import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
 import { Array as Arr, Schema } from "effect";
 import type { ReactNode, Ref } from "react";
-import { useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import {
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { Group } from "three";
-import { SRGBColorSpace } from "three";
+import { SRGBColorSpace, Vector3 } from "three";
 
 /**
- * A two-lane road at real scale, in metres: lanes of 3.5 m, a kerb, a
- * pavement, lamp posts and a row of trees on the left (−z), and white distance
- * posts every 10 m from the line where the hazard appears. The road lies on
- * the `field` setting's own grass: a lab passes `floor={0}` to its stage, so
- * an unseen ground catches the shadows and no second grass meets the photo. Traffic keeps left, as in Indonesia and Malaysia: the car
- * drives in the left lane toward +x, and the camera watches from the verge
- * across the empty right lane, so the car moves left to right on screen with
- * the pavement and trees behind it.
+ * A two-lane country road at real scale, in metres: lanes of 3.5 m, painted
+ * edge lines, and on both sides a gravel verge the asphalt ends flush in and
+ * the grass grows up to. Nothing of it stands above the ground: it has no
+ * kerb and no raised pavement, as a road outside a town has none. White
+ * distance posts stand in the verge on the left (−z). The road lies on the
+ * stage's own ground: a lab asks its stage for grass and sets the floor a
+ * hair under the asphalt. Traffic keeps left, as in Indonesia and Malaysia:
+ * the car drives in the left lane toward +x, and the camera watches from the
+ * right verge across the empty lane, so the car moves left to right on
+ * screen.
  */
 export const ROAD = {
   edge: 3.35,
   lane: -1.75,
   halfWidth: 3.5,
-  kerb: 0.15,
-  pavement: 2.2,
   side: -1,
 } as const;
+
+/** How wide the gravel verge is on each side of the road, in metres. */
+const VERGE = 1.5;
 
 /** How a road surface looks: its gloss, its base colour, its grain and its roughness. */
 const SurfaceLookSchema = Schema.Struct({
@@ -94,8 +106,33 @@ function useGrain(surface: Surface, length: number) {
 }
 
 /**
- * The road, its markings, its kerb and pavement, and the roadside, from
- * `from` to `to` metres along it. A lab adds its own `DistancePosts`.
+ * The soft edges of the two verges: each is solid where it meets the
+ * asphalt and thins out into the grass, so no verge ends in a cut line.
+ */
+function useVergeEdges() {
+  const edges = useMemo(() => {
+    const far = groundTexture(paintVerge(64, 0.5), 1, 64, [1, 0.5]);
+    far.offset.set(0, 0.5);
+    return {
+      far,
+      near: groundTexture(paintVerge(64, 0.5), 1, 64, [1, 0.5]),
+    };
+  }, []);
+
+  useEffect(
+    () => () => {
+      edges.far.dispose();
+      edges.near.dispose();
+    },
+    [edges]
+  );
+
+  return edges;
+}
+
+/**
+ * The road, its markings and its two gravel verges, from `from` to `to`
+ * metres along it. A lab adds its own `DistancePosts`.
  */
 export function Road({
   from,
@@ -110,19 +147,11 @@ export function Road({
   const middle = (from + to) / 2;
   const look = SURFACE_LOOK[surface];
   const { color, grain } = useGrain(surface, length);
+  const edges = useVergeEdges();
   const dashes = Arr.map(
     Arr.range(0, Math.floor(length / (DASH + DASH_GAP))),
     (index) => from + index * (DASH + DASH_GAP) + DASH / 2
   );
-  const trees = Arr.map(
-    Arr.range(0, Math.floor(length / 17)),
-    (index) => from + 6 + index * 17
-  );
-  const lamps = Arr.map(
-    Arr.range(0, Math.floor(length / 32)),
-    (index) => from + 14 + index * 32
-  );
-
   return (
     <group>
       <mesh
@@ -160,31 +189,24 @@ export function Road({
       {Arr.map([1, -1] as const, (side) => (
         <mesh
           key={side}
-          position={[middle, ROAD.kerb / 2, side * (ROAD.halfWidth + 0.08)]}
+          position={[middle, 0.002, side * (ROAD.halfWidth + VERGE / 2 - 0.1)]}
           receiveShadow
+          renderOrder={-8}
+          rotation={[-Math.PI / 2, 0, 0]}
         >
-          <boxGeometry args={[length, ROAD.kerb, 0.16]} />
-          <meshStandardMaterial color={ROAD_COLORS.kerb} roughness={0.9} />
+          <planeGeometry args={[length, VERGE + 0.2]} />
+          <meshStandardMaterial
+            alphaMap={side === 1 ? edges.near : edges.far}
+            bumpMap={grain}
+            bumpScale={2.4}
+            color={ROAD_COLORS.gravel}
+            depthWrite={false}
+            map={color}
+            roughness={1}
+            transparent
+          />
         </mesh>
       ))}
-      <mesh
-        position={[
-          middle,
-          ROAD.kerb - 0.02,
-          ROAD.side * (ROAD.halfWidth + 0.16 + ROAD.pavement / 2),
-        ]}
-        receiveShadow
-      >
-        <boxGeometry args={[length, 0.04, ROAD.pavement]} />
-        <meshStandardMaterial
-          color={ROAD_COLORS.pavement}
-          map={color}
-          roughness={0.95}
-        />
-      </mesh>
-
-      <Trees positions={trees} />
-      <Lamps positions={lamps} />
     </group>
   );
 }
@@ -206,44 +228,47 @@ function RoadPaint({
   );
 }
 
-/** Street lamps on the pavement, a slim pole with an arm over the road. */
-function Lamps({ positions }: { readonly positions: readonly number[] }) {
-  const z = ROAD.side * (ROAD.halfWidth + 0.5);
-  return (
-    <group>
-      <Instances castShadow limit={Math.max(1, positions.length)}>
-        <cylinderGeometry args={[0.06, 0.09, 7, 10]} />
-        <meshStandardMaterial
-          color={ROAD_COLORS.lampPost}
-          metalness={0.8}
-          roughness={0.4}
-        />
-        {Arr.map(positions, (x) => (
-          <Instance key={x} position={[x, 3.5, z]} />
-        ))}
-      </Instances>
-      <Instances castShadow limit={Math.max(1, positions.length)}>
-        <boxGeometry args={[0.12, 0.08, 1.6]} />
-        <meshStandardMaterial
-          color={ROAD_COLORS.lampPost}
-          metalness={0.8}
-          roughness={0.4}
-        />
-        {Arr.map(positions, (x) => (
-          <Instance key={x} position={[x, 6.95, z - ROAD.side * 0.75]} />
-        ))}
-      </Instances>
-    </group>
-  );
-}
+/** The least room between two post labels across the screen, in pixels. */
+const LABEL_ROOM = 62;
 
-/** Distance posts at the kerb, each labelled with its distance from the hazard. */
+/**
+ * Distance posts in the verge, labelled with their distance from the hazard.
+ * A label keeps its size on screen while the posts shrink with distance, so
+ * a post carries its label only where the label has room: the labels of a
+ * row that runs away from the camera never run into each other.
+ */
 export function DistancePosts({
   posts,
 }: {
   readonly posts: readonly number[];
 }) {
   const z = ROAD.side * (ROAD.halfWidth + 0.35);
+  const width = useThree((state) => state.size.width);
+  const [roomy, setRoomy] = useState(0);
+  const sight = useMemo(
+    () => ({
+      across: new Float32Array(posts.length),
+      roomy: 0,
+      spot: new Vector3(),
+    }),
+    [posts.length]
+  );
+
+  useFrame(({ camera }) => {
+    for (let index = 0; index < posts.length; index += 1) {
+      sight.spot.set(Number(posts[index]), 1.35, z).project(camera);
+      sight.across[index] =
+        Math.abs(sight.spot.x) > 1 || sight.spot.z > 1
+          ? Number.NaN
+          : (sight.spot.x * width) / 2;
+    }
+    const next = roomyLabels(sight.across, LABEL_ROOM);
+    if (next !== sight.roomy) {
+      sight.roomy = next;
+      setRoomy(next);
+    }
+  });
+
   return (
     <group>
       <Instances castShadow limit={Math.max(1, posts.length)}>
@@ -256,18 +281,24 @@ export function DistancePosts({
           <Instance key={x} position={[x, 0.5, z]} />
         ))}
       </Instances>
-      {Arr.map(posts, (x) => (
-        <ThreeLabel
-          color={getColor("GRAY", 800)}
-          fontSize="compact"
-          key={x}
-          outlineColor={getColor("SLATE", 50)}
-          outlineWidth={0.06}
-          position={[x, 1.35, z]}
-        >
-          {`${x} m`}
-        </ThreeLabel>
-      ))}
+      {Arr.map(
+        Arr.filter(
+          posts,
+          (_, index) => Math.floor(roomy / 2 ** index) % 2 === 1
+        ),
+        (x) => (
+          <ThreeLabel
+            color={getColor("GRAY", 800)}
+            fontSize="compact"
+            key={x}
+            outlineColor={getColor("SLATE", 50)}
+            outlineWidth={0.06}
+            position={[x, 1.35, z]}
+          >
+            {`${x} m`}
+          </ThreeLabel>
+        )
+      )}
     </group>
   );
 }

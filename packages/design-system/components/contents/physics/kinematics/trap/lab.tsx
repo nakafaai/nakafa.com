@@ -1,4 +1,5 @@
 import { useFrame } from "@react-three/fiber";
+import { RoadsideCamera } from "@repo/design-system/components/contents/physics/kinematics/follow";
 import { MotionPlot } from "@repo/design-system/components/contents/physics/kinematics/plot";
 import {
   DistancePosts,
@@ -26,7 +27,6 @@ import {
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
@@ -66,19 +66,6 @@ const HOLD_SECONDS = 1.5;
 
 /** How far the car's nose is ahead of its origin between the axles, in metres. */
 const NOSE = SEDAN.length / 2 + (SEDAN.frontAxle + SEDAN.rearAxle) / 2;
-
-/**
- * Where the camera stands for a gap: on the open verge past the second
- * gate, looking back up the road, and closer the tighter the trap is, so
- * both gates and the car that has just left them fill the frame.
- */
-function cameraFor(gap: TrapGap) {
-  return [
-    TRAP_CENTRE + gap / 2 + 7 + 0.3 * gap,
-    2 + 0.055 * gap,
-    6.5 + 0.2 * gap,
-  ] as const;
-}
 
 /** The moment a paused card shows for a gap: the car's tail has just cleared the second gate. */
 function stillTime(gap: TrapGap) {
@@ -149,14 +136,18 @@ export function SpeedTrapInstantSpeedLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} frameloop="always" reach={60} setting="field">
+        <ScienceStage
+          floor={-0.015}
+          frameloop="always"
+          ground="grass"
+          reach={gap + 20}
+          setting="field"
+        >
           <Suspense fallback={null}>
-            <CameraControls
-              cameraPosition={cameraFor(gap)}
-              cameraTarget={[TRAP_CENTRE + gap / 4, 0.9, ROAD.lane]}
-              fov={36}
-              maxPolarAngle={Math.PI / 2 - 0.04}
+            <RoadsideCamera
+              from={TRAP_CENTRE - gap / 2}
               resetKey={gap}
+              to={TRAP_CENTRE + gap / 2}
             />
             <TrapScene gap={gap} />
           </Suspense>
@@ -275,7 +266,10 @@ function TrapScene({ gap }: { readonly gap: TrapGap }) {
     <>
       <Road from={-60} surface="dry" to={TRACK + 60} />
       <DistancePosts
-        posts={Arr.map(Arr.range(1, TRACK / 10), (index) => index * 10)}
+        posts={Arr.filter(
+          Arr.map(Arr.range(1, TRACK / 10), (index) => index * 10),
+          (post) => post < to
+        )}
       />
       <mesh
         position={[TRAP_CENTRE, 0.008, ROAD.lane]}

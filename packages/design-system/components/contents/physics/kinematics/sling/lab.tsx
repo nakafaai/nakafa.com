@@ -1,6 +1,7 @@
 import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { VelocityArrow } from "@repo/design-system/components/contents/physics/kinematics/arrow";
+import { useSight } from "@repo/design-system/components/contents/physics/kinematics/follow";
 import { grainTexture } from "@repo/design-system/components/contents/physics/kinematics/grain";
 import { paintFrost } from "@repo/design-system/components/contents/physics/kinematics/sling/frost";
 import {
@@ -54,10 +55,24 @@ import {
 } from "three";
 
 /** How far the freed stone is followed after release, in string lengths: it stays in view. */
-const FLIGHT = 0.6;
+const FLIGHT = 0.3;
 
 /** Simulated seconds per wall second: the whirl is slowed so the release can be seen. */
 const PLAY_RATE = 0.4;
+
+/**
+ * The way the camera looks at the rink: down on it by 48 degrees from the
+ * side the learner stands on, a little from the right, through an angle of
+ * view of 36 degrees.
+ */
+const LINE = [-0.09, -0.743, -0.669] as const;
+const VIEW = 36;
+
+/** How long one m/s of the stone's speed is drawn, in string lengths. */
+const SPEED_UNIT = 0.11;
+
+/** How many places around the circle the frame is fitted to. */
+const AROUND = 16;
 
 /** How high over the ice the arrows are drawn, in metres. */
 const ARROWS = 0.3;
@@ -138,12 +153,7 @@ export function StringWhirlReleaseLab({
           setting="field"
         >
           <Suspense fallback={null}>
-            <CameraControls
-              cameraPosition={[radius * 0.55, radius * 2.3, radius * 4.4]}
-              cameraTarget={[0, 0.05, radius * 0.1]}
-              fov={40}
-              maxPolarAngle={Math.PI / 2 - 0.1}
-            />
+            <RinkCamera period={period} radius={radius} release={release} />
             <WhirlScene period={period} radius={radius} release={release} />
           </Suspense>
         </ScienceStage>
@@ -162,15 +172,21 @@ export function StringWhirlReleaseLab({
           <VisualFactTabular
             label={labels.speed}
             value={
-              <InlineMath math={quantity(motion.speed, "\\text{ m/s}", 2)} />
+              <span style={{ color: PLOT_COLORS.teal }}>
+                <InlineMath
+                  math={`v=${quantity(motion.speed, "\\text{ m/s}", 2)}`}
+                />
+              </span>
             }
           />
           <VisualFactTabular
             label={labels.acceleration}
             value={
-              <InlineMath
-                math={quantity(motion.acceleration, "\\text{ m/s}^2", 1)}
-              />
+              <span style={{ color: PLOT_COLORS.fuchsia }}>
+                <InlineMath
+                  math={`a=${quantity(motion.acceleration, "\\text{ m/s}^2", 1)}`}
+                />
+              </span>
             }
           />
         </VisualCardFacts>
@@ -189,7 +205,7 @@ const FROST_TILE = 7;
  * lying in the snow that the stage spreads around it.
  */
 function Ice({ radius }: { readonly radius: number }) {
-  const wide = radius * 9;
+  const wide = radius * 60;
   const maps = useMemo(() => {
     const pebble = grainTexture(1.2);
     pebble.repeat.set(wide * 5, wide * 5);
@@ -235,6 +251,54 @@ function Ice({ radius }: { readonly radius: number }) {
 }
 
 /**
+ * The camera over the rink: it looks down on the circle from the side the
+ * learner stands on, from as near as the frame allows while it holds the
+ * whole circle and the freed stone with its arrow, as far as the stone is
+ * followed along the tangent of the point of release.
+ */
+function RinkCamera({
+  period,
+  radius,
+  release,
+}: {
+  readonly period: number;
+  readonly radius: number;
+  readonly release: ReleasePoint;
+}) {
+  const points = useMemo(() => {
+    const letGo = RELEASE_ANGLES[release];
+    const flown =
+      (FLIGHT + whirl(radius, period).speed * SPEED_UNIT + 0.22) * radius;
+    return Arr.append(
+      Arr.makeBy(AROUND, (index) => {
+        const around = (index / AROUND) * 2 * Math.PI;
+        return [
+          radius * 1.08 * Math.cos(around),
+          0,
+          radius * 1.08 * Math.sin(around),
+        ] as const;
+      }),
+      [
+        radius * Math.cos(letGo) - flown * Math.sin(letGo),
+        ARROWS,
+        -radius * Math.sin(letGo) - flown * Math.cos(letGo),
+      ] as const
+    );
+  }, [period, radius, release]);
+  const sight = useSight(points, LINE, VIEW);
+
+  return (
+    <CameraControls
+      cameraPosition={sight.position}
+      cameraTarget={sight.target}
+      fov={VIEW}
+      maxPolarAngle={Math.PI / 2 - 0.1}
+      resetKey={release}
+    />
+  );
+}
+
+/**
  * The ice with the stake the string turns on, the circle the stone keeps to
  * scribed into it, the tangent at the point of release, and the stone on
  * its string with its velocity and its acceleration. East is +x and north
@@ -249,7 +313,6 @@ function WhirlScene({
   readonly radius: number;
   readonly release: ReleasePoint;
 }) {
-  const quantity = useQuantity();
   const stone = useRef<Group>(null);
   const string = useRef<Group>(null);
   const velocity = useRef<Group>(null);
@@ -261,7 +324,7 @@ function WhirlScene({
   const { advance, playing } = useTimeline(0, end / PLAY_RATE);
   const letGo = RELEASE_ANGLES[release];
   const speedArrow = useMemo(
-    () => [motion.speed * radius * 0.11, 0, 0] as const,
+    () => [motion.speed * radius * SPEED_UNIT, 0, 0] as const,
     [motion.speed, radius]
   );
   const pullArrow = useMemo(() => [radius * 0.6, 0, 0] as const, [radius]);
@@ -279,7 +342,10 @@ function WhirlScene({
   );
 
   useFrame((_, delta) => {
-    const now = advance(delta) * PLAY_RATE;
+    const run = advance(delta) * PLAY_RATE;
+    // A card that stands still shows the last moment before the stone is let go.
+    const now =
+      !playing && run >= end - 1e-6 ? releaseTime(period, release) - 1e-4 : run;
     const place = slingPlace(radius, period, release, now);
     const around = place.released ? letGo : Math.atan2(place.y, place.x);
     stone.current?.position.set(place.x, 0, -place.y);
@@ -305,24 +371,26 @@ function WhirlScene({
       <SimulationTicker running={playing} />
       <Ice radius={radius} />
       <mesh position={[0, 0.003, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[radius - 0.007, radius + 0.007, 160]} />
+        <ringGeometry args={[radius * 0.982, radius * 1.018, 160]} />
         <meshStandardMaterial
           color={RINK_COLORS.scribe}
-          opacity={0.75}
-          roughness={0.6}
+          opacity={0.95}
+          roughness={0.7}
           transparent
         />
       </mesh>
-      <Line
-        color={PLOT_COLORS.teal}
-        dashed
-        dashSize={radius * 0.09}
-        gapSize={radius * 0.07}
-        lineWidth={2}
-        opacity={0.7}
-        points={tangent}
-        transparent
-      />
+      <CameraBounds exclude>
+        <Line
+          color={PLOT_COLORS.teal}
+          dashed
+          dashSize={radius * 0.09}
+          gapSize={radius * 0.07}
+          lineWidth={2.5}
+          opacity={0.85}
+          points={tangent}
+          transparent
+        />
+      </CameraBounds>
       <mesh castShadow position={[0, 0.006, 0]} receiveShadow>
         <cylinderGeometry args={[0.045, 0.052, 0.012, 32]} />
         <SurfaceMaterial
@@ -359,7 +427,7 @@ function WhirlScene({
           position={[radius / 2, 0, 0]}
           rotation={[0, 0, Math.PI / 2]}
         >
-          <cylinderGeometry args={[0.0045, 0.0045, radius, 8]} />
+          <cylinderGeometry args={[0.011, 0.011, radius, 10]} />
           <SurfaceMaterial
             color={RINK_COLORS.rope}
             repeat={[1, 30]}
@@ -383,9 +451,9 @@ function WhirlScene({
           fontSize="compact"
           outlineColor={getColor("SLATE", 50)}
           outlineWidth={0.05}
-          position={[speedArrow[0] * 0.2, 0.42, 0]}
+          position={[speedArrow[0] + radius * 0.14, 0.02, 0]}
         >
-          <InlineMath math={`v=${quantity(motion.speed, "\\text{ m/s}", 2)}`} />
+          <InlineMath math="v" />
         </ThreeLabel>
       </group>
       <group ref={pull} visible={!released}>
@@ -401,11 +469,9 @@ function WhirlScene({
             fontSize="compact"
             outlineColor={getColor("SLATE", 50)}
             outlineWidth={0.05}
-            position={[pullArrow[0] * 0.5, 0.16, 0]}
+            position={[pullArrow[0] * 0.55, 0.02, radius * 0.17]}
           >
-            <InlineMath
-              math={`a=${quantity(motion.acceleration, "\\text{ m/s}^2", 1)}`}
-            />
+            <InlineMath math="a" />
           </ThreeLabel>
         )}
       </group>

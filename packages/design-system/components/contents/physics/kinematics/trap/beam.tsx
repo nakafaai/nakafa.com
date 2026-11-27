@@ -6,11 +6,11 @@ import { Strake } from "@repo/design-system/components/three/vessel/strake";
 import { GATE_COLORS } from "@repo/design-system/lib/material/gate";
 import { Array as Arr } from "effect";
 import type { ReactNode, Ref } from "react";
-import { useImperativeHandle, useMemo, useRef } from "react";
+import { useImperativeHandle, useRef } from "react";
 import type { Mesh, MeshStandardMaterial } from "three";
 import { DoubleSide } from "three";
 
-/** Where the sender stands on the open verge and the receiver on the pavement, across the road. */
+/** Where the sender stands on the near verge and the receiver on the far one, across the road. */
 const SENDER = ROAD.halfWidth + 0.55;
 const RECEIVER = -(ROAD.halfWidth + 0.6);
 
@@ -30,6 +30,15 @@ export interface GateRig {
   readonly trip: (broken: boolean) => void;
 }
 
+/** The cable that feeds a post's head: down the tube and away along the ground. */
+const CABLE = [
+  [0.02, BEAM - 0.1, -0.03],
+  [0.05, BEAM - 0.18, -0.045],
+  [0.045, 0.24, -0.04],
+  [0.05, 0.12, -0.05],
+  [0.12, 0.05, -0.1],
+] as const;
+
 /**
  * One post of a light gate: a galvanised tube on a concrete footing with a
  * hazard band, a sealed head with a hooded lens that faces across the road,
@@ -37,29 +46,14 @@ export interface GateRig {
  */
 function Post({
   children,
-  ground,
   z,
 }: {
   /** The lens that looks across the road, and whatever lamp the head carries. */
   readonly children: ReactNode;
-  /** The height of the ground the footing stands on. */
-  readonly ground: number;
   readonly z: number;
 }) {
-  const head = BEAM - ground;
-  const cable = useMemo(
-    () =>
-      [
-        [0.02, head - 0.1, -0.03],
-        [0.05, head - 0.18, -0.045],
-        [0.045, 0.24, -0.04],
-        [0.05, 0.12, -0.05],
-        [0.12, 0.05, -0.1],
-      ] as const,
-    [head]
-  );
   return (
-    <group position={[0, ground, z]}>
+    <group position={[0, 0, z]}>
       <RoundedBox
         args={[0.3, 0.1, 0.3]}
         castShadow
@@ -74,8 +68,8 @@ function Post({
           surface="concrete"
         />
       </RoundedBox>
-      <mesh castShadow position={[0, 0.1 + (head - 0.1) / 2, 0]}>
-        <cylinderGeometry args={[0.024, 0.024, head - 0.1, 20]} />
+      <mesh castShadow position={[0, 0.1 + (BEAM - 0.1) / 2, 0]}>
+        <cylinderGeometry args={[0.024, 0.024, BEAM - 0.1, 20]} />
         <SurfaceMaterial
           color={GATE_COLORS.steel}
           metalness={0.85}
@@ -96,7 +90,7 @@ function Post({
       <RoundedBox
         args={[0.13, 0.17, 0.15]}
         castShadow
-        position={[0, head, 0]}
+        position={[0, BEAM, 0]}
         radius={0.022}
         smoothness={4}
       >
@@ -108,7 +102,7 @@ function Post({
         />
       </RoundedBox>
       {Arr.map([1, -1] as const, (side) => (
-        <mesh key={side} position={[side * 0.066, head, 0]}>
+        <mesh key={side} position={[side * 0.066, BEAM, 0]}>
           <boxGeometry args={[0.004, 0.11, 0.09]} />
           <SurfaceMaterial
             color={GATE_COLORS.steel}
@@ -119,10 +113,10 @@ function Post({
           />
         </mesh>
       ))}
-      <group position={[0, head, 0]}>{children}</group>
+      <group position={[0, BEAM, 0]}>{children}</group>
       <Strake
         color={GATE_COLORS.cable}
-        points={cable}
+        points={CABLE}
         radius={0.007}
         surface="rubber"
       />
@@ -163,7 +157,7 @@ function Lens({ toward }: { readonly toward: 1 | -1 }) {
 
 /**
  * A light gate across the road at `at` metres: a sender on the open verge
- * shines a beam at bumper height into a receiver on the pavement. While a
+ * shines a beam at bumper height into a receiver on the far verge. While a
  * car in the left lane stands in the beam, the beam ends on the car's flank
  * and the receiver's beacon lights, which is the instant a timer reads. A
  * simulation drives it through `ref`, so it never re-renders mid-run.
@@ -194,10 +188,10 @@ export function LightGate({
 
   return (
     <group position={[at, 0, 0]}>
-      <Post ground={0} z={SENDER}>
+      <Post z={SENDER}>
         <Lens toward={-1} />
       </Post>
-      <Post ground={ROAD.kerb} z={RECEIVER}>
+      <Post z={RECEIVER}>
         <Lens toward={1} />
         <mesh position={[0, 0.085, 0]}>
           <sphereGeometry

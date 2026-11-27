@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { FollowCamera } from "@repo/design-system/components/contents/physics/kinematics/follow";
+import { RoadsideCamera } from "@repo/design-system/components/contents/physics/kinematics/follow";
 import { MotionPlot } from "@repo/design-system/components/contents/physics/kinematics/plot";
 import {
   DistancePosts,
@@ -45,13 +45,10 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { Suspense, useCallback, useRef, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 
 /** Simulated seconds per wall second: a 20 s commute plays in 10 s. */
 const PLAY_RATE = 2;
-
-/** The camera rides 7 m behind, 2.8 m up and 11 m beside the car. */
-const CAMERA_OFFSET = [-7, 2.8, 11] as const;
 
 /** The spacing of the distance posts for a road of `span` metres, so about ten stand along it. */
 function postStep(span: number) {
@@ -82,7 +79,7 @@ interface CarTripSecantSlopeLabProps {
 /**
  * A car drives a trip along a straight road while its position-time or
  * velocity-time graph stands below. The learner picks a time interval: flags
- * at the kerb mark where the car was at its two ends, and the secant between
+ * in the verge mark where the car was at its two ends, and the secant between
  * those two points on the graph has the average velocity, or on a velocity
  * graph the average acceleration, as its slope.
  */
@@ -152,7 +149,13 @@ export function CarTripSecantSlopeLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} frameloop="always" reach={40} setting="field">
+        <ScienceStage
+          floor={-0.015}
+          frameloop="always"
+          ground="grass"
+          reach={40}
+          setting="field"
+        >
           <Suspense fallback={null}>
             <TripScene interval={interval} trip={trip} />
           </Suspense>
@@ -215,8 +218,9 @@ export function CarTripSecantSlopeLab({
 
 /**
  * The road with its distance posts, the car driving its trip, and a flag at
- * the kerb where the car was at each end of the chosen interval. The camera
- * rides beside the car, so the flags pass as it reaches their moments.
+ * the verge where the car was at each end of the chosen interval. The camera
+ * stands on the verge past the end of the road where the trip ends and
+ * looks back along all of it, so both flags and the whole trip stay in view.
  */
 function TripScene({
   interval,
@@ -226,7 +230,6 @@ function TripScene({
   readonly trip: Trip;
 }) {
   const car = useRef<SedanRig>(null);
-  const shown = useRef(0);
   const measure = useQuantity();
   const duration = tripDuration(trip);
   const { advance, playing } = useTimeline(0, duration / PLAY_RATE);
@@ -234,30 +237,29 @@ function TripScene({
   const step = postStep(Math.max(reach.highest - reach.lowest, 1));
   const [start, end] = interval;
 
-  // The scene moves before the camera that follows it reads where it is.
   useFrame((_, delta) => {
     const now = advance(delta) * PLAY_RATE;
     const state = tripState(trip, now);
-    shown.current = state.position;
     car.current?.place(
       state.position,
       state.velocity > 0.05 &&
         tripState(trip, now + 0.05).velocity < state.velocity - 1e-6
     );
-  }, -1);
+  });
 
-  const follow = useCallback(() => shown.current, []);
+  const last = tripState(trip, duration).position;
+  const ends =
+    last - reach.lowest <= reach.highest - last
+      ? ([reach.highest, reach.lowest] as const)
+      : ([reach.lowest, reach.highest] as const);
 
   return (
     <>
       <SimulationTicker running={playing} />
-      <FollowCamera
-        depth={ROAD.lane}
-        follow={follow}
-        lookAhead={2}
-        maxDistance={90}
-        minDistance={6}
-        offset={CAMERA_OFFSET}
+      <RoadsideCamera
+        from={ends[0]}
+        resetKey={`${ends[0]}:${ends[1]}`}
+        to={ends[1]}
       />
       <Road from={reach.lowest - 200} surface="dry" to={reach.highest + 300} />
       <DistancePosts

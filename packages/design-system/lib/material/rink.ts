@@ -8,6 +8,6 @@ export const RINK_COLORS = {
   handle: "#c2261d",
   ice: "#dcebf2",
   rope: "#d8c79a",
-  scribe: "#5f7f93",
+  scribe: "#1f4666",
   steel: "#9aa0a6",
 } as const;

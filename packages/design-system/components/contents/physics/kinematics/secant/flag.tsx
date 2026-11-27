@@ -19,7 +19,7 @@ const FLY = 0.95;
 const HOIST = 0.55;
 
 /**
- * A marker flag at the kerb, `at` metres along the road: a white pole on a
+ * A marker flag in the verge, `at` metres along the road: a white pole on a
  * weighted base with a ball finial and a pennant in the colour its moment
  * carries on the graph, which waves in the wind. Its label names the
  * moment, so the learner reads on the road where the car was then.
@@ -27,7 +27,7 @@ const HOIST = 0.55;
  * @param at - Where the flag stands along the road, in metres
  * @param children - The name of the moment the flag marks
  * @param color - The pennant's colour, which the lab ties to its graph
- * @param side - Which kerb the flag stands at: -1 the pavement, 1 the verge
+ * @param side - Which verge the flag stands in: -1 the far one, 1 the near one
  */
 export function MarkerFlag({
   at,
@@ -65,9 +65,7 @@ export function MarkerFlag({
   });
 
   return (
-    <group
-      position={[at, side < 0 ? ROAD.kerb : 0, side * (ROAD.halfWidth + 0.4)]}
-    >
+    <group position={[at, 0, side * (ROAD.halfWidth + 0.4)]}>
       <mesh castShadow position={[0, 0.04, 0]} receiveShadow>
         <cylinderGeometry args={[0.2, 0.24, 0.08, 32]} />
         <SurfaceMaterial

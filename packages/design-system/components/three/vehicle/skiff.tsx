@@ -1,7 +1,10 @@
 import { RoundedBox } from "@react-three/drei";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { Helm } from "@repo/design-system/components/three/vehicle/helm";
-import { breadthAt } from "@repo/design-system/components/three/vehicle/lines";
+import {
+  breadthAt,
+  lidSheet,
+} from "@repo/design-system/components/three/vehicle/lines";
 import {
   heaveAt,
   rollAt,
@@ -21,7 +24,13 @@ import { Array as Arr } from "effect";
 import type { ReactNode, Ref } from "react";
 import { useEffect, useImperativeHandle, useMemo, useRef } from "react";
 import type { Group } from "three";
-import { BackSide, Shape, ShapeGeometry } from "three";
+import {
+  BackSide,
+  BufferGeometry,
+  Float32BufferAttribute,
+  Shape,
+  ShapeGeometry,
+} from "three";
 
 /**
  * An open outboard skiff at real size, in metres, facing +x with its origin
@@ -66,6 +75,13 @@ const INSIDE: HullLines = {
 
 /** The gunwale's height at the bow, just under which the open shell ends. */
 const RIM = LINES.depth * (1 + SHEER) - 0.0005;
+
+/**
+ * The height above the keel at which the hull's inside is closed against
+ * the water outside it: under the gunwale, over everything aboard that sits
+ * below it.
+ */
+const LID = LINES.depth - SKIN - 0.07;
 
 /** The height of the floorboards above the keel. */
 const FLOOR = 0.11;
@@ -151,18 +167,26 @@ function Boards() {
  * above the waterline whatever paint the boat's owner gives its topsides.
  */
 function Shell({ children }: { readonly children: ReactNode }) {
-  const parts = useMemo(
-    () => ({
+  const parts = useMemo(() => {
+    const sheet = lidSheet(INSIDE, LID, 28);
+    const lid = new BufferGeometry();
+    lid.setAttribute(
+      "position",
+      new Float32BufferAttribute(sheet.positions, 3)
+    );
+    lid.setIndex(sheet.indices);
+    return {
       bottom: hullGeometry(LINES, 0, SKIFF.draught + 0.03),
       inside: hullGeometry(INSIDE, 0, RIM - SKIN),
+      lid,
       topside: hullGeometry(LINES, SKIFF.draught + 0.03, RIM),
-    }),
-    []
-  );
+    };
+  }, []);
   useEffect(
     () => () => {
       parts.bottom.dispose();
       parts.inside.dispose();
+      parts.lid.dispose();
       parts.topside.dispose();
     },
     [parts]
@@ -191,6 +215,10 @@ function Shell({ children }: { readonly children: ReactNode }) {
           side={BackSide}
           surface="paint"
         />
+      </mesh>
+      {/* Drawn after the boat and before the water, into depth alone: the sea does not show inside the hull. */}
+      <mesh geometry={parts.lid} position={[0, SKIN, 0]} renderOrder={5}>
+        <meshBasicMaterial args={[{ colorWrite: false }]} />
       </mesh>
     </>
   );

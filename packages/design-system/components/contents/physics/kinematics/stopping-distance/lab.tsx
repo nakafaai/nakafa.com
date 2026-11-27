@@ -62,6 +62,9 @@ const BRAKING_COLOR = PLOT_COLORS.orange;
 /** The camera rides 6 m behind, 2.6 m up and 10 m beside the car. */
 const CAMERA_OFFSET = [-6, 2.6, 10] as const;
 
+/** The camera looks 3 m ahead of the car, 0.8 m up. */
+const AHEAD = [3, 0.8, 0] as const;
+
 /**
  * A car meets a hazard at the white line. For one second its driver reacts
  * and the car rolls on at full speed over the teal stretch; then it brakes at
@@ -222,9 +225,9 @@ function StopScene({ stop }: { readonly stop: Stop }) {
     <>
       <SimulationTicker running={playing} />
       <FollowCamera
+        aim={AHEAD}
         depth={ROAD.lane}
         follow={follow}
-        lookAhead={3}
         maxDistance={90}
         minDistance={6}
         offset={CAMERA_OFFSET}

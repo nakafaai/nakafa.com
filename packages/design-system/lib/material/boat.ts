@@ -21,6 +21,7 @@ export const BOAT_COLORS = {
   reed: "#6f7f3c",
   reedDry: "#a39355",
   mud: "#6b5a44",
+  silt: "#6b6a3a",
   hyacinth: "#4f8a2c",
   hyacinthStalk: "#b9c98a",
 } as const;

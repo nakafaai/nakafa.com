@@ -94,12 +94,30 @@ function Layer({
   );
 }
 
-/** The reeds of both banks: one clump drawn at every bed, greener at the root than at the tip. */
-function Reeds({ half }: { readonly half: number }) {
+/** How far to either side of a landing the bank is kept clear of reeds, in metres. */
+const LANDING = 5;
+
+/**
+ * The reeds of both banks: one clump drawn at every bed, greener at the root
+ * than at the tip. No reeds stand where a boat puts off from the near bank
+ * or comes in on the far one.
+ */
+function Reeds({
+  half,
+  landings,
+}: {
+  readonly half: number;
+  readonly landings: readonly [number, number];
+}) {
   const reeds = useRef<InstancedMesh>(null);
+  const [near, far] = landings;
   const beds = useMemo(
-    () => Arr.flatMap(SIDES, (side) => reedBeds(side, half, BEDS)),
-    [half]
+    () =>
+      Arr.filter(
+        Arr.flatMap(SIDES, (side) => reedBeds(side, half, BEDS)),
+        (bed) => Math.abs(bed.x - (bed.z > 0 ? near : far)) > LANDING
+      ),
+    [far, half, near]
   );
   const geometry = useMemo(() => {
     const clump = reedClump();
@@ -164,9 +182,16 @@ function Reeds({ half }: { readonly half: number }) {
  * fades into the horizon. The river runs along x and each waterline wanders
  * as a natural bank does.
  *
+ * @param landings - Where a boat puts off from the near bank and comes in on the far one, along the river, in metres
  * @param width - The river's width from waterline to waterline, in metres
  */
-export function Banks({ width }: { readonly width: number }) {
+export function Banks({
+  landings,
+  width,
+}: {
+  readonly landings: readonly [number, number];
+  readonly width: number;
+}) {
   return (
     <CameraBounds exclude>
       {Arr.map(SIDES, (side) => (
@@ -187,7 +212,7 @@ export function Banks({ width }: { readonly width: number }) {
           />
         </group>
       ))}
-      <Reeds half={width / 2} />
+      <Reeds half={width / 2} landings={landings} />
     </CameraBounds>
   );
 }

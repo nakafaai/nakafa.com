@@ -1,6 +1,9 @@
 import { useFrame } from "@react-three/fiber";
 import { VelocityArrow } from "@repo/design-system/components/contents/physics/kinematics/arrow";
-import { FollowCamera } from "@repo/design-system/components/contents/physics/kinematics/follow";
+import {
+  FollowCamera,
+  useSight,
+} from "@repo/design-system/components/contents/physics/kinematics/follow";
 import { apparentRain } from "@repo/design-system/components/contents/physics/kinematics/rain/drops";
 import { carAlong } from "@repo/design-system/components/contents/physics/kinematics/rain/fall";
 import type { RainRig } from "@repo/design-system/components/contents/physics/kinematics/rain/streaks";
@@ -10,7 +13,10 @@ import {
   Road,
 } from "@repo/design-system/components/contents/physics/kinematics/road";
 import type { SedanRig } from "@repo/design-system/components/contents/physics/kinematics/sedan";
-import { Sedan } from "@repo/design-system/components/contents/physics/kinematics/sedan";
+import {
+  SEDAN,
+  Sedan,
+} from "@repo/design-system/components/contents/physics/kinematics/sedan";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -56,12 +62,23 @@ const PLAY_RATE = 0.35;
  */
 const LOOP = { car: 544, ground: 44 } satisfies Record<Frame, number>;
 
-/** The camera stands 6 m back along the road, 2.3 m up and 10 m out on the verge. */
-const CAMERA_OFFSET = [-6, 2.3, 10] as const;
+/**
+ * The way the camera looks at the car: from ahead of it on the near verge,
+ * down by 27 degrees, through an angle of view of 40 degrees. It looks down
+ * more steeply than half its angle of view, so its frame holds the wet road
+ * and its verges and never the horizon.
+ */
+const LINE = [-0.42, -0.55, -1] as const;
+const VIEW = 40;
 
-/** Where the velocity triangle starts over the car's roof, and how long one m/s is drawn, in metres. */
-const TRIANGLE = [1.4, 4.6, 0] as const;
-const UNIT = 0.18;
+/**
+ * Where the rain's own arrow ends, on the car's roof ahead of its middle,
+ * and how long one m/s is drawn, in metres: the triangle of the three
+ * velocities stands on the car, taller than the car and, at the fastest
+ * car, half as long again.
+ */
+const TRIANGLE = [0.3, 1.5, 0] as const;
+const UNIT = 0.3;
 
 interface RainDriveRelativeVelocityLabProps {
   /** The car's speed the card starts at, in m/s. */
@@ -133,7 +150,11 @@ export function RainDriveRelativeVelocityLab({
           max={25}
           min={0}
           onValueChange={setCar}
-          readout={<InlineMath math={quantity(car, "\\text{ m/s}", 0)} />}
+          readout={
+            <span style={{ color: PLOT_COLORS.amber }}>
+              <InlineMath math={quantity(car, "\\text{ m/s}", 0)} />
+            </span>
+          }
           step={1}
           value={car}
         />
@@ -143,7 +164,13 @@ export function RainDriveRelativeVelocityLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} frameloop="always" reach={30} setting="field">
+        <ScienceStage
+          floor={-0.015}
+          frameloop="always"
+          ground="grass"
+          reach={30}
+          setting="field"
+        >
           <Suspense fallback={null}>
             <RainScene car={car} frame={frame} rain={rain} />
           </Suspense>
@@ -154,12 +181,18 @@ export function RainDriveRelativeVelocityLab({
         <VisualCardFacts>
           <VisualFactTabular
             label={labels.rainSpeed}
-            value={<InlineMath math={quantity(rain, "\\text{ m/s}", 1)} />}
+            value={
+              <span style={{ color: PLOT_COLORS.violet }}>
+                <InlineMath math={quantity(rain, "\\text{ m/s}", 1)} />
+              </span>
+            }
           />
           <VisualFactTabular
             label={labels.apparentSpeed}
             value={
-              <InlineMath math={quantity(seen.speed, "\\text{ m/s}", 1)} />
+              <span style={{ color: PLOT_COLORS.fuchsia }}>
+                <InlineMath math={quantity(seen.speed, "\\text{ m/s}", 1)} />
+              </span>
             }
           />
           <VisualFactTabular
@@ -203,6 +236,35 @@ function RainScene({
     [car, rain]
   );
 
+  // The frame holds the car and the whole triangle that stands on it.
+  const held = useMemo(
+    () =>
+      [
+        [-SEDAN.length / 2 - 0.4, 0, ROAD.lane + SEDAN.width / 2],
+        [SEDAN.length / 2 + 0.4, 0, ROAD.lane + SEDAN.width / 2],
+        [SEDAN.length / 2 + 0.4, 0, ROAD.lane - SEDAN.width / 2],
+        [TRIANGLE[0] + 1.6, TRIANGLE[1] + rain * UNIT + 0.5, ROAD.lane],
+        [TRIANGLE[0] - car * UNIT - 1.2, TRIANGLE[1] - 0.4, ROAD.lane],
+        [TRIANGLE[0] - car * UNIT - 1.2, TRIANGLE[1] + rain * UNIT, ROAD.lane],
+      ] as const,
+    [car, rain]
+  );
+  const sight = useSight(held, LINE, VIEW);
+  const offset = useMemo(
+    () =>
+      [
+        sight.position[0],
+        sight.position[1],
+        sight.position[2] - ROAD.lane,
+      ] as const,
+    [sight]
+  );
+  const aim = useMemo(
+    () =>
+      [sight.target[0], sight.target[1], sight.target[2] - ROAD.lane] as const,
+    [sight]
+  );
+
   useVisualStop(() => {
     clock.current.driven = 0;
     clock.current.fallen = 0;
@@ -220,7 +282,7 @@ function RainScene({
     sedan.current?.place(state.x, false);
     triangle.current?.position.set(
       state.x + TRIANGLE[0],
-      TRIANGLE[1],
+      TRIANGLE[1] + rain * UNIT,
       ROAD.lane + TRIANGLE[2]
     );
     shower.current?.fall(
@@ -229,6 +291,7 @@ function RainScene({
       seen.speed,
       (seen.angle * Math.PI) / 180
     );
+    shower.current?.spray(state.x, playing ? car : 0, state.fallen);
   }, -1);
 
   const beside = useCallback(() => clock.current.x, []);
@@ -237,12 +300,13 @@ function RainScene({
   return (
     <>
       <FollowCamera
+        aim={aim}
         depth={ROAD.lane}
         follow={riding ? beside : roadside}
-        lookAhead={1.5}
+        fov={VIEW}
         maxDistance={60}
         minDistance={6}
-        offset={CAMERA_OFFSET}
+        offset={offset}
       />
       <Road from={-340} surface="wet" to={340} />
       <Rain ref={shower} />

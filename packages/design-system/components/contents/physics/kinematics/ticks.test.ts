@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   axisTicks,
   curvePoints,
+  roomyLabels,
 } from "@repo/design-system/components/contents/physics/kinematics/ticks";
 
 describe("axisTicks", () => {
@@ -28,5 +29,19 @@ describe("curvePoints", () => {
       { x: 3, y: 9 },
       { x: 4, y: 16 },
     ]);
+  });
+});
+
+describe("roomyLabels", () => {
+  it("keeps every label of a row with room between them", () => {
+    expect(roomyLabels([0, 80, 160], 60)).toBe(0b111);
+  });
+
+  it("drops the labels that would touch the last one kept", () => {
+    expect(roomyLabels([0, 20, 45, 70, 100, 131], 60)).toBe(0b10_1001);
+  });
+
+  it("gives no label to a post that is off the screen", () => {
+    expect(roomyLabels([Number.NaN, 0, Number.NaN, 90], 60)).toBe(0b1010);
   });
 });

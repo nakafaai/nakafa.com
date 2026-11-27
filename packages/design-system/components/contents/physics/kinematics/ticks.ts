@@ -44,3 +44,28 @@ export function curvePoints(
     return { x, y: at(x) };
   });
 }
+
+/**
+ * Which labels of a row keep their place so that no two of them touch: a
+ * label is the same size on screen however far away its post stands, so a
+ * row of posts that runs into the distance can carry only some of them.
+ * Going along the row, a label stays when it stands at least `room` pixels
+ * from the last one that stayed. A place that is not a number is off the
+ * screen and carries no label.
+ *
+ * @param places - Where each label stands across the screen, in pixels
+ * @param room - The least distance between two labels, in pixels
+ * @returns One bit for each label, set when the label stays
+ */
+export function roomyLabels(places: ArrayLike<number>, room: number) {
+  let kept = 0;
+  let last = Number.NEGATIVE_INFINITY;
+  for (let index = 0; index < places.length; index += 1) {
+    const place = Number(places[index]);
+    if (Math.abs(place - last) >= room) {
+      kept += 2 ** index;
+      last = place;
+    }
+  }
+  return kept;
+}

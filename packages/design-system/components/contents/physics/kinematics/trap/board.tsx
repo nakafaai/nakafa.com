@@ -29,10 +29,7 @@ export function SpeedBoard({
   readonly lit: boolean;
 }) {
   return (
-    <group
-      position={[at, ROAD.kerb, -(ROAD.halfWidth + 1.25)]}
-      rotation={[0, 0.5, 0]}
-    >
+    <group position={[at, 0, -(ROAD.halfWidth + 1.25)]} rotation={[0, 0.5, 0]}>
       <mesh castShadow position={[0, (HEIGHT - SIZE[1] / 2) / 2, -0.07]}>
         <cylinderGeometry args={[0.045, 0.05, HEIGHT - SIZE[1] / 2, 20]} />
         <SurfaceMaterial

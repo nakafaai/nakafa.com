@@ -1,7 +1,7 @@
 import { Line } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { VelocityArrow } from "@repo/design-system/components/contents/physics/kinematics/arrow";
-import { FollowCamera } from "@repo/design-system/components/contents/physics/kinematics/follow";
+import { useSight } from "@repo/design-system/components/contents/physics/kinematics/follow";
 import { Banks } from "@repo/design-system/components/contents/physics/kinematics/river/bank";
 import type { River } from "@repo/design-system/components/contents/physics/kinematics/river/crossing";
 import {
@@ -12,6 +12,8 @@ import { Flotsam } from "@repo/design-system/components/contents/physics/kinemat
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
@@ -36,7 +38,7 @@ import { BOAT_COLORS } from "@repo/design-system/lib/material/boat";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Schema } from "effect";
 import type { ReactNode } from "react";
-import { Suspense, useCallback, useMemo, useRef, useState } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
 
 /** How long one crossing plays, in wall seconds. */
@@ -48,11 +50,35 @@ const HOLD_SECONDS = 1.6;
 /** How far into the crossing the boat is shown before the card plays. */
 const STILL = 0.55;
 
-/** How high over the water the velocity arrows are drawn, in metres. */
-const ARROWS = 1.9;
+/** How high over the water the velocity arrows start, in metres: just over the boat's gunwale. */
+const ARROWS = 1;
 
-/** The camera rides 5 m upstream of the boat, 6.2 m up and 6.4 m toward the near bank. */
-const CAMERA_OFFSET = [-5, 6.2, 6.4] as const;
+/**
+ * How steeply the camera looks down on the river, as the tangent of the
+ * angle, and its angle of view, in degrees. It looks down more steeply than
+ * half its angle of view, so its frame holds water and banks and never the
+ * horizon.
+ */
+const TILT = Math.tan((31 * Math.PI) / 180);
+const VIEW = 38;
+
+/** How much of each bank the frame takes in beyond the waterline, in metres. */
+const BANK = 4;
+
+/**
+ * How long the fastest velocity is drawn, as a share of the boat's distance
+ * from the camera: the arrows keep their size in the frame while the boat
+ * sails away from the camera, as the labels beside them do.
+ */
+const ARROW_SHARE = 0.2;
+
+/**
+ * How far each waterline lies beyond the end of the crossing, in metres.
+ * The crossing is measured between the places the middle of the boat puts
+ * off from and comes in to, and a boat has length: it floats clear of the
+ * bank at both, in open water.
+ */
+const BERTH = 3.2;
 
 interface RiverBoatCrossingLabProps {
   /** The boat's speed through the water, in m/s. */
@@ -98,6 +124,12 @@ export function RiverBoatCrossingLab({
     [boatSpeed, current, width]
   );
   const crossing = riverCrossing(river, heading);
+  // The ground reaches as far as the furthest landing the slider can ask for.
+  const reach = Math.max(
+    width,
+    Math.abs(riverCrossing(river, -60)?.drift ?? 0),
+    Math.abs(riverCrossing(river, 60)?.drift ?? 0)
+  );
 
   return (
     <VisualCard
@@ -123,7 +155,7 @@ export function RiverBoatCrossingLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage frameloop="always" reach={width * 0.75} setting="field">
+        <ScienceStage frameloop="always" reach={reach} setting="field">
           <Suspense fallback={null}>
             <RiverScene heading={heading} river={river} />
           </Suspense>
@@ -184,24 +216,53 @@ function RiverScene({
   const skiff = useRef<SkiffRig>(null);
   const arrows = useRef<Group>(null);
   const clock = useRef({ run: STILL * PLAY_SECONDS, water: 0 });
-  const place = useRef({ x: 0, z: 0 });
+  const shape = useThree((state) => state.size.width / state.size.height);
+  const camera = useThree((state) => state.camera);
   const quantity = useQuantity();
   const crossing = riverCrossing(river, heading);
   const half = river.width / 2;
   const angle = (heading * Math.PI) / 180;
+  const drift = crossing?.drift ?? 0;
+  const fastest = river.boatSpeed + river.current;
   const own = useMemo(
     () =>
       [
-        Math.sin(angle) * river.boatSpeed,
+        (Math.sin(angle) * river.boatSpeed) / fastest,
         0,
-        -Math.cos(angle) * river.boatSpeed,
+        (-Math.cos(angle) * river.boatSpeed) / fastest,
       ] as const,
-    [angle, river.boatSpeed]
+    [angle, fastest, river.boatSpeed]
   );
   const sum = useMemo(
-    () => [own[0] + river.current, 0, own[2]] as const,
-    [own, river.current]
+    () => [own[0] + river.current / fastest, 0, own[2]] as const,
+    [fastest, own, river.current]
   );
+  // The camera stands behind where the boat puts off and looks over the
+  // river toward where it lands: both banks and the whole crossing.
+  const shore = half + BERTH + BANK;
+  const held = useMemo(
+    () =>
+      [
+        [-5, 0, shore],
+        [5, 0, shore],
+        [-6, 3, half],
+        [8, 3, half],
+        [drift - 5, 3, -shore],
+        [drift + 9, 3, -shore],
+      ] as const,
+    [drift, half, shore]
+  );
+  const line = useMemo(
+    () =>
+      [
+        drift * 0.5,
+        -TILT * Math.hypot(drift * 0.5, 2 * half),
+        -2 * half,
+      ] as const,
+    [drift, half]
+  );
+  const sight = useSight(held, line, VIEW);
+  const landings = useMemo(() => [0, drift] as const, [drift]);
   const path = useMemo(
     () =>
       [
@@ -215,7 +276,6 @@ function RiverScene({
     clock.current.run = 0;
   });
 
-  // The scene moves before the camera that follows it reads where it is.
   useFrame((_, delta) => {
     const step = simulationStep(delta);
     const time = clock.current;
@@ -237,33 +297,47 @@ function RiverScene({
       time.water
     );
     arrows.current?.position.set(x, ARROWS, z);
-    place.current.x = x;
-    place.current.z = z;
-  }, -1);
-
-  const along = useCallback(() => place.current.x, []);
-  const across = useCallback(() => place.current.z, []);
+    arrows.current?.scale.setScalar(
+      ARROW_SHARE *
+        Math.min(1, shape) *
+        Math.hypot(
+          camera.position.x - x,
+          camera.position.y - ARROWS,
+          camera.position.z - z
+        )
+    );
+  });
 
   return (
     <>
-      <FollowCamera
-        across={across}
-        follow={along}
-        lookAhead={1.5}
-        maxDistance={river.width * 2.2}
-        minDistance={5}
-        offset={CAMERA_OFFSET}
+      <CameraControls
+        cameraPosition={sight.position}
+        cameraTarget={sight.target}
+        fov={VIEW}
+        maxPolarAngle={Math.PI / 2 - 0.2}
+        resetKey={heading}
       />
       <Sea level={0} swell={0.8} />
-      <Banks width={river.width} />
+      <CameraBounds exclude>
+        <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[4000, river.width + 2 * BERTH + 8]} />
+          <meshBasicMaterial
+            color={BOAT_COLORS.silt}
+            depthWrite={false}
+            opacity={0.42}
+            transparent
+          />
+        </mesh>
+      </CameraBounds>
+      <Banks landings={landings} width={river.width + 2 * BERTH} />
       <Flotsam current={river.current} width={river.width} />
       <Line
         color={getColor("WHITE")}
         dashed
-        dashSize={1.2}
-        gapSize={0.9}
-        lineWidth={2}
-        opacity={0.7}
+        dashSize={1.6}
+        gapSize={1.1}
+        lineWidth={2.5}
+        opacity={0.85}
         points={path}
         transparent
       />
@@ -272,45 +346,51 @@ function RiverScene({
         <VelocityArrow
           color={PLOT_COLORS.teal}
           from={ORIGIN}
-          thick={0.07}
+          thick={0.024}
           to={own}
         />
         <ThreeLabel
+          anchorX="right"
           color={PLOT_COLORS.teal}
           fontSize="compact"
+          gap={0.05}
           outlineColor={getColor("SLATE", 50)}
           outlineWidth={0.05}
-          position={[own[0] * 0.5, 0.5, own[2] * 0.5]}
+          position={[own[0] * 0.5, 0, own[2] * 0.5]}
         >
           <InlineMath math={quantity(river.boatSpeed, "\\text{ m/s}", 1)} />
         </ThreeLabel>
         <VelocityArrow
           color={PLOT_COLORS.amber}
           from={own}
-          thick={0.07}
+          thick={0.024}
           to={sum}
         />
         <ThreeLabel
+          anchorY="bottom"
           color={PLOT_COLORS.amber}
           fontSize="compact"
+          gap={0.05}
           outlineColor={getColor("SLATE", 50)}
           outlineWidth={0.05}
-          position={[(own[0] + sum[0]) * 0.5, 0.5, own[2]]}
+          position={[(own[0] + sum[0]) * 0.5, 0, own[2]]}
         >
           <InlineMath math={quantity(river.current, "\\text{ m/s}", 1)} />
         </ThreeLabel>
         <VelocityArrow
           color={PLOT_COLORS.violet}
           from={ORIGIN}
-          thick={0.09}
+          thick={0.03}
           to={sum}
         />
         <ThreeLabel
+          anchorX="left"
           color={PLOT_COLORS.violet}
           fontSize="compact"
+          gap={0.05}
           outlineColor={getColor("SLATE", 50)}
           outlineWidth={0.05}
-          position={[sum[0] * 0.5, -0.5, sum[2] * 0.5]}
+          position={[sum[0] * 0.5, 0, sum[2] * 0.5]}
         >
           <InlineMath
             math={quantity(crossing?.speed ?? 0, "\\text{ m/s}", 2)}

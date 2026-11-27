@@ -4,4 +4,6 @@
  */
 export const WEATHER_COLORS = {
   rain: "#dfeaf2",
+  ring: "#eaf3f8",
+  spray: "#c9d6de",
 } as const;
