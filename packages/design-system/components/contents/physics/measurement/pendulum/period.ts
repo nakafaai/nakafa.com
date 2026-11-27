@@ -22,6 +22,9 @@ export const BOBS = {
   wood: { density: 600, mass: 0.05 },
 } as const;
 
+/** The widest swing, in radians. */
+const SWING = 0.2;
+
 /** The radius of a solid ball bob, in metres, from its mass and density. */
 export function bobRadius(bob: typeof BobSchema.Type) {
   const { density, mass } = BOBS[bob];
@@ -42,4 +45,20 @@ export function periodPowers() {
 export function pendulumPeriod(length: number, mass: number) {
   const { gravity, length: power, mass: massPower } = periodPowers();
   return 2 * Math.PI * mass ** massPower * length ** power * GRAVITY ** gravity;
+}
+
+/**
+ * The angle of every thread from the vertical, in radians, `time` seconds
+ * after the bobs are let go together from their widest swing. One angle
+ * serves all three bobs, because no power of mass enters the period.
+ */
+export function swingAngle(length: number, time: number) {
+  return (
+    SWING * Math.cos((2 * Math.PI * time) / pendulumPeriod(length, BOBS.brass.mass))
+  );
+}
+
+/** How far a bob on a string `length` metres long swings to either side, in metres. */
+export function swingReach(length: number) {
+  return length * Math.sin(SWING);
 }

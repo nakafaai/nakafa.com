@@ -28,6 +28,8 @@ export const INSTRUMENT_COLORS = {
   hair: "#5b3a24",
   // The grey-green hammertone enamel of a cast balance housing.
   hammertone: "#66736f",
+  // A drawn iron rod, darker and greyer than tool steel.
+  iron: "#80848a",
   iris: "#4e3423",
   lampLight: "#fff1d6",
   // A liquid-crystal display: its grey-green ground and its dark figures.

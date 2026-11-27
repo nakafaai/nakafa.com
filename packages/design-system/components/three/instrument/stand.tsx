@@ -162,7 +162,7 @@ function Joint() {
       <group position={[0, 11 - BAR.drop / 2, 8]}>
         <Thumbscrew />
       </group>
-      <group position={[8, 2, 17]} rotation={[Math.PI / 2, 0, 0]}>
+      <group position={[8, -BAR.drop, 17]} rotation={[Math.PI / 2, 0, 0]}>
         <Thumbscrew />
       </group>
     </group>

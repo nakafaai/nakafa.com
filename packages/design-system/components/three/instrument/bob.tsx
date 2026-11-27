@@ -1,6 +1,9 @@
 import { useFrame } from "@react-three/fiber";
 import { Turn } from "@repo/design-system/components/three/form/part";
-import { bobProfile } from "@repo/design-system/components/three/instrument/radial";
+import {
+  ballOutline,
+  studTop,
+} from "@repo/design-system/components/three/instrument/ball";
 import { MILLIMETRE } from "@repo/design-system/components/three/instrument/scale";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
@@ -50,12 +53,8 @@ export function Bob({
   readonly swing: () => number;
 }) {
   const thread = useRef<Group>(null);
-  const profile = useMemo(
-    () => bobProfile(radius * MILLIMETRE),
-    [radius]
-  );
-  const top = profile.at(-1)?.[1] ?? 0;
-  const long = cord * MILLIMETRE - top;
+  const profile = useMemo(() => ballOutline(radius * MILLIMETRE), [radius]);
+  const long = cord * MILLIMETRE - studTop(radius * MILLIMETRE);
 
   useFrame(() => {
     thread.current?.rotation.set(0, 0, swing());

@@ -81,7 +81,7 @@ export function MicrometerScrewLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={1.1} setting="lab">
+        <ScienceStage floor={0} ground="epoxy" reach={1.1} setting="lab">
           <Suspense fallback={null}>
             <GaugeScene sleeve={sleeve} thickness={reading} />
           </Suspense>
