@@ -6,6 +6,7 @@ import {
   SHANK_STATIONS,
   shankRadius,
 } from "@repo/design-system/components/contents/physics/measurement/bolt/form";
+import { Array as Arr, Option } from "effect";
 
 describe("bolt form", () => {
   it("closes the head at both faces and rings it in order", () => {
@@ -29,6 +30,6 @@ describe("bolt form", () => {
     expect(shankRadius(30.75, 0)).toBeCloseTo(5 - 0.92);
     expect(shankRadius(30, 0)).toBeCloseTo(5);
     expect(shankRadius(49.5, 0)).toBeLessThanOrEqual(4.3);
-    expect(SHANK_STATIONS[SHANK_STATIONS.length - 1]).toBe(50);
+    expect(Arr.last(SHANK_STATIONS)).toEqual(Option.some(50));
   });
 });

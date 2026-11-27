@@ -117,7 +117,7 @@ const PLATE_SHAPE = (() => {
   window.lineTo(SLIDE.long - 4, 13.2);
   window.lineTo(SLIDE.long - 4, EDGE);
   window.closePath();
-  shape.holes.push(window);
+  shape.holes = [window];
   return shape;
 })();
 

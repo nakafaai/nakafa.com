@@ -39,7 +39,7 @@ function stripShape(long: number) {
   shape.quadraticCurveTo(-STRIP.margin, 0, -STRIP.margin + round, 0);
   const hole = new Path();
   hole.absarc(right - 4, -STRIP.tall + 6, 2, 0, Math.PI * 2, true);
-  shape.holes.push(hole);
+  shape.holes = [hole];
   return shape;
 }
 

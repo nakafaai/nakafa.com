@@ -35,9 +35,9 @@ const DISPLAY = { middle: 7, tall: 24, wide: 48 } as const;
 const FACE = CASE.thick / 2;
 
 /** The large figures of minutes and seconds, and the small ones of the hundredths. */
-const LARGE = { tall: 12.5, thick: 1.5, wide: 6.6 } as const;
+const LARGE = { tall: 12.5, thick: 1.9, wide: 6.8 } as const;
 /** The small figures of the hundredths. */
-const SMALL = { tall: 8.6, thick: 1.1, wide: 4.6 } as const;
+const SMALL = { tall: 8.6, thick: 1.4, wide: 4.8 } as const;
 
 /** Where each figure's middle stands on the display, with the size it is drawn at. */
 const FIGURES = [
@@ -226,7 +226,7 @@ export function Stopwatch({ seconds }: { readonly seconds: () => number }) {
         </group>
         <mesh position={[0, 0, 0.5]}>
           <planeGeometry args={[DISPLAY.wide + 1.5, DISPLAY.tall + 1.5]} />
-          <GlassMaterial color={INSTRUMENT_COLORS.crystal} opacity={0.12} />
+          <GlassMaterial color={INSTRUMENT_COLORS.crystal} opacity={0.05} />
         </mesh>
       </group>
       <Numeral

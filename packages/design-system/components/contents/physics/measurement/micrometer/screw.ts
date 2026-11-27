@@ -33,15 +33,3 @@ export function micrometerReading(thickness: number) {
     sleeve: turns * SCREW_PITCH,
   };
 }
-
-/**
- * How far the thimble has turned past its zero, in divisions, when the
- * spindle has moved `travel` millimetres: the turns the screw made, as the
- * fraction of a rim that faces the datum line.
- */
-export function thimbleTurn(travel: number) {
-  const divisions = travel / SCREW_RESOLUTION;
-  return (
-    divisions - Math.floor(divisions / THIMBLE_DIVISIONS) * THIMBLE_DIVISIONS
-  );
-}

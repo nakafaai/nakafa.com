@@ -26,6 +26,7 @@ import { SurfaceMaterial } from "@repo/design-system/components/three/surface/ma
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Match } from "effect";
+import type { ReactNode } from "react";
 
 /** One of the quantities the lab shows. */
 type Quantity = typeof BoltQuantitySchema.Type;
@@ -105,15 +106,16 @@ function Mark({ quantity }: { readonly quantity: Quantity }) {
 
 /**
  * The bolt lying where `at` puts the underside of its head, resting on a
- * flat of its head and on its thread, with the quantity in view marked on
- * it. It is drawn in millimetres with its axis along x.
+ * flat of its head and on its thread. It is drawn in millimetres with its
+ * axis along x, and its children are what is marked on it, placed along
+ * that axis.
  */
 function Bolt({
   at,
-  quantity,
+  children,
 }: {
   readonly at: readonly [number, number, number];
-  readonly quantity: Quantity;
+  readonly children: ReactNode;
 }) {
   return (
     <group
@@ -132,7 +134,7 @@ function Bolt({
         text="8.8"
         turn={[0, -Math.PI / 2, 0]}
       />
-      <Mark quantity={quantity} />
+      {children}
     </group>
   );
 }
@@ -160,7 +162,9 @@ export function BoltScene({ quantity }: { readonly quantity: Quantity }) {
           major={20}
           minor={2}
         >
-          <Bolt at={[-SHANK_LENGTH / 2, 0, 6]} quantity={quantity} />
+          <Bolt at={[-SHANK_LENGTH / 2, 0, 6]}>
+            <Mark quantity={quantity} />
+          </Bolt>
         </Balance>
       </group>
     );
@@ -177,7 +181,9 @@ export function BoltScene({ quantity }: { readonly quantity: Quantity }) {
       <Plate deep={160} wide={240}>
         <group position={[-0.3, 0, -0.12]}>
           <group scale={MILLIMETRE}>
-            <Bolt at={[0, 0, 0]} quantity={quantity} />
+            <Bolt at={[0, 0, 0]}>
+              <Mark quantity={quantity} />
+            </Bolt>
           </group>
           <group position={[0, 0, 12 * MILLIMETRE]}>
             <Rule length={7} />

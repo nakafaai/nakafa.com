@@ -1,3 +1,4 @@
+import { VERNIER_DIVISIONS } from "@repo/design-system/components/contents/physics/measurement/vernier/caliper";
 import { Caliper } from "@repo/design-system/components/three/instrument/caliper";
 import { ReadingCamera } from "@repo/design-system/components/three/instrument/camera";
 import {
@@ -59,6 +60,7 @@ export function CaliperScene({
       />
       <Plate deep={260} wide={520}>
         <Caliper
+          divisions={VERNIER_DIVISIONS}
           hold="slide"
           pointed={{
             line: [line, PLOT_COLORS.fuchsia],
