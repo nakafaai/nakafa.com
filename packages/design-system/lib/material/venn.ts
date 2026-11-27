@@ -16,8 +16,6 @@ export const VENN_COLORS = {
   // The tint printed over the chosen region, and the glow of a chosen object.
   region: "#2bb3c9",
   glow: "#ffcf70",
-  // The oiled beech tray.
-  tray: "#b08456",
   // Fruit.
   apple: "#b3242a",
   stem: "#5b3d22",
@@ -27,17 +25,11 @@ export const VENN_COLORS = {
   // Balls: a felt tennis ball and its seam, a steel ball, two plastic balls.
   felt: "#d6e03c",
   seam: "#f1f1e8",
-  steel: "#c9ccd0",
   redBall: "#c9272d",
   blueBall: "#1f5bb5",
-  // Metal pieces.
-  washer: "#b5b9be",
-  coin: "#c3c5c8",
-  // A die-cast toy car: red paint, tinted windows, black tyres, bright hubs.
+  // A die-cast toy car: red paint and tinted windows.
   car: "#b51f24",
   window: "#26323d",
-  tyre: "#1c1c1c",
-  hub: "#d2d5d9",
   // Painted wooden blocks.
   redBlock: "#b8322c",
   greenBlock: "#2f7a3b",

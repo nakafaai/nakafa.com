@@ -7,17 +7,9 @@
  * A simulation that shows one of them takes its colour from here, so it looks the same in every lesson.
  */
 export const ABACUS_COLORS = {
-  // The walnut of the base and the darker end grain of its plinth.
-  base: "#8a5a36",
-  plinth: "#6f452a",
-  // Polished brass rods and the brass of their collars.
-  brass: "#d4aa52",
-  brassShade: "#a57c2e",
   // The white board of the place-value card and its printed column rules.
   card: "#e6d3ad",
   cardRule: "#8c8577",
-  // The turned walnut pot that holds the loose beads.
-  pot: "#5b3a24",
   // Lacquered beads: units green, the base blue, its square red and its cube
   // a mustard yellow.
   beadUnits: "#2f7d4a",

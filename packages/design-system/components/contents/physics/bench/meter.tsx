@@ -1,9 +1,6 @@
 import { Post } from "@repo/design-system/components/contents/physics/bench/lead";
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
-import {
-  GlassMaterial,
-  MetalMaterial,
-} from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import type { ReactNode } from "react";
@@ -87,21 +84,12 @@ export function Meter({
     <group>
       <mesh castShadow position={[0, 0.02, 0.06]} receiveShadow>
         <boxGeometry args={[0.52, 0.04, 0.4]} />
-        <meshPhysicalMaterial
-          clearcoat={0.4}
-          color={APPARATUS_COLORS.bakelite}
-          roughness={0.42}
-        />
+        <Matter of="bakelite" />
       </mesh>
       <group position={[0, 0.04, -0.04]} rotation={[-0.3, 0, 0]}>
         <mesh castShadow position={[0, 0.2, 0]}>
           <boxGeometry args={[0.5, 0.4, 0.14]} />
-          <meshPhysicalMaterial
-            clearcoat={0.5}
-            clearcoatRoughness={0.3}
-            color={APPARATUS_COLORS.bakelite}
-            roughness={0.38}
-          />
+          <Matter of="bakelite" />
         </mesh>
         <mesh position={[0, 0.215, 0.072]}>
           <planeGeometry args={[0.44, 0.275]} />
@@ -114,19 +102,16 @@ export function Meter({
         <group position={[0, 0.095, 0.078]} rotation={[0, 0, swing]}>
           <mesh position={[0, 0.105, 0]}>
             <boxGeometry args={[0.009, 0.21, 0.003]} />
-            <meshStandardMaterial
-              color={INSTRUMENT_COLORS.dialNeedle}
-              roughness={0.4}
-            />
+            <Matter color={INSTRUMENT_COLORS.dialNeedle} of="enamel" />
           </mesh>
           <mesh rotation={[Math.PI / 2, 0, 0]}>
             <cylinderGeometry args={[0.02, 0.02, 0.008, 20]} />
-            <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.3} />
+            <Matter of="nickel" />
           </mesh>
         </group>
         <mesh position={[0, 0.215, 0.086]}>
           <planeGeometry args={[0.45, 0.285]} />
-          <GlassMaterial color={APPARATUS_COLORS.lampGlass} opacity={0.12} />
+          <Matter of="glass" opacity={0.12} />
         </mesh>
       </group>
       <Post color={APPARATUS_COLORS.leadRed} position={METER_POSTS[0]} />

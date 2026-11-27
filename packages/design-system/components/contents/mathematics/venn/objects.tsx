@@ -5,7 +5,7 @@ import {
   TennisBall,
 } from "@repo/design-system/components/contents/mathematics/venn/balls";
 import type { VennObject } from "@repo/design-system/components/contents/mathematics/venn/sets";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { VENN_COLORS } from "@repo/design-system/lib/material/venn";
 import { Array as Arr, Match } from "effect";
@@ -67,16 +67,11 @@ function Apple() {
   return (
     <group>
       <mesh castShadow geometry={geometry} receiveShadow>
-        <meshPhysicalMaterial
-          clearcoat={0.6}
-          clearcoatRoughness={0.3}
-          color={VENN_COLORS.apple}
-          roughness={0.4}
-        />
+        <Matter color={VENN_COLORS.apple} of="wax" />
       </mesh>
       <mesh position={[0.001, 0.062, 0]} rotation={[0, 0, -0.25]}>
         <cylinderGeometry args={[0.0012, 0.0016, 0.014, 8]} />
-        <meshStandardMaterial color={VENN_COLORS.stem} roughness={0.8} />
+        <Matter color={VENN_COLORS.stem} of="cork" />
       </mesh>
       <mesh
         position={[0.008, 0.064, 0.002]}
@@ -84,7 +79,11 @@ function Apple() {
         scale={[1, 0.18, 0.5]}
       >
         <sphereGeometry args={[0.009, 12, 8]} />
-        <meshStandardMaterial color={VENN_COLORS.leaf} roughness={0.6} />
+        <SurfaceMaterial
+          color={VENN_COLORS.leaf}
+          roughness={0.9}
+          surface="leaf"
+        />
       </mesh>
     </group>
   );
@@ -108,13 +107,7 @@ function Citrus({
       scale={[length / (2 * radius), 1, 1]}
     >
       <sphereGeometry args={[radius, 40, 24]} />
-      <SurfaceMaterial
-        bump={0.25}
-        color={color}
-        repeat={[4, 2]}
-        roughness={0.45}
-        surface="rubber"
-      />
+      <Matter color={color} of="rubber" />
     </mesh>
   );
 }
@@ -132,11 +125,7 @@ function Washer() {
   const geometry = useLathe(WASHER_OUTLINE);
   return (
     <mesh castShadow geometry={geometry} receiveShadow>
-      <meshPhysicalMaterial
-        color={VENN_COLORS.washer}
-        metalness={0.65}
-        roughness={0.42}
-      />
+      <Matter of="steel" />
     </mesh>
   );
 }
@@ -146,12 +135,7 @@ function Coin() {
   return (
     <mesh castShadow position={[0, 0.0009, 0]} receiveShadow>
       <cylinderGeometry args={[0.0122, 0.0122, 0.0018, 40]} />
-      <meshPhysicalMaterial
-        clearcoat={0.4}
-        color={VENN_COLORS.coin}
-        metalness={0.65}
-        roughness={0.35}
-      />
+      <Matter finish="polished" of="nickel" />
     </mesh>
   );
 }
@@ -173,13 +157,7 @@ function ToyCar() {
         radius={0.004}
         receiveShadow
       >
-        <meshPhysicalMaterial
-          clearcoat={1}
-          clearcoatRoughness={0.06}
-          color={VENN_COLORS.car}
-          metalness={0.45}
-          roughness={0.3}
-        />
+        <Matter color={VENN_COLORS.car} of="enamel" />
       </RoundedBox>
       <RoundedBox
         args={[0.038, 0.013, 0.028]}
@@ -187,24 +165,20 @@ function ToyCar() {
         position={[-0.004, 0.027, 0]}
         radius={0.004}
       >
-        <meshPhysicalMaterial
-          clearcoat={1}
-          color={VENN_COLORS.window}
-          roughness={0.1}
-        />
+        <Matter color={VENN_COLORS.window} of="epoxy" />
       </RoundedBox>
       {Arr.map(wheels, ([x, z]) => (
         <group key={`${x}-${z}`} position={[x, 0.0075, z]}>
           <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
             <cylinderGeometry args={[0.0075, 0.0075, 0.006, 20]} />
-            <meshStandardMaterial color={VENN_COLORS.tyre} roughness={0.85} />
+            <Matter of="rubber" />
           </mesh>
           <mesh
             position={[0, 0, Math.sign(z) * 0.0031]}
             rotation={[Math.PI / 2, 0, 0]}
           >
             <cylinderGeometry args={[0.0038, 0.0038, 0.0004, 16]} />
-            <MetalMaterial color={VENN_COLORS.hub} roughness={0.2} />
+            <Matter of="chrome" />
           </mesh>
         </group>
       ))}
@@ -223,13 +197,7 @@ function Block({ color }: { readonly color: string }) {
       receiveShadow
       rotation={[0, 0.3, 0]}
     >
-      <SurfaceMaterial
-        bump={0.05}
-        color={color}
-        repeat={[0.7, 0.7]}
-        roughness={0.55}
-        surface="wood"
-      />
+      <Matter color={color} of="lacquer" />
     </RoundedBox>
   );
 }
@@ -249,12 +217,7 @@ function Cup({ color }: { readonly color: string }) {
   const geometry = useLathe(CUP_OUTLINE);
   return (
     <mesh castShadow geometry={geometry} receiveShadow>
-      <meshPhysicalMaterial
-        clearcoat={0.8}
-        clearcoatRoughness={0.15}
-        color={color}
-        roughness={0.35}
-      />
+      <Matter color={color} of="enamel" />
     </mesh>
   );
 }

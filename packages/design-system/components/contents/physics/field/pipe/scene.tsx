@@ -10,13 +10,12 @@ import {
 } from "@repo/design-system/components/contents/physics/field/pipe/drag";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import {
   useVisualScene,
   useVisualStop,
 } from "@repo/design-system/components/visual/card";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
-import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
 import { Array as Arr } from "effect";
 import { useRef } from "react";
 import type { Group } from "three";
@@ -34,9 +33,12 @@ const WINDOW = Math.PI * 0.62;
 
 /** The wall of one pipe: what it is made of, and whether a slit runs down its back. */
 const WALLS = {
-  copper: { color: QUANTUM_COLORS.copper, metal: true, slit: false },
-  plastic: { color: APPARATUS_COLORS.plasticPipe, metal: false, slit: false },
-  slit: { color: QUANTUM_COLORS.copper, metal: true, slit: true },
+  copper: { matter: { of: "copper" }, slit: false },
+  plastic: {
+    matter: { color: APPARATUS_COLORS.plasticPipe, of: "plastic" },
+    slit: false,
+  },
+  slit: { matter: { of: "copper" }, slit: true },
 } as const;
 
 /** One pipe standing on the base, cut open toward the reader. A slit pipe is drawn in two shells with a gap down its back. */
@@ -69,13 +71,7 @@ function Pipe({ kind }: { readonly kind: keyof typeof WALLS }) {
               shell.length,
             ]}
           />
-          <meshPhysicalMaterial
-            clearcoat={wall.metal ? 0 : 0.5}
-            color={wall.color}
-            metalness={wall.metal ? 1 : 0}
-            roughness={wall.metal ? 0.28 : 0.45}
-            side={DoubleSide}
-          />
+          <Matter {...wall.matter} side={DoubleSide} />
         </mesh>
       ))}
     </group>
@@ -137,11 +133,7 @@ export function MagnetPipeScene({ longest }: { readonly longest: number }) {
       />
       <mesh castShadow position={[0, FOOT / 2, 0]} receiveShadow>
         <boxGeometry args={[SPACING * 2 + 0.9, FOOT, 0.8]} />
-        <meshPhysicalMaterial
-          clearcoat={0.4}
-          color={APPARATUS_COLORS.bakeliteBrown}
-          roughness={0.5}
-        />
+        <Matter of="walnut" />
       </mesh>
       {Arr.map([-1, 1] as const, (side) => (
         <mesh
@@ -150,19 +142,19 @@ export function MagnetPipeScene({ longest }: { readonly longest: number }) {
           position={[side * (SPACING + 0.36), FOOT + TALL / 2 + 0.1, -0.2]}
         >
           <cylinderGeometry args={[0.022, 0.022, TALL + 0.2, 14]} />
-          <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.25} />
+          <Matter of="nickel" />
         </mesh>
       ))}
       <mesh castShadow position={[0, FOOT + TALL * 0.8, -0.2]}>
         <boxGeometry args={[SPACING * 2 + 0.8, 0.06, 0.05]} />
-        <MetalMaterial color={APPARATUS_COLORS.caseSteel} roughness={0.4} />
+        <Matter of="steel" />
       </mesh>
       {Arr.map(PIPES, (pipe, index) => (
         <group key={pipe} position={[(index - 1) * SPACING, 0, 0]}>
           <Pipe kind={pipe} />
           <mesh position={[0, FOOT + TALL * 0.8, -0.16]}>
             <boxGeometry args={[0.34, 0.07, 0.08]} />
-            <MetalMaterial color={APPARATUS_COLORS.caseSteel} roughness={0.4} />
+            <Matter of="steel" />
           </mesh>
           <Tag position={[0, FOOT + TALL + 0.24, 0]}>
             <InlineMath math={`${index + 1}`} />
@@ -179,21 +171,13 @@ export function MagnetPipeScene({ longest }: { readonly longest: number }) {
               <cylinderGeometry
                 args={[RADIUS - 0.035, RADIUS - 0.035, 0.08, 32]}
               />
-              <meshPhysicalMaterial
-                clearcoat={0.6}
-                color={APPARATUS_COLORS.poleNorth}
-                metalness={0.5}
-                roughness={0.3}
-              />
+              <Matter color={APPARATUS_COLORS.poleNorth} of="enamel" />
             </mesh>
             <mesh castShadow position={[0, -0.04, 0]}>
               <cylinderGeometry
                 args={[RADIUS - 0.035, RADIUS - 0.035, 0.08, 32]}
               />
-              <MetalMaterial
-                color={APPARATUS_COLORS.neodymium}
-                roughness={0.2}
-              />
+              <Matter of="nickel" />
             </mesh>
             <mesh rotation={[Math.PI / 2, 0, 0]} visible={false}>
               <torusGeometry
@@ -205,10 +189,10 @@ export function MagnetPipeScene({ longest }: { readonly longest: number }) {
                   pipe === "slit" ? Math.PI * 1.5 : Math.PI * 2,
                 ]}
               />
-              <meshStandardMaterial
+              <Matter
                 color={APPARATUS_COLORS.eddyGlow}
-                emissive={APPARATUS_COLORS.eddyGlow}
-                emissiveIntensity={pipe === "slit" ? 0.9 : 4}
+                glow={pipe === "slit" ? 0.45 : 2}
+                of="light"
               />
             </mesh>
           </group>

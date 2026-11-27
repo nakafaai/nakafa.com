@@ -3,7 +3,6 @@ import { useFrame } from "@react-three/fiber";
 import { swing } from "@repo/design-system/components/contents/mathematics/logic/motion";
 import {
   BASE_TOP,
-  BrassMaterial,
   PartBase,
   Post,
 } from "@repo/design-system/components/contents/mathematics/logic/parts";
@@ -11,7 +10,7 @@ import {
   KNIFE,
   PARTS,
 } from "@repo/design-system/components/contents/mathematics/logic/rig";
-import { LOGIC_COLORS } from "@repo/design-system/lib/material/logic";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { Array as Arr } from "effect";
 import { useRef } from "react";
 import type { Group } from "three";
@@ -36,7 +35,7 @@ function Cheeks({
           position={[x, BASE_TOP + height / 2, side * 0.0019]}
         >
           <boxGeometry args={[0.0034, height, 0.0012]} />
-          <BrassMaterial roughness={0.3} />
+          <Matter of="brass" />
         </mesh>
       ))}
     </>
@@ -48,7 +47,7 @@ function Strap({ from, to }: { readonly from: number; readonly to: number }) {
   return (
     <mesh position={[(from + to) / 2, BASE_TOP + 0.0003, 0]} receiveShadow>
       <boxGeometry args={[Math.abs(to - from), 0.0006, 0.0052]} />
-      <BrassMaterial roughness={0.38} />
+      <Matter of="brass" />
     </mesh>
   );
 }
@@ -104,30 +103,20 @@ export function KnifeSwitch({
       >
         <mesh castShadow position={[KNIFE.blade / 2, 0, 0]}>
           <boxGeometry args={[KNIFE.blade, 0.0048, 0.0013]} />
-          <BrassMaterial roughness={0.26} />
+          <Matter of="brass" />
         </mesh>
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.0011, 0.0011, 0.0062, 12]} />
-          <BrassMaterial roughness={0.3} />
+          <Matter of="brass" />
         </mesh>
         <group position={[KNIFE.blade - 0.0035, 0.0024, 0]}>
           <mesh castShadow position={[0, 0.006, 0]}>
             <cylinderGeometry args={[0.0028, 0.0034, 0.012, 20]} />
-            <meshPhysicalMaterial
-              clearcoat={0.8}
-              clearcoatRoughness={0.15}
-              color={LOGIC_COLORS.handle}
-              roughness={0.3}
-            />
+            <Matter of="bakelite" />
           </mesh>
           <mesh castShadow position={[0, 0.0125, 0]}>
             <sphereGeometry args={[0.0036, 20, 14]} />
-            <meshPhysicalMaterial
-              clearcoat={0.8}
-              clearcoatRoughness={0.15}
-              color={LOGIC_COLORS.handle}
-              roughness={0.3}
-            />
+            <Matter of="bakelite" />
           </mesh>
         </group>
       </group>

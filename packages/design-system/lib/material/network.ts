@@ -9,8 +9,6 @@
  * them takes its colour from here, so it looks the same in every lesson.
  */
 export const NETWORK_COLORS = {
-  // The walnut frame of the map.
-  frame: "#5b3a24",
   // The map's hypsometric tints, valley floor to summit, and its contour ink.
   valley: "#7fa45f",
   meadow: "#b7c27a",
@@ -21,9 +19,6 @@ export const NETWORK_COLORS = {
   road: "#3b3d42",
   degreeLit: "#ffb21f",
   routeLit: "#3f93ff",
-  // Polished brass pins and grommets, on steel shafts.
-  brass: "#d4aa52",
-  steel: "#c5c9cd",
   // The enamel plates of the road lengths.
   sign: "#f6f3ea",
   // The enamelled pin heads of the trip's start and end.

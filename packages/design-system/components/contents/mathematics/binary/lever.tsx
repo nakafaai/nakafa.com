@@ -1,7 +1,6 @@
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
-import { LAMP_COLORS } from "@repo/design-system/lib/material/lamp";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { useRef } from "react";
 import type { Group } from "three";
 
@@ -55,7 +54,7 @@ export function ToggleSwitch({ on }: { readonly on: boolean }) {
         radius={0.0005}
         receiveShadow
       >
-        <MetalMaterial color={LAMP_COLORS.switchPlate} roughness={0.42} />
+        <Matter of="steel" />
       </RoundedBox>
       <mesh
         castShadow
@@ -64,7 +63,7 @@ export function ToggleSwitch({ on }: { readonly on: boolean }) {
         <cylinderGeometry
           args={[SWITCH.nut.radius, SWITCH.nut.radius, SWITCH.nut.height, 6]}
         />
-        <MetalMaterial color={LAMP_COLORS.chrome} roughness={0.18} />
+        <Matter of="chrome" />
       </mesh>
       <mesh
         castShadow
@@ -73,16 +72,7 @@ export function ToggleSwitch({ on }: { readonly on: boolean }) {
         <cylinderGeometry
           args={[SWITCH.knurl.radius, SWITCH.knurl.radius, 0.0022, 40]}
         />
-        <meshPhysicalMaterial
-          args={[
-            {
-              color: LAMP_COLORS.chrome,
-              flatShading: true,
-              metalness: 1,
-              roughness: 0.3,
-            },
-          ]}
-        />
+        <Matter finish="knurled" of="chrome" />
       </mesh>
       <mesh
         castShadow
@@ -100,7 +90,7 @@ export function ToggleSwitch({ on }: { readonly on: boolean }) {
             20,
           ]}
         />
-        <MetalMaterial color={LAMP_COLORS.chrome} roughness={0.22} />
+        <Matter of="chrome" />
       </mesh>
       <group
         position={[
@@ -120,11 +110,11 @@ export function ToggleSwitch({ on }: { readonly on: boolean }) {
               32,
             ]}
           />
-          <MetalMaterial color={LAMP_COLORS.chrome} roughness={0.12} />
+          <Matter of="chrome" />
         </mesh>
         <mesh castShadow position={[0, SWITCH.lever.length, 0]}>
           <sphereGeometry args={[SWITCH.lever.tip * 1.15, 28, 20]} />
-          <MetalMaterial color={LAMP_COLORS.chrome} roughness={0.12} />
+          <Matter of="chrome" />
         </mesh>
       </group>
     </group>

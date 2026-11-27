@@ -8,13 +8,8 @@ import {
 } from "@repo/design-system/components/contents/physics/bench/vessel";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import {
-  GlassMaterial,
-  LiquidMaterial,
-  MetalMaterial,
-} from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
 import { useEffect, useMemo } from "react";
 import { CanvasTexture, SRGBColorSpace } from "three";
@@ -101,19 +96,11 @@ export function ManometerScene({
       />
       <mesh castShadow position={[0, 0.04, -0.02]} receiveShadow>
         <boxGeometry args={[1.3, 0.08, 0.6]} />
-        <meshPhysicalMaterial
-          clearcoat={0.4}
-          color={APPARATUS_COLORS.bakeliteBrown}
-          roughness={0.5}
-        />
+        <Matter of="walnut" />
       </mesh>
       <mesh castShadow position={[0, 1.24, -0.13]} receiveShadow>
         <boxGeometry args={[1.02, 2.34, 0.05]} />
-        <meshPhysicalMaterial
-          clearcoat={0.3}
-          color={APPARATUS_COLORS.bakeliteBrown}
-          roughness={0.55}
-        />
+        <Matter of="walnut" />
       </mesh>
       <mesh position={[0, 1.36, -0.1]}>
         <planeGeometry args={[0.36, 1.72]} />
@@ -147,21 +134,21 @@ export function ManometerScene({
       </group>
       <mesh position={[0, BEND, 0]} renderOrder={3} rotation={[0, 0, Math.PI]}>
         <torusGeometry args={[ARM, BORE + 0.012, 16, 48, Math.PI]} />
-        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.22} />
+        <Matter of="glass" opacity={0.22} />
       </mesh>
       <mesh position={[0, BEND, 0]} renderOrder={1} rotation={[0, 0, Math.PI]}>
         <torusGeometry args={[ARM, BORE, 14, 48, Math.PI]} />
-        <LiquidMaterial color={color} opacity={dense ? 0.96 : 0.74} />
+        <Matter color={color} of="liquid" opacity={dense ? 0.96 : 0.74} />
       </mesh>
       <Lead color={APPARATUS_COLORS.rubberTube} points={HOSE} radius={0.05} />
       <group position={[-ARM - 1.2, 0, 0.3]}>
         <mesh castShadow position={[0, 0.3, 0]}>
           <cylinderGeometry args={[0.035, 0.035, 0.6, 16]} />
-          <MetalMaterial color={QUANTUM_COLORS.brass} roughness={0.28} />
+          <Matter of="brass" />
         </mesh>
         <mesh castShadow position={[0, 0.03, 0]}>
           <cylinderGeometry args={[0.16, 0.18, 0.06, 32]} />
-          <MetalMaterial color={QUANTUM_COLORS.brass} roughness={0.32} />
+          <Matter of="brass" />
         </mesh>
         <mesh
           castShadow
@@ -169,11 +156,7 @@ export function ManometerScene({
           rotation={[0, 0, Math.PI / 2]}
         >
           <cylinderGeometry args={[0.02, 0.02, 0.2, 12]} />
-          <meshPhysicalMaterial
-            clearcoat={0.5}
-            color={APPARATUS_COLORS.leadRed}
-            roughness={0.4}
-          />
+          <Matter color={APPARATUS_COLORS.leadRed} of="plastic" />
         </mesh>
       </group>
       <Tag position={[-ARM - 0.95, TOP + 0.34, 0.1]}>

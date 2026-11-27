@@ -1,4 +1,4 @@
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
 
 /**
@@ -20,19 +20,15 @@ export function Stand({
     <group>
       <mesh castShadow position={[-0.12, 0.025, 0]} receiveShadow>
         <boxGeometry args={[0.62, 0.05, 0.42]} />
-        <meshPhysicalMaterial
-          clearcoat={0.5}
-          color={APPARATUS_COLORS.caseDark}
-          roughness={0.45}
-        />
+        <Matter color={APPARATUS_COLORS.caseDark} of="enamel" />
       </mesh>
       <mesh castShadow position={[0, tall / 2, 0]}>
         <cylinderGeometry args={[0.022, 0.022, tall, 16]} />
-        <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.24} />
+        <Matter of="steel" />
       </mesh>
       <mesh castShadow position={[0, height, 0]}>
         <boxGeometry args={[0.09, 0.09, 0.09]} />
-        <MetalMaterial color={APPARATUS_COLORS.caseSteel} roughness={0.4} />
+        <Matter of="iron" />
       </mesh>
       <mesh
         castShadow
@@ -40,7 +36,7 @@ export function Stand({
         rotation={[0, 0, Math.PI / 2]}
       >
         <cylinderGeometry args={[0.016, 0.016, reach, 12]} />
-        <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.28} />
+        <Matter of="steel" />
       </mesh>
       <mesh
         castShadow
@@ -48,10 +44,7 @@ export function Stand({
         rotation={[Math.PI / 2, 0, 0]}
       >
         <torusGeometry args={[0.05, 0.016, 10, 28]} />
-        <meshStandardMaterial
-          color={APPARATUS_COLORS.beechEnd}
-          roughness={0.85}
-        />
+        <Matter of="cork" />
       </mesh>
     </group>
   );

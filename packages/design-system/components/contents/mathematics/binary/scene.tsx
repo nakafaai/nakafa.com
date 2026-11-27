@@ -30,16 +30,14 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { LAMP_COLORS } from "@repo/design-system/lib/material/lamp";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useRef } from "react";
-import type { PointLight } from "three";
 
 /** Where each group's digit stands on the bench, just in front of the case. */
 const DIGIT_ROW = CASE.depth / 2 + 0.02;
@@ -49,12 +47,6 @@ const PLATE = { depth: 0.04, height: 0.0012, width: 0.062 } as const;
 
 /** The two colours that tell neighbouring groups apart. */
 const GROUP_COLORS = [PLOT_COLORS.teal, PLOT_COLORS.violet] as const;
-
-/** How bright the panel's shared light is for each fully lit lamp. */
-const LIGHT_PER_LAMP = 0.0015;
-
-/** How high over the faceplate the shared light stands: the middle of a globe. */
-const LIGHT_HEIGHT = 0.08;
 
 /** The height of the top of a bulb above the faceplate, where its place value floats. */
 const LAMP_TOP = HOLDER_HEIGHT + GLOBE_HEIGHT;
@@ -109,7 +101,6 @@ export function BinaryScene({
   const lamps = lampCount(bits);
   const firstLamp = slots - lamps;
   const width = slots * PITCH + CASE.margin * 2;
-  const glows = useRef(Arr.makeBy(lamps, () => 0));
   const padded = paddedSlots(bits, grouping);
 
   return (
@@ -119,7 +110,6 @@ export function BinaryScene({
         <LabBench width={4} />
       </group>
       <PanelCase slots={slots} width={width} />
-      <PanelLight glows={glows} lamps={lamps} slots={slots} />
       {Arr.map(Arr.range(0, slots - 1), (slot) =>
         slot < firstLamp ? (
           <BlankSlot
@@ -130,8 +120,6 @@ export function BinaryScene({
           />
         ) : (
           <LampSlot
-            glows={glows}
-            index={slot - firstLamp}
             ink={ink}
             key={slot}
             lift={narrow && (slot - firstLamp) % 2 === 1 ? STAGGER : 0}
@@ -195,58 +183,12 @@ export function PanelCounter({
 }
 
 /**
- * The one warm light the lit lamps throw on the panel, standing over the
- * glow-weighted middle of the lit lamps with the strength of their glow
- * together, so the panel brightens as more lamps come on.
- */
-function PanelLight({
-  glows,
-  lamps,
-  slots,
-}: {
-  readonly glows: { readonly current: number[] };
-  readonly lamps: number;
-  readonly slots: number;
-}) {
-  const light = useRef<PointLight>(null);
-  useFrame(() => {
-    const current = light.current;
-    if (current === null) {
-      return;
-    }
-    const levels = glows.current;
-    const total = Arr.reduce(levels, 0, (sum, level) => sum + level);
-    const middle = Arr.reduce(
-      levels,
-      0,
-      (sum, level, index) => sum + level * slotX(slots - lamps + index, slots)
-    );
-    current.intensity = total * LIGHT_PER_LAMP;
-    current.position.set(
-      total > 0 ? middle / total : 0,
-      TOP + LIGHT_HEIGHT,
-      ROW.bulb
-    );
-  });
-  return (
-    <pointLight
-      color={LAMP_COLORS.lightWarm}
-      distance={0.9}
-      intensity={0}
-      ref={light}
-    />
-  );
-}
-
-/**
  * One lamp's column: its bulb at the back, its switch in front of it, and
  * its brass plate. The place value in base ten stands over the bulb; the
  * plate reads it as a power of two, except on a narrow card, where the
  * plates sit too close for a label each.
  */
 function LampSlot({
-  glows,
-  index,
   ink,
   lift,
   on,
@@ -255,8 +197,6 @@ function LampSlot({
   showPower,
   x,
 }: {
-  readonly glows: { readonly current: number[] };
-  readonly index: number;
   readonly ink: string;
   readonly lift: number;
   readonly on: boolean;
@@ -268,7 +208,7 @@ function LampSlot({
   return (
     <group position={[x, TOP, 0]}>
       <group position={[0, 0, ROW.bulb]}>
-        <GlobeBulb glows={glows} index={index} on={on} />
+        <GlobeBulb on={on} />
       </group>
       <group position={[0, 0, ROW.toggle]}>
         <ToggleSwitch on={on} />
@@ -307,7 +247,7 @@ function PlacePlate() {
         radius={0.0005}
         receiveShadow
       >
-        <MetalMaterial color={LAMP_COLORS.brassPlate} roughness={0.34} />
+        <Matter finish="brushed" of="brass" />
       </RoundedBox>
       {Arr.map([-1, 1] as const, (side) => (
         <mesh
@@ -315,7 +255,7 @@ function PlacePlate() {
           position={[side * (PLATE.width / 2 - 0.005), PLATE.height, 0]}
         >
           <cylinderGeometry args={[0.0018, 0.002, 0.001, 12]} />
-          <MetalMaterial color={LAMP_COLORS.screw} roughness={0.3} />
+          <Matter of="steel" />
         </mesh>
       ))}
     </group>
@@ -341,7 +281,7 @@ function BlankSlot({
         <cylinderGeometry
           args={[HOLDER.flange.radius * 0.96, HOLDER.flange.radius, 0.003, 40]}
         />
-        <MetalMaterial color={LAMP_COLORS.blankCover} roughness={0.4} />
+        <Matter of="steel" />
       </mesh>
       <PlacePlate />
       {padded ? (
@@ -383,12 +323,12 @@ function GroupBracket({
     <group position={[middle, TOP, ROW.bracket]}>
       <mesh position={[0, 0.0004, 0]}>
         <boxGeometry args={[span, 0.0008, 0.0034]} />
-        <meshStandardMaterial color={color} roughness={0.5} />
+        <Matter color={color} of="paint" />
       </mesh>
       {Arr.map([-1, 1] as const, (side) => (
         <mesh key={side} position={[(side * span) / 2, 0.0004, -0.0045]}>
           <boxGeometry args={[0.0034, 0.0008, 0.012]} />
-          <meshStandardMaterial color={color} roughness={0.5} />
+          <Matter color={color} of="paint" />
         </mesh>
       ))}
       {children}

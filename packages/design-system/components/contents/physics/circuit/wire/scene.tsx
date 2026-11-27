@@ -2,13 +2,12 @@ import { OakBoard } from "@repo/design-system/components/contents/physics/bench/
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { DryCell } from "@repo/design-system/components/contents/physics/bench/cell";
 import { Lead } from "@repo/design-system/components/contents/physics/bench/lead";
-import { nichromeColor } from "@repo/design-system/components/contents/physics/bench/resistor";
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
 import { wireRatios } from "@repo/design-system/components/contents/physics/circuit/current";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
+import { Shine } from "@repo/design-system/components/three/matter/shine";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
-import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 
@@ -47,31 +46,21 @@ function Standoff({ position }: { readonly position: Point }) {
     <group position={position}>
       <mesh castShadow position={[0, HEIGHT / 2 - 0.02, 0]} receiveShadow>
         <cylinderGeometry args={[0.032, 0.04, HEIGHT - 0.04, 24]} />
-        <meshPhysicalMaterial
-          clearcoat={0.7}
-          clearcoatRoughness={0.2}
-          color={APPARATUS_COLORS.porcelain}
-          roughness={0.3}
-        />
+        <Matter of="porcelain" />
       </mesh>
       {Arr.map(SHEDS, (y) => (
         <mesh castShadow key={y} position={[0, y, 0]}>
           <cylinderGeometry args={[0.046, 0.058, 0.024, 24]} />
-          <meshPhysicalMaterial
-            clearcoat={0.7}
-            clearcoatRoughness={0.2}
-            color={APPARATUS_COLORS.porcelain}
-            roughness={0.3}
-          />
+          <Matter of="porcelain" />
         </mesh>
       ))}
       <mesh castShadow position={[0, 0.012, 0]}>
         <cylinderGeometry args={[0.06, 0.064, 0.024, 24]} />
-        <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.3} />
+        <Matter of="nickel" />
       </mesh>
       <mesh castShadow position={[0, HEIGHT, 0]}>
         <cylinderGeometry args={[0.03, 0.03, 0.07, 6]} />
-        <MetalMaterial color={QUANTUM_COLORS.brass} roughness={0.28} />
+        <Matter of="brass" />
       </mesh>
     </group>
   );
@@ -89,8 +78,6 @@ function Wire({
   readonly radius: number;
   readonly row: number;
 }) {
-  const color = nichromeColor(glow);
-
   return (
     <group>
       <Standoff position={[LEFT, 0, row]} />
@@ -101,22 +88,9 @@ function Wire({
         rotation={[0, 0, Math.PI / 2]}
       >
         <cylinderGeometry args={[radius, radius, length, 20]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={glow * glow * 2.4}
-          metalness={0.55}
-          roughness={0.4}
-        />
+        <Matter glow={glow} of="nichrome" />
+        <Shine glow={glow} of="nichrome" />
       </mesh>
-      {glow > 0.25 ? (
-        <pointLight
-          color={APPARATUS_COLORS.nichromeWarm}
-          distance={1.4}
-          intensity={glow * glow * 0.25}
-          position={[LEFT + length / 2, HEIGHT + 0.05, row]}
-        />
-      ) : null}
     </group>
   );
 }

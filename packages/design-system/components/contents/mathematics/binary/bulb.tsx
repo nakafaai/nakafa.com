@@ -12,17 +12,16 @@ import {
   LEADS,
 } from "@repo/design-system/components/contents/mathematics/binary/globe";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
+import { Shine } from "@repo/design-system/components/three/matter/shine";
 import { LAMP_COLORS } from "@repo/design-system/lib/material/lamp";
 import { Array as Arr } from "effect";
-import type { RefObject } from "react";
 import { useEffect, useMemo, useRef } from "react";
-import type { MeshPhysicalMaterial, MeshStandardMaterial } from "three";
+import type { MeshPhysicalMaterial } from "three";
 import {
   AdditiveBlending,
   CatmullRomCurve3,
   Color,
-  DoubleSide,
   LatheGeometry,
   ShaderMaterial,
   TubeGeometry,
@@ -43,7 +42,7 @@ export const HOLDER_HEIGHT = HOLDER.flange.height + HOLDER.body.height;
 const FILAMENT_BRIGHTNESS = 14;
 
 /** How strongly a fully lit globe's glass glows with the light inside it. */
-const GLASS_GLOW = 1.6;
+const GLASS_GLOW = 0.2;
 
 /** How wide the halo around a lit globe spreads, in metres across. */
 const HALO_SIZE = 0.2;
@@ -66,31 +65,23 @@ void main() {
   gl_FragColor = vec4(color * a, a);
 }`;
 
-/** The cold, dim and hot colours of the filament, built once. */
+/** The cold, dim and hot colours of the filament and the glow of the lit glass, built once. */
 const SHADES = {
   cold: new Color(LAMP_COLORS.filamentCold),
   dim: new Color(LAMP_COLORS.filamentDim),
+  glow: new Color(LAMP_COLORS.glow),
   hot: new Color(LAMP_COLORS.filamentHot),
 };
 
 /**
  * One clear G45 globe bulb standing in its porcelain holder, its tungsten
  * filament warming up when its switch turns on and cooling when it turns
- * off. A lit bulb lights its glass from within and throws a soft halo; the
- * bulb writes its glow into `glows` at `index`, so the panel's one shared
- * light can follow every lamp.
+ * off. A lit bulb lights its glass from within, throws a soft halo and
+ * lights the panel around it.
  */
-export function GlobeBulb({
-  glows,
-  index,
-  on,
-}: {
-  readonly glows: RefObject<number[]>;
-  readonly index: number;
-  readonly on: boolean;
-}) {
+export function GlobeBulb({ on }: { readonly on: boolean }) {
   const glow = useRef(on ? 1 : 0);
-  const filament = useRef<MeshStandardMaterial>(null);
+  const filament = useRef<MeshPhysicalMaterial>(null);
   const glass = useRef<MeshPhysicalMaterial>(null);
   const envelope = useMemo(
     () =>
@@ -140,11 +131,10 @@ export function GlobeBulb({
     [coil, envelope, halo]
   );
 
-  // Bulbs heat before the panel's shared light reads their glow.
+  // A bulb heats before its light reads its glow.
   useFrame((state, delta) => {
     glow.current = heatFilament(glow.current, on, Math.min(delta, 0.1));
     const level = glow.current;
-    glows.current[index] = level;
     const shade = filament.current;
     if (shade !== null) {
       shade.emissive.copy(SHADES.dim).lerp(SHADES.hot, Math.sqrt(level));
@@ -152,6 +142,7 @@ export function GlobeBulb({
       shade.color.copy(SHADES.cold);
     }
     if (glass.current !== null) {
+      glass.current.emissive.copy(SHADES.glow);
       glass.current.emissiveIntensity = GLASS_GLOW * level;
     }
     const strength = halo.uniforms.strength;
@@ -175,21 +166,7 @@ export function GlobeBulb({
       <group position={[0, HOLDER_HEIGHT, 0]}>
         <ScrewCap />
         <mesh geometry={envelope} renderOrder={2}>
-          <meshPhysicalMaterial
-            clearcoat={1}
-            clearcoatRoughness={0.04}
-            color={LAMP_COLORS.globeGlass}
-            depthWrite={false}
-            emissive={LAMP_COLORS.glow}
-            emissiveIntensity={0}
-            ior={1.52}
-            metalness={0}
-            opacity={0.12}
-            ref={glass}
-            roughness={0.04}
-            side={DoubleSide}
-            transparent
-          />
+          <Matter of="glass" opacity={0.12} ref={glass} />
         </mesh>
         <mesh
           position={[0, GLOBE.cap.height + GLOBE.stem.top / 2, 0]}
@@ -203,14 +180,7 @@ export function GlobeBulb({
               12,
             ]}
           />
-          <meshPhysicalMaterial
-            clearcoat={1}
-            color={LAMP_COLORS.stemGlass}
-            depthWrite={false}
-            opacity={0.22}
-            roughness={0.1}
-            transparent
-          />
+          <Matter of="glass" />
         </mesh>
         {Arr.map([-1, 1] as const, (side) => {
           const wire = lead(side);
@@ -226,7 +196,7 @@ export function GlobeBulb({
               rotation={[0, 0, -tilt]}
             >
               <cylinderGeometry args={[0.000_28, 0.000_28, wire.length, 6]} />
-              <MetalMaterial color={LAMP_COLORS.leadWire} roughness={0.4} />
+              <Matter of="solder" />
             </mesh>
           );
         })}
@@ -241,17 +211,11 @@ export function GlobeBulb({
               6,
             ]}
           />
-          <MetalMaterial color={LAMP_COLORS.leadWire} roughness={0.4} />
+          <Matter of="solder" />
         </mesh>
         <mesh geometry={coil}>
-          <meshStandardMaterial
-            color={LAMP_COLORS.filamentCold}
-            emissive={LAMP_COLORS.filamentHot}
-            emissiveIntensity={0}
-            metalness={0.6}
-            ref={filament}
-            roughness={0.5}
-          />
+          <Matter of="tungsten" ref={filament} />
+          <Shine glow={1} level={glow} of="tungsten" />
         </mesh>
         <CameraBounds exclude>
           <Billboard position={[0, GLOBE_CENTRE, 0]}>
@@ -285,12 +249,7 @@ function Holder() {
             40,
           ]}
         />
-        <meshPhysicalMaterial
-          clearcoat={0.8}
-          clearcoatRoughness={0.15}
-          color={LAMP_COLORS.porcelain}
-          roughness={0.3}
-        />
+        <Matter of="porcelain" />
       </mesh>
       <mesh
         castShadow
@@ -305,23 +264,14 @@ function Holder() {
             40,
           ]}
         />
-        <meshPhysicalMaterial
-          clearcoat={0.8}
-          clearcoatRoughness={0.15}
-          color={LAMP_COLORS.porcelain}
-          roughness={0.3}
-        />
+        <Matter of="porcelain" />
       </mesh>
       <mesh
         position={[0, HOLDER_HEIGHT - 0.0005, 0]}
         rotation={[Math.PI / 2, 0, 0]}
       >
         <torusGeometry args={[HOLDER.body.radius * 0.93, 0.0011, 10, 40]} />
-        <meshPhysicalMaterial
-          clearcoat={0.8}
-          color={LAMP_COLORS.porcelain}
-          roughness={0.3}
-        />
+        <Matter of="porcelain" />
       </mesh>
       {Arr.map([-1, 1] as const, (side) => (
         <mesh
@@ -333,7 +283,7 @@ function Holder() {
           ]}
         >
           <cylinderGeometry args={[0.0022, 0.0024, 0.0012, 14]} />
-          <MetalMaterial color={LAMP_COLORS.screw} roughness={0.35} />
+          <Matter of="steel" />
         </mesh>
       ))}
     </group>
@@ -348,7 +298,7 @@ function ScrewCap() {
         <cylinderGeometry
           args={[GLOBE.cap.radius, GLOBE.cap.radius, GLOBE.cap.height, 32]}
         />
-        <MetalMaterial color={LAMP_COLORS.brassCap} roughness={0.28} />
+        <Matter of="brass" />
       </mesh>
       {Arr.map(Arr.range(1, 3), (ring) => (
         <mesh
@@ -357,7 +307,7 @@ function ScrewCap() {
           rotation={[Math.PI / 2, 0, 0]}
         >
           <torusGeometry args={[GLOBE.cap.radius, 0.0009, 8, 32]} />
-          <MetalMaterial color={LAMP_COLORS.brassCap} roughness={0.28} />
+          <Matter of="brass" />
         </mesh>
       ))}
     </group>
