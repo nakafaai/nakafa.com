@@ -164,7 +164,7 @@ export const measureContent = Effect.fn("camera.measureContent")(function* ({
 export function silhouetteBounds(silhouette: CameraSilhouette) {
   return Match.value(silhouette).pipe(
     Match.discriminatorsExhaustive("kind")({
-      hull: ({ points }) => new Box3().setFromPoints(points),
+      hull: ({ points }) => new Box3().setFromPoints([...points]),
       ring: ({ center, normal, radius }) => {
         // A circle reaches radius * sqrt(1 - n^2) along each world axis.
         const reach = new Vector3(
