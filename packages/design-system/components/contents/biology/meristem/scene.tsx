@@ -180,14 +180,14 @@ function SecondaryTrunkView() {
       <Leader
         anchorX="right"
         at={[-0.08, 1, 0]}
-        to={onFace(cross.xylemRadius * 0.7, Math.PI + 0.5)}
+        to={onFace(cross.xylemRadius * 0.7, Math.PI + 0.95)}
       >
         <span>{parts.secondaryXylem}</span>
       </Leader>
       <Leader
         anchorX="left"
         at={[0.08, 1, 0]}
-        to={onFace(cross.xylemRadius, -0.5)}
+        to={onFace(cross.xylemRadius, -1.3)}
       >
         <span>{parts.vascularCambium}</span>
       </Leader>
@@ -200,8 +200,8 @@ function SecondaryTrunkView() {
       </Leader>
       <Leader
         anchorX="left"
-        at={[0.24, 0.8, 0]}
-        to={onFace(cross.xylemRadius + 0.035, -0.2)}
+        at={[0.34, 0.76, 0]}
+        to={onFace(cross.xylemRadius + 0.035, 0.3)}
       >
         <span>{parts.secondaryPhloem}</span>
       </Leader>
