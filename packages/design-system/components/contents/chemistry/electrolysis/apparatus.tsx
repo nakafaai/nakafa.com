@@ -11,6 +11,7 @@ import {
   BENCH_LABEL_OUTLINE,
 } from "@repo/design-system/components/contents/chemistry/label";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { LanternBattery } from "@repo/design-system/components/three/apparatus/battery";
 import { Bubble } from "@repo/design-system/components/three/apparatus/bubble";
 import {
   boreAt,
