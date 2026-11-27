@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   growHabit,
+  growSward,
   HABITS,
   LEAF_STRIDE,
   stageHabit,
@@ -91,5 +92,41 @@ describe("stageHabit", () => {
       annual.height / HABITS.herb.height / 2
     );
     expect(rosette.leaves).toBeGreaterThan(8);
+  });
+});
+
+describe("growSward", () => {
+  it("stands every blade inside the sward, leaning but never lying down", () => {
+    const sward = leavesOf(
+      growSward({ blade: 0.1, count: 400, radius: 2, seed: 5 })
+    );
+
+    expect(sward).toHaveLength(400);
+    for (const blade of sward) {
+      expect(Math.hypot(blade.place[0], blade.place[2])).toBeLessThanOrEqual(2);
+      expect(blade.place[1]).toBe(0);
+      expect(blade.heading[1]).toBeGreaterThan(0.8);
+      expect(blade.size).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it("grows in tufts of unequal height that shorten to nothing at the rim", () => {
+    const sward = leavesOf(
+      growSward({ blade: 0.1, count: 2000, radius: 2, seed: 5 })
+    );
+    const inner = Arr.filter(
+      sward,
+      (blade) => Math.hypot(blade.place[0], blade.place[2]) < 1
+    );
+    const rim = Arr.filter(
+      sward,
+      (blade) => Math.hypot(blade.place[0], blade.place[2]) > 1.96
+    );
+    const sizes = Arr.map(inner, (blade) => blade.size);
+
+    expect(Math.max(...sizes)).toBeGreaterThan(2 * Math.min(...sizes));
+    expect(Math.max(...Arr.map(rim, (blade) => blade.size))).toBeLessThan(
+      Math.max(...sizes) / 4
+    );
   });
 });
