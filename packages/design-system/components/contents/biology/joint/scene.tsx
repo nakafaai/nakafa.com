@@ -1,95 +1,220 @@
-import { useGLTF } from "@react-three/drei";
-import { useFrame, useThree } from "@react-three/fiber";
-import { prepareAnatomicalScene } from "@repo/design-system/components/contents/biology/anatomy";
-import { HRA_KNEE_JOINT_ASSET } from "@repo/design-system/components/contents/biology/assets";
+import { useFrame } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
-import {
-  buildBandGeometry,
-  buildCentrumGeometry,
-  buildLongBoneGeometry,
-  buildMuscleBellyGeometry,
-  buildSutureSeamGeometry,
-} from "@repo/design-system/components/contents/biology/joint/geometry";
 import type {
   JointKind,
   JointPart,
 } from "@repo/design-system/components/contents/biology/joint/model";
 import { jointAnglesAt } from "@repo/design-system/components/contents/biology/joint/model";
 import {
+  ballForms,
+  discForms,
+  ELBOW_INSERTION,
+  forearmForms,
+  humerusForms,
+  SHOULDER_INSERTION,
+  scapulaForms,
+  seamForms,
+  vaultForms,
+  vertebraForms,
+} from "@repo/design-system/components/contents/biology/joint/skeleton";
+import {
+  bulge,
+  stretchBetween,
+} from "@repo/design-system/components/contents/biology/joint/strap";
+import type { Synovial } from "@repo/design-system/components/contents/biology/joint/tissue";
+import {
+  bellyForms,
+  capsuleForms,
+  collateralForms,
+  fixedCartilage,
+  fluidForms,
+  headCartilage,
+  tendonForms,
+} from "@repo/design-system/components/contents/biology/joint/tissue";
+import {
   SimulationTicker,
   simulationStep,
 } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
+import { Body } from "@repo/design-system/components/three/organism/body";
+import { Skin } from "@repo/design-system/components/three/organism/skin";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { SKELETON_COLORS } from "@repo/design-system/lib/material/skeleton";
-import { useEffect, useMemo, useRef } from "react";
+import { useRef } from "react";
 import type { Group } from "three";
-import { DoubleSide } from "three";
+import { Vector3 } from "three";
 
-const SKELETON_RULES = [
-  {
-    clearcoat: 0.72,
-    clearcoatRoughness: 0.16,
-    color: SKELETON_COLORS.cartilage,
-    match: "cartilage",
-    roughness: 0.24,
-    sheen: 0.45,
+/** The soft parts of each synovial joint, built once so every body keeps its shape between renders. */
+const SOFT = {
+  ballSocket: {
+    capsule: capsuleForms("ballSocket"),
+    cartilage: fixedCartilage("ballSocket"),
+    fluid: fluidForms("ballSocket"),
   },
-  {
-    clearcoat: 0.45,
-    clearcoatRoughness: 0.32,
-    color: SKELETON_COLORS.disc,
-    match: "meniscus",
-    roughness: 0.36,
-    sheen: 0.4,
+  hinge: {
+    capsule: capsuleForms("hinge"),
+    cartilage: fixedCartilage("hinge"),
+    fluid: fluidForms("hinge"),
   },
-] as const;
+};
 
-const BONE_FALLBACK = {
-  clearcoat: 0.22,
-  clearcoatRoughness: 0.48,
-  color: SKELETON_COLORS.bone,
-  roughness: 0.46,
-  sheen: 0.2,
-} as const;
+/**
+ * The muscle that moves each synovial joint: where it starts on the bone
+ * that stays still, where its tendon grips the bone that moves (in that
+ * bone's own frame), the place its tendon heads for, its tendon's length,
+ * and its belly's thickness at its resting length.
+ */
+const MUSCLE: Record<
+  Synovial,
+  {
+    readonly girth: number;
+    readonly grip: Vector3;
+    readonly origin: Vector3;
+    readonly rest: number;
+    readonly tendon: number;
+    readonly towards: Vector3;
+  }
+> = {
+  ballSocket: {
+    girth: 0.058,
+    grip: new Vector3(...SHOULDER_INSERTION),
+    origin: new Vector3(-0.64, 0.21, -0.02),
+    rest: 0.6,
+    tendon: 0.22,
+    towards: new Vector3(-0.3, 0.33, 0),
+  },
+  hinge: {
+    girth: 0.062,
+    grip: new Vector3(...ELBOW_INSERTION),
+    origin: new Vector3(-0.64, 0.145, 0.03),
+    rest: 0.67,
+    tendon: 0.22,
+    towards: new Vector3(-0.3, 0.22, 0.05),
+  },
+};
 
-function JointCamera() {
-  const narrow = isNarrowThreeScene(
-    useThree((state) => state.size),
-    1.25
-  );
+/** How thick a tendon is drawn. */
+const CORD = 0.014;
+
+/** The two places a frame works out for a muscle, reused so a frame allocates nothing. */
+const grip = new Vector3();
+const junction = new Vector3();
+
+/** Living compact bone: matt, faintly pitted, and warm where light passes through its thin edges. */
+function BoneSkin() {
   return (
-    <CameraControls
-      cameraPosition={narrow ? [0.1, 1.45, 4.15] : [0.08, 1.24, 3.45]}
-      cameraTarget={[0.04, 0.62, 0]}
-      fov={38}
-      maxDistance={6.8}
-      minDistance={1.4}
+    <Skin
+      bump={0.22}
+      flesh={SKELETON_COLORS.boneSoft}
+      glow={0.25}
+      repeat={[5, 3]}
+      roughness={0.8}
+      surface="stone"
     />
   );
 }
 
-/** Real NIH Human Reference Atlas knee specimen shown alongside the articulating hinge. */
-function KneeReferenceSpecimen() {
-  const { scene } = useGLTF(HRA_KNEE_JOINT_ASSET.path);
-  const specimen = useMemo(
-    () =>
-      prepareAnatomicalScene(scene, {
-        fallback: BONE_FALLBACK,
-        rules: SKELETON_RULES,
-        targetExtent: 1.28,
-      }),
-    [scene]
-  );
+/** Hyaline cartilage: smooth, wet and pearly. */
+function CartilageSkin() {
   return (
-    <group position={[-0.74, 0.68, 0.04]} rotation={[0.05, 0.42, 0.04]}>
-      <primitive object={specimen} />
-    </group>
+    <Skin
+      bump={0.15}
+      flesh={SKELETON_COLORS.cartilageHyaline}
+      glow={0.5}
+      repeat={[2, 2]}
+      roughness={0.35}
+      surface="ceramic"
+      wet={0.9}
+    />
   );
 }
 
+/** A tendon, a ligament or a capsule: tough, moist cords of fibre with a silky sheen. */
+function CordSkin() {
+  return (
+    <Skin
+      bump={0.5}
+      flesh={SKELETON_COLORS.tendonSheen}
+      glow={0.4}
+      repeat={[1, 3]}
+      roughness={0.6}
+      surface="wood"
+      wet={0.35}
+    />
+  );
+}
+
+/** Skeletal muscle under its thin wet sheath. */
+function MuscleSkin() {
+  return (
+    <Skin
+      bump={0.5}
+      flesh={SKELETON_COLORS.muscleFiber}
+      glow={0.4}
+      repeat={[2, 4]}
+      roughness={0.55}
+      surface="tissue"
+      wet={0.6}
+    />
+  );
+}
+
+/** The synovial membrane and the fibrous capsule round it: soft, wet and finely folded. */
+function CapsuleSkin() {
+  return (
+    <Skin
+      bump={0.45}
+      flesh={SKELETON_COLORS.synovium}
+      glow={0.4}
+      repeat={[4, 4]}
+      roughness={0.5}
+      surface="mucosa"
+      wet={0.7}
+    />
+  );
+}
+
+/** Synovial fluid: a clear, slippery, straw-coloured film. */
+function FluidSkin() {
+  return (
+    <Skin
+      bump={0.1}
+      clear={0.55}
+      repeat={[1, 1]}
+      roughness={0.08}
+      surface="plastic"
+      wet={1}
+    />
+  );
+}
+
+/** The camera every joint is seen with: one authored pose, fitted to what the joint can reach. */
+function JointCamera() {
+  return (
+    <CameraControls
+      cameraPosition={[0.5, 0.7, 4]}
+      cameraTarget={[0, 0, 0]}
+      fov={30}
+      framing="content"
+      maxDistance={6.8}
+      minDistance={0.8}
+    />
+  );
+}
+
+/**
+ * One joint of the human skeleton as an anatomical specimen: a suture of
+ * the skull, two vertebrae and their disc, the elbow or the shoulder. The
+ * bone that can move follows the learner's slider, or swings by itself while
+ * the card plays, and the muscle that moves it shortens and thickens.
+ *
+ * @param joint - Which joint is shown
+ * @param motion - How far the moving bone has moved, from 0 to 1
+ * @param onMotionChange - Reports the motion while the card plays
+ * @param parts - The names of the parts
+ */
 export function JointScene({
   joint,
   motion,
@@ -103,80 +228,51 @@ export function JointScene({
 }) {
   const playing = useVisualScene((card) => card.playing, false);
   const ink = useLabelInk();
-  const movingRef = useRef<Group>(null);
+  const moving = useRef<Group>(null);
+  const pad = useRef<Group>(null);
+  const tendon = useRef<Group>(null);
+  const belly = useRef<Group>(null);
   const clock = useRef(0);
 
-  const longBone = useMemo(() => buildLongBoneGeometry(0.76, 0.068), []);
-  const distalBone = useMemo(() => buildLongBoneGeometry(0.72, 0.064), []);
-  const centrumGeo = useMemo(() => buildCentrumGeometry(0.32, 0.22), []);
-  const discGeo = useMemo(() => buildCentrumGeometry(0.305, 0.095), []);
-  const muscleGeo = useMemo(buildMuscleBellyGeometry, []);
-  const sutureGeo = useMemo(buildSutureSeamGeometry, []);
-  const ligamentGeo = useMemo(
-    () =>
-      buildBandGeometry(
-        [
-          [-0.26, -0.05, 0.14],
-          [-0.08, -0.14, 0.17],
-          [0.1, -0.14, 0.17],
-          [0.24, -0.06, 0.13],
-        ],
-        0.022
-      ),
-    []
-  );
-  const tendonGeo = useMemo(
-    () =>
-      buildBandGeometry(
-        [
-          [-0.24, 0.23, 0.02],
-          [-0.06, 0.2, 0.05],
-          [0.14, 0.14, 0.03],
-        ],
-        0.02
-      ),
-    []
-  );
-
-  useEffect(
-    () => () => {
-      longBone.dispose();
-      distalBone.dispose();
-      centrumGeo.dispose();
-      discGeo.dispose();
-      muscleGeo.dispose();
-      sutureGeo.dispose();
-      ligamentGeo.dispose();
-      tendonGeo.dispose();
-    },
-    [
-      centrumGeo,
-      discGeo,
-      distalBone,
-      ligamentGeo,
-      longBone,
-      muscleGeo,
-      sutureGeo,
-      tendonGeo,
-    ]
-  );
-
   useFrame((_, delta) => {
-    const dt = simulationStep(delta);
     let current = motion;
     if (playing) {
-      clock.current += dt;
+      clock.current += simulationStep(delta);
       current = 0.5 + 0.5 * Math.sin(clock.current * 1.8);
       if (Math.abs(current - motion) > 0.04) {
         onMotionChange(Math.round(current * 100) / 100);
       }
     }
-    const group = movingRef.current;
-    if (group === null) {
+    const angles = jointAnglesAt(joint, current);
+    moving.current?.rotation.set(
+      angles.pitchRad,
+      angles.yawRad,
+      angles.rollRad
+    );
+    // A disc gives half the way its upper vertebra tilts, so it stays joined to both.
+    pad.current?.rotation.set(angles.pitchRad / 2, 0, angles.rollRad / 2);
+    if (
+      moving.current === null ||
+      tendon.current === null ||
+      belly.current === null ||
+      joint === "suture" ||
+      joint === "disc"
+    ) {
       return;
     }
-    const angles = jointAnglesAt(joint, current);
-    group.rotation.set(angles.pitchRad, angles.yawRad, angles.rollRad);
+    const muscle = MUSCLE[joint];
+    grip.copy(muscle.grip).applyEuler(moving.current.rotation);
+    junction
+      .subVectors(muscle.towards, grip)
+      .setLength(muscle.tendon)
+      .add(grip);
+    stretchBetween(tendon.current, grip, junction, CORD);
+    stretchBetween(
+      belly.current,
+      muscle.origin,
+      junction,
+      bulge(muscle.girth, muscle.rest, muscle.origin.distanceTo(junction))
+    );
   });
 
   if (joint === "suture") {
@@ -184,44 +280,34 @@ export function JointScene({
       <group>
         <SimulationTicker running={playing} />
         <JointCamera />
-        <mesh castShadow position={[-0.06, 0.58, 0]} receiveShadow>
-          <sphereGeometry
-            args={[0.48, 36, 28, Math.PI * 0.52, Math.PI * 0.96]}
-          />
-          <meshPhysicalMaterial
-            clearcoat={0.22}
-            color={SKELETON_COLORS.bone}
-            roughness={0.48}
-            side={DoubleSide}
-          />
-        </mesh>
-        <mesh castShadow position={[0.06, 0.58, 0]} receiveShadow>
-          <sphereGeometry
-            args={[0.48, 36, 28, -Math.PI * 0.48, Math.PI * 0.96]}
-          />
-          <meshPhysicalMaterial
-            clearcoat={0.22}
-            color={SKELETON_COLORS.bone}
-            roughness={0.48}
-            side={DoubleSide}
-          />
-        </mesh>
-        <mesh castShadow geometry={sutureGeo} position={[0, 0.04, 0.16]}>
-          <meshPhysicalMaterial
-            color={SKELETON_COLORS.ligament}
-            roughness={0.72}
-          />
-        </mesh>
-        <ThreeLabel color={ink} fontSize="compact" position={[-0.62, 1.02, 0]}>
-          <span>{parts.bone}</span>
-        </ThreeLabel>
-        <ThreeLabel
-          color={ink}
-          fontSize="compact"
-          position={[0.62, 0.62, 0.25]}
-        >
-          <span>{parts.ligament}</span>
-        </ThreeLabel>
+        <group rotation={[-0.32, 0.3, 0.1]}>
+          <group position={[0, 0, -1.2]}>
+            <Body shape={vaultForms}>
+              <BoneSkin />
+            </Body>
+            <Body shape={seamForms}>
+              <CordSkin />
+            </Body>
+          </group>
+          <ThreeLabel
+            anchorY="bottom"
+            color={ink}
+            fontSize="compact"
+            gap={0.05}
+            position={[-0.3, 0.5, -0.1]}
+          >
+            {parts.bone}
+          </ThreeLabel>
+          <ThreeLabel
+            anchorY="top"
+            color={ink}
+            fontSize="compact"
+            gap={0.05}
+            position={[0, -0.49, -0.08]}
+          >
+            {parts.ligament}
+          </ThreeLabel>
+        </group>
       </group>
     );
   }
@@ -231,210 +317,160 @@ export function JointScene({
       <group>
         <SimulationTicker running={playing} />
         <JointCamera />
-        <mesh
-          castShadow
-          geometry={centrumGeo}
-          position={[0, 0.26, 0]}
-          receiveShadow
-        >
-          <meshPhysicalMaterial
-            clearcoat={0.22}
-            color={SKELETON_COLORS.bone}
-            roughness={0.48}
-          />
-        </mesh>
-        <mesh castShadow geometry={discGeo} position={[0, 0.49, 0]}>
-          <meshPhysicalMaterial
-            clearcoat={0.55}
-            clearcoatRoughness={0.22}
-            color={SKELETON_COLORS.cartilage}
-            roughness={0.34}
-          />
-        </mesh>
-        <group position={[0, 0.56, 0]} ref={movingRef}>
-          <mesh
-            castShadow
-            geometry={centrumGeo}
-            position={[0, 0.15, 0]}
-            receiveShadow
-          >
-            <meshPhysicalMaterial
-              clearcoat={0.22}
-              color={SKELETON_COLORS.bone}
-              roughness={0.48}
-            />
-          </mesh>
+        <group rotation={[0.12, 0.65, 0]}>
+          <group position={[0, -0.165, 0]}>
+            <Body shape={vertebraForms}>
+              <BoneSkin />
+            </Body>
+          </group>
+          <group ref={pad}>
+            <Body shape={discForms}>
+              <CordSkin />
+            </Body>
+          </group>
+          <CameraBounds motion={{ rotation: "x" }} objectRef={moving}>
+            <group position={[0, 0.165, 0]}>
+              <Body shape={vertebraForms}>
+                <BoneSkin />
+              </Body>
+            </group>
+          </CameraBounds>
         </group>
-        <ThreeLabel color={ink} fontSize="compact" position={[-0.68, 0.82, 0]}>
-          <span>{parts.bone}</span>
+        <ThreeLabel
+          anchorX="right"
+          color={ink}
+          fontSize="compact"
+          gap={0.06}
+          position={[-0.3, 0.22, 0.1]}
+        >
+          {parts.bone}
         </ThreeLabel>
-        <ThreeLabel color={ink} fontSize="compact" position={[0.68, 0.5, 0.1]}>
-          <span>{parts.cartilage}</span>
+        <ThreeLabel
+          anchorX="left"
+          color={ink}
+          fontSize="compact"
+          gap={0.06}
+          position={[0.3, 0, 0.1]}
+        >
+          {parts.cartilage}
         </ThreeLabel>
       </group>
     );
   }
 
-  const isBallSocket = joint === "ballSocket";
+  const hinge = joint === "hinge";
+  const soft = SOFT[joint];
 
   return (
     <group>
       <SimulationTicker running={playing} />
       <JointCamera />
-
-      {isBallSocket ? null : <KneeReferenceSpecimen />}
-
-      <group position={[isBallSocket ? 0 : 0.42, 0.62, 0]}>
-        <mesh
-          castShadow
-          geometry={longBone}
-          position={[-0.04, 0, 0]}
-          receiveShadow
-          rotation={[0, 0, Math.PI / 2]}
-        >
-          <meshPhysicalMaterial
-            clearcoat={0.24}
-            clearcoatRoughness={0.44}
-            color={SKELETON_COLORS.bone}
-            roughness={0.46}
-          />
-        </mesh>
-
-        <mesh position={[-0.04, 0, 0]}>
-          <sphereGeometry
-            args={[
-              isBallSocket ? 0.165 : 0.135,
-              32,
-              24,
-              0,
-              Math.PI * 2,
-              0,
-              Math.PI * 0.65,
-            ]}
-          />
-          <meshPhysicalMaterial
-            clearcoat={0.85}
-            clearcoatRoughness={0.12}
-            color={SKELETON_COLORS.cartilage}
-            roughness={0.2}
-          />
-        </mesh>
-
-        <mesh position={[0.02, 0, 0]}>
-          <sphereGeometry args={[0.21, 32, 24]} />
-          <meshPhysicalMaterial
-            clearcoat={0.9}
-            color={SKELETON_COLORS.synovialFluid}
-            depthWrite={false}
-            ior={1.36}
-            opacity={0.26}
-            roughness={0.08}
-            transparent
-          />
-        </mesh>
-
-        <mesh position={[0.02, 0, 0]} rotation={[0, 0, Math.PI * 0.12]}>
-          <torusGeometry args={[0.215, 0.022, 16, 42, Math.PI * 1.45]} />
-          <meshPhysicalMaterial
-            clearcoat={0.45}
-            color={SKELETON_COLORS.membraneHealthy}
-            roughness={0.42}
-          />
-        </mesh>
-
-        <mesh castShadow geometry={ligamentGeo}>
-          <meshPhysicalMaterial
-            color={SKELETON_COLORS.ligament}
-            roughness={0.58}
-          />
-        </mesh>
-
-        <mesh
-          castShadow
-          geometry={muscleGeo}
-          position={[-0.44, 0.22, 0]}
-          rotation={[0, 0, Math.PI / 2]}
-        >
-          <meshPhysicalMaterial
-            clearcoat={0.35}
-            clearcoatRoughness={0.4}
-            color={SKELETON_COLORS.muscleContract}
-            roughness={0.52}
-          />
-        </mesh>
-        <mesh castShadow geometry={tendonGeo}>
-          <meshPhysicalMaterial
-            clearcoat={0.4}
-            color={SKELETON_COLORS.tendon}
-            roughness={0.38}
-          />
-        </mesh>
-
-        <group position={[0.04, 0, 0]} ref={movingRef}>
-          <mesh
-            castShadow
-            geometry={distalBone}
-            position={[0.02, 0, 0]}
-            receiveShadow
-            rotation={[0, 0, -Math.PI / 2]}
-          >
-            <meshPhysicalMaterial
-              clearcoat={0.24}
-              clearcoatRoughness={0.44}
-              color={SKELETON_COLORS.bone}
-              roughness={0.46}
-            />
-          </mesh>
-        </group>
-
-        <ThreeLabel color={ink} fontSize="compact" position={[-0.58, 0.44, 0]}>
-          <span>{parts.muscle}</span>
-        </ThreeLabel>
-        <ThreeLabel
-          color={ink}
-          fontSize="compact"
-          position={[-0.1, 0.56, 0.08]}
-        >
-          <span>{parts.tendon}</span>
-        </ThreeLabel>
-        <ThreeLabel
-          color={ink}
-          fontSize="compact"
-          position={[0.64, 0.44, 0.08]}
-        >
-          <span>{parts.membrane}</span>
-        </ThreeLabel>
-        <ThreeLabel
-          color={ink}
-          fontSize="compact"
-          position={[0.68, 0.06, 0.14]}
-        >
-          <span>{parts.fluid}</span>
-        </ThreeLabel>
-        <ThreeLabel
-          color={ink}
-          fontSize="compact"
-          position={[-0.58, -0.22, 0.08]}
-        >
-          <span>{parts.bone}</span>
-        </ThreeLabel>
-        <ThreeLabel
-          color={ink}
-          fontSize="compact"
-          position={[-0.18, -0.46, 0.14]}
-        >
-          <span>{parts.cartilage}</span>
-        </ThreeLabel>
-        <ThreeLabel
-          color={ink}
-          fontSize="compact"
-          position={[0.56, -0.34, 0.16]}
-        >
-          <span>{parts.ligament}</span>
-        </ThreeLabel>
+      <Body shape={hinge ? humerusForms : scapulaForms}>
+        <BoneSkin />
+      </Body>
+      <Body shape={soft.cartilage}>
+        <CartilageSkin />
+      </Body>
+      <Body shape={soft.capsule}>
+        <CapsuleSkin />
+      </Body>
+      <Body cast={false} shape={soft.fluid}>
+        <FluidSkin />
+      </Body>
+      <CameraBounds
+        motion={{ rotation: hinge ? "z" : "all" }}
+        objectRef={moving}
+      >
+        <Body shape={hinge ? forearmForms : ballForms}>
+          <BoneSkin />
+        </Body>
+        {hinge ? (
+          <Body shape={collateralForms}>
+            <CordSkin />
+          </Body>
+        ) : (
+          <Body shape={headCartilage}>
+            <CartilageSkin />
+          </Body>
+        )}
+      </CameraBounds>
+      <group ref={tendon}>
+        <Body shape={tendonForms}>
+          <CordSkin />
+        </Body>
       </group>
+      <group ref={belly}>
+        <Body shape={bellyForms}>
+          <MuscleSkin />
+        </Body>
+      </group>
+
+      <ThreeLabel
+        anchorY="bottom"
+        color={ink}
+        fontSize="compact"
+        gap={0.05}
+        position={[-0.45, hinge ? 0.24 : 0.3, 0]}
+      >
+        {parts.muscle}
+      </ThreeLabel>
+      <ThreeLabel
+        anchorY="bottom"
+        color={ink}
+        fontSize="compact"
+        gap={0.05}
+        position={[-0.08, hinge ? 0.3 : 0.36, 0.05]}
+      >
+        {parts.tendon}
+      </ThreeLabel>
+      <ThreeLabel
+        anchorX="right"
+        anchorY="top"
+        color={ink}
+        fontSize="compact"
+        gap={0.05}
+        position={[-0.5, -0.08, 0]}
+      >
+        {parts.bone}
+      </ThreeLabel>
+      <ThreeLabel
+        anchorY="top"
+        color={ink}
+        fontSize="compact"
+        gap={0.05}
+        position={[hinge ? 0 : -0.1, hinge ? -0.24 : -0.16, 0.12]}
+      >
+        {parts.cartilage}
+      </ThreeLabel>
+      <ThreeLabel
+        anchorY="top"
+        color={ink}
+        fontSize="compact"
+        gap={0.05}
+        position={[-0.32, -0.3, 0]}
+      >
+        {parts.ligament}
+      </ThreeLabel>
+      <ThreeLabel
+        anchorX="left"
+        anchorY="top"
+        color={ink}
+        fontSize="compact"
+        gap={0.05}
+        position={[0.2, -0.26, -0.1]}
+      >
+        {parts.membrane}
+      </ThreeLabel>
+      <ThreeLabel
+        anchorX="left"
+        anchorY="top"
+        color={ink}
+        fontSize="compact"
+        gap={0.05}
+        position={[0.36, -0.42, -0.1]}
+      >
+        {parts.fluid}
+      </ThreeLabel>
     </group>
   );
 }
-
-useGLTF.preload(HRA_KNEE_JOINT_ASSET.path);
