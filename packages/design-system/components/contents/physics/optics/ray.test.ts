@@ -118,3 +118,50 @@ describe("telescope", () => {
     });
   });
 });
+
+describe("principalRays", () => {
+  it("sends all three rays from the tip through the tip of the real image", () => {
+    const image = Option.getOrThrow(thinLens(15, 20));
+    const rays = principalRays(15, 20, 2);
+
+    expect(rays).toHaveLength(3);
+    for (const ray of rays) {
+      expect(ray.height + ray.slope * image.distance).toBeCloseTo(
+        2 * image.magnification,
+        10
+      );
+    }
+  });
+
+  it("makes the rays of a near object seem to come from the tip of the virtual image", () => {
+    const image = Option.getOrThrow(thinLens(15, 10));
+    const rays = principalRays(15, 10, 2);
+
+    expect(Arr.map(rays, (ray) => ray.height)).toStrictEqual([2, 0, 6]);
+    for (const ray of rays) {
+      expect(ray.height + ray.slope * image.distance).toBeCloseTo(
+        2 * image.magnification,
+        10
+      );
+    }
+  });
+
+  it("has no ray through the near focal point when the object stands there", () => {
+    expect(principalRays(15, 15, 2)).toHaveLength(2);
+  });
+});
+
+describe("starRay", () => {
+  it("brings every ray from the star to one point of the focal plane and out at one steeper slope", () => {
+    const lenses = { eyepiece: 5, objective: 100 };
+    const tilt = Math.tan((1.2 * Math.PI) / 180);
+    const high = starRay(4.8, tilt, lenses);
+    const low = starRay(-4.8, tilt, lenses);
+
+    expect(high.image).toBeCloseTo(100 * tilt, 10);
+    expect(low.image).toBeCloseTo(high.image, 10);
+    expect(high.out).toBeCloseTo(-20 * tilt, 10);
+    expect(low.out).toBeCloseTo(high.out, 10);
+    expect(high.atEyepiece).toBeCloseTo(100 * tilt + (tilt - 0.048) * 5, 10);
+  });
+});

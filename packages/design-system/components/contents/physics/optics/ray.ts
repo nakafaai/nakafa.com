@@ -1,3 +1,4 @@
+import { converge } from "@repo/design-system/components/three/optic/trace";
 import { Array as Arr, Option, Schema } from "effect";
 
 /**
@@ -189,6 +190,47 @@ export function thinLens(focal: number, object: number) {
     magnification: -distance / object,
     real: distance > 0,
   });
+}
+
+/**
+ * The three principal rays from the tip of an object `tall` high that stands
+ * `object` in front of a thin lens of focal length `focal`: where each meets
+ * the lens above the axis, and its slope once the lens has bent it. The ray
+ * parallel to the axis leaves through the far focal point, the ray through
+ * the centre goes straight on, and the ray through the near focal point
+ * leaves parallel, which no ray does when the object stands at that point.
+ */
+export function principalRays(focal: number, object: number, tall: number) {
+  return [
+    { height: tall, slope: converge(tall, 0, focal) },
+    { height: 0, slope: -tall / object },
+    ...(object === focal
+      ? []
+      : [{ height: (tall * focal) / (focal - object), slope: 0 }]),
+  ];
+}
+
+/**
+ * A ray from a distant star that meets the objective of a telescope in
+ * normal adjustment `height` above the axis, with the slope `tilt`: where it
+ * crosses the shared focal plane and the eyepiece, and its slope as it
+ * leaves. Every such ray crosses the focal plane at one height, where the
+ * objective forms the image of the star, and leaves at one slope, steeper
+ * than it came by the ratio of the focal lengths.
+ */
+export function starRay(
+  height: number,
+  tilt: number,
+  lenses: { readonly eyepiece: number; readonly objective: number }
+) {
+  const inside = converge(height, tilt, lenses.objective);
+  const image = height + inside * lenses.objective;
+  const atEyepiece = image + inside * lenses.eyepiece;
+  return {
+    atEyepiece,
+    image,
+    out: converge(atEyepiece, inside, lenses.eyepiece),
+  };
 }
 
 /**

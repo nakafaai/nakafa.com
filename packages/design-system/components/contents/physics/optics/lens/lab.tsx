@@ -1,22 +1,10 @@
-import {
-  dashed,
-  fade,
-  vignette,
-} from "@repo/design-system/components/contents/physics/canvas/paint";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
-import {
-  fitBench,
-  paintArrow,
-  paintLens,
-  paintRail,
-  paintRay,
-  toEdge,
-} from "@repo/design-system/components/contents/physics/optics/lens/bench";
-import type { Point } from "@repo/design-system/components/contents/physics/optics/light";
-import { paintDarkRoom } from "@repo/design-system/components/contents/physics/optics/light";
+import { LensScene } from "@repo/design-system/components/contents/physics/optics/lens/scene";
 import { thinLens } from "@repo/design-system/components/contents/physics/optics/ray";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -31,105 +19,9 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { P5Sketch } from "@repo/design-system/components/visual/sketch";
-import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
-import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { Array as Arr, Option, Schema } from "effect";
-import type p5 from "p5";
+import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
-import { useState } from "react";
-
-/** What the sketch reads on every frame: the focal length and the object distance, in centimetres. */
-const LensFrameSchema = Schema.Struct({
-  focal: Schema.Finite,
-  object: Schema.Finite,
-});
-type LensFrame = typeof LensFrameSchema.Type;
-
-/**
- * Draws one moment: the bench, the lens, the object arrow, the three
- * principal rays from its tip, and the image where they meet, or where their
- * dashed extensions meet behind the lens for a virtual image.
- */
-function lensProgram(sketch: p5, read: () => LensFrame) {
-  sketch.setup = () => {
-    sketch.createCanvas(1, 1);
-  };
-  sketch.draw = () => {
-    const { focal, object } = read();
-    const image = thinLens(focal, object);
-    const bench = fitBench(sketch, focal, object, image);
-    paintDarkRoom(sketch);
-    paintRail(sketch, bench, focal);
-    const at = (centimetres: number, up: number) => ({
-      x: bench.lens + centimetres * bench.scale,
-      y: bench.axis - up * bench.height,
-    });
-    const base = at(-object, 0);
-    const tip = at(-object, 1);
-    const focusFar = at(focal, 0);
-    const focusNear = at(-focal, 0);
-    const centre = at(0, 0);
-    const parallel = at(0, 1);
-    const through =
-      Math.abs(tip.x - focusNear.x) < 1
-        ? Option.none<number>()
-        : Option.some(
-            bench.axis +
-              ((tip.y - bench.axis) * (bench.lens - focusNear.x)) /
-                (tip.x - focusNear.x)
-          );
-    const imageTip = Option.map(image, (found) =>
-      at(found.distance, found.magnification)
-    );
-    const virtual = Option.exists(image, (found) => !found.real);
-    const back = (from: Point) =>
-      virtual
-        ? Option.map(imageTip, (to) => [from, to] as const)
-        : Option.none();
-    const reach = Math.max(
-      bench.height * 1.4,
-      Math.abs(bench.axis - Option.getOrElse(through, () => bench.axis)) + 12
-    );
-    paintLens(sketch, bench, Math.min(reach, sketch.height * 0.4));
-    paintRay(sketch, {
-      after: [parallel, toEdge(sketch, parallel, focusFar)],
-      back: back(parallel),
-      before: [tip, parallel],
-    });
-    paintRay(sketch, {
-      after: [centre, toEdge(sketch, tip, centre)],
-      back: back(centre),
-      before: [tip, centre],
-    });
-    Option.map(through, (y) => {
-      const hit = { x: bench.lens, y };
-      if (object < focal) {
-        dashed(sketch, focusNear, tip, {
-          color: fade(INSTRUMENT_COLORS.lampLight, 0.45),
-          dash: 4,
-          weight: 1.2,
-        });
-      }
-      paintRay(sketch, {
-        after: [hit, { x: sketch.width, y }],
-        back: back(hit),
-        before: [tip, hit],
-      });
-    });
-    paintArrow(sketch, base, tip, PLOT_COLORS.teal, false);
-    Option.map(imageTip, (to) =>
-      paintArrow(
-        sketch,
-        { x: to.x, y: bench.axis },
-        to,
-        PLOT_COLORS.pink,
-        virtual
-      )
-    );
-    vignette(sketch, 0.3);
-  };
-}
+import { Suspense, useState } from "react";
 
 interface ConvexLensLabProps {
   description: NonNullable<ReactNode>;
@@ -155,7 +47,7 @@ interface ConvexLensLabProps {
 }
 
 /**
- * An object arrow in front of a convex lens on an optical bench. Three
+ * A lit arrow in front of a convex lens on a real optical bench. Three
  * principal rays from its tip find the image: one parallel to the axis bends
  * through the far focal point, one through the centre goes straight on, and
  * one through the near focal point leaves parallel. Slide the object across
@@ -208,12 +100,16 @@ export function ConvexLensLab({
           </ToggleGroup>
         ) : null}
       </VisualCardToolbar>
-      <VisualCardBody aria-label={labels.viewLabel} render={<section />}>
-        <P5Sketch
-          label={labels.viewLabel}
-          program={lensProgram}
-          state={{ focal, object }}
-        />
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ScienceStage floor={0} frameloop="always" reach={4} setting="lab">
+          <Suspense fallback={null}>
+            <LensScene focal={focal} object={object} />
+          </Suspense>
+        </ScienceStage>
       </VisualCardBody>
       <VisualCardSceneActions />
       <VisualCardFooter>
