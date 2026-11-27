@@ -1,13 +1,9 @@
-import { fractalAt } from "@repo/design-system/components/three/field/noise";
-import { faces } from "@repo/design-system/components/three/organism/budget";
+import type { Organ } from "@repo/design-system/components/contents/biology/gametogenesis/tissue";
+import { organ } from "@repo/design-system/components/contents/biology/gametogenesis/tissue";
 import type { Form } from "@repo/design-system/components/three/organism/form";
-import type {
-  Loft,
-  Station,
-} from "@repo/design-system/components/three/organism/loft";
+import type { Station } from "@repo/design-system/components/three/organism/loft";
 import {
   duct,
-  loftBody,
   ovoid,
 } from "@repo/design-system/components/three/organism/loft";
 import { scatter } from "@repo/design-system/components/three/organism/scatter";
@@ -22,46 +18,16 @@ const AMBER = new Color(BIOLOGY_COLORS.leydigAmber);
 const GOLD = new Color(BIOLOGY_COLORS.luteumGold);
 const IVORY = new Color(BIOLOGY_COLORS.zonaPellucida);
 
-/** One organ of a tract: its sections, how lobed and lumpy it is, and its two tones. */
-interface Organ {
-  readonly along: number;
-  readonly around: number;
-  readonly deep: Color;
-  readonly lobes: number;
-  readonly lump: number;
-  readonly pale: Color;
-  readonly seed: number;
-  readonly stations: readonly Station[];
-}
-
-/**
- * Lofts one organ: its own tone, mottled and darker in its creases, with
- * `lobes` swellings along it where it is coiled or sacculated.
- */
-function organ(part: Organ, detail: number): Form {
-  const swell: Loft["relief"] = (along, around) =>
-    part.lobes === 0
-      ? 0
-      : 0.16 *
-        Math.sin(along * Math.PI * part.lobes + 4 * Math.sin(around * 6.283)) *
-        Math.sin(Math.PI * along);
-  return loftBody({
-    along: faces(part.along, detail),
-    around: faces(part.around, detail),
-    belly: 0,
-    lump: part.lump,
-    paint: (along, around, color) => {
-      const mottle = fractalAt(along, around, 7, 5, part.seed, 3);
-      color
-        .copy(part.deep)
-        .lerp(part.pale, Math.min(1, 0.35 + mottle + swell(along, around)));
-    },
-    relief: swell,
-    seed: part.seed,
-    square: 2,
-    stations: part.stations,
-    up: [0, 0, 1],
-  });
+/** An egg-shaped organ stood on end at `x` and `y`: its long axis runs up the body. */
+function upright(
+  stations: readonly Station[],
+  x: number,
+  y: number
+): readonly Station[] {
+  return Arr.map(stations, (station) => ({
+    ...station,
+    centre: [x, y + station.centre[0], 0],
+  }));
 }
 
 /**
@@ -81,7 +47,7 @@ export function maleForms(detail: number): readonly Form[] {
       lump: 0.05,
       pale: IVORY,
       seed: 3,
-      stations: ovoid([-0.34, 0.27, 0], 0.01, 0.105, 0.14, 0),
+      stations: upright(ovoid([0, 0, 0], 0.3, 0.105, 0.1, 0.15), -0.34, 0.27),
     },
     {
       along: 96,
@@ -310,7 +276,7 @@ export function fimbriae(count: number) {
   return scatter(count * 2, 37, (index, chance) => {
     const side = index % 2 === 0 ? -1 : 1;
     const turn = (Math.floor(index / 2) / count) * 2 * Math.PI;
-    const long = 0.07 + 0.05 * chance(1);
+    const long = 0.05 + 0.035 * chance(1);
     return {
       lean: [turn, 0, -Math.PI / 2 + 0.5 * Math.cos(turn) * side],
       place: [

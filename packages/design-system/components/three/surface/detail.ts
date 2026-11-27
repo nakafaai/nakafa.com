@@ -33,6 +33,7 @@ export const SurfaceSchema = Schema.Literals([
   "scales",
   "mucosa",
   "sand",
+  "cytoplasm",
 ]);
 export type Surface = typeof SurfaceSchema.Type;
 
@@ -69,6 +70,7 @@ const LOOKS: Record<Surface, typeof LookSchema.Type> = {
   scales: { dip: 0.3, relief: 0.5, rough: 0.24, wear: 0.2 },
   mucosa: { dip: 0.26, relief: 0.32, rough: 0.2, wear: 0.16 },
   sand: { dip: 0.3, relief: 0.6, rough: 0.9, wear: 0.06 },
+  cytoplasm: { dip: 0.16, relief: 0.16, rough: 0.28, wear: 0.12 },
 };
 
 /** How tall the deepest relief stands, in tile widths. */
@@ -140,7 +142,9 @@ function woodAt(x: number, y: number) {
  * or a tapir: a net of fine creases round small plates, pitted with pores.
  * Scales overlap in staggered rows, each standing proud at its free edge.
  * Mucosa is wet living lining, softly folded and threaded with fine vessels.
- * Sand lies in ripples the water left, grain by grain.
+ * Sand lies in ripples the water left, grain by grain. Cytoplasm is the
+ * inside of one living cell seen through its membrane: clouded, and
+ * speckled with granules.
  */
 const PATTERNS: Record<
   Surface,
@@ -353,6 +357,16 @@ const PATTERNS: Record<
     return {
       height: 0.55 * ripple ** 1.5 + 0.3 * grain + 0.15 * grains.owner,
       shade: 0.5 + 0.25 * ripple + 0.25 * grains.owner,
+    };
+  },
+  cytoplasm: (x, y) => {
+    const cloud = fractalAt(x, y, 5, 5, 223, 3);
+    const granules = cellsAt(x, y, 54, 54, 227);
+    const granule =
+      granules.owner < 0.45 ? held(1 - granules.nearest * 2.6) : 0;
+    return {
+      height: 0.35 + 0.35 * cloud + 0.3 * granule,
+      shade: 0.74 + 0.26 * cloud - 0.22 * granule,
     };
   },
 };

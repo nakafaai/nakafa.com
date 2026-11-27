@@ -219,8 +219,9 @@ export function finBody(fin: {
 /**
  * The sections of an egg-shaped body `long` along x about `centre`: a
  * testis, an ovary, a gland, a cell, a nucleus. `wide` and `tall` are its
- * half-breadth and half-height at its fullest, and `blunt` moves that
- * fullest place towards one end, from -1 to 1.
+ * half-breadth and half-height at its middle, and `blunt` swells the end
+ * towards -x and slims the other, from -1 to 1. With none it is an
+ * ellipsoid.
  */
 export function ovoid(
   centre: readonly [number, number, number],
@@ -229,12 +230,15 @@ export function ovoid(
   tall: number,
   blunt: number
 ): readonly Station[] {
-  return Arr.makeBy(9, (step): Station => {
-    const along = step / 8;
-    const girth =
-      Math.sin(Math.PI * along) ** 0.9 * (1 + blunt * (along - 0.5));
+  return Arr.makeBy(13, (step): Station => {
+    const turn = (Math.PI * step) / 12;
+    const girth = Math.sin(turn) * (1 - 0.5 * blunt * Math.cos(turn));
     return {
-      centre: [centre[0] + (along - 0.5) * long, centre[1], centre[2]],
+      centre: [
+        centre[0] - 0.5 * long * Math.cos(turn),
+        centre[1],
+        centre[2],
+      ],
       tall: tall * girth,
       wide: wide * girth,
     };

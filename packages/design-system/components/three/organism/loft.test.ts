@@ -133,12 +133,13 @@ describe("ovoid", () => {
     const egg = ovoid([1, 2, 3], 2, 0.5, 0.4, 0);
     const blunt = ovoid([0, 0, 0], 2, 0.5, 0.4, 1);
 
-    expect(egg).toHaveLength(9);
+    expect(egg).toHaveLength(13);
     expect(egg[0]?.centre).toEqual([0, 2, 3]);
     expect(egg[0]?.wide).toBeCloseTo(0);
-    expect(egg[4]?.wide).toBeCloseTo(0.5);
-    expect(egg[4]?.tall).toBeCloseTo(0.4);
-    expect(Number(blunt[6]?.wide)).toBeGreaterThan(Number(blunt[2]?.wide));
+    expect(egg[6]?.wide).toBeCloseTo(0.5);
+    expect(egg[6]?.tall).toBeCloseTo(0.4);
+    expect(egg[3]?.wide).toBeCloseTo(0.5 * Math.SQRT1_2);
+    expect(Number(blunt[3]?.wide)).toBeGreaterThan(Number(blunt[9]?.wide));
   });
 });
 
