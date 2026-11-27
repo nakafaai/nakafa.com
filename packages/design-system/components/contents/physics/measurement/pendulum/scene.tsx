@@ -11,7 +11,10 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { Bob } from "@repo/design-system/components/three/instrument/bob";
 import { MILLIMETRE } from "@repo/design-system/components/three/instrument/scale";
-import { Gantry } from "@repo/design-system/components/three/instrument/stand";
+import {
+  GANTRY_REACH,
+  Gantry,
+} from "@repo/design-system/components/three/instrument/stand";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr, Match } from "effect";
@@ -35,9 +38,6 @@ const APART = 190;
 /** How far apart the two stands are, in millimetres: the three threads, and the widest swing clear on either side. */
 const WIDE = 2 * (APART + swingReach(STRING_RANGE.max) * 1000 + 70);
 
-/** How far the arms reach from the rods, in millimetres. */
-const REACH = 190;
-
 /**
  * What the camera frames at every width for strings `length` metres long,
  * in scene units: the crossbar between the two rods, and under it every
@@ -56,7 +56,7 @@ function frameOf(length: number) {
       min:
         (RISE - length * 1000 - bobRadius("wood") * 1000 - CLEAR) * MILLIMETRE,
     },
-    z: { max: 40 * MILLIMETRE, min: (-REACH - 40) * MILLIMETRE },
+    z: { max: 40 * MILLIMETRE, min: (-GANTRY_REACH - 40) * MILLIMETRE },
   };
 }
 
@@ -122,7 +122,7 @@ export function SwingScene({ length }: { readonly length: number }) {
         maxPolarAngle={Math.PI * 0.49}
       />
       <CameraBounds bounds={frameOf(length)}>
-        <Gantry reach={REACH} rise={RISE} wide={WIDE}>
+        <Gantry rise={RISE} wide={WIDE}>
           {Arr.map(BobSchema.literals, (kind, index) => (
             <group
               key={kind}

@@ -1,3 +1,5 @@
+import { DoubleSide } from "three";
+
 /**
  * The regions a lesson marks on an instrument or on what it measures, in the
  * lesson's colour: the band a value may lie in, the face an area is taken
@@ -49,7 +51,8 @@ export function Band({
 }
 
 /**
- * The round face an area is taken over: a see-through disc about `at`.
+ * The round face an area is taken over: a see-through disc about `at`,
+ * which shows from both of its sides.
  *
  * @param at - The middle of the face
  * @param color - The lesson's colour for this quantity
@@ -80,6 +83,7 @@ export function Patch({
         emissiveIntensity={0.5}
         opacity={SHEER}
         roughness={0.5}
+        side={DoubleSide}
         transparent
       />
     </mesh>

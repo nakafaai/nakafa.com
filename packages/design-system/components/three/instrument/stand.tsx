@@ -14,6 +14,9 @@ const ROD = { arm: 5, upright: 6 } as const;
 /** How far the crossbar of a gantry hangs under its arms, and how far it runs past them, in millimetres. */
 const BAR = { drop: 12, past: 34 } as const;
 
+/** How far the arms of a gantry reach from its rods toward the reader, in millimetres. */
+export const GANTRY_REACH = 190;
+
 /** Bright steel, drawn along a rod. */
 function Steel() {
   return (
@@ -171,25 +174,23 @@ function Joint() {
 
 /**
  * A gantry on the bench: two retort stands `wide` millimetres apart whose
- * arms carry one steel crossbar, joined to each arm by a boss head. What
- * hangs from the bar swings clear of both rods.
+ * arms reach `GANTRY_REACH` toward the reader and carry one steel crossbar,
+ * joined to each arm by a boss head. What hangs from the bar swings clear of
+ * both rods.
  *
  * It is drawn in scene units with the middle of the crossbar over the
  * origin. Its children hang from the bar, placed in scene units from the
  * middle of its underside.
  *
- * @param reach - How far the arms reach from the rods, in millimetres
  * @param rise - How high the underside of the crossbar is over the bench, in millimetres
  * @param wide - How far apart the stands are, in millimetres
  */
 export function Gantry({
   children,
-  reach,
   rise,
   wide,
 }: {
   readonly children: ReactNode;
-  readonly reach: number;
   readonly rise: number;
   readonly wide: number;
 }) {
@@ -198,12 +199,12 @@ export function Gantry({
   return (
     <group>
       <group position={[(-wide / 2) * MILLIMETRE, 0, 0]}>
-        <Stand reach={reach} rise={arm} tall={arm + 46}>
+        <Stand reach={GANTRY_REACH} rise={arm} tall={arm + 46}>
           <Joint />
         </Stand>
       </group>
       <group position={[(wide / 2) * MILLIMETRE, 0, 0]}>
-        <Stand reach={reach} rise={arm} tall={arm + 46}>
+        <Stand reach={GANTRY_REACH} rise={arm} tall={arm + 46}>
           <Joint />
         </Stand>
       </group>
