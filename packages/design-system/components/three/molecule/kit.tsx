@@ -1,4 +1,5 @@
 import {
+  atomFacets,
   facetsOf,
   seamProfile,
 } from "@repo/design-system/components/three/molecule/ball";
@@ -103,7 +104,7 @@ function Balls({ balls }: { readonly balls: Shape["balls"] }) {
   const { tier } = useStage();
   const mesh = useRef<InstancedMesh>(null);
   const geometry = useMemo(() => {
-    const facets = facetsOf(tier);
+    const facets = atomFacets(tier, balls.length);
     return new LatheGeometry(
       Arr.map(
         seamProfile(facets.rings),
@@ -111,7 +112,7 @@ function Balls({ balls }: { readonly balls: Shape["balls"] }) {
       ),
       facets.sides
     );
-  }, [tier]);
+  }, [balls.length, tier]);
   useEffect(() => () => geometry.dispose(), [geometry]);
 
   useLayoutEffect(() => {

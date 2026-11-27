@@ -46,7 +46,7 @@ const ANHYDRIDE = (50 * Math.PI) / 180;
 const ESTER = (60 * Math.PI) / 180;
 
 /** A molecule of named atoms and the bonds between them, with every hydrogen added; `part` gives each atom's part by its name. */
-function built(
+export function built(
   atoms: readonly Named[],
   links: readonly Link[],
   part: (name: string) => number
@@ -65,14 +65,14 @@ function built(
 }
 
 /** Where the atom called `name` stands; the origin when the list lacks it. */
-function at(atoms: readonly Named[], name: string): Point {
+export function at(atoms: readonly Named[], name: string): Point {
   return Arr.reduce(atoms, ORIGIN, (found, atom) =>
     atom[0] === name ? [atom[2], atom[3], atom[4]] : found
   );
 }
 
 /** A named atom at a point. */
-function named(name: string, element: Element, [x, y, z]: Point): Named {
+export function named(name: string, element: Element, [x, y, z]: Point): Named {
   return [name, element, x, y, z];
 }
 

@@ -21,6 +21,18 @@ export function facetsOf(tier: StageBudget["tier"]) {
   );
 }
 
+/** From how many atoms a model is a crowd, drawn coarser so a membrane of thousands still holds its frame rate. */
+const CROWD = 900;
+
+/**
+ * How finely a model of `atoms` atoms draws each of them at the stage's
+ * tier: as the tier asks, or, in a crowd where each atom covers only a few
+ * pixels, with the fewest facets that still read as round.
+ */
+export function atomFacets(tier: StageBudget["tier"], atoms: number) {
+  return atoms > CROWD ? { rings: 8, rod: 6, sides: 12 } : facetsOf(tier);
+}
+
 /**
  * The profile of a moulded atom of radius one, from its south pole to its
  * north: a sphere with the fine seam the two halves of a mould leave around

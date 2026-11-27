@@ -27,7 +27,7 @@ export const HELIX_RISE = 3.4;
 export const HELIX_TURN = (Math.PI * 2) / 10.5;
 
 /** One named atom of a residue: its name, its element and its x, y and z in the base pair's frame. */
-const NamedSchema = Schema.Tuple([
+export const NamedSchema = Schema.Tuple([
   Schema.String,
   ElementSchema,
   Schema.Finite,

@@ -76,3 +76,38 @@ export function screw(point: Point, angle: number, rise: number): Point {
     point[2] + rise,
   ];
 }
+
+/**
+ * Where an atom stands by its internal coordinates: `length` from `bonded`,
+ * at `angle` radians to the bond from `bonded` back to `before`, and turned
+ * `torsion` radians about that bond from `first`, so that 0 is cis to
+ * `first` and pi is trans.
+ */
+export function grown(
+  bonded: Point,
+  before: Point,
+  first: Point,
+  length: number,
+  angle: number,
+  torsion: number
+): Point {
+  const along = unit(sub(bonded, before));
+  const normal = unit(cross(sub(before, first), along));
+  const toward = cross(normal, along);
+  return add(
+    bonded,
+    scale(
+      add(
+        scale(along, -Math.cos(angle)),
+        scale(
+          add(
+            scale(toward, Math.cos(torsion)),
+            scale(normal, Math.sin(torsion))
+          ),
+          Math.sin(angle)
+        )
+      ),
+      length
+    )
+  );
+}
