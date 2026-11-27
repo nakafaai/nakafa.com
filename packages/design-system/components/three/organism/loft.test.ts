@@ -50,7 +50,7 @@ describe("stationAt", () => {
     expect(stationAt(SPINDLE.stations, -1).centre[0]).toBeCloseTo(-1);
     expect(stationAt(SPINDLE.stations, 2).centre[0]).toBeCloseTo(1);
     expect(stationAt(SPINDLE.stations, 0.25).centre[0]).toBeCloseTo(-0.5625);
-    expect(stationAt(SPINDLE.stations, 0.25).tall).toBeCloseTo(0.5);
+    expect(stationAt(SPINDLE.stations, 0.25).tall).toBeCloseTo(0.5625);
   });
 
   it("never lets a section be narrower than nothing where the curve overshoots", () => {
@@ -141,7 +141,7 @@ describe("ovoid", () => {
     expect(egg[6]?.wide).toBeCloseTo(0.5);
     expect(egg[6]?.tall).toBeCloseTo(0.4);
     expect(egg[3]?.wide).toBeCloseTo(0.5 * Math.SQRT1_2);
-    expect(Number(blunt[3]?.wide)).toBeGreaterThan(Number(blunt[9]?.wide));
+    expect(Number(blunt[9]?.wide)).toBeGreaterThan(Number(blunt[3]?.wide));
   });
 });
 

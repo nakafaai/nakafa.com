@@ -35,6 +35,7 @@ import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Body, Tuft } from "@repo/design-system/components/three/organism/body";
 import type { Stroke } from "@repo/design-system/components/three/organism/life";
 import { Skin } from "@repo/design-system/components/three/organism/skin";
+import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import {
   useVisualReset,
   useVisualScene,
@@ -45,9 +46,23 @@ import { Array as Arr, Match } from "effect";
 import { useRef } from "react";
 import type { Group } from "three";
 
-const CAMERA_POSITION: readonly [number, number, number] = [0, 0.88, 2.34];
 const CAMERA_TARGET: readonly [number, number, number] = [0, 0.56, 0];
 const STEP_SECONDS = 2.2;
+
+/** The camera stands further back on a narrow screen, so every label stays inside the frame. */
+function GameteCamera() {
+  const narrow = isNarrowThreeScene(
+    useThree((state) => state.size),
+    1.25
+  );
+  return (
+    <CameraControls
+      cameraPosition={narrow ? [0, 0.97, 3.75] : [0, 0.88, 2.34]}
+      cameraTarget={CAMERA_TARGET}
+      fov={38}
+    />
+  );
+}
 
 /** A sperm cell's tail beats in a wave that grows from the middle piece to its tip. */
 const SPERM_STROKE: Stroke = {
@@ -96,29 +111,29 @@ function SpermatozoonSpecimen({
         />
       </Body>
       <ThreeLabel
+        anchorX="right"
+        color={ink}
+        fontSize="compact"
+        gap={0.04}
+        position={[-0.63, 0.02, 0]}
+      >
+        {parts.acrosome}
+      </ThreeLabel>
+      <ThreeLabel
         anchorY="bottom"
         color={ink}
         fontSize="compact"
         gap={0.04}
-        position={[-0.58, 0.1, 0]}
+        position={[-0.45, 0.1, 0]}
       >
-        {parts.acrosome}
+        {parts.head}
       </ThreeLabel>
       <ThreeLabel
         anchorY="top"
         color={ink}
         fontSize="compact"
         gap={0.04}
-        position={[-0.44, -0.1, 0]}
-      >
-        {parts.head}
-      </ThreeLabel>
-      <ThreeLabel
-        anchorY="bottom"
-        color={ink}
-        fontSize="compact"
-        gap={0.04}
-        position={[-0.2, 0.06, 0]}
+        position={[-0.2, -0.06, 0]}
       >
         {parts.middle}
       </ThreeLabel>
@@ -158,20 +173,20 @@ function OocyteSpecimen({
         <CellSkin clear={0.62} />
       </Body>
       <ThreeLabel
-        anchorX="left"
+        anchorY="bottom"
         color={ink}
         fontSize="compact"
         gap={0.04}
-        position={[0.4, 0.24, 0]}
+        position={[0, 0.42, 0]}
       >
         {parts.follicular}
       </ThreeLabel>
       <ThreeLabel
-        anchorX="left"
+        anchorY="top"
         color={ink}
         fontSize="compact"
         gap={0.04}
-        position={[0.42, -0.12, 0.2]}
+        position={[0.3, -0.24, 0.2]}
       >
         {parts.antrum}
       </ThreeLabel>
@@ -273,11 +288,7 @@ export function GametogenesisScene({
   return (
     <group>
       <SimulationTicker running={playing} />
-      <CameraControls
-        cameraPosition={CAMERA_POSITION}
-        cameraTarget={CAMERA_TARGET}
-        fov={38}
-      />
+      <GameteCamera />
 
       <BiologyBenchSurface radius={12} y={0} />
       <SlideStage position={[0, 0, 0]} radius={0.98} />

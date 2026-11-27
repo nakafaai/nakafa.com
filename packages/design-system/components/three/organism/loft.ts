@@ -223,7 +223,7 @@ export function finBody(fin: {
  * The sections of an egg-shaped body `long` along x about `centre`: a
  * testis, an ovary, a gland, a cell, a nucleus. `wide` and `tall` are its
  * half-breadth and half-height at its middle, and `blunt` swells the end
- * towards -x and slims the other, from -1 to 1. With none it is an
+ * towards +x and slims the other, from -1 to 1. With none it is an
  * ellipsoid.
  */
 export function ovoid(

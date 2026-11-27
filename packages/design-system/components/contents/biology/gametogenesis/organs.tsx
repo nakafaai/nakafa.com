@@ -149,11 +149,11 @@ export function SystemView({
         <OrganSkin />
       </Tuft>
       <ThreeLabel
-        anchorY="top"
+        anchorX="left"
         color={ink}
         fontSize="compact"
         gap={0.04}
-        position={[0.56, 0.52, 0.05]}
+        position={[0.67, 0.56, 0.05]}
       >
         {parts.ovary}
       </ThreeLabel>
@@ -248,20 +248,20 @@ export function GonadView({
         <SectionSkin />
       </Tuft>
       <ThreeLabel
-        anchorX="right"
+        anchorY="bottom"
         color={ink}
         fontSize="compact"
         gap={0.04}
-        position={[-0.44, 0.72, 0.06]}
+        position={[-0.3, 0.93, 0]}
       >
         {parts.follicle}
       </ThreeLabel>
       <ThreeLabel
-        anchorX="left"
+        anchorY="top"
         color={ink}
         fontSize="compact"
         gap={0.04}
-        position={[0.42, 0.68, 0.06]}
+        position={[0.24, 0.41, 0.08]}
       >
         {parts.corpusLuteum}
       </ThreeLabel>
