@@ -8,24 +8,13 @@ import { SEDAN } from "@repo/design-system/components/contents/physics/kinematic
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { chanceAt } from "@repo/design-system/components/three/field/noise";
 import { Turn } from "@repo/design-system/components/three/form/part";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { WEATHER_COLORS } from "@repo/design-system/lib/material/weather";
 import { Array as Arr } from "effect";
 import type { Ref } from "react";
-import {
-  useEffect,
-  useImperativeHandle,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-} from "react";
+import { useEffect, useImperativeHandle, useMemo, useRef } from "react";
 import type { InstancedMesh } from "three";
-import {
-  AdditiveBlending,
-  Color,
-  Matrix4,
-  Object3D,
-  TorusGeometry,
-} from "three";
+import { Matrix4, Object3D, TorusGeometry } from "three";
 
 /** How many drops fall in the box of air around the camera. */
 const DROPS = 2400;
@@ -131,21 +120,6 @@ export function Rain({ ref }: { readonly ref: Ref<RainRig> }) {
     []
   );
 
-  // Each streak keeps its own brightness: the ones near the lens are the faintest.
-  useLayoutEffect(() => {
-    const tone = new Color();
-    Arr.forEach(drops, (drop, index) => {
-      const near = (drop.z - FAR) / (NEAR - FAR);
-      streaks.current?.setColorAt(
-        index,
-        tone.set(WEATHER_COLORS.rain).multiplyScalar(0.42 - 0.26 * near)
-      );
-    });
-    if (streaks.current?.instanceColor) {
-      streaks.current.instanceColor.needsUpdate = true;
-    }
-  }, [drops]);
-
   useImperativeHandle(ref, () => ({
     fall: (centre, fallen, speed, lean) => {
       const rain = streaks.current;
@@ -215,25 +189,14 @@ export function Rain({ ref }: { readonly ref: Ref<RainRig> }) {
         ref={streaks}
       >
         <Turn profile={STREAK} />
-        <meshBasicMaterial
-          blending={AdditiveBlending}
-          depthWrite={false}
-          toneMapped={false}
-          transparent
-        />
+        <Matter color={WEATHER_COLORS.rain} of="light" opacity={0.3} />
       </instancedMesh>
       <instancedMesh
         args={[ring, undefined, RINGS]}
         frustumCulled={false}
         ref={rings}
       >
-        <meshBasicMaterial
-          blending={AdditiveBlending}
-          color={WEATHER_COLORS.ring}
-          depthWrite={false}
-          opacity={0.13}
-          transparent
-        />
+        <Matter color={WEATHER_COLORS.ring} of="light" opacity={0.16} />
       </instancedMesh>
       <instancedMesh
         args={[undefined, undefined, SPRAY]}
@@ -241,13 +204,7 @@ export function Rain({ ref }: { readonly ref: Ref<RainRig> }) {
         ref={mist}
       >
         <Turn profile={MOTE} />
-        <meshBasicMaterial
-          blending={AdditiveBlending}
-          color={WEATHER_COLORS.spray}
-          depthWrite={false}
-          opacity={0.1}
-          transparent
-        />
+        <Matter color={WEATHER_COLORS.spray} of="light" opacity={0.12} />
       </instancedMesh>
     </CameraBounds>
   );

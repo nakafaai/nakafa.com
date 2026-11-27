@@ -6,13 +6,14 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/round";
 import { SEDAN } from "@repo/design-system/components/contents/physics/kinematics/sedan";
 import { Turn } from "@repo/design-system/components/three/form/part";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { Strake } from "@repo/design-system/components/three/vessel/strake";
 import { GATE_COLORS } from "@repo/design-system/lib/material/gate";
 import { Array as Arr } from "effect";
 import type { ReactNode, Ref } from "react";
 import { useImperativeHandle, useRef } from "react";
-import type { Mesh, MeshStandardMaterial } from "three";
+import type { Mesh, MeshPhysicalMaterial } from "three";
 import { DoubleSide } from "three";
 
 /** Where the sender stands on the near verge and the receiver on the far one, across the road. */
@@ -181,13 +182,7 @@ function Lens({ toward }: { readonly toward: 1 | -1 }) {
       </mesh>
       <mesh position={[0, 0.004 - 0.032 * 0.45, 0]} scale={[1, 0.45, 1]}>
         <Turn profile={LENS} />
-        <meshPhysicalMaterial
-          clearcoat={1}
-          color={GATE_COLORS.lens}
-          emissive={GATE_COLORS.beam}
-          emissiveIntensity={1.6}
-          roughness={0.08}
-        />
+        <Matter color={GATE_COLORS.beam} glow={0.8} of="epoxy" />
       </mesh>
     </group>
   );
@@ -211,7 +206,7 @@ export function LightGate({
   readonly ref: Ref<GateRig>;
 }) {
   const beam = useRef<Mesh>(null);
-  const beacon = useRef<MeshStandardMaterial>(null);
+  const beacon = useRef<MeshPhysicalMaterial>(null);
 
   useImperativeHandle(ref, () => ({
     trip: (broken) => {
@@ -233,23 +228,17 @@ export function LightGate({
         <Lens toward={1} />
         <mesh position={[0, 0.085, 0]}>
           <Turn profile={BEACON} />
-          <meshStandardMaterial
-            color={GATE_COLORS.beaconLens}
-            emissive={GATE_COLORS.beaconGlow}
-            emissiveIntensity={BEACON_REST}
+          <Matter
+            color={GATE_COLORS.beaconGlow}
+            glow={BEACON_REST}
+            of="epoxy"
             ref={beacon}
-            roughness={0.25}
           />
         </mesh>
       </Post>
       <mesh ref={beam} rotation={[Math.PI / 2, 0, 0]}>
         <Turn profile={RAY} />
-        <meshBasicMaterial
-          color={GATE_COLORS.beam}
-          opacity={0.7}
-          toneMapped={false}
-          transparent
-        />
+        <Matter color={GATE_COLORS.beam} of="light" opacity={0.7} />
       </mesh>
     </group>
   );

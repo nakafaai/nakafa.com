@@ -7,13 +7,12 @@ import {
 } from "@repo/design-system/components/contents/physics/kinematics/river/raft";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { BOAT_COLORS } from "@repo/design-system/lib/material/boat";
-import { Array as Arr } from "effect";
 import { useEffect, useMemo, useRef } from "react";
 import type { InstancedMesh } from "three";
 import {
   BufferGeometry,
-  Color,
   DoubleSide,
   Float32BufferAttribute,
   Object3D,
@@ -43,21 +42,10 @@ export function Flotsam({
   const lanes = useMemo(() => raftLanes(width, RAFTS), [width]);
   const geometry = useMemo(() => {
     const raft = hyacinthRaft();
-    const pale = new Color(BOAT_COLORS.hyacinthStalk);
-    const green = new Color(BOAT_COLORS.hyacinth);
     const built = new BufferGeometry();
     built.setAttribute(
       "position",
       new Float32BufferAttribute(raft.positions, 3)
-    );
-    built.setAttribute(
-      "color",
-      new Float32BufferAttribute(
-        Arr.flatMap(raft.shades, (shade) =>
-          pale.clone().lerp(green, shade).toArray()
-        ),
-        3
-      )
     );
     built.setIndex(raft.indices);
     built.computeVertexNormals();
@@ -101,7 +89,7 @@ export function Flotsam({
         receiveShadow
         ref={rafts}
       >
-        <meshStandardMaterial roughness={0.42} side={DoubleSide} vertexColors />
+        <Matter color={BOAT_COLORS.hyacinth} of="wax" side={DoubleSide} />
       </instancedMesh>
     </CameraBounds>
   );

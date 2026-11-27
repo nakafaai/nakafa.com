@@ -5,6 +5,7 @@ import {
   SHORE_EXTENT,
 } from "@repo/design-system/components/contents/physics/kinematics/river/shore";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import type { GroundSchema } from "@repo/design-system/components/three/stage/land";
 import { GroundMaterial } from "@repo/design-system/components/three/stage/terrain";
 import { BOAT_COLORS } from "@repo/design-system/lib/material/boat";
@@ -13,7 +14,6 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import type { InstancedMesh } from "three";
 import {
   BufferGeometry,
-  Color,
   DoubleSide,
   Float32BufferAttribute,
   Object3D,
@@ -101,24 +101,10 @@ function Reeds({
   );
   const geometry = useMemo(() => {
     const clump = reedClump();
-    const green = new Color(BOAT_COLORS.reed);
-    const dry = new Color(BOAT_COLORS.reedDry);
     const built = new BufferGeometry();
     built.setAttribute(
       "position",
       new Float32BufferAttribute(clump.positions, 3)
-    );
-    built.setAttribute(
-      "color",
-      new Float32BufferAttribute(
-        Arr.flatMap(clump.ups, (up) =>
-          green
-            .clone()
-            .lerp(dry, up ** 2)
-            .toArray()
-        ),
-        3
-      )
     );
     built.setIndex(clump.indices);
     built.computeVertexNormals();
@@ -150,7 +136,7 @@ function Reeds({
       key={beds.length}
       ref={reeds}
     >
-      <meshStandardMaterial roughness={0.75} side={DoubleSide} vertexColors />
+      <Matter color={BOAT_COLORS.reed} of="paint" side={DoubleSide} />
     </instancedMesh>
   );
 }

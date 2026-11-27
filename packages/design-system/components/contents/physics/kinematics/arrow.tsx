@@ -1,4 +1,5 @@
 import { Turn } from "@repo/design-system/components/three/form/part";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { useMemo } from "react";
 import { Quaternion, Vector3 } from "three";
 
@@ -58,12 +59,7 @@ export function VelocityArrow({
     <group position={from} quaternion={turn}>
       <mesh castShadow scale={[thick, length - head, thick]}>
         <Turn profile={SHAFT} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={0.5}
-          roughness={0.4}
-        />
+        <Matter color={color} glow={0.35} of="enamel" />
       </mesh>
       <mesh
         castShadow
@@ -71,12 +67,7 @@ export function VelocityArrow({
         scale={[thick * 2.6, head, thick * 2.6]}
       >
         <Turn profile={HEAD} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={0.5}
-          roughness={0.4}
-        />
+        <Matter color={color} glow={0.35} of="enamel" />
       </mesh>
     </group>
   );

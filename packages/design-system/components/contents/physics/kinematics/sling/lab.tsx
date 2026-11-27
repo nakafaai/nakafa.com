@@ -2,8 +2,6 @@ import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { VelocityArrow } from "@repo/design-system/components/contents/physics/kinematics/arrow";
 import { useSight } from "@repo/design-system/components/contents/physics/kinematics/follow";
-import { grainTexture } from "@repo/design-system/components/contents/physics/kinematics/grain";
-import { paintFrost } from "@repo/design-system/components/contents/physics/kinematics/sling/frost";
 import {
   CurlingStone,
   STONE,
@@ -24,6 +22,7 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
@@ -46,14 +45,8 @@ import { RINK_COLORS } from "@repo/design-system/lib/material/rink";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
-import {
-  DataTexture,
-  LinearFilter,
-  LinearMipmapLinearFilter,
-  RepeatWrapping,
-} from "three";
 
 /** How far the freed stone is followed after release, in string lengths: it stays in view. */
 const FLIGHT = 0.3;
@@ -212,56 +205,25 @@ export function StringWhirlReleaseLab({
   );
 }
 
-/** Pixels along each side of the frost tile, and the metres of ice one tile covers. */
-const FROST = 512;
-const FROST_TILE = 7;
-
 /**
- * The frozen pond the stone slides on: pebbled ice, glossy where it is
- * clear and dull where frost has drifted over it, crossed by fine cracks,
- * lying in the snow that the stage spreads around it.
+ * The frozen pond the stone slides on, lying in the snow that the stage
+ * spreads around it and reaching far past the frame.
  */
 function Ice({ radius }: { readonly radius: number }) {
-  const wide = radius * 60;
-  const maps = useMemo(() => {
-    const pebble = grainTexture(1.2);
-    pebble.repeat.set(wide * 5, wide * 5);
-    const frost = new DataTexture(paintFrost(FROST), FROST, FROST);
-    frost.wrapS = RepeatWrapping;
-    frost.wrapT = RepeatWrapping;
-    frost.repeat.set((2 * wide) / FROST_TILE, (2 * wide) / FROST_TILE);
-    frost.magFilter = LinearFilter;
-    frost.minFilter = LinearMipmapLinearFilter;
-    frost.generateMipmaps = true;
-    frost.needsUpdate = true;
-    return { frost, pebble };
-  }, [wide]);
-  useEffect(
-    () => () => {
-      maps.frost.dispose();
-      maps.pebble.dispose();
-    },
-    [maps]
+  const pond = useMemo(
+    () =>
+      [
+        [radius * 60, 0],
+        [0, 0],
+      ] as const,
+    [radius]
   );
 
   return (
     <CameraBounds exclude>
-      <mesh
-        position={[0, 0.001, 0]}
-        receiveShadow
-        rotation={[-Math.PI / 2, 0, 0]}
-      >
-        <circleGeometry args={[wide, 96]} />
-        <meshPhysicalMaterial
-          bumpMap={maps.pebble}
-          bumpScale={0.3}
-          clearcoat={1}
-          clearcoatRoughness={0.08}
-          color={RINK_COLORS.ice}
-          map={maps.frost}
-          roughness={0.55}
-          roughnessMap={maps.frost}
-        />
+      <mesh position={[0, 0.001, 0]} receiveShadow>
+        <Turn profile={pond} />
+        <Matter color={RINK_COLORS.ice} of="ice" />
       </mesh>
     </CameraBounds>
   );

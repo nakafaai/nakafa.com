@@ -26,12 +26,10 @@ import {
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { Sweep } from "@repo/design-system/components/three/form/part";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { Road } from "@repo/design-system/components/three/stage/road";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -52,7 +50,7 @@ import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
-import { Suspense, useMemo, useRef, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 
 /** How far the track runs, in metres: past the widest trap. */
 const TRACK = 80;
@@ -223,9 +221,6 @@ export function SpeedTrapInstantSpeedLab({
   );
 }
 
-/** The paint of the measured stretch: a ribbon a few millimetres thick, its broad face up. */
-const PAINTED = [0.002, [0, 1, 0]] as const;
-
 /**
  * The test road, the two gates of the trap with the stretch they time
  * painted between them, the car that speeds up through them, and the board
@@ -242,16 +237,6 @@ function TrapScene({ gap }: { readonly gap: TrapGap }) {
   const reading = trapReading(gap);
   const from = TRAP_CENTRE - gap / 2;
   const to = TRAP_CENTRE + gap / 2;
-  // The measured stretch, painted on the car's lane from gate to gate.
-  const stretch = useMemo(
-    () =>
-      [
-        [from, 0.016, ROAD.lane],
-        [to, 0.016, ROAD.lane],
-      ] as const,
-    [from, to]
-  );
-
   useVisualStop(() => {
     run.current.time = 0;
   });
@@ -290,15 +275,6 @@ function TrapScene({ gap }: { readonly gap: TrapGap }) {
           (post) => post <= to - 8
         )}
       />
-      <mesh receiveShadow>
-        <Sweep flat={PAINTED} path={stretch} radius={1.55} />
-        <SurfaceMaterial
-          color={PLOT_COLORS.amber}
-          repeat={[2, gap]}
-          roughness={0.75}
-          surface="paint"
-        />
-      </mesh>
       <ThreeLabel
         color={PLOT_COLORS.amber}
         fontSize="compact"
