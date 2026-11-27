@@ -26,7 +26,11 @@ describe("fringeStart", () => {
   });
 
   it("centres a 27 mm span of 4.5 mm fringes although the spacing is not exact in binary", () => {
-    const spacing = spacingOf({ distance: 1.5, separation: 0.2, wavelength: 600 });
+    const spacing = spacingOf({
+      distance: 1.5,
+      separation: 0.2,
+      wavelength: 600,
+    });
     expect(fringeStart(spacing, 27)).toBeCloseTo(-13.5, 9);
   });
 });
