@@ -151,9 +151,11 @@ export function DepthScene({
   const lean = Math.tan((emerges * Math.PI) / 180);
   const top = Arr.lastNonEmpty(crossings);
   const reach = cellDrop(VIEWER);
-  const stacked = Arr.scan(Arr.reverse(layers), 0, (sum, layer) => {
-    return sum + layer.thickness * unit;
-  });
+  const stacked = Arr.scan(
+    Arr.reverse(layers),
+    0,
+    (sum, layer) => sum + layer.thickness * unit
+  );
 
   return (
     <group>

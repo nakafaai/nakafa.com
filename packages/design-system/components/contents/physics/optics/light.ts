@@ -5,15 +5,13 @@ import {
   spotlight,
 } from "@repo/design-system/components/contents/physics/canvas/paint";
 import { getColor } from "@repo/design-system/lib/color";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
-import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Schema } from "effect";
 import type p5 from "p5";
 
 /**
- * Painting for the light labs: a darkened optics room, a laser or ray-box
- * beam that glows the way a real beam does in faint haze, glass that shows
- * its edges, and the arcs that mark an angle between a ray and a normal.
+ * Painting for the wave sketches that show light: a darkened optics room, a
+ * beam that glows the way a real beam does in faint haze, and the arcs that
+ * mark an angle between a ray and a normal.
  */
 
 /** A point on the canvas, in pixels. */
@@ -72,43 +70,6 @@ export function beam(
   sketch.pop();
 }
 
-/**
- * Fills a rectangle of glass: a faint blue-green body that darkens toward its
- * far edges, a bright rim where the edges catch the light, and a sheen across
- * its upper face.
- */
-export function paintGlass(
-  sketch: p5,
-  box: {
-    readonly height: number;
-    readonly width: number;
-    readonly x: number;
-    readonly y: number;
-  }
-) {
-  const tint = BENCH_COLORS.glass;
-  gradientRect(
-    sketch,
-    box,
-    [
-      [0, fade(tint, 0.16)],
-      [0.5, fade(tint, 0.07)],
-      [1, fade(tint, 0.2)],
-    ],
-    true
-  );
-  gradientRect(sketch, { ...box, height: box.height * 0.18 }, [
-    [0, fade(getColor("WHITE"), 0.16)],
-    [1, fade(getColor("WHITE"), 0)],
-  ]);
-  sketch.push();
-  sketch.noFill();
-  sketch.stroke(fade(mix(tint, getColor("WHITE"), 0.6), 0.75));
-  sketch.strokeWeight(2);
-  sketch.rect(box.x, box.y, box.width, box.height, 2);
-  sketch.pop();
-}
-
 /** Draws the arc of an angle at `center` from direction `start` to direction `end`, in radians on the canvas. */
 export function angleArc(
   sketch: p5,
@@ -129,27 +90,5 @@ export function angleArc(
     Math.min(angles.start, angles.end),
     Math.max(angles.start, angles.end)
   );
-  sketch.pop();
-}
-
-/** A ray box: a black lamp housing with a slit, aimed along `angle` radians with its slit at `at`. */
-export function paintRayBox(
-  sketch: p5,
-  at: Point,
-  angle: number,
-  size: number
-) {
-  sketch.push();
-  sketch.translate(at.x, at.y);
-  sketch.rotate(angle);
-  sketch.noStroke();
-  sketch.fill(getColor("NEUTRAL", 800));
-  sketch.rect(-size * 2.2, -size * 0.55, size * 2.2, size * 1.1, size * 0.18);
-  sketch.fill(fade(getColor("WHITE"), 0.12));
-  sketch.rect(-size * 2.2, -size * 0.55, size * 2.2, size * 0.25, size * 0.18);
-  sketch.fill(getColor("ZINC", 950));
-  sketch.rect(-size * 0.12, -size * 0.3, size * 0.12, size * 0.6);
-  sketch.fill(fade(INSTRUMENT_COLORS.lampLight, 0.9));
-  sketch.rect(-size * 0.06, -size * 0.07, size * 0.06, size * 0.14);
   sketch.pop();
 }

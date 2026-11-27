@@ -1,9 +1,9 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   bend,
   bounce,
   converge,
 } from "@repo/design-system/components/three/optic/trace";
-import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
 
 const DEGREE = Math.PI / 180;

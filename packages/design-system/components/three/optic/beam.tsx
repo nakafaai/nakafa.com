@@ -123,6 +123,33 @@ function beamBody(color: string, soft: number, hot: number) {
   };
 }
 
+/** Lays one body of a beam along its path: one stretched round part from each point to the next, `wide` in radius. */
+function layBody(
+  body: InstancedMesh | null,
+  points: readonly Point[],
+  wide: number
+) {
+  if (body === null) {
+    return;
+  }
+  for (let index = 0; index < body.count; index += 1) {
+    const start = points[index] ?? [0, 0, 0];
+    const end = points[index + 1] ?? start;
+    from.set(start[0], start[1], start[2]);
+    span.set(end[0], end[1], end[2]).sub(from);
+    const long = span.length();
+    part.position.copy(from).addScaledVector(span, 0.5);
+    part.quaternion.setFromUnitVectors(
+      UP,
+      long > 0 ? span.divideScalar(long) : UP
+    );
+    part.scale.set(wide, long, wide);
+    part.updateMatrix();
+    body.setMatrixAt(index, part.matrix);
+  }
+  body.instanceMatrix.needsUpdate = true;
+}
+
 /**
  * A ray of light made visible, as a narrow beam is in slightly dusty air: a
  * bright core inside a halo of scattered light, running through `points` in
@@ -176,31 +203,9 @@ export function Beam({
     bodies.core.uniforms.uStrength.value = dashed ? strength * 0.5 : strength;
     bodies.halo.uniforms.uStrength.value = dashed ? 0 : strength * 0.3;
     bodies.core.uniforms.uDash.value = dashed ? width * 9 : 0;
-    for (const [body, wide] of [
-      [core.current, dashed ? width * 0.6 : width],
-      [halo.current, width * HALO],
-    ] as const) {
-      if (body === null) {
-        continue;
-      }
-      for (let index = 0; index < count; index += 1) {
-        const start = points[index] ?? [0, 0, 0];
-        const end = points[index + 1] ?? start;
-        from.set(start[0], start[1], start[2]);
-        span.set(end[0], end[1], end[2]).sub(from);
-        const long = span.length();
-        part.position.copy(from).addScaledVector(span, 0.5);
-        part.quaternion.setFromUnitVectors(
-          UP,
-          long > 0 ? span.divideScalar(long) : UP
-        );
-        part.scale.set(wide, long, wide);
-        part.updateMatrix();
-        body.setMatrixAt(index, part.matrix);
-      }
-      body.instanceMatrix.needsUpdate = true;
-    }
-  }, [bodies, count, dashed, points, strength, width]);
+    layBody(core.current, points, dashed ? width * 0.6 : width);
+    layBody(halo.current, points, width * HALO);
+  }, [bodies, dashed, points, strength, width]);
 
   useFrame((state) => {
     bodies.core.uniforms.uTime.value = state.clock.elapsedTime;

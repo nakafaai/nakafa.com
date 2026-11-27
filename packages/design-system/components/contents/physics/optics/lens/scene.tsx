@@ -18,10 +18,7 @@ import {
   CROWN_INDEX,
   cellDrop,
 } from "@repo/design-system/components/three/optic/lens";
-import {
-  Arrow,
-  Lamp,
-} from "@repo/design-system/components/three/optic/source";
+import { Arrow, Lamp } from "@repo/design-system/components/three/optic/source";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
@@ -207,8 +204,7 @@ export function LensScene({
         width={0.006}
       />
       {Arr.map(rays, (ray) => {
-        const onCard =
-          Math.abs(ray.height + ray.slope * stop) < CARD.tall / 2;
+        const onCard = Math.abs(ray.height + ray.slope * stop) < CARD.tall / 2;
         return (
           <Ray
             back={Option.map(virtual, (found) =>

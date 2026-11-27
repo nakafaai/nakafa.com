@@ -247,7 +247,11 @@ export function Lamp({
 }) {
   return (
     <group>
-      <mesh castShadow position={[0, tall * 0.5, 0]} rotation={[0, 0, -Math.PI / 2]}>
+      <mesh
+        castShadow
+        position={[0, tall * 0.5, 0]}
+        rotation={[0, 0, -Math.PI / 2]}
+      >
         <latheGeometry args={[LAMP_PROFILE, 64]} />
         <SurfaceMaterial
           bump={0.8}

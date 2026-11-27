@@ -89,7 +89,12 @@ describe("blockPath", () => {
   });
 
   it("ends inside the glass when the ray never gets out", () => {
-    const { path } = blockPath({ height: 20, index: 1.5, width: 0.2 }, 0.1, 60, 1);
+    const { path } = blockPath(
+      { height: 20, index: 1.5, width: 0.2 },
+      0.1,
+      60,
+      1
+    );
     expect(path).toHaveLength(6);
   });
 });

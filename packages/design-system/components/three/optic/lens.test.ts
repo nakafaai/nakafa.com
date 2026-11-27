@@ -1,3 +1,4 @@
+import { describe, expect, it } from "@effect/vitest";
 import {
   CROWN_INDEX,
   cellDrop,
@@ -5,7 +6,6 @@ import {
   lensProfile,
   sag,
 } from "@repo/design-system/components/three/optic/lens";
-import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
 
 describe("curvature", () => {
@@ -57,11 +57,13 @@ describe("lensProfile", () => {
 
 describe("cellDrop", () => {
   it("reaches below the axis by the lens, its cell and its stem", () => {
-    expect(
-      cellDrop({ focal: 10, half: 3, index: 1.5, thin: 0.2 })
-    ).toBeCloseTo(3.105, 12);
-    expect(
-      cellDrop({ focal: 2, half: 5, index: 1.5, thin: 0.1 })
-    ).toBeCloseTo(1.985, 12);
+    expect(cellDrop({ focal: 10, half: 3, index: 1.5, thin: 0.2 })).toBeCloseTo(
+      3.105,
+      12
+    );
+    expect(cellDrop({ focal: 2, half: 5, index: 1.5, thin: 0.1 })).toBeCloseTo(
+      1.985,
+      12
+    );
   });
 });

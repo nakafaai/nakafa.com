@@ -5,7 +5,7 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useEffect, useMemo } from "react";
-import { CanvasTexture, SRGBColorSpace, Shape } from "three";
+import { CanvasTexture, Shape, SRGBColorSpace } from "three";
 
 /** How tall the rail stands on the benchtop, and how wide its foot and its top are. */
 const RAIL_TALL = 0.15;
@@ -402,8 +402,14 @@ export function Backboard({
         [
           { at: [0, tall + 0.08, 0], size: [wide + 0.08, 0.04, 0.06] },
           { at: [0, 0.04, 0], size: [wide + 0.08, 0.04, 0.06] },
-          { at: [wide / 2 + 0.02, tall / 2 + 0.06, 0], size: [0.04, tall, 0.06] },
-          { at: [-wide / 2 - 0.02, tall / 2 + 0.06, 0], size: [0.04, tall, 0.06] },
+          {
+            at: [wide / 2 + 0.02, tall / 2 + 0.06, 0],
+            size: [0.04, tall, 0.06],
+          },
+          {
+            at: [-wide / 2 - 0.02, tall / 2 + 0.06, 0],
+            size: [0.04, tall, 0.06],
+          },
           { at: [wide / 2 - 0.3, 0.02, 0], size: [0.08, 0.04, 0.5] },
           { at: [-wide / 2 + 0.3, 0.02, 0], size: [0.08, 0.04, 0.5] },
         ] as const,
