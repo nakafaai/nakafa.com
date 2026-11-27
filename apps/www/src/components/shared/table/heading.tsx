@@ -9,7 +9,7 @@ import { Array as Arr, Match, Option } from "effect";
 import type { ComponentProps, ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import {
-  choiceWidth,
+  fitWidth,
   HeadAlignContext,
   headPlace,
   menuPlaceOf,
@@ -61,7 +61,7 @@ export function DataTableHead<TData extends RowData>({
       </ColumnHead>
     );
   }
-  const sizing = columnSizing(filter, title, width);
+  const sizing = columnSizing(column, filter, title, width);
   return (
     <ColumnHead
       menu={menuPlaceOf(
@@ -193,16 +193,27 @@ function SortingHead<TData extends RowData>({
 }
 
 /**
- * How wide a column of data stands: a column of one known value as wide as its longest value (`choiceWidth`), a column
- * of wide cells at the wide width, a first column of short names at a short name's width, and every other column at
- * the width of what it holds (`headWidth`).
+ * How wide a column of data stands: a column of one known value as wide as its longest value (`fitWidth`), a first
+ * column of short names as wide as the longest name its rows hold, a column of wide cells at the wide width, and every
+ * other column at the width of what it holds (`headWidth`).
  */
-function columnSizing(
+function columnSizing<TData extends RowData>(
+  column: Header<typeof dataTableFeatures, TData>["column"],
   filter: HeadFilter,
   title: string,
   width: ColumnWidth | undefined
 ) {
-  if (width === "wide" || width === "short") {
+  if (width === "fit") {
+    return {
+      size: fitWidth(
+        title,
+        Arr.map(column.table.getCoreRowModel().rows, (row) =>
+          String(row.getValue(column.id))
+        )
+      ),
+    };
+  }
+  if (width === "wide") {
     return { width };
   }
   if (width === "compact") {
@@ -213,7 +224,7 @@ function columnSizing(
   }
   if (filter.kind === "choice") {
     return {
-      size: choiceWidth(
+      size: fitWidth(
         title,
         Arr.map(filter.options, (option) => option.label)
       ),

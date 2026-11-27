@@ -80,7 +80,7 @@ export function ColumnHead({
   /** Where the head's menu opens under it. */
   menu?: typeof HeadAlign.Type;
   place: VariantProps<typeof columnAlign>["align"];
-  /** The column's width as a length, for a column sized by what it holds (`choiceWidth`), in place of `width`. */
+  /** The column's width as a length, for a column sized by what it holds (`fitWidth`), in place of `width`. */
   size?: string | undefined;
   /** How the column sorts the rows, for a head that sorts them. */
   sorted?: keyof typeof sortNames | undefined;

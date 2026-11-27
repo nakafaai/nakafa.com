@@ -62,10 +62,11 @@ export type ColumnSortWords = typeof ColumnSortWords.Type;
 const ChoiceSort = Schema.Struct({ sort: Schema.optionalKey(ColumnSortWords) });
 
 /**
- * A column that needs less or more room than its kind normally takes. `short` is a first column of short names, such
- * as a try-out's sets: it holds a short name's room, so the columns beside it share the rest of the table.
+ * A column that needs less or more room than its kind normally takes. `fit` is a first column of short names, such as
+ * a try-out's sets: it stands as wide as the longest name its rows hold in the reader's language, so every name reads
+ * whole, Set 1 and Aufgabensatz 1 alike, and the columns beside it share the rest of the table.
  */
-const ColumnWidth = Schema.Literals(["compact", "short", "wide"]);
+const ColumnWidth = Schema.Literals(["compact", "fit", "wide"]);
 export type ColumnWidth = typeof ColumnWidth.Type;
 
 /** What every column of data declares: its ID, its name in the head, how its cell draws, and where it stands. */

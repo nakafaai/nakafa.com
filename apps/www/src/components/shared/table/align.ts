@@ -64,8 +64,9 @@ export const columnAlign = cva("in-[thead]:bg-muted", {
  * A narrow table gives the row's name and a column of known values less, so its first two columns stand whole beside
  * the row's menu in a table as narrow as a phone's or a tablet's side pane, and the rest scroll under it. The table's
  * own width decides it, never the screen's (`tableBoxVariants`): a table in a narrow pane of a wide screen is as narrow
- * as a phone's. From 36rem (`@xl/table`) the columns take their full widths. A first column of short names (`short`)
- * holds a short name's room instead of the rest of the table, so its spare width goes to every column alike.
+ * as a phone's. From 36rem (`@xl/table`) the columns take their full widths. A first column of short names (`fit`)
+ * stands as wide as its longest name (`fitWidth`) instead of taking the rest of the table, so its spare width goes to
+ * every column alike.
  */
 export const headWidth = cva("", {
   variants: {
@@ -74,7 +75,6 @@ export const headWidth = cva("", {
       days: "w-52 min-w-52",
       menu: "min-w-12",
       number: "w-28 min-w-28",
-      short: "w-32 min-w-32",
       shortText: "min-w-16",
       text: "min-w-32 not-first:w-72 @xl/table:min-w-50 @xl/table:not-first:min-w-64",
       values: "w-36 min-w-36 @xl/table:w-48 @xl/table:min-w-48",
@@ -84,12 +84,14 @@ export const headWidth = cva("", {
 });
 
 /**
- * The width of a column of one known value: as wide as its longest value's badge or its head's name, whichever is
- * longer, so a short value such as a level never holds the room of a long one, and the column keeps its width before
- * its rows arrive. A character counts as `1ch`, about a letter of the table's type, and `4rem` holds the value's
- * marker, such as a badge's icon or a level's bars, and its padding beside the cell's own, so no wide letter is cut.
+ * The width of a column sized by what it holds: as wide as its longest value or its head's name, whichever is longer.
+ * A column of one known value reads its values from its options, so a short value such as a level never holds the
+ * room of a long one and the column keeps its width before its rows arrive; a first column of short names (`fit`)
+ * reads the names its rows hold, so a language with longer words widens it instead of cutting them. A character
+ * counts as `1ch`, about a letter of the table's type, and `4rem` holds the value's marker, such as a badge's icon, a
+ * level's bars or a set's completion mark, and its padding beside the cell's own, so no wide letter is cut.
  */
-export const choiceWidth = (title: string, labels: readonly string[]) =>
+export const fitWidth = (title: string, labels: readonly string[]) =>
   `calc(${Math.max(title.length, ...Arr.map(labels, (label) => label.length))}ch + 4rem)`;
 
 /** Where a head's button stands at each place of its column: over a column's figures, and in the middle over a menu. */
