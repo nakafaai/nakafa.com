@@ -1,6 +1,9 @@
 import { useFrame, useThree } from "@react-three/fiber";
+import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import type { LiftForce } from "@repo/design-system/components/contents/biology/xylem/model";
 import { evaluateXylemLift } from "@repo/design-system/components/contents/biology/xylem/model";
+import { XylemVesselCutaway } from "@repo/design-system/components/contents/biology/xylem/vessels";
+import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import {
   SimulationTicker,
   simulationStep,
@@ -8,11 +11,17 @@ import {
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
+import {
+  useVisualReset,
+  useVisualScene,
+  useVisualStop,
+} from "@repo/design-system/components/visual/card";
 import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
 import { Array as Arr } from "effect";
-import { useMemo, useRef } from "react";
+import { useCallback, useRef } from "react";
 import type { Group } from "three";
+
+const COHESION_BEADS = [0, 0.25, 0.5, 0.75] as const;
 
 function XylemCamera() {
   const narrow = isNarrowThreeScene(
@@ -21,8 +30,8 @@ function XylemCamera() {
   );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0, 1.55, 3.3] : [0, 1.35, 2.7]}
-      cameraTarget={[0, 0.68, 0]}
+      cameraPosition={narrow ? [0, 1.55, 3.4] : [0, 1.35, 2.8]}
+      cameraTarget={[0, 0.72, 0]}
       fov={38}
       maxDistance={5.8}
       minDistance={1.4}
@@ -45,139 +54,114 @@ export function XylemCohesionScene({
   >;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
-  const dropletRef = useRef<Group>(null);
+  const ink = useLabelInk();
+  const chainRef = useRef<Group>(null);
   const phaseRef = useRef(0);
   const lift = evaluateXylemLift(force, heightMeters);
 
-  const rings = useMemo(
-    () =>
-      Arr.makeBy(6, (index) => ({
-        id: `lr-${index}`,
-        y: 0.24 + index * 0.16,
-      })),
-    []
-  );
+  const rewind = useCallback(() => {
+    phaseRef.current = 0;
+  }, []);
+  useVisualStop(rewind);
+  useVisualReset(rewind);
 
   const columnRatio = Math.min(
     1,
     lift.maxReachMeters / Math.max(1, heightMeters)
   );
-  const columnH = 0.22 + columnRatio * 0.78;
+  const columnHeight = 0.24 + columnRatio * 0.74;
 
   useFrame((_, delta) => {
-    if (!playing || dropletRef.current === null) {
+    if (!playing || chainRef.current === null) {
       return;
     }
-    phaseRef.current += simulationStep(delta) * lift.flowSpeed;
-    const t = phaseRef.current % 1;
-    dropletRef.current.position.set(0, 0.18 + t * columnH, 0.24);
+    phaseRef.current =
+      (phaseRef.current + simulationStep(delta) * lift.flowSpeed * 0.55) % 1;
+    Arr.forEach(chainRef.current.children, (child, idx) => {
+      const t = (phaseRef.current + (COHESION_BEADS[idx] ?? 0)) % 1;
+      child.position.set(0, 0.22 + t * (columnHeight - 0.06), 0.21);
+    });
   });
 
   return (
     <group>
       <SimulationTicker running={playing} />
       <XylemCamera />
-      {/* Root base cell */}
-      <mesh castShadow position={[0, 0.1, 0]}>
-        <boxGeometry args={[0.72, 0.18, 0.56]} />
-        <meshStandardMaterial
-          color={BOTANY_COLORS.epidermisTan}
-          roughness={0.7}
-        />
-      </mesh>
-      {/* Hollow lignified xylem vessel */}
-      <mesh castShadow position={[0, 0.66, 0]}>
-        <cylinderGeometry args={[0.2, 0.2, 1.0, 20, 1, true]} />
-        <meshStandardMaterial
-          color={BOTANY_COLORS.ligninBrown}
-          opacity={0.45}
-          roughness={0.55}
-          side={2}
-          transparent
-        />
-      </mesh>
-      {/* Annular lignin reinforcement rings */}
-      {Arr.map(rings, (ring) => (
-        <mesh
-          key={ring.id}
-          position={[0, ring.y, 0]}
-          rotation={[Math.PI / 2, 0, 0]}
-        >
-          <torusGeometry args={[0.21, 0.018, 8, 24]} />
-          <meshStandardMaterial
-            color={BOTANY_COLORS.ligninBrown}
-            roughness={0.5}
-          />
-        </mesh>
-      ))}
-      {/* Continuous cohesive water column */}
-      <mesh position={[0, 0.18 + columnH * 0.5, 0]}>
-        <cylinderGeometry args={[0.14, 0.14, columnH, 16]} />
-        <meshStandardMaterial
-          color={BOTANY_COLORS.waterBlue}
-          opacity={0.78}
-          roughness={0.18}
-          transparent
-        />
-      </mesh>
-      {/* Leaf canopy with stoma at top */}
-      <mesh castShadow position={[0, 1.24, 0]} scale={[1.6, 0.25, 0.9]}>
-        <sphereGeometry args={[0.24, 14, 12]} />
-        <meshStandardMaterial
-          color={BOTANY_COLORS.healthyLeaf}
-          roughness={0.5}
-        />
-      </mesh>
-      {/* Ascending cohesive water beads */}
-      <group position={[0, 0.55, 0.24]} ref={dropletRef}>
-        <mesh>
-          <sphereGeometry args={[0.048, 12, 10]} />
-          <meshStandardMaterial
-            color={BOTANY_COLORS.cohesionCyan}
-            roughness={0.2}
-          />
-        </mesh>
-        <mesh position={[0, 0.1, 0]}>
-          <sphereGeometry args={[0.042, 12, 10]} />
-          <meshStandardMaterial
-            color={BOTANY_COLORS.cohesionCyan}
-            roughness={0.2}
-          />
-        </mesh>
+      <SeamlessBenchSurface radius={14} y={0} />
+      <XylemVesselCutaway
+        columnHeight={columnHeight}
+        reachesTop={lift.reachesTop}
+      />
+
+      {/* Rising cohesive H2O droplets linked by glowing hydrogen-bond strands */}
+      <group ref={chainRef}>
+        {Arr.map(COHESION_BEADS, (offset) => (
+          <group
+            key={offset}
+            position={[0, 0.22 + offset * (columnHeight - 0.06), 0.21]}
+          >
+            <mesh>
+              <sphereGeometry args={[0.036, 14, 12]} />
+              <meshPhysicalMaterial
+                clearcoat={1}
+                color={BOTANY_COLORS.cohesionCyan}
+                emissive={BOTANY_COLORS.cohesionCyan}
+                emissiveIntensity={0.22}
+                roughness={0.12}
+              />
+            </mesh>
+            <mesh position={[0, 0.065, 0]}>
+              <cylinderGeometry args={[0.008, 0.008, 0.075, 8]} />
+              <meshStandardMaterial
+                color={BOTANY_COLORS.vaporMist}
+                emissive={BOTANY_COLORS.cohesionCyan}
+                emissiveIntensity={0.45}
+                opacity={0.75}
+                transparent
+              />
+            </mesh>
+          </group>
+        ))}
       </group>
-      {/* Labels */}
+
+      {/* Non-overlapping theme-aware labels */}
       <ThreeLabel
-        color={BOTANY_COLORS.labelInk}
+        anchorX="right"
+        color={ink}
         fontSize="compact"
-        position={[-0.68, 1.24, 0]}
+        position={[-0.58, 1.38, 0]}
       >
         <span>{parts.stoma}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={BOTANY_COLORS.labelInk}
+        anchorX="left"
+        color={ink}
         fontSize="compact"
-        position={[0.64, 0.86, 0]}
+        position={[0.48, 0.94, 0]}
       >
         <span>{parts.ligninWall}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={BOTANY_COLORS.labelInk}
+        anchorX="right"
+        color={ink}
         fontSize="compact"
-        position={[-0.68, 0.62, 0]}
+        position={[-0.48, 0.68, 0.06]}
       >
         <span>{parts.waterColumn}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={BOTANY_COLORS.labelInk}
+        anchorX="left"
+        color={ink}
         fontSize="compact"
-        position={[0.68, 0.5, 0]}
+        position={[0.48, 0.54, 0.14]}
       >
         <span>{parts.cohesionBond}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={BOTANY_COLORS.labelInk}
+        anchorX="right"
+        color={ink}
         fontSize="compact"
-        position={[-0.66, 0.14, 0]}
+        position={[-0.56, 0.16, 0]}
       >
         <span>{parts.rootCell}</span>
       </ThreeLabel>

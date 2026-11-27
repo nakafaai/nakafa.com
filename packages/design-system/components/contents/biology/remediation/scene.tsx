@@ -1,6 +1,12 @@
 import { useFrame, useThree } from "@react-three/fiber";
+import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import type { RemediationPlant } from "@repo/design-system/components/contents/biology/remediation/model";
 import { evaluatePhytoremediation } from "@repo/design-system/components/contents/biology/remediation/model";
+import {
+  HyperaccumulatorPlant,
+  SubstrateCutaway,
+  WetlandHorizonFloor,
+} from "@repo/design-system/components/contents/biology/remediation/wetland";
 import {
   SimulationTicker,
   simulationStep,
@@ -8,11 +14,17 @@ import {
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
-import { useVisualScene } from "@repo/design-system/components/visual/card";
+import {
+  useVisualReset,
+  useVisualScene,
+  useVisualStop,
+} from "@repo/design-system/components/visual/card";
 import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
 import { Array as Arr } from "effect";
-import { useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import type { Group } from "three";
+
+const METAL_SYMBOLS = ["Pb²⁺", "Cd²⁺", "Zn²⁺"] as const;
 
 function RemediationCamera() {
   const narrow = isNarrowThreeScene(
@@ -21,10 +33,10 @@ function RemediationCamera() {
   );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0, 1.5, 3.35] : [0, 1.28, 2.7]}
-      cameraTarget={[0, 0.56, 0]}
+      cameraPosition={narrow ? [0, 1.65, 3.85] : [0, 1.46, 3.35]}
+      cameraTarget={[0, 0.54, 0]}
       fov={38}
-      maxDistance={5.8}
+      maxDistance={6.2}
       minDistance={1.4}
     />
   );
@@ -45,20 +57,29 @@ export function PhytoremediationScene({
   readonly plant: RemediationPlant;
 }) {
   const playing = useVisualScene((card) => card.playing, false);
+  const ink = useLabelInk();
   const uptakeRef = useRef<Group>(null);
   const phaseRef = useRef(0);
   const reading = evaluatePhytoremediation(plant, harvests);
 
+  const rewind = useCallback(() => {
+    phaseRef.current = 0;
+  }, []);
+  useVisualStop(rewind);
+  useVisualReset(rewind);
+
   const visibleIons = Math.max(
     1,
-    Math.round((reading.remainingPercent / 100) * 8)
+    Math.round((reading.remainingPercent / 100) * 9)
   );
   const ions = useMemo(
     () =>
-      Arr.makeBy(8, (index) => ({
+      Arr.makeBy(9, (index) => ({
         id: `ion-${index}`,
-        x: -0.78 + (index % 4) * 0.5,
-        z: index < 4 ? -0.14 : 0.16,
+        symbol: METAL_SYMBOLS[index % METAL_SYMBOLS.length] ?? "Pb²⁺",
+        x: -0.82 + (index % 5) * 0.41,
+        y: 0.14 + (index % 3) * 0.08,
+        z: index < 5 ? 0.46 : -0.18,
       })),
     []
   );
@@ -67,103 +88,62 @@ export function PhytoremediationScene({
     if (!playing || uptakeRef.current === null) {
       return;
     }
-    phaseRef.current += simulationStep(delta) * 1.1;
-    const t = phaseRef.current % 1;
-    uptakeRef.current.position.set(0, 0.2 + t * 0.72, 0.24);
+    phaseRef.current = (phaseRef.current + simulationStep(delta) * 0.85) % 1;
+    const t = phaseRef.current;
+    uptakeRef.current.position.set(
+      Math.sin(t * Math.PI * 2) * 0.08,
+      0.22 + t * 0.68,
+      0.28
+    );
   });
 
   return (
     <group>
       <SimulationTicker running={playing} />
       <RemediationCamera />
-      {/* Soil bed or aquatic channel */}
-      <mesh position={[0, 0.2, 0]}>
-        <boxGeometry args={[2.1, 0.36, 0.85]} />
-        <meshStandardMaterial
-          color={
-            reading.isAquatic ? BOTANY_COLORS.waterBlue : BOTANY_COLORS.soilDark
-          }
-          opacity={reading.isAquatic ? 0.65 : 1}
-          roughness={reading.isAquatic ? 0.2 : 0.85}
-          transparent={reading.isAquatic}
-        />
-      </mesh>
-      {/* Heavy metal ions remaining in substrate */}
+      <WetlandHorizonFloor isAquatic={reading.isAquatic} />
+      <SubstrateCutaway isAquatic={reading.isAquatic} />
+      <HyperaccumulatorPlant plant={plant} />
+
+      {/* Crystalline metallic heavy-metal ions embedded in substrate */}
       {Arr.map(Arr.take(ions, visibleIons), (ion) => (
-        <mesh key={ion.id} position={[ion.x, 0.22, ion.z]}>
-          <dodecahedronGeometry args={[0.05, 0]} />
+        <mesh castShadow key={ion.id} position={[ion.x, ion.y, ion.z]}>
+          <octahedronGeometry args={[0.044, 0]} />
           <meshStandardMaterial
             color={BOTANY_COLORS.heavyMetal}
-            metalness={0.65}
-            roughness={0.3}
+            emissive={BOTANY_COLORS.heavyMetalGlint}
+            emissiveIntensity={0.18}
+            metalness={0.85}
+            roughness={0.22}
           />
         </mesh>
       ))}
-      {/* Fibrous hyperaccumulator root zone */}
-      <mesh position={[0, 0.3, 0]}>
-        <coneGeometry args={[0.3, 0.34, 14]} />
-        <meshStandardMaterial
-          color={BOTANY_COLORS.rootIvory}
-          roughness={0.75}
-        />
-      </mesh>
-      {/* Harvestable shoot canopy */}
-      <mesh castShadow position={[0, 0.68, 0]}>
-        <cylinderGeometry args={[0.04, 0.055, 0.56, 12]} />
-        <meshStandardMaterial
-          color={BOTANY_COLORS.stemGreen}
-          roughness={0.55}
-        />
-      </mesh>
-      <mesh castShadow position={[0, 0.98, 0]} scale={[1.35, 0.75, 1]}>
-        <sphereGeometry args={[0.24, 14, 12]} />
-        <meshStandardMaterial
-          color={
-            plant === "mustard"
-              ? BOTANY_COLORS.chlorosisYellow
-              : BOTANY_COLORS.healthyLeaf
-          }
-          roughness={0.48}
-        />
-      </mesh>
-      {/* Ascending chelated metal ion into shoot */}
-      <group position={[0, 0.52, 0.24]} ref={uptakeRef}>
-        <mesh>
-          <dodecahedronGeometry args={[0.048, 0]} />
+
+      {/* Ascending chelated heavy-metal ion moving into shoot */}
+      <group position={[0, 0.56, 0.28]} ref={uptakeRef}>
+        <mesh castShadow>
+          <octahedronGeometry args={[0.046, 0]} />
           <meshStandardMaterial
-            color={BOTANY_COLORS.heavyMetal}
-            metalness={0.7}
-            roughness={0.25}
+            color={BOTANY_COLORS.heavyMetalGlint}
+            emissive={BOTANY_COLORS.cohesionCyan}
+            emissiveIntensity={0.35}
+            metalness={0.88}
+            roughness={0.18}
           />
         </mesh>
       </group>
-      {/* Labels */}
-      <ThreeLabel
-        color={BOTANY_COLORS.labelInk}
-        fontSize="compact"
-        position={[0.64, 1.02, 0]}
-      >
+
+      {/* Non-overlapping theme-aware labels kept comfortably inside frame */}
+      <ThreeLabel color={ink} fontSize="compact" position={[0.62, 1.12, 0]}>
         <span>{parts.shoot}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={BOTANY_COLORS.labelInk}
-        fontSize="compact"
-        position={[-0.72, 0.52, 0]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[-0.72, 0.56, 0.14]}>
         <span>{parts.rootZone}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={BOTANY_COLORS.labelInk}
-        fontSize="compact"
-        position={[0.76, 0.52, 0]}
-      >
-        <span>{parts.metalIon}</span>
+      <ThreeLabel color={ink} fontSize="compact" position={[0.68, 0.58, 0.2]}>
+        <span>{`${parts.metalIon} (Pb²⁺)`}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={BOTANY_COLORS.labelInk}
-        fontSize="compact"
-        position={[-0.74, 0.14, 0.48]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[-0.78, 0.16, 0.52]}>
         <span>{reading.isAquatic ? parts.waterChannel : parts.soilBed}</span>
       </ThreeLabel>
     </group>
