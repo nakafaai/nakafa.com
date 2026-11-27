@@ -3,90 +3,72 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   crowdOf,
-  frameOf,
   layoutOf,
   MIDDLE,
   poolsOf,
 } from "@repo/design-system/components/contents/biology/lipid/layout";
-import { Array as Arr, Order } from "effect";
-
-describe("frameOf", () => {
-  it("steps back in a narrow frame and moves a labelled crowd farther aside", () => {
-    expect(frameOf(true).camera[2]).toBeGreaterThan(frameOf(false).camera[2]);
-    expect(frameOf(true).aside).toBeLessThan(frameOf(false).aside);
-  });
-});
+import { Array as Arr } from "effect";
 
 describe("layoutOf", () => {
-  it("hangs the lipid just above the floor at the frame's scale", () => {
-    const wide = layoutOf("triglyceride", false, false);
-    const lows = Arr.map(wide.molecule.atoms, (atom) => atom.at[1]);
-    expect(wide.scale).toBe(frameOf(false).molecule);
-    expect(wide.stand[1] + Math.min(...lows) * wide.scale).toBeCloseTo(0.08, 9);
-    const narrow = layoutOf("triglyceride", true, true);
-    const sides = Arr.map(narrow.molecule.atoms, (atom) => atom.at[0]);
-    expect(narrow.stand[0] + Math.min(...sides) * narrow.scale).toBeCloseTo(
-      -1.06,
-      9
-    );
-    expect(narrow.stand[0]).toBeLessThan(wide.stand[0]);
+  it("hangs the lipid just above the floor, centred, inside its box", () => {
+    const { bounds, molecule, scale, stand } = layoutOf("triglyceride", true);
+    const lows = Arr.map(molecule.atoms, (atom) => atom.at[1]);
+    const sides = Arr.map(molecule.atoms, (atom) => atom.at[0]);
+    expect(stand[1] + Math.min(...lows) * scale).toBeCloseTo(0.08, 9);
+    expect(
+      stand[0] + ((Math.min(...sides) + Math.max(...sides)) / 2) * scale
+    ).toBeCloseTo(0, 9);
+    expect(bounds.x.min).toBeCloseTo(Math.min(...sides) - 1.2, 9);
+    expect(bounds.y.max).toBeCloseTo(Math.max(...lows) + 1.2, 9);
+    expect(bounds.z.max).toBeGreaterThan(bounds.z.min + 2.4);
   });
 
-  it("names glycerol, the ester bond and the fatty acid of a saturated fat", () => {
-    const { marks, stand } = layoutOf("triglyceride", false, false);
+  it("names glycerol, an ester bond and a fatty acid of a saturated fat on its right", () => {
+    const { marks, molecule, scale, stand } = layoutOf("triglyceride", false);
     expect(Arr.map(marks, (mark) => mark.part)).toEqual([
-      "glycerol",
       "ester",
+      "glycerol",
       "fatty",
     ]);
-    expect(Arr.map(marks, (mark) => mark.side)).toEqual([
-      "right",
-      "left",
-      "left",
-    ]);
-    const [glycerol, ester, fatty] = marks;
+    const [ester, glycerol, fatty] = marks;
     expect(glycerol?.at[0]).toBeGreaterThan(stand[0]);
-    expect(ester?.at[0]).toBeLessThan(stand[0]);
-    expect(fatty?.at[1]).toBeLessThan((ester?.at[1] ?? 0) - 0.3);
+    expect(ester?.at[1]).toBeGreaterThan(glycerol?.at[1] ?? 9);
+    expect(fatty?.at[1]).toBeLessThan((glycerol?.at[1] ?? 0) - 0.2);
+    const right =
+      stand[0] +
+      Math.max(...Arr.map(molecule.atoms, (atom) => atom.at[0])) * scale;
+    Arr.forEach(marks, (mark) => {
+      expect(mark.at[0]).toBeLessThan(right + 0.07);
+    });
   });
 
   it("adds the phosphate group of a membrane lipid and the kink of an unsaturated tail", () => {
-    const { marks } = layoutOf("phospholipid", true, false);
+    const { marks } = layoutOf("phospholipid", true);
     expect(Arr.map(marks, (mark) => mark.part)).toEqual([
+      "phosphate",
       "glycerol",
       "ester",
-      "fatty",
-      "phosphate",
       "kink",
+      "fatty",
     ]);
-    const [glycerol, , , phosphate, kink] = marks;
-    expect(phosphate?.at[1]).toBeGreaterThan(glycerol?.at[1] ?? 9);
-    expect(kink?.side).toBe("right");
-    expect(kink?.at[1]).toBeLessThan(glycerol?.at[1] ?? 0);
-    expect(Arr.dedupe(Arr.map(marks, (mark) => mark.at[0]))).toHaveLength(5);
   });
 
-  it("stands every label in one column on the right of a narrow frame, none on another", () => {
+  it("keeps every label clear of the one above", () => {
     Arr.forEach(["phospholipid", "triglyceride"] as const, (kind) => {
-      const { marks } = layoutOf(kind, true, true);
-      Arr.forEach(marks, (mark) => {
-        expect(mark.side).toBe("right");
-      });
-      expect(Arr.dedupe(Arr.map(marks, (mark) => mark.at[0]))).toHaveLength(1);
-      const heights = Arr.sort(
-        Arr.map(marks, (mark) => mark.at[1]),
-        Order.Number
-      );
-      Arr.forEach(Arr.zip(heights, Arr.drop(heights, 1)), ([low, high]) => {
-        expect(high - low).toBeGreaterThan(0.15);
+      Arr.forEach([true, false], (unsaturated) => {
+        const { marks, scale } = layoutOf(kind, unsaturated);
+        const heights = Arr.map(marks, (mark) => mark.at[1]);
+        Arr.forEach(Arr.zip(heights, Arr.drop(heights, 1)), ([high, low]) => {
+          expect(high - low).toBeGreaterThan(3.39 * scale);
+        });
       });
     });
   });
 });
 
 describe("crowdOf and poolsOf", () => {
-  it("names the heads and tails of a bilayer on its right and moves it aside", () => {
-    const bilayer = crowdOf("phospholipid", false, false);
+  it("names the heads and tails of a bilayer on its right", () => {
+    const bilayer = crowdOf("phospholipid", false);
     expect(Arr.map(bilayer.marks, (mark) => mark.part)).toEqual([
       "head",
       "tail",
@@ -94,33 +76,30 @@ describe("crowdOf and poolsOf", () => {
     const [head, tail] = bilayer.marks;
     expect(head?.at[1]).toBeGreaterThan(tail?.at[1] ?? 9);
     expect(tail?.at[1]).toBeGreaterThan(MIDDLE);
-    expect(head?.at[0]).toBeGreaterThan(0.2);
-    expect(bilayer.stand).toEqual([frameOf(false).aside, MIDDLE, 0]);
-    expect(bilayer.scale).toBe(frameOf(false).crowd);
-    const narrow = crowdOf("phospholipid", true, true);
-    expect(narrow.stand[0]).toBe(frameOf(true).aside);
-    expect(narrow.marks[0]?.at[0]).toBeLessThan(head?.at[0] ?? 0);
-    expect(
-      Arr.filter(narrow.molecule.atoms, (atom) => atom.element === "P")
-    ).toHaveLength(32);
+    expect(head?.at[0]).toBeGreaterThan(bilayer.bounds.x.max * bilayer.scale);
+    expect(bilayer.stand).toEqual([0, MIDDLE, 0]);
     expect(
       Arr.filter(bilayer.molecule.atoms, (atom) => atom.element === "P")
     ).toHaveLength(36);
-  });
-
-  it("stands a droplet of fat in the middle with no labels", () => {
-    const droplet = crowdOf("triglyceride", false, true);
-    expect(droplet.marks).toEqual([]);
-    expect(droplet.stand).toEqual([0, MIDDLE, 0]);
     expect(
-      Arr.some(droplet.molecule.atoms, (atom) => atom.element === "P")
-    ).toBe(false);
-    expect(crowdOf("triglyceride", true, false).scale).toBe(
-      frameOf(false).crowd
-    );
+      Arr.filter(
+        crowdOf("phospholipid", true).molecule.atoms,
+        (atom) => atom.element === "P"
+      )
+    ).toHaveLength(32);
   });
 
-  it("gathers water above and below a bilayer and all around a droplet", () => {
+  it("stands a clump of fat in the middle with no labels", () => {
+    const clump = crowdOf("triglyceride", false);
+    expect(clump.marks).toEqual([]);
+    expect(clump.stand).toEqual([0, MIDDLE, 0]);
+    expect(Arr.some(clump.molecule.atoms, (atom) => atom.element === "P")).toBe(
+      false
+    );
+    expect(clump.bounds.y.max).toBeGreaterThan(20);
+  });
+
+  it("gathers water above and below a bilayer and all around a clump of fat", () => {
     Arr.forEach(poolsOf("phospholipid"), (pool) => {
       expect(Math.abs(pool[1])).toBeGreaterThan(40);
     });

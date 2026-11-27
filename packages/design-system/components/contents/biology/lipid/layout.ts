@@ -6,8 +6,9 @@ import {
 } from "@repo/design-system/components/three/molecule/lipid";
 import type { Point } from "@repo/design-system/components/three/molecule/point";
 import { PointSchema } from "@repo/design-system/components/three/molecule/point";
+import type { Molecule } from "@repo/design-system/components/three/molecule/shape";
 import { centerOf } from "@repo/design-system/components/three/molecule/shape";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Order, Schema } from "effect";
 
 /** The parts of a lipid the lab names. */
 const PartSchema = Schema.Literals([
@@ -20,154 +21,157 @@ const PartSchema = Schema.Literals([
   "tail",
 ]);
 
-/** One label of the scene: the part it names, where it stands in scene units and the side of the subject it is on. */
+/** One label of the scene: the part it names and where it stands in scene units. */
 const MarkSchema = Schema.Struct({
   at: PointSchema,
   part: PartSchema,
-  side: Schema.Literals(["left", "right"]),
 });
 type Mark = typeof MarkSchema.Type;
 
-/** The height the camera looks at and a crowd is centred on, in scene units. */
+/** A label before it is placed: the part it names and the height of that part on the molecule, in angstrom. */
+const NoteSchema = Schema.Struct({
+  height: Schema.Finite,
+  part: PartSchema,
+});
+type Note = typeof NoteSchema.Type;
+
+/** The height a crowd is centred on and the camera first looks at, in scene units. */
 export const MIDDLE = 0.72;
+
+/** How large one angstrom of a lone lipid and of a crowd is drawn, in scene units. */
+const LONE = 0.039;
+const CROWD = 0.0155;
 
 /** How far above the floor a lone lipid's lowest atom hangs, in scene units. */
 const FOOT = 0.08;
 
-/** How far a label stands from the outermost atom, in angstrom, and how near its height an atom must be to count. */
+/**
+ * How far a label stands from the outermost atom, how near its height an
+ * atom must be to count as beside it, how far apart two labels are kept so
+ * neither covers the other, and how far past an atom's middle the atom
+ * reaches, all in angstrom.
+ */
 const MARGIN = 1.6;
-const NEAR = 2.5;
+const NEAR = 1.6;
+const APART = 3.4;
+const REACH = 1.2;
 
-/**
- * Where a lone lipid stands across the frame, in scene units: the middle
- * carbon of its glycerol a little left of the middle of a wide frame, and
- * its leftmost atom near the left edge of a narrow one.
- */
-const SHIFT = -0.22;
-const LEFT = -1.06;
+/** What stands above the top label of a column: nothing, at any height. */
+const TOP: Note = { height: Number.POSITIVE_INFINITY, part: "glycerol" };
 
-/**
- * How the scene is framed: where the camera stands, how large one angstrom
- * of a lone lipid and of a crowd is drawn in scene units, and how far a
- * crowd with labels is moved aside. A narrow frame steps back and moves the
- * subject left, so every label fits on its right.
- */
-export function frameOf(narrow: boolean) {
-  return narrow
-    ? {
-        aside: -0.5,
-        camera: [0, 0.9, 3.1] as const,
-        crowd: 0.0145,
-        molecule: 0.036,
-      }
-    : {
-        aside: -0.2,
-        camera: [0, 0.9, 2.18] as const,
-        crowd: 0.0155,
-        molecule: 0.039,
-      };
+/** How far below the middle of a fatty acid its label stands, in angstrom, clear of the kink an unsaturated one has there. */
+const BELOW = 6;
+
+/** The box that holds every atom of a molecule, in angstrom, for the camera to frame. */
+function boundsOf(molecule: Molecule) {
+  const range = (axis: 0 | 1 | 2) => {
+    const places = Arr.map(molecule.atoms, (atom) => atom.at[axis]);
+    return {
+      max: Math.max(...places) + REACH,
+      min: Math.min(...places) - REACH,
+    };
+  };
+  return { x: range(0), y: range(1), z: range(2) };
 }
 
 /**
- * A lone lipid laid out in the frame: its atoms, how large one angstrom of
- * it is drawn, where the middle carbon of its glycerol stands in scene
- * units, and its labels. In a wide frame the ester bond, the fatty acid and
- * the phosphate group are named on its left, and glycerol and the kink of an
- * unsaturated tail on its right, each level with its part and beside the
- * atoms at that height. In a narrow frame all stand in one column on the
- * right of the whole molecule, nudged apart so none covers another.
+ * The heights of a column of labels, from the top one down: each as high as
+ * its part, or lower when the label above would otherwise cover it.
  */
-export function layoutOf(kind: Kind, unsaturated: boolean, narrow: boolean) {
+function spacedOf(notes: readonly Note[]): readonly Note[] {
+  const down = Arr.sort(
+    notes,
+    Order.mapInput(Order.flip(Order.Number), (note: Note) => note.height)
+  );
+  return Arr.drop(
+    Arr.scan(
+      down,
+      TOP,
+      (above, note): Note => ({
+        height: Math.min(note.height, above.height - APART),
+        part: note.part,
+      })
+    ),
+    1
+  );
+}
+
+/**
+ * A lone lipid laid out for the camera to frame: its atoms, how large one
+ * angstrom of it is drawn, where the middle carbon of its glycerol stands
+ * in scene units, the box of its atoms in angstrom, and its labels. The
+ * labels stand in a column on its right, each beside the atoms at its own
+ * height and as level with the part it names as the label above lets it be:
+ * the phosphate group of a membrane lipid, glycerol, an ester bond, the kink
+ * of an unsaturated tail and a fatty acid.
+ */
+export function layoutOf(kind: Kind, unsaturated: boolean) {
   const { ester, kink, molecule } = lipidOf(kind, unsaturated);
-  const scale = frameOf(narrow).molecule;
-  const leftmost = Math.min(...Arr.map(molecule.atoms, (atom) => atom.at[0]));
-  const lowest = Math.min(...Arr.map(molecule.atoms, (atom) => atom.at[1]));
+  const bounds = boundsOf(molecule);
   const stand: Point = [
-    narrow ? LEFT - leftmost * scale : SHIFT,
-    FOOT - lowest * scale,
+    (-(bounds.x.min + bounds.x.max) / 2) * LONE,
+    FOOT - (bounds.y.min + REACH) * LONE,
     0,
   ];
-  const edgeOf = (side: Mark["side"], height: number) => {
-    const sides = Arr.map(
-      Arr.filter(
-        molecule.atoms,
-        (atom) => narrow || Math.abs(atom.at[1] - height) < NEAR
-      ),
-      (atom) => atom.at[0]
-    );
-    return side === "left"
-      ? Math.min(...sides) - MARGIN
-      : Math.max(...sides) + MARGIN;
-  };
-  const mark = (
-    part: Mark["part"],
-    wide: Mark["side"],
-    height: number,
-    nudge: number
-  ): Mark => {
-    const side = narrow ? "right" : wide;
-    return {
-      at: [
-        stand[0] + edgeOf(side, height) * scale,
-        stand[1] + (height + (narrow ? nudge : 0)) * scale,
-        0,
-      ],
-      part,
-      side,
-    };
-  };
+  const notes = spacedOf([
+    ...Arr.map(
+      Arr.filter(molecule.atoms, (atom) => atom.element === "P"),
+      (atom): Note => ({ height: atom.at[1] + 1, part: "phosphate" })
+    ),
+    { height: centerOf(molecule, 0)[1] + 0.5, part: "glycerol" },
+    { height: ester[1], part: "ester" },
+    ...(unsaturated ? [{ height: kink[1], part: "kink" } as const] : []),
+    { height: centerOf(molecule, 1)[1] - BELOW, part: "fatty" },
+  ]);
   return {
-    marks: [
-      mark("glycerol", "right", centerOf(molecule, 0)[1] + 0.5, 0.5),
-      mark("ester", "left", ester[1], -4),
-      mark("fatty", "left", centerOf(molecule, 1)[1], -7),
-      ...Arr.map(
-        Arr.filter(molecule.atoms, (atom) => atom.element === "P"),
-        (atom) => mark("phosphate", "left", atom.at[1] + 1, 2.5)
-      ),
-      ...(unsaturated ? [mark("kink", "right", kink[1], 0)] : []),
-    ],
+    bounds,
+    marks: Arr.map(notes, (note): Mark => {
+      const beside = Arr.map(
+        Arr.filter(
+          molecule.atoms,
+          (atom) => Math.abs(atom.at[1] - note.height) < NEAR
+        ),
+        (atom) => atom.at[0]
+      );
+      return {
+        at: [
+          stand[0] + (Math.max(...beside) + MARGIN) * LONE,
+          stand[1] + note.height * LONE,
+          0,
+        ],
+        part: note.part,
+      };
+    }),
     molecule,
-    scale,
+    scale: LONE,
     stand,
   };
 }
 
 /**
- * Many lipids in water laid out in the frame: the heavy atoms of a droplet
- * of fat or of a patch of bilayer, how large one angstrom is drawn, where
- * the middle of the crowd stands in scene units, and its labels. A bilayer
- * names the hydrophilic heads of its upper leaflet and the hydrophobic tails
- * below them on its right, and is moved aside to make room for them; a
- * droplet has no labels and stands in the middle.
+ * Many lipids in water laid out for the camera to frame: the heavy atoms of
+ * a clump of fat or of a patch of bilayer, how large one angstrom is drawn,
+ * where the middle of the crowd stands in scene units, the box of its atoms
+ * in angstrom, and its labels. A bilayer names the hydrophilic heads of its
+ * upper leaflet and the hydrophobic tails below them on its right; a clump
+ * of fat has no labels.
  */
-export function crowdOf(kind: Kind, unsaturated: boolean, narrow: boolean) {
-  const frame = frameOf(narrow);
-  if (kind === "triglyceride") {
-    return {
-      marks: [],
-      molecule: dropletOf(unsaturated),
-      scale: frame.crowd,
-      stand: [0, MIDDLE, 0] as const,
-    };
-  }
-  const molecule = bilayerOf(
-    unsaturated,
-    unsaturated ? 4 : 3,
-    unsaturated ? 4 : 6
-  );
-  const reach =
-    Math.max(...Arr.map(molecule.atoms, (atom) => atom.at[0])) + MARGIN * 2;
+export function crowdOf(kind: Kind, unsaturated: boolean) {
+  const fat = kind === "triglyceride";
+  const molecule = fat
+    ? dropletOf(unsaturated)
+    : bilayerOf(unsaturated, unsaturated ? 4 : 3, unsaturated ? 4 : 6);
+  const bounds = boundsOf(molecule);
   const mark = (part: Mark["part"], height: number): Mark => ({
-    at: [frame.aside + reach * frame.crowd, MIDDLE + height * frame.crowd, 0],
+    at: [(bounds.x.max + MARGIN) * CROWD, MIDDLE + height * CROWD, 0],
     part,
-    side: "right",
   });
   return {
-    marks: [mark("head", 27), mark("tail", 12)],
+    bounds,
+    marks: fat ? [] : [mark("head", 27), mark("tail", 12)],
     molecule,
-    scale: frame.crowd,
-    stand: [frame.aside, MIDDLE, 0] as const,
+    scale: CROWD,
+    stand: [0, MIDDLE, 0] as const,
   };
 }
 

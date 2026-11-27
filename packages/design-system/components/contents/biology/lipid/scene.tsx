@@ -1,8 +1,7 @@
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import {
   crowdOf,
-  frameOf,
   layoutOf,
   MIDDLE,
   poolsOf,
@@ -14,10 +13,10 @@ import type {
 } from "@repo/design-system/components/contents/biology/lipid/packing";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { MoleculeModel } from "@repo/design-system/components/three/molecule/kit";
 import { Solvent } from "@repo/design-system/components/three/molecule/solvent";
-import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { Array as Arr } from "effect";
 import { useMemo, useRef } from "react";
@@ -31,14 +30,6 @@ type Parts = Readonly<
   >
 >;
 
-/** Whether the frame is too narrow for labels on both sides of the subject. */
-function useNarrow() {
-  return isNarrowThreeScene(
-    useThree((state) => state.size),
-    1.2
-  );
-}
-
 /**
  * The lipid lab's scene. One molecule is a ball and stick model with every
  * atom, in the water it meets: glycerol, the ester bonds, eighteen-carbon
@@ -46,7 +37,8 @@ function useNarrow() {
  * when not, and the phosphate and choline head of a membrane lipid. Many
  * molecules in water are a space-filling model of their heavy atoms: a clump
  * of fat that hides its tails from the water, or a patch of bilayer with its
- * heads out and its tails in.
+ * heads out and its tails in. The camera frames the atoms and their labels,
+ * whatever the shape of the frame; the water is left out of that fit.
  */
 export function LipidScene({
   chain,
@@ -61,21 +53,15 @@ export function LipidScene({
 }) {
   const playing = useVisualScene((card) => card.playing, false);
   const ink = useLabelInk();
-  const narrow = useNarrow();
   const rootRef = useRef<Group>(null);
   const clock = useRef(0);
   const unsaturated = chain === "unsaturated";
-  const one = useMemo(
+  const subject = useMemo(
     () =>
       scale === "molecule"
-        ? layoutOf(molecule, unsaturated, narrow)
-        : undefined,
-    [molecule, narrow, scale, unsaturated]
-  );
-  const many = useMemo(
-    () =>
-      scale === "water" ? crowdOf(molecule, unsaturated, narrow) : undefined,
-    [molecule, narrow, scale, unsaturated]
+        ? layoutOf(molecule, unsaturated)
+        : crowdOf(molecule, unsaturated),
+    [molecule, scale, unsaturated]
   );
 
   useFrame((_, delta) => {
@@ -90,30 +76,34 @@ export function LipidScene({
   return (
     <group>
       <CameraControls
-        cameraPosition={frameOf(narrow).camera}
+        cameraPosition={[0, 0.9, 2.18]}
         cameraTarget={[0, MIDDLE, 0]}
         fov={38}
+        framing="content"
       />
       <group ref={rootRef}>
-        {one !== undefined && (
-          <group position={one.stand} scale={one.scale}>
-            <MoleculeModel molecule={one.molecule} style="sticks" />
-            <group position={[0, -8, -32]}>
-              <Solvent count={30} inner={14} outer={24} playing={playing} />
-            </group>
-          </group>
-        )}
-        {many !== undefined && (
-          <group position={many.stand} scale={many.scale}>
-            <MoleculeModel molecule={many.molecule} style="spheres" />
-            <Water kind={molecule} />
-          </group>
-        )}
-        {Arr.map(one?.marks ?? many?.marks ?? [], (mark) => (
+        <group position={subject.stand} scale={subject.scale}>
+          <CameraBounds bounds={subject.bounds}>
+            <MoleculeModel
+              molecule={subject.molecule}
+              style={scale === "molecule" ? "sticks" : "spheres"}
+            />
+          </CameraBounds>
+          <CameraBounds exclude>
+            {scale === "molecule" ? (
+              <group position={[-16, -8, -28]}>
+                <Solvent count={26} inner={12} outer={20} playing={playing} />
+              </group>
+            ) : (
+              <Water kind={molecule} />
+            )}
+          </CameraBounds>
+        </group>
+        {Arr.map(subject.marks, (mark) => (
           <ThreeLabel
-            anchorX={mark.side === "left" ? "right" : "left"}
+            anchorX="left"
             color={ink}
-            fontSize={narrow ? "compact" : "annotation"}
+            fontSize="compact"
             key={mark.part}
             position={mark.at}
           >
