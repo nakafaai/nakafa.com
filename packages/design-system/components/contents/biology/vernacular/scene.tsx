@@ -1,5 +1,6 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { AnimalModel } from "@repo/design-system/components/contents/biology/vernacular/animals";
+import { seabedAt } from "@repo/design-system/components/contents/biology/vernacular/habitat";
 import type {
   SeaAnimal,
   SeaLanguage,
@@ -9,7 +10,6 @@ import {
   seaSlotPosition,
   seaSpeciesOf,
 } from "@repo/design-system/components/contents/biology/vernacular/model";
-import { seabedAt } from "@repo/design-system/components/contents/biology/vernacular/habitat";
 import { Seabed } from "@repo/design-system/components/contents/biology/vernacular/seabed";
 import {
   SimulationTicker,

@@ -13,8 +13,8 @@ import {
 } from "@repo/design-system/components/contents/biology/gametogenesis/gonad";
 import {
   femaleForms,
-  fimbriaForms,
   fimbriae,
+  fimbriaForms,
   maleForms,
 } from "@repo/design-system/components/contents/biology/gametogenesis/tract";
 import { ThreeLabel } from "@repo/design-system/components/three/label";

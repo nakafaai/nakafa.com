@@ -22,12 +22,7 @@ import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { useRef } from "react";
 import type { Points } from "three";
-import {
-  AdditiveBlending,
-  BackSide,
-  BufferAttribute,
-  DoubleSide,
-} from "three";
+import { AdditiveBlending, BackSide, BufferAttribute, DoubleSide } from "three";
 
 /** Seagrass leans and recovers with the swell. */
 const BLADE_STROKE: Stroke = {
@@ -66,7 +61,6 @@ function Motes() {
         depthWrite={false}
         opacity={0.55}
         size={0.006}
-        sizeAttenuation
         transparent
       />
     </points>

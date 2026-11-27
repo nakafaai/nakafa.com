@@ -85,7 +85,9 @@ describe("loftBody", () => {
   it("closes each tip to one point with one normal, and welds its seam", () => {
     const body = loftBody(SPINDLE);
 
-    expect(vertexAt(body.position, 0, 0)).toEqual(vertexAt(body.position, 0, 5));
+    expect(vertexAt(body.position, 0, 0)).toEqual(
+      vertexAt(body.position, 0, 5)
+    );
     expect(vertexAt(body.normal, 0, 0)).toEqual(vertexAt(body.normal, 0, 5));
     expect(vertexAt(body.normal, 0, 0)[0]).toBeCloseTo(-1);
     expect(vertexAt(body.normal, 4, 12)).toEqual(vertexAt(body.normal, 4, 0));
@@ -119,7 +121,7 @@ describe("finBody", () => {
       sweep: 0.3,
       thick: 0.05,
     });
-    const tip = (8 * 9) * 3;
+    const tip = 8 * 9 * 3;
 
     expect(fin.position[1]).toBeCloseTo(0.2);
     expect(fin.position[tip]).toBeCloseTo(1);

@@ -111,7 +111,13 @@ export function attachForm(
       .transformDirection(placement)
       .toArray(normal, vertex);
   }
-  return { color: form.color, index: form.index, normal, position, uv: form.uv };
+  return {
+    color: form.color,
+    index: form.index,
+    normal,
+    position,
+    uv: form.uv,
+  };
 }
 
 /**
@@ -119,7 +125,11 @@ export function attachForm(
  * moved by one stroke: the trunk, its fins or limbs, its head.
  */
 export function fuseForms(forms: readonly Form[]) {
-  const vertices = Arr.reduce(forms, 0, (sum, form) => sum + form.uv.length / 2);
+  const vertices = Arr.reduce(
+    forms,
+    0,
+    (sum, form) => sum + form.uv.length / 2
+  );
   const corners = Arr.reduce(forms, 0, (sum, form) => sum + form.index.length);
   const position = new Float32Array(vertices * 3);
   const normal = new Float32Array(vertices * 3);

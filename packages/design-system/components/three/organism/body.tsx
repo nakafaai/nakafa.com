@@ -131,9 +131,9 @@ export function Tuft({
       args={[geometry, undefined, placements.length / 16]}
       castShadow={cast}
       frustumCulled={false}
-      instanceMatrix={matrices}
       receiveShadow={cast}
     >
+      <primitive attach="instanceMatrix" object={matrices} />
       {children}
     </instancedMesh>
   );

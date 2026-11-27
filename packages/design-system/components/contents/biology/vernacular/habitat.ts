@@ -148,7 +148,7 @@ export function shaftForms(detail: number): readonly Form[] {
  * patches, the pasture a dugong grazes, each blade its own height and lean.
  */
 export function meadow(count: number) {
-  return scatter(count, 43, (index, chance) => {
+  return scatter(count, 43, (_index, chance) => {
     const patch = Math.floor(chance(1) * 9);
     const spread = 0.62 * Math.sqrt(chance(2));
     const bearing = chance(3) * 2 * Math.PI;

@@ -1,8 +1,9 @@
 import type { Surface } from "@repo/design-system/components/three/surface/detail";
 import { useSurfaceMaps } from "@repo/design-system/components/three/surface/material";
 import { getColor } from "@repo/design-system/lib/color";
+import { useEffect, useMemo } from "react";
 import type { Side } from "three";
-import { FrontSide } from "three";
+import { FrontSide, MeshPhysicalMaterial, Vector2 } from "three";
 
 /** How strongly a relief of 1 bends the light: the slope the detail normals are painted at. */
 const RELIEF = 1 / 0.6;
@@ -52,30 +53,34 @@ export function Skin({
   readonly wet?: number;
 }) {
   const maps = useSurfaceMaps(surface, repeat[0], repeat[1]);
-  const light = flesh ?? getColor("BLACK");
-
-  return (
-    <meshPhysicalMaterial
-      aoMap={maps.finish}
-      clearcoat={wet}
-      clearcoatRoughness={0.12}
-      depthWrite={clear === 0}
-      emissive={light}
-      emissiveIntensity={glow * 0.3}
-      emissiveMap={maps.tone}
-      map={maps.tone}
-      metalness={metalness}
-      normalMap={maps.normal}
-      normalScale={[bump * RELIEF, bump * RELIEF]}
-      opacity={1 - clear}
-      roughness={roughness}
-      roughnessMap={maps.finish}
-      sheen={glow}
-      sheenColor={light}
-      sheenRoughness={0.5}
-      side={side}
-      transparent={clear > 0}
-      vertexColors
-    />
+  // Sheen and the emissive map are set on the material object, which JSX props cannot name.
+  const material = useMemo(
+    () =>
+      new MeshPhysicalMaterial({
+        aoMap: maps.finish,
+        clearcoat: wet,
+        clearcoatRoughness: 0.12,
+        depthWrite: clear === 0,
+        emissive: flesh ?? getColor("BLACK"),
+        emissiveIntensity: glow * 0.3,
+        emissiveMap: maps.tone,
+        map: maps.tone,
+        metalness,
+        normalMap: maps.normal,
+        normalScale: new Vector2(bump * RELIEF, bump * RELIEF),
+        opacity: 1 - clear,
+        roughness,
+        roughnessMap: maps.finish,
+        sheen: glow,
+        sheenColor: flesh ?? getColor("BLACK"),
+        sheenRoughness: 0.5,
+        side,
+        transparent: clear > 0,
+        vertexColors: true,
+      }),
+    [bump, clear, flesh, glow, maps, metalness, roughness, side, wet]
   );
+  useEffect(() => () => material.dispose(), [material]);
+
+  return <primitive attach="material" object={material} />;
 }

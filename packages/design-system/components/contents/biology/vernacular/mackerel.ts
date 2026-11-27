@@ -117,8 +117,18 @@ export function mackerelForms(detail: number): readonly Form[] {
         attachForm(finlet, [x, -high, 0], [-0.5, -1, 0], [1, 0, 0]),
       ];
     }),
-    attachForm(pectoral, [0.17, -0.004, 0.038], [-0.85, -0.25, 0.45], [0, 1, 0]),
-    attachForm(pectoral, [0.17, -0.004, -0.038], [-0.85, -0.25, -0.45], [0, 1, 0]),
+    attachForm(
+      pectoral,
+      [0.17, -0.004, 0.038],
+      [-0.85, -0.25, 0.45],
+      [0, 1, 0]
+    ),
+    attachForm(
+      pectoral,
+      [0.17, -0.004, -0.038],
+      [-0.85, -0.25, -0.45],
+      [0, 1, 0]
+    ),
     attachForm(pelvic, [0.13, -0.066, 0.012], [-0.7, -0.6, 0.3], [1, 0, 0]),
     attachForm(pelvic, [0.13, -0.066, -0.012], [-0.7, -0.6, -0.3], [1, 0, 0]),
   ];

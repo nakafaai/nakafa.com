@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { dugongForms } from "@repo/design-system/components/contents/biology/vernacular/dugong";
 import {
   fringe,
@@ -14,6 +13,7 @@ import { mackerelForms } from "@repo/design-system/components/contents/biology/v
 import type { SeaAnimal } from "@repo/design-system/components/contents/biology/vernacular/model";
 import { starForms } from "@repo/design-system/components/contents/biology/vernacular/star";
 import { whaleForms } from "@repo/design-system/components/contents/biology/vernacular/whale";
+import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { Body, Tuft } from "@repo/design-system/components/three/organism/body";
 import { Eye } from "@repo/design-system/components/three/organism/eye";
 import type { Stroke } from "@repo/design-system/components/three/organism/life";

@@ -32,7 +32,8 @@ describe("moundBody", () => {
 
   it("closes its seam: the first and last spoke share a place and a normal", () => {
     const star = moundBody({
-      height: (out, turn) => 0.3 * (1 - out) + 0.05 * Math.sin(turn * 10 * Math.PI),
+      height: (out, turn) =>
+        0.3 * (1 - out) + 0.05 * Math.sin(turn * 10 * Math.PI),
       paint: (_out, _turn, color) => {
         color.setRGB(1, 1, 1);
       },
@@ -43,10 +44,14 @@ describe("moundBody", () => {
     const first = 2 * 21;
     const last = first + 20;
 
-    expect(star.position[last * 3]).toBeCloseTo(Number(star.position[first * 3]));
+    expect(star.position[last * 3]).toBeCloseTo(
+      Number(star.position[first * 3])
+    );
     expect(star.normal[last * 3 + 1]).toBeCloseTo(
       Number(star.normal[first * 3 + 1])
     );
-    expect(star.uv[first * 2]).toBeCloseTo(0.5 + Number(star.position[first * 3]));
+    expect(star.uv[first * 2]).toBeCloseTo(
+      0.5 + Number(star.position[first * 3])
+    );
   });
 });

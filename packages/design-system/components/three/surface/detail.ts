@@ -316,10 +316,7 @@ const PATTERNS: Record<
     return {
       height: 0.2 + 0.5 * whole ** 0.6 + 0.3 * folds - 0.35 * pore,
       shade:
-        0.45 +
-        0.3 * whole +
-        0.25 * fractalAt(x, y, 6, 6, 179, 3) -
-        0.2 * pore,
+        0.45 + 0.3 * whole + 0.25 * fractalAt(x, y, 6, 6, 179, 3) - 0.2 * pore,
     };
   },
   scales: (x, y) => {

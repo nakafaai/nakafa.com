@@ -154,7 +154,10 @@ export function loftBody(loft: Loft): Form {
     for (let column = 0; column < loft.around; column += 1) {
       const a = ring * columns + column;
       const b = a + columns;
-      index.set([a, a + 1, b, a + 1, b + 1, b], (ring * loft.around + column) * 6);
+      index.set(
+        [a, a + 1, b, a + 1, b + 1, b],
+        (ring * loft.around + column) * 6
+      );
     }
   }
 
@@ -234,11 +237,7 @@ export function ovoid(
     const turn = (Math.PI * step) / 12;
     const girth = Math.sin(turn) * (1 - 0.5 * blunt * Math.cos(turn));
     return {
-      centre: [
-        centre[0] - 0.5 * long * Math.cos(turn),
-        centre[1],
-        centre[2],
-      ],
+      centre: [centre[0] - 0.5 * long * Math.cos(turn), centre[1], centre[2]],
       tall: tall * girth,
       wide: wide * girth,
     };

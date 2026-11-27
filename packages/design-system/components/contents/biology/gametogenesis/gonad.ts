@@ -38,7 +38,7 @@ const HEAD = new Color(BIOLOGY_COLORS.spermHeadBlue);
 const TAIL = new Color(BIOLOGY_COLORS.flagellumIvory);
 
 /** Where the three cut seminiferous tubules of the testis section lie. */
-export const TUBULES = [
+const TUBULES = [
   [-0.38, 0.6, 0],
   [0, 0.66, 0.01],
   [0.38, 0.58, 0.02],
@@ -274,11 +274,7 @@ export function leydigCells() {
 }
 
 /** How far a place on a mound lies from a point of its floor. */
-function away(
-  reach: number,
-  turn: number,
-  point: readonly [number, number]
-) {
+function away(reach: number, turn: number, point: readonly [number, number]) {
   return Math.hypot(
     reach * Math.cos(turn * TURN) - point[0],
     reach * Math.sin(turn * TURN) - point[1]
@@ -312,7 +308,10 @@ function follicle(detail: number): Form {
       } else if (egg < 0.052) {
         color.copy(CORONA).multiplyScalar(0.75 + 0.4 * grain);
       } else if (out > 0.84) {
-        color.copy(PINK).lerp(AMBER, 0.45).multiplyScalar(0.75 + 0.45 * grain);
+        color
+          .copy(PINK)
+          .lerp(AMBER, 0.45)
+          .multiplyScalar(0.75 + 0.45 * grain);
       } else {
         color.copy(FLUID).multiplyScalar(0.92 + 0.1 * grain);
       }
