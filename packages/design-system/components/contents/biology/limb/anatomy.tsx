@@ -1,7 +1,7 @@
 import {
   buildBandGeometry,
   buildLongBoneGeometry,
-} from "@repo/design-system/components/contents/biology/joint/geometry";
+} from "@repo/design-system/components/contents/biology/limb/geometry";
 import { SKELETON_COLORS } from "@repo/design-system/lib/material/skeleton";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";

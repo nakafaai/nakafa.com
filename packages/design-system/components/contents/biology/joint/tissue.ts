@@ -1,4 +1,7 @@
-import { fractalAt } from "@repo/design-system/components/three/field/noise";
+import {
+  fractalAt,
+  ridgedAt,
+} from "@repo/design-system/components/three/field/noise";
 import { faces } from "@repo/design-system/components/three/organism/budget";
 import type { Form } from "@repo/design-system/components/three/organism/form";
 import type { Station } from "@repo/design-system/components/three/organism/loft";
@@ -64,11 +67,11 @@ export function fixedCartilage(kind: Synovial) {
             square: 2.3,
             stations: Arr.map(
               [
-                [-0.058, 0, 0],
-                [-0.046, 0.076, 0.134],
-                [0, 0.094, 0.134],
-                [0.04, 0.084, 0.134],
-                [0.074, 0.056, 0.12],
+                [-0.05, 0, 0],
+                [-0.04, 0.08, 0.104],
+                [0, 0.093, 0.108],
+                [0.04, 0.083, 0.108],
+                [0.074, 0.055, 0.098],
                 [0.094, 0, 0],
               ] as const,
               ([x, tall, wide]): Station => ({ centre: [x, 0, 0], tall, wide })
@@ -121,12 +124,12 @@ const WALL = 0.2;
 export function capsuleForms(kind: Synovial) {
   return (detail: number): readonly Form[] => [
     sheet(
-      { ...CAPSULE[kind], radius: WALL, thick: 0.014 },
+      { ...CAPSULE[kind], radius: WALL, thick: 0.03 },
       (along, across, side, color) => {
         if (side < 0) {
           color
             .copy(SYNOVIUM)
-            .multiplyScalar(0.8 + 0.3 * fractalAt(along, across, 14, 14, 83, 3));
+            .multiplyScalar(0.55 + 0.6 * ridgedAt(along, across, 9, 9, 83, 3));
           return;
         }
         const band = 0.5 + 0.5 * Math.sin(across * 16 + along * 5);
@@ -145,10 +148,10 @@ export function fluidForms(kind: Synovial) {
   return (detail: number): readonly Form[] => [
     sheet(
       {
-        across: [CAPSULE[kind].across[0] + 0.04, CAPSULE[kind].across[1] - 0.04],
-        along: [CAPSULE[kind].along[0] + 0.04, CAPSULE[kind].along[1] - 0.04],
-        radius: WALL - 0.016,
-        thick: 0.012,
+        across: [CAPSULE[kind].across[0] + 0.1, CAPSULE[kind].across[1] - 0.1],
+        along: [CAPSULE[kind].along[0] + 0.06, CAPSULE[kind].along[0] + 0.62],
+        radius: WALL - 0.03,
+        thick: 0.03,
       },
       (_along, _across, _side, color) => {
         color.copy(STRAW);
@@ -239,8 +242,9 @@ export function tendonForms(detail: number): readonly Form[] {
 
 /**
  * A skeletal muscle one unit long and one unit thick along x, ready to be
- * stretched from its origin to its tendon: a spindle of red fascicles that
- * narrows into pale tendon at each end.
+ * stretched from where it is sawn through to its tendon: a spindle of red
+ * fascicles, cut blunt at its first end and narrowing into pale tendon at
+ * its last.
  */
 export function bellyForms(detail: number): readonly Form[] {
   return [
@@ -248,16 +252,19 @@ export function bellyForms(detail: number): readonly Form[] {
       along: faces(64, detail),
       around: faces(40, detail),
       belly: 0,
-      lump: 0.03,
+      lump: 0.07,
       paint: (along, around, color) => {
         const fascicle = fractalAt(along, around, 2, 30, 103, 3);
-        const end = Math.min(1, Math.min(along, 1 - along) / 0.14);
+        const end = Math.min(1, (1 - along) / 0.16);
         color
           .copy(DARK)
-          .lerp(RED, 0.25 + 0.75 * fascicle)
+          .lerp(RED, 0.5 * fascicle)
+          .multiplyScalar(0.78)
+          .multiplyScalar(0.7 + 0.3 * Math.cos(around * 2 * Math.PI * 14) ** 2)
           .lerp(TENDON, 1 - end * end * (3 - 2 * end));
       },
-      relief: (_along, around) => 0.05 * Math.sin(around * 2 * Math.PI * 9),
+      relief: (_along, around) =>
+        0.045 * Math.abs(Math.cos(around * 2 * Math.PI * 7)),
       seed: 103,
       square: 2,
       stations: Arr.makeBy(15, (step): Station => {
@@ -265,7 +272,7 @@ export function bellyForms(detail: number): readonly Form[] {
         const girth =
           step === 0 || step === 14
             ? 0
-            : 0.16 + 0.84 * Math.sin(Math.PI * along) ** 0.8;
+            : 0.16 + 0.84 * Math.sin(Math.PI * (0.22 + 0.78 * along)) ** 0.8;
         return { centre: [along, 0, 0], tall: girth, wide: girth };
       }),
       up: [0, 1, 0],

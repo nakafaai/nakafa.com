@@ -1,4 +1,5 @@
 import { useFrame } from "@react-three/fiber";
+import { Callout } from "@repo/design-system/components/contents/biology/joint/callout";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import type {
   JointKind,
@@ -17,6 +18,14 @@ import {
   vaultForms,
   vertebraForms,
 } from "@repo/design-system/components/contents/biology/joint/skeleton";
+import {
+  BoneSkin,
+  CapsuleSkin,
+  CartilageSkin,
+  CordSkin,
+  FluidSkin,
+  MuscleSkin,
+} from "@repo/design-system/components/contents/biology/joint/skins";
 import {
   bulge,
   stretchBetween,
@@ -39,9 +48,8 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Body } from "@repo/design-system/components/three/organism/body";
-import { Skin } from "@repo/design-system/components/three/organism/skin";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
-import { SKELETON_COLORS } from "@repo/design-system/lib/material/skeleton";
+import { Array as Arr } from "effect";
 import { useRef } from "react";
 import type { Group } from "three";
 import { Vector3 } from "three";
@@ -80,20 +88,108 @@ const MUSCLE: Record<
   ballSocket: {
     girth: 0.058,
     grip: new Vector3(...SHOULDER_INSERTION),
-    origin: new Vector3(-0.64, 0.21, -0.02),
-    rest: 0.6,
+    origin: new Vector3(-0.54, 0.17, -0.02),
+    rest: 0.5,
     tendon: 0.22,
     towards: new Vector3(-0.3, 0.33, 0),
   },
   hinge: {
     girth: 0.062,
     grip: new Vector3(...ELBOW_INSERTION),
-    origin: new Vector3(-0.64, 0.145, 0.03),
-    rest: 0.67,
+    origin: new Vector3(-0.52, 0.115, 0.03),
+    rest: 0.55,
     tendon: 0.22,
     towards: new Vector3(-0.3, 0.22, 0.05),
   },
 };
+
+/** The parts of a synovial joint that stay still, whose names stand in open space on leaders. */
+const STILL = [
+  "muscle",
+  "bone",
+  "cartilage",
+  "ligament",
+  "membrane",
+  "fluid",
+] as const;
+
+/** Where each still part's name stands, the edge its leader leaves from, and the point it names. */
+const NAMES: Record<
+  Synovial,
+  Readonly<
+    Record<
+      (typeof STILL)[number],
+      {
+        readonly at: readonly [number, number, number];
+        readonly side: "bottom" | "left" | "right" | "top";
+        readonly target: readonly [number, number, number];
+      }
+    >
+  >
+> = {
+  ballSocket: {
+    bone: { at: [-0.62, -0.08, 0], side: "right", target: [-0.54, -0.08, 0] },
+    cartilage: {
+      at: [-0.4, -0.34, 0.06],
+      side: "top",
+      target: [-0.077, -0.084, 0.065],
+    },
+    fluid: {
+      at: [0.42, -0.46, -0.1],
+      side: "top",
+      target: [-0.046, -0.13, -0.099],
+    },
+    ligament: {
+      at: [-0.2, -0.46, 0.06],
+      side: "top",
+      target: [-0.175, -0.107, 0.064],
+    },
+    membrane: {
+      at: [0.14, -0.34, -0.1],
+      side: "top",
+      target: [-0.052, -0.106, -0.142],
+    },
+    muscle: {
+      at: [-0.62, 0.17, -0.02],
+      side: "right",
+      target: [-0.54, 0.17, -0.02],
+    },
+  },
+  hinge: {
+    bone: { at: [-0.6, 0, 0], side: "right", target: [-0.52, 0, 0] },
+    cartilage: {
+      at: [-0.36, -0.3, 0.1],
+      side: "top",
+      target: [-0.03, -0.07, 0.105],
+    },
+    fluid: {
+      at: [0.44, -0.42, -0.1],
+      side: "top",
+      target: [0.045, -0.109, -0.122],
+    },
+    ligament: {
+      at: [-0.14, -0.42, 0.14],
+      side: "top",
+      target: [0, -0.02, 0.146],
+    },
+    membrane: {
+      at: [0.2, -0.3, -0.1],
+      side: "top",
+      target: [0.108, -0.141, -0.091],
+    },
+    muscle: {
+      at: [-0.6, 0.115, 0.03],
+      side: "right",
+      target: [-0.52, 0.115, 0.03],
+    },
+  },
+};
+
+/**
+ * How many scene units one unit of a joint's anatomy is drawn at, so the
+ * specimen fills the frame beside names of the stage's own reading size.
+ */
+const SCALE = 3.5;
 
 /** How thick a tendon is drawn. */
 const CORD = 0.014;
@@ -102,104 +198,24 @@ const CORD = 0.014;
 const grip = new Vector3();
 const junction = new Vector3();
 
-/** Living compact bone: matt, faintly pitted, and warm where light passes through its thin edges. */
-function BoneSkin() {
-  return (
-    <Skin
-      bump={0.22}
-      flesh={SKELETON_COLORS.boneSoft}
-      glow={0.25}
-      repeat={[5, 3]}
-      roughness={0.8}
-      surface="stone"
-    />
-  );
-}
+/** How far the camera stands from each joint, so the joint and all it can reach fill the frame. */
+const DISTANCE: Record<JointKind, number> = {
+  ballSocket: 8.4,
+  disc: 6.3,
+  hinge: 8.4,
+  suture: 8.4,
+};
 
-/** Hyaline cartilage: smooth, wet and pearly. */
-function CartilageSkin() {
-  return (
-    <Skin
-      bump={0.15}
-      flesh={SKELETON_COLORS.cartilageHyaline}
-      glow={0.5}
-      repeat={[2, 2]}
-      roughness={0.35}
-      surface="ceramic"
-      wet={0.9}
-    />
-  );
-}
-
-/** A tendon, a ligament or a capsule: tough, moist cords of fibre with a silky sheen. */
-function CordSkin() {
-  return (
-    <Skin
-      bump={0.5}
-      flesh={SKELETON_COLORS.tendonSheen}
-      glow={0.4}
-      repeat={[1, 3]}
-      roughness={0.6}
-      surface="wood"
-      wet={0.35}
-    />
-  );
-}
-
-/** Skeletal muscle under its thin wet sheath. */
-function MuscleSkin() {
-  return (
-    <Skin
-      bump={0.5}
-      flesh={SKELETON_COLORS.muscleFiber}
-      glow={0.4}
-      repeat={[2, 4]}
-      roughness={0.55}
-      surface="tissue"
-      wet={0.6}
-    />
-  );
-}
-
-/** The synovial membrane and the fibrous capsule round it: soft, wet and finely folded. */
-function CapsuleSkin() {
-  return (
-    <Skin
-      bump={0.45}
-      flesh={SKELETON_COLORS.synovium}
-      glow={0.4}
-      repeat={[4, 4]}
-      roughness={0.5}
-      surface="mucosa"
-      wet={0.7}
-    />
-  );
-}
-
-/** Synovial fluid: a clear, slippery, straw-coloured film. */
-function FluidSkin() {
-  return (
-    <Skin
-      bump={0.1}
-      clear={0.55}
-      repeat={[1, 1]}
-      roughness={0.08}
-      surface="plastic"
-      wet={1}
-    />
-  );
-}
-
-/** The camera every joint is seen with: one authored pose, fitted to what the joint can reach. */
-function JointCamera() {
+/** The camera a joint is seen with: one authored pose, fitted to what the joint can reach. */
+function JointCamera({ distance }: { readonly distance: number }) {
   return (
     <CameraControls
-      cameraPosition={[0.5, 0.7, 4]}
+      cameraPosition={[0.12 * distance, 0.17 * distance, 0.98 * distance]}
       cameraTarget={[0, 0, 0]}
       fov={30}
       framing="content"
-      maxDistance={6.8}
-      minDistance={0.8}
+      maxDistance={24}
+      minDistance={2.8}
     />
   );
 }
@@ -232,6 +248,7 @@ export function JointScene({
   const pad = useRef<Group>(null);
   const tendon = useRef<Group>(null);
   const belly = useRef<Group>(null);
+  const mark = useRef<Group>(null);
   const clock = useRef(0);
 
   useFrame((_, delta) => {
@@ -255,6 +272,7 @@ export function JointScene({
       moving.current === null ||
       tendon.current === null ||
       belly.current === null ||
+      mark.current === null ||
       joint === "suture" ||
       joint === "disc"
     ) {
@@ -273,14 +291,15 @@ export function JointScene({
       junction,
       bulge(muscle.girth, muscle.rest, muscle.origin.distanceTo(junction))
     );
+    mark.current.position.copy(junction);
   });
 
   if (joint === "suture") {
     return (
       <group>
         <SimulationTicker running={playing} />
-        <JointCamera />
-        <group rotation={[-0.32, 0.3, 0.1]}>
+        <JointCamera distance={DISTANCE[joint]} />
+        <group rotation={[-0.5, 0.42, 0.12]} scale={SCALE}>
           <group position={[0, 0, -1.2]}>
             <Body shape={vaultForms}>
               <BoneSkin />
@@ -289,24 +308,16 @@ export function JointScene({
               <CordSkin />
             </Body>
           </group>
-          <ThreeLabel
-            anchorY="bottom"
-            color={ink}
-            fontSize="compact"
-            gap={0.05}
-            position={[-0.3, 0.5, -0.1]}
+          <Callout
+            at={[-0.4, 0.44, 0]}
+            side="bottom"
+            target={[-0.36, 0.26, -0.06]}
           >
             {parts.bone}
-          </ThreeLabel>
-          <ThreeLabel
-            anchorY="top"
-            color={ink}
-            fontSize="compact"
-            gap={0.05}
-            position={[0, -0.49, -0.08]}
-          >
+          </Callout>
+          <Callout at={[0.1, -0.46, 0]} side="top" target={[0, -0.28, 0]}>
             {parts.ligament}
-          </ThreeLabel>
+          </Callout>
         </group>
       </group>
     );
@@ -316,8 +327,8 @@ export function JointScene({
     return (
       <group>
         <SimulationTicker running={playing} />
-        <JointCamera />
-        <group rotation={[0.12, 0.65, 0]}>
+        <JointCamera distance={DISTANCE[joint]} />
+        <group rotation={[0.12, 0.65, 0]} scale={SCALE}>
           <group position={[0, -0.165, 0]}>
             <Body shape={vertebraForms}>
               <BoneSkin />
@@ -328,43 +339,40 @@ export function JointScene({
               <CordSkin />
             </Body>
           </group>
-          <CameraBounds motion={{ rotation: "x" }} objectRef={moving}>
+          <group ref={moving}>
             <group position={[0, 0.165, 0]}>
               <Body shape={vertebraForms}>
                 <BoneSkin />
               </Body>
             </group>
-          </CameraBounds>
+          </group>
+          <Callout
+            at={[-0.26, 0.36, 0.2]}
+            side="bottom"
+            target={[-0.12, 0.2, 0.13]}
+          >
+            {parts.bone}
+          </Callout>
+          <Callout
+            at={[0.3, -0.36, 0.2]}
+            side="top"
+            target={[0.1, -0.02, 0.15]}
+          >
+            {parts.cartilage}
+          </Callout>
         </group>
-        <ThreeLabel
-          anchorX="right"
-          color={ink}
-          fontSize="compact"
-          gap={0.06}
-          position={[-0.3, 0.22, 0.1]}
-        >
-          {parts.bone}
-        </ThreeLabel>
-        <ThreeLabel
-          anchorX="left"
-          color={ink}
-          fontSize="compact"
-          gap={0.06}
-          position={[0.3, 0, 0.1]}
-        >
-          {parts.cartilage}
-        </ThreeLabel>
       </group>
     );
   }
 
   const hinge = joint === "hinge";
   const soft = SOFT[joint];
+  const names = NAMES[joint];
 
   return (
-    <group>
+    <group scale={SCALE}>
       <SimulationTicker running={playing} />
-      <JointCamera />
+      <JointCamera distance={DISTANCE[joint]} />
       <Body shape={hinge ? humerusForms : scapulaForms}>
         <BoneSkin />
       </Body>
@@ -404,73 +412,28 @@ export function JointScene({
           <MuscleSkin />
         </Body>
       </group>
-
-      <ThreeLabel
-        anchorY="bottom"
-        color={ink}
-        fontSize="compact"
-        gap={0.05}
-        position={[-0.45, hinge ? 0.24 : 0.3, 0]}
-      >
-        {parts.muscle}
-      </ThreeLabel>
-      <ThreeLabel
-        anchorY="bottom"
-        color={ink}
-        fontSize="compact"
-        gap={0.05}
-        position={[-0.08, hinge ? 0.3 : 0.36, 0.05]}
-      >
-        {parts.tendon}
-      </ThreeLabel>
-      <ThreeLabel
-        anchorX="right"
-        anchorY="top"
-        color={ink}
-        fontSize="compact"
-        gap={0.05}
-        position={[-0.5, -0.08, 0]}
-      >
-        {parts.bone}
-      </ThreeLabel>
-      <ThreeLabel
-        anchorY="top"
-        color={ink}
-        fontSize="compact"
-        gap={0.05}
-        position={[hinge ? 0 : -0.1, hinge ? -0.24 : -0.16, 0.12]}
-      >
-        {parts.cartilage}
-      </ThreeLabel>
-      <ThreeLabel
-        anchorY="top"
-        color={ink}
-        fontSize="compact"
-        gap={0.05}
-        position={[-0.32, -0.3, 0]}
-      >
-        {parts.ligament}
-      </ThreeLabel>
-      <ThreeLabel
-        anchorX="left"
-        anchorY="top"
-        color={ink}
-        fontSize="compact"
-        gap={0.05}
-        position={[0.2, -0.26, -0.1]}
-      >
-        {parts.membrane}
-      </ThreeLabel>
-      <ThreeLabel
-        anchorX="left"
-        anchorY="top"
-        color={ink}
-        fontSize="compact"
-        gap={0.05}
-        position={[0.36, -0.42, -0.1]}
-      >
-        {parts.fluid}
-      </ThreeLabel>
+      <group ref={mark}>
+        <ThreeLabel
+          anchorX="right"
+          anchorY="bottom"
+          color={ink}
+          fontSize="compact"
+          gap={0.04}
+          position={[-0.02, 0.07, 0]}
+        >
+          {parts.tendon}
+        </ThreeLabel>
+      </group>
+      {Arr.map(STILL, (part) => (
+        <Callout
+          at={names[part].at}
+          key={part}
+          side={names[part].side}
+          target={names[part].target}
+        >
+          {parts[part]}
+        </Callout>
+      ))}
     </group>
   );
 }

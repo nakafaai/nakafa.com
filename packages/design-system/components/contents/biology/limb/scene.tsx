@@ -1,6 +1,6 @@
 import { useThree } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
-import { buildBandGeometry } from "@repo/design-system/components/contents/biology/joint/geometry";
+import { buildBandGeometry } from "@repo/design-system/components/contents/biology/limb/geometry";
 import {
   useArmGeometries,
   useLegGeometries,

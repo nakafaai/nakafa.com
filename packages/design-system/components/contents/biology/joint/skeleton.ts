@@ -1,6 +1,7 @@
 import {
   cellsAt,
   fractalAt,
+  ridgedAt,
 } from "@repo/design-system/components/three/field/noise";
 import { faces } from "@repo/design-system/components/three/organism/budget";
 import type { Form } from "@repo/design-system/components/three/organism/form";
@@ -28,12 +29,13 @@ const TURN = 2 * Math.PI;
  * thinner, and pitted with the small holes its vessels enter by.
  */
 function compact(color: Color, x: number, y: number, seed: number) {
-  const mottle = fractalAt(x, y, 9, 5, seed, 4);
-  const pit = cellsAt(x, y, 70, 36, seed + 1).nearest < 0.16 ? 0.84 : 1;
+  const mottle = fractalAt(x, y, 7, 4, seed, 4);
+  const streak = fractalAt(x, y, 3, 48, seed + 2, 3);
+  const pit = cellsAt(x, y, 70, 36, seed + 1).nearest < 0.16 ? 0.8 : 1;
   color
     .copy(SOFT)
-    .lerp(IVORY, 0.3 + 0.7 * mottle)
-    .multiplyScalar(pit);
+    .lerp(IVORY, Math.min(1, 0.1 + 0.9 * mottle))
+    .multiplyScalar(pit * (0.82 + 0.26 * streak));
 }
 
 /**
@@ -60,7 +62,7 @@ function bone(
     along: faces(120, detail),
     around: faces(40, detail),
     belly: 0,
-    lump: 0.05,
+    lump: 0.09,
     paint: (along, around, color) => {
       if (along < cut[0] || along > 1 - cut[1]) {
         spongy(color, around, along * 6, seed);
@@ -68,7 +70,8 @@ function bone(
       }
       compact(color, along, around, seed);
     },
-    relief: () => 0,
+    relief: (along, around) =>
+      0.05 * (ridgedAt(along, around, 3, 5, seed + 3, 2) - 0.5),
     seed,
     square: 2.3,
     stations,
@@ -95,17 +98,17 @@ export function humerusForms(detail: number): readonly Form[] {
   return [
     bone(
       sections([
-        [-0.66, 0, 0, 0, 0],
-        [-0.65, 0, 0, 0.05, 0.05],
-        [-0.52, 0, 0, 0.054, 0.054],
-        [-0.4, 0, 0, 0.05, 0.056],
-        [-0.28, 0, 0, 0.048, 0.072],
+        [-0.52, 0, 0, 0, 0],
+        [-0.51, 0, 0, 0.05, 0.05],
+        [-0.42, 0, 0, 0.054, 0.054],
+        [-0.34, 0, 0, 0.05, 0.056],
+        [-0.26, 0, 0, 0.048, 0.072],
         [-0.17, 0, 0, 0.044, 0.105],
         [-0.09, 0, 0, 0.05, 0.145],
-        [-0.04, 0, 0, 0.074, 0.13],
-        [0, 0, 0, 0.084, 0.125],
-        [0.04, 0, 0, 0.074, 0.125],
-        [0.07, 0, 0, 0.046, 0.11],
+        [-0.04, 0, 0, 0.074, 0.118],
+        [0, 0, 0, 0.084, 0.1],
+        [0.04, 0, 0, 0.074, 0.1],
+        [0.07, 0, 0, 0.046, 0.09],
         [0.084, 0, 0, 0, 0],
       ]),
       11,
@@ -132,10 +135,10 @@ export function forearmForms(detail: number): readonly Form[] {
         [0.13, -0.075, -0.02, 0.048, 0.055],
         [0.165, -0.025, -0.025, 0.05, 0.048],
         [0.26, -0.012, -0.035, 0.038, 0.04],
-        [0.4, -0.005, -0.04, 0.032, 0.032],
-        [0.54, 0, -0.04, 0.03, 0.03],
-        [0.65, 0, -0.04, 0.03, 0.032],
-        [0.66, 0, -0.04, 0, 0],
+        [0.34, -0.005, -0.04, 0.032, 0.032],
+        [0.43, 0, -0.04, 0.03, 0.03],
+        [0.51, 0, -0.04, 0.03, 0.032],
+        [0.52, 0, -0.04, 0, 0],
       ]),
       13,
       detail,
@@ -149,10 +152,10 @@ export function forearmForms(detail: number): readonly Form[] {
         [0.16, 0, 0.085, 0.03, 0.03],
         [0.21, 0.004, 0.085, 0.036, 0.03],
         [0.3, 0, 0.08, 0.026, 0.027],
-        [0.44, 0, 0.07, 0.027, 0.028],
-        [0.56, 0, 0.065, 0.028, 0.03],
-        [0.65, 0, 0.06, 0.03, 0.032],
-        [0.66, 0, 0.06, 0, 0],
+        [0.36, 0, 0.075, 0.027, 0.028],
+        [0.44, 0, 0.07, 0.028, 0.03],
+        [0.51, 0, 0.065, 0.03, 0.032],
+        [0.52, 0, 0.065, 0, 0],
       ]),
       17,
       detail,
@@ -190,10 +193,10 @@ export function scapulaForms(detail: number): readonly Form[] {
         [-0.165, 0, 0, 0.11, 0.085],
         [-0.25, 0, 0, 0.08, 0.06],
         [-0.36, -0.01, 0, 0.085, 0.045],
-        [-0.46, -0.05, -0.01, 0.16, 0.028],
-        [-0.56, -0.09, -0.02, 0.23, 0.018],
-        [-0.66, -0.12, -0.03, 0.2, 0.014],
-        [-0.7, -0.13, -0.03, 0, 0],
+        [-0.42, -0.04, -0.01, 0.14, 0.03],
+        [-0.47, -0.06, -0.015, 0.19, 0.022],
+        [-0.52, -0.08, -0.02, 0.2, 0.018],
+        [-0.55, -0.09, -0.02, 0, 0],
       ]),
       29,
       detail
@@ -219,10 +222,10 @@ export function ballForms(detail: number): readonly Form[] {
         [0.085, 0, 0, 0.082, 0.082],
         [0.14, 0.008, 0, 0.092, 0.088],
         [0.22, 0, 0, 0.07, 0.068],
-        [0.34, 0, 0, 0.056, 0.056],
-        [0.5, 0, 0, 0.052, 0.052],
-        [0.65, 0, 0, 0.05, 0.05],
-        [0.66, 0, 0, 0, 0],
+        [0.32, 0, 0, 0.056, 0.056],
+        [0.42, 0, 0, 0.052, 0.052],
+        [0.51, 0, 0, 0.05, 0.05],
+        [0.52, 0, 0, 0, 0],
       ]),
       31,
       detail,
@@ -246,7 +249,7 @@ function serration(along: number) {
 
 /** Half the gap between the two bones of a suture, in radians, and each bone's breadth. */
 const SEAM = 0.012;
-const PLATE = 0.44;
+const PLATE = 0.62;
 
 /**
  * One flat bone of the skull's vault on its side of a suture, sawn out of
@@ -258,8 +261,8 @@ function vaultBone(side: 1 | -1, detail: number): Form {
   const far = QUARTER + side * (SEAM + PLATE);
   return shellBody({
     across: side === 1 ? [near, far] : [far, near],
-    along: [-0.4, 0.4],
-    columns: faces(40, detail),
+    along: [-0.33, 0.33],
+    columns: faces(48, detail),
     edge: (along) =>
       side === 1 ? [serration(along), 0] : [0, serration(along)],
     lump: 0.5,
@@ -293,7 +296,7 @@ export function seamForms(detail: number): readonly Form[] {
   return [
     shellBody({
       across: [QUARTER - SEAM * 1.6, QUARTER + SEAM * 1.6],
-      along: [-0.395, 0.395],
+      along: [-0.326, 0.326],
       columns: 6,
       edge: (along) => [serration(along), serration(along)],
       lump: 0,
@@ -350,7 +353,7 @@ export function vertebraForms(detail: number): readonly Form[] {
     ),
     up: [0, 0, 1],
   });
-  const process = (
+  const spur = (
     points: readonly (readonly [number, number, number, number, number])[],
     seed: number
   ) => bone(sections(points), seed, detail * 0.5);
@@ -369,7 +372,7 @@ export function vertebraForms(detail: number): readonly Form[] {
       53,
       detail * 0.5
     ),
-    process(
+    spur(
       [
         [0, 0.01, -0.37, 0.05, 0.03],
         [0, -0.01, -0.5, 0.062, 0.02],
@@ -379,7 +382,7 @@ export function vertebraForms(detail: number): readonly Form[] {
       59
     ),
     ...Arr.map([1, -1] as const, (side) =>
-      process(
+      spur(
         [
           [side * 0.13, 0.03, -0.25, 0.034, 0.034],
           [side * 0.25, 0.03, -0.28, 0.03, 0.024],
