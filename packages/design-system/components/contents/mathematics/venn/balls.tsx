@@ -1,5 +1,4 @@
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { VENN_COLORS } from "@repo/design-system/lib/material/venn";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
@@ -40,16 +39,10 @@ export function TennisBall() {
     <group position={[0, 0.0335, 0]}>
       <mesh castShadow receiveShadow>
         <sphereGeometry args={[0.0335, 40, 24]} />
-        <SurfaceMaterial
-          bump={0.5}
-          color={VENN_COLORS.felt}
-          repeat={[3, 1.5]}
-          roughness={0.95}
-          surface="cloth"
-        />
+        <Matter color={VENN_COLORS.felt} of="felt" />
       </mesh>
       <mesh geometry={seam}>
-        <meshStandardMaterial color={VENN_COLORS.seam} roughness={0.7} />
+        <Matter color={VENN_COLORS.seam} of="rubber" />
       </mesh>
     </group>
   );
@@ -60,12 +53,7 @@ export function PlasticBall({ color }: { readonly color: string }) {
   return (
     <mesh castShadow position={[0, 0.035, 0]} receiveShadow>
       <sphereGeometry args={[0.035, 40, 24]} />
-      <meshPhysicalMaterial
-        clearcoat={1}
-        clearcoatRoughness={0.1}
-        color={color}
-        roughness={0.3}
-      />
+      <Matter color={color} of="epoxy" />
     </mesh>
   );
 }
@@ -75,7 +63,7 @@ export function SteelBall() {
   return (
     <mesh castShadow position={[0, 0.02, 0]} receiveShadow>
       <sphereGeometry args={[0.02, 40, 24]} />
-      <MetalMaterial color={VENN_COLORS.steel} roughness={0.25} />
+      <Matter of="steel" />
     </mesh>
   );
 }

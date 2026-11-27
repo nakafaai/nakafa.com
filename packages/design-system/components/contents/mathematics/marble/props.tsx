@@ -1,11 +1,7 @@
 import type { MarbleColor } from "@repo/design-system/components/contents/mathematics/marble/draw";
 import { JAR } from "@repo/design-system/components/contents/mathematics/marble/jar";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import {
-  MetalMaterial,
-  VesselGlassMaterial,
-} from "@repo/design-system/components/three/physical";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { getColor } from "@repo/design-system/lib/color";
 import { MARBLE_COLORS } from "@repo/design-system/lib/material/marble";
 import { Array as Arr } from "effect";
@@ -67,11 +63,7 @@ export function MarbleJar() {
   return (
     <group>
       <mesh geometry={geometry}>
-        <VesselGlassMaterial
-          color={MARBLE_COLORS.jarGlass}
-          thickness={JAR.wall}
-          tint={MARBLE_COLORS.jarTint}
-        />
+        <Matter of="glass" thickness={JAR.wall} />
       </mesh>
       {Arr.map([0.004, 0.009], (drop) => (
         <mesh
@@ -80,11 +72,7 @@ export function MarbleJar() {
           rotation={[Math.PI / 2, 0, 0]}
         >
           <torusGeometry args={[NECK + 0.0004, 0.0009, 8, 96]} />
-          <VesselGlassMaterial
-            color={MARBLE_COLORS.jarGlass}
-            thickness={0.0018}
-            tint={MARBLE_COLORS.jarTint}
-          />
+          <Matter of="glass" thickness={0.0018} />
         </mesh>
       ))}
     </group>
@@ -99,17 +87,11 @@ export function JarLid() {
         <cylinderGeometry
           args={[NECK + 0.004, NECK + 0.004, 0.013, 96, 1, true]}
         />
-        <MetalMaterial color={MARBLE_COLORS.lid} roughness={0.45} />
+        <Matter of="steel" />
       </mesh>
       <mesh castShadow position={[0, 0.0128, 0]}>
         <cylinderGeometry args={[NECK + 0.0035, NECK + 0.004, 0.0012, 96]} />
-        <meshPhysicalMaterial
-          clearcoat={1}
-          clearcoatRoughness={0.08}
-          color={MARBLE_COLORS.lidLacquer}
-          metalness={0.4}
-          roughness={0.3}
-        />
+        <Matter color={MARBLE_COLORS.lidLacquer} of="enamel" />
       </mesh>
     </group>
   );
@@ -148,13 +130,7 @@ export function MarbleDish() {
       position={[0, -0.009, 0]}
       receiveShadow
     >
-      <meshPhysicalMaterial
-        clearcoat={0.8}
-        clearcoatRoughness={0.12}
-        color={MARBLE_COLORS.dish}
-        roughness={0.35}
-        side={DoubleSide}
-      />
+      <Matter color={MARBLE_COLORS.dish} of="ceramic" side={DoubleSide} />
     </mesh>
   );
 }
@@ -217,14 +193,7 @@ export function TallyBoard({
     <group position={[BOARD.at[0], BOARD.at[1], BOARD.at[2]]}>
       <mesh castShadow position={[0, 0.006, 0]} receiveShadow>
         <boxGeometry args={[BOARD.width, 0.012, BOARD.depth]} />
-        <SurfaceMaterial
-          bump={0.012}
-          coat={0.4}
-          color={MARBLE_COLORS.walnut}
-          repeat={[0.5, 2]}
-          roughness={0.45}
-          surface="wood"
-        />
+        <Matter of="walnut" />
       </mesh>
       {Arr.map([0, 1] as const, (row) => (
         <ThreeLabel
@@ -246,10 +215,7 @@ export function TallyBoard({
             <group key={`${column}-${row}`} position={[x, 0.012, z]}>
               <mesh position={[0, 0.0002, 0]} rotation={[-Math.PI / 2, 0, 0]}>
                 <circleGeometry args={[0.0042, 24]} />
-                <meshStandardMaterial
-                  color={MARBLE_COLORS.walnutHole}
-                  roughness={0.9}
-                />
+                <Matter color={MARBLE_COLORS.walnutHole} of="walnut" />
               </mesh>
               <mesh
                 castShadow

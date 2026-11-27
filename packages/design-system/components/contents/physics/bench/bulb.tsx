@@ -1,19 +1,10 @@
 import { Turn } from "@repo/design-system/components/three/form/part";
-import {
-  GlassMaterial,
-  MetalMaterial,
-} from "@repo/design-system/components/three/physical";
-import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
-import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
+import { matterGlow } from "@repo/design-system/components/three/matter/glow";
+import { Matter } from "@repo/design-system/components/three/matter/material";
+import { Shine } from "@repo/design-system/components/three/matter/shine";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
-import {
-  AdditiveBlending,
-  CatmullRomCurve3,
-  Color,
-  TubeGeometry,
-  Vector3,
-} from "three";
+import { CatmullRomCurve3, TubeGeometry, Vector3 } from "three";
 
 /** The height of the filament above the board the lamp stands on. */
 const FILAMENT_HEIGHT = 0.335;
@@ -31,11 +22,18 @@ const ENVELOPE = [
 ] as const;
 
 const THREADS = [0.108, 0.126, 0.144] as const;
+
 const SUPPORTS = [-1, 1] as const;
 
-const COLD = new Color(APPARATUS_COLORS.tungsten);
-const HOT = new Color(APPARATUS_COLORS.filamentHot);
-const WHITE = new Color(APPARATUS_COLORS.filamentWhite);
+/**
+ * How much of its glare a lamp at full brightness shows in the air inside
+ * its glass. The glare falls far faster than the filament dims, as the light
+ * a filament gives does, so a lamp at a dull red heat keeps clear glass.
+ */
+const GLARE = 0.4;
+
+/** How large the glare is beside the envelope it fills, about the filament. */
+const GLARE_SIZE = 0.82;
 
 /** A coiled tungsten filament from `from` to `to` along the lamp's width, sagging by `droop` at its free end. */
 function coil(from: number, to: number, droop: number) {
@@ -67,23 +65,13 @@ function support(side: number) {
   );
 }
 
-/** The colour of tungsten at `glow`: dull grey, then orange, then nearly white. */
-function filamentColor(glow: number) {
-  const color = new Color();
-  if (glow < 0.5) {
-    color.copy(COLD).lerp(HOT, glow * 2);
-  } else {
-    color.copy(HOT).lerp(WHITE, (glow - 0.5) * 2);
-  }
-  return `#${color.getHexString()}`;
-}
-
 /**
  * A filament lamp in a porcelain batten holder: a clear glass envelope on a
  * nickel screw cap, with a coiled tungsten filament strung between two
  * support wires. The filament brightens with `glow` from 0 (cold) to 1 (full
- * brightness) and lights the board around it; a `broken` one hangs in two
- * pieces and stays dark.
+ * brightness), fills the glass round it with a warm glare of its own colour
+ * and lights the board it stands on; a `broken` one hangs in two pieces and
+ * stays dark, its glass clear.
  */
 export function Bulb({
   broken = false,
@@ -104,6 +92,7 @@ export function Bulb({
     [broken]
   );
   const supports = useMemo(() => Arr.map(SUPPORTS, support), []);
+  const glare = lit ** 4 * GLARE;
   useEffect(
     () => () => {
       Arr.forEach(filaments, (filament) => filament.geometry.dispose());
@@ -116,86 +105,64 @@ export function Bulb({
     },
     [supports]
   );
-  const color = filamentColor(lit);
-
   return (
     <group>
       <mesh castShadow position={[0, 0.026, 0]} receiveShadow>
         <cylinderGeometry args={[0.105, 0.115, 0.052, 40]} />
-        <meshPhysicalMaterial
-          clearcoat={0.7}
-          clearcoatRoughness={0.2}
-          color={APPARATUS_COLORS.porcelain}
-          roughness={0.3}
-        />
+        <Matter of="porcelain" />
       </mesh>
       <mesh castShadow position={[0, 0.074, 0]}>
         <cylinderGeometry args={[0.062, 0.07, 0.044, 32]} />
-        <meshPhysicalMaterial
-          clearcoat={0.7}
-          clearcoatRoughness={0.2}
-          color={APPARATUS_COLORS.porcelain}
-          roughness={0.3}
-        />
+        <Matter of="porcelain" />
       </mesh>
       <mesh castShadow position={[0, 0.126, 0]}>
         <cylinderGeometry args={[0.049, 0.049, 0.062, 28]} />
-        <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.28} />
+        <Matter of="nickel" />
       </mesh>
       {Arr.map(THREADS, (y) => (
         <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0.12]}>
           <torusGeometry args={[0.049, 0.005, 8, 28]} />
-          <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.22} />
+          <Matter of="nickel" />
         </mesh>
       ))}
       <mesh position={[0, 0.2, 0]}>
         <cylinderGeometry args={[0.012, 0.02, 0.1, 14]} />
-        <GlassMaterial color={APPARATUS_COLORS.lampGlass} opacity={0.42} />
+        <Matter of="glass" opacity={0.42} />
       </mesh>
       {Arr.map(supports, (geometry, index) => (
         <mesh geometry={geometry} key={SUPPORTS[index]}>
-          <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.3} />
+          <Matter finish="brushed" of="nickel" />
         </mesh>
       ))}
-      {Arr.map(filaments, (filament) => (
-        <mesh geometry={filament.geometry} key={filament.key}>
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={lit * lit * 9}
-            metalness={0.4}
-            roughness={0.5}
-          />
-        </mesh>
-      ))}
-      {lit > 0.02 ? (
-        <>
-          <mesh position={[0, FILAMENT_HEIGHT, 0]}>
-            <sphereGeometry args={[0.085, 24, 18]} />
-            <meshBasicMaterial
-              blending={AdditiveBlending}
-              color={APPARATUS_COLORS.lampHalo}
-              depthWrite={false}
-              opacity={0.05 + lit * 0.3}
-              toneMapped={false}
-              transparent
-            />
+      <group>
+        {Arr.map(filaments, (filament) => (
+          <mesh geometry={filament.geometry} key={filament.key}>
+            <Matter glow={lit} of="tungsten" />
           </mesh>
-          <pointLight
-            color={APPARATUS_COLORS.lampHalo}
-            distance={2.2}
-            intensity={lit * lit * 0.8}
-            position={[0, FILAMENT_HEIGHT, 0]}
+        ))}
+        <Shine glow={lit} of="tungsten" />
+      </group>
+      {glare > 0.01 ? (
+        <mesh
+          position={[0, FILAMENT_HEIGHT * (1 - GLARE_SIZE), 0]}
+          scale={GLARE_SIZE}
+        >
+          <Turn profile={ENVELOPE} />
+          <Matter
+            color={matterGlow({ glow: lit, of: "tungsten" }).color}
+            glow={0.6}
+            of="light"
+            opacity={glare}
           />
-        </>
+        </mesh>
       ) : null}
       <mesh castShadow renderOrder={2}>
         <Turn profile={ENVELOPE} />
-        <GlassMaterial color={APPARATUS_COLORS.lampGlass} opacity={0.2} />
+        <Matter of="glass" opacity={0.08} />
       </mesh>
       <mesh position={[0, 0.156, 0]}>
         <cylinderGeometry args={[0.05, 0.05, 0.014, 28]} />
-        <meshStandardMaterial color={QUANTUM_COLORS.ceramic} roughness={0.5} />
+        <Matter of="porcelain" />
       </mesh>
     </group>
   );

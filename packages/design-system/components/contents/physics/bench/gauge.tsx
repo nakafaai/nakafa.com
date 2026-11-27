@@ -1,11 +1,7 @@
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
-import {
-  GlassMaterial,
-  MetalMaterial,
-} from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
-import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
 import type { ReactNode } from "react";
 import { useEffect, useMemo } from "react";
 import { CanvasTexture, SRGBColorSpace } from "three";
@@ -70,12 +66,12 @@ export function Gauge({
     <group>
       <mesh castShadow position={[0, 0.09, 0]}>
         <cylinderGeometry args={[0.03, 0.036, 0.18, 16]} />
-        <MetalMaterial color={QUANTUM_COLORS.brass} roughness={0.3} />
+        <Matter of="brass" />
       </mesh>
       <group position={[0, 0.36, 0]}>
         <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.2, 0.2, 0.09, 48]} />
-          <MetalMaterial color={QUANTUM_COLORS.brass} roughness={0.26} />
+          <Matter of="brass" />
         </mesh>
         <mesh position={[0, 0, 0.047]}>
           <circleGeometry args={[0.178, 48]} />
@@ -88,23 +84,20 @@ export function Gauge({
         <group position={[0, 0, 0.052]} rotation={[0, 0, turn]}>
           <mesh position={[0.06, 0, 0]}>
             <boxGeometry args={[0.15, 0.012, 0.004]} />
-            <meshStandardMaterial
-              color={INSTRUMENT_COLORS.dialNeedle}
-              roughness={0.4}
-            />
+            <Matter color={INSTRUMENT_COLORS.dialNeedle} of="enamel" />
           </mesh>
           <mesh rotation={[Math.PI / 2, 0, 0]}>
             <cylinderGeometry args={[0.02, 0.02, 0.01, 18]} />
-            <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.3} />
+            <Matter of="nickel" />
           </mesh>
         </group>
         <mesh position={[0, 0, 0.062]}>
           <circleGeometry args={[0.182, 48]} />
-          <GlassMaterial color={APPARATUS_COLORS.lampGlass} opacity={0.12} />
+          <Matter of="glass" opacity={0.12} />
         </mesh>
         <mesh position={[0, 0, 0.05]} rotation={[0, 0, 0]}>
           <torusGeometry args={[0.19, 0.014, 12, 48]} />
-          <MetalMaterial color={QUANTUM_COLORS.brass} roughness={0.22} />
+          <Matter finish="polished" of="brass" />
         </mesh>
       </group>
       <Tag position={[0, 0.7, 0]}>{children}</Tag>

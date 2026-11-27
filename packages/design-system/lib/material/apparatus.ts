@@ -9,67 +9,41 @@
  * every lesson.
  */
 export const APPARATUS_COLORS = {
-  // Quarter-sawn oak: the pale early wood, the darker late wood, and its pores.
-  oakLight: "#b98a52",
+  // The dark late wood of oak and the end grain of beech, for the stands of
+  // the measuring instruments.
   oakDark: "#6f4522",
-  oakPore: "#4a2d14",
-  oakEdge: "#7a5230",
-  // Instrument cases, knobs, feet and holders.
-  bakelite: "#1f1b18",
-  bakeliteBrown: "#4a2c1c",
+  beechEnd: "#a67c4a",
+  // Instrument cases.
   caseEnamel: "#d9d5c8",
   caseSteel: "#5b6470",
   caseDark: "#2a2f37",
-  rubberFoot: "#17181b",
-  porcelain: "#f1eee6",
-  // Leads, terminals and solder.
+  // Leads and terminals.
   leadRed: "#c62828",
   leadBlack: "#1c1f24",
   leadBlue: "#1e5fbf",
   leadYellow: "#d9a514",
   leadGreen: "#2f8f4e",
   nickel: "#c9ccd1",
-  solder: "#b9bcc2",
-  // A lamp: its glass, its cold tungsten, and its light.
-  lampGlass: "#f4f7fa",
-  tungsten: "#4b4a48",
-  filamentHot: "#ffb347",
-  filamentWhite: "#fff1cf",
+  // The light of a lamp.
   lampHalo: "#ffd68a",
-  // Nichrome wire, dull at rest and orange to yellow as it heats.
-  nichrome: "#8d9096",
-  nichromeWarm: "#ff5a1f",
-  nichromeHot: "#ffc24a",
   // A dry cell's printed jacket.
   cellJacket: "#1d3f8f",
   cellStripe: "#e3b23c",
-  cellCap: "#c7cad0",
-  // A breadboard, its chips, and its indicator lamps.
-  breadboard: "#eeeae0",
-  breadboardRail: "#d8d3c6",
-  socketHole: "#3a3d43",
+  // Chips and their indicator lamps.
   chipBody: "#191a1d",
-  chipPin: "#c8cbd0",
   chipNotch: "#33363b",
   transistorBody: "#1b1c1f",
   ledRed: "#ff3b30",
   ledGreen: "#30d158",
   ledAmber: "#ffb020",
-  ledBlue: "#3aa0ff",
-  ledOff: "#6b6f76",
   ldrFace: "#c2452d",
   ldrTrack: "#f3e6c8",
   // A transformer and a magnet.
-  laminate: "#5a5f66",
-  laminateEdge: "#3c4046",
   enamelCopper: "#b5652f",
-  enamelCopperDark: "#8a4a20",
   bobbin: "#22262c",
   fluxGlow: "#5ad1ff",
   poleNorth: "#c0392b",
   poleSouth: "#2b5fb3",
-  magnetSteel: "#8a8f96",
-  neodymium: "#d4d7dc",
   plasticPipe: "#e8e4d8",
   eddyGlow: "#ffb020",
   forceArrow: "#22b573",
@@ -80,29 +54,19 @@ export const APPARATUS_COLORS = {
   dyedWater: "#2f8fe0",
   oil: "#d9a933",
   hydraulicOil: "#c2412d",
-  beechWood: "#c9a26b",
-  beechEnd: "#a67c4a",
   tracer: "#ffffff",
   rubberTube: "#7a2f24",
   scalePaper: "#f3efe2",
   scaleInk: "#22252a",
-  // Heat: wax, ice, steam and the alcohol of a thermometer.
-  wax: "#efe6cf",
+  // Heat: melted wax, bubbles and the alcohol of a thermometer.
   waxMelt: "#d8c592",
-  ice: "#dff2ff",
-  iceCore: "#f6fbff",
-  steam: "#f2f6fa",
   bubble: "#eaf6ff",
   alcohol: "#d22f3a",
-  foamCup: "#f3f1ea",
   heaterSheath: "#b8bcc2",
   gasCool: "#5fa8ff",
-  gasWarm: "#ffb04a",
   gasHot: "#ff5a3c",
   // A Geiger-Muller tube, its source, and what it counts.
-  mica: "#d9d3c2",
   sourceHolder: "#e0b23a",
-  sourceFoil: "#9aa1a8",
   betaTrack: "#69e0ff",
   counterLed: "#ff4136",
   proton: "#e5484d",
@@ -117,5 +81,4 @@ export const APPARATUS_COLORS = {
   photonRed: "#ff3b30",
   photonUltra: "#b9a4ff",
   electron: "#7fe3ff",
-  cathodeMetal: "#aeb4bc",
 } as const;

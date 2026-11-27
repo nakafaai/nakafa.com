@@ -5,6 +5,7 @@ import {
   LINK_GAP,
   RAIL,
 } from "@repo/design-system/components/contents/mathematics/argument/layout";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { ARGUMENT_COLORS } from "@repo/design-system/lib/material/argument";
 import { Array as Arr } from "effect";
 import { useRef } from "react";
@@ -27,9 +28,9 @@ const SWING_RATE = 12;
 
 /** Each state's finish: bright steel, polished brass, or red enamel. */
 const FINISH = {
-  broken: { color: ARGUMENT_COLORS.broken, metalness: 0.15, roughness: 0.4 },
-  locked: { color: ARGUMENT_COLORS.locked, metalness: 0.85, roughness: 0.28 },
-  pending: { color: ARGUMENT_COLORS.steel, metalness: 0.8, roughness: 0.34 },
+  broken: { color: ARGUMENT_COLORS.broken, of: "enamel" },
+  locked: { finish: "brushed", of: "brass" },
+  pending: { finish: "brushed", of: "steel" },
 } as const;
 
 /**
@@ -96,11 +97,7 @@ export function ChainLink({
             <torusGeometry
               args={[RING.width / 2 - RING.tube, RING.tube, 12, 40]}
             />
-            <meshStandardMaterial
-              color={finish.color}
-              metalness={finish.metalness}
-              roughness={finish.roughness}
-            />
+            <Matter {...finish} />
           </mesh>
         </group>
       ))}

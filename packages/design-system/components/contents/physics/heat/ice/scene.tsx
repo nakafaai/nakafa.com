@@ -7,7 +7,7 @@ import { useCycleClock } from "@repo/design-system/components/contents/simulatio
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { Turn } from "@repo/design-system/components/three/form/part";
-import { LiquidMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
 import { useRef } from "react";
 import type { Group } from "three";
@@ -122,7 +122,7 @@ export function IceMeltingScene({
         <cylinderGeometry
           args={[radius - 0.004, INSIDE.floor - 0.004, level - WALL, 48]}
         />
-        <LiquidMaterial color={APPARATUS_COLORS.waterDeep} opacity={0.42} />
+        <Matter color={APPARATUS_COLORS.waterDeep} of="liquid" opacity={0.42} />
       </mesh>
       <group position={[-0.1, level, 0.08]} ref={cube}>
         <RoundedBox
@@ -132,33 +132,16 @@ export function IceMeltingScene({
           renderOrder={2}
           smoothness={5}
         >
-          <meshPhysicalMaterial
-            clearcoat={1}
-            clearcoatRoughness={0.08}
-            color={APPARATUS_COLORS.iceCore}
-            depthWrite={false}
-            opacity={0.78}
-            roughness={0.08}
-            transparent
-          />
+          <Matter of="ice" />
         </RoundedBox>
         <mesh rotation={[0.4, 0.6, 0.2]}>
           <icosahedronGeometry args={[CUBE * 0.3, 1]} />
-          <meshStandardMaterial
-            color={APPARATUS_COLORS.iceCore}
-            opacity={0.55}
-            roughness={0.5}
-            transparent
-          />
+          <Matter of="ice" opacity={0.55} />
         </mesh>
       </group>
       <mesh castShadow receiveShadow rotation={[0, OPENING / 2, 0]}>
         <Turn arc={[0, Math.PI * 2 - OPENING]} profile={CUP} />
-        <meshStandardMaterial
-          color={APPARATUS_COLORS.foamCup}
-          roughness={0.96}
-          side={DoubleSide}
-        />
+        <Matter of="foam" side={DoubleSide} />
       </mesh>
       <group position={[THERMOMETER.x, THERMOMETER.y, 0.05]}>
         <Thermometer

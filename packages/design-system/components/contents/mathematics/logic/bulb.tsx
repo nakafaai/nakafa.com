@@ -8,20 +8,16 @@ import {
 } from "@repo/design-system/components/contents/mathematics/logic/parts";
 import { PARTS } from "@repo/design-system/components/contents/mathematics/logic/rig";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
+import { Shine } from "@repo/design-system/components/three/matter/shine";
 import { LOGIC_COLORS } from "@repo/design-system/lib/material/logic";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo, useRef } from "react";
-import type {
-  MeshPhysicalMaterial,
-  MeshStandardMaterial,
-  PointLight,
-} from "three";
+import type { MeshPhysicalMaterial } from "three";
 import {
   AdditiveBlending,
   CatmullRomCurve3,
   Color,
-  DoubleSide,
   LatheGeometry,
   ShaderMaterial,
   TubeGeometry,
@@ -56,9 +52,6 @@ const COIL_BRIGHTNESS = 16;
 /** How far the halo of a lit bulb spreads, in metres across. */
 const HALO_SIZE = 0.07;
 
-/** How strongly a lit bulb lights the board around it, in candela. */
-const LIGHT = 0.05;
-
 const HALO_VERTEX = `
 varying vec2 vUv;
 void main() {
@@ -76,10 +69,11 @@ void main() {
   gl_FragColor = vec4(color * a, a);
 }`;
 
-/** The coil's colours cold, dim and hot, built once. */
+/** The coil's colours cold, dim and hot and the glow of the lit glass, built once. */
 const SHADES = {
   cold: new Color(LOGIC_COLORS.filamentCold),
   dim: new Color(LOGIC_COLORS.filamentDim),
+  glow: new Color(LOGIC_COLORS.glow),
   hot: new Color(LOGIC_COLORS.filamentHot),
 };
 
@@ -107,9 +101,8 @@ function coilPath() {
 export function LampHolder({ lit }: { readonly lit: boolean }) {
   const { depth, length, reach } = PARTS.lamp;
   const level = useRef(lit ? 1 : 0);
-  const coilShade = useRef<MeshStandardMaterial>(null);
+  const coilShade = useRef<MeshPhysicalMaterial>(null);
   const glass = useRef<MeshPhysicalMaterial>(null);
-  const light = useRef<PointLight>(null);
   const envelope = useMemo(
     () =>
       new LatheGeometry(
@@ -159,10 +152,8 @@ export function LampHolder({ lit }: { readonly lit: boolean }) {
       coilShade.current.emissiveIntensity = COIL_BRIGHTNESS * next ** 1.5;
     }
     if (glass.current !== null) {
-      glass.current.emissiveIntensity = 1.4 * next;
-    }
-    if (light.current !== null) {
-      light.current.intensity = LIGHT * next;
+      glass.current.emissive.copy(SHADES.glow);
+      glass.current.emissiveIntensity = 0.22 * next;
     }
     const strength = halo.uniforms.strength;
     if (strength !== undefined) {
@@ -180,46 +171,22 @@ export function LampHolder({ lit }: { readonly lit: boolean }) {
         <cylinderGeometry
           args={[SOCKET.radius, SOCKET.radius * 1.08, SOCKET.height, 28]}
         />
-        <MetalMaterial color={LOGIC_COLORS.nickel} roughness={0.3} />
+        <Matter of="nickel" />
       </mesh>
       <group position={[0, GLASS_FOOT, 0]}>
         <mesh geometry={envelope} renderOrder={2}>
-          <meshPhysicalMaterial
-            clearcoat={1}
-            clearcoatRoughness={0.04}
-            color={LOGIC_COLORS.bulbGlass}
-            depthWrite={false}
-            emissive={LOGIC_COLORS.glow}
-            emissiveIntensity={0}
-            opacity={0.16}
-            ref={glass}
-            roughness={0.04}
-            side={DoubleSide}
-            transparent
-          />
+          <Matter of="glass" opacity={0.16} ref={glass} />
         </mesh>
         {Arr.map([-1, 1] as const, (side) => (
           <mesh key={side} position={[side * 0.0017, COIL_HEIGHT / 2, 0]}>
             <cylinderGeometry args={[0.0002, 0.0002, COIL_HEIGHT, 6]} />
-            <MetalMaterial color={LOGIC_COLORS.nickel} roughness={0.4} />
+            <Matter of="nickel" />
           </mesh>
         ))}
         <mesh geometry={coil}>
-          <meshStandardMaterial
-            color={LOGIC_COLORS.filamentCold}
-            emissive={LOGIC_COLORS.filamentHot}
-            emissiveIntensity={0}
-            metalness={0.6}
-            ref={coilShade}
-            roughness={0.5}
-          />
+          <Matter of="tungsten" ref={coilShade} />
+          <Shine glow={1} level={level} of="tungsten" />
         </mesh>
-        <pointLight
-          color={LOGIC_COLORS.lightWarm}
-          intensity={0}
-          position={[0, COIL_HEIGHT, 0]}
-          ref={light}
-        />
         <CameraBounds exclude>
           <Billboard position={[0, COIL_HEIGHT, 0]}>
             <mesh material={halo} renderOrder={3}>

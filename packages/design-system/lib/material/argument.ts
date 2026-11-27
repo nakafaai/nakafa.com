@@ -8,13 +8,11 @@
  * colour from here, so it looks the same in every lesson.
  */
 export const ARGUMENT_COLORS = {
-  // The oiled oak rail, its felt pockets and the brass plate over each.
-  rail: "#b4875a",
+  // The rail's felt pockets and the brass-yellow enamel plate over each.
   pocket: "#3b3532",
   plate: "#c9a24a",
   plateInk: "#2b2115",
-  // The steel links: bright steel waiting, brass once locked, red once broken.
-  steel: "#aeb3b8",
+  // The links: brass once locked, red once broken.
   locked: "#d9a63a",
   broken: "#c0352b",
   // The lamp strip round the conclusion's pocket, dark and lit.

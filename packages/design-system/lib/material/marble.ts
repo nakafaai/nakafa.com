@@ -14,15 +14,10 @@ export const MARBLE_COLORS = {
   yellow: "#e0ad16",
   // The white glass ribbon twisted through every marble.
   ribbon: "#f4f1ea",
-  // The jar: soda-lime glass, faintly green through its thickness.
-  jarGlass: "#eef4f2",
-  jarTint: "#cfe5d8",
-  // A tinplate screw lid with a lacquered top.
-  lid: "#b9bcbf",
+  // The lacquered top of the jar's tinplate screw lid.
   lidLacquer: "#8a1c22",
   // A white glazed stoneware dish.
   dish: "#f1eee8",
-  // A walnut tally board and its drilled holes.
-  walnut: "#5b3a24",
+  // The drilled holes of the walnut tally board.
   walnutHole: "#2a190e",
 } as const;

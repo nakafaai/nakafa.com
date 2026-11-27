@@ -11,23 +11,14 @@ import { useQuantity } from "@repo/design-system/components/contents/simulation/
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { Turn } from "@repo/design-system/components/three/form/part";
-import {
-  GlassMaterial,
-  MetalMaterial,
-} from "@repo/design-system/components/three/physical";
+import { Matter } from "@repo/design-system/components/three/matter/material";
+import { Shine } from "@repo/design-system/components/three/matter/shine";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { Array as Arr, Option } from "effect";
 import { useMemo, useRef } from "react";
 import type { Group } from "three";
-import {
-  AdditiveBlending,
-  Color,
-  DoubleSide,
-  Quaternion,
-  Vector3,
-} from "three";
+import { Color, DoubleSide, Quaternion, Vector3 } from "three";
 
 /** The photocell: the height of its axis, half its length, and its radius. */
 const AXIS = 0.95;
@@ -168,20 +159,12 @@ export function PhotoelectricScene({
       />
       <mesh castShadow position={[0, 0.04, 0]} receiveShadow>
         <boxGeometry args={[2.5, 0.08, 1]} />
-        <meshPhysicalMaterial
-          clearcoat={0.5}
-          color={APPARATUS_COLORS.bakelite}
-          roughness={0.42}
-        />
+        <Matter of="bakelite" />
       </mesh>
       {Arr.map([-HALF + 0.12, HALF - 0.12] as const, (x) => (
         <mesh castShadow key={x} position={[x, (AXIS - RADIUS) / 2 + 0.06, 0]}>
           <boxGeometry args={[0.1, AXIS - RADIUS - 0.04, 0.5]} />
-          <meshPhysicalMaterial
-            clearcoat={0.5}
-            color={APPARATUS_COLORS.bakelite}
-            roughness={0.42}
-          />
+          <Matter of="bakelite" />
         </mesh>
       ))}
       <group position={[0, AXIS, 0]}>
@@ -202,31 +185,26 @@ export function PhotoelectricScene({
               Math.PI * 0.64,
             ]}
           />
-          <meshPhysicalMaterial
-            color={APPARATUS_COLORS.cathodeMetal}
-            metalness={1}
-            roughness={0.3}
-            side={DoubleSide}
-          />
+          <Matter of="aluminium" side={DoubleSide} />
         </mesh>
         <mesh position={[PLATE - 0.5, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
           <cylinderGeometry args={[0.014, 0.014, HALF + PLATE + 0.3, 10]} />
-          <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.3} />
+          <Matter of="nickel" />
         </mesh>
         <mesh castShadow position={[RING, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
           <torusGeometry args={[0.16, 0.014, 12, 40]} />
-          <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.26} />
+          <Matter of="nickel" />
         </mesh>
         <mesh
           position={[(RING + HALF + 0.1) / 2, -0.16, 0]}
           rotation={[0, 0, Math.PI / 2]}
         >
           <cylinderGeometry args={[0.014, 0.014, HALF + 0.1 - RING, 10]} />
-          <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.3} />
+          <Matter of="nickel" />
         </mesh>
         <mesh castShadow renderOrder={3} rotation={[0, 0, Math.PI / 2]}>
           <Turn profile={BULB} />
-          <GlassMaterial color={BENCH_COLORS.glass} opacity={0.16} />
+          <Matter of="glass" opacity={0.16} />
         </mesh>
         {Arr.map([-1, 1] as const, (side) => (
           <mesh
@@ -236,7 +214,7 @@ export function PhotoelectricScene({
             rotation={[0, 0, Math.PI / 2]}
           >
             <cylinderGeometry args={[0.1, 0.1, 0.12, 24]} />
-            <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.3} />
+            <Matter of="nickel" />
           </mesh>
         ))}
       </group>
@@ -247,19 +225,12 @@ export function PhotoelectricScene({
           quaternion={beam.turn}
         >
           <cylinderGeometry args={[0.2, 0.16, 0.6, 32]} />
-          <meshPhysicalMaterial
-            clearcoat={0.6}
-            color={APPARATUS_COLORS.caseDark}
-            roughness={0.4}
-          />
+          <Matter color={APPARATUS_COLORS.caseDark} of="enamel" />
         </mesh>
         <mesh>
           <sphereGeometry args={[0.12, 20, 16]} />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={0.6 + intensity * 2.4}
-          />
+          <Matter color={color} glow={0.3 + intensity * 1.2} of="light" />
+          <Shine color={color} glow={0.3 + intensity * 1.2} of="light" />
         </mesh>
       </group>
       <mesh
@@ -267,7 +238,7 @@ export function PhotoelectricScene({
         position={[LENS.x + 0.5, LENS.y / 2 + 0.1, LENS.z + 0.25]}
       >
         <cylinderGeometry args={[0.03, 0.03, LENS.y + 0.2, 16]} />
-        <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.26} />
+        <Matter of="nickel" />
       </mesh>
       <mesh
         castShadow
@@ -275,35 +246,30 @@ export function PhotoelectricScene({
         receiveShadow
       >
         <cylinderGeometry args={[0.3, 0.32, 0.06, 40]} />
-        <meshPhysicalMaterial
-          clearcoat={0.5}
-          color={APPARATUS_COLORS.caseDark}
-          roughness={0.45}
-        />
+        <Matter color={APPARATUS_COLORS.caseDark} of="enamel" />
       </mesh>
       <mesh
         position={[LENS.x + 0.28, LENS.y + 0.14, LENS.z + 0.14]}
         rotation={[Math.PI / 2, 0, -Math.PI / 3]}
       >
         <cylinderGeometry args={[0.022, 0.022, 0.6, 12]} />
-        <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.3} />
+        <Matter of="nickel" />
       </mesh>
       <mesh position={beam.middle} quaternion={beam.turn} renderOrder={5}>
         <cylinderGeometry args={[0.2, 0.1, beam.length, 32, 1, true]} />
-        <meshBasicMaterial
-          blending={AdditiveBlending}
+        <Matter
           color={color}
-          depthWrite={false}
+          glow={0.5}
+          of="light"
           opacity={0.1 + intensity * 0.3}
           side={DoubleSide}
-          transparent
         />
       </mesh>
       <group ref={photons}>
         {Arr.makeBy(PHOTONS, (index) => (
           <mesh key={index} visible={false}>
             <sphereGeometry args={[0.03, 12, 10]} />
-            <meshBasicMaterial color={color} />
+            <Matter color={color} glow={0.5} of="light" />
           </mesh>
         ))}
       </group>
@@ -311,11 +277,7 @@ export function PhotoelectricScene({
         {Arr.map(seeds, (seed) => (
           <mesh key={seed.key} visible={false}>
             <sphereGeometry args={[0.024, 12, 10]} />
-            <meshStandardMaterial
-              color={APPARATUS_COLORS.electron}
-              emissive={APPARATUS_COLORS.electron}
-              emissiveIntensity={1.8}
-            />
+            <Matter color={APPARATUS_COLORS.electron} glow={0.9} of="light" />
           </mesh>
         ))}
       </group>

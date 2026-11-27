@@ -15,7 +15,7 @@ import {
 } from "@repo/design-system/components/contents/mathematics/venn/tint";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import { Matter } from "@repo/design-system/components/three/matter/material";
 import { VENN_COLORS } from "@repo/design-system/lib/material/venn";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
@@ -57,13 +57,7 @@ export function Mat() {
     <group>
       <mesh position={[0, MAT.thickness / 2, 0]} receiveShadow>
         <boxGeometry args={[MAT.width, MAT.thickness, MAT.depth]} />
-        <SurfaceMaterial
-          bump={0.3}
-          color={VENN_COLORS.mat}
-          repeat={[MAT.width / 0.19, MAT.depth / 0.19]}
-          roughness={0.95}
-          surface="cloth"
-        />
+        <Matter color={VENN_COLORS.mat} of="felt" />
       </mesh>
       {Arr.map(edges, (edge) => (
         <mesh
@@ -72,7 +66,7 @@ export function Mat() {
           receiveShadow
         >
           <boxGeometry args={[edge.size[0], 0.0008, edge.size[1]]} />
-          <meshStandardMaterial color={VENN_COLORS.binding} roughness={0.9} />
+          <Matter color={VENN_COLORS.binding} of="cloth" />
         </mesh>
       ))}
       <ThreeLabel
@@ -113,12 +107,7 @@ export function Hoops({ centres }: { readonly centres: readonly Place[] }) {
               rotation={[Math.PI / 2, 0, 0]}
             >
               <torusGeometry args={[HOOP.radius, HOOP.tube, 24, 240]} />
-              <meshPhysicalMaterial
-                clearcoat={1}
-                clearcoatRoughness={0.12}
-                color={color}
-                roughness={0.32}
-              />
+              <Matter color={color} of="epoxy" />
             </mesh>
             <ThreeLabel
               color={color}
@@ -192,13 +181,7 @@ export function Tray() {
     <group position={[0, 0, TRAY_Z]}>
       <mesh castShadow position={[0, TRAY_FLOOR / 2, 0]} receiveShadow>
         <boxGeometry args={[outer.width, TRAY_FLOOR, outer.depth]} />
-        <SurfaceMaterial
-          bump={0.04}
-          color={VENN_COLORS.tray}
-          repeat={[outer.width / 0.6, outer.depth / 0.075]}
-          roughness={0.5}
-          surface="wood"
-        />
+        <Matter of="beech" />
       </mesh>
       {Arr.map(rims, (rim) => (
         <mesh
@@ -208,13 +191,7 @@ export function Tray() {
           receiveShadow
         >
           <boxGeometry args={[rim.size[0], 0.024, rim.size[1]]} />
-          <SurfaceMaterial
-            bump={0.04}
-            color={VENN_COLORS.tray}
-            repeat={[rim.size[0] / 0.6, 0.4]}
-            roughness={0.5}
-            surface="wood"
-          />
+          <Matter of="beech" />
         </mesh>
       ))}
     </group>

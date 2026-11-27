@@ -5,22 +5,24 @@ import {
   CARBON_12_ID,
   isAtomSymbolSampleId,
 } from "@repo/design-system/components/contents/chemistry/atom-symbol/data";
+import { NuclideScene } from "@repo/design-system/components/contents/chemistry/isotope/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -105,22 +107,20 @@ export function AtomSymbolLab({
 
       <VisualCardBody
         aria-label={`${selectedLabels.ariaName}, ${labels.massNumber} ${selectedSample.massNumber}, ${labels.atomicNumber} ${selectedSample.atomicNumber}`}
-        className="grid min-h-44 place-items-center p-(--card-spacing) text-center sm:min-h-48 [[data-fullscreen]>&]:grid"
+        className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <div className="flex flex-col items-center gap-3">
-          <div className="text-muted-foreground text-sm">
-            {selectedLabels.name}
-          </div>
-          <div className="text-5xl sm:text-6xl">
-            <InlineMath math={notation} />
-          </div>
-        </div>
+        <ScienceStage reach={4} setting="space">
+          <NuclideScene
+            caption={selectedLabels.name}
+            neutrons={neutronCount}
+            notation={<InlineMath math={notation} />}
+            protons={selectedSample.atomicNumber}
+          />
+        </ScienceStage>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
         <VisualCardFacts>

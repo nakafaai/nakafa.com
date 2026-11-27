@@ -1,6 +1,5 @@
 import type {
   ShellModelSample,
-  ShellModelSceneColors,
   ShellModelShells,
 } from "@repo/design-system/components/contents/chemistry/shell-model/data";
 import { useRequired } from "@repo/design-system/hooks/required";
@@ -9,7 +8,6 @@ import { createContext } from "react";
 
 interface ShellModelProviderProps {
   children: ReactNode;
-  colors: ShellModelSceneColors;
   outerShellKey: string;
   sample: ShellModelSample;
   shells: ShellModelShells;
@@ -20,7 +18,7 @@ const ShellModelContext = createContext<Omit<
   "children"
 > | null>(null);
 
-/** Provides one shell model's colors, outer shell, sample and shells to its stage and scene. */
+/** Provides one shell model's outer shell, sample and shells to its stage and scene. */
 export function ShellModelProvider({
   children,
   ...values
