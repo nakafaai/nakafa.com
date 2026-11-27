@@ -3,15 +3,16 @@ import {
   BOARD_TOP,
   HOLE,
 } from "@repo/design-system/components/contents/mathematics/logic/rig";
-import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
+import type { BoardPoint } from "@repo/design-system/components/contents/mathematics/pcb";
+import {
+  CircuitBoard,
+  Pads,
+  Traces,
+} from "@repo/design-system/components/contents/mathematics/pcb";
+import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import { LOGIC_COLORS } from "@repo/design-system/lib/material/logic";
 import { Array as Arr } from "effect";
-import { useLayoutEffect, useMemo, useRef } from "react";
-import type { InstancedMesh } from "three";
-import { Object3D } from "three";
-
-/** The desk's top, wider and deeper than the board, its top face at y = 0. */
-const DESK = { depth: 0.9, height: 0.03, width: 1.6 } as const;
+import { useMemo } from "react";
 
 /** The holes of the pegboard, a pitch apart, kept a pitch clear of every edge. */
 function holeSpots() {
@@ -25,65 +26,49 @@ function holeSpots() {
   );
 }
 
-/** The oak desk the board lies on, its grain at the real width of oak growth rings. */
+/** The oak desk the board lies on, planked and oiled, running out past the frame. */
 export function Desk() {
-  return (
-    <mesh position={[0, -DESK.height / 2, -0.12]} receiveShadow>
-      <boxGeometry args={[DESK.width, DESK.height, DESK.depth]} />
-      <SurfaceMaterial
-        bump={0.04}
-        color={LOGIC_COLORS.desk}
-        repeat={[3, 24]}
-        roughness={0.5}
-        surface="wood"
-      />
-    </mesh>
-  );
+  return <StudioTable color={LOGIC_COLORS.desk} />;
 }
 
+/** How far the gold land round each plated hole reaches, in metres. */
+const LAND = HOLE.radius * 1.75;
+
 /**
- * A sheet of tempered hardboard pegboard, its smooth face up and its holes
- * an inch apart, as a school circuit kit is built on.
+ * A trainer board: green FR4 with a plated through-hole an inch apart for
+ * every part's fixing, each ringed by a gold land, and the supply and return
+ * rails plotted in copper along its front and back edges, as a school
+ * electronics kit is built on.
  */
 export function Pegboard() {
-  const spots = useMemo(holeSpots, []);
-  const holes = useRef<InstancedMesh>(null);
-
-  useLayoutEffect(() => {
-    const mesh = holes.current;
-    if (mesh === null) {
-      return;
-    }
-    const place = new Object3D();
-    Arr.forEach(spots, ({ x, z }, index) => {
-      place.position.set(x, BOARD_TOP + 0.0002, z);
-      place.rotation.set(-Math.PI / 2, 0, 0);
-      place.updateMatrix();
-      mesh.setMatrixAt(index, place.matrix);
-    });
-    mesh.instanceMatrix.needsUpdate = true;
-  }, [spots]);
-
+  const spots = useMemo(
+    () => Arr.map(holeSpots(), ({ x, z }): BoardPoint => [x, z]),
+    []
+  );
+  const rail = BOARD.depth / 2 - HOLE.pitch * 0.45;
+  const reach = BOARD.width / 2 - HOLE.pitch * 0.9;
   return (
-    <group>
-      <mesh castShadow position={[0, BOARD_TOP / 2, 0]} receiveShadow>
-        <boxGeometry args={[BOARD.width, BOARD.thickness, BOARD.depth]} />
-        <SurfaceMaterial
-          bump={0.05}
-          color={LOGIC_COLORS.hardboard}
-          repeat={[3, 2]}
-          roughness={0.62}
-          surface="paint"
-        />
-      </mesh>
-      <instancedMesh
-        args={[undefined, undefined, spots.length]}
-        receiveShadow
-        ref={holes}
-      >
-        <circleGeometry args={[HOLE.radius, 20]} />
-        <meshStandardMaterial color={LOGIC_COLORS.hole} roughness={0.95} />
-      </instancedMesh>
-    </group>
+    <CircuitBoard
+      depth={BOARD.depth}
+      inset={HOLE.pitch * 0.4}
+      thickness={BOARD.thickness}
+      top={BOARD_TOP}
+      width={BOARD.width}
+    >
+      <Traces
+        runs={[
+          [
+            [-reach, rail],
+            [reach, rail],
+          ],
+          [
+            [-reach, -rail],
+            [reach, -rail],
+          ],
+        ]}
+        width={0.004}
+      />
+      <Pads hole={HOLE.radius} radius={LAND} spots={spots} />
+    </CircuitBoard>
   );
 }

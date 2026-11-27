@@ -1,31 +1,26 @@
-import { Line } from "@react-three/drei";
 import {
   Flask,
   FlaskLiquid,
-  GLASS_WALL,
   LabBench,
 } from "@repo/design-system/components/contents/chemistry/bench";
 import type { Solid } from "@repo/design-system/components/contents/chemistry/rate/curve";
+import { amountAt } from "@repo/design-system/components/contents/chemistry/rate/curve";
 import {
-  amountAt,
-  TIME_SPAN,
-} from "@repo/design-system/components/contents/chemistry/rate/curve";
-import { InlineMath } from "@repo/design-system/components/markdown/math";
+  Bung,
+  DeliveryTube,
+  GasSyringe,
+  SYRINGE,
+  SyringeStand,
+} from "@repo/design-system/components/contents/chemistry/rate/rig";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import {
-  MetalMaterial,
-  VesselGlassMaterial,
-} from "@repo/design-system/components/three/physical";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
-import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
 
 /** One run: its solid, the final amount of gas it gives off in mol, and its name on the graph. */
-interface RateRun {
+export interface RateRun {
   /** The final amount of gas, in mol. */
   readonly amount: number;
   /** That amount as math, in the reader's number format. */
@@ -36,25 +31,16 @@ interface RateRun {
   readonly solid: Solid;
 }
 
-/** Where the runs stand, either side of the graph. */
-const RUN_X = 0.21;
+/** Where the runs' flasks stand, either side of the bench's middle, their syringes pointing inward. */
+const RUN_X = 0.36;
 
-/** The gas syringe's barrel: its height, length, radius, and how far it starts from the flask. */
-const SYRINGE_Y = 0.2;
-const SYRINGE_LENGTH = 0.15;
-const SYRINGE_RADIUS = 0.015;
-const SYRINGE_GAP = 0.05;
+/** How high a flask's bung sits in its neck. */
+const BUNG_Y = 0.136;
 
-/** The graph board's middle, size, and the samples each curve takes. */
-const BOARD_Y = 0.27;
-const BOARD_WIDTH = 0.3;
-const BOARD_HEIGHT = 0.26;
-const SAMPLES = 120;
-
-/** How many pieces of a solid a flask shows, and their edge in metres. */
+/** How many pieces of a solid a flask shows, and their size in metres. */
 const PiecesSchema = Schema.Struct({ count: Schema.Int, size: Schema.Finite });
 
-/** How many pieces of solid each form shows in the flask, and their edge in metres. */
+/** How many pieces of solid each form shows in the flask, and their size in metres. */
 const PIECES = {
   chips: { count: 6, size: 0.009 },
   granules: { count: 14, size: 0.005 },
@@ -66,23 +52,21 @@ export const RUN_COLORS = [PLOT_COLORS.teal, PLOT_COLORS.orange] as const;
 
 /**
  * Up to two runs of a reaction that gives off a gas, at bench scale: each a
- * conical flask of acid with its solid, stoppered, its gas led to a gas
- * syringe whose plunger moves out as the gas collects. With the curves shown,
- * a board between the runs plots each run's amount of gas against time from
- * the same formula that moves the plungers, and a dot marks the time chosen.
+ * conical flask of acid with its solid, closed with a rubber bung, its gas
+ * led through a bent glass tube to a glass gas syringe clamped on a retort
+ * stand. With the curves shown, each plunger moves out as the gas collects,
+ * by the same formula that draws the graph under the scene.
  */
 export function RateScene({
-  children,
   runs,
   showCurves,
   time,
 }: {
-  readonly children?: ReactNode;
   readonly runs: Arr.NonEmptyReadonlyArray<RateRun>;
   readonly showCurves: boolean;
   readonly time: number;
 }) {
-  const most = largest(runs);
+  const most = largestAmount(runs);
   return (
     <group>
       <LabBench width={3} />
@@ -94,12 +78,11 @@ export function RateScene({
           side={index === 0 ? -1 : 1}
         />
       ))}
-      {children}
     </group>
   );
 }
 
-/** One run's flask, solid, delivery tube and gas syringe. */
+/** One run's flask, solid, bung, delivery tube, and its gas syringe on a stand. */
 function RunRig({
   filled,
   run,
@@ -110,8 +93,7 @@ function RunRig({
   readonly side: -1 | 1;
 }) {
   const x = side * RUN_X;
-  const start = x + side * SYRINGE_GAP;
-  const plunger = start + side * (0.01 + filled * (SYRINGE_LENGTH - 0.02));
+  const inward = side === -1 ? 1 : -1;
   const { count: pieces, size } = PIECES[run.solid];
 
   return (
@@ -128,67 +110,57 @@ function RunRig({
           const radius = 0.006 + ((index * 7) % 10) * 0.0028;
           return (
             <mesh
+              castShadow
               key={String(index)}
               position={[
                 Math.cos(angle) * radius,
-                0.004 + size / 2,
+                0.004 + size * 0.4,
                 Math.sin(angle) * radius,
               ]}
+              rotation={[index * 1.3, index * 2.1, index * 0.7]}
+              scale={[1, 0.72 + (index % 3) * 0.12, 0.85]}
             >
-              <boxGeometry args={[size, size, size]} />
+              <dodecahedronGeometry args={[size * 0.62, 0]} />
               <meshStandardMaterial
-                color={REAGENT_COLORS.bakingSoda}
-                roughness={0.9}
+                args={[
+                  {
+                    color: REAGENT_COLORS.bakingSoda,
+                    flatShading: true,
+                    roughness: 0.9,
+                  },
+                ]}
               />
             </mesh>
           );
         })}
-        <mesh position={[0, 0.152, 0]}>
-          <cylinderGeometry args={[0.019, 0.016, 0.022, 20]} />
-          <meshStandardMaterial color={BENCH_COLORS.stopper} roughness={0.7} />
-        </mesh>
+        <group position={[0, BUNG_Y, 0]}>
+          <Bung />
+          <DeliveryTube
+            reach={inward * SYRINGE.gap}
+            rise={SYRINGE.y - BUNG_Y}
+          />
+        </group>
+        <group position={[inward * SYRINGE.gap, SYRINGE.y, 0]}>
+          <GasSyringe filled={filled} side={inward} />
+        </group>
+        <group
+          position={[
+            inward * (SYRINGE.gap + 0.024 + SYRINGE.length * 0.6),
+            0,
+            0,
+          ]}
+        >
+          <SyringeStand height={SYRINGE.y} />
+        </group>
       </group>
-      <Line
-        color={BENCH_COLORS.glass}
-        lineWidth={3}
-        points={[
-          [x, 0.16, 0],
-          [x, SYRINGE_Y, 0],
-          [start, SYRINGE_Y, 0],
-        ]}
-      />
-      <mesh
-        position={[start + (side * SYRINGE_LENGTH) / 2, SYRINGE_Y, 0]}
-        rotation={[0, 0, Math.PI / 2]}
-      >
-        <cylinderGeometry
-          args={[SYRINGE_RADIUS, SYRINGE_RADIUS, SYRINGE_LENGTH, 24, 1, true]}
-        />
-        <VesselGlassMaterial
-          color={BENCH_COLORS.glass}
-          thickness={GLASS_WALL}
-          tint={BENCH_COLORS.glassEdge}
-        />
-      </mesh>
-      <mesh position={[plunger, SYRINGE_Y, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <cylinderGeometry
-          args={[SYRINGE_RADIUS - 0.001, SYRINGE_RADIUS - 0.001, 0.006, 24]}
-        />
-        <meshStandardMaterial color={BENCH_COLORS.stopper} roughness={0.5} />
-      </mesh>
-      <mesh
-        position={[plunger + side * 0.05, SYRINGE_Y, 0]}
-        rotation={[0, 0, Math.PI / 2]}
-      >
-        <cylinderGeometry args={[0.003, 0.003, 0.1, 12]} />
-        <MetalMaterial color={BENCH_COLORS.probeSteel} roughness={0.3} />
-      </mesh>
       <ThreeLabel
+        anchorX={side === -1 ? "left" : "right"}
         color={ORIGIN_COLOR.LIGHT}
         fontSize="compact"
+        maximumFontSize={17}
         outlineColor={ORIGIN_COLOR.DARK}
         outlineWidth={0.006}
-        position={[x, -0.02, 0.06]}
+        position={[x + side * 0.045, -0.02, 0.06]}
       >
         {run.label}
       </ThreeLabel>
@@ -196,92 +168,7 @@ function RunRig({
   );
 }
 
-/** The graph board: amount of gas against time, one curve per run, and a dot at the chosen time. */
-export function Board({
-  runs,
-  time,
-  timeLabel,
-}: {
-  readonly runs: Arr.NonEmptyReadonlyArray<RateRun>;
-  readonly time: number;
-  readonly timeLabel: string;
-}) {
-  const most = largest(runs);
-  const left = -BOARD_WIDTH / 2 + 0.02;
-  const bottom = BOARD_Y - BOARD_HEIGHT / 2 + 0.03;
-  const width = BOARD_WIDTH - 0.04;
-  const height = BOARD_HEIGHT - 0.06;
-  const point = (t: number, amount: number) =>
-    [
-      left + (t / TIME_SPAN) * width,
-      bottom + (amount / most) * height * 0.9,
-      0.006,
-    ] as const;
-
-  return (
-    <group position={[0, 0, -0.12]}>
-      <mesh position={[0, BOARD_Y, 0]}>
-        <boxGeometry args={[BOARD_WIDTH, BOARD_HEIGHT, 0.008]} />
-        <meshStandardMaterial color={INSTRUMENT_COLORS.paper} roughness={0.9} />
-      </mesh>
-      <Line
-        color={INSTRUMENT_COLORS.graphite}
-        lineWidth={1.5}
-        points={[
-          [left, bottom + height, 0.006],
-          [left, bottom, 0.006],
-          [left + width, bottom, 0.006],
-        ]}
-      />
-      {Arr.map(runs, (run, index) => {
-        const color = RUN_COLORS[index === 0 ? 0 : 1];
-        const samples = Arr.makeBy(SAMPLES + 1, (step) => {
-          const t = (step / SAMPLES) * TIME_SPAN;
-          return point(t, amountAt(run.amount, run.solid, t));
-        });
-        const dot = point(time, amountAt(run.amount, run.solid, time));
-        return (
-          <group key={String(index)}>
-            <Line color={color} lineWidth={2.5} points={samples} />
-            <mesh position={dot}>
-              <sphereGeometry args={[0.004, 12, 8]} />
-              <meshStandardMaterial color={color} />
-            </mesh>
-            <ThreeLabel
-              anchorX="right"
-              color={color}
-              fontSize="compact"
-              gap={0.004}
-              position={[left, point(0, run.amount)[1], 0.006]}
-            >
-              <InlineMath math={run.amountTex} />
-            </ThreeLabel>
-          </group>
-        );
-      })}
-      <ThreeLabel
-        anchorY="top"
-        color={ORIGIN_COLOR.DARK}
-        fontSize="compact"
-        gap={0.004}
-        position={[0, bottom, 0.006]}
-      >
-        {timeLabel}
-      </ThreeLabel>
-      <ThreeLabel
-        anchorY="bottom"
-        color={ORIGIN_COLOR.DARK}
-        fontSize="compact"
-        gap={0.004}
-        position={[left, bottom + height, 0.006]}
-      >
-        <InlineMath math="n\ (\mathrm{mol})" />
-      </ThreeLabel>
-    </group>
-  );
-}
-
 /** The largest final amount of the runs, which the graph and the syringes scale to. */
-function largest(runs: readonly RateRun[]) {
+export function largestAmount(runs: readonly RateRun[]) {
   return Arr.reduce(runs, 0, (most, run) => Math.max(most, run.amount));
 }

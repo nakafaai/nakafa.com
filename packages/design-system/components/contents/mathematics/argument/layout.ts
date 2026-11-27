@@ -128,13 +128,16 @@ export function printOf(text: string) {
 /**
  * How far back the camera stands to take in the whole table on a canvas of
  * `aspect` width to height, looking down at `elevation` radians through a
- * vertical field of `fov` degrees, with a margin round the edge.
+ * vertical field of `fov` degrees, with a margin round the edge. The table's
+ * near edge lies closer to a camera that looks down at a slant, so the camera
+ * stands back by that much more and the nearest card never leaves the frame.
  */
 export function viewDistance(aspect: number, elevation: number, fov: number) {
   const half = Math.tan((fov * Math.PI) / 360);
   const down = (EXTENT.depth / 2) * Math.sin(elevation);
   const across = EXTENT.width / 2;
-  return Math.max(down / half, across / (half * aspect)) * 1.05;
+  const near = (EXTENT.depth / 2) * Math.cos(elevation);
+  return Math.max(down / half, across / (half * aspect)) * 1.05 + near;
 }
 
 /**

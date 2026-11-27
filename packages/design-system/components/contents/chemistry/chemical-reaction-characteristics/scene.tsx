@@ -1,3 +1,4 @@
+import { RoundedBox } from "@react-three/drei";
 import {
   useReactionCharacteristicsColors,
   useReactionCharacteristicsCue,
@@ -23,6 +24,7 @@ import {
   PRECIPITATE_CUE_ID,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
 import type { ReactionCharacteristicsLabProps } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/lab";
+import { createBeakerMarkingsTexture } from "@repo/design-system/components/contents/chemistry/glassware";
 import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { ArrowHelper } from "@repo/design-system/components/three/arrow";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
@@ -34,30 +36,46 @@ import {
 import { getColor } from "@repo/design-system/lib/color";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { Array as Arr } from "effect";
+import { useEffect, useMemo } from "react";
 import { Vector2 } from "three";
 
 const BEFORE_BEAKER_X = -1.16;
 const AFTER_BEAKER_X = 1.16;
 const BEAKER_SCALE = 1.08;
-const BEAKER_TOP_RADIUS = 0.46;
-const BEAKER_BOTTOM_RADIUS = 0.41;
-const LIQUID_RADIUS = 0.375;
+const BEAKER_RADIUS = 0.44;
+const LIQUID_RADIUS = 0.4;
 const GLASS_OPACITY = 0.24;
 const LIQUID_OPACITY = 0.68;
 const SCENE_Y = -0.12;
 const SCENE_SCALE = 1.12;
-const BENCH_Y = -BEAKER_WALL_HEIGHT / 2 - 0.03;
-const GRADUATION_HEIGHTS = [-0.36, -0.1, 0.16, 0.42] as const;
+const TILE = { side: 1.5, thick: 0.03 } as const;
+const BENCH_Y = -BEAKER_WALL_HEIGHT / 2 - TILE.thick;
 
-/** Turned borosilicate beaker profile: flat base, rounded heel, straight wall, flared pouring lip. */
+/** How thick the beaker's wall and its base are drawn. */
+const WALL = 0.022;
+const BASE = 0.034;
+
+/**
+ * A Griffin beaker's wall in section, turned on the lathe: a thick flat
+ * base, a rounded heel, a straight wall, a rim that flares and rolls over,
+ * and the inner wall back down, so the glass has a real thickness to refract
+ * and catch the light.
+ */
 const BEAKER_LATHE_PROFILE = Arr.map(
   [
     [0.001, -BEAKER_WALL_HEIGHT / 2],
-    [BEAKER_BOTTOM_RADIUS - 0.035, -BEAKER_WALL_HEIGHT / 2],
-    [BEAKER_BOTTOM_RADIUS, -BEAKER_WALL_HEIGHT / 2 + 0.045],
-    [BEAKER_BOTTOM_RADIUS + 0.015, -BEAKER_WALL_HEIGHT / 2 + 0.22],
-    [BEAKER_TOP_RADIUS - 0.015, BEAKER_WALL_HEIGHT / 2 - 0.05],
-    [BEAKER_TOP_RADIUS + 0.025, BEAKER_WALL_HEIGHT / 2],
+    [BEAKER_RADIUS - 0.05, -BEAKER_WALL_HEIGHT / 2],
+    [BEAKER_RADIUS - 0.012, -BEAKER_WALL_HEIGHT / 2 + 0.012],
+    [BEAKER_RADIUS, -BEAKER_WALL_HEIGHT / 2 + 0.05],
+    [BEAKER_RADIUS, BEAKER_WALL_HEIGHT / 2 - 0.06],
+    [BEAKER_RADIUS + 0.012, BEAKER_WALL_HEIGHT / 2 - 0.025],
+    [BEAKER_RADIUS + 0.034, BEAKER_WALL_HEIGHT / 2 - 0.004],
+    [BEAKER_RADIUS + 0.036, BEAKER_WALL_HEIGHT / 2 + 0.006],
+    [BEAKER_RADIUS + 0.024, BEAKER_WALL_HEIGHT / 2 + 0.01],
+    [BEAKER_RADIUS - WALL, BEAKER_WALL_HEIGHT / 2 - 0.05],
+    [BEAKER_RADIUS - WALL, -BEAKER_WALL_HEIGHT / 2 + BASE + 0.03],
+    [BEAKER_RADIUS - WALL - 0.03, -BEAKER_WALL_HEIGHT / 2 + BASE],
+    [0.001, -BEAKER_WALL_HEIGHT / 2 + BASE],
   ] as const,
   ([r, y]) => new Vector2(r, y)
 );
@@ -66,11 +84,12 @@ const BEAKER_LATHE_PROFILE = Arr.map(
 const LIQUID_MENISCUS_PROFILE = Arr.map(
   [
     [0.001, LIQUID_BOTTOM_Y],
-    [LIQUID_RADIUS - 0.02, LIQUID_BOTTOM_Y],
-    [LIQUID_RADIUS, LIQUID_BOTTOM_Y + 0.025],
-    [LIQUID_RADIUS + 0.012, LIQUID_TOP_Y + 0.028],
-    [LIQUID_RADIUS - 0.028, LIQUID_TOP_Y + 0.008],
-    [LIQUID_RADIUS - 0.08, LIQUID_TOP_Y],
+    [LIQUID_RADIUS - 0.03, LIQUID_BOTTOM_Y],
+    [LIQUID_RADIUS, LIQUID_BOTTOM_Y + 0.03],
+    [LIQUID_RADIUS, LIQUID_TOP_Y + 0.03],
+    [LIQUID_RADIUS - 0.012, LIQUID_TOP_Y + 0.012],
+    [LIQUID_RADIUS - 0.04, LIQUID_TOP_Y + 0.003],
+    [LIQUID_RADIUS - 0.09, LIQUID_TOP_Y],
     [0.001, LIQUID_TOP_Y],
   ] as const,
   ([r, y]) => new Vector2(r, y)
@@ -122,20 +141,28 @@ export function ReactionCharacteristicsScene({
   );
 }
 
-/** Renders one 3D laboratory beaker standing on a ceramic mat. */
+/** One beaker on a glazed white tile, which shows the colour of what it holds. */
 function ReactionBeaker({ phase, x }: { phase: ReactionPhase; x: number }) {
   const colors = useReactionCharacteristicsColors();
   const cueId = useReactionCharacteristicsCue((state) => state.cueId);
 
   return (
     <group position={[x, 0, 0]} scale={BEAKER_SCALE}>
-      <mesh position={[0, BENCH_Y + 0.015, 0]} receiveShadow>
-        <cylinderGeometry args={[0.56, 0.58, 0.03, 48]} />
-        <meshStandardMaterial
+      <RoundedBox
+        args={[TILE.side, TILE.thick, TILE.side]}
+        castShadow
+        position={[0, BENCH_Y + TILE.thick / 2, 0]}
+        radius={0.014}
+        receiveShadow
+        smoothness={4}
+      >
+        <meshPhysicalMaterial
+          clearcoat={0.9}
+          clearcoatRoughness={0.12}
           color={BENCH_COLORS.ceramicTile}
-          roughness={0.42}
+          roughness={0.3}
         />
-      </mesh>
+      </RoundedBox>
       <BeakerGlass />
       <Liquid color={getLiquidColor({ colors, cueId, phase })} />
       <ReactionCueVisual phase={phase} />
@@ -143,43 +170,46 @@ function ReactionBeaker({ phase, x }: { phase: ReactionPhase; x: number }) {
   );
 }
 
-/** Borosilicate glass beaker turned with LatheGeometry, poured lip, and graduation ticks. */
+/** A borosilicate Griffin beaker with a pouring spout and its printed scale. */
 function BeakerGlass() {
   const colors = useReactionCharacteristicsColors();
+  const markings = useMemo(createBeakerMarkingsTexture, []);
+  useEffect(() => () => markings?.dispose(), [markings]);
+
   return (
     <group>
-      <mesh castShadow receiveShadow>
-        <latheGeometry args={[BEAKER_LATHE_PROFILE, 72]} />
+      <mesh castShadow renderOrder={2}>
+        <latheGeometry args={[BEAKER_LATHE_PROFILE, 96]} />
         <GlassMaterial color={colors.glass} opacity={GLASS_OPACITY} />
       </mesh>
-
       <mesh
-        position={[0, BEAKER_WALL_HEIGHT / 2, 0]}
-        rotation={[Math.PI / 2, 0, 0]}
+        position={[BEAKER_RADIUS + 0.03, BEAKER_WALL_HEIGHT / 2 - 0.012, 0]}
+        rotation={[0, 0, -0.42]}
+        scale={[1.15, 0.6, 0.8]}
       >
-        <torusGeometry args={[BEAKER_TOP_RADIUS + 0.015, 0.014, 16, 72]} />
-        <GlassMaterial color={colors.glass} opacity={0.62} />
+        <cylinderGeometry args={[0.05, 0.075, 0.11, 24, 1, true, -1.2, 2.4]} />
+        <GlassMaterial color={colors.glass} opacity={0.5} />
       </mesh>
-
-      {Arr.map(GRADUATION_HEIGHTS, (y, index) => {
-        const t = (y + BEAKER_WALL_HEIGHT / 2) / BEAKER_WALL_HEIGHT;
-        const radius =
-          BEAKER_BOTTOM_RADIUS +
-          (BEAKER_TOP_RADIUS - BEAKER_BOTTOM_RADIUS) * t +
-          0.004;
-        const arc = index % 2 === 0 ? Math.PI * 0.28 : Math.PI * 0.16;
-        return (
-          <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[radius, 0.004, 8, 48, arc]} />
-            <meshBasicMaterial
-              color={getColor("WHITE")}
-              depthWrite={false}
-              opacity={0.65}
-              transparent
-            />
-          </mesh>
-        );
-      })}
+      {markings === null ? null : (
+        <mesh position={[0, 0.02, 0]} renderOrder={3} rotation={[0, 2.2, 0]}>
+          <cylinderGeometry
+            args={[
+              BEAKER_RADIUS + 0.003,
+              BEAKER_RADIUS + 0.003,
+              BEAKER_WALL_HEIGHT * 0.78,
+              64,
+              1,
+              true,
+            ]}
+          />
+          <meshBasicMaterial
+            depthWrite={false}
+            map={markings}
+            opacity={0.9}
+            transparent
+          />
+        </mesh>
+      )}
     </group>
   );
 }

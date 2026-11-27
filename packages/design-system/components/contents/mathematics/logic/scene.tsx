@@ -27,6 +27,7 @@ import type {
   Case,
   LogicMode,
 } from "@repo/design-system/components/contents/mathematics/logic/truth";
+import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
@@ -90,7 +91,7 @@ export function LogicScene({
                 fontSize="compact"
                 position={[0, BASE_TOP + 0.002, PARTS.switch.depth / 2 + 0.011]}
               >
-                {name.toUpperCase()}
+                <InlineMath math={name.toUpperCase()} />
               </ThreeLabel>
             </>
           ) : (

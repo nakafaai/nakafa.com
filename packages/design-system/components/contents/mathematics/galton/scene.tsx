@@ -24,9 +24,12 @@ import {
   pinPoints,
 } from "@repo/design-system/components/contents/mathematics/galton/board";
 import { woodGrain } from "@repo/design-system/components/contents/mathematics/galton/wood";
+import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { GlassMaterial } from "@repo/design-system/components/three/physical";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { GALTON_COLORS } from "@repo/design-system/lib/material/galton";
+import { TABLE_COLORS } from "@repo/design-system/lib/material/table";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
 import type { Texture } from "three";
@@ -36,6 +39,7 @@ import {
   RepeatWrapping,
   Shape,
   SRGBColorSpace,
+  Vector2,
 } from "three";
 
 /** The frame's rails: 20 mm wide, the top rail 25 mm and the base rail 30 mm tall. */
@@ -81,6 +85,7 @@ export function GaltonScene({
   const pose = useMemo(() => boardPose(p), [p]);
   return (
     <group>
+      <StudioTable color={TABLE_COLORS.maple} />
       <group position={[pose.pivot, 0, 0]} rotation={[0, 0, pose.angle]}>
         <group position={[-pose.pivot, 0, 0]}>
           <Frame />
@@ -99,7 +104,7 @@ export function GaltonScene({
             <boxGeometry
               args={[2 * INNER_HALF, INNER_TOP - BIN_FLOOR, GLASS]}
             />
-            <GlassMaterial color={GALTON_COLORS.glass} opacity={0.1} />
+            <GlassMaterial color={GALTON_COLORS.glass} opacity={0.14} />
           </mesh>
         </group>
       </group>
@@ -123,9 +128,12 @@ function Frame() {
         receiveShadow
       >
         <boxGeometry args={[2 * outer - 0.004, sides - 0.004, BACK]} />
-        <meshStandardMaterial
+        <SurfaceMaterial
+          bump={0.004}
           color={GALTON_COLORS.backboard}
-          roughness={0.82}
+          repeat={[3, 5]}
+          roughness={0.7}
+          surface="paint"
         />
       </mesh>
       {Arr.map([-1, 1] as const, (side) => (
@@ -224,7 +232,14 @@ function Walnut({ grain }: { readonly grain: Texture }) {
 
 /** Light maple, for the hopper floor and the dividers: strips so thin that their grain does not show. */
 function Maple() {
-  return <meshStandardMaterial color={GALTON_COLORS.maple} roughness={0.55} />;
+  return (
+    <meshPhysicalMaterial
+      clearcoat={0.3}
+      clearcoatRoughness={0.4}
+      color={GALTON_COLORS.maple}
+      roughness={0.5}
+    />
+  );
 }
 
 /** The hopper's floor: two maple slats falling at 30 degrees from the frame's sides to the outlet. */
@@ -251,6 +266,27 @@ function Hopper() {
   );
 }
 
+/**
+ * A machined brass pin, turned about its own axis and centred on its middle:
+ * a shank pressed into the backboard, a turned shoulder seated on the face,
+ * the round body a ball strikes, and a chamfered tip at the glass.
+ */
+const PIN_LENGTH = GAP + 0.004;
+const PIN_PROFILE = Arr.map(
+  [
+    [0.0001, -PIN_LENGTH / 2],
+    [PIN_RADIUS * 0.7, -PIN_LENGTH / 2],
+    [PIN_RADIUS * 0.7, -PIN_LENGTH / 2 + 0.0038],
+    [PIN_RADIUS * 1.35, -PIN_LENGTH / 2 + 0.004],
+    [PIN_RADIUS * 1.35, -PIN_LENGTH / 2 + 0.0046],
+    [PIN_RADIUS, -PIN_LENGTH / 2 + 0.005],
+    [PIN_RADIUS, PIN_LENGTH / 2 - 0.0006],
+    [PIN_RADIUS * 0.6, PIN_LENGTH / 2],
+    [0.0001, PIN_LENGTH / 2],
+  ] as const,
+  ([radius, height]) => new Vector2(radius, height)
+);
+
 /** The brass pins, each set into the backboard and reaching the glass. */
 function Pins({ rows }: { readonly rows: number }) {
   const placements = useMemo<readonly Placement[]>(
@@ -263,12 +299,13 @@ function Pins({ rows }: { readonly rows: number }) {
   );
   return (
     <Instances placements={placements}>
-      <cylinderGeometry args={[PIN_RADIUS, PIN_RADIUS, GAP + 0.004, 14]} />
+      <latheGeometry args={[PIN_PROFILE, 28]} />
       <meshPhysicalMaterial
-        clearcoat={0.5}
+        clearcoat={0.6}
+        clearcoatRoughness={0.1}
         color={GALTON_COLORS.pin}
         metalness={1}
-        roughness={0.28}
+        roughness={0.18}
       />
     </Instances>
   );

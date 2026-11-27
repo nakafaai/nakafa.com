@@ -104,8 +104,8 @@ export function ChemicalCellLab({
         <ScienceStage floor={0} frameloop="always" reach={0.6} setting="lab">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[0.1, 0.32, 0.64]}
-              cameraTarget={[0, 0.08, 0.14]}
+              cameraPosition={[0.05, 0.25, 0.78]}
+              cameraTarget={[0, 0.085, 0.14]}
               fov={34}
               maxDistance={1.6}
               minDistance={0.2}

@@ -73,6 +73,14 @@ export const BENCH_COLORS = {
   panSteel: "#dfe3e6",
   probeSteel: "#c8cdd2",
   stopper: "#3a2c26",
+  // A retort stand: its cast-iron base and bossheads, its chrome rod, and the cork lining of its clamp's jaws.
+  standIron: "#2c2f34",
+  standChrome: "#d3d8dc",
+  clampCork: "#b98c5d",
+  // The pale agar jelly of a salt bridge.
+  agar: "#efe7cf",
+  // The printed scale of a glass gas syringe.
+  syringeScale: "#22262b",
   trough: "#5b6066",
 
   // A cathode-ray tube: its zinc sulfide screen, the green glow electrons

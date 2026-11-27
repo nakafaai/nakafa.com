@@ -1,5 +1,9 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import {
+  Chamber,
+  PLATE,
+} from "@repo/design-system/components/contents/chemistry/millikan/chamber";
+import {
   APPARATUS,
   chargeToHover,
   DROPS,
@@ -11,7 +15,6 @@ import { useInvalidateOnChange } from "@repo/design-system/components/contents/s
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -155,7 +158,7 @@ export function MillikanOilDropLab({
 }
 
 /**
- * The two round brass plates 5 mm apart and the drops between them, each
+ * Millikan's condenser, its brass plates 5 mm apart, and the drops between them, each
  * glinting in the lamp light and drifting at its Stokes speed: up when the
  * field outweighs gravity, down when it does not, and still at balance.
  * Drops that reach a plate start again in the middle.
@@ -200,30 +203,25 @@ function Plates({ voltage }: { readonly voltage: number }) {
 
   return (
     <group>
-      {Arr.map([gap / 2 + 0.06, -gap / 2 - 0.06] as const, (y) => (
-        <mesh castShadow key={y} position={[0, y, 0]} receiveShadow>
-          <cylinderGeometry args={[3.4, 3.4, 0.12, 64]} />
-          <MetalMaterial color={PLOT_COLORS.amber} roughness={0.28} />
-        </mesh>
-      ))}
+      <Chamber gap={gap} />
       <ThreeLabel
         color={getColor("SLATE", 400)}
         fontSize="compact"
-        position={[3.7, gap / 2 + 0.06, 0]}
+        position={[4.3, gap / 2 + PLATE.thick / 2, 0]}
       >
         <InlineMath math="+" />
       </ThreeLabel>
       <ThreeLabel
         color={getColor("SLATE", 400)}
         fontSize="compact"
-        position={[3.7, -gap / 2 - 0.06, 0]}
+        position={[4.3, -gap / 2 - PLATE.thick / 2, 0]}
       >
         <InlineMath math="-" />
       </ThreeLabel>
       {Arr.map(drops, (drop) => (
         <mesh key={drop.charges} ref={drop.ref}>
           <sphereGeometry
-            args={[drop.charges === balanced ? 0.12 : 0.1, 24, 16]}
+            args={[drop.charges === balanced ? 0.12 : 0.1, 32, 24]}
           />
           <meshStandardMaterial
             color={glint}
@@ -241,10 +239,10 @@ function Plates({ voltage }: { readonly voltage: number }) {
 function MillikanCamera() {
   const size = useThree((state) => state.size);
   const narrow = size.width < size.height * 1.2;
-  const distance = narrow ? 13 : 10;
+  const distance = narrow ? 15 : 11.5;
   return (
     <CameraControls
-      cameraPosition={[0, distance * 0.18, distance]}
+      cameraPosition={[0, distance * 0.16, distance]}
       cameraTarget={[0, 0, 0]}
       fov={40}
       maxDistance={distance * 1.8}

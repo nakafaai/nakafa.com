@@ -4,6 +4,7 @@ import type {
   Sort,
 } from "@repo/design-system/components/contents/mathematics/counterexample/layout";
 import { DIVIDER } from "@repo/design-system/components/contents/mathematics/counterexample/layout";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { COUNTEREXAMPLE_COLORS } from "@repo/design-system/lib/material/counterexample";
 import { Array as Arr } from "effect";
 
@@ -61,11 +62,15 @@ export function FeltBoard({ size }: { readonly size: Size }) {
         position={[0, FELT_TOP / 2, 0]}
         radius={0.003}
         receiveShadow
-        smoothness={2}
+        smoothness={6}
       >
-        <meshStandardMaterial
+        <SurfaceMaterial
+          bump={0.012}
+          coat={0.35}
           color={COUNTEREXAMPLE_COLORS.frame}
-          roughness={0.5}
+          repeat={[0.5, 3]}
+          roughness={0.46}
+          surface="wood"
         />
       </RoundedBox>
       {Arr.map(rails, ({ args, at }) => (
@@ -76,9 +81,13 @@ export function FeltBoard({ size }: { readonly size: Size }) {
           receiveShadow
         >
           <boxGeometry args={[args[0], FRAME.lip, args[1]]} />
-          <meshStandardMaterial
+          <SurfaceMaterial
+            bump={0.012}
+            coat={0.35}
             color={COUNTEREXAMPLE_COLORS.frame}
-            roughness={0.5}
+            repeat={[0.4, 2]}
+            roughness={0.46}
+            surface="wood"
           />
         </mesh>
       ))}
@@ -88,9 +97,12 @@ export function FeltBoard({ size }: { readonly size: Size }) {
         rotation={[-Math.PI / 2, 0, 0]}
       >
         <planeGeometry args={[size.width, size.depth]} />
-        <meshStandardMaterial
+        <SurfaceMaterial
+          bump={0.2}
           color={COUNTEREXAMPLE_COLORS.felt}
+          repeat={[size.width / 0.06, size.depth / 0.06]}
           roughness={1}
+          surface="cloth"
         />
       </mesh>
     </group>

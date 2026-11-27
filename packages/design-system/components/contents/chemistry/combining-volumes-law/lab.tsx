@@ -157,7 +157,7 @@ function CombiningVolumesCameraControls() {
     <CameraControls
       cameraPosition={cameraPosition}
       cameraTarget={COMBINING_VOLUMES_SCENE_VIEW.cameraTarget}
-      fov={42}
+      fov={28}
       framing="content"
     />
   );

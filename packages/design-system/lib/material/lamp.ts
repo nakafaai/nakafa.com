@@ -1,12 +1,11 @@
 /**
  * A lamp panel as a camera sees it: clear globe bulbs with tungsten filaments
  * in porcelain holders, chrome toggle switches on steel plates, engraved
- * brass place-value plates, all on a brushed aluminium faceplate in a walnut
+ * brass place-value plates, all on a printed circuit board in a walnut
  * case. A simulation that shows one of them takes its colour from here, so it
  * looks the same in every lesson.
  */
 export const LAMP_COLORS = {
-  aluminium: "#b9bec3",
   blankCover: "#8f959b",
   brassCap: "#c6a25b",
   brassPlate: "#b8913f",

@@ -1,24 +1,12 @@
-import { sampleBoltzmann } from "@repo/design-system/components/contents/chemistry/collision/model";
 import {
   GlassMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
-import { KINETICS_COLORS } from "@repo/design-system/lib/material/kinetics";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
-import {
-  CatmullRomCurve3,
-  DoubleSide,
-  ExtrudeGeometry,
-  LatheGeometry,
-  Shape,
-  ShapeGeometry,
-  TubeGeometry,
-  Vector2,
-  Vector3,
-} from "three";
+import { ExtrudeGeometry, LatheGeometry, Shape, Vector2 } from "three";
 
 const HOTPLATE_FEET = [
   [-0.082, 0.088],
@@ -36,10 +24,6 @@ const BEAKER_GRADUATIONS = [
   { major: false, y: 0.091 },
   { major: true, y: 0.104 },
 ] as const;
-
-const PLOT_W = 0.22;
-const PLOT_H = 0.125;
-const EA_RATIO = 0.62;
 
 /** Builds the sloped housing of a benchtop magnetic-stirrer hotplate. */
 function createHotplateHousing() {
@@ -226,154 +210,6 @@ export function GraduatedBeaker() {
           transparent
         />
       </mesh>
-    </group>
-  );
-}
-
-/**
- * Compact dark-anodised benchtop spectrometer display stand rendering a live
- * 3D Maxwell-Boltzmann kinetic energy distribution tube, activation energy rod,
- * and translucent shaded tail region for E >= Ea.
- */
-export function BoltzmannStand({
-  heatNorm,
-  temperatureK,
-}: {
-  readonly heatNorm: number;
-  readonly temperatureK: number;
-}) {
-  const { curveGeo, tailGeo } = useMemo(() => {
-    const samples = sampleBoltzmann(temperatureK, 48);
-    // Flatten peak slightly at higher T to keep area intuition clear.
-    const heightScale = 0.72 + (1 - heatNorm) * 0.28;
-    const x0 = -PLOT_W / 2;
-    const y0 = -PLOT_H / 2 + 0.004;
-
-    const points = Arr.map(
-      samples,
-      (pt) =>
-        new Vector3(
-          x0 + pt.energy * PLOT_W,
-          y0 + pt.density * (PLOT_H - 0.014) * heightScale,
-          0.0045
-        )
-    );
-    const curve = new CatmullRomCurve3(points);
-    const tube = new TubeGeometry(curve, 64, 0.0024, 10, false);
-
-    const tail = Arr.filter(samples, (pt) => pt.aboveEa);
-    const tailShape = new Shape();
-    const eaX = x0 + EA_RATIO * PLOT_W;
-    tailShape.moveTo(eaX, y0);
-    for (const pt of tail) {
-      tailShape.lineTo(
-        x0 + pt.energy * PLOT_W,
-        y0 + pt.density * (PLOT_H - 0.014) * heightScale
-      );
-    }
-    tailShape.lineTo(x0 + PLOT_W, y0);
-    tailShape.closePath();
-    const shaded = new ShapeGeometry(tailShape);
-
-    return { curveGeo: tube, tailGeo: shaded };
-  }, [heatNorm, temperatureK]);
-
-  useEffect(
-    () => () => {
-      curveGeo.dispose();
-      tailGeo.dispose();
-    },
-    [curveGeo, tailGeo]
-  );
-
-  const eaX = -PLOT_W / 2 + EA_RATIO * PLOT_W;
-  const gridY = [-0.02, 0.015, 0.05] as const;
-
-  return (
-    <group>
-      {/* Weighted anodised base */}
-      <mesh castShadow position={[0, 0.007, 0]} receiveShadow>
-        <boxGeometry args={[0.24, 0.014, 0.088]} />
-        <MetalMaterial color={CAR_COLORS.rimDark} roughness={0.46} />
-      </mesh>
-      {/* Side support pillars */}
-      {Arr.map([-0.085, 0.085] as const, (x) => (
-        <mesh castShadow key={x} position={[x, 0.032, -0.006]}>
-          <cylinderGeometry args={[0.005, 0.006, 0.044, 16]} />
-          <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.3} />
-        </mesh>
-      ))}
-      {/* Tilted dark spectrometer screen bezel */}
-      <group position={[0, 0.122, -0.004]} rotation={[-0.08, 0, 0]}>
-        <mesh castShadow receiveShadow>
-          <boxGeometry args={[0.272, 0.172, 0.014]} />
-          <MetalMaterial color={CAR_COLORS.dashboard} roughness={0.44} />
-        </mesh>
-        {/* Brushed aluminium top & bottom trim bars */}
-        <mesh position={[0, 0.087, 0]}>
-          <boxGeometry args={[0.274, 0.004, 0.016]} />
-          <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.28} />
-        </mesh>
-        <mesh position={[0, -0.087, 0]}>
-          <boxGeometry args={[0.274, 0.004, 0.016]} />
-          <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.28} />
-        </mesh>
-        {/* Recessed screen face */}
-        <mesh position={[0, 0, 0.0072]}>
-          <planeGeometry args={[0.25, 0.15]} />
-          <meshStandardMaterial
-            color={BENCH_COLORS.meterHalo}
-            roughness={0.35}
-          />
-        </mesh>
-        {/* Subtle horizontal reference grid lines */}
-        {Arr.map(gridY, (y) => (
-          <mesh key={y} position={[0, y, 0.0078]}>
-            <boxGeometry args={[PLOT_W, 0.0008, 0.0004]} />
-            <meshBasicMaterial color={BENCH_COLORS.meterBody} />
-          </mesh>
-        ))}
-        {/* Axes */}
-        <mesh position={[0, -PLOT_H / 2 + 0.004, 0.0085]}>
-          <boxGeometry args={[PLOT_W + 0.008, 0.0022, 0.0018]} />
-          <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.35} />
-        </mesh>
-        <mesh position={[-PLOT_W / 2, 0.002, 0.0085]}>
-          <boxGeometry args={[0.0022, PLOT_H, 0.0018]} />
-          <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.35} />
-        </mesh>
-        {/* Shaded E >= Ea tail area */}
-        <mesh geometry={tailGeo} position={[0, 0, 0.0082]}>
-          <meshStandardMaterial
-            color={KINETICS_COLORS.shadedArea}
-            emissive={KINETICS_COLORS.shadedArea}
-            emissiveIntensity={0.28}
-            opacity={0.58}
-            roughness={0.35}
-            side={DoubleSide}
-            transparent
-          />
-        </mesh>
-        {/* Live Maxwell-Boltzmann tube curve */}
-        <mesh geometry={curveGeo} position={[0, 0, 0.0065]}>
-          <meshStandardMaterial
-            color={KINETICS_COLORS.reactant}
-            emissive={KINETICS_COLORS.reactant}
-            emissiveIntensity={0.32}
-            roughness={0.25}
-          />
-        </mesh>
-        {/* Vertical amber activation-energy threshold rod */}
-        <mesh position={[eaX, 0.002, 0.011]}>
-          <cylinderGeometry args={[0.0018, 0.0018, PLOT_H + 0.004, 12]} />
-          <meshStandardMaterial
-            color={KINETICS_COLORS.activationLine}
-            emissive={KINETICS_COLORS.activationLine}
-            emissiveIntensity={0.5}
-            roughness={0.25}
-          />
-        </mesh>
-      </group>
     </group>
   );
 }

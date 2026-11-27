@@ -25,10 +25,7 @@ import { ArrowHelper } from "@repo/design-system/components/three/arrow";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import {
-  GlassMaterial,
-  MetalMaterial,
-} from "@repo/design-system/components/three/physical";
+import { GlassMaterial } from "@repo/design-system/components/three/physical";
 import { useRequired } from "@repo/design-system/hooks/required";
 import { getColor } from "@repo/design-system/lib/color";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
@@ -36,7 +33,7 @@ import { Array as Arr, HashMap, Option, Schema } from "effect";
 import type { ReactNode } from "react";
 import { createContext, useMemo, useRef } from "react";
 import type { Group } from "three";
-import { Quaternion, Vector3 } from "three";
+import { Quaternion, Vector2, Vector3 } from "three";
 
 const REACTANTS_X = -1.08;
 const PRODUCTS_X = 1.08;
@@ -128,7 +125,7 @@ export function CombiningVolumesScene({
     >
       <group position={[0, 0.08, 0]} scale={SCENE_SCALE}>
         <CameraBounds exclude>
-          <SeamlessBenchSurface radius={20} y={TUBE_BASE_Y - 0.036} />
+          <SeamlessBenchSurface radius={20} y={TUBE_BASE_Y} />
         </CameraBounds>
         <ThreeLabel
           anchorY="bottom"
@@ -231,6 +228,39 @@ function GasColumn({ gas, x }: { gas: CombiningVolumesGasModel; x: number }) {
   );
 }
 
+/** How thick a gas jar's wall and its base are drawn, and how far its ground flange stands out. */
+const JAR = { base: 0.03, flange: 0.045, wall: 0.016 } as const;
+
+/**
+ * A gas jar's wall in section for a jar `height` tall, its middle at y = 0:
+ * a thick base, a straight wall, a ground flange round the mouth for the
+ * cover plate to seal on, and the inner wall back down.
+ */
+function jarProfile(height: number) {
+  const top = height / 2;
+  const bottom = -height / 2;
+  return Arr.map(
+    [
+      [0.001, bottom],
+      [TUBE_RADIUS - 0.03, bottom],
+      [TUBE_RADIUS - 0.008, bottom + 0.008],
+      [TUBE_RADIUS, bottom + 0.03],
+      [TUBE_RADIUS, top - 0.03],
+      [TUBE_RADIUS + JAR.flange, top - 0.016],
+      [TUBE_RADIUS + JAR.flange, top],
+      [TUBE_RADIUS - JAR.wall, top],
+      [TUBE_RADIUS - JAR.wall, bottom + JAR.base + 0.02],
+      [TUBE_RADIUS - JAR.wall - 0.02, bottom + JAR.base],
+      [0.001, bottom + JAR.base],
+    ] as const,
+    ([radius, y]) => new Vector2(radius, y)
+  );
+}
+
+/**
+ * A borosilicate gas jar `height` tall, closed with a ground-glass cover
+ * plate, with a white enamel ring printed at every volume mark.
+ */
 function VolumeTube({
   colors,
   height,
@@ -240,51 +270,47 @@ function VolumeTube({
   height: number;
   volumeUnits: number;
 }) {
-  const dividers =
-    volumeUnits > 1
-      ? Arr.map(
-          Arr.range(1, volumeUnits - 1),
-          (unit) => -height / 2 + unit * VOLUME_UNIT_HEIGHT
-        )
-      : [];
+  const profile = useMemo(() => jarProfile(height), [height]);
+  const marks = Arr.map(
+    Arr.range(1, volumeUnits),
+    (unit) => -height / 2 + unit * VOLUME_UNIT_HEIGHT - 0.012
+  );
 
   return (
     <group>
-      <mesh castShadow receiveShadow>
-        <cylinderGeometry
-          args={[TUBE_RADIUS, TUBE_RADIUS, height, 48, 1, true]}
-        />
-        <GlassMaterial color={colors.glass} opacity={0.18} />
+      <mesh castShadow renderOrder={2}>
+        <latheGeometry args={[profile, 96]} />
+        <GlassMaterial color={colors.glass} opacity={0.22} />
       </mesh>
 
-      <mesh castShadow position={[0, -height / 2 - 0.018, 0]} receiveShadow>
+      <mesh castShadow position={[0, height / 2 + 0.011, 0]} renderOrder={3}>
         <cylinderGeometry
-          args={[TUBE_RADIUS * 1.18, TUBE_RADIUS * 1.28, 0.036, 48]}
+          args={[
+            TUBE_RADIUS + JAR.flange + 0.012,
+            TUBE_RADIUS + JAR.flange + 0.012,
+            0.018,
+            64,
+          ]}
         />
-        <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.32} />
+        <meshPhysicalMaterial
+          clearcoat={0.3}
+          clearcoatRoughness={0.5}
+          color={colors.glass}
+          opacity={0.62}
+          roughness={0.55}
+          transparent
+        />
       </mesh>
 
-      <mesh castShadow position={[0, height / 2 + 0.018, 0]} receiveShadow>
-        <cylinderGeometry
-          args={[TUBE_RADIUS * 0.86, TUBE_RADIUS * 0.94, 0.044, 36]}
-        />
-        <meshStandardMaterial color={BENCH_COLORS.bottleCap} roughness={0.74} />
-      </mesh>
-
-      {Arr.map([-height / 2, height / 2], (y) => (
-        <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[TUBE_RADIUS, 0.012, 12, 48]} />
-          <GlassMaterial color={colors.glass} opacity={0.58} />
-        </mesh>
-      ))}
-
-      {Arr.map(dividers, (y) => (
-        <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[TUBE_RADIUS + 0.002, 0.004, 8, 48]} />
+      {Arr.map(marks, (y) => (
+        <mesh key={y} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0.9]}>
+          <torusGeometry
+            args={[TUBE_RADIUS + 0.002, 0.0035, 8, 48, Math.PI * 0.7]}
+          />
           <meshBasicMaterial
-            color={colors.text}
+            color={BENCH_COLORS.ptfe}
             depthWrite={false}
-            opacity={0.32}
+            opacity={0.9}
             transparent
           />
         </mesh>
@@ -298,8 +324,8 @@ function VolumeBand({ color }: { color: string }) {
     <mesh>
       <cylinderGeometry
         args={[
-          TUBE_RADIUS * 0.82,
-          TUBE_RADIUS * 0.82,
+          TUBE_RADIUS * 0.84,
+          TUBE_RADIUS * 0.84,
           VOLUME_UNIT_HEIGHT * 0.78,
           42,
         ]}

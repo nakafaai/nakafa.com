@@ -17,9 +17,11 @@ import {
   Rack,
   Tray,
 } from "@repo/design-system/components/contents/mathematics/dice/table";
+import { StudioTable } from "@repo/design-system/components/contents/mathematics/table";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { useTimeline } from "@repo/design-system/components/contents/simulation/timeline";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { TABLE_COLORS } from "@repo/design-system/lib/material/table";
 import { Array as Arr, Option } from "effect";
 import { useRef } from "react";
 import type { Group } from "three";
@@ -89,6 +91,7 @@ export function DiceScene({
     <>
       <SimulationTicker running={playing} />
       <DiceCamera span={rackWidth(shown.length)} />
+      <StudioTable color={TABLE_COLORS.maple} />
       <Tray />
       <Rack highlight={highlight} outcomes={shown} target={target} />
       <Chips capacity={ROLLS} highlight={highlight} ref={chips} />

@@ -218,8 +218,10 @@ export function TallyBoard({
       <mesh castShadow position={[0, 0.006, 0]} receiveShadow>
         <boxGeometry args={[BOARD.width, 0.012, BOARD.depth]} />
         <SurfaceMaterial
+          bump={0.012}
+          coat={0.4}
           color={MARBLE_COLORS.walnut}
-          repeat={[2, 1]}
+          repeat={[0.5, 2]}
           roughness={0.45}
           surface="wood"
         />

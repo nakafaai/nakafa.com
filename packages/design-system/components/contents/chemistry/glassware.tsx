@@ -114,7 +114,12 @@ export function createEpoxyTexture(): CanvasTexture | null {
   return texture;
 }
 
-/** High-resolution printed paper reagent bottle label with true subscripts, chemical name, concentration, and GHS stripe. */
+/**
+ * A printed paper reagent bottle label, drawn large enough to read from
+ * across the bench: the formula with true subscripts fills the label, the
+ * chemical's name sits under it, and the hazard stripe carries the
+ * concentration.
+ */
 export function createBottleLabelTexture(
   formula: string,
   chemicalName: string,
@@ -125,42 +130,38 @@ export function createBottleLabelTexture(
     return null;
   }
   const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 320;
+  canvas.width = 1024;
+  canvas.height = 768;
   const ctx = canvas.getContext("2d");
   if (!ctx) {
     return null;
   }
   ctx.fillStyle = BENCH_COLORS.bottleLabelPaper;
-  ctx.fillRect(0, 0, 512, 320);
+  ctx.fillRect(0, 0, 1024, 768);
 
   ctx.strokeStyle = BENCH_COLORS.bottleLabelRule;
-  ctx.lineWidth = 6;
-  ctx.strokeRect(14, 14, 484, 292);
+  ctx.lineWidth = 10;
+  ctx.strokeRect(24, 24, 976, 720);
 
   ctx.fillStyle = stripe;
-  ctx.fillRect(14, 252, 484, 54);
+  ctx.fillRect(24, 588, 976, 156);
 
   ctx.fillStyle = BENCH_COLORS.bottleLabelInk;
-  const formulaSize = formula.length > 6 ? 50 : 72;
-  drawFormulaText(ctx, formula, 256, 118, formulaSize, "center");
+  const formulaSize = formula.length > 6 ? 170 : 250;
+  drawFormulaText(ctx, formula, 512, 330, formulaSize, "center");
 
   ctx.fillStyle = BENCH_COLORS.bottleLabelSub;
   ctx.textAlign = "center";
-  ctx.font = `600 28px ${FORMULA_FONT_FAMILY}`;
-  ctx.fillText(chemicalName, 256, 174);
-
-  ctx.fillStyle = BENCH_COLORS.bottleLabelInk;
-  ctx.font = "700 32px ui-monospace, monospace";
-  ctx.fillText(concentration, 256, 224);
+  ctx.font = `600 76px ${FORMULA_FONT_FAMILY}`;
+  ctx.fillText(chemicalName, 512, 500);
 
   ctx.fillStyle = getColor("WHITE");
-  ctx.font = `700 24px ${FORMULA_FONT_FAMILY}`;
-  ctx.fillText("REAGENT GRADE", 256, 287);
+  ctx.font = `700 104px ${FORMULA_FONT_FAMILY}`;
+  ctx.fillText(concentration, 512, 704);
 
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
-  texture.anisotropy = 8;
+  texture.anisotropy = 16;
   texture.needsUpdate = true;
   return texture;
 }
@@ -417,9 +418,9 @@ function ReagentBottle({
         />
       </mesh>
       {labelTex === null ? null : (
-        <mesh position={[0, 0.056, 0]} rotation={[0, -Math.PI * 0.44, 0]}>
+        <mesh position={[0, 0.058, 0]} rotation={[0, -Math.PI * 0.44, 0]}>
           <cylinderGeometry
-            args={[0.0478, 0.0478, 0.056, 32, 1, true, 0, Math.PI * 0.88]}
+            args={[0.0478, 0.0478, 0.078, 48, 1, true, 0, Math.PI * 0.88]}
           />
           <meshStandardMaterial
             map={labelTex}

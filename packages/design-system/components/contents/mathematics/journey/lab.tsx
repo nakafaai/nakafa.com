@@ -5,6 +5,7 @@ import {
   partFocus,
   wholeFocus,
 } from "@repo/design-system/components/contents/mathematics/journey/clock";
+import { JourneyGraph } from "@repo/design-system/components/contents/mathematics/journey/graph";
 import { meetingOf } from "@repo/design-system/components/contents/mathematics/journey/meet";
 import { JourneyReadings } from "@repo/design-system/components/contents/mathematics/journey/readings";
 import type { Units } from "@repo/design-system/components/contents/mathematics/journey/readout";
@@ -26,6 +27,7 @@ import {
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardFooter,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
@@ -37,22 +39,21 @@ import { Suspense, useCallback, useMemo, useState } from "react";
 /** The toolbar's choice of the whole journey, beside its legs. */
 const WHOLE = "whole";
 
-/** How far the road and the paper reach from the middle of the table, in metres. */
-const REACH = 0.9;
+/** How far the diorama reaches from the middle of the table, in metres. */
+const REACH = 0.5;
 
 /**
- * A distance-time graph drawn by a journey. A bus travels one straight road
- * through its stops, and beside the road lies a sheet of graph paper whose
- * distance axis runs the same way as the road and to the same scale: a thread
- * runs from the bus straight across to the point of its line, so the bus's
- * place on the road is the height of the graph. Each leg is a straight
- * segment, named by its corners: steep where the bus is fast, flat where it
- * stands at a stop, and falling where it heads back toward the start. The
- * learner picks a leg, or the whole journey, or drags the clock, and Play
- * runs the journey and draws the graph as it goes, the scene, the graph and
- * the readouts showing one minute together. A leg in focus shows its rise and
- * its run, and its speed is worked out as distance over time; the whole
- * journey's average speed is its total distance over its total time.
+ * A distance-time graph drawn by a journey. The scene is a road diorama: a
+ * bus travels one straight road through its stops, past a post at every
+ * kilometre mark. Under the scene, the graph plots the bus's distance from
+ * the start against the clock. Each leg is a straight segment, named by its
+ * corners: steep where the bus is fast, flat where it stands at a stop, and
+ * falling where it heads back toward the start. The learner picks a leg, or
+ * the whole journey, or drags the clock, and Play runs the journey and draws
+ * the graph as it goes, the road, the graph and the readouts showing one
+ * minute together. A leg in focus shows its rise and its run, and its speed
+ * is worked out as distance over time; the whole journey's average speed is
+ * its total distance over its total time.
  *
  * A second traveller, such as a motorbike that leaves later or from the other
  * end, drives the same road with its own line on the graph, and where the two
@@ -177,14 +178,11 @@ export function JourneyGraphLab({
         <ScienceStage floor={0} reach={REACH} setting="studio">
           <Suspense fallback={null}>
             <JourneyScene
-              focus={focus.part}
-              meeting={Option.filter(meeting, () => showMeeting)}
               minute={focus.minute}
               onMinute={follow}
               second={Option.map(other, (trip) => trip.stages)}
               stages={stages}
               stops={stops}
-              titles={labels.axes}
               units={labels.units}
             />
           </Suspense>
@@ -193,15 +191,26 @@ export function JourneyGraphLab({
 
       <VisualCardSceneActions />
 
-      <JourneyReadings
-        bus={{ name: bus.name, stages }}
-        focus={focus}
-        labels={labels}
-        meeting={meeting}
-        second={other}
-        showMeeting={showMeeting}
-        showSpeeds={showSpeeds}
-      />
+      <VisualCardFooter>
+        <JourneyGraph
+          bus={{ name: bus.name, stages }}
+          focus={focus.part}
+          meeting={Option.filter(meeting, () => showMeeting)}
+          minute={focus.minute}
+          second={other}
+          titles={labels.axes}
+          units={labels.units}
+        />
+        <JourneyReadings
+          bus={{ name: bus.name, stages }}
+          focus={focus}
+          labels={labels}
+          meeting={meeting}
+          second={other}
+          showMeeting={showMeeting}
+          showSpeeds={showSpeeds}
+        />
+      </VisualCardFooter>
     </VisualCard>
   );
 }

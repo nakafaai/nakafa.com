@@ -6,6 +6,8 @@ export const INSTRUMENT_COLORS = {
   aluminium: "#c3c8cc",
   bowlingResin: "#3a1f52",
   brass: "#b8923a",
+  // The dark anodised aluminium of a display rail or an optical bench.
+  anodised: "#30343a",
   copper: "#b46a3c",
   dialFace: "#f4f3ee",
   dialNeedle: "#c0262d",

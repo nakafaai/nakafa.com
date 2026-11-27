@@ -21,10 +21,12 @@ import { FrontSide } from "three";
  * @param roughness - The roughness at the surface's smoothest
  * @param side - Which faces draw: both for cloth and thin sheets seen from either side
  * @param bump - How strongly the relief bends the light
+ * @param coat - How much clear lacquer or varnish lies over the surface, from 0 to 1
  */
 export function SurfaceMaterial({
   attach = "material",
   bump = 0.6,
+  coat = 0,
   color,
   metalness = 0,
   repeat = [1, 1],
@@ -34,6 +36,7 @@ export function SurfaceMaterial({
 }: {
   readonly attach?: string;
   readonly bump?: number;
+  readonly coat?: number;
   readonly color: string;
   readonly metalness?: number;
   readonly repeat?: readonly [number, number];
@@ -64,6 +67,24 @@ export function SurfaceMaterial({
     },
     [maps]
   );
+
+  if (coat > 0) {
+    return (
+      <meshPhysicalMaterial
+        attach={attach}
+        bumpMap={maps.bump}
+        bumpScale={bump}
+        clearcoat={coat}
+        clearcoatRoughness={0.14}
+        color={color}
+        map={maps.tone}
+        metalness={metalness}
+        roughness={roughness}
+        roughnessMap={maps.roughness}
+        side={side}
+      />
+    );
+  }
 
   return (
     <meshStandardMaterial

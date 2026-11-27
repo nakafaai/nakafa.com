@@ -168,6 +168,7 @@ export function FractionalDistillationScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
+        maximumFontSize={14}
         position={[-0.28, 0.305, RIG_Z]}
       >
         <span>{parts.furnace}</span>
@@ -175,6 +176,7 @@ export function FractionalDistillationScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
+        maximumFontSize={14}
         position={[0, 0.585, RIG_Z]}
       >
         <span>{parts.column}</span>
@@ -183,15 +185,18 @@ export function FractionalDistillationScene({
         anchorX="right"
         color={labelInk}
         fontSize="compact"
+        maximumFontSize={14}
         position={[-0.11, 0.445, RIG_Z + 0.04]}
       >
         <span>{parts.bubbleCap}</span>
       </ThreeLabel>
       <ThreeLabel
-        anchorX="left"
+        anchorX="right"
+        anchorY="bottom"
         color={labelInk}
         fontSize="compact"
-        position={[0.255, Math.max(0.205, activeTrayY), RIG_Z + 0.02]}
+        maximumFontSize={14}
+        position={[0.37, Math.max(0.205, activeTrayY) + 0.03, RIG_Z + 0.02]}
       >
         <span>
           {parts.outletPipe} ({selected.chainLength})
@@ -200,6 +205,7 @@ export function FractionalDistillationScene({
       <ThreeLabel
         color={labelInk}
         fontSize="compact"
+        maximumFontSize={14}
         position={[0, 0.036, RIG_Z + 0.13]}
       >
         <span>{parts.vaporStream}</span>

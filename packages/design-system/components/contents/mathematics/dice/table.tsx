@@ -10,6 +10,7 @@ import {
   stackX,
 } from "@repo/design-system/components/contents/mathematics/dice/stack";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { DICE_COLORS } from "@repo/design-system/lib/material/dice";
 import { Array as Arr } from "effect";
 import type { Ref } from "react";
@@ -36,14 +37,16 @@ const RIM = TRAY.floor + TRAY.height;
 /** How thick the felt lining of the walls is, in metres. */
 const LINING = 0.0015;
 
-/** Oiled walnut: a satin finish that keeps the grain's sheen. */
+/** Oiled walnut: its grain under a satin finish that keeps the wood's sheen. */
 function Walnut() {
   return (
-    <meshPhysicalMaterial
-      clearcoat={0.35}
-      clearcoatRoughness={0.45}
+    <SurfaceMaterial
+      bump={0.012}
+      coat={0.4}
       color={DICE_COLORS.walnut}
-      roughness={0.62}
+      repeat={[0.5, 2]}
+      roughness={0.5}
+      surface="wood"
     />
   );
 }
@@ -186,11 +189,13 @@ export function Rack({
         receiveShadow
         smoothness={3}
       >
-        <meshPhysicalMaterial
-          clearcoat={0.25}
-          clearcoatRoughness={0.5}
+        <SurfaceMaterial
+          bump={0.012}
+          coat={0.3}
           color={DICE_COLORS.oak}
-          roughness={0.58}
+          repeat={[0.6, 3]}
+          roughness={0.5}
+          surface="wood"
         />
       </RoundedBox>
       {Arr.map(outcomes, (outcome, index) => (
