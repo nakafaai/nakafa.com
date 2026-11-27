@@ -39,13 +39,18 @@ const WATER = smallOf("water");
 const PACE = 1.4;
 const BREATH = 2.6;
 
-/** The camera of both scenes: it frames the atoms and their labels, whatever the shape of the frame. */
+/**
+ * The camera of both scenes: it frames the atoms and their labels, whatever
+ * the shape of the frame. Its narrow view stands it far back, so a deep
+ * molecule such as glycogen is drawn nearly as a textbook draws it, without
+ * the atoms nearest the camera swelling out of the frame.
+ */
 function SugarCamera() {
   return (
     <CameraControls
       cameraPosition={[0, 0.9, 2.18]}
       cameraTarget={[0, MIDDLE, 0]}
-      fov={38}
+      fov={20}
       framing="content"
     />
   );

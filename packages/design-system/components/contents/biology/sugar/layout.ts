@@ -31,7 +31,7 @@ const SPAN = 1.7;
 const LEAN = (28 * Math.PI) / 180;
 
 /** How far apart the two sugars of a pair stand before they join, in angstrom. */
-export const GAP = 4;
+export const GAP = 2.5;
 
 /**
  * How far past an atom's middle the atom reaches, how far a label stands
@@ -39,14 +39,19 @@ export const GAP = 4;
  * middle of its ring, how far below the molecule the released water rests,
  * and how near a bond an atom must be to count as above it, all in angstrom.
  */
-const REACH = 1.2;
+const REACH = 0.6;
 const MARGIN = 1.5;
-const OUTWARD = 2;
+const OUTWARD = 1.2;
 const BELOW = 1.4;
 const NEAR = 2.4;
 
-/** How deep the box the camera frames a pair in is, in angstrom each way: shallower than the sugars, so they fill the frame. */
-const DEPTH = 2;
+/**
+ * How deep the box the camera frames a pair in is, in angstrom each way.
+ * The camera fits the box's corners, and the corners nearest it grow most in
+ * perspective; a pair is nearly flat, so a shallow box lets it fill the
+ * frame without an atom leaving it.
+ */
+const DEPTH = 1;
 
 /** The pose that lays the line from `from` to `to` along x, with the first ring's face leaning toward the viewer. */
 function poseOf(from: Point, to: Point) {
