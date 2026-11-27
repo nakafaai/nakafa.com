@@ -11,15 +11,27 @@ import {
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { Airflow } from "@repo/design-system/components/three/energy/airflow";
 import { Turbine } from "@repo/design-system/components/three/energy/turbine";
+import { useStage } from "@repo/design-system/components/three/stage/context";
 import { Sea } from "@repo/design-system/components/three/stage/sea";
-import { useGround } from "@repo/design-system/components/three/stage/terrain";
+import {
+  GROUND_REACHES,
+  HORIZON_FADE_INNER,
+  HORIZON_FADE_OUTER,
+  useGround,
+  useHorizonFade,
+} from "@repo/design-system/components/three/stage/terrain";
 import { Array as Arr } from "effect";
 import { Suspense, useEffect, useMemo } from "react";
 
-/** How wide one tile of the ground's texture lies, in scene units. */
-const TILE = 1;
+/** How wide the stage lays one tile of its ground's texture, in reaches. */
+const TILE_REACHES = 0.22;
 
-/** One rise of the site's land, painted as the ground the stage lays round it. */
+/**
+ * One rise of the site's land, painted exactly as the stage paints its own
+ * ground: the same texture in the same place, the same material, and the
+ * same fade into the haze, so a site's rises read as one piece of land with
+ * no rim to see.
+ */
 function Rise({
   rise,
   site,
@@ -27,12 +39,20 @@ function Rise({
   readonly rise: (typeof SITE_RISES)[Site][number];
   readonly site: Site;
 }) {
-  const tiles = (2 * rise.land.radius) / TILE;
+  const { reach } = useStage();
+  const tiles = (2 * GROUND_REACHES) / TILE_REACHES;
   const { bump, map, patches } = useGround(SITE_GROUND[site].ground, [
     tiles,
     tiles,
   ]);
-  const geometry = useMemo(() => landGeometry(rise.land), [rise.land]);
+  const fade = useHorizonFade(
+    HORIZON_FADE_INNER * reach,
+    HORIZON_FADE_OUTER * reach
+  );
+  const geometry = useMemo(
+    () => landGeometry(rise, 2 * GROUND_REACHES * reach),
+    [reach, rise]
+  );
   useEffect(() => () => geometry.dispose(), [geometry]);
 
   return (
@@ -40,14 +60,20 @@ function Rise({
       geometry={geometry}
       position={[rise.at[0], rise.at[1], rise.at[2]]}
       receiveShadow
+      renderOrder={-10}
+      userData={{ treatAsOpaque: true }}
     >
       <meshStandardMaterial
         aoMap={patches}
+        aoMapIntensity={1}
         bumpMap={bump}
         bumpScale={0.35}
+        depthWrite
         map={map}
         metalness={0}
+        ref={fade}
         roughness={0.94}
+        transparent
       />
     </mesh>
   );
@@ -67,7 +93,11 @@ export function WindScene({ site }: { readonly site: Site }) {
       <CameraBounds exclude>
         <Airflow metres={ROTOR_RADIUS} radius={1} wind={SITE_WIND[site]} />
         {Arr.map(SITE_RISES[site], (rise) => (
-          <Rise key={rise.at[0]} rise={rise} site={site} />
+          <Rise
+            key={`${rise.at[0]}:${rise.land.radius}`}
+            rise={rise}
+            site={site}
+          />
         ))}
         {"sea" in place ? (
           <Suspense fallback={null}>

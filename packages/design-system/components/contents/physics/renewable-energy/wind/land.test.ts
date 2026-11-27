@@ -6,6 +6,7 @@ import {
   SITE_GROUND,
   SITE_RISES,
 } from "@repo/design-system/components/contents/physics/renewable-energy/wind/land";
+import { Array as Arr } from "effect";
 
 const HILL = SITE_RISES.hill[0].land;
 const BEACH = SITE_RISES.coast[0];
@@ -32,8 +33,14 @@ describe("the sites", () => {
     );
     expect(SITE_GROUND.coast.sea).toBeLessThan(0);
     expect(SITE_GROUND.coast.sea).toBeGreaterThan(-BEACH.land.drop);
-    expect(SITE_GROUND.hill.floor).toBeGreaterThan(-HILL.drop);
-    expect(SITE_GROUND.valley.floor).toBe(0);
+  });
+
+  it("bring the hill down to the plain it stands on, a hair under it so the two never part", () => {
+    const [hill, plain] = SITE_RISES.hill;
+    const foot = hill.at[1] - hill.land.drop;
+    expect(foot).toBeLessThan(plain.at[1]);
+    expect(plain.at[1] - foot).toBeLessThan(0.01);
+    expect(plain.land.radius).toBeGreaterThan(10 * hill.land.radius - 1);
   });
 
   it("put the sea between the coast's turbine and the wind", () => {
@@ -42,7 +49,7 @@ describe("the sites", () => {
   });
 
   it("bury the foot of each valley ridge under the valley floor", () => {
-    for (const ridge of SITE_RISES.valley) {
+    for (const ridge of Arr.take(SITE_RISES.valley, 2)) {
       expect(ridge.at[1] - ridge.land.drop).toBeLessThan(0);
       expect(Math.hypot(ridge.at[0], ridge.at[2])).toBeGreaterThan(
         ridge.land.radius
@@ -65,8 +72,8 @@ describe("ringShare", () => {
 });
 
 describe("landGeometry", () => {
-  it("meshes a rise that looks up, with its texture laid once across it", () => {
-    const geometry = landGeometry(HILL);
+  it("meshes a rise that looks up, with its texture laid where the stage lays its ground's", () => {
+    const geometry = landGeometry(SITE_RISES.hill[0], 144);
     const normal = geometry.getAttribute("normal");
     const uv = geometry.getAttribute("uv");
     geometry.computeBoundingBox();
@@ -74,6 +81,12 @@ describe("landGeometry", () => {
     expect(normal.getY(35 * 129 + 7)).toBeGreaterThan(0.5);
     expect(geometry.boundingBox?.max.x).toBeCloseTo(HILL.radius, 6);
     expect([uv.getX(0), uv.getY(0)]).toEqual([0.5, 0.5]);
-    expect(uv.getX(56 * 129)).toBeCloseTo(1, 9);
+    expect(uv.getX(56 * 129)).toBeCloseTo(0.5 + HILL.radius / 144, 6);
+  });
+
+  it("lays the texture of a rise that stands off the middle from the middle all the same", () => {
+    const uv = landGeometry(BEACH, 144).getAttribute("uv");
+    expect(uv.getX(0)).toBeCloseTo(0.5 + BEACH.at[0] / 144, 6);
+    expect(uv.getY(0)).toBeCloseTo(0.5 - BEACH.at[2] / 144, 6);
   });
 });

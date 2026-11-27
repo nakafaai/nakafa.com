@@ -5,15 +5,16 @@ import {
   streamRadius,
   windShare,
 } from "@repo/design-system/components/three/energy/rotor";
+import { wispPixels } from "@repo/design-system/components/three/energy/wisp";
 import { chanceAt } from "@repo/design-system/components/three/field/noise";
 import {
   useVisualScene,
   useVisualStop,
 } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
-import { useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import type { InstancedMesh } from "three";
-import { Object3D } from "three";
+import { DataTexture, DoubleSide, LinearFilter, Object3D } from "three";
 
 /** How many smoke streaks mark the air. */
 const STREAKS = 54;
@@ -26,9 +27,15 @@ const BEHIND = 2.8;
 const NEAREST = 0.12;
 const WIDEST = 1.45;
 
-/** The length of a streak in the free wind and its thickness, in rotor radii. */
-const LENGTH = 0.38;
-const THICKNESS = 0.008;
+/** The length of a streak in the free wind and its width, in rotor radii. */
+const LENGTH = 1.1;
+const WIDTH = 0.04;
+
+/** The two cards a streak is drawn on, crossed along the wind so it has body from every side, and how each is turned to lie along the wind. */
+const CARDS = [0, Math.PI / 2] as const;
+
+/** How many pixels a wisp's picture has across and along. */
+const WISP = [16, 64] as const;
 
 /** Over what distance a streak grows in as it enters and thins out as it leaves, in rotor radii. */
 const FADE = 0.5;
@@ -70,16 +77,19 @@ function placeStreaks(streaks: InstancedMesh, upwind: Float32Array) {
       ROTOR.hub + Math.sin(ANGLES[streak]) * away,
       ROTOR.overhang - downstream
     );
-    PLACER.scale.set(shown, shown, paceAt(streak, downstream));
-    PLACER.updateMatrix();
-    streaks.setMatrixAt(streak, PLACER.matrix);
+    PLACER.scale.set(shown, paceAt(streak, downstream), 1);
+    for (let card = 0; card < CARDS.length; card += 1) {
+      PLACER.rotation.set(Math.PI / 2, CARDS[card], 0);
+      PLACER.updateMatrix();
+      streaks.setMatrixAt(streak * CARDS.length + card, PLACER.matrix);
+    }
   }
   streaks.instanceMatrix.needsUpdate = true;
 }
 
 /**
  * The wind through a turbine's rotor, shown as a wind tunnel shows it with
- * smoke: thin streaks that drift at the wind's true speed for the rotor's
+ * smoke: soft wisps with no edge that drift at the wind's true speed for the rotor's
  * size, slow to two thirds of it at the rotor and to a third behind it, and
  * spread as the slowed air takes more room. Streaks that miss the rotor keep
  * their speed and bend round the wake. Stands in the turbine's own space.
@@ -100,6 +110,14 @@ export function Airflow({
   const mesh = useRef<InstancedMesh>(null);
   const playing = useVisualScene((card) => card.playing, true);
   const upwind = useMemo(() => Float32Array.from(STARTS), []);
+  const smoke = useMemo(() => {
+    const picture = new DataTexture(wispPixels(...WISP), ...WISP);
+    picture.magFilter = LinearFilter;
+    picture.minFilter = LinearFilter;
+    picture.needsUpdate = true;
+    return picture;
+  }, []);
+  useEffect(() => () => smoke.dispose(), [smoke]);
 
   useLayoutEffect(() => {
     if (mesh.current) {
@@ -127,15 +145,17 @@ export function Airflow({
   return (
     <group scale={radius}>
       <instancedMesh
-        args={[undefined, undefined, STREAKS]}
+        args={[undefined, undefined, STREAKS * CARDS.length]}
         frustumCulled={false}
         ref={mesh}
       >
-        <boxGeometry args={[THICKNESS, THICKNESS, LENGTH]} />
+        <planeGeometry args={[WIDTH, LENGTH]} />
         <meshBasicMaterial
           color={getColor("WHITE")}
           depthWrite={false}
-          opacity={0.55}
+          map={smoke}
+          opacity={0.3}
+          side={DoubleSide}
           transparent
         />
       </instancedMesh>

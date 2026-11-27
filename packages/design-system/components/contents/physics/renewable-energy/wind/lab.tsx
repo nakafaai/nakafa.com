@@ -1,4 +1,3 @@
-import { SITE_GROUND } from "@repo/design-system/components/contents/physics/renewable-energy/wind/land";
 import { WindScene } from "@repo/design-system/components/contents/physics/renewable-energy/wind/scene";
 import type { Site } from "@repo/design-system/components/contents/physics/renewable-energy/wind/site";
 import {
@@ -63,9 +62,6 @@ export function WindRotorLab({
   const [site, setSite] = useState<Site>(initialSite);
   const measure = useQuantity();
   const isSite = Schema.is(SiteSchema);
-  const place = SITE_GROUND[site];
-  const ground =
-    "floor" in place ? { floor: place.floor, ground: place.ground } : {};
 
   return (
     <VisualCard
@@ -99,12 +95,7 @@ export function WindRotorLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage
-          {...ground}
-          frameloop="always"
-          reach={4.5}
-          setting="field"
-        >
+        <ScienceStage frameloop="always" reach={4.5} setting="field">
           <Suspense fallback={null}>
             <CameraControls
               cameraPosition={[3.6, 1.5, 6.6]}
