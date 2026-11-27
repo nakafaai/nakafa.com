@@ -37,7 +37,7 @@ function slideOutline(gap: number, tall: number) {
   outline.quadraticCurveTo(-half, half, -half, half - round);
   outline.lineTo(-half, -half + round);
   outline.quadraticCurveTo(-half, -half, -half + round, -half);
-  for (const side of [-1, 1]) {
+  outline.holes = Arr.map([-1, 1], (side) => {
     const cut = new Path();
     const at = (side * gap) / 2;
     cut.moveTo(at - CUT / 2, -tall / 2);
@@ -45,8 +45,8 @@ function slideOutline(gap: number, tall: number) {
     cut.lineTo(at + CUT / 2, tall / 2);
     cut.lineTo(at + CUT / 2, -tall / 2);
     cut.closePath();
-    outline.holes.push(cut);
-  }
+    return cut;
+  });
   return outline;
 }
 

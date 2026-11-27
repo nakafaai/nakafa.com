@@ -209,7 +209,11 @@ function Dipper({ incidence }: { readonly incidence: number }) {
           <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.26} />
         </mesh>
       ))}
-      <mesh castShadow position={[0, GANTRY + 0.1, 0]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh
+        castShadow
+        position={[0, GANTRY + 0.1, 0]}
+        rotation={[0, 0, Math.PI / 2]}
+      >
         <cylinderGeometry args={[0.018, 0.018, post * 2 + 0.12, 20]} />
         <MetalMaterial color={APPARATUS_COLORS.nickel} roughness={0.26} />
       </mesh>
@@ -344,7 +348,11 @@ export function TankScene({
           color={PLOT_COLORS.amber}
           from={[-Math.sin(turn) * RAY, -Math.cos(turn) * RAY]}
         />
-        <Ray angle={-Math.PI / 2 + bend} color={PLOT_COLORS.pink} from={[0, 0]} />
+        <Ray
+          angle={-Math.PI / 2 + bend}
+          color={PLOT_COLORS.pink}
+          from={[0, 0]}
+        />
         <Arc
           color={PLOT_COLORS.amber}
           from={Math.PI / 2}

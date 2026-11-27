@@ -30,7 +30,7 @@ import { Array as Arr } from "effect";
 import { useMemo } from "react";
 
 /** How high above the benchtop the optical axis runs. */
-const AXIS = 1.05;
+const AXIS = 1.3;
 
 /** How long the bench is, where along it the slits stand, and how many scene units one centimetre takes. */
 const LENGTH = 7.2;
@@ -41,9 +41,9 @@ const UNIT = 0.0155;
 const THROW = 0.8;
 
 /** The screen, the band of fringes on it, and where its scale, its count and its span are printed. */
-const CARD = { tall: 1.2, wide: 1.7 } as const;
-const BAND = { at: 0.26, tall: 0.5, wide: 1.5 } as const;
-const PRINT = { dots: 0.555, scale: -0.04, span: -0.38, wide: BAND.wide };
+const CARD = { tall: 1.8, wide: 2.6 } as const;
+const BAND = { at: 0.12, tall: 0.7, wide: 2.3 } as const;
+const PRINT = { dots: 0.56, scale: -0.3, span: -0.62, wide: BAND.wide };
 
 /** How many scene units of slide one millimetre between the slits takes, so the slits visibly part. */
 const PARTING = 0.1;
@@ -110,12 +110,12 @@ export function SlitScene({
   return (
     <group>
       <BenchCamera
-        narrow={[-4.9, 3.6, 11.4]}
-        target={[-0.35, 0.8, 0]}
-        wide={[-3.7, 2.5, 7.3]}
+        narrow={[-7.6, 3, 3.6]}
+        target={[0.6, 1.15, 0]}
+        wide={[-6.3, 2.5, 2.9]}
       />
       <SeamlessBenchSurface />
-      <Backboard back={0.8} tall={2.1} wide={LENGTH + 0.7} />
+      <Backboard back={1.6} tall={2.5} wide={LENGTH + 0.7} />
       <Rail length={LENGTH} unit={UNIT} />
       <Rider at={SLITS_AT - THROW - 0.31} drop={LASER_DROP} height={AXIS}>
         <group position={[0.31, 0, 0]}>

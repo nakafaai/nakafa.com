@@ -36,6 +36,9 @@ export function spacingOf(light: typeof ArrangementSchema.Type) {
   );
 }
 
+/** How much of a fringe a span may fall short of a whole number of them and still count as whole, which rounding in the spacing costs. */
+const NEAR = 1e-9;
+
 /**
  * Where the bright fringe the count starts at stands, in millimetres from
  * the centre of the screen: the centre itself with no span, and otherwise a
@@ -44,7 +47,7 @@ export function spacingOf(light: typeof ArrangementSchema.Type) {
 export function fringeStart(spacing: number, span: number | undefined) {
   return Option.match(Option.fromNullishOr(span), {
     onNone: () => 0,
-    onSome: (wide) => -Math.floor(wide / spacing / 2) * spacing,
+    onSome: (wide) => -Math.floor(wide / spacing / 2 + NEAR) * spacing,
   });
 }
 
