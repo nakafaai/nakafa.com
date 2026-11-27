@@ -172,6 +172,20 @@ for (const href of NAMED_SET_TABLES) {
             ...parts.map((part) => part.getBoundingClientRect().width)
           );
         const heads = Array.from(element.querySelectorAll("thead th"));
+        // A column stands at least as wide as its head's button, which reaches into the head's padding by its negative
+        // margins, so what the column draws is the wider of the button's own room and its cells.
+        const button = (head: Element | undefined) => {
+          const control = head?.querySelector("button");
+          if (control === null || control === undefined) {
+            return 0;
+          }
+          const style = getComputedStyle(control);
+          return (
+            control.getBoundingClientRect().width +
+            Number.parseFloat(style.marginLeft) +
+            Number.parseFloat(style.marginRight)
+          );
+        };
         const status = heads.find(
           (head) =>
             head.querySelector("[aria-hidden] [data-slot=badge]") !== null
@@ -195,7 +209,7 @@ for (const href of NAMED_SET_TABLES) {
           nameSpare:
             heads[0] === undefined
               ? -1
-              : inner(heads[0]) - Math.max(0, ...names),
+              : inner(heads[0]) - Math.max(button(heads[0]), ...names),
           names: names.length,
           scrolls:
             viewport !== null &&
@@ -204,9 +218,12 @@ for (const href of NAMED_SET_TABLES) {
             status === undefined
               ? -1
               : inner(status) -
-                widest(
-                  Array.from(
-                    status.querySelectorAll("[aria-hidden] [data-slot=badge]")
+                Math.max(
+                  button(status),
+                  widest(
+                    Array.from(
+                      status.querySelectorAll("[aria-hidden] [data-slot=badge]")
+                    )
                   )
                 ),
         };
@@ -219,7 +236,8 @@ for (const href of NAMED_SET_TABLES) {
         expect(table.scrolls).toBe(false);
         return;
       }
-      // A phone's table is wider than its card, so no column takes spare width: each stands at what it draws.
+      // A phone's table is wider than its card, so no column takes spare width: each stands at what it draws, or at its
+      // head's button where the head is the wider, such as Name over Set 1.
       expect(table.nameSpare).toBeLessThanOrEqual(2);
       expect(table.statusSpare).toBeLessThanOrEqual(2);
     });
