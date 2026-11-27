@@ -1,19 +1,16 @@
 import { useGLTF } from "@react-three/drei";
-import {
-  CCBY_LEOPARD_ASSET,
-  CCBY_LEOPARD_CAT_ASSET,
-  CCBY_MALAYAN_TAPIR_ASSET,
-  CCBY_SUN_BEAR_ASSET,
-  CCBY_TIGER_ASSET,
-} from "@repo/design-system/components/contents/biology/assets";
+import { CCBY_TIGER_ASSET } from "@repo/design-system/components/contents/biology/assets";
 import { buildStemGeometry } from "@repo/design-system/components/contents/biology/botanical";
 import { leafBlade } from "@repo/design-system/components/contents/biology/flora";
-import {
-  LivingSpecimen,
-  RiggedSpecimen,
-} from "@repo/design-system/components/contents/biology/specimen";
+import { RiggedSpecimen } from "@repo/design-system/components/contents/biology/specimen";
 import { BirdwingSpecimen } from "@repo/design-system/components/contents/biology/taxon/birdwing";
 import { HornbillSpecimen } from "@repo/design-system/components/contents/biology/taxon/hornbill";
+import {
+  LeopardCatSpecimen,
+  LeopardSpecimen,
+  SunBearSpecimen,
+  TapirSpecimen,
+} from "@repo/design-system/components/contents/biology/taxon/mammals";
 import type { TaxonOrganism } from "@repo/design-system/components/contents/biology/taxon/model";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { CLASSIFICATION_COLORS } from "@repo/design-system/lib/material/classification";
@@ -173,11 +170,11 @@ function PadiSpecimen() {
 export const TAXON_SPECIMEN_HEIGHT: Readonly<Record<TaxonOrganism, number>> = {
   birdwing: 0.5,
   hornbill: 0.74,
-  leopard: 0.46,
-  leopardCat: 0.3,
+  leopard: 0.4,
+  leopardCat: 0.32,
   padi: 0.62,
-  sunBear: 0.5,
-  tapir: 0.52,
+  sunBear: 0.48,
+  tapir: 0.5,
   tiger: 0.44,
 };
 
@@ -195,35 +192,10 @@ export function TaxonSpecimenFigurine({
         path={CCBY_TIGER_ASSET.path}
       />
     )),
-    Match.when("leopard", () => (
-      <LivingSpecimen
-        extent={0.8}
-        heading={Math.PI / 2}
-        path={CCBY_LEOPARD_ASSET.path}
-      />
-    )),
-    Match.when("leopardCat", () => (
-      <LivingSpecimen
-        extent={0.48}
-        heading={Math.PI / 2}
-        path={CCBY_LEOPARD_CAT_ASSET.path}
-        phase={1.4}
-      />
-    )),
-    Match.when("sunBear", () => (
-      <LivingSpecimen
-        extent={0.7}
-        heading={Math.PI / 2}
-        path={CCBY_SUN_BEAR_ASSET.path}
-      />
-    )),
-    Match.when("tapir", () => (
-      <LivingSpecimen
-        extent={0.72}
-        heading={Math.PI / 2}
-        path={CCBY_MALAYAN_TAPIR_ASSET.path}
-      />
-    )),
+    Match.when("leopard", () => <LeopardSpecimen />),
+    Match.when("leopardCat", () => <LeopardCatSpecimen />),
+    Match.when("sunBear", () => <SunBearSpecimen />),
+    Match.when("tapir", () => <TapirSpecimen />),
     Match.when("hornbill", () => (
       <group scale={0.88}>
         <HornbillSpecimen />
@@ -236,4 +208,3 @@ export function TaxonSpecimenFigurine({
 }
 
 useGLTF.preload(CCBY_TIGER_ASSET.path);
-useGLTF.preload(CCBY_LEOPARD_ASSET.path);
