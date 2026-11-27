@@ -15,13 +15,13 @@ import { Balance } from "@repo/design-system/components/three/instrument/balance
 import { ReadingCamera } from "@repo/design-system/components/three/instrument/camera";
 import { Extent } from "@repo/design-system/components/three/instrument/extent";
 import { Numeral } from "@repo/design-system/components/three/instrument/ink";
+import { Machined } from "@repo/design-system/components/three/instrument/machined";
 import {
   PLATE_TOP,
   Plate,
 } from "@repo/design-system/components/three/instrument/plate";
 import { Rule } from "@repo/design-system/components/three/instrument/rule";
 import { MILLIMETRE } from "@repo/design-system/components/three/instrument/scale";
-import { Turned } from "@repo/design-system/components/three/instrument/turned";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
@@ -122,12 +122,12 @@ function Bolt({
       position={[at[0], at[1] + HEAD_REACH.flats, at[2]]}
       rotation={[0, 0, -REST]}
     >
-      <Turned faceted radius={headRadius} stations={HEAD_STATIONS}>
+      <Machined faceted radius={headRadius} stations={HEAD_STATIONS}>
         <Zinc />
-      </Turned>
-      <Turned radius={shankRadius} stations={SHANK_STATIONS}>
+      </Machined>
+      <Machined radius={shankRadius} stations={SHANK_STATIONS}>
         <Zinc />
-      </Turned>
+      </Machined>
       <Numeral
         at={[-HEAD_REACH.thick - 0.03, 2.6, 0]}
         height={2.6}

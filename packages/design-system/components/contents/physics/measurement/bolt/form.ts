@@ -6,7 +6,7 @@ import {
   hexagonRadius,
   stationsBetween,
   threadRadius,
-} from "@repo/design-system/components/three/instrument/turn";
+} from "@repo/design-system/components/three/instrument/radial";
 
 /**
  * The shape of an M10 hexagon head bolt (ISO 4014), in millimetres along its

@@ -1,14 +1,14 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   hexagonRadius,
+  radialSurface,
   stationsBetween,
   threadRadius,
-  turnedSurface,
-} from "@repo/design-system/components/three/instrument/turn";
+} from "@repo/design-system/components/three/instrument/radial";
 
-describe("turned surface", () => {
+describe("radial surface", () => {
   it("stands every vertex at its radius from the axis and closes each ring", () => {
-    const surface = turnedSurface([0, 2], 4, (along) => along + 1);
+    const surface = radialSurface([0, 2], 4, (along) => along + 1);
 
     expect(surface.positions).toHaveLength(2 * 5 * 3);
     expect(surface.faces).toHaveLength(4 * 6);
@@ -22,7 +22,7 @@ describe("turned surface", () => {
   });
 
   it("has no faces without two rings", () => {
-    expect(turnedSurface([], 4, () => 1).faces).toHaveLength(0);
+    expect(radialSurface([], 4, () => 1).faces).toHaveLength(0);
   });
 
   it("spaces stations no farther apart than asked, ends included", () => {

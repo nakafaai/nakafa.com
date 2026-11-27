@@ -1,11 +1,12 @@
-import { turnedSurface } from "@repo/design-system/components/three/instrument/turn";
+import { radialSurface } from "@repo/design-system/components/three/instrument/radial";
 import type { ReactNode } from "react";
 import { useEffect, useMemo } from "react";
 import { BufferAttribute, BufferGeometry } from "three";
 
 /**
- * A turned, rolled or forged part drawn as its real surface about the x
- * axis: a threaded shank, a hexagon head, a chamfered pin. It owns its
+ * A machined, rolled or forged part drawn as its real surface about the x
+ * axis, where that surface changes round the axis: a threaded shank, a
+ * hexagon head. It owns its
  * geometry, builds it once for a shape, and frees it when the part leaves.
  * Its children are the part's material.
  *
@@ -14,7 +15,7 @@ import { BufferAttribute, BufferGeometry } from "three";
  * @param around - How many steps one ring takes around the axis
  * @param faceted - Whether the part has true flats, as a hexagon head has, in place of a smooth skin
  */
-export function Turned({
+export function Machined({
   around = 96,
   children,
   faceted = false,
@@ -28,7 +29,7 @@ export function Turned({
   readonly stations: readonly number[];
 }) {
   const geometry = useMemo(() => {
-    const surface = turnedSurface(stations, around, radius);
+    const surface = radialSurface(stations, around, radius);
     const smooth = new BufferGeometry();
     smooth.setAttribute("position", new BufferAttribute(surface.positions, 3));
     smooth.setAttribute("uv", new BufferAttribute(surface.coordinates, 2));

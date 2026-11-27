@@ -1,11 +1,12 @@
 import { Array as Arr } from "effect";
 
 /**
- * A turned, rolled or forged part as a surface about the x axis: a thread, a
- * hexagon head, a chamfered pin. The author states how far the surface
- * stands from the axis at each place along it and each angle around it, and
- * gets the vertices of the real shape, so a thread is a helix that catches
- * the light and a hexagon has true flats.
+ * A machined, rolled or forged part whose surface is not the same all the
+ * way round its axis: a thread, a hexagon head, a knurl. The author states
+ * how far the surface stands from the x axis at each place along it and
+ * each angle around it, and gets the vertices of the real shape, so a
+ * thread is a helix that catches the light and a hexagon has true flats. A
+ * part that is the same all the way round is a turn of `three/form`.
  */
 
 /** The radius of a part at a place along its axis and an angle around it, from +y toward +z. */
@@ -20,7 +21,7 @@ type Radius = (along: number, angle: number) => number;
  * @param around - How many steps one ring takes around the axis
  * @param radius - How far the surface stands from the axis
  */
-export function turnedSurface(
+export function radialSurface(
   stations: readonly number[],
   around: number,
   radius: Radius
