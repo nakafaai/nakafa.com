@@ -44,9 +44,6 @@ const TILT = (27 * Math.PI) / 180;
 const YAW = (30 * Math.PI) / 180;
 const VIEW = 44;
 
-/** How far past the end of a stretch the frame reaches, in metres: the car that has just driven it. */
-const PAST = 8;
-
 /** How high the frame reaches over the road, in metres: a car and the label of a post. */
 const HEADROOM = 1.8;
 
@@ -58,28 +55,31 @@ const HEADROOM = 1.8;
  * stretch brings it close and a long one moves it out.
  *
  * @param from - The far end of the stretch along the road, in metres
+ * @param past - How far past the near end the frame reaches, in metres: room for what stands or has driven there
  * @param to - The end the camera stands past, in metres
  * @param resetKey - Changes when the stretch does, so the view starts over
  */
 export function RoadsideCamera({
   from,
+  past,
   resetKey,
   to,
 }: {
   readonly from: number;
+  readonly past: number;
   readonly resetKey: number | string;
   readonly to: number;
 }) {
   const toward = to < from ? -1 : 1;
   const points = useMemo(
     () =>
-      Arr.flatMap([from, to + toward * PAST], (x) =>
+      Arr.flatMap([from, to + toward * past], (x) =>
         Arr.flatMap([0, HEADROOM], (y) => [
           [x, y, -(ROAD.halfWidth + 1.2)] as const,
           [x, y, ROAD.halfWidth + 0.4] as const,
         ])
       ),
-    [from, to, toward]
+    [from, past, to, toward]
   );
   const line = useMemo(
     () =>

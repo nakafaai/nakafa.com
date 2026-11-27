@@ -1,6 +1,7 @@
 import { Line } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import { VelocityArrow } from "@repo/design-system/components/contents/physics/kinematics/arrow";
+import { besideArrow } from "@repo/design-system/components/contents/physics/kinematics/beside";
 import { useSight } from "@repo/design-system/components/contents/physics/kinematics/follow";
 import { Banks } from "@repo/design-system/components/contents/physics/kinematics/river/bank";
 import type { River } from "@repo/design-system/components/contents/physics/kinematics/river/crossing";
@@ -59,16 +60,16 @@ const ARROWS = 1;
  * half its angle of view, so its frame holds water and banks and never the
  * horizon.
  */
-const TILT = Math.tan((31 * Math.PI) / 180);
-const VIEW = 38;
+const TILT = Math.tan((50 * Math.PI) / 180);
+const VIEW = 40;
 
 /** How much of each bank the frame takes in beyond the waterline, in metres. */
-const BANK = 4;
+const BANK = 6;
 
 /**
- * How long the fastest velocity is drawn, as a share of the boat's distance
- * from the camera: the arrows keep their size in the frame while the boat
- * sails away from the camera, as the labels beside them do.
+ * How long the boat's own velocity is drawn, as a share of the boat's
+ * distance from the camera: the arrows keep their size in the frame while
+ * the boat sails away from the camera, as the labels beside them do.
  */
 const ARROW_SHARE = 0.2;
 
@@ -223,45 +224,47 @@ function RiverScene({
   const half = river.width / 2;
   const angle = (heading * Math.PI) / 180;
   const drift = crossing?.drift ?? 0;
-  const fastest = river.boatSpeed + river.current;
   const own = useMemo(
-    () =>
-      [
-        (Math.sin(angle) * river.boatSpeed) / fastest,
-        0,
-        (-Math.cos(angle) * river.boatSpeed) / fastest,
-      ] as const,
-    [angle, fastest, river.boatSpeed]
+    () => [Math.sin(angle), 0, -Math.cos(angle)] as const,
+    [angle]
   );
   const sum = useMemo(
-    () => [own[0] + river.current / fastest, 0, own[2]] as const,
-    [fastest, own, river.current]
+    () => [own[0] + river.current / river.boatSpeed, 0, own[2]] as const,
+    [own, river.boatSpeed, river.current]
   );
-  // The camera stands behind where the boat puts off and looks over the
-  // river toward where it lands: both banks and the whole crossing.
+  // The frame holds both banks and the whole crossing, from where the boat
+  // puts off to where it lands.
   const shore = half + BERTH + BANK;
   const held = useMemo(
     () =>
       [
-        [-5, 0, shore],
-        [5, 0, shore],
-        [-6, 3, half],
-        [8, 3, half],
-        [drift - 5, 3, -shore],
-        [drift + 9, 3, -shore],
+        [Math.min(0, drift) - BANK, 0, shore],
+        [Math.max(0, drift) + BANK, 0, shore],
+        [Math.min(0, drift) - BANK, 2, -shore],
+        [Math.max(0, drift) + BANK, 2, -shore],
       ] as const,
-    [drift, half, shore]
+    [drift, shore]
   );
-  const line = useMemo(
-    () =>
-      [
-        drift * 0.5,
-        -TILT * Math.hypot(drift * 0.5, 2 * half),
-        -2 * half,
-      ] as const,
-    [drift, half]
-  );
+  // The camera looks straight across the river and down, so the triangle of
+  // the three velocities is seen nearly true. A landing further downstream
+  // than the river is wide turns it to look along the river, so the long
+  // crossing runs into the frame and not across a strip of it.
+  const line = useMemo(() => {
+    const lean =
+      Math.sign(drift) * Math.max(0, Math.abs(drift) / (2 * half) - 1) * 0.5;
+    return [lean, -TILT * Math.hypot(lean, 1), -1] as const;
+  }, [drift, half]);
   const sight = useSight(held, line, VIEW);
+  // Each value stands outside the triangle, beside the middle of its arrow.
+  const sides = useMemo(() => {
+    const boat = [own[0], -own[2]] as const;
+    const ground = [sum[0], -sum[2]] as const;
+    return {
+      current: besideArrow(boat, ground, START),
+      ground: besideArrow(START, ground, boat),
+      own: besideArrow(START, boat, ground),
+    };
+  }, [own, sum]);
   const landings = useMemo(() => [0, drift] as const, [drift]);
   const path = useMemo(
     () =>
@@ -350,13 +353,14 @@ function RiverScene({
           to={own}
         />
         <ThreeLabel
-          anchorX="right"
+          anchorX={sides.own.anchorX}
+          anchorY={sides.own.anchorY}
           color={PLOT_COLORS.teal}
           fontSize="compact"
-          gap={0.05}
+          gap={0.25}
           outlineColor={getColor("SLATE", 50)}
           outlineWidth={0.05}
-          position={[own[0] * 0.5, 0, own[2] * 0.5]}
+          position={[sides.own.middle[0], 0, -sides.own.middle[1]]}
         >
           <InlineMath math={quantity(river.boatSpeed, "\\text{ m/s}", 1)} />
         </ThreeLabel>
@@ -367,13 +371,14 @@ function RiverScene({
           to={sum}
         />
         <ThreeLabel
-          anchorY="bottom"
+          anchorX={sides.current.anchorX}
+          anchorY={sides.current.anchorY}
           color={PLOT_COLORS.amber}
           fontSize="compact"
-          gap={0.05}
+          gap={0.25}
           outlineColor={getColor("SLATE", 50)}
           outlineWidth={0.05}
-          position={[(own[0] + sum[0]) * 0.5, 0, own[2]]}
+          position={[sides.current.middle[0], 0, -sides.current.middle[1]]}
         >
           <InlineMath math={quantity(river.current, "\\text{ m/s}", 1)} />
         </ThreeLabel>
@@ -384,13 +389,14 @@ function RiverScene({
           to={sum}
         />
         <ThreeLabel
-          anchorX="left"
+          anchorX={sides.ground.anchorX}
+          anchorY={sides.ground.anchorY}
           color={PLOT_COLORS.violet}
           fontSize="compact"
-          gap={0.05}
+          gap={0.25}
           outlineColor={getColor("SLATE", 50)}
           outlineWidth={0.05}
-          position={[sum[0] * 0.5, 0, sum[2] * 0.5]}
+          position={[sides.ground.middle[0], 0, -sides.ground.middle[1]]}
         >
           <InlineMath
             math={quantity(crossing?.speed ?? 0, "\\text{ m/s}", 2)}
@@ -400,6 +406,9 @@ function RiverScene({
     </>
   );
 }
+
+/** Where the boat's arrows start, on the plane its velocity triangle is drawn in. */
+const START = [0, 0] as const;
 
 /** The boat's own place in the frame its arrows are drawn in. */
 const ORIGIN = [0, 0, 0] as const;

@@ -469,7 +469,7 @@ function WhirlScene({
             fontSize="compact"
             outlineColor={getColor("SLATE", 50)}
             outlineWidth={0.05}
-            position={[pullArrow[0] * 0.55, 0.02, radius * 0.17]}
+            position={[pullArrow[0] * 0.92, 0.02, -radius * 0.2]}
           >
             <InlineMath math="a" />
           </ThreeLabel>

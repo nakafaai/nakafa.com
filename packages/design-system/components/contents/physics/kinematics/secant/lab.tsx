@@ -258,6 +258,7 @@ function TripScene({
       <SimulationTicker running={playing} />
       <RoadsideCamera
         from={ends[0]}
+        past={3.5}
         resetKey={`${ends[0]}:${ends[1]}`}
         to={ends[1]}
       />

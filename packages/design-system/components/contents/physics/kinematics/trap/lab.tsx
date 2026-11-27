@@ -146,6 +146,7 @@ export function SpeedTrapInstantSpeedLab({
           <Suspense fallback={null}>
             <RoadsideCamera
               from={TRAP_CENTRE - gap / 2}
+              past={SEDAN.length + 3.5}
               resetKey={gap}
               to={TRAP_CENTRE + gap / 2}
             />
@@ -268,7 +269,7 @@ function TrapScene({ gap }: { readonly gap: TrapGap }) {
       <DistancePosts
         posts={Arr.filter(
           Arr.map(Arr.range(1, TRACK / 10), (index) => index * 10),
-          (post) => post < to
+          (post) => post <= to - 8
         )}
       />
       <mesh
