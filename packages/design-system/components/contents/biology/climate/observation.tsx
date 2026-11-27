@@ -1,8 +1,5 @@
-import { useGLTF, useTexture } from "@react-three/drei";
-import {
-  BLUE_MARBLE_EARTH_TEXTURE_ASSET,
-  TERRA_SATELLITE_ASSET,
-} from "@repo/design-system/components/contents/biology/assets";
+import { useGLTF } from "@react-three/drei";
+import { TERRA_SATELLITE_ASSET } from "@repo/design-system/components/contents/biology/assets";
 import { boxWrap } from "@repo/design-system/components/contents/biology/climate/wrap";
 import type { BiologyLabProps } from "@repo/design-system/components/contents/biology/lab";
 import { BiologyLabFrame } from "@repo/design-system/components/contents/biology/lab";
@@ -31,7 +28,6 @@ import {
   Mesh,
   MeshPhysicalMaterial,
   RepeatWrapping,
-  SRGBColorSpace,
   Vector3,
 } from "three";
 
@@ -133,13 +129,10 @@ function ClimateObservationScene() {
 /** The Earth, lit from where the stage's sun stands. */
 function Globe() {
   const { sun } = useStage();
-  const texture = useTexture(BLUE_MARBLE_EARTH_TEXTURE_ASSET.path);
-  texture.colorSpace = SRGBColorSpace;
-  texture.anisotropy = 8;
 
   return (
     <group rotation={[0.08, -1.35, 0]}>
-      <Planet map={texture} radius={EARTH} sun={sun} />
+      <Planet body="earth" radius={EARTH} sun={sun} />
     </group>
   );
 }
@@ -451,4 +444,3 @@ function prepareSatellite(source: Group) {
 }
 
 useGLTF.preload(TERRA_SATELLITE_ASSET.path);
-useTexture.preload(BLUE_MARBLE_EARTH_TEXTURE_ASSET.path);

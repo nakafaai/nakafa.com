@@ -174,7 +174,7 @@ export function stalksOf(
         })
       : Result.failVoid
   );
-  return Arr.sortBy(
+  return Arr.sort(
     stalks,
     Order.mapInput(
       Order.Number,
