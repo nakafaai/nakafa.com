@@ -22,7 +22,6 @@ import {
   GonadView,
   SystemView,
 } from "@repo/design-system/components/contents/biology/gametogenesis/organs";
-import { SlideStage } from "@repo/design-system/components/contents/biology/workbench";
 import {
   SimulationTicker,
   simulationStep,
@@ -286,8 +285,6 @@ export function GametogenesisScene({
     <group>
       <SimulationTicker running={playing} />
       <GameteCamera />
-
-      <SlideStage position={[0, 0, 0]} radius={0.98} />
 
       <group ref={rootRef}>
         {Match.value(level).pipe(

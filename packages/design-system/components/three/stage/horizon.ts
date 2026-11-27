@@ -1,12 +1,16 @@
 import { Color, DataUtils, LinearSRGBColorSpace } from "three";
 
-/** How far above and below the horizon the rows that set the haze reach, in degrees. */
-const HORIZON_BAND = 8;
+/** Between which heights above the horizon the rows that set the haze lie, in degrees. */
+const HAZE_LOW = 8;
+const HAZE_HIGH = 24;
 
 /**
- * Reads the tone a backdrop shows at its horizon: the mean linear color of the
- * rows within eight degrees of it, scaled by the backdrop's exposure. Distant
- * ground fades into this tone, so it meets the backdrop whatever the photo.
+ * Reads the tone of a backdrop's sky just above its horizon: the mean linear
+ * color of the rows from eight to twenty-four degrees above it, over the
+ * tree lines and roofs that stand on the horizon itself, scaled by the
+ * backdrop's exposure. Distant ground fades into this tone, as ground does
+ * into the haze under a real sky, so it meets the backdrop whatever the
+ * photo. The rows of the image run from the ground up.
  *
  * @param data - An equirectangular image of half floats, four channels per
  * pixel, as three decodes an EXR
@@ -20,9 +24,12 @@ export function horizonColor(
   height: number,
   exposure: number
 ) {
-  const band = Math.max(1, Math.round((height * HORIZON_BAND) / 180));
-  const first = Math.floor(height / 2) - band;
-  const last = Math.ceil(height / 2) + band;
+  const middle = Math.floor(height / 2);
+  const first = middle + Math.round((height * HAZE_LOW) / 180);
+  const last = Math.max(
+    first + 1,
+    middle + Math.round((height * HAZE_HIGH) / 180)
+  );
   let red = 0;
   let green = 0;
   let blue = 0;

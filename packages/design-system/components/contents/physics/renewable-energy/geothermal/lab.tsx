@@ -78,7 +78,13 @@ export function GeothermalLoopLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} frameloop="always" reach={9} setting="field">
+        <ScienceStage
+          floor={0}
+          frameloop="always"
+          ground="cut"
+          reach={9}
+          setting="field"
+        >
           <Suspense fallback={null}>
             <CameraControls
               cameraPosition={[10, 4, 18]}
