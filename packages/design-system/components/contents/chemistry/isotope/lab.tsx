@@ -5,6 +5,7 @@ import {
   ISOTOPE_SAMPLES,
   isIsotopeSampleId,
 } from "@repo/design-system/components/contents/chemistry/isotope/data";
+import { IsotopeScene } from "@repo/design-system/components/contents/chemistry/isotope/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   ToggleGroup,
@@ -12,32 +13,19 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
-import type { VariantProps } from "class-variance-authority";
-import { cva } from "class-variance-authority";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
-
-const particleDotVariants = cva(
-  "grid size-8 place-items-center rounded-full text-xs font-medium",
-  {
-    variants: {
-      type: {
-        neutron: "bg-secondary text-secondary-foreground",
-        proton: "bg-primary text-primary-foreground",
-      },
-    },
-  }
-);
 
 interface IsotopeLabProps {
   description: NonNullable<ReactNode>;
@@ -73,7 +61,6 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
   const selectedLabels = labels.samples[selectedSampleId];
   const neutronCount = selectedSample.massNumber - selectedSample.atomicNumber;
   const electronCount = selectedSample.atomicNumber;
-  const notation = `\\vphantom{X}^{${selectedSample.massNumber}}_{${selectedSample.atomicNumber}}\\mathrm{${selectedSample.symbol}}`;
 
   /**
    * Keeps one isotope selected when ToggleGroup emits an empty value.
@@ -116,31 +103,16 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
       </VisualCardToolbar>
 
       <VisualCardBody
-        aria-label={`${selectedLabels.ariaName}, ${labels.massNumber} ${selectedSample.massNumber}`}
-        className="grid gap-4 p-(--card-spacing) text-center [[data-fullscreen]>&]:grid"
+        aria-label={`${selectedLabels.ariaName}, ${labels.massNumber} ${selectedSample.massNumber}, ${labels.protons}: ${selectedSample.atomicNumber}, ${labels.neutrons}: ${neutronCount}`}
+        className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <div className="grid place-items-center px-2 py-4">
-          <div className="flex flex-col items-center gap-3">
-            <div className="text-muted-foreground text-sm">
-              {selectedLabels.name}
-            </div>
-            <div className="text-5xl sm:text-6xl">
-              <InlineMath math={notation} />
-            </div>
-          </div>
-        </div>
-
-        <NucleusDots
-          labels={labels}
-          neutronCount={neutronCount}
-          protonCount={selectedSample.atomicNumber}
-        />
+        <ScienceStage reach={4} setting="space">
+          <IsotopeScene name={selectedLabels.name} sample={selectedSample} />
+        </ScienceStage>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
         <VisualCardFacts>
@@ -176,64 +148,5 @@ export function IsotopeLab({ title, description, labels }: IsotopeLabProps) {
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-/**
- * Renders proton and neutron dots with generated counts, not hard-coded dots.
- */
-function NucleusDots({
-  labels,
-  neutronCount,
-  protonCount,
-}: {
-  labels: IsotopeLabProps["labels"];
-  neutronCount: number;
-  protonCount: number;
-}) {
-  const protons = Array.from(
-    { length: protonCount },
-    (_, protonIndex) => protonIndex
-  );
-  const neutrons = Array.from(
-    { length: neutronCount },
-    (_, neutronIndex) => neutronIndex
-  );
-
-  return (
-    <figure
-      aria-label={`${labels.protons}: ${protonCount}, ${labels.neutrons}: ${neutronCount}`}
-      className="flex w-full justify-center p-2"
-    >
-      <div className="flex max-w-sm flex-wrap justify-center gap-2">
-        {Arr.map(protons, (protonIndex) => (
-          <ParticleDot key={`proton-${protonIndex}`} math="p^+" type="proton" />
-        ))}
-        {Arr.map(neutrons, (neutronIndex) => (
-          <ParticleDot
-            key={`neutron-${neutronIndex}`}
-            math="n^0"
-            type="neutron"
-          />
-        ))}
-      </div>
-    </figure>
-  );
-}
-
-/**
- * Renders one stable-size nucleus particle marker.
- */
-function ParticleDot({
-  math,
-  type,
-}: {
-  math: string;
-  type: NonNullable<VariantProps<typeof particleDotVariants>["type"]>;
-}) {
-  return (
-    <span aria-hidden className={particleDotVariants({ type })}>
-      <InlineMath math={math} />
-    </span>
   );
 }
