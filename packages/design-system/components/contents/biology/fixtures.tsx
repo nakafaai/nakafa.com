@@ -1,7 +1,5 @@
-import {
-  latheProfile,
-  liquidMeniscus,
-} from "@repo/design-system/components/contents/chemistry/glassware";
+import { liquidMeniscus } from "@repo/design-system/components/contents/chemistry/glassware";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   LiquidMaterial,
@@ -88,28 +86,20 @@ export function LabeledVessel({
   readonly subtitle: string;
   readonly title: string;
 }) {
-  const glassPoints = useMemo(
-    () =>
-      latheProfile([
-        [0.001, 0],
-        [radius * 0.94, 0],
-        [radius, height * 0.04],
-        [radius, height * 0.94],
-        [radius * 1.08, height],
-      ]),
-    [height, radius]
-  );
+  const glassPoints = [
+    [0, 0],
+    [radius * 0.94, 0],
+    [radius, height * 0.04],
+    [radius, height * 0.94],
+    [radius * 1.08, height],
+  ] as const;
   const liquidLevel = Math.max(height * 0.1, height * fillFraction);
-  const liquidPoints = useMemo(
-    () =>
-      latheProfile([
-        [0.001, height * 0.03],
-        [radius * 0.92, height * 0.03],
-        ...liquidMeniscus(radius * 0.92, liquidLevel),
-        [0.001, liquidLevel],
-      ]),
-    [height, liquidLevel, radius]
-  );
+  const liquidPoints = [
+    [0.001, height * 0.03],
+    [radius * 0.92, height * 0.03],
+    ...liquidMeniscus(radius * 0.92, liquidLevel),
+    [0.001, liquidLevel],
+  ] as const;
   const labelTex = useMemo(
     () =>
       createPrintedLabelTexture({
@@ -125,11 +115,11 @@ export function LabeledVessel({
   return (
     <group position={position}>
       <mesh>
-        <latheGeometry args={[liquidPoints, 36]} />
+        <Turn profile={liquidPoints} />
         <LiquidMaterial color={liquidColor} opacity={0.62} />
       </mesh>
       <mesh castShadow renderOrder={2}>
-        <latheGeometry args={[glassPoints, 40]} />
+        <Turn profile={glassPoints} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.28} />
       </mesh>
       {labelTex === null ? null : (

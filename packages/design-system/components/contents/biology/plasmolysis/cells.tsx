@@ -3,7 +3,7 @@ import type {
   CellOutcome,
   Tonicity,
 } from "@repo/design-system/components/contents/biology/plasmolysis/model";
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
 import { FOLIAGE_COLORS } from "@repo/design-system/lib/material/foliage";
 import { HOMEOSTASIS_COLORS } from "@repo/design-system/lib/material/homeostasis";
@@ -48,8 +48,8 @@ const PLASMODESMATA = [
   [0.56, -0.18, 0],
 ] as const;
 
-const RBC_BICONCAVE_PROFILE = latheProfile([
-  [0.001, -0.055],
+const RBC_BICONCAVE_PROFILE = [
+  [0, -0.055],
   [0.14, -0.068],
   [0.28, -0.145],
   [0.42, -0.155],
@@ -59,8 +59,8 @@ const RBC_BICONCAVE_PROFILE = latheProfile([
   [0.42, 0.155],
   [0.28, 0.145],
   [0.14, 0.068],
-  [0.001, 0.055],
-]);
+  [0, 0.055],
+] as const;
 
 /** Rigid polygonal cellulose cell wall housing (open at front) with plasmodesmata channels. */
 export function PlantCellWallCutaway() {
@@ -291,7 +291,7 @@ export function ErythrocyteSpecimen({
 
   return (
     <mesh castShadow rotation={[0.45, 0, 0.15]}>
-      <latheGeometry args={[RBC_BICONCAVE_PROFILE, 48]} />
+      <Turn profile={RBC_BICONCAVE_PROFILE} />
       <meshPhysicalMaterial
         clearcoat={0.62}
         clearcoatRoughness={0.22}

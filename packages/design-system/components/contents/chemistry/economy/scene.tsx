@@ -2,15 +2,15 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import {
-  createFeedCurve,
-  createProductCurve,
-  createWasteCurve,
+  FEED,
   FeedHopperManifold,
   HOPPER_POS,
+  PRODUCT,
   PRODUCT_FLASK_POS,
   ProductAndWasteStations,
   REACTOR_X,
   REACTOR_Z,
+  WASTE,
   WASTE_BEAKER_POS,
 } from "@repo/design-system/components/contents/chemistry/economy/geometry";
 import type { SynthesisRoute } from "@repo/design-system/components/contents/chemistry/economy/model";
@@ -24,6 +24,11 @@ import {
   simulationStep,
 } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import {
+  pointOn,
+  rideOn,
+  trackOf,
+} from "@repo/design-system/components/three/form/path";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import {
@@ -32,30 +37,16 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { Array as Arr } from "effect";
-import { useMemo, useRef } from "react";
-import type { CatmullRomCurve3, Group } from "three";
+import { useRef } from "react";
+import type { Group } from "three";
 
 const FEED_PULSES = Arr.makeBy(4, (index) => index / 4);
 const PRODUCT_PULSES = Arr.makeBy(4, (index) => index / 4);
 const WASTE_PULSES = Arr.makeBy(3, (index) => index / 3);
 
-function stepAlongCurve(
-  group: Group | null,
-  curve: CatmullRomCurve3,
-  offsets: readonly number[],
-  phase: number
-) {
-  if (group === null) {
-    return;
-  }
-  for (let i = 0; i < group.children.length; i += 1) {
-    const child = group.children[i];
-    const offset = offsets[i];
-    if (child !== undefined && offset !== undefined) {
-      child.position.copy(curve.getPointAt((phase + offset) % 1));
-    }
-  }
-}
+const FEED_TRACK = trackOf(FEED);
+const PRODUCT_TRACK = trackOf(PRODUCT);
+const WASTE_TRACK = trackOf(WASTE);
 
 function EconomyCamera() {
   const narrow = isNarrowThreeScene(
@@ -97,20 +88,21 @@ export function AtomEconomyScene({
   const reading = evaluateAtomEconomy(route);
   const hasWaste = reading.wasteSpheres > 0;
 
-  const { feedCurve, productCurve, wasteCurve } = useMemo(
-    () => ({
-      feedCurve: createFeedCurve(),
-      productCurve: createProductCurve(),
-      wasteCurve: createWasteCurve(),
-    }),
-    []
-  );
-
   useVisualStop(() => {
     phaseRef.current = 0;
-    stepAlongCurve(feedPulsesRef.current, feedCurve, FEED_PULSES, 0);
-    stepAlongCurve(productPulsesRef.current, productCurve, PRODUCT_PULSES, 0);
-    stepAlongCurve(wastePulsesRef.current, wasteCurve, WASTE_PULSES, 0);
+    rideOn(FEED_TRACK, feedPulsesRef.current?.children ?? [], FEED_PULSES, 0);
+    rideOn(
+      PRODUCT_TRACK,
+      productPulsesRef.current?.children ?? [],
+      PRODUCT_PULSES,
+      0
+    );
+    rideOn(
+      WASTE_TRACK,
+      wastePulsesRef.current?.children ?? [],
+      WASTE_PULSES,
+      0
+    );
     if (swirlRef.current !== null) {
       swirlRef.current.rotation.y = 0;
     }
@@ -124,15 +116,20 @@ export function AtomEconomyScene({
     phaseRef.current += simulationStep(delta) * 0.58;
     const t = phaseRef.current;
 
-    stepAlongCurve(feedPulsesRef.current, feedCurve, FEED_PULSES, t);
-    stepAlongCurve(
-      productPulsesRef.current,
-      productCurve,
+    rideOn(FEED_TRACK, feedPulsesRef.current?.children ?? [], FEED_PULSES, t);
+    rideOn(
+      PRODUCT_TRACK,
+      productPulsesRef.current?.children ?? [],
       PRODUCT_PULSES,
       t * (0.55 + (reading.economyPercent / 100) * 0.5)
     );
     if (hasWaste) {
-      stepAlongCurve(wastePulsesRef.current, wasteCurve, WASTE_PULSES, t * 0.7);
+      rideOn(
+        WASTE_TRACK,
+        wastePulsesRef.current?.children ?? [],
+        WASTE_PULSES,
+        t * 0.7
+      );
     }
     if (swirlRef.current !== null) {
       swirlRef.current.rotation.y = t * Math.PI * 1.4;
@@ -162,9 +159,9 @@ export function AtomEconomyScene({
       {/* Animated cyan reactant molecule clusters streaming from hopper into reactor */}
       <group ref={feedPulsesRef}>
         {Arr.map(FEED_PULSES, (offset) => {
-          const pt = feedCurve.getPointAt(offset);
+          const pt = pointOn(FEED_TRACK, offset);
           return (
-            <group key={`feed-${offset}`} position={[pt.x, pt.y, pt.z]}>
+            <group key={`feed-${offset}`} position={pt}>
               <mesh>
                 <sphereGeometry args={[0.0068, 12, 10]} />
                 <meshStandardMaterial
@@ -191,9 +188,9 @@ export function AtomEconomyScene({
       {/* Animated green product spheres streaming along upper glass delivery arm */}
       <group ref={productPulsesRef}>
         {Arr.map(PRODUCT_PULSES, (offset) => {
-          const pt = productCurve.getPointAt(offset);
+          const pt = pointOn(PRODUCT_TRACK, offset);
           return (
-            <mesh key={`prod-${offset}`} position={[pt.x, pt.y, pt.z]}>
+            <mesh key={`prod-${offset}`} position={pt}>
               <sphereGeometry args={[0.0056, 12, 10]} />
               <meshStandardMaterial
                 color={PROCESS_COLORS.greenProduct}
@@ -210,9 +207,9 @@ export function AtomEconomyScene({
       {hasWaste ? (
         <group ref={wastePulsesRef}>
           {Arr.map(WASTE_PULSES, (offset) => {
-            const pt = wasteCurve.getPointAt(offset);
+            const pt = pointOn(WASTE_TRACK, offset);
             return (
-              <mesh key={`waste-${offset}`} position={[pt.x, pt.y, pt.z]}>
+              <mesh key={`waste-${offset}`} position={pt}>
                 <dodecahedronGeometry args={[0.0048, 0]} />
                 <meshStandardMaterial
                   color={PROCESS_COLORS.wasteSlate}

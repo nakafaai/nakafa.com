@@ -1,5 +1,4 @@
 import { useFrame } from "@react-three/fiber";
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
 import { SeamlessBenchSurface } from "@repo/design-system/components/contents/chemistry/surface";
 import { BenchCamera } from "@repo/design-system/components/contents/physics/bench/camera";
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
@@ -12,6 +11,7 @@ import { hashUnit } from "@repo/design-system/components/contents/simulation/gra
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   LiquidMaterial,
@@ -54,12 +54,10 @@ function bore(x: number, narrow: number) {
 
 /** The outline of the pipe's wall or of the water in it, as radii along its length, `inset` inside the glass. */
 function outline(narrow: number, inset: number) {
-  return latheProfile(
-    Arr.makeBy(49, (index) => {
-      const x = -HALF + (index / 48) * HALF * 2;
-      return [bore(x, narrow) - inset, x] as const;
-    })
-  );
+  return Arr.makeBy(49, (index) => {
+    const x = -HALF + (index / 48) * HALF * 2;
+    return [bore(x, narrow) - inset, x] as const;
+  });
 }
 
 /**
@@ -154,7 +152,7 @@ export function VenturiScene({
       ))}
       <group position={[0, AXIS, 0]} rotation={[0, 0, -Math.PI / 2]}>
         <mesh renderOrder={1}>
-          <latheGeometry args={[water, 48]} />
+          <Turn profile={water} />
           <LiquidMaterial color={APPARATUS_COLORS.water} opacity={0.42} />
         </mesh>
         <group ref={specks}>
@@ -177,7 +175,7 @@ export function VenturiScene({
           ))}
         </group>
         <mesh castShadow renderOrder={3}>
-          <latheGeometry args={[wall, 48]} />
+          <Turn profile={wall} />
           <GlassMaterial color={BENCH_COLORS.glass} opacity={0.2} />
         </mesh>
         {Arr.map([-HALF, HALF] as const, (end) => (

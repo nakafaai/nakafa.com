@@ -1,5 +1,4 @@
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
 import type { CondensationPolymer } from "@repo/design-system/components/contents/chemistry/nylon/model";
 import {
   AtomSphere,
@@ -9,6 +8,7 @@ import {
   MultiBond,
   SpecimenPlinth,
 } from "@repo/design-system/components/contents/chemistry/specimen";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -20,15 +20,13 @@ import { ORGANIC_COLORS } from "@repo/design-system/lib/material/organic";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr } from "effect";
-import { useEffect, useMemo } from "react";
-import { LatheGeometry } from "three";
 
 export const RIG_Z = 0.04;
 export const CHAIN_Y = 0.195;
 export const STANCHION_X = 0.262;
 
-const CATCH_DISH_PROFILE = latheProfile([
-  [0.001, 0.002],
+const CATCH_DISH_PROFILE = [
+  [0, 0.002],
   [0.036, 0.003],
   [0.062, 0.009],
   [0.075, 0.018],
@@ -36,8 +34,8 @@ const CATCH_DISH_PROFILE = latheProfile([
   [0.073, 0.02],
   [0.059, 0.011],
   [0.034, 0.005],
-  [0.001, 0.004],
-]);
+  [0, 0.004],
+] as const;
 
 const BENZENE_ANGLES = Arr.makeBy(6, (idx) => (idx / 6) * Math.PI * 2);
 
@@ -47,9 +45,6 @@ export function CondensationBenchBase({
 }: {
   readonly polymer: CondensationPolymer;
 }) {
-  const dishGeo = useMemo(() => new LatheGeometry(CATCH_DISH_PROFILE, 44), []);
-  useEffect(() => () => dishGeo.dispose(), [dishGeo]);
-
   const isNylon = polymer === "nylon66";
 
   return (
@@ -82,7 +77,8 @@ export function CondensationBenchBase({
             <cylinderGeometry args={[0.044, 0.048, 0.004, 32]} />
             <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.3} />
           </mesh>
-          <mesh castShadow geometry={dishGeo} position={[0, 0.003, 0]}>
+          <mesh castShadow position={[0, 0.003, 0]}>
+            <Turn profile={CATCH_DISH_PROFILE} />
             <GlassMaterial color={BENCH_COLORS.glass} opacity={0.36} />
           </mesh>
         </group>

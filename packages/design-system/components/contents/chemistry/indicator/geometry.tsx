@@ -1,3 +1,5 @@
+import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
+import type { Path } from "@repo/design-system/components/three/form/path";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
@@ -5,21 +7,7 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
-import {
-  CatmullRomCurve3,
-  DoubleSide,
-  ExtrudeGeometry,
-  LatheGeometry,
-  Shape,
-  TubeGeometry,
-  Vector2,
-  Vector3,
-} from "three";
-
-/** Converts [radius, height] pairs into LatheGeometry Vector2 control points. */
-function lathePoints(pairs: readonly (readonly [number, number])[]) {
-  return Arr.map(pairs, ([radius, height]) => new Vector2(radius, height));
-}
+import { DoubleSide, ExtrudeGeometry, Shape } from "three";
 
 /** Creates a rounded rectangular glazed porcelain spotting tile geometry. */
 function buildTileGeometry() {
@@ -48,82 +36,77 @@ function buildTileGeometry() {
   return geo;
 }
 
-/** Creates a 250 mL borosilicate graduated beaker profile with pouring lip flare. */
-function buildBeakerGeometry() {
-  const points = lathePoints([
-    [0.0008, 0],
-    [0.042, 0],
-    [0.0455, 0.004],
-    [0.046, 0.01],
-    [0.046, 0.112],
-    [0.0485, 0.1165],
-    [0.05, 0.118],
-    [0.0475, 0.118],
-    [0.0442, 0.113],
-    [0.0442, 0.005],
-    [0.041, 0.003],
-    [0.0008, 0.003],
-  ]);
-  return new LatheGeometry(points, 56);
-}
+/**
+ * The outside of a 250 mL borosilicate beaker, from its base to its flared
+ * lip. The base is dished a little, as blown glass is, so the beaker stands
+ * on its rim and not flat on the tile.
+ */
+const BEAKER = [
+  [0, 0.0005],
+  [0.036, 0.0005],
+  [0.042, 0],
+  [0.0455, 0.004],
+  [0.046, 0.01],
+  [0.046, 0.112],
+  [0.0485, 0.1165],
+  [0.05, 0.118],
+] as const;
 
-/** Creates a turned borosilicate glass dropping pipette barrel and fine nozzle. */
-function buildPipetteGlassGeometry() {
-  const points = lathePoints([
-    [0.0012, 0],
-    [0.0017, 0.012],
-    [0.0028, 0.028],
-    [0.0054, 0.044],
-    [0.0055, 0.106],
-    [0.0068, 0.11],
-    [0.0052, 0.111],
-    [0.0042, 0.105],
-    [0.0042, 0.043],
-    [0.0011, 0.002],
-  ]);
-  return new LatheGeometry(points, 32);
-}
+/** The glass of a dropping pipette: up the outside of its nozzle and barrel, over its rim and back down its bore. */
+const PIPETTE_GLASS = [
+  [0.0012, 0],
+  [0.0017, 0.012],
+  [0.0028, 0.028],
+  [0.0054, 0.044],
+  [0.0055, 0.106],
+  [0.0068, 0.11],
+  [0.0052, 0.111],
+  [0.0042, 0.105],
+  [0.0042, 0.043],
+  [0.0011, 0.002],
+] as const;
 
-/** Creates a turned nitrile rubber teat bulb for the dropping pipette. */
-function buildPipetteBulbGeometry() {
-  const points = lathePoints([
-    [0.0056, 0],
-    [0.0074, 0.003],
-    [0.0068, 0.01],
-    [0.0115, 0.024],
-    [0.0122, 0.036],
-    [0.01, 0.046],
-    [0.0055, 0.052],
-    [0.0005, 0.054],
-  ]);
-  return new LatheGeometry(points, 32);
-}
+/** The nitrile teat of the dropping pipette. */
+const PIPETTE_BULB = [
+  [0.0056, 0],
+  [0.0074, 0.003],
+  [0.0068, 0.01],
+  [0.0115, 0.024],
+  [0.0122, 0.036],
+  [0.01, 0.046],
+  [0.0055, 0.052],
+  [0, 0.054],
+] as const;
 
-/** Creates a teardrop droplet profile for animated indicator drops. */
-function buildDropletGeometry() {
-  const points = lathePoints([
-    [0.0002, 0],
-    [0.0024, 0.0009],
-    [0.0036, 0.0028],
-    [0.0033, 0.0052],
-    [0.0018, 0.008],
-    [0.0002, 0.0108],
-  ]);
-  return new LatheGeometry(points, 20);
-}
+/** A falling drop of indicator: round below, drawn to a point above. */
+const DROPLET = [
+  [0, 0],
+  [0.0024, 0.0009],
+  [0.0036, 0.0028],
+  [0.0033, 0.0052],
+  [0.0018, 0.008],
+  [0, 0.0108],
+] as const;
 
-/** Builds a gently curved ribbon mesh along a 3D spine for a pH test paper strip. */
-function buildStripSegment(
-  controlPoints: readonly (readonly [number, number, number])[],
-  halfWidth: number
-) {
-  const curve = new CatmullRomCurve3(
-    Arr.map(controlPoints, ([x, y, z]) => new Vector3(x, y, z))
-  );
-  const tube = new TubeGeometry(curve, 20, halfWidth, 4, false);
-  tube.scale(1, 1, 0.12);
-  return tube;
-}
+/** The dry length of the test strip, leaning out over the beaker's rim. */
+const DRY_STRIP: Path = [
+  [0.027, 0.074, 0],
+  [0.035, 0.098, 0],
+  [0.045, 0.119, 0],
+  [0.058, 0.132, 0],
+  [0.071, 0.142, 0],
+];
+
+/** The wet length of the test strip, down in the solution. */
+const WET_STRIP: Path = [
+  [0.018, 0.032, 0],
+  [0.021, 0.048, 0],
+  [0.025, 0.064, 0],
+  [0.028, 0.077, 0],
+];
+
+/** A paper strip's section: an eighth as thick as it is wide, its face toward the viewer. */
+const PAPER = [0.12, [0, 0, 1]] as const;
 
 /** Glazed white porcelain spotting tile sitting on the bench at y = 0. */
 export function SpottingTile() {
@@ -164,8 +147,6 @@ export function SpottingTile() {
 
 /** Turned 250 mL borosilicate glass beaker with crisp volumetric graduation ticks. */
 export function GraduatedBeaker() {
-  const geo = useMemo(buildBeakerGeometry, []);
-  useEffect(() => () => geo.dispose(), [geo]);
   const ticks = Arr.makeBy(7, (index) => ({
     key: index,
     major: index % 2 === 1,
@@ -174,7 +155,8 @@ export function GraduatedBeaker() {
 
   return (
     <group>
-      <mesh castShadow geometry={geo}>
+      <mesh castShadow>
+        <Turn profile={BEAKER} wall={[0.0018, 0.003]} />
         <meshPhysicalMaterial
           clearcoat={1}
           clearcoatRoughness={0.04}
@@ -210,51 +192,17 @@ export function CurvedPhStrip({
   readonly stainColor: string;
   readonly wetClear: boolean;
 }) {
-  const dryGeo = useMemo(
-    () =>
-      buildStripSegment(
-        [
-          [0.027, 0.074, 0],
-          [0.035, 0.098, 0],
-          [0.045, 0.119, 0],
-          [0.058, 0.132, 0],
-          [0.071, 0.142, 0],
-        ],
-        0.006
-      ),
-    []
-  );
-  const wetGeo = useMemo(
-    () =>
-      buildStripSegment(
-        [
-          [0.018, 0.032, 0],
-          [0.021, 0.048, 0],
-          [0.025, 0.064, 0],
-          [0.028, 0.077, 0],
-        ],
-        0.006
-      ),
-    []
-  );
-
-  useEffect(
-    () => () => {
-      dryGeo.dispose();
-      wetGeo.dispose();
-    },
-    [dryGeo, wetGeo]
-  );
-
   return (
     <group position={[0, 0, 0.012]}>
-      <mesh castShadow geometry={dryGeo}>
+      <mesh castShadow>
+        <Sweep flat={PAPER} path={DRY_STRIP} radius={0.006} />
         <meshStandardMaterial
           color={INSTRUMENT_COLORS.paper}
           roughness={0.84}
         />
       </mesh>
-      <mesh castShadow geometry={wetGeo}>
+      <mesh castShadow>
+        <Sweep flat={PAPER} path={WET_STRIP} radius={0.006} />
         <meshPhysicalMaterial
           clearcoat={0.25}
           color={wetClear ? BENCH_COLORS.ceramicTile : stainColor}
@@ -271,19 +219,10 @@ export function DroppingPipette({
 }: {
   readonly reagentColor: string;
 }) {
-  const glassGeo = useMemo(buildPipetteGlassGeometry, []);
-  const bulbGeo = useMemo(buildPipetteBulbGeometry, []);
-  useEffect(
-    () => () => {
-      glassGeo.dispose();
-      bulbGeo.dispose();
-    },
-    [bulbGeo, glassGeo]
-  );
-
   return (
     <group>
-      <mesh castShadow geometry={glassGeo}>
+      <mesh castShadow>
+        <Turn profile={PIPETTE_GLASS} />
         <meshPhysicalMaterial
           clearcoat={1}
           clearcoatRoughness={0.04}
@@ -306,7 +245,8 @@ export function DroppingPipette({
           transparent
         />
       </mesh>
-      <mesh castShadow geometry={bulbGeo} position={[0, 0.107, 0]}>
+      <mesh castShadow position={[0, 0.107, 0]}>
+        <Turn profile={PIPETTE_BULB} />
         <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.78} />
       </mesh>
     </group>
@@ -315,11 +255,9 @@ export function DroppingPipette({
 
 /** Teardrop falling indicator droplet mesh. */
 export function IndicatorDroplet({ color }: { readonly color: string }) {
-  const geo = useMemo(buildDropletGeometry, []);
-  useEffect(() => () => geo.dispose(), [geo]);
-
   return (
-    <mesh castShadow geometry={geo}>
+    <mesh castShadow>
+      <Turn profile={DROPLET} />
       <meshPhysicalMaterial
         clearcoat={1}
         clearcoatRoughness={0.05}

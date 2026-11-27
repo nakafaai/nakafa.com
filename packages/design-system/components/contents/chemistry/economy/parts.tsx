@@ -1,9 +1,11 @@
 import { ColumnLiquid } from "@repo/design-system/components/contents/chemistry/bench";
 import {
-  createDomeCapGeometry,
+  DOME_CAP,
   REACTOR_X,
   REACTOR_Z,
 } from "@repo/design-system/components/contents/chemistry/economy/geometry";
+import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
+import type { Path } from "@repo/design-system/components/three/form/path";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -13,8 +15,7 @@ import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { useEffect, useMemo } from "react";
-import { CatmullRomCurve3, TubeGeometry, Vector3 } from "three";
+import { useMemo } from "react";
 
 const FLANGE_ANGLES = Arr.makeBy(6, (index) => (index / 6) * Math.PI * 2);
 const TIE_ROD_ANGLES = Arr.makeBy(
@@ -22,19 +23,14 @@ const TIE_ROD_ANGLES = Arr.makeBy(
   (index) => (index / 3) * Math.PI * 2 + 0.52
 );
 
-function createCatalyticCoilGeometry() {
-  const pts = Arr.makeBy(28, (index) => {
-    const u = index / 27;
-    const angle = u * Math.PI * 5.2;
-    const radius = 0.018;
-    return new Vector3(
-      Math.cos(angle) * radius,
-      0.088 + u * 0.104,
-      Math.sin(angle) * radius
-    );
-  });
-  return new TubeGeometry(new CatmullRomCurve3(pts), 64, 0.0022, 10, false);
-}
+/** The catalytic swirl coil: two and three-fifths turns up the middle of the reactor. */
+const COIL: Path = {
+  from: [0, 0.088, 0],
+  kind: "helix",
+  radius: 0.018,
+  to: [0, 0.192, 0],
+  turns: 2.6,
+};
 
 /** Bolted stainless-flanged borosilicate-jacketed catalytic synthesis reactor. */
 export function SynthesisReactor({
@@ -42,9 +38,6 @@ export function SynthesisReactor({
 }: {
   readonly children: ReactNode;
 }) {
-  const domeCapGeo = useMemo(createDomeCapGeometry, []);
-  useEffect(() => () => domeCapGeo.dispose(), [domeCapGeo]);
-
   return (
     <group position={[REACTOR_X, 0, REACTOR_Z]}>
       {/* Heavy cast-iron foot ring and 3 tripod legs */}
@@ -99,7 +92,8 @@ export function SynthesisReactor({
       ))}
 
       {/* Stainless dome cap and top pressure gauge */}
-      <mesh castShadow geometry={domeCapGeo} position={[0, 0.235, 0]}>
+      <mesh castShadow position={[0, 0.235, 0]}>
+        <Turn profile={DOME_CAP} />
         <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.26} />
       </mesh>
       <mesh position={[0, 0.268, 0]}>
@@ -145,9 +139,6 @@ export function CatalyticSwirl({
   readonly productSpheres: number;
   readonly wasteSpheres: number;
 }) {
-  const coilGeo = useMemo(createCatalyticCoilGeometry, []);
-  useEffect(() => () => coilGeo.dispose(), [coilGeo]);
-
   const productDots = useMemo(
     () =>
       Arr.makeBy(productSpheres, (index) => {
@@ -180,7 +171,8 @@ export function CatalyticSwirl({
 
   return (
     <group>
-      <mesh geometry={coilGeo}>
+      <mesh>
+        <Sweep ends="round" path={COIL} radius={0.0022} />
         <meshStandardMaterial
           color={PROCESS_COLORS.catalystTeal}
           emissive={PROCESS_COLORS.catalystTeal}

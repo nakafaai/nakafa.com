@@ -9,15 +9,12 @@ import {
   transferMode,
 } from "@repo/design-system/components/contents/biology/placenta/exchange";
 import {
-  buildBiconcaveCellGeometry,
-  buildHelixTube,
-  buildVillusBranch,
-} from "@repo/design-system/components/contents/biology/placenta/geometry";
-import {
   SimulationTicker,
   simulationStep,
 } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
+import type { Path } from "@repo/design-system/components/three/form/path";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
@@ -27,10 +24,70 @@ import { HEART_COLORS } from "@repo/design-system/lib/material/heart";
 import { LABORATORY_COLORS } from "@repo/design-system/lib/material/laboratory";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Match } from "effect";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { DoubleSide } from "three";
 
 const PARTICLE_OFFSETS = [0, 0.25, 0.5, 0.75] as const;
+
+/**
+ * One strand of the umbilical cord, wound two and a half turns round the
+ * line from the foetus to the placenta: `phase` is where it starts round
+ * the cord and `radius` how far it lies from the cord's middle.
+ */
+function cordOf(phase: number, radius: number): Path {
+  return {
+    from: [-0.14, 0.04, 0.04],
+    kind: "helix",
+    phase,
+    radius,
+    to: [0.3, -0.14, 0.04],
+    turns: 2.5,
+  };
+}
+
+/** The trunk of the chorionic villus tree. */
+const VILLUS_TRUNK: Path = [
+  [0.02, -0.34, 0],
+  [0, -0.1, 0.02],
+  [-0.02, 0.12, -0.01],
+  [0.01, 0.34, 0],
+];
+
+/** The villus tree's upper frond. */
+const VILLUS_FROND_A: Path = [
+  [0, 0.05, 0.01],
+  [-0.12, 0.14, 0.06],
+  [-0.22, 0.21, 0.02],
+];
+
+/** The villus tree's lower frond. */
+const VILLUS_FROND_B: Path = [
+  [0, -0.12, 0],
+  [-0.13, -0.18, -0.05],
+  [-0.24, -0.22, 0.02],
+];
+
+/** The foetal capillary that loops through the villus. */
+const FOETAL_CAPILLARY: Path = [
+  [0.36, -0.28, 0.02],
+  [0.2, -0.18, 0.08],
+  [0.14, 0, 0.04],
+  [0.2, 0.18, -0.04],
+  [0.36, 0.28, 0.02],
+];
+
+/** A red blood cell: a disc dimpled on both faces. */
+const RED_CELL = [
+  [0, -0.011],
+  [0.024, -0.012],
+  [0.044, -0.024],
+  [0.056, -0.012],
+  [0.058, 0],
+  [0.056, 0.012],
+  [0.044, 0.024],
+  [0.024, 0.012],
+  [0, 0.011],
+] as const;
 
 const PLACENTA_RULES = [
   {
@@ -131,89 +188,6 @@ export function PlacentaScene({
   const clock = useRef(0.35);
   const [phase, setPhase] = useState(0.35);
 
-  const cordSheath = useMemo(() => buildHelixTube(0, 0.006, 0.03), []);
-  const cordArteryA = useMemo(() => buildHelixTube(0, 0.014, 0.0085), []);
-  const cordArteryB = useMemo(() => buildHelixTube(2.1, 0.014, 0.0085), []);
-  const cordVein = useMemo(() => buildHelixTube(4.2, 0.012, 0.011), []);
-
-  const villusTrunk = useMemo(
-    () =>
-      buildVillusBranch(
-        [
-          [0.02, -0.34, 0],
-          [0.0, -0.1, 0.02],
-          [-0.02, 0.12, -0.01],
-          [0.01, 0.34, 0],
-        ],
-        0.048
-      ),
-    []
-  );
-  const villusFrondA = useMemo(
-    () =>
-      buildVillusBranch(
-        [
-          [0, 0.05, 0.01],
-          [-0.12, 0.14, 0.06],
-          [-0.22, 0.21, 0.02],
-        ],
-        0.03
-      ),
-    []
-  );
-  const villusFrondB = useMemo(
-    () =>
-      buildVillusBranch(
-        [
-          [0, -0.12, 0],
-          [-0.13, -0.18, -0.05],
-          [-0.24, -0.22, 0.02],
-        ],
-        0.028
-      ),
-    []
-  );
-  const foetalCapillary = useMemo(
-    () =>
-      buildVillusBranch(
-        [
-          [0.36, -0.28, 0.02],
-          [0.2, -0.18, 0.08],
-          [0.14, 0, 0.04],
-          [0.2, 0.18, -0.04],
-          [0.36, 0.28, 0.02],
-        ],
-        0.042
-      ),
-    []
-  );
-  const rbcGeo = useMemo(buildBiconcaveCellGeometry, []);
-
-  useEffect(
-    () => () => {
-      cordSheath.dispose();
-      cordArteryA.dispose();
-      cordArteryB.dispose();
-      cordVein.dispose();
-      villusTrunk.dispose();
-      villusFrondA.dispose();
-      villusFrondB.dispose();
-      foetalCapillary.dispose();
-      rbcGeo.dispose();
-    },
-    [
-      cordArteryA,
-      cordArteryB,
-      cordSheath,
-      cordVein,
-      foetalCapillary,
-      rbcGeo,
-      villusFrondA,
-      villusFrondB,
-      villusTrunk,
-    ]
-  );
-
   useFrame((_, delta) => {
     if (!playing) {
       return;
@@ -291,7 +265,8 @@ export function PlacentaScene({
           </mesh>
         </group>
 
-        <mesh geometry={cordSheath}>
+        <mesh>
+          <Sweep path={cordOf(0, 0.006)} radius={0.03} />
           <meshPhysicalMaterial
             clearcoat={0.75}
             color={PLOT_COLORS.pink}
@@ -301,21 +276,24 @@ export function PlacentaScene({
             transparent
           />
         </mesh>
-        <mesh castShadow geometry={cordArteryA}>
+        <mesh castShadow>
+          <Sweep path={cordOf(0, 0.014)} radius={0.0085} />
           <meshPhysicalMaterial
             clearcoat={0.5}
             color={BIOLOGY_COLORS.blood}
             roughness={0.34}
           />
         </mesh>
-        <mesh castShadow geometry={cordArteryB}>
+        <mesh castShadow>
+          <Sweep path={cordOf(2.1, 0.014)} radius={0.0085} />
           <meshPhysicalMaterial
             clearcoat={0.5}
             color={BIOLOGY_COLORS.bloodDark}
             roughness={0.36}
           />
         </mesh>
-        <mesh castShadow geometry={cordVein}>
+        <mesh castShadow>
+          <Sweep path={cordOf(4.2, 0.012)} radius={0.011} />
           <meshPhysicalMaterial
             clearcoat={0.55}
             color={HEART_COLORS.veinOuter}
@@ -356,7 +334,8 @@ export function PlacentaScene({
           />
         </mesh>
 
-        <mesh castShadow geometry={villusTrunk}>
+        <mesh castShadow>
+          <Sweep path={VILLUS_TRUNK} radius={0.048} />
           <meshPhysicalMaterial
             clearcoat={0.48}
             clearcoatRoughness={0.28}
@@ -364,14 +343,30 @@ export function PlacentaScene({
             roughness={0.42}
           />
         </mesh>
-        <mesh castShadow geometry={villusFrondA}>
+        <mesh castShadow>
+          <Sweep
+            ends="round"
+            path={VILLUS_FROND_A}
+            radius={[
+              [0, 0.03],
+              [1, 0.021],
+            ]}
+          />
           <meshPhysicalMaterial
             clearcoat={0.48}
             color={CELL_COLORS.membrane}
             roughness={0.42}
           />
         </mesh>
-        <mesh castShadow geometry={villusFrondB}>
+        <mesh castShadow>
+          <Sweep
+            ends="round"
+            path={VILLUS_FROND_B}
+            radius={[
+              [0, 0.028],
+              [1, 0.02],
+            ]}
+          />
           <meshPhysicalMaterial
             clearcoat={0.48}
             color={CELL_COLORS.membrane}
@@ -379,7 +374,8 @@ export function PlacentaScene({
           />
         </mesh>
 
-        <mesh castShadow geometry={foetalCapillary}>
+        <mesh castShadow>
+          <Sweep path={FOETAL_CAPILLARY} radius={0.042} />
           <meshPhysicalMaterial
             clearcoat={0.65}
             color={BIOLOGY_COLORS.bloodDark}
@@ -393,11 +389,11 @@ export function PlacentaScene({
           return substance === "bloodCells" ? (
             <mesh
               castShadow
-              geometry={rbcGeo}
               key={offset}
               position={[x, y, 0.16]}
               rotation={[0.45, offset * 2, 0.3]}
             >
+              <Turn profile={RED_CELL} />
               <meshPhysicalMaterial
                 clearcoat={0.65}
                 color={particleColor}

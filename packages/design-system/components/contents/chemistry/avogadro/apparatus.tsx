@@ -1,8 +1,6 @@
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
-import {
-  drawFormulaText,
-  latheProfile,
-} from "@repo/design-system/components/contents/chemistry/glassware";
+import { drawFormulaText } from "@repo/design-system/components/contents/chemistry/glassware";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -12,13 +10,7 @@ import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
-import {
-  CanvasTexture,
-  ExtrudeGeometry,
-  LatheGeometry,
-  Shape,
-  SRGBColorSpace,
-} from "three";
+import { CanvasTexture, ExtrudeGeometry, Shape, SRGBColorSpace } from "three";
 
 export const RIG_Z = 0.04;
 export const CYL_FLOOR = 0.04;
@@ -26,27 +18,27 @@ export const CYL_INNER_R = 0.064;
 const CYL_TOP = 0.308;
 const CYL_OUTER_R = 0.069;
 
-const FLANGE_PROFILE = latheProfile([
-  [0.001, 0],
+const FLANGE_PROFILE = [
+  [0, 0],
   [0.088, 0],
   [0.088, 0.012],
   [0.076, 0.014],
   [0.076, 0.024],
   [0.064, 0.024],
   [0.064, 0.018],
-  [0.001, 0.018],
-]);
+  [0, 0.018],
+] as const;
 
-const PISTON_PROFILE = latheProfile([
-  [0.001, -0.012],
+const PISTON_PROFILE = [
+  [0, -0.012],
   [0.059, -0.012],
   [0.0615, -0.01],
   [0.0615, 0.01],
   [0.059, 0.012],
   [0.014, 0.012],
   [0.012, 0.018],
-  [0.001, 0.018],
-]);
+  [0, 0.018],
+] as const;
 
 const FLANGE_BOLTS = Arr.makeBy(6, (idx) => (idx / 6) * Math.PI * 2);
 const CLAMP_HEIGHTS = [0.135, 0.278] as const;
@@ -190,9 +182,7 @@ export function RetortStand() {
 
 /** Bolted stainless base flange and graduated borosilicate gas cylinder. */
 export function GasCylinder() {
-  const flangeGeo = useMemo(() => new LatheGeometry(FLANGE_PROFILE, 44), []);
   const scaleTex = useMemo(createVolumeScaleTexture, []);
-  useEffect(() => () => flangeGeo.dispose(), [flangeGeo]);
   useEffect(() => () => scaleTex?.dispose(), [scaleTex]);
 
   const height = CYL_TOP - CYL_FLOOR;
@@ -200,12 +190,8 @@ export function GasCylinder() {
   return (
     <group position={[0, 0, RIG_Z]}>
       {/* Bolted stainless steel base flange */}
-      <mesh
-        castShadow
-        geometry={flangeGeo}
-        position={[0, 0.017, 0]}
-        receiveShadow
-      >
+      <mesh castShadow position={[0, 0.017, 0]} receiveShadow>
+        <Turn profile={FLANGE_PROFILE} />
         <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.28} />
       </mesh>
       {Arr.map(FLANGE_BOLTS, (ang) => (
@@ -298,14 +284,12 @@ export function GasCylinder() {
 
 /** Turned aluminium moving piston head with twin black rubber O-rings, chrome push-rod, and T-handle. */
 export function PistonAssembly({ pistonY }: { readonly pistonY: number }) {
-  const headGeo = useMemo(() => new LatheGeometry(PISTON_PROFILE, 44), []);
-  useEffect(() => () => headGeo.dispose(), [headGeo]);
-
   const rodLen = 0.125;
 
   return (
     <group position={[0, pistonY, RIG_Z]}>
-      <mesh castShadow geometry={headGeo}>
+      <mesh castShadow>
+        <Turn profile={PISTON_PROFILE} />
         <MetalMaterial color={INSTRUMENT_COLORS.aluminium} roughness={0.24} />
       </mesh>
       {/* Twin black rubber O-ring seals */}

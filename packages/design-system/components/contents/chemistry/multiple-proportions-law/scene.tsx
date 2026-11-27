@@ -2,7 +2,6 @@ import { useFrame } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import type { ElementName } from "@repo/design-system/components/contents/chemistry/element";
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
 import {
   CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH,
   ChemistryParticleLabel,
@@ -26,6 +25,7 @@ import { useSimulationClock } from "@repo/design-system/components/contents/simu
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   GlassMaterial,
@@ -37,17 +37,16 @@ import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr, HashMap, Match, Option } from "effect";
 import type { ReactNode, RefObject } from "react";
-import { createContext, useEffect, useMemo, useRef } from "react";
+import { createContext, useRef } from "react";
 import type { Group } from "three";
-import { LatheGeometry } from "three";
 
 const FIRST_X = -0.175;
 const SECOND_X = 0.175;
 const STAGE_Z = 0.035;
 const MOLECULE_Y = 0.128;
 
-const WATCH_GLASS_PROFILE = latheProfile([
-  [0.001, 0.004],
+const WATCH_GLASS_PROFILE = [
+  [0, 0.004],
   [0.056, 0.005],
   [0.098, 0.013],
   [0.122, 0.026],
@@ -55,8 +54,8 @@ const WATCH_GLASS_PROFILE = latheProfile([
   [0.12, 0.029],
   [0.095, 0.017],
   [0.054, 0.009],
-  [0.001, 0.008],
-]);
+  [0, 0.008],
+] as const;
 
 const MultipleProportionsSceneColorsContext =
   createContext<MultipleProportionsSceneColors | null>(null);
@@ -95,9 +94,6 @@ function WatchGlassPedestal({
   readonly plaqueSubtitle: string;
   readonly x: number;
 }) {
-  const dishGeo = useMemo(() => new LatheGeometry(WATCH_GLASS_PROFILE, 56), []);
-  useEffect(() => () => dishGeo.dispose(), [dishGeo]);
-
   return (
     <group position={[x, 0, STAGE_Z]}>
       <mesh castShadow position={[0, 0.005, 0]} receiveShadow>
@@ -113,7 +109,8 @@ function WatchGlassPedestal({
         <torusGeometry args={[0.095, 0.0024, 12, 56]} />
         <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.26} />
       </mesh>
-      <mesh castShadow geometry={dishGeo} position={[0, 0.009, 0]}>
+      <mesh castShadow position={[0, 0.009, 0]}>
+        <Turn profile={WATCH_GLASS_PROFILE} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.34} />
       </mesh>
       <FormulaPlaque

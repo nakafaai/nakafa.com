@@ -4,6 +4,8 @@ import {
   Flask,
   FlaskLiquid,
 } from "@repo/design-system/components/contents/chemistry/bench";
+import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
+import type { Path } from "@repo/design-system/components/three/form/path";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -12,14 +14,6 @@ import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { Array as Arr } from "effect";
-import { useEffect, useMemo } from "react";
-import {
-  CatmullRomCurve3,
-  LatheGeometry,
-  TubeGeometry,
-  Vector2,
-  Vector3,
-} from "three";
 
 export const REACTOR_X = -0.01;
 export const REACTOR_Z = 0.02;
@@ -36,89 +30,55 @@ const WASTE_CHUNKS = [
   { id: "chunk-3", r: 0.005, x: -0.007, y: 0.022, z: -0.006 },
 ] as const;
 
-export function createFeedCurve() {
-  return new CatmullRomCurve3([
-    new Vector3(-0.23, 0.118, 0.02),
-    new Vector3(-0.205, 0.112, 0.02),
-    new Vector3(-0.135, 0.116, 0.02),
-    new Vector3(-0.082, 0.128, 0.02),
-    new Vector3(-0.048, 0.132, 0.02),
-  ]);
-}
+/** The feed manifold from the hopper's throat to the reactor. */
+export const FEED: Path = [
+  [-0.23, 0.118, 0.02],
+  [-0.205, 0.112, 0.02],
+  [-0.135, 0.116, 0.02],
+  [-0.082, 0.128, 0.02],
+  [-0.048, 0.132, 0.02],
+];
 
-export function createProductCurve() {
-  return new CatmullRomCurve3([
-    new Vector3(0.032, 0.204, 0.015),
-    new Vector3(0.088, 0.232, -0.002),
-    new Vector3(0.145, 0.214, -0.02),
-    new Vector3(0.16, 0.184, -0.025),
-    new Vector3(0.16, 0.156, -0.025),
-  ]);
-}
+/** The delivery tube from the reactor's head down into the product flask. */
+export const PRODUCT: Path = [
+  [0.032, 0.204, 0.015],
+  [0.088, 0.232, -0.002],
+  [0.145, 0.214, -0.02],
+  [0.16, 0.184, -0.025],
+  [0.16, 0.156, -0.025],
+];
 
-export function createWasteCurve() {
-  return new CatmullRomCurve3([
-    new Vector3(0.034, 0.088, 0.032),
-    new Vector3(0.108, 0.094, 0.05),
-    new Vector3(0.188, 0.112, 0.064),
-    new Vector3(0.244, 0.104, 0.068),
-    new Vector3(0.255, 0.078, 0.068),
-  ]);
-}
+/** The by-product chute from the reactor's foot to the waste beaker. */
+export const WASTE: Path = [
+  [0.034, 0.088, 0.032],
+  [0.108, 0.094, 0.05],
+  [0.188, 0.112, 0.064],
+  [0.244, 0.104, 0.068],
+  [0.255, 0.078, 0.068],
+];
 
-export function createDomeCapGeometry() {
-  const profile = Arr.map(
-    [
-      [0.038, 0],
-      [0.038, 0.007],
-      [0.033, 0.017],
-      [0.021, 0.024],
-      [0.008, 0.027],
-      [0.0005, 0.027],
-    ] as const,
-    ([r, y]) => new Vector2(r, y)
-  );
-  return new LatheGeometry(profile, 36);
-}
+/** The dished cap of the synthesis reactor. */
+export const DOME_CAP = [
+  [0.038, 0],
+  [0.038, 0.007],
+  [0.033, 0.017],
+  [0.021, 0.024],
+  [0.008, 0.027],
+  [0, 0.027],
+] as const;
 
-function createHopperGeometry() {
-  const profile = Arr.map(
-    [
-      [0.009, 0.106],
-      [0.012, 0.116],
-      [0.022, 0.138],
-      [0.038, 0.174],
-      [0.045, 0.206],
-      [0.049, 0.212],
-      [0.045, 0.214],
-      [0.041, 0.205],
-      [0.034, 0.174],
-      [0.018, 0.138],
-      [0.009, 0.114],
-    ] as const,
-    ([r, y]) => new Vector2(r, y)
-  );
-  return new LatheGeometry(profile, 44);
-}
+/** The outside of the feed hopper, from its throat up to its rolled rim. */
+const HOPPER = [
+  [0.009, 0.106],
+  [0.012, 0.116],
+  [0.022, 0.138],
+  [0.038, 0.174],
+  [0.045, 0.206],
+  [0.049, 0.212],
+] as const;
 
 /** Conical stainless reactant feed hopper on tripod legs with flanged manifold and brass handwheel. */
 export function FeedHopperManifold() {
-  const { feedTubeGeo, hopperGeo } = useMemo(() => {
-    const feedCurve = createFeedCurve();
-    return {
-      feedTubeGeo: new TubeGeometry(feedCurve, 36, 0.0056, 14, false),
-      hopperGeo: createHopperGeometry(),
-    };
-  }, []);
-
-  useEffect(
-    () => () => {
-      feedTubeGeo.dispose();
-      hopperGeo.dispose();
-    },
-    [feedTubeGeo, hopperGeo]
-  );
-
   return (
     <group>
       {/* Tripod stand and conical stainless feed hopper */}
@@ -144,7 +104,8 @@ export function FeedHopperManifold() {
           <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.34} />
         </mesh>
         {/* Turned stainless hopper cone */}
-        <mesh castShadow geometry={hopperGeo} receiveShadow>
+        <mesh castShadow receiveShadow>
+          <Turn profile={HOPPER} wall={0.004} />
           <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.26} />
         </mesh>
         {/* Glowing cyan reactant charge inside hopper mouth */}
@@ -161,7 +122,8 @@ export function FeedHopperManifold() {
       </group>
 
       {/* Curved flanged stainless feed manifold */}
-      <mesh castShadow geometry={feedTubeGeo}>
+      <mesh castShadow>
+        <Sweep path={FEED} radius={0.0056} />
         <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.28} />
       </mesh>
       {/* Inlet and outlet pipe flanges */}
@@ -215,23 +177,6 @@ export function ProductAndWasteStations({
   readonly economyPercent: number;
   readonly wasteSpheres: number;
 }) {
-  const { productTubeGeo, wasteTubeGeo } = useMemo(() => {
-    const productCurve = createProductCurve();
-    const wasteCurve = createWasteCurve();
-    return {
-      productTubeGeo: new TubeGeometry(productCurve, 44, 0.0046, 12, false),
-      wasteTubeGeo: new TubeGeometry(wasteCurve, 40, 0.0044, 12, false),
-    };
-  }, []);
-
-  useEffect(
-    () => () => {
-      productTubeGeo.dispose();
-      wasteTubeGeo.dispose();
-    },
-    [productTubeGeo, wasteTubeGeo]
-  );
-
   const economyFraction = Math.min(1, Math.max(0, (economyPercent - 45) / 55));
   const productLevel = 0.024 + economyFraction * 0.072;
   const hasWaste = wasteSpheres > 0;
@@ -241,12 +186,14 @@ export function ProductAndWasteStations({
   return (
     <group>
       {/* Curved borosilicate delivery tube to desired product flask */}
-      <mesh geometry={productTubeGeo} renderOrder={2}>
+      <mesh renderOrder={2}>
+        <Sweep ends="open" path={PRODUCT} radius={0.0046} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.38} />
       </mesh>
 
       {/* Lower stainless drain pipe to byproduct waste beaker */}
-      <mesh castShadow geometry={wasteTubeGeo}>
+      <mesh castShadow>
+        <Sweep path={WASTE} radius={0.0044} />
         <MetalMaterial
           color={hasWaste ? BENCH_COLORS.panSteel : CAR_COLORS.castIron}
           roughness={hasWaste ? 0.32 : 0.56}

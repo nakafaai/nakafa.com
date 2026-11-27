@@ -5,12 +5,12 @@ import {
   CONDENSER_X,
   CONVERTER_X,
   CompressorUnit,
-  createFeedCurve,
-  createRecycleCurve,
-  createSynthesisCurve,
+  FEED,
   PilotSkid,
   ProcessPiping,
+  RECYCLE,
   RIG_Z,
+  SYNTHESIS,
 } from "@repo/design-system/components/contents/chemistry/haber/geometry";
 import { evaluateHaberConverter } from "@repo/design-system/components/contents/chemistry/haber/model";
 import {
@@ -22,6 +22,11 @@ import {
   simulationStep,
 } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import {
+  placeOn,
+  pointOn,
+  trackOf,
+} from "@repo/design-system/components/three/form/path";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
@@ -48,6 +53,14 @@ function HaberCamera() {
   );
 }
 
+const FEED_TRACK = trackOf(FEED);
+const SYNTHESIS_TRACK = trackOf(SYNTHESIS);
+const RECYCLE_TRACK = trackOf(RECYCLE);
+const FEED_START = pointOn(FEED_TRACK, 0.45);
+const SYNTHESIS_START = pointOn(SYNTHESIS_TRACK, 0.5);
+const RECYCLE_FIRST = pointOn(RECYCLE_TRACK, 0.28);
+const RECYCLE_SECOND = pointOn(RECYCLE_TRACK, 0.76);
+
 function FlowPulses({
   playing,
   relativeRate,
@@ -57,10 +70,6 @@ function FlowPulses({
   readonly relativeRate: number;
   readonly yieldPercent: number;
 }) {
-  const feedCurve = useMemo(createFeedCurve, []);
-  const synthCurve = useMemo(createSynthesisCurve, []);
-  const recycleCurve = useMemo(createRecycleCurve, []);
-
   const feedRef = useRef<Mesh>(null);
   const synthRef = useRef<Mesh>(null);
   const recycleARef = useRef<Mesh>(null);
@@ -84,21 +93,19 @@ function FlowPulses({
     const p = phaseRef.current;
 
     if (feedRef.current !== null) {
-      feedRef.current.position.copy(feedCurve.getPointAt(p % 1));
+      placeOn(FEED_TRACK, p % 1, feedRef.current.position);
       feedRef.current.position.z += 0.015;
     }
     if (synthRef.current !== null) {
-      synthRef.current.position.copy(synthCurve.getPointAt((p + 0.35) % 1));
+      placeOn(SYNTHESIS_TRACK, (p + 0.35) % 1, synthRef.current.position);
       synthRef.current.position.z += 0.015;
     }
     if (recycleARef.current !== null) {
-      recycleARef.current.position.copy(recycleCurve.getPointAt((p * 0.7) % 1));
+      placeOn(RECYCLE_TRACK, (p * 0.7) % 1, recycleARef.current.position);
       recycleARef.current.position.z += 0.016;
     }
     if (recycleBRef.current !== null) {
-      recycleBRef.current.position.copy(
-        recycleCurve.getPointAt((p * 0.7 + 0.5) % 1)
-      );
+      placeOn(RECYCLE_TRACK, (p * 0.7 + 0.5) % 1, recycleBRef.current.position);
       recycleBRef.current.position.z += 0.016;
     }
     for (let i = 0; i < DROP_COUNT; i += 1) {
@@ -116,15 +123,10 @@ function FlowPulses({
     }
   });
 
-  const initFeed = feedCurve.getPointAt(0.45);
-  const initSynth = synthCurve.getPointAt(0.5);
-  const initRecA = recycleCurve.getPointAt(0.28);
-  const initRecB = recycleCurve.getPointAt(0.76);
-
   return (
     <group>
       <mesh
-        position={[initFeed.x, initFeed.y, initFeed.z + 0.015]}
+        position={[FEED_START[0], FEED_START[1], FEED_START[2] + 0.015]}
         ref={feedRef}
       >
         <sphereGeometry args={[0.012, 12, 10]} />
@@ -135,7 +137,11 @@ function FlowPulses({
         />
       </mesh>
       <mesh
-        position={[initSynth.x, initSynth.y, initSynth.z + 0.015]}
+        position={[
+          SYNTHESIS_START[0],
+          SYNTHESIS_START[1],
+          SYNTHESIS_START[2] + 0.015,
+        ]}
         ref={synthRef}
       >
         <sphereGeometry args={[0.012, 12, 10]} />
@@ -146,7 +152,11 @@ function FlowPulses({
         />
       </mesh>
       <mesh
-        position={[initRecA.x, initRecA.y, initRecA.z + 0.016]}
+        position={[
+          RECYCLE_FIRST[0],
+          RECYCLE_FIRST[1],
+          RECYCLE_FIRST[2] + 0.016,
+        ]}
         ref={recycleARef}
       >
         <sphereGeometry args={[0.0115, 12, 10]} />
@@ -157,7 +167,11 @@ function FlowPulses({
         />
       </mesh>
       <mesh
-        position={[initRecB.x, initRecB.y, initRecB.z + 0.016]}
+        position={[
+          RECYCLE_SECOND[0],
+          RECYCLE_SECOND[1],
+          RECYCLE_SECOND[2] + 0.016,
+        ]}
         ref={recycleBRef}
       >
         <sphereGeometry args={[0.0115, 12, 10]} />

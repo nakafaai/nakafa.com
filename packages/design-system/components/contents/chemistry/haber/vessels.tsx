@@ -2,9 +2,11 @@ import { ColumnLiquid } from "@repo/design-system/components/contents/chemistry/
 import {
   CONDENSER_X,
   CONVERTER_X,
-  createDomeGeometry,
   RIG_Z,
 } from "@repo/design-system/components/contents/chemistry/haber/geometry";
+import { head } from "@repo/design-system/components/three/form/outline";
+import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
+import type { Path } from "@repo/design-system/components/three/form/path";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -13,28 +15,21 @@ import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { Array as Arr } from "effect";
-import { useEffect, useMemo } from "react";
-import { CatmullRomCurve3, DoubleSide, TubeGeometry, Vector3 } from "three";
+import { DoubleSide } from "three";
 
-function createCondenserCoilGeometry() {
-  const turns = 5.5;
-  const samples = 110;
-  const r = 0.05;
-  const points = [
-    new Vector3(0.086, 0.328, 0),
-    ...Arr.makeBy(samples + 1, (step) => {
-      const t = step / samples;
-      const angle = t * Math.PI * 2 * turns;
-      return new Vector3(
-        Math.cos(angle) * r,
-        0.328 - t * 0.138,
-        Math.sin(angle) * r
-      );
-    }),
-    new Vector3(0.086, 0.19, 0),
-  ];
-  return new TubeGeometry(new CatmullRomCurve3(points), 150, 0.0042, 10, false);
-}
+/** How far the converter's bolting flanges stand out, and how deep they are. */
+const FLANGE = [0.012, 0.014] as const;
+
+/** The condenser's cooling coil: five and a half turns down the jacket, with a lead through the wall at each end. */
+const COIL: Path = {
+  from: [0, 0.328, 0],
+  kind: "helix",
+  lead: [[0.086, 0.328, 0]],
+  radius: 0.05,
+  tail: [[0.086, 0.19, 0]],
+  to: [0, 0.19, 0],
+  turns: -5.5,
+};
 
 /** Bolted stainless pressure converter tower with cutaway window and 3 glowing iron catalyst beds. */
 export function ConverterVessel({
@@ -42,11 +37,6 @@ export function ConverterVessel({
 }: {
   readonly temperatureC: number;
 }) {
-  const topDome = useMemo(() => createDomeGeometry(0.09, 0.056), []);
-  const bottomDome = useMemo(() => createDomeGeometry(0.09, 0.044), []);
-  useEffect(() => () => topDome.dispose(), [topDome]);
-  useEffect(() => () => bottomDome.dispose(), [bottomDome]);
-
   const tempNorm = Math.max(0, Math.min(1, (temperatureC - 300) / 300));
   const glowIntensity = 0.08 + tempNorm * 1.55;
   const bedHeights = [0.155, 0.22, 0.285] as const;
@@ -69,15 +59,12 @@ export function ConverterVessel({
           <MetalMaterial color={CAR_COLORS.castIron} roughness={0.5} />
         </mesh>
       ))}
-      <mesh
-        castShadow
-        geometry={bottomDome}
-        position={[0, 0.105, 0]}
-        rotation={[Math.PI, 0, 0]}
-      >
+      <mesh castShadow position={[0, 0.105, 0]} rotation={[Math.PI, 0, 0]}>
+        <Turn profile={head(0.09, 0.044, FLANGE)} />
         <MetalMaterial color={PROCESS_COLORS.alloySteel} roughness={0.32} />
       </mesh>
-      <mesh castShadow geometry={topDome} position={[0, 0.335, 0]}>
+      <mesh castShadow position={[0, 0.335, 0]}>
+        <Turn profile={head(0.09, 0.056, FLANGE)} />
         <MetalMaterial color={PROCESS_COLORS.alloySteel} roughness={0.32} />
       </mesh>
       {Arr.map([0.102, 0.338] as const, (y) => (
@@ -169,9 +156,6 @@ export function CondenserUnit({
 }: {
   readonly yieldPercent: number;
 }) {
-  const coilGeo = useMemo(createCondenserCoilGeometry, []);
-  useEffect(() => () => coilGeo.dispose(), [coilGeo]);
-
   const liquidLevel = 0.072 + (yieldPercent / 72) * 0.115;
   const tieRods = Arr.makeBy(
     4,
@@ -207,7 +191,8 @@ export function CondenserUnit({
           <MetalMaterial color={CAR_COLORS.chrome} roughness={0.22} />
         </mesh>
       ))}
-      <mesh castShadow geometry={coilGeo}>
+      <mesh castShadow>
+        <Sweep path={COIL} radius={0.0042} />
         <MetalMaterial color={CAR_COLORS.chrome} roughness={0.22} />
       </mesh>
       {Arr.map([0.19, 0.328] as const, (y) => (

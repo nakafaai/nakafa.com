@@ -2,8 +2,8 @@ import { ColumnLiquid } from "@repo/design-system/components/contents/chemistry/
 import {
   createBottleLabelTexture,
   drawFormulaText,
-  latheProfile,
 } from "@repo/design-system/components/contents/chemistry/glassware";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -25,8 +25,8 @@ import {
 const UP_AXIS = new Vector3(0, 1, 0);
 const FALLBACK_SIDE = new Vector3(0, 0, 1);
 
-const VIAL_PROFILE = latheProfile([
-  [0.001, 0],
+const VIAL_PROFILE = [
+  [0, 0],
   [0.019, 0],
   [0.0215, 0.003],
   [0.0215, 0.058],
@@ -39,8 +39,8 @@ const VIAL_PROFILE = latheProfile([
   [0.0112, 0.071],
   [0.0194, 0.058],
   [0.0194, 0.004],
-  [0.001, 0.0036],
-]);
+  [0, 0.0036],
+] as const;
 
 /** Glossy clear-coated molecular or crystal atom sphere. */
 export function AtomSphere({
@@ -396,7 +396,7 @@ export function LabeledVial({
         radius={0.0185}
       />
       <mesh castShadow position={[0, 0.0036, 0]} renderOrder={2}>
-        <latheGeometry args={[VIAL_PROFILE, 40]} />
+        <Turn profile={VIAL_PROFILE} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.28} />
       </mesh>
       {labelTex === null ? null : (

@@ -22,6 +22,8 @@ import type { Metal } from "@repo/design-system/components/contents/chemistry/vo
 import { halfCell } from "@repo/design-system/components/contents/chemistry/voltaic/cell";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ORIGIN_COLOR } from "@repo/design-system/components/three/data/constants";
+import { Sweep } from "@repo/design-system/components/three/form/part";
+import type { Path } from "@repo/design-system/components/three/form/path";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   GlassMaterial,
@@ -34,8 +36,6 @@ import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { useEffect, useMemo } from "react";
-import { CatmullRomCurve3, TubeGeometry, Vector3 } from "three";
 
 /** Metres per scene unit, the same bench scale as the electrolysis lab. */
 const SCENE_SCALE = 0.1;
@@ -227,46 +227,28 @@ export function HalfCell({
   );
 }
 
+/** The salt bridge's glass: up one leg, across and down the other, bent in two smooth elbows. */
+const BRIDGE: Path = {
+  bend: 0.22,
+  kind: "route",
+  points: [
+    [-BRIDGE_X, BRIDGE_DIP, 0],
+    [-BRIDGE_X, BRIDGE_TOP, 0],
+    [BRIDGE_X, BRIDGE_TOP, 0],
+    [BRIDGE_X, BRIDGE_DIP, 0],
+  ],
+};
+
 /**
  * A salt bridge: an inverted glass U-tube bent in two smooth elbows, filled
  * with pale agar jelly of potassium nitrate and stopped with a cotton plug
  * at each end, a leg dipping into the solution of each beaker.
  */
 function SaltBridge() {
-  const { gel, glass } = useMemo(() => {
-    const bend = 0.22;
-    const path = new CatmullRomCurve3(
-      [
-        new Vector3(-BRIDGE_X, BRIDGE_DIP, 0),
-        new Vector3(-BRIDGE_X, BRIDGE_TOP - bend, 0),
-        new Vector3(-BRIDGE_X + bend * 0.3, BRIDGE_TOP - bend * 0.3, 0),
-        new Vector3(-BRIDGE_X + bend, BRIDGE_TOP, 0),
-        new Vector3(BRIDGE_X - bend, BRIDGE_TOP, 0),
-        new Vector3(BRIDGE_X - bend * 0.3, BRIDGE_TOP - bend * 0.3, 0),
-        new Vector3(BRIDGE_X, BRIDGE_TOP - bend, 0),
-        new Vector3(BRIDGE_X, BRIDGE_DIP, 0),
-      ],
-      false,
-      "catmullrom",
-      0.25
-    );
-    return {
-      gel: new TubeGeometry(path, 160, BRIDGE_RADIUS * 0.78, 20, false),
-      glass: new TubeGeometry(path, 160, BRIDGE_RADIUS, 28, false),
-    };
-  }, []);
-
-  useEffect(
-    () => () => {
-      gel.dispose();
-      glass.dispose();
-    },
-    [gel, glass]
-  );
-
   return (
     <group>
-      <mesh geometry={gel}>
+      <mesh>
+        <Sweep path={BRIDGE} radius={BRIDGE_RADIUS * 0.78} />
         <meshPhysicalMaterial
           color={BENCH_COLORS.agar}
           opacity={0.78}
@@ -274,7 +256,8 @@ function SaltBridge() {
           transparent
         />
       </mesh>
-      <mesh castShadow geometry={glass} renderOrder={2}>
+      <mesh castShadow renderOrder={2}>
+        <Sweep ends="open" path={BRIDGE} radius={BRIDGE_RADIUS} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.3} />
       </mesh>
       {Arr.map([-BRIDGE_X, BRIDGE_X], (x) => (

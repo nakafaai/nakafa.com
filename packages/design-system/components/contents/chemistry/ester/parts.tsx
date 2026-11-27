@@ -2,16 +2,20 @@ import { ColumnLiquid } from "@repo/design-system/components/contents/chemistry/
 import {
   AXIS_X,
   AXIS_Z,
-  createCondenserGeometries,
+  CONDENSER_JACKET,
+  CONDENSER_TUBE,
   createHotplateBody,
-  createRoundFlaskGeometry,
-  createSphericalBandGeometry,
-  createWaterBathGeometry,
   esterTint,
+  FLASK,
+  INLET_HOSE,
+  layerOf,
+  OUTLET_HOSE,
   ROD_X,
   ROD_Z,
+  WATER_BATH,
 } from "@repo/design-system/components/contents/chemistry/ester/geometry";
 import type { EsterId } from "@repo/design-system/components/contents/chemistry/ester/model";
+import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   LiquidMaterial,
@@ -188,9 +192,6 @@ export function RefluxHotplate({
 
 /** Low-form borosilicate water bath dish resting on the hotplate. */
 export function WaterBathDish() {
-  const dishGeo = useMemo(createWaterBathGeometry, []);
-  useEffect(() => () => dishGeo.dispose(), [dishGeo]);
-
   return (
     <group position={[AXIS_X, 0.058, AXIS_Z]}>
       <ColumnLiquid
@@ -200,7 +201,8 @@ export function WaterBathDish() {
         opacity={0.36}
         radius={0.0545}
       />
-      <mesh castShadow geometry={dishGeo} renderOrder={3}>
+      <mesh castShadow renderOrder={3}>
+        <Turn profile={WATER_BATH} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.26} />
       </mesh>
     </group>
@@ -218,38 +220,22 @@ export function RoundBottomFlask({
   readonly ester: EsterId;
   readonly esterLayerRatio: number;
 }) {
-  const flaskGeo = useMemo(createRoundFlaskGeometry, []);
   const esterThickness = 0.005 + esterLayerRatio * 0.017;
   const interfaceY = 0.128 - esterThickness * 0.25;
   const esterTopY = interfaceY + esterThickness;
-
-  const { aqueousGeo, esterGeo } = useMemo(
-    () => ({
-      aqueousGeo: createSphericalBandGeometry(0.091, interfaceY),
-      esterGeo: createSphericalBandGeometry(interfaceY, esterTopY),
-    }),
-    [esterTopY, interfaceY]
-  );
-
-  useEffect(() => () => flaskGeo.dispose(), [flaskGeo]);
-  useEffect(
-    () => () => {
-      aqueousGeo.dispose();
-      esterGeo.dispose();
-    },
-    [aqueousGeo, esterGeo]
-  );
 
   const organicColor = esterTint(ester);
 
   return (
     <group position={[AXIS_X, 0, AXIS_Z]}>
       {/* Lower aqueous alcohol and carboxylic acid layer */}
-      <mesh geometry={aqueousGeo} renderOrder={1}>
+      <mesh renderOrder={1}>
+        <Turn profile={layerOf(0.091, interfaceY)} />
         <LiquidMaterial color={ORGANIC_COLORS.waterBlue} opacity={0.46} />
       </mesh>
       {/* Upper floating fruity ester meniscus layer */}
-      <mesh geometry={esterGeo} renderOrder={1}>
+      <mesh renderOrder={1}>
+        <Turn profile={layerOf(interfaceY, esterTopY)} />
         <LiquidMaterial color={organicColor} opacity={0.86} />
       </mesh>
       {/* Frosted B24 ground-glass socket collar */}
@@ -264,7 +250,8 @@ export function RoundBottomFlask({
         />
       </mesh>
       {/* Borosilicate round-bottom flask glass wall */}
-      <mesh castShadow geometry={flaskGeo} renderOrder={2}>
+      <mesh castShadow renderOrder={2}>
+        <Turn profile={FLASK} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.28} />
       </mesh>
     </group>
@@ -276,21 +263,6 @@ export function RoundBottomFlask({
  * side coolant nipples, and flexible translucent silicone hoses looping back.
  */
 export function LiebigCondenser() {
-  const { inletHoseGeo, innerGeo, jacketGeo, outletHoseGeo } = useMemo(
-    createCondenserGeometries,
-    []
-  );
-
-  useEffect(
-    () => () => {
-      inletHoseGeo.dispose();
-      innerGeo.dispose();
-      jacketGeo.dispose();
-      outletHoseGeo.dispose();
-    },
-    [inletHoseGeo, innerGeo, jacketGeo, outletHoseGeo]
-  );
-
   return (
     <group>
       <group position={[AXIS_X, 0, AXIS_Z]}>
@@ -303,11 +275,13 @@ export function LiebigCondenser() {
           radius={0.0178}
         />
         {/* Inner vapour condensation tube */}
-        <mesh geometry={innerGeo} renderOrder={2}>
+        <mesh renderOrder={2}>
+          <Turn profile={CONDENSER_TUBE} />
           <GlassMaterial color={BENCH_COLORS.glass} opacity={0.34} />
         </mesh>
         {/* Outer borosilicate cooling jacket */}
-        <mesh castShadow geometry={jacketGeo} renderOrder={3}>
+        <mesh castShadow renderOrder={3}>
+          <Turn profile={CONDENSER_JACKET} />
           <GlassMaterial color={BENCH_COLORS.glass} opacity={0.25} />
         </mesh>
         {/* Lower-left coolant inlet glass barb */}
@@ -322,7 +296,8 @@ export function LiebigCondenser() {
         </mesh>
       </group>
       {/* Translucent silicone coolant hoses */}
-      <mesh castShadow geometry={inletHoseGeo}>
+      <mesh castShadow>
+        <Sweep ends="open" path={INLET_HOSE} radius={0.0044} />
         <meshPhysicalMaterial
           clearcoat={0.45}
           color={ORGANIC_COLORS.condenserGlass}
@@ -331,7 +306,8 @@ export function LiebigCondenser() {
           transparent
         />
       </mesh>
-      <mesh castShadow geometry={outletHoseGeo}>
+      <mesh castShadow>
+        <Sweep ends="open" path={OUTLET_HOSE} radius={0.0044} />
         <meshPhysicalMaterial
           clearcoat={0.45}
           color={ORGANIC_COLORS.condenserGlass}

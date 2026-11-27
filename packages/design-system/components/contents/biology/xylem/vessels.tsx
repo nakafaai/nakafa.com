@@ -2,10 +2,8 @@ import {
   BotanicalLeaf,
   FibrousRoots,
 } from "@repo/design-system/components/contents/biology/seedling";
-import {
-  latheProfile,
-  liquidMeniscus,
-} from "@repo/design-system/components/contents/chemistry/glassware";
+import { liquidMeniscus } from "@repo/design-system/components/contents/chemistry/glassware";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { LiquidMaterial } from "@repo/design-system/components/three/physical";
 import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
 import { FOLIAGE_COLORS } from "@repo/design-system/lib/material/foliage";
@@ -45,16 +43,12 @@ export function XylemVesselCutaway({
   }, []);
   useEffect(() => () => spiralGeo.dispose(), [spiralGeo]);
 
-  const waterProfile = useMemo(
-    () =>
-      latheProfile([
-        [0.001, 0.18],
-        [0.148, 0.18],
-        ...liquidMeniscus(0.148, 0.18 + columnHeight),
-        [0.001, 0.18 + columnHeight],
-      ]),
-    [columnHeight]
-  );
+  const waterProfile = [
+    [0, 0.18],
+    [0.148, 0.18],
+    ...liquidMeniscus(0.148, 0.18 + columnHeight),
+    [0.001, 0.18 + columnHeight],
+  ] as const;
 
   return (
     <group>
@@ -138,7 +132,7 @@ export function XylemVesselCutaway({
 
       {/* Continuous cohesive translucent water column with concave meniscus */}
       <mesh>
-        <latheGeometry args={[waterProfile, 36]} />
+        <Turn profile={waterProfile} />
         <LiquidMaterial color={BOTANY_COLORS.waterBlue} opacity={0.76} />
       </mesh>
 

@@ -1,6 +1,7 @@
 import { ColumnLiquid } from "@repo/design-system/components/contents/chemistry/bench";
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
 import type { PeriodOxide } from "@repo/design-system/components/contents/chemistry/oxide/model";
+import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
+import type { Path } from "@repo/design-system/components/three/form/path";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -13,16 +14,7 @@ import { Array as Arr } from "effect";
 import type { RefObject } from "react";
 import { useEffect, useMemo } from "react";
 import type { Group } from "three";
-import {
-  CanvasTexture,
-  CatmullRomCurve3,
-  ExtrudeGeometry,
-  LatheGeometry,
-  Shape,
-  SRGBColorSpace,
-  TubeGeometry,
-  Vector3,
-} from "three";
+import { CanvasTexture, ExtrudeGeometry, Shape, SRGBColorSpace } from "three";
 
 export const BEAKER_X = -0.105;
 export const BEAKER_Z = 0.065;
@@ -30,8 +22,24 @@ export const METER_X = -0.275;
 export const METER_Z = -0.045;
 const PROBE_X = BEAKER_X + 0.024;
 
-const BEAKER_250_WALL = latheProfile([
-  [0.001, 0],
+/** The coaxial lead from the pH meter over to its electrode in the beaker. */
+const CABLE: Path = [
+  [METER_X + 0.032, 0.135, METER_Z],
+  [METER_X + 0.075, 0.215, METER_Z + 0.025],
+  [PROBE_X - 0.04, 0.242, BEAKER_Z - 0.012],
+  [PROBE_X, 0.198, BEAKER_Z],
+];
+
+/** The glass delivery tube that bubbles gas into the beaker, in the beaker's own frame. */
+const SPARGER: Path = [
+  [-0.072, 0.155, -0.022],
+  [-0.022, 0.145, -0.006],
+  [-0.014, 0.105, 0],
+  [-0.014, 0.028, 0],
+];
+
+const BEAKER_250_WALL = [
+  [0, 0],
   [0.044, 0],
   [0.048, 0.0045],
   [0.048, 0.095],
@@ -40,8 +48,8 @@ const BEAKER_250_WALL = latheProfile([
   [0.0454, 0.095],
   [0.0454, 0.0055],
   [0.042, 0.0042],
-  [0.001, 0.0042],
-]);
+  [0, 0.0042],
+] as const;
 
 const SAMPLE_GRANULES = [
   { id: "g-0", r: 0.0115, x: -0.014, y: 0.017, z: 0.008 },
@@ -175,19 +183,8 @@ export function BenchPhMeter({
     () => createPhLcdTexture(ph, indicatorColor),
     [indicatorColor, ph]
   );
-  const cableGeo = useMemo(() => {
-    const curve = new CatmullRomCurve3([
-      new Vector3(METER_X + 0.032, 0.135, METER_Z),
-      new Vector3(METER_X + 0.075, 0.215, METER_Z + 0.025),
-      new Vector3(PROBE_X - 0.04, 0.242, BEAKER_Z - 0.012),
-      new Vector3(PROBE_X, 0.198, BEAKER_Z),
-    ]);
-    return new TubeGeometry(curve, 44, 0.0028, 12, false);
-  }, []);
-
   useEffect(() => () => bodyGeo.dispose(), [bodyGeo]);
   useEffect(() => () => lcdTex?.dispose(), [lcdTex]);
-  useEffect(() => () => cableGeo.dispose(), [cableGeo]);
 
   return (
     <group>
@@ -252,7 +249,8 @@ export function BenchPhMeter({
       </group>
 
       {/* Curved coaxial electrode lead */}
-      <mesh castShadow geometry={cableGeo}>
+      <mesh castShadow>
+        <Sweep path={CABLE} radius={0.0028} />
         <meshStandardMaterial color={BENCH_COLORS.leadBlack} roughness={0.55} />
       </mesh>
 
@@ -320,21 +318,8 @@ export function ReactionBeakerStation({
   readonly liquidColor: string;
   readonly oxide: PeriodOxide;
 }) {
-  const beakerGeo = useMemo(() => new LatheGeometry(BEAKER_250_WALL, 56), []);
   const markings = useMemo(createBeakerScaleTexture, []);
-  const spargerGeo = useMemo(() => {
-    const curve = new CatmullRomCurve3([
-      new Vector3(-0.072, 0.155, -0.022),
-      new Vector3(-0.022, 0.145, -0.006),
-      new Vector3(-0.014, 0.105, 0),
-      new Vector3(-0.014, 0.028, 0),
-    ]);
-    return new TubeGeometry(curve, 36, 0.0036, 12, false);
-  }, []);
-
-  useEffect(() => () => beakerGeo.dispose(), [beakerGeo]);
   useEffect(() => () => markings?.dispose(), [markings]);
-  useEffect(() => () => spargerGeo.dispose(), [spargerGeo]);
 
   const isGas = oxide === "so2";
   const isReactive = oxide === "na2o" || oxide === "p4o10" || oxide === "so2";
@@ -361,7 +346,8 @@ export function ReactionBeakerStation({
 
         {/* Oxide specimen: either crystalline solid granules or SO₂ gas delivery sparger */}
         {isGas ? (
-          <mesh castShadow geometry={spargerGeo} renderOrder={2}>
+          <mesh castShadow renderOrder={2}>
+            <Sweep ends="open" path={SPARGER} radius={0.0036} />
             <GlassMaterial color={BENCH_COLORS.glassEdge} opacity={0.48} />
           </mesh>
         ) : (
@@ -404,7 +390,8 @@ export function ReactionBeakerStation({
         ) : null}
 
         {/* Borosilicate beaker glass wall, pouring rim, and white enamel graduations */}
-        <mesh castShadow geometry={beakerGeo} renderOrder={2}>
+        <mesh castShadow renderOrder={2}>
+          <Turn profile={BEAKER_250_WALL} />
           <GlassMaterial color={BENCH_COLORS.glass} opacity={0.26} />
         </mesh>
         <mesh position={[0, 0.1, 0]} rotation={[Math.PI / 2, 0, 0]}>

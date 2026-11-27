@@ -1,5 +1,5 @@
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
 import { Tag } from "@repo/design-system/components/contents/physics/bench/tag";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { GlassMaterial } from "@repo/design-system/components/three/physical";
 import { APPARATUS_COLORS } from "@repo/design-system/lib/material/apparatus";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
@@ -64,21 +64,17 @@ export function Thermometer({
   const scale = useMemo(paintScale, []);
   useEffect(() => () => scale?.dispose(), [scale]);
   const span = tall - NECK - CROWN;
-  const stem = useMemo(
-    () =>
-      latheProfile([
-        [0.001, -0.05],
-        [0.03, -0.04],
-        [0.046, -0.008],
-        [0.046, 0.03],
-        [0.034, 0.07],
-        [0.03, 0.1],
-        [0.03, tall - 0.02],
-        [0.022, tall],
-        [0.001, tall + 0.004],
-      ]),
-    [tall]
-  );
+  const stem = [
+    [0, -0.05],
+    [0.03, -0.04],
+    [0.046, -0.008],
+    [0.046, 0.03],
+    [0.034, 0.07],
+    [0.03, 0.1],
+    [0.03, tall - 0.02],
+    [0.022, tall],
+    [0.001, tall + 0.004],
+  ] as const;
 
   return (
     <group>
@@ -122,7 +118,7 @@ export function Thermometer({
         </group>
       </group>
       <mesh castShadow renderOrder={4}>
-        <latheGeometry args={[stem, 24]} />
+        <Turn profile={stem} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.26} />
       </mesh>
       <Tag position={[0, tall + 0.16, 0]}>{children}</Tag>
