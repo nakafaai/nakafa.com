@@ -1,6 +1,12 @@
 import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
 import type { Path } from "@repo/design-system/components/three/form/path";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import {
+  dialAngle,
+  dialMarks,
+} from "@repo/design-system/components/three/print/dial";
+import { PrintDisc } from "@repo/design-system/components/three/print/layer";
+import type { Sheet } from "@repo/design-system/components/three/print/sheet";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { EQUILIBRIUM_COLORS } from "@repo/design-system/lib/material/equilibrium";
@@ -210,16 +216,41 @@ export function PressureReactor({
   );
 }
 
+/**
+ * The pressure gauge's dial: the share of the reactor's range over a sweep
+ * of 4.4 rad. The needle reads its angle from this dial.
+ */
+const GAUGE_DIAL = {
+  centre: [0, 0],
+  radius: 0.0192,
+  scale: { from: 0, major: 0.25, minor: 0.125, to: 1 },
+  sweep: { from: 2.2, to: -2.2 },
+} as const;
+
+/** The radius of the gauge's white face, in metres. */
+const GAUGE_FACE = 0.022;
+
+/**
+ * The gauge's printed scale: ticks alone, since the gauge is told only how
+ * far along its range the pressure stands, not a pressure a number could
+ * name.
+ */
+const GAUGE_SHEET: Sheet = {
+  height: GAUGE_FACE * 2,
+  marks: dialMarks(GAUGE_DIAL, () => "", {
+    ink: INSTRUMENT_COLORS.graphite,
+    numbered: false,
+  }),
+  width: GAUGE_FACE * 2,
+};
+
 /** Side-mounted analog brass-bezel pressure gauge whose needle tracks concentration. */
 export function AnalogPressureGauge({
   pressureRatio,
 }: {
   readonly pressureRatio: number;
 }) {
-  // Sweep needle from +126 deg (low pressure) to -126 deg (high pressure)
-  const clamped = Math.max(0, Math.min(1, pressureRatio));
-  const needleAngle = 2.2 - clamped * 4.4;
-  const ticks = Arr.makeBy(9, (index) => 2.2 - (index / 8) * 4.4);
+  const needleAngle = dialAngle(GAUGE_DIAL, pressureRatio);
 
   return (
     <group>
@@ -232,25 +263,17 @@ export function AnalogPressureGauge({
           <Turn profile={GAUGE_BEZEL} />
           <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.24} />
         </mesh>
-        {/* Crisp white dial face */}
+        {/* White dial face with its printed scale */}
         <mesh position={[0, 0, 0.0125]}>
-          <circleGeometry args={[0.022, 32]} />
+          <circleGeometry args={[GAUGE_FACE, 32]} />
           <meshStandardMaterial
             color={INSTRUMENT_COLORS.dialFace}
             roughness={0.55}
           />
+          <group position={[0, 0, 0.0003]}>
+            <PrintDisc sheet={GAUGE_SHEET} stock="ink" />
+          </group>
         </mesh>
-        {/* Scale tick marks */}
-        {Arr.map(ticks, (angle) => (
-          <mesh
-            key={`gt-${angle}`}
-            position={[Math.cos(angle) * 0.017, Math.sin(angle) * 0.017, 0.013]}
-            rotation={[0, 0, angle]}
-          >
-            <boxGeometry args={[0.0038, 0.001, 0.0004]} />
-            <meshBasicMaterial color={INSTRUMENT_COLORS.graphite} />
-          </mesh>
-        ))}
         {/* Pivoting red pressure needle */}
         <group position={[0, 0, 0.0138]} rotation={[0, 0, needleAngle]}>
           <mesh position={[0.0065, 0, 0]}>

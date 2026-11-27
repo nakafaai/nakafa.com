@@ -3,19 +3,15 @@ import {
   GlassMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
+import type { Sheet } from "@repo/design-system/components/three/print/sheet";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { LABORATORY_COLORS } from "@repo/design-system/lib/material/laboratory";
 import { Array as Arr } from "effect";
-import { useEffect, useMemo } from "react";
-import {
-  CanvasTexture,
-  CatmullRomCurve3,
-  SRGBColorSpace,
-  Vector3,
-} from "three";
+import { useMemo } from "react";
+import { CatmullRomCurve3, Vector3 } from "three";
 
 const OBJECTIVES = [
   { color: BIOLOGY_COLORS.objectiveRed, len: 0.048, yaw: 0 },
@@ -23,28 +19,25 @@ const OBJECTIVES = [
   { color: BIOLOGY_COLORS.objectiveBlue, len: 0.082, yaw: (Math.PI * 4) / 3 },
 ] as const;
 
-/** Procedural cotton-rag scientific drawing paper grain texture. */
-function createPaperTexture(): CanvasTexture | null {
-  if (typeof document === "undefined") {
-    return null;
-  }
-  const canvas = document.createElement("canvas");
-  canvas.width = 256;
-  canvas.height = 256;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return null;
-  }
-  ctx.fillStyle = LABORATORY_COLORS.paper;
-  ctx.fillRect(0, 0, 256, 256);
-  ctx.strokeStyle = BOTANY_COLORS.labelBorder;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(10, 10, 236, 236);
-  const tex = new CanvasTexture(canvas);
-  tex.colorSpace = SRGBColorSpace;
-  tex.needsUpdate = true;
-  return tex;
-}
+/** The drawing sheet: its width and depth on the bench, in metres. */
+export const DRAWING_PAPER = { depth: 0.68, width: 0.92 } as const;
+
+/** The ruled margin printed round the drawing sheet, as on scientific drawing paper. */
+export const DRAWING_MARGIN: Sheet = {
+  height: DRAWING_PAPER.depth,
+  marks: [
+    {
+      at: [0, 0],
+      height: DRAWING_PAPER.depth - 0.054,
+      ink: BOTANY_COLORS.labelBorder,
+      kind: "frame",
+      line: 0.004,
+      radius: 0,
+      width: DRAWING_PAPER.width - 0.054,
+    },
+  ],
+  width: DRAWING_PAPER.width,
+};
 
 /** Realistic brass and cream-enamel compound light microscope with glass objectives, stage clips, and stained glass slide. */
 export function CompoundMicroscope({
@@ -344,11 +337,4 @@ export function GraphitePencil({
       </mesh>
     </group>
   );
-}
-
-/** Hook that builds and disposes the cotton-rag drawing sheet CanvasTexture. */
-export function useDrawingPaperTexture() {
-  const tex = useMemo(() => createPaperTexture(), []);
-  useEffect(() => () => tex?.dispose(), [tex]);
-  return tex;
 }

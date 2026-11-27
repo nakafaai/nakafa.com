@@ -79,7 +79,7 @@ function CalorimeterCamera() {
   );
   return (
     <CameraControls
-      cameraPosition={narrow ? [1.7, 1.65, 3.35] : [1.45, 1.38, 2.75]}
+      cameraPosition={narrow ? [2.05, 1.95, 4.05] : [1.45, 1.38, 2.75]}
       cameraTarget={[0, 0.58, 0]}
       fov={36}
       maxDistance={6.2}

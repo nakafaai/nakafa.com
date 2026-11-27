@@ -1,26 +1,22 @@
 import { ColumnLiquid } from "@repo/design-system/components/contents/chemistry/bench";
-import {
-  createBottleLabelTexture,
-  drawFormulaText,
-} from "@repo/design-system/components/contents/chemistry/glassware";
 import { Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
+import {
+  PrintFace,
+  PrintSleeve,
+} from "@repo/design-system/components/three/print/layer";
+import type { Sheet } from "@repo/design-system/components/three/print/sheet";
+import { words } from "@repo/design-system/components/three/print/sheet";
+import { getColor } from "@repo/design-system/lib/color";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
-import {
-  CanvasTexture,
-  ExtrudeGeometry,
-  Quaternion,
-  Shape,
-  SRGBColorSpace,
-  Vector3,
-} from "three";
+import { ExtrudeGeometry, Quaternion, Shape, Vector3 } from "three";
 
 const UP_AXIS = new Vector3(0, 1, 0);
 const FALLBACK_SIDE = new Vector3(0, 0, 1);
@@ -203,37 +199,136 @@ export function MultiBond({
   );
 }
 
-function createPlaqueTexture(
-  formula: string,
-  subtitle: string
-): CanvasTexture | null {
-  if (typeof document === "undefined") {
-    return null;
-  }
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 192;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return null;
-  }
-  ctx.fillStyle = BENCH_COLORS.balanceBezel;
-  ctx.fillRect(0, 0, 512, 192);
-  ctx.strokeStyle = INSTRUMENT_COLORS.brass;
-  ctx.lineWidth = 8;
-  ctx.strokeRect(10, 10, 492, 172);
-  ctx.fillStyle = BENCH_COLORS.schellbachWhite;
-  const formulaSize = formula.length > 10 ? 44 : 58;
-  drawFormulaText(ctx, formula, 256, 92, formulaSize, "center");
-  ctx.fillStyle = INSTRUMENT_COLORS.brass;
-  ctx.textAlign = "center";
-  ctx.font = "600 28px ui-sans-serif, system-ui, sans-serif";
-  ctx.fillText(subtitle, 256, 150);
-  const texture = new CanvasTexture(canvas);
-  texture.colorSpace = SRGBColorSpace;
-  texture.anisotropy = 8;
-  texture.needsUpdate = true;
-  return texture;
+/**
+ * A specimen's nameplate as printed: a dark enamelled plate inside a brass
+ * rule, the formula in white as large as the plate allows, and the
+ * specimen's name in brass under it.
+ */
+function plaqueSheet(formula: string, subtitle: string, width: number): Sheet {
+  const height = width * 0.375;
+  return {
+    ground: BENCH_COLORS.balanceBezel,
+    height,
+    marks: [
+      {
+        at: [0, 0],
+        height: height * 0.9,
+        ink: INSTRUMENT_COLORS.brass,
+        kind: "frame",
+        line: width * 0.016,
+        radius: width * 0.01,
+        width: width * 0.96,
+      },
+      words({
+        at: [0, height * 0.12],
+        box: {
+          height: height * 0.4,
+          leading: 1,
+          smallest: height * 0.14,
+          width: width * 0.86,
+        },
+        ink: BENCH_COLORS.schellbachWhite,
+        size: height * 0.3,
+        text: formula,
+      }),
+      words({
+        at: [0, height * -0.23],
+        box: {
+          height: height * 0.2,
+          leading: 1,
+          smallest: height * 0.08,
+          width: width * 0.86,
+        },
+        ink: INSTRUMENT_COLORS.brass,
+        size: height * 0.146,
+        text: subtitle,
+        weight: 600,
+      }),
+    ],
+    width,
+  };
+}
+
+/** The paper label of a sample vial: how far round the vial it wraps and how tall it is, in metres. */
+const VIAL_LABEL = {
+  height: 0.028,
+  radius: 0.022,
+  width: 0.022 * Math.PI * 0.9,
+};
+
+/**
+ * A sample vial's paper label as printed: the formula with true subscripts
+ * as large as the label allows, the chemical's name under it, and the
+ * concentration on the hazard stripe.
+ */
+function vialSheet(label: {
+  readonly chemicalName: string;
+  readonly concentration: string;
+  readonly formula: string;
+  readonly stripeColor: string;
+}): Sheet {
+  const { height, width } = VIAL_LABEL;
+  return {
+    ground: BENCH_COLORS.bottleLabelPaper,
+    height,
+    marks: [
+      {
+        at: [0, height * -0.37],
+        height: height * 0.2,
+        ink: label.stripeColor,
+        kind: "band",
+        radius: 0,
+        width: width * 0.95,
+      },
+      {
+        at: [0, 0],
+        height: height * 0.94,
+        ink: BENCH_COLORS.bottleLabelRule,
+        kind: "frame",
+        line: height * 0.014,
+        radius: 0,
+        width: width * 0.95,
+      },
+      words({
+        at: [0, height * 0.2],
+        box: {
+          height: height * 0.4,
+          leading: 1,
+          smallest: height * 0.14,
+          width: width * 0.84,
+        },
+        ink: BENCH_COLORS.bottleLabelInk,
+        size: height * 0.34,
+        text: label.formula,
+      }),
+      words({
+        at: [0, height * -0.11],
+        box: {
+          height: height * 0.14,
+          leading: 1,
+          smallest: height * 0.06,
+          width: width * 0.84,
+        },
+        ink: BENCH_COLORS.bottleLabelSub,
+        size: height * 0.105,
+        text: label.chemicalName,
+        weight: 600,
+      }),
+      words({
+        at: [0, height * -0.37],
+        box: {
+          height: height * 0.18,
+          leading: 1,
+          smallest: height * 0.07,
+          width: width * 0.84,
+        },
+        ink: getColor("WHITE"),
+        size: height * 0.135,
+        text: label.concentration,
+      }),
+    ],
+    width,
+  };
 }
 
 /** Angled brass-bordered specimen nameplate with crisp Unicode chemical formula. */
@@ -249,24 +344,20 @@ export function FormulaPlaque({
   readonly width?: number;
 }) {
   const height = width * 0.375;
-  const tex = useMemo(
-    () => createPlaqueTexture(formula, subtitle),
-    [formula, subtitle]
+  const plate = useMemo(
+    () => plaqueSheet(formula, subtitle, width),
+    [formula, subtitle, width]
   );
-  useEffect(() => () => tex?.dispose(), [tex]);
 
   return (
     <group position={position} rotation={[-0.58, 0, 0]}>
       <mesh castShadow receiveShadow>
         <boxGeometry args={[width + 0.008, height + 0.008, 0.006]} />
         <MetalMaterial color={INSTRUMENT_COLORS.brass} roughness={0.28} />
+        <group position={[0, 0, 0.0034]}>
+          <PrintFace sheet={plate} stock="ink" />
+        </group>
       </mesh>
-      {tex === null ? null : (
-        <mesh position={[0, 0, 0.0034]}>
-          <planeGeometry args={[width, height]} />
-          <meshStandardMaterial map={tex} roughness={0.42} />
-        </mesh>
-      )}
     </group>
   );
 }
@@ -370,17 +461,10 @@ export function LabeledVial({
   readonly position: readonly [number, number, number];
   readonly stripeColor: string;
 }) {
-  const labelTex = useMemo(
-    () =>
-      createBottleLabelTexture(
-        formula,
-        chemicalName,
-        concentration,
-        stripeColor
-      ),
+  const label = useMemo(
+    () => vialSheet({ chemicalName, concentration, formula, stripeColor }),
     [chemicalName, concentration, formula, stripeColor]
   );
-  useEffect(() => () => labelTex?.dispose(), [labelTex]);
 
   return (
     <group position={position}>
@@ -399,19 +483,9 @@ export function LabeledVial({
         <Turn profile={VIAL_PROFILE} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.28} />
       </mesh>
-      {labelTex === null ? null : (
-        <mesh position={[0, 0.035, 0]} rotation={[0, -Math.PI * 0.45, 0]}>
-          <cylinderGeometry
-            args={[0.022, 0.022, 0.028, 28, 1, true, 0, Math.PI * 0.9]}
-          />
-          <meshStandardMaterial
-            map={labelTex}
-            polygonOffset
-            polygonOffsetFactor={-1}
-            roughness={0.84}
-          />
-        </mesh>
-      )}
+      <group position={[0, 0.035, 0]}>
+        <PrintSleeve radius={VIAL_LABEL.radius} sheet={label} stock="paper" />
+      </group>
       <mesh castShadow position={[0, 0.09, 0]}>
         <cylinderGeometry args={[0.0145, 0.0145, 0.016, 20]} />
         <meshStandardMaterial color={BENCH_COLORS.bottleCap} roughness={0.52} />

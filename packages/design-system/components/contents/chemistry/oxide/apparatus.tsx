@@ -6,6 +6,17 @@ import {
   GlassMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
+import {
+  fillRise,
+  graduationSheet,
+} from "@repo/design-system/components/three/print/graduation";
+import {
+  PrintFace,
+  PrintSleeve,
+} from "@repo/design-system/components/three/print/layer";
+import { usePrintNumber } from "@repo/design-system/components/three/print/number";
+import type { Sheet } from "@repo/design-system/components/three/print/sheet";
+import { words } from "@repo/design-system/components/three/print/sheet";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
@@ -14,7 +25,7 @@ import { Array as Arr } from "effect";
 import type { RefObject } from "react";
 import { useEffect, useMemo } from "react";
 import type { Group } from "three";
-import { CanvasTexture, ExtrudeGeometry, Shape, SRGBColorSpace } from "three";
+import { ExtrudeGeometry, Shape } from "three";
 
 export const BEAKER_X = -0.105;
 export const BEAKER_Z = 0.065;
@@ -73,81 +84,67 @@ const METER_FEET = [
   [0.048, 0.036],
 ] as const;
 
-function createBeakerScaleTexture(): CanvasTexture | null {
-  if (typeof document === "undefined") {
-    return null;
-  }
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 256;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return null;
-  }
-  ctx.clearRect(0, 0, 512, 256);
-  ctx.shadowColor = BENCH_COLORS.glassMarkingShadow;
-  ctx.shadowBlur = 2;
-  ctx.strokeStyle = BENCH_COLORS.glassMarking;
-  ctx.fillStyle = BENCH_COLORS.glassMarking;
-  ctx.lineWidth = 4;
-  ctx.font = "700 20px ui-sans-serif, system-ui, sans-serif";
-  const ticks = [
-    { label: "200", y: 50 },
-    { label: "150", y: 96 },
-    { label: "100", y: 142 },
-    { label: "50", y: 188 },
-  ] as const;
-  Arr.forEach(ticks, (tick) => {
-    ctx.beginPath();
-    ctx.moveTo(212, tick.y);
-    ctx.lineTo(266, tick.y);
-    ctx.stroke();
-    ctx.fillText(tick.label, 274, tick.y + 7);
-  });
-  ctx.font = "700 16px ui-sans-serif, system-ui, sans-serif";
-  ctx.fillText("250 mL", 212, 26);
-  const texture = new CanvasTexture(canvas);
-  texture.colorSpace = SRGBColorSpace;
-  texture.needsUpdate = true;
-  return texture;
-}
+/** The inner radius of the reaction beaker and the height of its inner floor, in metres. */
+const BEAKER_BORE = { floor: 0.0055, radius: 0.0454 } as const;
 
-function createPhLcdTexture(
+/**
+ * The scale fired on the reaction beaker: 100 to 400 mL, each mark at the
+ * height a beaker of this bore holds that much, under its nominal capacity.
+ */
+const BEAKER_SCALE = { from: 100, major: 100, minor: 50, to: 400 } as const;
+
+/** The pH meter's display: its width and height, in metres. */
+const LCD = { height: 0.046, width: 0.092 } as const;
+
+/**
+ * What the pH meter's display shows: the reading in large figures, the
+ * indicator's colour in a bar above it, and the temperature and modes
+ * below, written in the reader's locale.
+ */
+function lcdSheet(
   ph: number,
-  indicatorColor: string
-): CanvasTexture | null {
-  if (typeof document === "undefined") {
-    return null;
-  }
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 256;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return null;
-  }
-  ctx.fillStyle = BENCH_COLORS.lcd;
-  ctx.fillRect(0, 0, 512, 256);
-  ctx.strokeStyle = BENCH_COLORS.balanceFrame;
-  ctx.lineWidth = 8;
-  ctx.strokeRect(8, 8, 496, 240);
-
-  ctx.fillStyle = indicatorColor;
-  ctx.fillRect(24, 24, 464, 22);
-
-  ctx.fillStyle = BENCH_COLORS.lcdInk;
-  ctx.font = "700 94px ui-monospace, monospace";
-  ctx.textAlign = "center";
-  ctx.fillText(`pH ${ph.toFixed(1)}`, 256, 154);
-
-  ctx.font = "600 30px ui-monospace, monospace";
-  ctx.fillText("25.0 °C   ATC   HOLD", 256, 218);
-
-  const texture = new CanvasTexture(canvas);
-  texture.colorSpace = SRGBColorSpace;
-  texture.anisotropy = 8;
-  texture.needsUpdate = true;
-  return texture;
+  indicatorColor: string,
+  format: (value: number, digits: number) => string
+): Sheet {
+  return {
+    ground: BENCH_COLORS.lcd,
+    height: LCD.height,
+    marks: [
+      {
+        at: [0, 0],
+        height: LCD.height * 0.94,
+        ink: BENCH_COLORS.balanceFrame,
+        kind: "frame",
+        line: 0.0014,
+        radius: 0.0012,
+        width: LCD.width * 0.97,
+      },
+      {
+        at: [0, 0.0167],
+        height: 0.004,
+        ink: indicatorColor,
+        kind: "band",
+        radius: 0,
+        width: 0.0834,
+      },
+      words({
+        at: [0, 0.0014],
+        face: "mono",
+        ink: BENCH_COLORS.lcdInk,
+        size: 0.0169,
+        text: `pH ${format(ph, 1)}`,
+      }),
+      words({
+        at: [0, -0.0142],
+        face: "mono",
+        ink: BENCH_COLORS.lcdInk,
+        size: 0.0054,
+        text: `${format(25, 1)} °C   ATC   HOLD`,
+        weight: 600,
+      }),
+    ],
+    width: LCD.width,
+  };
 }
 
 function createPhMeterBodyGeometry() {
@@ -179,12 +176,12 @@ export function BenchPhMeter({
   readonly ph: number;
 }) {
   const bodyGeo = useMemo(createPhMeterBodyGeometry, []);
-  const lcdTex = useMemo(
-    () => createPhLcdTexture(ph, indicatorColor),
-    [indicatorColor, ph]
+  const format = usePrintNumber();
+  const lcd = useMemo(
+    () => lcdSheet(ph, indicatorColor, format),
+    [format, indicatorColor, ph]
   );
   useEffect(() => () => bodyGeo.dispose(), [bodyGeo]);
-  useEffect(() => () => lcdTex?.dispose(), [lcdTex]);
 
   return (
     <group>
@@ -215,17 +212,9 @@ export function BenchPhMeter({
             <boxGeometry args={[0.1, 0.056, 0.004]} />
             <MetalMaterial color={BENCH_COLORS.balanceBezel} roughness={0.4} />
           </mesh>
-          {lcdTex === null ? null : (
-            <mesh position={[0, 0.002, 0.0025]}>
-              <planeGeometry args={[0.092, 0.046]} />
-              <meshStandardMaterial
-                emissive={BENCH_COLORS.lcdHalo}
-                emissiveIntensity={0.22}
-                map={lcdTex}
-                roughness={0.34}
-              />
-            </mesh>
-          )}
+          <group position={[0, 0.002, 0.0025]}>
+            <PrintFace sheet={lcd} stock="display" />
+          </group>
         </group>
         {/* Tactile calibration and mode keys */}
         {Arr.map([-0.032, 0, 0.032] as const, (kx, idx) => (
@@ -318,8 +307,21 @@ export function ReactionBeakerStation({
   readonly liquidColor: string;
   readonly oxide: PeriodOxide;
 }) {
-  const markings = useMemo(createBeakerScaleTexture, []);
-  useEffect(() => () => markings?.dispose(), [markings]);
+  const format = usePrintNumber();
+  const markings = useMemo(
+    () =>
+      graduationSheet(
+        {
+          caption: `${format(500, 0)} mL`,
+          ink: BENCH_COLORS.schellbachWhite,
+          rise: fillRise(BEAKER_BORE.radius),
+          scale: BEAKER_SCALE,
+          size: 0.0068,
+        },
+        format
+      ),
+    [format]
+  );
 
   const isGas = oxide === "so2";
   const isReactive = oxide === "na2o" || oxide === "p4o10" || oxide === "so2";
@@ -398,21 +400,17 @@ export function ReactionBeakerStation({
           <torusGeometry args={[0.0496, 0.0014, 10, 56]} />
           <GlassMaterial color={BENCH_COLORS.glassEdge} opacity={0.58} />
         </mesh>
-        {markings === null ? null : (
-          <mesh
-            position={[0, 0.05, 0]}
-            renderOrder={3}
-            rotation={[0, -Math.PI, 0]}
-          >
-            <cylinderGeometry args={[0.0484, 0.0484, 0.074, 44, 1, true]} />
-            <meshBasicMaterial
-              depthWrite={false}
-              map={markings}
-              opacity={0.92}
-              transparent
-            />
-          </mesh>
-        )}
+        <group
+          position={[
+            0,
+            BEAKER_BORE.floor +
+              ((BEAKER_SCALE.from + BEAKER_SCALE.to) / 2) *
+                fillRise(BEAKER_BORE.radius),
+            0,
+          ]}
+        >
+          <PrintSleeve radius={0.048} sheet={markings} stock="enamel" />
+        </group>
       </group>
     </group>
   );

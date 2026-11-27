@@ -2,9 +2,10 @@ import { useFrame } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import {
   CompoundMicroscope,
+  DRAWING_MARGIN,
+  DRAWING_PAPER,
   GraphitePencil,
   IlluminatedEyepieceInset,
-  useDrawingPaperTexture,
 } from "@repo/design-system/components/contents/biology/drawing/apparatus";
 import type {
   Specimen,
@@ -24,6 +25,7 @@ import {
 } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
+import { PrintFace } from "@repo/design-system/components/three/print/layer";
 import {
   useVisualReset,
   useVisualScene,
@@ -67,7 +69,6 @@ export function DrawingScene({
 }) {
   const playing = useVisualScene((card) => card.playing, false);
   const ink = useLabelInk();
-  const paperTex = useDrawingPaperTexture();
   const clock = useRef(3.6);
   const [progress, setProgress] = useState(1);
 
@@ -87,6 +88,11 @@ export function DrawingScene({
   });
 
   const scale = drawingScale(drawingMm, drawingMin, drawingMax);
+  // The ruler lies with its far end to the left, so it reads from the drawing's length down to 0.
+  const rulerScale = useMemo(
+    () => ({ from: drawingMm, major: 10, minor: 1, to: 0 }),
+    [drawingMm]
+  );
   const faulty = version === "faulty";
 
   const outlineGeo = useMemo(() => {
@@ -176,12 +182,16 @@ export function DrawingScene({
       {/* Right: cotton-rag A4 scientific drawing sheet + pencil + graduated wooden ruler */}
       <group position={[0.32, 0.005, 0.02]}>
         <mesh castShadow receiveShadow>
-          <boxGeometry args={[0.92, 0.008, 0.68]} />
+          <boxGeometry
+            args={[DRAWING_PAPER.width, 0.008, DRAWING_PAPER.depth]}
+          />
           <meshStandardMaterial
             color={LABORATORY_COLORS.paper}
-            map={paperTex}
             roughness={0.86}
           />
+          <group position={[0, 0.0042, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <PrintFace sheet={DRAWING_MARGIN} stock="ink" />
+          </group>
         </mesh>
 
         <GraphitePencil position={[0.34, 0.012, 0.24]} />
@@ -248,6 +258,8 @@ export function DrawingScene({
           height={0.44 * scale}
           position={[-0.1, 0.012, 0.24]}
           rotation={[-Math.PI / 2, 0, Math.PI / 2]}
+          scale={rulerScale}
+          turn={-Math.PI / 2}
           width={0.042}
         />
         <ThreeLabel

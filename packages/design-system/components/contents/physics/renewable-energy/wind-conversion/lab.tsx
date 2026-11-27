@@ -111,8 +111,8 @@ export function WindEnergyConversionLab({
         >
           <Suspense>
             <CameraControls
-              cameraPosition={[2.65, 2, 4.7]}
-              cameraTarget={[0.03, 0.94, 0.14]}
+              cameraPosition={[3.1, 2.1, 5.6]}
+              cameraTarget={[0.03, 1.12, 0.14]}
               fov={34}
             />
             <WindConversionScene

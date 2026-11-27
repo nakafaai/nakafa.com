@@ -1,5 +1,5 @@
 import { RoundedBox } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { createEpoxyTexture } from "@repo/design-system/components/contents/chemistry/glassware";
 import type { RampAngle } from "@repo/design-system/components/contents/physics/kinematics/galileo/ramp";
 import {
@@ -17,7 +17,10 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import {
@@ -355,6 +358,26 @@ interface GalileoInclineBellsLabProps {
  * The bells ring at an even beat although their gaps grow as 1 : 3 : 5 : 7,
  * because the distance grows with the square of the time.
  */
+/**
+ * Looks down the bench at the whole ramp. A narrow frame is as wide as it is
+ * tall, so its camera stands further back to keep both ends of the board in.
+ */
+function RampCamera() {
+  const narrow = isNarrowThreeScene(
+    useThree((state) => state.size),
+    1.2
+  );
+  return (
+    <CameraControls
+      cameraPosition={narrow ? [-0.7, 5.2, 6.1] : [-0.5, 3.2, 3.9]}
+      cameraTarget={[0, 0.15, -0.1]}
+      fov={40}
+      maxDistance={10.5}
+      minDistance={1.2}
+    />
+  );
+}
+
 export function GalileoInclineBellsLab({
   description,
   labels,
@@ -397,13 +420,7 @@ export function GalileoInclineBellsLab({
       >
         <ScienceStage floor={-0.08} reach={2.8} setting="lab">
           <Suspense fallback={null}>
-            <CameraControls
-              cameraPosition={[0.15, 1.48, 5.15]}
-              cameraTarget={[-0.08, 0.22, 0]}
-              fov={36}
-              maxDistance={8.5}
-              minDistance={1.2}
-            />
+            <RampCamera />
             <RampScene angle={angle} onReset={() => setAngle(3)} />
           </Suspense>
         </ScienceStage>

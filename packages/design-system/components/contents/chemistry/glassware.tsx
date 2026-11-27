@@ -38,7 +38,7 @@ export function liquidMeniscus(radius: number, level: number) {
  * Draws a Unicode chemical formula or unit (e.g. `AgNO₃`, `CuSO₄`, `dm³`)
  * onto a 2D canvas with crisp baseline-shifted subscripts and superscripts.
  */
-export function drawFormulaText(
+function drawFormulaText(
   ctx: CanvasRenderingContext2D,
   formula: string,
   anchorX: number,
@@ -115,7 +115,7 @@ export function createEpoxyTexture(): CanvasTexture | null {
  * chemical's name sits under it, and the hazard stripe carries the
  * concentration.
  */
-export function createBottleLabelTexture(
+function createBottleLabelTexture(
   formula: string,
   chemicalName: string,
   concentration: string,

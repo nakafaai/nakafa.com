@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car";
+import { RoadCar } from "@repo/design-system/components/contents/physics/kinematics/car";
 import type {
   InstantaneousSpeedCaseId,
   InstantaneousVelocitySpeedState,
@@ -8,7 +8,6 @@ import {
   DEFAULT_INSTANTANEOUS_SPEED_CASE_ID,
   getInstantaneousVelocitySpeedState,
   INSTANTANEOUS_SPEED_CAMERA,
-  INSTANTANEOUS_SPEED_CAR_MODEL_PATH,
   INSTANTANEOUS_SPEED_CASES,
   INSTANTANEOUS_SPEED_COLORS,
   INSTANTANEOUS_SPEED_SCENE,
@@ -312,10 +311,7 @@ function AnimatedCar({ motion }: { motion: InstantaneousVelocitySpeedState }) {
           rotation={[0, getCarRotationY(motion.scenario.direction), 0]}
           scale={INSTANTANEOUS_SPEED_SCENE.carScale}
         >
-          <PhysicsCarModel
-            bodyColor={INSTANTANEOUS_SPEED_COLORS.car}
-            modelPath={INSTANTANEOUS_SPEED_CAR_MODEL_PATH}
-          />
+          <RoadCar color={INSTANTANEOUS_SPEED_COLORS.car} />
         </group>
       </CameraBounds>
     </>

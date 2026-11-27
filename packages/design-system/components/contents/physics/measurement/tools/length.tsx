@@ -6,6 +6,7 @@ import {
   RULER_START_X,
   RULER_STEP_CM,
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
+import { Desk } from "@repo/design-system/components/contents/physics/measurement/tools/desk";
 import type { MeasurementSceneProps } from "@repo/design-system/components/contents/physics/measurement/tools/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
@@ -32,8 +33,8 @@ const MAJOR_TICKS: readonly Placement[] = Arr.makeBy(
 
 /**
  * A stainless steel rule, brushed, with its graduations etched in black along
- * its back edge, tilted toward the reader, and an oak block laid against
- * that edge whose length is the selected reading.
+ * its back edge, lying on a walnut desk, and an oak block laid against that
+ * edge whose length is the selected reading.
  */
 export function LengthScene({
   colors,
@@ -42,9 +43,11 @@ export function LengthScene({
 }: MeasurementSceneProps) {
   const blockCenterX = RULER_START_X + measurement / 2;
   const blockEndX = RULER_START_X + measurement;
-  const readingLabelX = Math.max(blockEndX + 0.35, RULER_START_X + 0.95);
+  // The reading stands under the graduation the block ends at, clear of the zero.
+  const readingLabelX = Math.max(blockEndX, RULER_START_X + 0.95);
   return (
-    <group rotation={[0.55, 0.05, 0]}>
+    <group>
+      <Desk top={-0.06} />
       <RoundedBox
         args={[RULER_LENGTH_CM + 0.6, 0.12, 1]}
         castShadow
@@ -85,16 +88,18 @@ export function LengthScene({
       </RoundedBox>
 
       <ThreeLabel
+        anchorY="top"
         color={colors.text}
         fontSize="reading"
-        position={[RULER_START_X - 0.35, 0.64, 1]}
+        position={[RULER_START_X, 0.08, 0.72]}
       >
         <InlineMath math="0" />
       </ThreeLabel>
       <ThreeLabel
+        anchorY="top"
         color={colors.text}
         fontSize="reading"
-        position={[readingLabelX, 0.92, 1]}
+        position={[readingLabelX, 0.08, 0.72]}
       >
         {reading}
       </ThreeLabel>

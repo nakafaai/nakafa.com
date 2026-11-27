@@ -1,4 +1,3 @@
-import { PerspectiveCamera, RoundedBox } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 import {
   ROAD,
@@ -9,6 +8,7 @@ import {
   SEDAN,
   Sedan,
 } from "@repo/design-system/components/contents/physics/kinematics/sedan";
+import { Cockpit } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/cockpit";
 import type { Stop } from "@repo/design-system/components/contents/physics/kinematics/stopping-distance/motion";
 import {
   stopPosition,
@@ -48,7 +48,7 @@ import { Array as Arr, Effect, Option, Random } from "effect";
 import type { KeyboardEvent, ReactNode, RefObject } from "react";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type { Group } from "three";
-import { EventDispatcher, Quaternion, Vector3 } from "three";
+import { EventDispatcher, Vector3 } from "three";
 
 /** Both cars cruise at 20 m/s, 72 km/h, two seconds apart. */
 const SPEED = 20;
@@ -59,9 +59,6 @@ const DECELERATION = 5;
 
 /** A learner who has not braked three seconds after the lights has missed them. */
 const GIVE_UP = 3;
-
-/** The driver sits on the right, as in a right-hand-drive car, at eye height. */
-const EYE = [-0.4, 1.22, 0.36] as const;
 
 /**
  * A reaction test from the driver's seat. The learner drives at 72 km/h two
@@ -334,124 +331,5 @@ function ReactionScene({
         </group>
       </group>
     </>
-  );
-}
-
-/** Where a pillar of the windscreen runs: from the dashboard's corner up to the roof. */
-const PILLAR = { bottom: [0.74, 0.95, 0.72], top: [0.12, 1.42, 0.66] } as const;
-
-/** One pillar's middle, length and turn, so a box lies along it. */
-function pillarOf(side: 1 | -1) {
-  const bottom = new Vector3(
-    PILLAR.bottom[0],
-    PILLAR.bottom[1],
-    side * PILLAR.bottom[2]
-  );
-  const top = new Vector3(PILLAR.top[0], PILLAR.top[1], side * PILLAR.top[2]);
-  const along = top.clone().sub(bottom);
-  return {
-    length: along.length(),
-    middle: bottom.clone().add(top).multiplyScalar(0.5),
-    turn: new Quaternion().setFromUnitVectors(
-      new Vector3(1, 0, 0),
-      along.normalize()
-    ),
-  };
-}
-
-/**
- * What the driver sees of their own car from the right-hand seat: the
- * painted bonnet ahead, a soft dashboard with the instrument hood, the
- * three-spoke steering wheel, the trimmed windscreen pillars and header, and
- * the rear-view mirror, with the camera at the driver's eyes.
- */
-function Cockpit() {
-  const pillars = useMemo(() => Arr.map([1, -1] as const, pillarOf), []);
-  return (
-    <group>
-      <PerspectiveCamera
-        fov={50}
-        makeDefault
-        position={EYE}
-        rotation={[0, -Math.PI / 2, 0]}
-      />
-      <RoundedBox
-        args={[1.7, 0.06, SEDAN.width - 0.12]}
-        position={[1.45, 0.92, 0]}
-        radius={0.025}
-        rotation={[0, 0, -0.08]}
-      >
-        <meshPhysicalMaterial
-          clearcoat={1}
-          clearcoatRoughness={0.05}
-          color={CAR_COLORS.carPaint}
-          metalness={0.4}
-          roughness={0.34}
-        />
-      </RoundedBox>
-      <RoundedBox
-        args={[0.5, 0.16, SEDAN.width - 0.16]}
-        position={[0.42, 0.88, 0]}
-        radius={0.05}
-      >
-        <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.85} />
-      </RoundedBox>
-      <RoundedBox
-        args={[0.18, 0.07, 0.32]}
-        position={[0.26, 0.97, EYE[2]]}
-        radius={0.03}
-      >
-        <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.8} />
-      </RoundedBox>
-      <group
-        position={[0.08, 0.86, EYE[2]]}
-        rotation={[0, Math.PI / 2, -0.42, "ZYX"]}
-      >
-        <mesh>
-          <torusGeometry args={[0.19, 0.022, 14, 48]} />
-          <meshStandardMaterial color={CAR_COLORS.tyre} roughness={0.6} />
-        </mesh>
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.055, 0.06, 0.05, 24]} />
-          <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.7} />
-        </mesh>
-        {Arr.map([0, Math.PI, -Math.PI / 2] as const, (angle) => (
-          <group key={angle} rotation={[0, 0, angle]}>
-            <mesh position={[0.11, 0, 0]}>
-              <boxGeometry args={[0.13, 0.035, 0.016]} />
-              <meshStandardMaterial
-                color={CAR_COLORS.dashboard}
-                roughness={0.7}
-              />
-            </mesh>
-          </group>
-        ))}
-      </group>
-      {Arr.map(pillars, ({ length, middle, turn }) => (
-        <mesh key={middle.z} position={middle} quaternion={turn}>
-          <boxGeometry args={[length, 0.07, 0.06]} />
-          <meshStandardMaterial color={CAR_COLORS.headliner} roughness={0.9} />
-        </mesh>
-      ))}
-      <mesh position={[0.12, 1.43, 0]}>
-        <boxGeometry args={[0.1, 0.05, 1.36]} />
-        <meshStandardMaterial color={CAR_COLORS.headliner} roughness={0.9} />
-      </mesh>
-      <mesh position={[-0.32, 1.47, 0]}>
-        <boxGeometry args={[0.8, 0.02, 1.4]} />
-        <meshStandardMaterial color={CAR_COLORS.headliner} roughness={0.95} />
-      </mesh>
-      <mesh position={[0.11, 1.38, 0]}>
-        <boxGeometry args={[0.02, 0.06, 0.02]} />
-        <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.6} />
-      </mesh>
-      <RoundedBox
-        args={[0.025, 0.065, 0.25]}
-        position={[0.1, 1.33, 0]}
-        radius={0.01}
-      >
-        <meshStandardMaterial color={CAR_COLORS.dashboard} roughness={0.5} />
-      </RoundedBox>
-    </group>
   );
 }

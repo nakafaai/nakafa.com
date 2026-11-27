@@ -1,5 +1,10 @@
-import { Line, useGLTF } from "@react-three/drei";
+import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
+import {
+  CANNON,
+  Cannon,
+  Shot,
+} from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/cannon";
 import type {
   ProjectileMotionState,
   ProjectileScenarioId,
@@ -7,23 +12,25 @@ import type {
 import {
   getProjectileLoopSample,
   getProjectilePoint,
-  PROJECTILE_ASSET_PATHS,
   PROJECTILE_SCENE,
 } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/data";
+import {
+  Butt,
+  Islet,
+} from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/islet";
 import { Ocean } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/ocean";
 import { useSimulationClock } from "@repo/design-system/components/contents/simulation/clock";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
-import { Array as Arr, Record as Rec } from "effect";
+import { Array as Arr } from "effect";
 import { useMemo, useRef } from "react";
-import type { Group, MeshBasicMaterial, PointLight } from "three";
-import { CatmullRomCurve3, Mesh, Vector2, Vector3 } from "three";
+import type { Group, Mesh, MeshBasicMaterial, PointLight } from "three";
+import { CatmullRomCurve3, Vector2, Vector3 } from "three";
 
 const PIRATE_COLORS = {
   flashCore: PLOT_COLORS.amber,
   flashOuter: PLOT_COLORS.orange,
-  ghostHalo: getColor("WHITE"),
   smoke: getColor("SLATE", 200),
 } as const;
 
@@ -68,7 +75,7 @@ export function PirateProjectileScene({
       <CameraBounds exclude>
         <Ocean motion={motion} />
       </CameraBounds>
-      <StartIsland />
+      <StartIsland motion={motion} />
       <TargetIsland motion={motion} />
       <Trajectory motion={motion} />
       <GhostBalls motion={motion} />
@@ -80,64 +87,48 @@ export function PirateProjectileScene({
   );
 }
 
-function StartIsland() {
+/** The battery: a sand islet with the gun on its crest, laid to the launch angle. */
+function StartIsland({ motion }: { motion: ProjectileMotionState }) {
   return (
     <group>
       <CameraBounds exclude>
-        <SceneAsset path={PROJECTILE_ASSET_PATHS.sandFoliage} scale={0.58} />
+        <group position={[0.5, 0, 0]}>
+          <Islet radius={1.6} seed={1.4} />
+        </group>
       </CameraBounds>
-      <SceneAsset
-        path={PROJECTILE_ASSET_PATHS.cannon}
-        position={[0, 0.04, 0]}
-        rotation={[0, PROJECTILE_SCENE.cannonRotationY, 0]}
-        scale={PROJECTILE_SCENE.cannonScale}
-      />
-      <CameraBounds exclude>
-        <SceneAsset
-          path={PROJECTILE_ASSET_PATHS.palm}
-          position={[-1.25, 0.02, 1.15]}
-          rotation={[0, -0.72, 0]}
-          scale={0.3}
-        />
-        <SceneAsset
-          path={PROJECTILE_ASSET_PATHS.rock}
-          position={[-1.3, -0.02, -1.25]}
-          rotation={[0, 0.8, 0]}
-          scale={0.18}
-        />
-      </CameraBounds>
+      <group
+        position={[
+          PROJECTILE_SCENE.launchOffset[0],
+          PROJECTILE_SCENE.launchOffset[1] - CANNON.trunnion,
+          PROJECTILE_SCENE.launchOffset[2],
+        ]}
+      >
+        <Cannon elevation={motion.angleRadians} />
+      </group>
     </group>
   );
 }
 
+/** The range's far end: a second islet with the butt the shot comes down on. */
 function TargetIsland({ motion }: { motion: ProjectileMotionState }) {
   const targetX = PROJECTILE_SCENE.launchOffset[0] + motion.rangeWorld;
 
   return (
     <group position={[targetX, 0, 0]}>
       <CameraBounds exclude>
-        <SceneAsset path={PROJECTILE_ASSET_PATHS.sand} scale={0.5} />
+        <group
+          position={[
+            0.2,
+            PROJECTILE_SCENE.launchOffset[1] - CANNON.trunnion,
+            0,
+          ]}
+        >
+          <Islet radius={1.45} seed={3.2} />
+        </group>
       </CameraBounds>
-      <SceneAsset
-        path={PROJECTILE_ASSET_PATHS.flag}
-        position={[0.4, 0.02, 0.8]}
-        rotation={[0, -0.45, 0]}
-        scale={0.34}
-      />
-      <CameraBounds exclude>
-        <SceneAsset
-          path={PROJECTILE_ASSET_PATHS.rock}
-          position={[-0.9, -0.02, -0.95]}
-          rotation={[0, 1.1, 0]}
-          scale={0.16}
-        />
-        <SceneAsset
-          path={PROJECTILE_ASSET_PATHS.ship}
-          position={[...PROJECTILE_SCENE.shipOffset]}
-          rotation={[0, Math.PI / 2, 0]}
-          scale={PROJECTILE_SCENE.shipScale}
-        />
-      </CameraBounds>
+      <group position={[0.1, PROJECTILE_SCENE.launchOffset[1], 0]}>
+        <Butt height={CANNON.trunnion} />
+      </group>
     </group>
   );
 }
@@ -162,14 +153,10 @@ function Trajectory({ motion }: { motion: ProjectileMotionState }) {
   return (
     <group>
       <mesh>
-        <tubeGeometry args={[curve, 80, 0.032, 16, false]} />
-        <meshPhysicalMaterial
-          clearcoat={0.7}
+        <tubeGeometry args={[curve, 96, 0.014, 10, false]} />
+        <meshBasicMaterial
           color={motion.scenario.color}
-          emissive={motion.scenario.color}
-          emissiveIntensity={0.45}
-          opacity={0.86}
-          roughness={0.22}
+          opacity={0.9}
           transparent
         />
       </mesh>
@@ -191,38 +178,16 @@ function Trajectory({ motion }: { motion: ProjectileMotionState }) {
   );
 }
 
+/** The shot's past positions at equal time steps, as faded iron shot. */
 function GhostBalls({ motion }: { motion: ProjectileMotionState }) {
   return (
     <group>
       {Arr.map(motion.ghostTimes, (time) => {
         const point = getProjectilePoint(motion, time);
-        const progress = time / motion.flightTime;
-        const markerScale = 0.42 + progress * 0.14;
 
         return (
           <group key={time} position={toSceneTuple(point.x, point.y, 0)}>
-            <mesh castShadow scale={markerScale}>
-              <sphereGeometry args={[PROJECTILE_SCENE.ballScale, 28, 20]} />
-              <meshPhysicalMaterial
-                clearcoat={0.9}
-                clearcoatRoughness={0.08}
-                color={motion.scenario.color}
-                emissive={motion.scenario.color}
-                emissiveIntensity={0.25}
-                roughness={0.2}
-              />
-            </mesh>
-            <mesh scale={markerScale * 1.28}>
-              <sphereGeometry args={[PROJECTILE_SCENE.ballScale, 24, 16]} />
-              <meshPhysicalMaterial
-                clearcoat={1}
-                color={PIRATE_COLORS.ghostHalo}
-                depthWrite={false}
-                opacity={0.24}
-                roughness={0.08}
-                transparent
-              />
-            </mesh>
+            <Shot faded />
           </group>
         );
       })}
@@ -273,10 +238,7 @@ function AnimatedCannonBall({ motion }: { motion: ProjectileMotionState }) {
       }}
       objectRef={ballRef}
     >
-      <SceneAsset
-        path={PROJECTILE_ASSET_PATHS.ball}
-        scale={PROJECTILE_SCENE.ballScale}
-      />
+      <Shot />
     </CameraBounds>
   );
 }
@@ -310,7 +272,14 @@ function MuzzleBlast({ motion }: { motion: ProjectileMotionState }) {
   });
 
   return (
-    <group position={PROJECTILE_SCENE.launchOffset}>
+    <group
+      position={toSceneTuple(
+        Math.cos(motion.angleRadians) * CANNON.muzzle,
+        Math.sin(motion.angleRadians) * CANNON.muzzle,
+        0
+      )}
+      rotation={[0, 0, motion.angleRadians]}
+    >
       <pointLight
         color={PIRATE_COLORS.flashOuter}
         distance={3.2}
@@ -372,7 +341,7 @@ function SmokePuff({
     const drift = phase * 0.95;
     const spread = Math.sin(index * 1.9) * phase * 0.28;
 
-    puffRef.current.position.set(-drift, phase * 0.16, spread);
+    puffRef.current.position.set(drift * 0.7, phase * 0.22, spread);
     puffRef.current.scale.setScalar(0.08 + phase * 0.32);
     materialRef.current.opacity = (1 - phase) * 0.2;
   });
@@ -391,45 +360,6 @@ function SmokePuff({
   );
 }
 
-function SceneAsset({
-  path,
-  position,
-  rotation,
-  scale,
-}: {
-  path: string;
-  position?: VectorTuple;
-  rotation?: VectorTuple;
-  scale?: number | VectorTuple;
-}) {
-  const { scene } = useGLTF(path);
-  const model = useMemo(() => cloneModel(scene), [scene]);
-
-  return (
-    <primitive
-      object={model}
-      position={position}
-      rotation={rotation}
-      scale={scale}
-    />
-  );
-}
-
-function cloneModel(scene: Group) {
-  const clone = scene.clone(true);
-
-  clone.traverse((child) => {
-    if (!(child instanceof Mesh)) {
-      return;
-    }
-
-    child.castShadow = true;
-    child.receiveShadow = true;
-  });
-
-  return clone;
-}
-
 function toScenePoint(x: number, y: number, z: number) {
   return new Vector3(...toSceneTuple(x, y, z));
 }
@@ -441,5 +371,3 @@ function toSceneTuple(x: number, y: number, z: number): VectorTuple {
     PROJECTILE_SCENE.launchOffset[2] + z,
   ];
 }
-
-useGLTF.preload(Rec.values(PROJECTILE_ASSET_PATHS));

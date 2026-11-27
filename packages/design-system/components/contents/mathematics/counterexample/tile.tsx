@@ -1,13 +1,11 @@
 import { RoundedBox } from "@react-three/drei";
 import type { Tile } from "@repo/design-system/components/contents/mathematics/counterexample/claim";
 import { TILE } from "@repo/design-system/components/contents/mathematics/counterexample/layout";
-import { usePrintFont } from "@repo/design-system/components/contents/mathematics/counterexample/print";
+import { PrintFace } from "@repo/design-system/components/three/print/layer";
+import type { Sheet } from "@repo/design-system/components/three/print/sheet";
+import { words } from "@repo/design-system/components/three/print/sheet";
 import { COUNTEREXAMPLE_COLORS } from "@repo/design-system/lib/material/counterexample";
-import { useEffect, useMemo } from "react";
-import { CanvasTexture, SRGBColorSpace } from "three";
-
-/** How many pixels the printed face of a number tile has on each side. */
-const FACE_PIXELS = 256;
+import { useMemo } from "react";
 
 /** How much of the tile's top the printed face covers. */
 const FACE_SHARE = 0.9;
@@ -19,55 +17,43 @@ const SHAPE_HEIGHT = 0.008;
 const MINUS = "−";
 
 /**
- * Prints one number on a tile's face: dark ink, bold tabular figures, as
- * large as the face allows. The face is transparent round the figures, so
- * the maple of the tile shows through.
+ * One number as printed on a tile's face: dark ink, bold figures, as large
+ * as the face allows. The print is ink alone, so the maple of the tile
+ * shows round the figures.
  */
-function numberTexture(value: number, family: string) {
-  const canvas = document.createElement("canvas");
-  canvas.width = FACE_PIXELS;
-  canvas.height = FACE_PIXELS;
-  const texture = new CanvasTexture(canvas);
-  texture.colorSpace = SRGBColorSpace;
-  texture.anisotropy = 4;
-  const context = canvas.getContext("2d");
-  if (context === null) {
-    return texture;
-  }
-  const figures = `${value < 0 ? MINUS : ""}${Math.abs(value)}`;
-  context.font = `700 100px ${family}`;
-  const width = context.measureText(figures).width;
-  const size = Math.min(150, (100 * FACE_PIXELS * 0.78) / Math.max(1, width));
-  context.font = `700 ${size}px ${family}`;
-  context.fillStyle = COUNTEREXAMPLE_COLORS.ink;
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  context.fillText(figures, FACE_PIXELS / 2, FACE_PIXELS / 2 + size * 0.04);
-  texture.needsUpdate = true;
-  return texture;
+function numberSheet(value: number): Sheet {
+  const side = TILE.side * FACE_SHARE;
+  return {
+    height: side,
+    marks: [
+      words({
+        at: [0, 0],
+        box: {
+          height: side,
+          leading: 1,
+          smallest: side * 0.2,
+          width: side * 0.78,
+        },
+        ink: COUNTEREXAMPLE_COLORS.ink,
+        size: side * 0.58,
+        text: `${value < 0 ? MINUS : ""}${Math.abs(value)}`,
+      }),
+    ],
+    width: side,
+  };
 }
 
 /** A number printed on the top of a tile. */
 function NumberFace({ value }: { readonly value: number }) {
-  const family = usePrintFont();
-  const texture = useMemo(() => numberTexture(value, family), [family, value]);
-  useEffect(() => () => texture.dispose(), [texture]);
+  const sheet = useMemo(() => numberSheet(value), [value]);
 
   return (
-    <mesh
+    <group
       position={[0, TILE.height / 2 + 0.0004, 0]}
       rotation={[-Math.PI / 2, 0, 0]}
     >
-      <planeGeometry args={[TILE.side * FACE_SHARE, TILE.side * FACE_SHARE]} />
-      <meshStandardMaterial
-        color={COUNTEREXAMPLE_COLORS.face}
-        map={texture}
-        polygonOffset
-        polygonOffsetFactor={-1}
-        roughness={0.7}
-        transparent
-      />
-    </mesh>
+      <PrintFace sheet={sheet} stock="ink" />
+    </group>
   );
 }
 

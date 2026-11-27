@@ -2,9 +2,6 @@ import { lerp } from "@repo/design-system/components/contents/physics/kinematics
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr } from "effect";
 
-export const UNIFORM_LINEAR_MOTION_CAR_MODEL_PATH =
-  "/models/physics/kinematics/kenney-car-kit/sedan-sports.glb";
-
 export const UNIFORM_LINEAR_MOTION_SPEEDS = [2, 4, 6] as const;
 
 export type UniformLinearMotionSpeed =

@@ -1,12 +1,11 @@
 import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { PhysicsCarModel } from "@repo/design-system/components/contents/physics/kinematics/car";
+import { RoadCar } from "@repo/design-system/components/contents/physics/kinematics/car";
 import type {
   DisplacementDistanceCaseId,
   DisplacementDistanceState,
 } from "@repo/design-system/components/contents/physics/kinematics/displacement-distance/data";
 import {
-  DISPLACEMENT_DISTANCE_CAR_MODEL_PATH,
   DISPLACEMENT_DISTANCE_CASE_IDS,
   DISPLACEMENT_DISTANCE_SCENE,
   formatVectorMath,
@@ -254,10 +253,7 @@ function AnimatedCar({ motion }: { motion: DisplacementDistanceState }) {
       objectRef={carRef}
     >
       <group scale={DISPLACEMENT_DISTANCE_SCENE.carScale}>
-        <PhysicsCarModel
-          bodyColor={CAR_COLOR}
-          modelPath={DISPLACEMENT_DISTANCE_CAR_MODEL_PATH}
-        />
+        <RoadCar color={CAR_COLOR} />
       </group>
     </CameraBounds>
   );

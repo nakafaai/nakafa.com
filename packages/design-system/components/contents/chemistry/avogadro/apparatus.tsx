@@ -1,16 +1,18 @@
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
-import { drawFormulaText } from "@repo/design-system/components/contents/chemistry/glassware";
 import { Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   MetalMaterial,
 } from "@repo/design-system/components/three/physical";
+import { graduationSheet } from "@repo/design-system/components/three/print/graduation";
+import { PrintSleeve } from "@repo/design-system/components/three/print/layer";
+import { usePrintNumber } from "@repo/design-system/components/three/print/number";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
-import { CanvasTexture, ExtrudeGeometry, Shape, SRGBColorSpace } from "three";
+import { ExtrudeGeometry, Shape } from "three";
 
 export const RIG_Z = 0.04;
 export const CYL_FLOOR = 0.04;
@@ -42,7 +44,19 @@ const PISTON_PROFILE = [
 
 const FLANGE_BOLTS = Arr.makeBy(6, (idx) => (idx / 6) * Math.PI * 2);
 const CLAMP_HEIGHTS = [0.135, 0.278] as const;
-const GRAD_TICKS = Arr.makeBy(7, (idx) => 0.07 + idx * 0.036);
+
+/**
+ * How the cylinder reads its gas: the scene lifts the piston 0.215 m for
+ * every 75 dm³ from a middle height of 0.068 m, and the gas ends at the
+ * piston's lower face, 0.012 m below its middle. The scale is fired where
+ * that face stands at each volume, so the piston reads the volume the lab
+ * states.
+ */
+const VOLUME = {
+  rise: 0.215 / 75,
+  scale: { from: 10, major: 10, minor: 5, to: 70 },
+  zero: 0.068 - 0.012,
+} as const;
 
 function createStandBaseGeometry() {
   const halfW = 0.195;
@@ -67,47 +81,6 @@ function createStandBaseGeometry() {
   });
   geo.rotateX(-Math.PI / 2);
   return geo;
-}
-
-function createVolumeScaleTexture(): CanvasTexture | null {
-  if (typeof document === "undefined") {
-    return null;
-  }
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 512;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    return null;
-  }
-  ctx.clearRect(0, 0, 512, 512);
-  ctx.shadowColor = BENCH_COLORS.glassMarkingShadow;
-  ctx.shadowBlur = 2;
-  ctx.strokeStyle = BENCH_COLORS.glassMarking;
-  ctx.fillStyle = BENCH_COLORS.glassMarking;
-  ctx.lineWidth = 4;
-  ctx.font = "700 22px ui-sans-serif, system-ui, sans-serif";
-  const marks = [
-    { label: "70", y: 66 },
-    { label: "60", y: 122 },
-    { label: "50", y: 178 },
-    { label: "40", y: 234 },
-    { label: "30", y: 290 },
-    { label: "20", y: 346 },
-    { label: "10", y: 402 },
-  ] as const;
-  Arr.forEach(marks, (mark) => {
-    ctx.beginPath();
-    ctx.moveTo(126, mark.y);
-    ctx.lineTo(176, mark.y);
-    ctx.stroke();
-    ctx.fillText(mark.label, 184, mark.y + 8);
-  });
-  drawFormulaText(ctx, "dm³", 128, 36, 20, "left");
-  const texture = new CanvasTexture(canvas);
-  texture.colorSpace = SRGBColorSpace;
-  texture.needsUpdate = true;
-  return texture;
 }
 
 /** Cast-iron retort stand, vertical chrome rod, and twin bosshead clamps. */
@@ -182,8 +155,21 @@ export function RetortStand() {
 
 /** Bolted stainless base flange and graduated borosilicate gas cylinder. */
 export function GasCylinder() {
-  const scaleTex = useMemo(createVolumeScaleTexture, []);
-  useEffect(() => () => scaleTex?.dispose(), [scaleTex]);
+  const format = usePrintNumber();
+  const scale = useMemo(
+    () =>
+      graduationSheet(
+        {
+          caption: "dm³",
+          ink: BENCH_COLORS.schellbachBlue,
+          rise: VOLUME.rise,
+          scale: VOLUME.scale,
+          size: 0.0105,
+        },
+        format
+      ),
+    [format]
+  );
 
   const height = CYL_TOP - CYL_FLOOR;
 
@@ -223,48 +209,18 @@ export function GasCylinder() {
         />
         <GlassMaterial color={BENCH_COLORS.glassEdge} opacity={0.14} />
       </mesh>
-      {/* Silk-screened white dm³ volumetric graduation markings */}
-      {scaleTex === null ? null : (
-        <mesh
-          position={[0, CYL_FLOOR + height / 2, 0]}
-          renderOrder={3}
-          rotation={[0, -Math.PI * 0.88, 0]}
-        >
-          <cylinderGeometry
-            args={[
-              CYL_OUTER_R + 0.0008,
-              CYL_OUTER_R + 0.0008,
-              height - 0.015,
-              44,
-              1,
-              true,
-            ]}
-          />
-          <meshBasicMaterial
-            depthWrite={false}
-            map={scaleTex}
-            opacity={0.94}
-            transparent
-          />
-        </mesh>
-      )}
-      {/* 3D crisp white scale bar and tick markers on left front */}
-      <mesh position={[-CYL_OUTER_R - 0.001, CYL_FLOOR + height / 2, 0.014]}>
-        <boxGeometry args={[0.0018, height - 0.032, 0.0018]} />
-        <meshStandardMaterial
-          color={BENCH_COLORS.schellbachWhite}
-          roughness={0.4}
-        />
-      </mesh>
-      {Arr.map(GRAD_TICKS, (y) => (
-        <mesh key={y} position={[-CYL_OUTER_R - 0.001, y, 0.022]}>
-          <boxGeometry args={[0.002, 0.0022, 0.014]} />
-          <meshStandardMaterial
-            color={BENCH_COLORS.schellbachWhite}
-            roughness={0.4}
-          />
-        </mesh>
-      ))}
+      {/* Fired blue enamel dm³ scale, each mark where the piston's lower face stands at that volume */}
+      <group
+        position={[
+          0,
+          VOLUME.zero +
+            ((VOLUME.scale.from + VOLUME.scale.to) / 2) * VOLUME.rise,
+          0,
+        ]}
+        rotation={[0, -0.55, 0]}
+      >
+        <PrintSleeve radius={CYL_OUTER_R} sheet={scale} stock="enamel" />
+      </group>
       {/* Top machined stainless guide collar & piston-rod bushing */}
       <mesh position={[0, CYL_TOP + 0.006, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[CYL_OUTER_R, 0.006, 12, 48]} />

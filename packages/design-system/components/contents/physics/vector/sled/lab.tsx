@@ -1,3 +1,4 @@
+import { useThree } from "@react-three/fiber";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
 import {
   TowSchema,
@@ -7,7 +8,10 @@ import { SledScene } from "@repo/design-system/components/contents/physics/vecto
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
   VisualCard,
@@ -51,6 +55,26 @@ interface SledPullWorkLabProps {
  * the part up eases the sled's press on the snow, and only the part along
  * the motion does work over the distance.
  */
+/**
+ * Frames the sled and the tow line. A narrow frame is as wide as it is tall,
+ * so its camera stands further back to keep the whole sled in.
+ */
+function SledCamera() {
+  const narrow = isNarrowThreeScene(
+    useThree((state) => state.size),
+    1.2
+  );
+  return (
+    <CameraControls
+      cameraPosition={narrow ? [0.3, 1.2, 3.7] : [0.35, 0.95, 2.6]}
+      cameraTarget={[0.55, 0.35, 0]}
+      fov={38}
+      maxDistance={6}
+      minDistance={1.2}
+    />
+  );
+}
+
 export function SledPullWorkLab({
   angle: start,
   description,
@@ -90,13 +114,7 @@ export function SledPullWorkLab({
       >
         <ScienceStage floor={0} ground="snow" reach={2} setting="field">
           <Suspense fallback={null}>
-            <CameraControls
-              cameraPosition={[0.35, 0.95, 2.6]}
-              cameraTarget={[0.55, 0.35, 0]}
-              fov={38}
-              maxDistance={6}
-              minDistance={1.2}
-            />
+            <SledCamera />
             <SledScene angle={angle} tow={tow} />
           </Suspense>
         </ScienceStage>

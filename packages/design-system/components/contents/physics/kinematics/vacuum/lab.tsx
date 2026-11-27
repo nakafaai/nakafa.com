@@ -1,4 +1,8 @@
 import { useFrame } from "@react-three/fiber";
+import {
+  Coin,
+  Feather,
+} from "@repo/design-system/components/contents/physics/kinematics/vacuum/bodies";
 import type { TubeAir } from "@repo/design-system/components/contents/physics/kinematics/vacuum/fall";
 import {
   TUBE_DROP,
@@ -6,12 +10,16 @@ import {
   tubeDrops,
   tubeTimes,
 } from "@repo/design-system/components/contents/physics/kinematics/vacuum/fall";
+import {
+  TUBE,
+  VacuumApparatus,
+} from "@repo/design-system/components/contents/physics/kinematics/vacuum/tube";
+import { DialGauge } from "@repo/design-system/components/contents/physics/solid/gauge";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { SimulationTicker } from "@repo/design-system/components/contents/simulation/ticker";
 import { useTimeline } from "@repo/design-system/components/contents/simulation/timeline";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
-import { GlassMaterial } from "@repo/design-system/components/three/physical";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import {
@@ -28,94 +36,19 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
-import { CAR_COLORS } from "@repo/design-system/lib/material/car";
-import { REAGENT_COLORS } from "@repo/design-system/lib/material/reagent";
-import { ROAD_COLORS } from "@repo/design-system/lib/material/road";
-import { Array as Arr, Schema } from "effect";
+import { Schema } from "effect";
 import type { ReactNode } from "react";
 import { Suspense, useRef, useState } from "react";
 import type { Group } from "three";
 
-/** The tube: its inner radius, its height, and the height of its base, in metres. */
-const TUBE = { base: 0.06, height: 1.3, radius: 0.07 } as const;
-
-/** Where the coin and the feather start: just under the stopper. */
+/** Where the coin and the feather start: just under the upper cap. */
 const START = TUBE.base + TUBE.height - 0.1;
 
 /** How long the drop waits before it starts, so the release can be seen, in seconds. */
 const LEAD_IN = 0.6;
 
-/** The glass tube on its wooden base, closed by rubber stoppers, with the pump hose at the bottom. */
-function GlassTube() {
-  return (
-    <group>
-      <mesh castShadow position={[0, TUBE.base / 2, 0]} receiveShadow>
-        <boxGeometry args={[0.32, TUBE.base, 0.22]} />
-        <meshStandardMaterial color={ROAD_COLORS.bark} roughness={0.7} />
-      </mesh>
-      <mesh position={[0, TUBE.base + TUBE.height / 2, 0]}>
-        <cylinderGeometry
-          args={[
-            TUBE.radius + 0.004,
-            TUBE.radius + 0.004,
-            TUBE.height,
-            48,
-            1,
-            true,
-          ]}
-        />
-        <GlassMaterial color={BENCH_COLORS.glass} opacity={0.2} />
-      </mesh>
-      {Arr.map([TUBE.base + 0.02, TUBE.base + TUBE.height - 0.02], (height) => (
-        <mesh castShadow key={height} position={[0, height, 0]}>
-          <cylinderGeometry
-            args={[TUBE.radius + 0.008, TUBE.radius + 0.008, 0.05, 32]}
-          />
-          <meshStandardMaterial color={BENCH_COLORS.stopper} roughness={0.85} />
-        </mesh>
-      ))}
-      <mesh
-        castShadow
-        position={[0.16, TUBE.base + 0.02, 0]}
-        rotation={[0, 0, Math.PI / 2]}
-      >
-        <torusGeometry args={[0.1, 0.009, 12, 32, Math.PI]} />
-        <meshStandardMaterial color={CAR_COLORS.tyre} roughness={0.8} />
-      </mesh>
-    </group>
-  );
-}
-
-/** A coin, a brass disc lying flat as it falls. */
-function Coin() {
-  return (
-    <mesh castShadow rotation={[0.2, 0, 0.1]}>
-      <cylinderGeometry args={[0.02, 0.02, 0.003, 32]} />
-      <meshStandardMaterial
-        color={BENCH_COLORS.batteryTerminal}
-        metalness={1}
-        roughness={0.25}
-      />
-    </mesh>
-  );
-}
-
-/** A small white feather: a soft vane around a thin shaft. */
-function Feather() {
-  return (
-    <group rotation={[0, 0, 0.35]}>
-      <mesh castShadow scale={[0.02, 0.05, 0.003]}>
-        <sphereGeometry args={[1, 24, 12]} />
-        <meshStandardMaterial color={REAGENT_COLORS.foam} roughness={0.95} />
-      </mesh>
-      <mesh position={[0, -0.012, 0]}>
-        <cylinderGeometry args={[0.001, 0.001, 0.1, 6]} />
-        <meshStandardMaterial color={BENCH_COLORS.cabinet} roughness={0.6} />
-      </mesh>
-    </group>
-  );
-}
+/** What the gauge reads with the room's air in the tube, and with it pumped out. */
+const PRESSURE = { air: 0.76, vacuum: 0.03 } as const;
 
 /** The two bodies falling inside the tube, run by the card's play clock. */
 function FallScene({ air }: { readonly air: TubeAir }) {
@@ -126,7 +59,7 @@ function FallScene({ air }: { readonly air: TubeAir }) {
   useFrame((_, delta) => {
     const time = advance(delta);
     const drops = tubeDrops(air, time);
-    coin.current?.position.set(-0.028, START - drops.coin, 0);
+    coin.current?.position.set(-0.03, START - drops.coin, 0);
     const sway = air === "air" ? Math.sin(Math.max(time, 0) * 5) * 0.012 : 0;
     feather.current?.position.set(0.028 + sway, START - drops.feather, 0);
     feather.current?.rotation.set(
@@ -139,7 +72,9 @@ function FallScene({ air }: { readonly air: TubeAir }) {
   return (
     <group>
       <SimulationTicker running={playing} />
-      <GlassTube />
+      <VacuumApparatus>
+        <DialGauge radius={TUBE.gauge} reading={PRESSURE[air]} />
+      </VacuumApparatus>
       <group ref={coin}>
         <Coin />
       </group>
@@ -204,13 +139,13 @@ export function FeatherCoinVacuumLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={0.9} setting="lab">
+        <ScienceStage reach={1.2} setting="lab">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[0.42, 0.85, 1.95]}
-              cameraTarget={[0, 0.7, 0]}
+              cameraPosition={[1.05, 0.98, 2.2]}
+              cameraTarget={[0.3, 0.7, 0]}
               fov={40}
-              maxDistance={3.2}
+              maxDistance={3.6}
               minDistance={0.5}
             />
             <FallScene air={air} />

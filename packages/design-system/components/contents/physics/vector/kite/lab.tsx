@@ -1,4 +1,4 @@
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { LabSlider } from "@repo/design-system/components/contents/physics/canvas/slider";
 import {
   KITE,
@@ -17,7 +17,10 @@ import { SimulationTicker } from "@repo/design-system/components/contents/simula
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
-import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
+import {
+  isNarrowThreeScene,
+  threeSceneFrameVariants,
+} from "@repo/design-system/components/three/scene";
 import { ScienceStage } from "@repo/design-system/components/three/stage";
 import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { Strake } from "@repo/design-system/components/three/vessel/strake";
@@ -33,7 +36,6 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { MACHINE_COLORS } from "@repo/design-system/lib/material/machine";
 import { PLOT_COLORS } from "@repo/design-system/lib/plot";
 import { Array as Arr, Schema } from "effect";
@@ -106,9 +108,9 @@ function Kite() {
         />
       </mesh>
       <Strake
-        color={CAR_COLORS.tyre}
+        color={MACHINE_COLORS.cotton}
         points={hem}
-        radius={0.014}
+        radius={0.009}
         surface="cloth"
       />
       <Rod
@@ -138,6 +140,67 @@ function Kite() {
           repeat={[1, 2]}
           side={DoubleSide}
           surface="cloth"
+        />
+      </mesh>
+    </group>
+  );
+}
+
+/** How far the flying line sags under its own weight, as a share of its span. */
+const SAG = 0.03;
+
+/**
+ * The braided flying line from the top of the stake to the kite: it hangs in
+ * a shallow curve under its own weight, as a real line does in a steady wind.
+ */
+function flyingLine([x, y]: readonly [number, number, number]) {
+  const span = Math.hypot(x, y - 0.6);
+  return Arr.makeBy(13, (step) => {
+    const along = step / 12;
+    return [
+      x * along,
+      0.6 + (y - 0.6) * along - 4 * SAG * span * along * (1 - along),
+      0,
+    ] as const;
+  });
+}
+
+/**
+ * The winder the spare line is kept on, lying in the grass by the stake: a
+ * beech spool with two flanges, wound with line, and a peg to turn it by.
+ */
+function Reel() {
+  return (
+    <group position={[-1.4, 0.62, 0.9]} rotation={[0.25, 0.5, 0]} scale={2}>
+      {Arr.map([-0.11, 0.11], (side) => (
+        <mesh
+          castShadow
+          key={side}
+          position={[0, 0, side]}
+          rotation={[Math.PI / 2, 0, 0]}
+        >
+          <cylinderGeometry args={[0.3, 0.3, 0.025, 40]} />
+          <SurfaceMaterial
+            color={MACHINE_COLORS.ash}
+            repeat={[2, 2]}
+            surface="wood"
+          />
+        </mesh>
+      ))}
+      <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.19, 0.19, 0.2, 32]} />
+        <SurfaceMaterial
+          color={MACHINE_COLORS.cotton}
+          repeat={[1, 24]}
+          surface="cloth"
+        />
+      </mesh>
+      <mesh castShadow position={[0.2, 0, 0.19]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.025, 0.025, 0.14, 12]} />
+        <SurfaceMaterial
+          color={MACHINE_COLORS.walnut}
+          repeat={[1, 1]}
+          surface="wood"
         />
       </mesh>
     </group>
@@ -190,14 +253,18 @@ function KiteScene({
           surface="wood"
         />
       </mesh>
-      <Rod
+      <Reel />
+      <Strake
         color={MACHINE_COLORS.cotton}
-        from={[0, 0.6, 0]}
-        radius={0.015}
-        to={kite}
+        points={flyingLine(kite)}
+        radius={0.022}
+        surface="cloth"
       />
       <group position={kite} ref={flier}>
-        <group rotation={[-0.3, -0.7, (-angle * Math.PI) / 540]} scale={1.4}>
+        <group
+          rotation={[-0.18, -0.22, (-angle * Math.PI) / 540]}
+          scale={[1.8, 1.8, 0.35]}
+        >
           <Kite />
         </group>
       </group>
@@ -271,6 +338,30 @@ interface KiteStringTensionLabProps {
  * axis, the string's pull on the stake splits into T cos θ straight up and
  * T sin θ along the ground.
  */
+/**
+ * Frames the flyer, the line and the kite. A narrow frame is as wide as it is
+ * tall, so its camera stands further back to keep both ends of the line in.
+ */
+function KiteCamera({ length }: { readonly length: number }) {
+  const narrow = isNarrowThreeScene(
+    useThree((state) => state.size),
+    1.2
+  );
+  return (
+    <CameraControls
+      cameraPosition={[
+        length * 0.4,
+        length * 0.45,
+        length * (narrow ? 1.8 : 1.35),
+      ]}
+      cameraTarget={[length * 0.4, length * 0.42, 0]}
+      fov={40}
+      maxDistance={length * 3}
+      minDistance={length * 0.4}
+    />
+  );
+}
+
 export function KiteStringTensionLab({
   angle: start,
   description,
@@ -309,18 +400,12 @@ export function KiteStringTensionLab({
       >
         <ScienceStage
           floor={0}
-          ground="sand"
+          ground="grass"
           reach={length * 0.7}
-          setting="sky"
+          setting="field"
         >
           <Suspense fallback={null}>
-            <CameraControls
-              cameraPosition={[length * 0.4, length * 0.45, length * 1.35]}
-              cameraTarget={[length * 0.4, length * 0.42, 0]}
-              fov={40}
-              maxDistance={length * 3}
-              minDistance={length * 0.4}
-            />
+            <KiteCamera length={length} />
             <KiteScene angle={angle} line={line} />
           </Suspense>
         </ScienceStage>

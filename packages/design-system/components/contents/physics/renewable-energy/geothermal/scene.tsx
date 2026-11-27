@@ -9,6 +9,7 @@ import {
   Puffs,
 } from "@repo/design-system/components/contents/physics/renewable-energy/world/parts";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
+import { SurfaceMaterial } from "@repo/design-system/components/three/surface/material";
 import { getColor } from "@repo/design-system/lib/color";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { ENERGY_COLORS } from "@repo/design-system/lib/material/energy";
@@ -79,15 +80,24 @@ export function GeothermalScene({
         return (
           <mesh key={layer.tone} position={[0, middle, 0]} receiveShadow>
             <boxGeometry args={[BLOCK.wide, layer.tall, BLOCK.deep]} />
-            <meshStandardMaterial color={layer.tone} roughness={0.95} />
+            <SurfaceMaterial
+              bump={1.6}
+              color={layer.tone}
+              repeat={[6, Math.max(1, Math.round(layer.tall * 1.5))]}
+              roughness={0.95}
+              surface="concrete"
+            />
           </mesh>
         );
       })}
       <mesh position={[0, bottom - 0.5, 0]}>
         <boxGeometry args={[BLOCK.wide, 1, BLOCK.deep]} />
-        <meshStandardMaterial
+        <SurfaceMaterial
+          bump={1.6}
           color={mix(DEEP_ROCK, TOWN_COLORS.roofTerracotta, 0.1 + warmth * 0.3)}
+          repeat={[6, 1]}
           roughness={0.9}
+          surface="concrete"
         />
       </mesh>
       {Arr.map(
@@ -128,7 +138,12 @@ export function GeothermalScene({
       )}
       <mesh castShadow position={[...HALL.at]} receiveShadow>
         <boxGeometry args={[...HALL.size]} />
-        <meshStandardMaterial color={MACHINE_COLORS.concrete} roughness={0.8} />
+        <SurfaceMaterial
+          color={MACHINE_COLORS.concrete}
+          repeat={[4, 1]}
+          roughness={0.8}
+          surface="concrete"
+        />
       </mesh>
       <mesh
         castShadow
@@ -198,11 +213,13 @@ export function GeothermalScene({
         </Pipe>
       ))}
       <mesh castShadow position={[...TOWER.at]} receiveShadow>
-        <latheGeometry args={[TOWER_SHELL, 40]} />
-        <meshStandardMaterial
+        <latheGeometry args={[TOWER_SHELL, 64]} />
+        <SurfaceMaterial
           color={MACHINE_COLORS.concrete}
+          repeat={[6, 3]}
           roughness={0.85}
           side={DoubleSide}
+          surface="concrete"
         />
       </mesh>
       <Puffs
