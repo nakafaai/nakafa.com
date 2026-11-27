@@ -1,4 +1,4 @@
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import {
   capsuleForms,
   curve,
@@ -163,17 +163,14 @@ export function NephronScene({
   );
 }
 
-/** Looks at the whole nephron from the front, farther back on a narrow card. */
+/** Looks at the whole nephron from the front, as close as the slice of kidney allows on any card. */
 function NephronCamera() {
-  const size = useThree((state) => state.size);
-  const narrow = size.width < size.height * 1.2;
-  const distance = narrow ? 14 : 10.2;
   return (
     <CameraControls
-      cameraPosition={[0.6, 0.5, distance]}
+      cameraPosition={[0.6, 0.5, 10.2]}
       cameraTarget={[0, -0.1, 0]}
       fov={36}
-      maxDistance={distance * 1.8}
+      framing="content"
       minDistance={2}
     />
   );

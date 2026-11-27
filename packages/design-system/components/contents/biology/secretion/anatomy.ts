@@ -58,7 +58,11 @@ export function cellForms(detail: number): readonly Form[] {
         const across = 0.5 + (reach * Math.cos(turn * 2 * Math.PI)) / 4;
         const deep = 0.5 + (reach * Math.sin(turn * 2 * Math.PI)) / 4;
         const grain = fractalAt(across, deep, 60, 60, 281, 3);
-        const specks = blend(fractalAt(across, deep, 150, 150, 283, 1), 0.74, 30);
+        const specks = blend(
+          fractalAt(across, deep, 150, 150, 283, 1),
+          0.74,
+          30
+        );
         const duct = blend(Math.cos(turn * 2 * Math.PI), 0.8, 12);
         color
           .copy(CYTOPLASM)
@@ -75,7 +79,13 @@ export function cellForms(detail: number): readonly Form[] {
 }
 
 /** One small round body a unit in radius, in two tones: a ribosome, a granule, a vesicle. */
-function bead(deep: Color, pale: Color, lump: number, fine: number, seed: number) {
+function bead(
+  deep: Color,
+  pale: Color,
+  lump: number,
+  fine: number,
+  seed: number
+) {
   return loftBody({
     along: fine,
     around: fine,
@@ -219,7 +229,15 @@ export function golgiForms(detail: number): readonly Form[] {
 
 /** One secretory granule or transport vesicle, a unit in radius, full of enzyme. */
 export function granuleForms(detail: number): readonly Form[] {
-  return [bead(VESICLE, CYTOPLASM.clone().lerp(VESICLE, 0.55), 0.06, faces(18, detail), 301)];
+  return [
+    bead(
+      VESICLE,
+      CYTOPLASM.clone().lerp(VESICLE, 0.55),
+      0.06,
+      faces(18, detail),
+      301
+    ),
+  ];
 }
 
 /**

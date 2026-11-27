@@ -1,4 +1,4 @@
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import {
   cargoForms,
@@ -22,7 +22,6 @@ import { CameraControls } from "@repo/design-system/components/three/camera/cont
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Body, Tuft } from "@repo/design-system/components/three/organism/body";
 import { Skin } from "@repo/design-system/components/three/organism/skin";
-import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { ENZYME_COLORS } from "@repo/design-system/lib/material/enzyme";
 import { useMemo, useRef } from "react";
@@ -43,17 +42,14 @@ function OrganelleSkin({ flesh }: { readonly flesh: string }) {
   );
 }
 
+/** Looks down into the cut cell, as close as the cell and its labels allow on any card. */
 function SecretionCamera() {
-  const narrow = isNarrowThreeScene(
-    useThree((state) => state.size),
-    1.25
-  );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0, 2.35, 4.15] : [0, 1.85, 3.2]}
+      cameraPosition={[0, 1.85, 3.2]}
       cameraTarget={[0.05, 0.28, 0]}
       fov={38}
-      maxDistance={6.5}
+      framing="content"
       minDistance={1.5}
     />
   );
@@ -168,57 +164,45 @@ export function SecretionScene({
         </group>
       </group>
 
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        position={[-1.05, 0.78, 0]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[-1.05, 0.78, 0]}>
         <span>{parts.nucleus}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={ink}
         anchorY="top"
+        color={ink}
         fontSize="compact"
-        position={[-0.5, 0.16, 0.86]}
+        position={[-0.95, 0.16, 0.86]}
       >
         <span>{parts.ribosome}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        position={[-0.15, 0.98, -0.62]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[-0.3, 0.8, -0.62]}>
         <span>{parts.reticulum}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={ink}
         anchorY="top"
+        color={ink}
         fontSize="compact"
         position={[0.42, 0.14, 0.34]}
       >
         <span>{parts.golgi}</span>
       </ThreeLabel>
-      <ThreeLabel
-        color={ink}
-        fontSize="compact"
-        position={[0.95, 0.5, 0.1]}
-      >
+      <ThreeLabel color={ink} fontSize="compact" position={[0.95, 0.5, 0.1]}>
         <span>{parts.vesicle}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={ink}
         anchorX="right"
         anchorY="top"
+        color={ink}
         fontSize="compact"
-        position={[1.22, 0.14, 0.92]}
+        position={[1.15, 0.16, 0.86]}
       >
         <span>{parts.membrane}</span>
       </ThreeLabel>
       <ThreeLabel
-        color={ink}
         anchorX="right"
+        color={ink}
         fontSize="compact"
-        position={[1.56, 0.78, -0.7]}
+        position={[1.45, 0.5, -0.45]}
       >
         <span>{parts.duct}</span>
       </ThreeLabel>

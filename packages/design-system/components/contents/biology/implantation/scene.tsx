@@ -1,4 +1,4 @@
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import {
   blastomereForms,
@@ -14,10 +14,10 @@ import {
 } from "@repo/design-system/components/contents/biology/implantation/cleavage";
 import { simulationStep } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Body, Tuft } from "@repo/design-system/components/three/organism/body";
 import { Skin } from "@repo/design-system/components/three/organism/skin";
-import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { BIOLOGY_COLORS } from "@repo/design-system/lib/material/biology";
 import { LABORATORY_COLORS } from "@repo/design-system/lib/material/laboratory";
@@ -40,17 +40,14 @@ export type ImplantationPart =
   | "cavity"
   | "hcg";
 
-/** The camera stands further back on a narrow screen, so the whole passage and its labels fit. */
+/** The camera stands as close as the whole passage and its labels allow on any card. */
 function PassageCamera() {
-  const narrow = isNarrowThreeScene(
-    useThree((state) => state.size),
-    1.25
-  );
   return (
     <CameraControls
-      cameraPosition={narrow ? [0, 0.95, 4.3] : [0, 0.86, 2.25]}
+      cameraPosition={[0, 0.86, 2.25]}
       cameraTarget={CAMERA_TARGET}
       fov={38}
+      framing="content"
     />
   );
 }
@@ -117,13 +114,15 @@ export function ImplantationScene({
     <group>
       <PassageCamera />
 
-      <mesh position={[0, -0.02, 0]} receiveShadow>
-        <boxGeometry args={[2.2, 0.04, 1.0]} />
-        <meshStandardMaterial
-          color={LABORATORY_COLORS.worktop}
-          roughness={0.65}
-        />
-      </mesh>
+      <CameraBounds exclude>
+        <mesh position={[0, -0.02, 0]} receiveShadow>
+          <boxGeometry args={[2.2, 0.04, 1.0]} />
+          <meshStandardMaterial
+            color={LABORATORY_COLORS.worktop}
+            roughness={0.65}
+          />
+        </mesh>
+      </CameraBounds>
 
       <Body shape={passageForms}>
         <Skin
