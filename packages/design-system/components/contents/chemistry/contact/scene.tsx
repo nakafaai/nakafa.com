@@ -1,16 +1,16 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useLabelInk } from "@repo/design-system/components/contents/biology/cell/parts";
 import {
+  ABSORBER_DUCT,
   ABSORBER_X,
+  BURNER_DUCT,
   BURNER_X,
+  CONVERTER_DUCT,
   CONVERTER_X,
   ContactPlantSkid,
-  createAbsorberToDilutionCurve,
-  createBurnerToConverterCurve,
-  createConverterToAbsorberCurve,
-  createOutletPipeCurve,
   DILUTION_X,
   FLASK_X,
+  OUTLET,
   PLANT_Z,
   StageDucts,
   SulfurBurner,
@@ -27,6 +27,12 @@ import {
   simulationStep,
 } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import type { Track } from "@repo/design-system/components/three/form/path";
+import {
+  placeOn,
+  pointOn,
+  trackOf,
+} from "@repo/design-system/components/three/form/path";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
@@ -54,6 +60,15 @@ function ContactCamera() {
   );
 }
 
+const BURNER_TRACK = trackOf(BURNER_DUCT);
+const CONVERTER_TRACK = trackOf(CONVERTER_DUCT);
+const ABSORBER_TRACK = trackOf(ABSORBER_DUCT);
+const OUTLET_TRACK = trackOf(OUTLET);
+const BURNER_START = pointOn(BURNER_TRACK, 0.45);
+const CONVERTER_START = pointOn(CONVERTER_TRACK, 0.5);
+const ABSORBER_START = pointOn(ABSORBER_TRACK, 0.5);
+const OUTLET_START = pointOn(OUTLET_TRACK, 0.55);
+
 function PlantFlowEffects({
   flameRef,
   playing,
@@ -63,11 +78,6 @@ function PlantFlowEffects({
   readonly playing: boolean;
   readonly stage: ContactStage;
 }) {
-  const curve1 = useMemo(createBurnerToConverterCurve, []);
-  const curve2 = useMemo(createConverterToAbsorberCurve, []);
-  const curve3 = useMemo(createAbsorberToDilutionCurve, []);
-  const curve4 = useMemo(createOutletPipeCurve, []);
-
   const p1Ref = useRef<Mesh>(null);
   const p2Ref = useRef<Mesh>(null);
   const p3Ref = useRef<Mesh>(null);
@@ -93,23 +103,23 @@ function PlantFlowEffects({
     phaseRef.current += dt * 0.55;
     const p = phaseRef.current;
 
-    const placeOnCurve = (
+    const placeOnDuct = (
       mesh: Mesh | null,
-      curve: typeof curve1,
+      track: Track,
       offset: number,
       zShift: number
     ) => {
       if (mesh === null) {
         return;
       }
-      mesh.position.copy(curve.getPointAt(offset % 1));
+      placeOn(track, offset % 1, mesh.position);
       mesh.position.z += zShift;
     };
 
-    placeOnCurve(p1Ref.current, curve1, p, 0.013);
-    placeOnCurve(p2Ref.current, curve2, p + 0.3, 0.013);
-    placeOnCurve(p3Ref.current, curve3, p + 0.6, 0.013);
-    placeOnCurve(p4Ref.current, curve4, p * 1.1, 0.011);
+    placeOnDuct(p1Ref.current, BURNER_TRACK, p, 0.013);
+    placeOnDuct(p2Ref.current, CONVERTER_TRACK, p + 0.3, 0.013);
+    placeOnDuct(p3Ref.current, ABSORBER_TRACK, p + 0.6, 0.013);
+    placeOnDuct(p4Ref.current, OUTLET_TRACK, p * 1.1, 0.011);
 
     if (acidDropRef.current !== null) {
       const dropT = (p * 1.8) % 1;
@@ -140,14 +150,12 @@ function PlantFlowEffects({
     }
   });
 
-  const init1 = curve1.getPointAt(0.45);
-  const init2 = curve2.getPointAt(0.5);
-  const init3 = curve3.getPointAt(0.5);
-  const init4 = curve4.getPointAt(0.55);
-
   return (
     <group>
-      <mesh position={[init1.x, init1.y, init1.z + 0.013]} ref={p1Ref}>
+      <mesh
+        position={[BURNER_START[0], BURNER_START[1], BURNER_START[2] + 0.013]}
+        ref={p1Ref}
+      >
         <sphereGeometry args={[0.01, 12, 10]} />
         <meshStandardMaterial
           color={PROCESS_COLORS.sulfurYellow}
@@ -155,7 +163,14 @@ function PlantFlowEffects({
           emissiveIntensity={stage === "roasting" ? 1.35 : 0.65}
         />
       </mesh>
-      <mesh position={[init2.x, init2.y, init2.z + 0.013]} ref={p2Ref}>
+      <mesh
+        position={[
+          CONVERTER_START[0],
+          CONVERTER_START[1],
+          CONVERTER_START[2] + 0.013,
+        ]}
+        ref={p2Ref}
+      >
         <sphereGeometry args={[0.01, 12, 10]} />
         <meshStandardMaterial
           color={PROCESS_COLORS.vanadiumOrange}
@@ -163,7 +178,14 @@ function PlantFlowEffects({
           emissiveIntensity={stage === "catalyticOxidation" ? 1.35 : 0.65}
         />
       </mesh>
-      <mesh position={[init3.x, init3.y, init3.z + 0.013]} ref={p3Ref}>
+      <mesh
+        position={[
+          ABSORBER_START[0],
+          ABSORBER_START[1],
+          ABSORBER_START[2] + 0.013,
+        ]}
+        ref={p3Ref}
+      >
         <sphereGeometry args={[0.01, 12, 10]} />
         <meshStandardMaterial
           color={PROCESS_COLORS.oleumAmber}
@@ -171,7 +193,10 @@ function PlantFlowEffects({
           emissiveIntensity={stage === "oleumAbsorption" ? 1.35 : 0.65}
         />
       </mesh>
-      <mesh position={[init4.x, init4.y, init4.z + 0.011]} ref={p4Ref}>
+      <mesh
+        position={[OUTLET_START[0], OUTLET_START[1], OUTLET_START[2] + 0.011]}
+        ref={p4Ref}
+      >
         <sphereGeometry args={[0.0085, 10, 8]} />
         <meshStandardMaterial
           color={PROCESS_COLORS.oleumAmber}

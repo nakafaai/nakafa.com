@@ -1,4 +1,5 @@
 import { parseFormulaRuns } from "@repo/design-system/components/contents/chemistry/formula";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { LiquidMaterial } from "@repo/design-system/components/three/physical";
 import { getColor } from "@repo/design-system/lib/color";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
@@ -10,18 +11,12 @@ import {
   DoubleSide,
   RepeatWrapping,
   SRGBColorSpace,
-  Vector2,
 } from "three";
 
 const MENISCUS_RISE = 0.0018;
 const MENISCUS_REACH = 0.0046;
 const FORMULA_FONT_FAMILY =
   "ui-sans-serif, system-ui, -apple-system, sans-serif";
-
-/** An outline turned around a vertical axis, from its radii at each height. */
-export function latheProfile(points: readonly (readonly [number, number])[]) {
-  return Arr.map(points, ([radius, height]) => new Vector2(radius, height));
-}
 
 /**
  * The surface of a liquid in glass, as lathe points from the wall inward:
@@ -246,8 +241,9 @@ export function createFlaskMarkingsTexture(): CanvasTexture | null {
   return texture;
 }
 
-const BOTTLE_PROFILE = latheProfile([
-  [0.001, 0],
+/** The outside of a reagent bottle, from its base up its shoulder to the lip its cap screws down over. */
+const BOTTLE_PROFILE = [
+  [0, 0],
   [0.042, 0],
   [0.0455, 0.003],
   [0.047, 0.009],
@@ -258,8 +254,8 @@ const BOTTLE_PROFILE = latheProfile([
   [0.0215, 0.143],
   [0.0185, 0.149],
   [0.0185, 0.155],
-  [0.0215, 0.158],
-]);
+  [0.0204, 0.158],
+] as const;
 
 const CAP_RIBS = Arr.range(0, 11);
 
@@ -360,21 +356,17 @@ function ReagentBottle({
   );
   useEffect(() => () => labelTex?.dispose(), [labelTex]);
 
-  const liquidPoints = useMemo(
-    () =>
-      latheProfile([
-        [0.0005, 0.006],
-        [0.0435, 0.006],
-        ...liquidMeniscus(0.0435, fillHeight),
-        [0.0005, fillHeight],
-      ]),
-    [fillHeight]
-  );
-
   return (
     <group position={position}>
       <mesh>
-        <latheGeometry args={[liquidPoints, 48]} />
+        <Turn
+          profile={[
+            [0, 0.006],
+            [0.0435, 0.006],
+            ...liquidMeniscus(0.0435, fillHeight),
+            [0, fillHeight],
+          ]}
+        />
         <LiquidMaterial color={liquidColor} opacity={0.76} />
       </mesh>
       <mesh
@@ -392,7 +384,7 @@ function ReagentBottle({
         />
       </mesh>
       <mesh castShadow renderOrder={2}>
-        <latheGeometry args={[BOTTLE_PROFILE, 48]} />
+        <Turn profile={BOTTLE_PROFILE} />
         <meshPhysicalMaterial
           clearcoat={1}
           clearcoatRoughness={0.03}

@@ -5,12 +5,14 @@ import {
 } from "@repo/design-system/components/contents/chemistry/bench";
 import {
   ABSORBER_X,
-  createDomeGeometry,
-  createOutletPipeCurve,
   DILUTION_X,
+  FLANGE,
   FLASK_X,
+  OUTLET,
   PLANT_Z,
 } from "@repo/design-system/components/contents/chemistry/contact/geometry";
+import { head } from "@repo/design-system/components/three/form/outline";
+import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -19,8 +21,7 @@ import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { Array as Arr } from "effect";
-import { useEffect, useMemo } from "react";
-import { DoubleSide, TubeGeometry } from "three";
+import { DoubleSide } from "three";
 
 /** Stage 3: Packed borosilicate absorption tower with Raschig rings, spray nozzle, and oleum sump. */
 export function AbsorptionTower({ active }: { readonly active: boolean }) {
@@ -125,14 +126,6 @@ export function AbsorptionTower({ active }: { readonly active: boolean }) {
 
 /** Stage 4: Domed oleum dilution tank, curved stainless outlet with valve, and benchtop receiving flask. */
 export function DilutionUnit({ active }: { readonly active: boolean }) {
-  const tankDome = useMemo(() => createDomeGeometry(0.062, 0.038), []);
-  const outletGeo = useMemo(
-    () => new TubeGeometry(createOutletPipeCurve(), 40, 0.008, 12, false),
-    []
-  );
-  useEffect(() => () => tankDome.dispose(), [tankDome]);
-  useEffect(() => () => outletGeo.dispose(), [outletGeo]);
-
   const legs = Arr.makeBy(3, (step) => (step / 3) * Math.PI * 2 + 0.5);
 
   return (
@@ -152,7 +145,8 @@ export function DilutionUnit({ active }: { readonly active: boolean }) {
           <cylinderGeometry args={[0.066, 0.066, 0.014, 32]} />
           <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.32} />
         </mesh>
-        <mesh castShadow geometry={tankDome} position={[0, 0.242, 0]}>
+        <mesh castShadow position={[0, 0.242, 0]}>
+          <Turn profile={head(0.062, 0.038, FLANGE)} />
           <MetalMaterial color={PROCESS_COLORS.alloySteel} roughness={0.3} />
         </mesh>
         <mesh castShadow position={[0, 0.148, 0]}>
@@ -191,7 +185,8 @@ export function DilutionUnit({ active }: { readonly active: boolean }) {
           />
         ) : null}
       </group>
-      <mesh castShadow geometry={outletGeo}>
+      <mesh castShadow>
+        <Sweep path={OUTLET} radius={0.008} />
         <MetalMaterial color={BENCH_COLORS.panSteel} roughness={0.24} />
       </mesh>
       <group position={[0.445, 0.175, PLANT_Z + 0.006]}>

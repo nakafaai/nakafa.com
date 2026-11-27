@@ -1,4 +1,5 @@
 import { RoundedBox } from "@react-three/drei";
+import { Sweep } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -7,7 +8,7 @@ import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
-import { CatmullRomCurve3, Color, Shape, Vector3 } from "three";
+import { Color, Shape } from "three";
 
 /** Where the lower pole's face stands, just under the plane the ions fly in. */
 const POLE_FACE = 0.2;
@@ -116,17 +117,6 @@ export function SectorMagnet({
  */
 export function IonSource({ at }: { readonly at: number }) {
   const filament = new Color(BENCH_COLORS.coalGlow).multiplyScalar(2.2);
-  const hose = useMemo(
-    () =>
-      new CatmullRomCurve3([
-        new Vector3(-0.4, 0.3, at + 0.5),
-        new Vector3(-1.4, 0.25, at + 0.9),
-        new Vector3(-2.6, 0.12, at + 0.4),
-        new Vector3(-3.6, 0.1, at - 0.8),
-      ]),
-    [at]
-  );
-
   return (
     <group>
       <mesh
@@ -154,7 +144,15 @@ export function IonSource({ at }: { readonly at: number }) {
         </RoundedBox>
       ))}
       <mesh castShadow>
-        <tubeGeometry args={[hose, 48, 0.09, 16, false]} />
+        <Sweep
+          path={[
+            [-0.4, 0.3, at + 0.5],
+            [-1.4, 0.25, at + 0.9],
+            [-2.6, 0.12, at + 0.4],
+            [-3.6, 0.1, at - 0.8],
+          ]}
+          radius={0.09}
+        />
         <meshStandardMaterial color={BENCH_COLORS.epoxy} roughness={0.7} />
       </mesh>
     </group>

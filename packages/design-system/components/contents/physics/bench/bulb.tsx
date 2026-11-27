@@ -1,4 +1,4 @@
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import {
   GlassMaterial,
   MetalMaterial,
@@ -18,7 +18,7 @@ import {
 /** The height of the filament above the board the lamp stands on. */
 const FILAMENT_HEIGHT = 0.335;
 
-const ENVELOPE = latheProfile([
+const ENVELOPE = [
   [0.048, 0.15],
   [0.052, 0.19],
   [0.075, 0.24],
@@ -27,8 +27,8 @@ const ENVELOPE = latheProfile([
   [0.135, 0.41],
   [0.105, 0.455],
   [0.06, 0.482],
-  [0.001, 0.49],
-]);
+  [0, 0.49],
+] as const;
 
 const THREADS = [0.108, 0.126, 0.144] as const;
 const SUPPORTS = [-1, 1] as const;
@@ -190,7 +190,7 @@ export function Bulb({
         </>
       ) : null}
       <mesh castShadow renderOrder={2}>
-        <latheGeometry args={[ENVELOPE, 48]} />
+        <Turn profile={ENVELOPE} />
         <GlassMaterial color={APPARATUS_COLORS.lampGlass} opacity={0.2} />
       </mesh>
       <mesh position={[0, 0.156, 0]}>

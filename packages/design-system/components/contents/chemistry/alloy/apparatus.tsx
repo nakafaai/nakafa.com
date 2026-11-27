@@ -1,5 +1,5 @@
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { CAR_COLORS } from "@repo/design-system/lib/material/car";
@@ -9,7 +9,7 @@ import { Array as Arr } from "effect";
 import type { RefObject } from "react";
 import { useEffect, useMemo } from "react";
 import type { Group } from "three";
-import { DoubleSide, ExtrudeGeometry, LatheGeometry, Shape } from "three";
+import { DoubleSide, ExtrudeGeometry, Shape } from "three";
 
 export const RIG_Z = 0.04;
 export const LATTICE_X = 0.055;
@@ -26,15 +26,15 @@ const ANVIL_BOLTS = [
   [0.275, 0.088],
 ] as const;
 
-const ARROW_PROFILE = latheProfile([
-  [0.001, 0],
+const ARROW_PROFILE = [
+  [0, 0],
   [0.009, 0],
   [0.009, 0.008],
   [0.0062, 0.01],
   [0.0062, 0.056],
   [0.0155, 0.056],
-  [0.001, 0.088],
-]);
+  [0, 0.088],
+] as const;
 
 function createAnvilPlateGeometry() {
   const halfW = 0.305;
@@ -135,9 +135,6 @@ export function HydraulicShearRam({
   readonly ramRef: RefObject<Group | null>;
   readonly shearForce: number;
 }) {
-  const arrowGeo = useMemo(() => new LatheGeometry(ARROW_PROFILE, 28), []);
-  useEffect(() => () => arrowGeo.dispose(), [arrowGeo]);
-
   const pressureNorm = Math.min(1, Math.max(0, shearForce / 100));
 
   return (
@@ -192,7 +189,8 @@ export function HydraulicShearRam({
 
       {/* Sculpted 3D crimson shear-force arrow above ram */}
       <group position={[-0.215, ROW_Y[2] + 0.078, 0]} ref={arrowRef}>
-        <mesh castShadow geometry={arrowGeo} rotation={[0, 0, -Math.PI / 2]}>
+        <mesh castShadow rotation={[0, 0, -Math.PI / 2]}>
+          <Turn profile={ARROW_PROFILE} />
           <meshPhysicalMaterial
             clearcoat={0.65}
             clearcoatRoughness={0.18}

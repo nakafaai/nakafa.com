@@ -1,5 +1,5 @@
 import { BotanicalLeaf } from "@repo/design-system/components/contents/biology/seedling";
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
 import { FOLIAGE_COLORS } from "@repo/design-system/lib/material/foliage";
 import { Array as Arr } from "effect";
@@ -13,14 +13,14 @@ import {
   Vector3,
 } from "three";
 
-const ROOT_CAP_PROFILE = latheProfile([
-  [0.001, 0],
+const ROOT_CAP_PROFILE = [
+  [0, 0],
   [0.095, 0.03],
   [0.185, 0.11],
   [0.245, 0.24],
   [0.265, 0.34],
   [0.245, 0.36],
-]);
+] as const;
 
 const MERISTEM_CELLS = Arr.flatMap([-0.085, 0, 0.085] as const, (x) =>
   Arr.map([0.34, 0.43, 0.52] as const, (y) => ({
@@ -160,8 +160,9 @@ export function RootApexCutaway() {
       </mesh>
       {/* Translucent mucilaginous root cap thimble wrapping the lower apex */}
       <mesh castShadow position={[0, 0.04, 0]}>
-        <latheGeometry
-          args={[ROOT_CAP_PROFILE, 36, Math.PI * 0.48, Math.PI * 1.04]}
+        <Turn
+          arc={[Math.PI * 0.48, Math.PI * 1.04]}
+          profile={ROOT_CAP_PROFILE}
         />
         <meshPhysicalMaterial
           clearcoat={0.65}

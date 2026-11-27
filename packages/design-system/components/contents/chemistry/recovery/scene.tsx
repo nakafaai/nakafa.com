@@ -3,11 +3,11 @@ import { useLabelInk } from "@repo/design-system/components/contents/biology/cel
 import { LabBench } from "@repo/design-system/components/contents/chemistry/bench";
 import {
   CycloneAndTubing,
-  createFeedCurve,
-  createProductCurve,
-  createRecoveryCurve,
+  FEED,
+  PRODUCT,
   PRODUCT_FLASK_POS,
   ProductAndWasteVessels,
+  RECOVERY,
   WASTE_CARBOY_POS,
 } from "@repo/design-system/components/contents/chemistry/recovery/geometry";
 import type { CatalysisMode } from "@repo/design-system/components/contents/chemistry/recovery/model";
@@ -22,13 +22,18 @@ import {
   simulationStep,
 } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import {
+  pointOn,
+  rideOn,
+  trackOf,
+} from "@repo/design-system/components/three/form/path";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { isNarrowThreeScene } from "@repo/design-system/components/three/scene";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { Array as Arr, Match } from "effect";
-import { useMemo, useRef } from "react";
-import type { CatmullRomCurve3, Group } from "three";
+import { useRef } from "react";
+import type { Group } from "three";
 
 const FEED_PULSES = Arr.makeBy(4, (index) => index / 4);
 const LOOP_BEADS = Arr.makeBy(6, (index) => index / 6);
@@ -44,23 +49,9 @@ function wasteFillFraction(mode: CatalysisMode, cycleProgress: number) {
   );
 }
 
-function stepAlongCurve(
-  group: Group | null,
-  curve: CatmullRomCurve3,
-  offsets: readonly number[],
-  phase: number
-) {
-  if (group === null) {
-    return;
-  }
-  for (let i = 0; i < group.children.length; i += 1) {
-    const child = group.children[i];
-    const offset = offsets[i];
-    if (child !== undefined && offset !== undefined) {
-      child.position.copy(curve.getPointAt((phase + offset) % 1));
-    }
-  }
-}
+const FEED_TRACK = trackOf(FEED);
+const RECOVERY_TRACK = trackOf(RECOVERY);
+const PRODUCT_TRACK = trackOf(PRODUCT);
 
 function RecoveryCamera() {
   const narrow = isNarrowThreeScene(
@@ -117,15 +108,6 @@ export function GreenCatalystScene({
   // Waste carboy fill rises sharply with cycles in stoichiometric mode and stays tiny for recyclable catalysts.
   const wasteLevel = 0.008 + wasteFillFraction(mode, cycleProgress) * 0.098;
 
-  const { feedCurve, productCurve, recoveryCurve } = useMemo(
-    () => ({
-      feedCurve: createFeedCurve(),
-      productCurve: createProductCurve(),
-      recoveryCurve: createRecoveryCurve(),
-    }),
-    []
-  );
-
   useFrame((_, delta) => {
     if (!playing) {
       return;
@@ -133,14 +115,19 @@ export function GreenCatalystScene({
     phaseRef.current += simulationStep(delta) * 0.55;
     const t = phaseRef.current;
 
-    stepAlongCurve(feedPulsesRef.current, feedCurve, FEED_PULSES, t);
+    rideOn(FEED_TRACK, feedPulsesRef.current?.children ?? [], FEED_PULSES, t);
     if (loopActive) {
       const rate = 0.65 + (reading.recoveredPercent / 100) * 0.65;
-      stepAlongCurve(loopBeadsRef.current, recoveryCurve, LOOP_BEADS, t * rate);
+      rideOn(
+        RECOVERY_TRACK,
+        loopBeadsRef.current?.children ?? [],
+        LOOP_BEADS,
+        t * rate
+      );
     }
-    stepAlongCurve(
-      productDropsRef.current,
-      productCurve,
+    rideOn(
+      PRODUCT_TRACK,
+      productDropsRef.current?.children ?? [],
       PRODUCT_DROPS,
       t * 0.85
     );
@@ -165,58 +152,55 @@ export function GreenCatalystScene({
 
       {/* Animated cyan reactant feed pulses */}
       <group ref={feedPulsesRef}>
-        {Arr.map(FEED_PULSES, (offset) => {
-          const pt = feedCurve.getPointAt(offset);
-          return (
-            <mesh key={`feed-${offset}`} position={[pt.x, pt.y, pt.z]}>
-              <sphereGeometry args={[0.0072, 10, 10]} />
-              <meshStandardMaterial
-                color={PROCESS_COLORS.ammoniaCyan}
-                emissive={PROCESS_COLORS.ammoniaCyan}
-                emissiveIntensity={0.45}
-                roughness={0.2}
-              />
-            </mesh>
-          );
-        })}
+        {Arr.map(FEED_PULSES, (offset) => (
+          <mesh key={`feed-${offset}`} position={pointOn(FEED_TRACK, offset)}>
+            <sphereGeometry args={[0.0072, 10, 10]} />
+            <meshStandardMaterial
+              color={PROCESS_COLORS.ammoniaCyan}
+              emissive={PROCESS_COLORS.ammoniaCyan}
+              emissiveIntensity={0.45}
+              roughness={0.2}
+            />
+          </mesh>
+        ))}
       </group>
 
       {/* Animated recycled catalyst beads along overhead cyclone loop */}
       {loopActive ? (
         <group ref={loopBeadsRef}>
-          {Arr.map(LOOP_BEADS, (offset) => {
-            const pt = recoveryCurve.getPointAt(offset);
-            return (
-              <mesh key={`loop-${offset}`} position={[pt.x, pt.y, pt.z]}>
-                <sphereGeometry args={[0.0076, 12, 10]} />
-                <meshStandardMaterial
-                  color={PROCESS_COLORS.electronGold}
-                  emissive={PROCESS_COLORS.electronGold}
-                  emissiveIntensity={0.5}
-                  roughness={0.22}
-                />
-              </mesh>
-            );
-          })}
+          {Arr.map(LOOP_BEADS, (offset) => (
+            <mesh
+              key={`loop-${offset}`}
+              position={pointOn(RECOVERY_TRACK, offset)}
+            >
+              <sphereGeometry args={[0.0076, 12, 10]} />
+              <meshStandardMaterial
+                color={PROCESS_COLORS.electronGold}
+                emissive={PROCESS_COLORS.electronGold}
+                emissiveIntensity={0.5}
+                roughness={0.22}
+              />
+            </mesh>
+          ))}
         </group>
       ) : null}
 
       {/* Animated green product stream droplets */}
       <group ref={productDropsRef}>
-        {Arr.map(PRODUCT_DROPS, (offset) => {
-          const pt = productCurve.getPointAt(offset);
-          return (
-            <mesh key={`prod-${offset}`} position={[pt.x, pt.y, pt.z]}>
-              <sphereGeometry args={[0.0048, 10, 10]} />
-              <meshStandardMaterial
-                color={PROCESS_COLORS.greenProduct}
-                emissive={PROCESS_COLORS.greenProduct}
-                emissiveIntensity={0.35}
-                roughness={0.2}
-              />
-            </mesh>
-          );
-        })}
+        {Arr.map(PRODUCT_DROPS, (offset) => (
+          <mesh
+            key={`prod-${offset}`}
+            position={pointOn(PRODUCT_TRACK, offset)}
+          >
+            <sphereGeometry args={[0.0048, 10, 10]} />
+            <meshStandardMaterial
+              color={PROCESS_COLORS.greenProduct}
+              emissive={PROCESS_COLORS.greenProduct}
+              emissiveIntensity={0.35}
+              roughness={0.2}
+            />
+          </mesh>
+        ))}
       </group>
 
       {/* Crisp adaptive-ink labels */}

@@ -1,27 +1,27 @@
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { MetalMaterial } from "@repo/design-system/components/three/physical";
 import { BOTANY_COLORS } from "@repo/design-system/lib/material/botany";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import { CatmullRomCurve3, DoubleSide, Vector3 } from "three";
 
-const SHADE_PROFILE = latheProfile([
+const SHADE_PROFILE = [
   [0.032, -0.04],
   [0.052, 0.02],
   [0.125, 0.14],
   [0.14, 0.165],
   [0.132, 0.168],
   [0.046, 0.022],
-]);
+] as const;
 
-const BASE_PROFILE = latheProfile([
-  [0.001, 0],
+const BASE_PROFILE = [
+  [0, 0],
   [0.15, 0],
   [0.155, 0.025],
   [0.115, 0.045],
   [0.042, 0.068],
   [0.022, 0.085],
-]);
+] as const;
 
 /** Brass directional laboratory lamp casting a warm volumetric phototropism beam onto the lit flank. */
 export function DirectionalBrassLamp({
@@ -44,7 +44,7 @@ export function DirectionalBrassLamp({
     <group position={position}>
       {/* Turned weighted brass base */}
       <mesh castShadow receiveShadow>
-        <latheGeometry args={[BASE_PROFILE, 36]} />
+        <Turn profile={BASE_PROFILE} />
         <MetalMaterial color={BOTANY_COLORS.brassGold} roughness={0.34} />
       </mesh>
       {/* Articulated brass gooseneck stem */}
@@ -55,7 +55,7 @@ export function DirectionalBrassLamp({
       {/* Lamp head aimed toward the coleoptile lit side */}
       <group position={[-0.17, 1.09, 0]} rotation={[0, 0, 1.98]}>
         <mesh castShadow>
-          <latheGeometry args={[SHADE_PROFILE, 36]} />
+          <Turn profile={SHADE_PROFILE} />
           <meshPhysicalMaterial
             clearcoat={0.5}
             color={BOTANY_COLORS.brassGold}

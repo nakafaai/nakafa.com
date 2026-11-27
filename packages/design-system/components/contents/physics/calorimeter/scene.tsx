@@ -6,6 +6,8 @@ import {
   simulationStep,
 } from "@repo/design-system/components/contents/simulation/ticker";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { Sweep, Turn } from "@repo/design-system/components/three/form/part";
+import type { Path } from "@repo/design-system/components/three/form/path";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import {
   GlassMaterial,
@@ -19,15 +21,9 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
 import { Array as Arr, Match } from "effect";
-import { useEffect, useMemo, useRef } from "react";
+import { useRef } from "react";
 import type { Group } from "three";
-import {
-  CatmullRomCurve3,
-  DoubleSide,
-  TubeGeometry,
-  Vector2,
-  Vector3,
-} from "three";
+import { DoubleSide } from "three";
 
 function sampleColor(material: CalorimeterMaterial): string {
   return Match.value(material).pipe(
@@ -40,49 +36,41 @@ function sampleColor(material: CalorimeterMaterial): string {
   );
 }
 
-function createHelixCoil(): TubeGeometry {
-  const pts = Arr.makeBy(64, (index) => {
-    const t = index / 63;
-    const angle = t * Math.PI * 10;
-    const radius = 0.055;
-    return new Vector3(
-      Math.cos(angle) * radius,
-      0.16 + t * 0.42,
-      Math.sin(angle) * radius
-    );
-  });
-  return new TubeGeometry(new CatmullRomCurve3(pts), 96, 0.011, 10, false);
-}
+/** The immersion heater: five turns of element up the middle of the cup. */
+const HEATER_COIL: Path = {
+  from: [0, 0.16, 0],
+  kind: "helix",
+  radius: 0.055,
+  to: [0, 0.58, 0],
+  turns: 5,
+};
 
-function createStirrerPath(): TubeGeometry {
-  const pts = [
-    new Vector3(0, 1.06, 0),
-    new Vector3(0, 0.24, 0),
-    new Vector3(0.06, 0.19, 0.04),
-    new Vector3(0, 0.19, 0.11),
-    new Vector3(-0.07, 0.19, 0.04),
-    new Vector3(-0.04, 0.19, -0.05),
-    new Vector3(0, 0.22, 0),
-  ];
-  return new TubeGeometry(new CatmullRomCurve3(pts), 64, 0.011, 10, false);
-}
+/** The stirrer: a rod down through the lid, bent into a loop at its foot. */
+const STIRRER: Path = [
+  [0, 1.06, 0],
+  [0, 0.24, 0],
+  [0.06, 0.19, 0.04],
+  [0, 0.19, 0.11],
+  [-0.07, 0.19, 0.04],
+  [-0.04, 0.19, -0.05],
+  [0, 0.22, 0],
+];
 
-function createInnerCupProfile() {
-  return Arr.map(
-    [
-      [0.001, 0.08],
-      [0.44, 0.08],
-      [0.46, 0.1],
-      [0.46, 0.78],
-      [0.49, 0.81],
-      [0.47, 0.82],
-      [0.44, 0.78],
-      [0.44, 0.11],
-      [0.001, 0.11],
-    ] as const,
-    ([r, y]) => new Vector2(r, y)
-  );
-}
+/** The spun copper inner cup, as the outline of its wall and base. */
+const INNER_CUP = [
+  [0, 0.08],
+  [0.44, 0.08],
+  [0.46, 0.1],
+  [0.46, 0.78],
+  [0.49, 0.81],
+  [0.47, 0.82],
+  [0.44, 0.78],
+  [0.44, 0.11],
+  [0, 0.11],
+] as const;
+
+/** The cup's cutaway: the front quarter left open to see inside. */
+const CUP_ARC = [0.76, Math.PI * 1.48] as const;
 
 function CalorimeterCamera() {
   const narrow = isNarrowThreeScene(
@@ -124,18 +112,6 @@ export function CalorimeterScene({
   const ink = useLabelInk();
   const stirrerRef = useRef<Group>(null);
   const phaseRef = useRef(0);
-
-  const heaterCoil = useMemo(createHelixCoil, []);
-  const stirrerGeom = useMemo(createStirrerPath, []);
-  const cupProfile = useMemo(createInnerCupProfile, []);
-
-  useEffect(
-    () => () => {
-      heaterCoil.dispose();
-      stirrerGeom.dispose();
-    },
-    [heaterCoil, stirrerGeom]
-  );
 
   useVisualStop(() => {
     phaseRef.current = 0;
@@ -205,7 +181,7 @@ export function CalorimeterScene({
 
       {/* Spun copper inner calorimeter vessel (cutaway front for inspection) */}
       <mesh castShadow position={[0, 0, 0]}>
-        <latheGeometry args={[cupProfile, 48, 0.76, Math.PI * 1.48]} />
+        <Turn arc={CUP_ARC} profile={INNER_CUP} />
         <MetalMaterial color={QUANTUM_COLORS.copper} roughness={0.24} />
       </mesh>
 
@@ -229,7 +205,8 @@ export function CalorimeterScene({
 
       {/* Helical nichrome immersion heater coil + ceramic terminal posts */}
       <group position={[-0.2, 0, -0.02]}>
-        <mesh castShadow geometry={heaterCoil}>
+        <mesh castShadow>
+          <Sweep ends="round" path={HEATER_COIL} radius={0.011} />
           <meshStandardMaterial
             color={QUANTUM_COLORS.heaterCoil}
             emissive={QUANTUM_COLORS.heaterCoil}
@@ -295,7 +272,8 @@ export function CalorimeterScene({
 
       {/* Brass looped stirrer with wooden knob */}
       <group position={[0, 0, 0.16]} ref={stirrerRef}>
-        <mesh castShadow geometry={stirrerGeom}>
+        <mesh castShadow>
+          <Sweep ends="round" path={STIRRER} radius={0.011} />
           <MetalMaterial color={QUANTUM_COLORS.brass} roughness={0.26} />
         </mesh>
         <mesh castShadow position={[0, 1.09, 0]}>

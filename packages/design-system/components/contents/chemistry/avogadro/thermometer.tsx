@@ -1,18 +1,16 @@
 import { RIG_Z } from "@repo/design-system/components/contents/chemistry/avogadro/apparatus";
 import type { GasCondition } from "@repo/design-system/components/contents/chemistry/avogadro/model";
-import { latheProfile } from "@repo/design-system/components/contents/chemistry/glassware";
+import { Turn } from "@repo/design-system/components/three/form/part";
 import { GlassMaterial } from "@repo/design-system/components/three/physical";
 import { BENCH_COLORS } from "@repo/design-system/lib/material/bench";
 import { INSTRUMENT_COLORS } from "@repo/design-system/lib/material/instrument";
 import { PROCESS_COLORS } from "@repo/design-system/lib/material/process";
 import { Array as Arr } from "effect";
-import { useEffect, useMemo } from "react";
-import { LatheGeometry } from "three";
 
 export const THERM_X = 0.145;
 
-const THERM_GLASS_PROFILE = latheProfile([
-  [0.001, 0],
+const THERM_GLASS_PROFILE = [
+  [0, 0],
   [0.0075, 0.002],
   [0.0108, 0.008],
   [0.0108, 0.016],
@@ -20,8 +18,8 @@ const THERM_GLASS_PROFILE = latheProfile([
   [0.0052, 0.028],
   [0.0052, 0.215],
   [0.0042, 0.221],
-  [0.001, 0.222],
-]);
+  [0, 0.222],
+] as const;
 
 const THERM_TICKS = Arr.makeBy(11, (idx) => 0.112 + idx * 0.0155);
 
@@ -31,12 +29,6 @@ export function GlassThermometer({
 }: {
   readonly condition: GasCondition;
 }) {
-  const glassGeo = useMemo(
-    () => new LatheGeometry(THERM_GLASS_PROFILE, 32),
-    []
-  );
-  useEffect(() => () => glassGeo.dispose(), [glassGeo]);
-
   const isRtp = condition === "rtp";
   const fluidColor = isRtp
     ? PROCESS_COLORS.weakAcidOrange
@@ -80,7 +72,8 @@ export function GlassThermometer({
         />
       </mesh>
       {/* Turned borosilicate outer glass bulb and stem */}
-      <mesh castShadow geometry={glassGeo} renderOrder={2}>
+      <mesh castShadow renderOrder={2}>
+        <Turn profile={THERM_GLASS_PROFILE} />
         <GlassMaterial color={BENCH_COLORS.glass} opacity={0.34} />
       </mesh>
     </group>
