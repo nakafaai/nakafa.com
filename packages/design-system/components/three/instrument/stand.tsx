@@ -15,7 +15,7 @@ const ROD = { arm: 5, upright: 6 } as const;
 const BAR = { drop: 12, past: 34 } as const;
 
 /** How far the arms of a gantry reach from its rods toward the reader, in millimetres. */
-export const GANTRY_REACH = 190;
+const GANTRY_REACH = 190;
 
 /** Bright steel, drawn along a rod. */
 function Steel() {
