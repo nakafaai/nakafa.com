@@ -61,6 +61,15 @@ export const ARTIFACT_PAGE_BYTES = 2 * 1024 * 1024;
 /** Maximum records considered before byte and transaction proof guards yield. */
 export const PROOF_PAGE_LIMIT = 128;
 
+/**
+ * Maximum bytes one verification transaction reads before it yields its
+ * continuation. Verifying an item parses its signed artifact and its prior
+ * version inside the mutation, and Convex stops a mutation after one second of
+ * execution, long before the read ceiling: a page of full lessons read up to
+ * that ceiling timed out on its first page (catalog-20261127d).
+ */
+export const VERIFY_PAGE_BYTES = 2 * 1024 * 1024;
+
 /** Maximum complete proof-page response below Convex action limits. */
 export const PROOF_PAGE_BYTES = 4 * 1024 * 1024;
 
