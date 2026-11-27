@@ -1,5 +1,4 @@
-import { useFrame, useThree } from "@react-three/fiber";
-import { getAtomSceneColors } from "@repo/design-system/components/contents/chemistry/color";
+import { useFrame } from "@react-three/fiber";
 import { MathLines } from "@repo/design-system/components/contents/chemistry/lines";
 import { ELEMENTS } from "@repo/design-system/components/contents/chemistry/molecule/elements";
 import type {
@@ -22,7 +21,13 @@ import {
 import { toggleColumns } from "@repo/design-system/components/contents/simulation/columns";
 import { useQuantity } from "@repo/design-system/components/contents/simulation/quantity";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { BohrShells } from "@repo/design-system/components/three/atom/bohr";
+import { AtomNucleus } from "@repo/design-system/components/three/atom/core";
+import { neutronsOf } from "@repo/design-system/components/three/atom/isotope";
+import { Spark } from "@repo/design-system/components/three/atom/light";
+import { orbitsOf } from "@repo/design-system/components/three/atom/shell";
 import { CameraControls } from "@repo/design-system/components/three/camera/controls";
+import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { GlassMaterial } from "@repo/design-system/components/three/physical";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene";
@@ -43,11 +48,12 @@ import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { VisualSlider } from "@repo/design-system/components/visual/slider";
 import { getColor } from "@repo/design-system/lib/color";
-import { useTheme } from "@repo/design-system/providers/theme";
+import { PARTICLE_COLORS } from "@repo/design-system/lib/material/particle";
+import { QUANTUM_COLORS } from "@repo/design-system/lib/material/quantum";
 import { Array as Arr, Option, Schema } from "effect";
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import { createRef, useMemo, useRef, useState } from "react";
-import type { Mesh } from "three";
+import type { Group, Mesh } from "three";
 import { useFormatter } from "use-intl";
 
 /** How many picometres one scene unit spans. */
@@ -58,6 +64,16 @@ const APART = 2.6;
 
 /** How long one transfer takes while the card plays, in seconds. */
 const CYCLE = 5;
+
+/** The radius of one nucleon, small enough that potassium's nucleus sits well inside its K shell. */
+const NUCLEON = 0.026;
+
+/** How wide the glow of an electron on its way across is drawn, in scene units. */
+const SPARK = 0.5;
+
+/** The dark of open space behind the atoms, which outlines their labels, and how wide that outline is. */
+const BACKDROP = getColor("ZINC", 950);
+const OUTLINE = 0.012;
 
 /** The words an ion formation lab reads from its lesson. */
 interface TransferLabels {
@@ -170,7 +186,7 @@ export function IonFormationLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage reach={APART + 2.4} setting="studio">
+        <ScienceStage reach={APART + 2.4} setting="space">
           <TransferCamera />
           <TransferScene
             onProgress={setProgress}
@@ -256,15 +272,14 @@ function TransferScene({
 }) {
   const pair = getPair(pairId);
   useInvalidateOnChange(pairId);
-  const resolvedTheme = useTheme((state) => state.resolvedTheme);
-  const colors = getAtomSceneColors(resolvedTheme);
+  const time = useRef(0);
   const metalSphere = useRef<Mesh>(null);
   const nonmetalSphere = useRef<Mesh>(null);
   const movers = useMemo(
     () =>
       Arr.map(Arr.range(1, pair.electrons), (number) => ({
         number,
-        ref: createRef<Mesh>(),
+        ref: createRef<Group>(),
       })),
     [pair.electrons]
   );
@@ -282,6 +297,7 @@ function TransferScene({
 
   useFrame(() => {
     const share = smooth(clock.current);
+    time.current = clock.current * CYCLE;
     const metalRadius =
       (pair.metal.atomic + (pair.metal.ionic - pair.metal.atomic) * share) /
       PICOMETRES;
@@ -309,36 +325,44 @@ function TransferScene({
   });
 
   return (
-    <group>
-      <AtomShells atom={pair.metal} keep={pair.electrons} x={-APART} />
-      <AtomShells atom={pair.nonmetal} keep={0} x={APART} />
+    <CameraBounds
+      bounds={{
+        x: { min: -APART - 2.3, max: APART + 1.9 },
+        y: { min: -2.5, max: 2.3 },
+        z: { min: -0.4, max: 0.4 },
+      }}
+    >
+      <AtomShells
+        atom={pair.metal}
+        clock={time}
+        keep={pair.electrons}
+        x={-APART}
+      />
+      <AtomShells atom={pair.nonmetal} clock={time} keep={0} x={APART} />
       <mesh position={[-APART, 0, 0]} ref={metalSphere}>
         <sphereGeometry args={[1, 64, 48]} />
         <GlassMaterial
           color={ELEMENTS[pair.metal.symbol].color}
-          opacity={0.16}
+          opacity={0.07}
         />
       </mesh>
       <mesh position={[APART, 0, 0]} ref={nonmetalSphere}>
         <sphereGeometry args={[1, 64, 48]} />
         <GlassMaterial
           color={ELEMENTS[pair.nonmetal.symbol].color}
-          opacity={0.16}
+          opacity={0.07}
         />
       </mesh>
       {Arr.map(movers, (mover) => (
-        <mesh key={`mover-${mover.number}`} ref={mover.ref}>
-          <sphereGeometry args={[0.07, 16, 12]} />
-          <meshStandardMaterial
-            color={getColor("SLATE", 50)}
-            emissive={getColor("SLATE", 200)}
-            emissiveIntensity={2.4}
-          />
-        </mesh>
+        <group key={`mover-${mover.number}`} ref={mover.ref}>
+          <Spark color={PARTICLE_COLORS.valence} size={SPARK} />
+        </group>
       ))}
       <ThreeLabel
-        color={colors.text}
+        color={QUANTUM_COLORS.spaceLabel}
         fontSize="compact"
+        outlineColor={BACKDROP}
+        outlineWidth={OUTLINE}
         position={[-APART, -2.3, 0]}
       >
         <InlineMath
@@ -350,8 +374,10 @@ function TransferScene({
         />
       </ThreeLabel>
       <ThreeLabel
-        color={colors.text}
+        color={QUANTUM_COLORS.spaceLabel}
         fontSize="compact"
+        outlineColor={BACKDROP}
+        outlineWidth={OUTLINE}
         position={[APART, -2.3, 0]}
       >
         <InlineMath
@@ -362,7 +388,7 @@ function TransferScene({
           }
         />
       </ThreeLabel>
-    </group>
+    </CameraBounds>
   );
 }
 
@@ -372,83 +398,60 @@ function shellRadius(atom: IonAtom, index: number) {
 }
 
 /**
- * The nucleus and shells of one atom, each shell a thin ring with its
- * electrons spaced around it; the outer shell leaves out the `keep` electrons
- * that cross to the other atom, which are drawn on their own.
+ * One atom as Bohr drew it, facing the reader: its nucleus of protons and
+ * neutrons and its electrons on luminous shells, the valence shell warm.
+ * The outer shell leaves out the `keep` electrons that cross to the other
+ * atom, which are drawn on their own.
  */
 function AtomShells({
   atom,
+  clock,
   keep,
   x,
 }: {
   readonly atom: IonAtom;
+  readonly clock: RefObject<number>;
   readonly keep: number;
   readonly x: number;
 }) {
-  const shells = Arr.map(atom.shells, (count, index) => ({
-    count: index === atom.shells.length - 1 ? count - keep : count,
-    radius: shellRadius(atom, index + 1),
-    shell: index + 1,
-  }));
+  const step = shellRadius(atom, 1);
+  const orbits = useMemo(
+    () =>
+      orbitsOf(
+        Arr.map(atom.shells, (count, index) =>
+          index === atom.shells.length - 1 ? count - keep : count
+        ),
+        step,
+        step
+      ),
+    [atom.shells, keep, step]
+  );
+  const protons = Arr.reduce(atom.shells, 0, (sum, count) => sum + count);
 
   return (
-    <group position={[x, 0, 0]}>
-      <mesh>
-        <sphereGeometry args={[0.1, 24, 16]} />
-        <meshPhysicalMaterial
-          clearcoat={0.8}
-          color={ELEMENTS[atom.symbol].color}
-          roughness={0.3}
-        />
-      </mesh>
-      {Arr.map(shells, (shell) => (
-        <group key={shell.shell}>
-          <mesh>
-            <torusGeometry args={[shell.radius, 0.008, 8, 128]} />
-            <meshStandardMaterial color={getColor("SLATE", 400)} />
-          </mesh>
-          {Arr.map(
-            shell.count > 0 ? Arr.range(1, shell.count) : [],
-            (electron) => {
-              const angle =
-                (2 * Math.PI * electron) / shell.count + shell.shell;
-              return (
-                <mesh
-                  key={electron}
-                  position={[
-                    shell.radius * Math.cos(angle),
-                    shell.radius * Math.sin(angle),
-                    0,
-                  ]}
-                >
-                  <sphereGeometry args={[0.055, 14, 10]} />
-                  <meshStandardMaterial
-                    color={getColor("SLATE", 50)}
-                    emissive={getColor("SLATE", 200)}
-                    emissiveIntensity={1.2}
-                  />
-                </mesh>
-              );
-            }
-          )}
-        </group>
-      ))}
+    <group position={[x, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+      <AtomNucleus
+        neutrons={neutronsOf(protons)}
+        nucleon={NUCLEON}
+        protons={protons}
+      />
+      <BohrShells
+        clock={clock}
+        orbits={orbits}
+        valence={atom.shells.length - 1}
+      />
     </group>
   );
 }
 
-/** Faces both atoms from the front, farther back on a narrow card. */
+/** Faces both atoms from the front and frames the pair, whatever the card's shape. */
 function TransferCamera() {
-  const size = useThree((state) => state.size);
-  const narrow = size.width < size.height * 1.2;
-  const distance = narrow ? 15 : 11;
   return (
     <CameraControls
-      cameraPosition={[0, distance * 0.15, distance]}
+      cameraPosition={[0, 1.6, 11]}
       cameraTarget={[0, -0.2, 0]}
       fov={40}
-      maxDistance={distance * 1.8}
-      minDistance={3}
+      framing="content"
     />
   );
 }
