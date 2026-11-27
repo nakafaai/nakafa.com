@@ -90,8 +90,8 @@ function insideMathOrExemptContext(node: Node): boolean {
 }
 
 /** Returns the attribute name carrying a numeric/unit readout on `tag`, if any. */
-function readoutAttribute(tag: string): string | undefined {
-  if (HashSet.has(FACT_TAGS, tag)) {
+function readoutAttribute(tag: string | undefined): string | undefined {
+  if (tag !== undefined && HashSet.has(FACT_TAGS, tag)) {
     return "value";
   }
   if (tag === SLIDER_TAG) {

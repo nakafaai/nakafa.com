@@ -96,6 +96,7 @@ describe("Math expression source policy", () => {
       <VisualSlider aria-label="10^23" readout={<InlineMath math={\`\${v}\\%\`} />} />
       <VisualFact label="Note" value="Healthy leaf" />
       <VisualFactTabular label="Count" value={\`\${n}\`} />
+      <Box.Row />
       <section className="gap-2">{row.math}</section>
     </>
   );
