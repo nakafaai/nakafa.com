@@ -69,6 +69,7 @@ export const SurfaceSchema = Schema.Literals([
   "mucosa",
   "sand",
   "cytoplasm",
+  "fur",
 ]);
 export type Surface = typeof SurfaceSchema.Type;
 
@@ -119,6 +120,7 @@ const LOOKS: Record<Surface, typeof LookSchema.Type> = {
   mucosa: { dip: 0.26, relief: 0.32, rough: 0.2, wear: 0.16 },
   sand: { dip: 0.3, relief: 0.6, rough: 0.9, wear: 0.06 },
   cytoplasm: { dip: 0.16, relief: 0.16, rough: 0.28, wear: 0.12 },
+  fur: { dip: 0.3, relief: 0.5, rough: 0.72, wear: 0.24 },
 };
 
 /** How tall the deepest relief stands, in tile widths. */
@@ -172,7 +174,8 @@ export const BOARDS = 4;
  * proud at its free edge. Mucosa is wet living lining, softly folded and
  * threaded with fine vessels. Sand lies in ripples the water left, grain by
  * grain. Cytoplasm is the inside of one living cell seen through its
- * membrane: clouded, and speckled with granules.
+ * membrane: clouded, and speckled with granules. Fur is a short coat that
+ * lies one way: fine strands in soft clumps.
  */
 const PATTERNS: Record<
   Surface,
@@ -431,6 +434,15 @@ const PATTERNS: Record<
     return {
       height: 0.35 + 0.35 * cloud + 0.3 * granule,
       shade: 0.74 + 0.26 * cloud - 0.22 * granule,
+    };
+  },
+  fur: (x, y) => {
+    const strands = fractalAt(x, y, 9, 150, 229, 3);
+    const clumps = fractalAt(x, y, 7, 12, 233, 2);
+    const tips = ridgedAt(x, y, 14, 220, 239, 2);
+    return {
+      height: 0.2 + 0.45 * strands + 0.2 * clumps + 0.15 * tips,
+      shade: 0.52 + 0.3 * strands + 0.18 * clumps,
     };
   },
 };

@@ -75,35 +75,3 @@ Open-Source 3D Fauna Reference Models
    License: Creative Commons Attribution 4.0 International (CC-BY-4.0)
    License URL: https://creativecommons.org/licenses/by/4.0/
    Processing: gltf-transform: animation removed (rig kept in its first pose), alpha mask, weld, quantize, 1024px WebP texture
-
-11. ccby-leopard.glb
-   Title: leopard
-   Author: dinomaster
-   Source: https://sketchfab.com/3d-models/2528ea73ca62461c9b300a1ff216521e
-   License: Creative Commons Attribution 4.0 International (CC-BY-4.0)
-   License URL: https://creativecommons.org/licenses/by/4.0/
-   Processing: Changed. The base colour texture is replaced by a coat painted in code from each surface point (golden fur, broken black rosettes, white underside); then gltf-transform join, weld, quantize, 1024px WebP texture
-
-12. ccby-leopard-cat.glb
-   Title: leopard
-   Author: dinomaster
-   Source: https://sketchfab.com/3d-models/2528ea73ca62461c9b300a1ff216521e
-   License: Creative Commons Attribution 4.0 International (CC-BY-4.0)
-   License URL: https://creativecommons.org/licenses/by/4.0/
-   Processing: Changed. The same mesh with a leopard cat coat painted in code (tawny fur, solid black spots, striped crown, white underside); then gltf-transform join, weld, quantize, 1024px WebP texture
-
-13. ccby-sun-bear.glb
-   Title: Bear
-   Author: Nyilonelycompany
-   Source: https://sketchfab.com/3d-models/ce0d5eb86cf5459bb6bd20244cb44b27
-   License: Creative Commons Attribution 4.0 International (CC-BY-4.0)
-   License URL: https://creativecommons.org/licenses/by/4.0/
-   Processing: Changed. The brown fur texture is recoloured in code to a sun bear coat (black fur keeping the fur detail, pale muzzle, ochre chest crescent); the rig is baked into its standing pose and removed; then gltf-transform weld, quantize, 1024px WebP texture
-
-14. ccby-malayan-tapir.glb
-   Title: Baby Tapir
-   Author: pandalog
-   Source: https://sketchfab.com/3d-models/eb47c254025943f1b234355d368f8611
-   License: Creative Commons Attribution 4.0 International (CC-BY-4.0)
-   License URL: https://creativecommons.org/licenses/by/4.0/
-   Processing: Changed. The calf's striped texture is replaced by the adult Malayan tapir coat painted in code (black head, shoulders and legs, white saddle, white ear rims); then gltf-transform join, weld, quantize, 1024px WebP texture
