@@ -5,6 +5,7 @@ import { assert, it } from "@effect/vitest";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import { ContentSnapshotKindSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
@@ -15,6 +16,7 @@ import {
 import {
   recomputeProgram,
   verifyArtifactBatchProgram,
+  verifySnapshotFamilyProgram,
 } from "@repo/backend/confect/contentRelease/proof/verify";
 import { beginVerification } from "@repo/backend/confect/contentRelease/verify";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -57,7 +59,7 @@ import {
 import { parse } from "convex-helpers/validators";
 import type { TestConvex } from "convex-test";
 import type { Context } from "effect";
-import { Data, Effect, Schema } from "effect";
+import { Array as Arr, Data, Effect, Predicate, Schema } from "effect";
 
 /** The private proof poll coordinator, as a test provides it. */
 type ProofPollCoordinatorService = Context.Service.Shape<
@@ -312,9 +314,27 @@ export async function recomputeContentProof(
     );
     verifiedArtifacts += receipt.verifiedArtifacts;
   }
+  const familyProofs = await Promise.all(
+    Arr.map(ContentSnapshotKindSchema.literals, (family) =>
+      target.action((ctx) =>
+        Effect.runPromise(
+          verifySnapshotFamilyProgram(manifestHash, releaseId, family).pipe(
+            Effect.provideService(ContentVerificationKeyResolver, resolver),
+            Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+          )
+        )
+      )
+    )
+  );
+  const snapshotProofs = Arr.filter(familyProofs, Predicate.isNotNull);
   return target.action((ctx) =>
     Effect.runPromise(
-      recomputeProgram(manifestHash, releaseId, verifiedArtifacts).pipe(
+      recomputeProgram(
+        manifestHash,
+        releaseId,
+        verifiedArtifacts,
+        snapshotProofs
+      ).pipe(
         Effect.provideService(ContentVerificationKeyResolver, resolver),
         Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
       )

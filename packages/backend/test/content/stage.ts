@@ -3,8 +3,10 @@ import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import type { ReleaseId } from "@nakafa/aksara-contracts/ids";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
+import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { PublicationScopeSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { ContentSnapshotSetSchema } from "@nakafa/aksara-contracts/release/snapshot/spec";
+import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import { INITIAL_MODEL_SLOT } from "@repo/backend/confect/contentRelease/models/slot";
@@ -14,7 +16,10 @@ import type {
   MutationCtx,
 } from "@repo/backend/convex/_generated/server";
 import type schema from "@repo/backend/convex/schema";
-import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
+import {
+  TEST_KEY_RESOLVER,
+  TEST_PROOF_RENDERER,
+} from "@repo/backend/test/content/proof";
 import {
   TEST_DIGEST,
   TEST_MANIFEST_HASH,
@@ -234,5 +239,44 @@ export async function insertTestRelease(
     nextSequence: sequence + 1,
     searchSlot: INITIAL_MODEL_SLOT,
     updatedAt: now,
+  });
+}
+
+/** Inserts one completed signed release used as a recovery proof base. */
+export function insertCompletedRelease(
+  ctx: MutationCtx,
+  release: SignedContentRelease,
+  stagedSnapshotRows: number
+) {
+  return ctx.db.insert("contentReleases", {
+    ...releaseReachability(release),
+    baseFamilies: [],
+    checkedIndex: -1,
+    checkedItems: 0,
+    completedAt: 1,
+    createdAt: 1,
+    proofAt: 1,
+    proofJson: "{}",
+    releaseId: release.manifest.releaseId,
+    releaseJson: Schema.encodeSync(
+      Schema.fromJsonString(SignedContentReleaseSchema)
+    )(release),
+    rendererJson: Schema.encodeSync(
+      Schema.fromJsonString(RendererManifestEnvelopeSchema)
+    )(TEST_PROOF_RENDERER),
+    resultFamilies: [...release.manifest.scope.families],
+    role: "candidate",
+    sequence: 1,
+    stagedArtifacts: 0,
+    stagedDeletes: 0,
+    stagedItems: 0,
+    stagedProjections: 0,
+    stagedRoutes: 0,
+    stagedSnapshotBatches: 1,
+    stagedSnapshotRows,
+    stagedUpserts: 0,
+    status: "completed",
+    updatedAt: 1,
+    verifiedAt: 1,
   });
 }

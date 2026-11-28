@@ -1,7 +1,8 @@
+import { ContentSnapshotKindSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { workflow } from "@repo/backend/confect/workflow";
 import { internal } from "@repo/backend/convex/_generated/api";
 import { v } from "convex/values";
-import { Array as Arr } from "effect";
+import { Array as Arr, Predicate } from "effect";
 
 const ARTIFACT_PROOF_PARALLELISM = 4;
 const PROOF_RETRY = {
@@ -49,9 +50,27 @@ export const verifyRelease = workflow.define({
         (count, receipt) => count + receipt.verifiedArtifacts
       );
     }
+    // Each snapshot family owns a whole action: proving every family inside the
+    // final proof outran its ten minutes once assessment passed 30,000 rows.
+    const snapshotProofs = await Promise.all(
+      Arr.map(ContentSnapshotKindSchema.literals, (family) =>
+        step.runAction(
+          internal.contentRelease.proof.verify.verifySnapshots,
+          { ...args, family },
+          {
+            name: `verify ${family} snapshot`,
+            retry: PROOF_RETRY,
+          }
+        )
+      )
+    );
     await step.runAction(
       internal.contentRelease.proof.verify.verifyRelease,
-      { ...args, verifiedArtifacts },
+      {
+        ...args,
+        snapshotProofs: Arr.filter(snapshotProofs, Predicate.isNotNull),
+        verifiedArtifacts,
+      },
       { retry: PROOF_RETRY }
     );
     return null;

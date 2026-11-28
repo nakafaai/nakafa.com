@@ -20720,9 +20720,40 @@ export declare const internal: {
           {
             manifestHash: string;
             releaseId: string;
+            snapshotProofs: Array<{
+              family: "assessment" | "program" | "quran";
+              stagedRows: number;
+              state: {
+                baseSnapshotId: string | null;
+                mode: "inherit" | "replace" | "restore";
+                resultSnapshotId: string | null;
+                rowCount: number;
+                rowDigest: string;
+              };
+            }>;
             verifiedArtifacts: number;
           },
           null
+        >;
+        verifySnapshots: FunctionReference<
+          "action",
+          "internal",
+          {
+            family: "assessment" | "program" | "quran";
+            manifestHash: string;
+            releaseId: string;
+          },
+          {
+            family: "assessment" | "program" | "quran";
+            stagedRows: number;
+            state: {
+              baseSnapshotId: string | null;
+              mode: "inherit" | "replace" | "restore";
+              resultSnapshotId: string | null;
+              rowCount: number;
+              rowDigest: string;
+            };
+          } | null
         >;
       };
       workflow: {
@@ -21411,6 +21442,12 @@ export declare const internal: {
         >;
       };
       read: {
+        batchCount: FunctionReference<
+          "query",
+          "internal",
+          { family: "assessment" | "program" | "quran"; releaseId: string },
+          number
+        >;
         manifest: FunctionReference<
           "query",
           "internal",

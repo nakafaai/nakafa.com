@@ -30,6 +30,16 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.internalQuery({
+      name: "batchCount",
+      args: () => ({
+        family: snapshotFamilyValidator,
+        releaseId: Schema.String,
+      }),
+      returns: () => Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+    })
+  )
+  .addFunction(
+    FunctionSpec.internalQuery({
       name: "rows",
       args: () => ({
         afterBatchIndex: Schema.Int.check(Schema.isGreaterThanOrEqualTo(-1)),

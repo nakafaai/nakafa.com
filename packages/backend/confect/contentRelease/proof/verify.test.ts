@@ -136,7 +136,7 @@ describe("contentRelease/proof/verify", () => {
                 return runQuery(reference, args);
               });
               return Effect.runPromiseWith(runtimeServices)(
-                recomputeProgram(manifestHash, releaseId, 0).pipe(
+                recomputeProgram(manifestHash, releaseId, 0, []).pipe(
                   Effect.provideService(
                     ContentVerificationKeyResolver,
                     TEST_KEY_RESOLVER
@@ -167,7 +167,7 @@ describe("contentRelease/proof/verify", () => {
       await expect(
         t.action((ctx) =>
           Effect.runPromise(
-            recomputeProgram(manifestHash, releaseId, 1).pipe(
+            recomputeProgram(manifestHash, releaseId, 1, []).pipe(
               Effect.provideService(
                 ContentVerificationKeyResolver,
                 TEST_KEY_RESOLVER
@@ -198,9 +198,21 @@ describe("contentRelease/proof/verify", () => {
         },
       });
       await expect(
+        t.action(internal.contentRelease.proof.verify.verifySnapshots, {
+          family: "assessment",
+          manifestHash,
+          releaseId,
+        })
+      ).rejects.toMatchObject({
+        data: {
+          code: "CONTENT_RELEASE_MISSING",
+        },
+      });
+      await expect(
         t.action(internal.contentRelease.proof.verify.verifyRelease, {
           manifestHash,
           releaseId,
+          snapshotProofs: [],
           verifiedArtifacts: 0,
         })
       ).rejects.toMatchObject({
@@ -282,7 +294,7 @@ describe("contentRelease/proof/verify", () => {
         const result = yield* Effect.promise(() =>
           t.action((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              recomputeProgram(manifestHash, releaseId, 0).pipe(
+              recomputeProgram(manifestHash, releaseId, 0, []).pipe(
                 Effect.match({
                   onFailure: (error) => ({
                     code: error.code,

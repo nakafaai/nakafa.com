@@ -3,6 +3,7 @@
 import type { ReleaseVerificationEvidence } from "@nakafa/aksara-contracts/release";
 import { verifyResultCatalog } from "@nakafa/aksara-contracts/release/result/digest";
 import { verifyContentRoutes } from "@nakafa/aksara-contracts/release/route/verify";
+import type { ContentSnapshotKind } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import { verifySignedContentRelease } from "@nakafa/aksara-contracts/release/verify";
 import { validateRendererManifestHash } from "@nakafa/aksara-contracts/renderer/manifest";
 import contentReleaseInternal from "@repo/backend/confect/_generated/refs/contentRelease.server";
@@ -19,7 +20,11 @@ import { verifyArtifactBatch } from "@repo/backend/confect/contentRelease/proof/
 import { verifyContentStreams } from "@repo/backend/confect/contentRelease/proof/content";
 import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
 import type { RouteCatalogPage } from "@repo/backend/confect/contentRelease/proof/routes";
-import { verifyReleaseSnapshots } from "@repo/backend/confect/contentRelease/proof/snapshot";
+import {
+  proveSnapshotFamily,
+  verifyReleaseSnapshots,
+} from "@repo/backend/confect/contentRelease/proof/snapshot";
+import type { FamilySnapshotProof } from "@repo/backend/confect/contentRelease/proof/spec";
 import {
   readProofStream,
   readResultStream,
@@ -130,12 +135,25 @@ export const verifyArtifactBatchProgram = Effect.fn(
   };
 });
 
+/** Proves one replaced snapshot family on its own rows in its own Node worker. */
+export const verifySnapshotFamilyProgram = Effect.fn(
+  "contentRelease.verifySnapshotFamilyProof"
+)(function* (
+  manifestHash: string,
+  releaseId: string,
+  family: ContentSnapshotKind
+) {
+  const { release, state } = yield* loadProofIdentity(manifestHash, releaseId);
+  return yield* proveSnapshotFamily(release, state.role, family);
+});
+
 /** Recomputes the complete authenticated proof before activation. */
 export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
   function* (
     manifestHash: string,
     releaseId: string,
-    verifiedArtifacts: number
+    verifiedArtifacts: number,
+    snapshotProofs: readonly FamilySnapshotProof[]
   ) {
     const { runMutation } = yield* MutationRunner;
     const { release, state } = yield* loadProofIdentity(
@@ -161,7 +179,8 @@ export const recomputeProgram = Effect.fn("contentRelease.recomputeProof")(
           release,
           state.role,
           state.stagedSnapshotBatches,
-          state.stagedSnapshotRows
+          state.stagedSnapshotRows,
+          snapshotProofs
         ),
       },
       {

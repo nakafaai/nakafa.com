@@ -28,6 +28,7 @@ import { Array as Arr, Effect, Match, Struct } from "effect";
 
 const readManifest = internal.contentRelease.snapshot.read.manifest;
 const readRows = internal.contentRelease.snapshot.read.rows;
+const readBatchCount = internal.contentRelease.snapshot.read.batchCount;
 /** Caps that read exactly one batch per page, as the ledger checks expect. */
 const ONE_BATCH = { maxBatches: 1, maxBytes: MAX_RUN_BYTES };
 describe("contentRelease/snapshot/read", () => {
@@ -273,6 +274,17 @@ describe("contentRelease/snapshot/read", () => {
           })
         ).resolves.toBe(data.manifestJson)
       );
+      // The ledger counts the three staged program batches and none for Quran.
+      for (const [family, count] of [
+        ["program", 3],
+        ["quran", 0],
+      ] as const) {
+        yield* Effect.promise(() =>
+          expect(
+            t.query(readBatchCount, { family, releaseId: TEST_RELEASE_ID })
+          ).resolves.toBe(count)
+        );
+      }
       const all = data.rowJson.length;
       const wide = { maxBatches: 128, maxBytes: MAX_RUN_BYTES };
       // [after, caps, first batch, done, next, first row, end row]

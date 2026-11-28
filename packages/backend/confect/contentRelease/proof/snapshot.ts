@@ -6,6 +6,7 @@ import { ContentSnapshotKindSchema } from "@nakafa/aksara-contracts/release/snap
 import type { ContentSnapshotSet } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import {
   hasSameContentSnapshots,
+  inheritContentSnapshots,
   invertContentSnapshots,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { verifyContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/verify";
@@ -16,10 +17,11 @@ import type { ReleaseRole } from "@repo/backend/confect/contentRelease/model";
 import {
   decodeReleaseJson,
   decodeSnapshotJson,
-  parseStoredJson,
 } from "@repo/backend/confect/contentRelease/parse";
 import { contractFailure } from "@repo/backend/confect/contentRelease/proof/failure";
-import { Array as Arr, Effect, Option, Stream } from "effect";
+import type { FamilySnapshotProof } from "@repo/backend/confect/contentRelease/proof/spec";
+import { snapshotFamilyRows } from "@repo/backend/confect/contentRelease/proof/window";
+import { Array as Arr, Effect, Stream } from "effect";
 
 /** Returns fixed replacement families in canonical signed order. */
 function replacementFamilies(release: SignedContentRelease) {
@@ -54,102 +56,6 @@ const readManifest = Effect.fn("contentRelease.readProofSnapshotManifest")(
   }
 );
 
-/**
- * Batches the proof joins into one row page. A release stages snapshots in
- * batches of at most 16 rows, so reading them one per query cost the proof over
- * 1,400 sequential Convex round trips and ran it past the publisher's
- * ten-minute window.
- */
-const PROOF_RUN_BATCHES = 64;
-/** Row JSON one page may start another batch under: a few MiB per round trip. */
-const PROOF_RUN_BYTES = 4 * 1024 * 1024;
-
-/** Creates one replayable family row stream from exact release batch ledgers. */
-function familyRows(releaseId: string, family: ContentSnapshotKind) {
-  return Stream.paginate(-1, (afterBatchIndex) =>
-    QueryRunner.pipe(
-      Effect.flatMap(({ runQuery }) =>
-        runQuery(contentReleaseInternal.snapshot.read.rows, {
-          afterBatchIndex,
-          family,
-          maxBatches: PROOF_RUN_BATCHES,
-          maxBytes: PROOF_RUN_BYTES,
-          releaseId,
-        })
-      ),
-      Effect.catchTag("SchemaError", Effect.die),
-      Effect.map(
-        (page): readonly [readonly string[], Option.Option<number>] => [
-          page.rowJson,
-          Option.filter(Option.some(page.nextBatchIndex), () => !page.done),
-        ]
-      )
-    )
-  ).pipe(Stream.mapEffect(parseStoredJson));
-}
-
-/**
- * Authenticates one replaced family against its own manifest and only its own rows. The contract replays its row
- * stream once to count and once per manifest, so a stream of every family decoded every row once per family plus
- * once: a release replacing all three decoded each row four times and outran an action's ten minutes.
- */
-const verifyFamily = Effect.fn("contentRelease.verifyFamilySnapshot")(
-  function* (
-    release: SignedContentRelease,
-    previous: ContentSnapshotSet | null,
-    family: ContentSnapshotKind
-  ) {
-    const releaseId = release.manifest.releaseId;
-    return yield* verifyContentSnapshots({
-      manifests: Stream.fromEffect(readManifest(releaseId, family)),
-      previousSnapshots: previous,
-      rows: familyRows(releaseId, family),
-    }).pipe(Effect.mapError(contractFailure));
-  }
-);
-
-/**
- * Authenticates every replaced family, each on its own rows, and joins the proofs: a family takes the state its own
- * proof derived, and every family no proof replaced keeps the inherited state all proofs share.
- */
-const verifyFamilies = Effect.fn("contentRelease.verifyFamilySnapshots")(
-  function* (
-    release: SignedContentRelease,
-    previous: ContentSnapshotSet | null
-  ) {
-    const families = replacementFamilies(release);
-    const proofs = yield* Effect.forEach(
-      families,
-      (family) => verifyFamily(release, previous, family),
-      { concurrency: "unbounded" }
-    );
-    if (!Arr.isArrayNonEmpty(proofs)) {
-      return yield* verifyContentSnapshots({
-        manifests: Stream.empty,
-        previousSnapshots: previous,
-        rows: Stream.empty,
-      }).pipe(Effect.mapError(contractFailure));
-    }
-    const proven = Arr.zip(families, proofs);
-    const pick = (family: ContentSnapshotKind) =>
-      Option.match(
-        Arr.findFirst(proven, ([each]) => each === family),
-        {
-          onNone: () => proofs[0].snapshots[family],
-          onSome: ([, proof]) => proof.snapshots[family],
-        }
-      );
-    return {
-      snapshots: {
-        assessment: pick("assessment"),
-        program: pick("program"),
-        quran: pick("quran"),
-      },
-      stagedRows: Arr.reduce(proofs, 0, (sum, proof) => sum + proof.stagedRows),
-    };
-  }
-);
-
 /** Loads the exact signed base snapshot set or the empty genesis identity. */
 const loadPrevious = Effect.fn("contentRelease.loadPreviousSnapshots")(
   function* (release: SignedContentRelease) {
@@ -172,6 +78,79 @@ const loadPrevious = Effect.fn("contentRelease.loadPreviousSnapshots")(
   }
 );
 
+/** A rollback or recovery restores its base's snapshots without staging rows. */
+function restoresPrevious(release: SignedContentRelease, role: ReleaseRole) {
+  return role === "recovery" || release.manifest.origin.kind === "rollback";
+}
+
+/**
+ * Authenticates one replaced family against its own manifest and only its own
+ * rows, in its own durable step, so the largest family owns a whole action. The
+ * contract replays its row stream once to count and once per manifest pass.
+ * Returns null for a family the release keeps, and for every family of a
+ * release that restores its base.
+ */
+export const proveSnapshotFamily = Effect.fn(
+  "contentRelease.proveSnapshotFamily"
+)(function* (
+  release: SignedContentRelease,
+  role: ReleaseRole,
+  family: ContentSnapshotKind
+) {
+  if (
+    restoresPrevious(release, role) ||
+    release.manifest.snapshots[family].mode !== "replace"
+  ) {
+    return null;
+  }
+  const releaseId = release.manifest.releaseId;
+  const previous = yield* loadPrevious(release);
+  const proof = yield* verifyContentSnapshots({
+    manifests: Stream.fromEffect(readManifest(releaseId, family)),
+    previousSnapshots: previous,
+    rows: snapshotFamilyRows(releaseId, family),
+  }).pipe(Effect.mapError(contractFailure));
+  return {
+    family,
+    stagedRows: proof.stagedRows,
+    state: proof.snapshots[family],
+  } satisfies FamilySnapshotProof;
+});
+
+/**
+ * Joins the family proofs: each replaced family takes the state its own proof
+ * derived, and every family the release keeps inherits its base result, as
+ * the contract derives it. The proofs must name exactly the replaced families.
+ */
+const joinFamilies = Effect.fn("contentRelease.joinFamilySnapshots")(function* (
+  release: SignedContentRelease,
+  previous: ContentSnapshotSet | null,
+  proofs: readonly FamilySnapshotProof[]
+) {
+  const families = replacementFamilies(release);
+  const proven = Arr.map(proofs, (proof) => proof.family);
+  if (
+    families.length !== proven.length ||
+    !Arr.every(families, (family, index) => proven[index] === family)
+  ) {
+    return yield* releaseFail(
+      "CONTENT_RELEASE_INTEGRITY",
+      `Release ${release.manifest.releaseId} snapshot proofs do not cover its replaced families.`
+    );
+  }
+  return {
+    snapshots: Arr.reduce(
+      proofs,
+      inheritContentSnapshots(previous),
+      (snapshots, proof): ContentSnapshotSet => ({
+        ...snapshots,
+        [proof.family]: proof.state,
+      })
+    ),
+    stagedRows: Arr.reduce(proofs, 0, (sum, proof) => sum + proof.stagedRows),
+  };
+});
+
 /** Authenticates candidate replacements or one zero-copy recovery inverse. */
 export const verifyReleaseSnapshots = Effect.fn(
   "contentRelease.verifyReleaseSnapshots"
@@ -179,16 +158,16 @@ export const verifyReleaseSnapshots = Effect.fn(
   release: SignedContentRelease,
   role: ReleaseRole,
   stagedSnapshotBatches: number,
-  stagedSnapshotRows: number
+  stagedSnapshotRows: number,
+  proofs: readonly FamilySnapshotProof[]
 ) {
   const previous = yield* loadPrevious(release);
-  const restoresPrevious =
-    role === "recovery" || release.manifest.origin.kind === "rollback";
-  if (restoresPrevious) {
+  if (restoresPrevious(release, role)) {
     if (
       previous === null ||
       stagedSnapshotBatches !== 0 ||
       stagedSnapshotRows !== 0 ||
+      proofs.length !== 0 ||
       !hasSameContentSnapshots(
         release.manifest.snapshots,
         invertContentSnapshots(previous)
@@ -204,7 +183,7 @@ export const verifyReleaseSnapshots = Effect.fn(
       stagedRows: 0,
     };
   }
-  const verified = yield* verifyFamilies(release, previous);
+  const verified = yield* joinFamilies(release, previous, proofs);
   if (
     stagedSnapshotRows !== verified.stagedRows ||
     !hasSameContentSnapshots(verified.snapshots, release.manifest.snapshots)
