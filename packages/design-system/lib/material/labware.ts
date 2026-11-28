@@ -47,6 +47,9 @@ export const LABWARE_COLORS = {
   // The pale agar jelly of a salt bridge and the cotton wool that plugs it.
   agar: "#efe7cf",
   cotton: "#f3f1ea",
+  // A burette reader: a white card and the matt black band across it.
+  card: "#f6f5f0",
+  cardBand: "#0c0c0d",
   // The glaze of a white tile.
   tile: "#e4ddd2",
   // The red rubber of tubing and a bung, and the black rubber of a foot.
