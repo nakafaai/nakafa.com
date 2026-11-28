@@ -13,6 +13,7 @@ import { Array as Arr, Match } from "effect";
 import {
   Box2,
   Box3,
+  Matrix4,
   OrthographicCamera,
   PerspectiveCamera,
   Vector2,
@@ -29,10 +30,23 @@ const FRAMES = [
 const FIELDS = [30, 50, 75];
 const position = new Vector3(...DEFAULT_CAMERA_POSITION);
 const target = new Vector3(...DEFAULT_CAMERA_TARGET);
-const box: CameraSilhouette = {
-  box: new Box3(new Vector3(-3, -0.5, -1), new Vector3(2, 1.5, 1)),
-  kind: "box",
-};
+/** The hull of a box's eight corners, as the measurement gives a part. */
+function hullOf(
+  min: Vector3,
+  max: Vector3,
+  matrix = new Matrix4()
+): CameraSilhouette {
+  return {
+    kind: "hull",
+    points: Arr.flatMap([min.x, max.x], (x) =>
+      Arr.flatMap([min.y, max.y], (y) =>
+        Arr.map([min.z, max.z], (z) => new Vector3(x, y, z).applyMatrix4(matrix))
+      )
+    ),
+  };
+}
+
+const box = hullOf(new Vector3(-3, -0.5, -1), new Vector3(2, 1.5, 1));
 const sphere: CameraSilhouette = {
   center: new Vector3(1, 2, -1),
   kind: "sphere",
@@ -49,12 +63,7 @@ const ring: CameraSilhouette = {
 function surface(silhouette: CameraSilhouette) {
   return Match.value(silhouette).pipe(
     Match.discriminatorsExhaustive("kind")({
-      box: ({ box: { max, min } }) =>
-        Arr.flatMap([min.x, max.x], (x) =>
-          Arr.flatMap([min.y, max.y], (y) =>
-            Arr.map([min.z, max.z], (z) => new Vector3(x, y, z))
-          )
-        ),
+      hull: ({ points }) => points,
       ring: ({ center, normal, radius }) => {
         const first = new Vector3(1, 0, 0).cross(normal).normalize();
         const second = first.clone().cross(normal);
@@ -163,7 +172,12 @@ describe("resolveContentFit", () => {
             expect(framed.min.y + framed.max.y).toBeCloseTo(1, 2);
 
             const boxed = fitOf(
-              [{ box: silhouetteBounds(round), kind: "box" }],
+              [
+                hullOf(
+                  silhouetteBounds(round).min,
+                  silhouetteBounds(round).max
+                ),
+              ],
               view,
               projection
             );
@@ -194,10 +208,7 @@ describe("resolveContentFit", () => {
   });
 
   it("keeps the camera off a subject without size and honours a minimum view height", () => {
-    const point: CameraSilhouette = {
-      box: new Box3(new Vector3(1, 1, 1), new Vector3(1, 1, 1)),
-      kind: "box",
-    };
+    const point = hullOf(new Vector3(1, 1, 1), new Vector3(1, 1, 1));
     const view = { fov: 50, height: 600, width: 800 };
 
     const near = fitOf([point], view);
@@ -220,10 +231,7 @@ describe("resolveContentFit", () => {
   it("reserves exactly a pixel label's rectangle and nothing when there is none", () => {
     const view = { fov: 45, height: 600, width: 800 };
     const front = new Vector3(0, 0, 5);
-    const cube: CameraSilhouette = {
-      box: new Box3(new Vector3(-1, -1, -1), new Vector3(1, 1, 1)),
-      kind: "box",
-    };
+    const cube = hullOf(new Vector3(-1, -1, -1), new Vector3(1, 1, 1));
     const input = {
       ...view,
       minimumViewHeight: 0,
@@ -282,6 +290,63 @@ describe("resolveContentFit", () => {
     expect(flatAnchor.max.x * view.width + 240).toBeCloseTo(
       view.width * (1 - FRAME_EDGE_SHARE),
       4
+    );
+  });
+
+  it("fits a turned, sparse scene by its parts, not by the world box round them", () => {
+    const view = { fov: 50, height: 300, width: 390 };
+    // Two thin bars on a diagonal leave most of their world box empty.
+    const turn = new Matrix4().makeRotationY(Math.PI / 4);
+    const bar = (offset: number) =>
+      hullOf(
+        new Vector3(-2, -0.1, offset - 0.1),
+        new Vector3(2, 0.1, offset + 0.1),
+        turn
+      );
+    const parts = [bar(-1.5), bar(1.5)];
+    const world = new Box3();
+    for (const part of parts) {
+      world.union(silhouetteBounds(part));
+    }
+
+    const fit = fitOf(parts, view);
+    const boxed = fitOf([hullOf(world.min, world.max)], view);
+    const framed = frameOf(Arr.flatMap(parts, surface), fit, view, "perspective");
+
+    expect(fit.distance).toBeLessThan(boxed.distance * 0.97);
+    expect(framed.binding).toBeCloseTo(TIGHT, 6);
+  });
+
+  it("releases only the labels that cannot share the frame, largest first", () => {
+    const input = {
+      fov: 45,
+      height: 360,
+      minimumViewHeight: 0,
+      position: new Vector3(0, 0, 5),
+      projection: "perspective" as const,
+      silhouettes: [box],
+      target: new Vector3(),
+      width: 320,
+    };
+    const wide = {
+      anchors: new Box3(new Vector3(), new Vector3()),
+      gap: { x: 0, y: 0 },
+      rectangle: new Box2(new Vector2(-220, -20), new Vector2(220, 20)),
+    };
+    const small = {
+      anchors: new Box3(new Vector3(2, 0, 0), new Vector3(2, 0, 0)),
+      gap: { x: 0, y: 0 },
+      rectangle: new Box2(new Vector2(0, -10), new Vector2(60, 10)),
+    };
+
+    const kept = resolveContentFit({ ...input, labels: [small, wide] });
+    const alone = resolveContentFit({ ...input, labels: [small] });
+    const plain = resolveContentFit({ ...input, labels: [] });
+
+    expect(kept.distance).toBe(alone.distance);
+    expect(kept.distance).toBeGreaterThan(plain.distance);
+    expect(resolveContentFit({ ...input, labels: [wide, small] }).distance).toBe(
+      alone.distance
     );
   });
 
@@ -359,6 +424,7 @@ describe("cameraFitKey", () => {
     expect(limited).not.toBe(first);
     expect(limited).toContain(",2,40");
     expect(grown).not.toBe(first);
-    expect(first).toContain("box,-3,-0.5,-1,2,1.5,1,sphere,1,2,-1,1.5,ring");
+    expect(first).toContain("hull,-3,-0.5,-1,-3,-0.5,1,");
+    expect(first).toContain(",sphere,1,2,-1,1.5,ring,");
   });
 });

@@ -87,10 +87,11 @@ function labelAnchors(label: CameraPixelLabel, right: Vector3, up: Vector3) {
  * authored.
  *
  * Every silhouette is held inside the four frame edges by its true projected
- * outline: a box by its faces, a ball by its tangent cone, a ring by its
- * ellipse. A label that keeps a fixed pixel size reserves exactly its own
- * rectangle beside its anchor and nothing else; when the labels cannot share
- * the frame with the content, the content alone is fitted.
+ * outline: measured geometry by the hull of its parts' own boxes, a ball by
+ * its tangent cone, a ring by its ellipse. A label that keeps a fixed pixel
+ * size reserves exactly its own rectangle beside its anchor and nothing else.
+ * When the labels cannot all share the frame with the content, the largest
+ * ones are released one at a time, so every label that can stay in view does.
  */
 export function resolveContentFit({
   fov,
@@ -210,10 +211,12 @@ export function resolveContentFit({
     };
   };
 
-  const labelledFrame = frame(labels);
-  const fitted = Number.isFinite(labelledFrame.amount)
-    ? labelledFrame
-    : frame([]);
+  const fitKept = (kept: readonly CameraPixelLabel[]): ReturnType<typeof frame> => {
+    const framed = frame(kept);
+    // Without labels every limit closes in on the content, so this ends.
+    return Number.isFinite(framed.amount) ? framed : fitKept(withoutLargest(kept));
+  };
+  const fitted = fitKept(labels);
   const fittedTarget = center
     .clone()
     .addScaledVector(right, fitted.x())
@@ -235,6 +238,17 @@ export function resolveContentFit({
       ? 2 * fitted.amount * Math.tan(MathUtils.degToRad(fov) / 2)
       : fitted.amount,
   };
+}
+
+/** The labels without the one whose rectangle covers the most pixels. */
+function withoutLargest(labels: readonly CameraPixelLabel[]) {
+  const area = (label: CameraPixelLabel) =>
+    (label.rectangle.max.x - label.rectangle.min.x) *
+    (label.rectangle.max.y - label.rectangle.min.y);
+  const largest = Arr.reduce(labels, 0, (best, label, index) =>
+    area(label) > area(labels[best] ?? label) ? index : best
+  );
+  return Arr.remove(labels, largest);
 }
 
 /**
@@ -325,10 +339,9 @@ export function cameraFitKey(input: {
         ...Arr.flatMap(input.silhouettes, (silhouette) =>
           Match.value(silhouette).pipe(
             Match.discriminatorsExhaustive("kind")({
-              box: ({ box, kind }) => [
+              hull: ({ kind, points }) => [
                 kind,
-                ...box.min.toArray(),
-                ...box.max.toArray(),
+                ...Arr.flatMap(points, (point) => point.toArray()),
               ],
               ring: ({ center, kind, normal, radius }) => [
                 kind,

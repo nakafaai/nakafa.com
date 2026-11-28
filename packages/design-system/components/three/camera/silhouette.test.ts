@@ -115,16 +115,28 @@ describe("measureContent", () => {
   );
 });
 
+describe("silhouetteBounds", () => {
+  it("holds a hull's points", () => {
+    const bounds = silhouetteBounds({
+      kind: "hull",
+      points: [new Vector3(-1, 2, 0), new Vector3(3, -1, 4)],
+    });
+
+    expect(bounds.min.toArray()).toEqual([-1, -1, 0]);
+    expect(bounds.max.toArray()).toEqual([3, 2, 4]);
+  });
+});
+
 describe("silhouetteReach", () => {
-  it("measures a box by its faces, a ball by its radius and a ring by its tilt", () => {
+  it("measures a hull by its furthest point, a ball by its radius and a ring by its tilt", () => {
     const origin = new Vector3(1, 0, 0);
     const along = new Vector3(2, 0, 0);
 
     expect(
       silhouetteReach(
         {
-          box: new Box3(new Vector3(-1, -1, -1), new Vector3(3, 1, 1)),
-          kind: "box",
+          kind: "hull",
+          points: [new Vector3(-1, -1, -1), new Vector3(3, 1, 1)],
         },
         along,
         origin
