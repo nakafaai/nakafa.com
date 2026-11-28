@@ -1,5 +1,8 @@
 import { Backdrop } from "@repo/design-system/components/three/stage/backdrop";
-import { useStage } from "@repo/design-system/components/three/stage/context";
+import {
+  useDark,
+  useStage,
+} from "@repo/design-system/components/three/stage/context";
 import { Motes } from "@repo/design-system/components/three/stage/motes";
 import { toneColor } from "@repo/design-system/components/three/stage/place";
 import { Field } from "@repo/design-system/components/three/stage/scope";
@@ -8,7 +11,6 @@ import {
   SETTING_SUNS,
   Softboxes,
   Sun,
-  useDark,
 } from "@repo/design-system/components/three/stage/settings";
 import { getColor } from "@repo/design-system/lib/color";
 

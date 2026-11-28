@@ -1,9 +1,7 @@
 import { useThree } from "@react-three/fiber";
 import {
   Bloom,
-  BrightnessContrast,
   EffectComposer,
-  HueSaturation,
   N8AO,
   ToneMapping,
 } from "@react-three/postprocessing";
@@ -15,7 +13,7 @@ import { useEffect } from "react";
 
 /**
  * Restores direct WebGL rendering state if EffectComposer fails at runtime,
- * ensuring the scene continues rendering cleanly with PBR Neutral tone mapping.
+ * ensuring the scene continues rendering cleanly with the canvas's own film curve.
  */
 function DirectRendererFallback() {
   const gl = useThree((state) => state.gl);
@@ -31,13 +29,15 @@ function DirectRendererFallback() {
 
 /**
  * The photographic finish for capable desktop GPUs. Ambient occlusion darkens
- * creases and contacts, bloom lifts emissive accents, and Khronos PBR Neutral
- * tone mapping keeps authored colors true while keeping every part of an
- * educational specimen razor-sharp from foreground to background.
+ * creases and contacts, bloom lifts only what is brighter than a lit white
+ * surface (a lamp, a glowing tube, the sun's disc), and the ACES film curve
+ * gives every lab the contrast and highlight roll-off of a photograph. No
+ * colour grade, blur or vignette follows it, so this path and the direct
+ * one show the same picture.
  *
  * Mobile, low-end, software-rendered, and adaptively degraded canvases skip
- * multi-pass postprocessing completely and render directly with PBR Neutral
- * tone mapping on the main renderer, saving 50 to 90 MB of VRAM per canvas
+ * multi-pass postprocessing completely and render directly with the same
+ * film curve on the main renderer, saving 50 to 90 MB of VRAM per canvas
  * and keeping frame times inside 60 to 120 fps. A non-fatal ErrorBoundary
  * guarantees any shader or half-float failure falls back to direct rendering.
  */
@@ -67,9 +67,7 @@ export function Finish() {
           luminanceThreshold={2}
           mipmapBlur
         />
-        <ToneMapping mode={ToneMappingMode.NEUTRAL} />
-        <HueSaturation saturation={0.08} />
-        <BrightnessContrast contrast={0.08} />
+        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
       </EffectComposer>
     </ErrorBoundary>
   );

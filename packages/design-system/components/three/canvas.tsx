@@ -39,6 +39,7 @@ import {
 import { getSharedContextPool } from "@repo/design-system/components/three/pool";
 import { waitRetryDelay } from "@repo/design-system/components/three/retry";
 import { SceneDrawn } from "@repo/design-system/components/three/reveal";
+import { EXPOSURE } from "@repo/design-system/components/three/sky/tone";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import {
   useHasVisualCard,
@@ -65,7 +66,15 @@ import {
   useSyncExternalStore,
 } from "react";
 import type { ToneMapping, WebGLRenderer } from "three";
+import { Texture } from "three";
 import { useStore as useZustandStore } from "zustand";
+
+/**
+ * How many samples every texture takes along a surface seen at a slant,
+ * capped by what the graphics card offers. Without them a road, a bench or
+ * a lawn blurs to one tone a few steps from the camera.
+ */
+Texture.DEFAULT_ANISOTROPY = 8;
 
 /**
  * Shared Three.js canvas: one scene in a frame that keeps its size from the
@@ -390,6 +399,7 @@ function ThreeCanvasComponent({
                     failIfMajorPerformanceCaveat: false,
                     powerPreference,
                     toneMapping,
+                    toneMappingExposure: EXPOSURE,
                   }}
                   onCreated={(state) => {
                     intentionalLossRef.current = false;

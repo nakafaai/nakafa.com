@@ -83,7 +83,6 @@ describe("resolveStageProfile", () => {
       motes: 1600,
       postprocessing: true,
       shadowMapSize: 2048,
-      shadowRadius: 4,
       useExrEnvironment: true,
     });
   });
@@ -96,7 +95,6 @@ describe("resolveStageProfile", () => {
       motes: 1000,
       postprocessing: false,
       shadowMapSize: 2048,
-      shadowRadius: 3,
       useExrEnvironment: true,
     });
   });
@@ -109,7 +107,6 @@ describe("resolveStageProfile", () => {
       motes: 520,
       postprocessing: false,
       shadowMapSize: 1024,
-      shadowRadius: 2,
       useExrEnvironment: true,
     });
 
@@ -120,7 +117,6 @@ describe("resolveStageProfile", () => {
       motes: 260,
       postprocessing: false,
       shadowMapSize: 1024,
-      shadowRadius: 2,
       useExrEnvironment: false,
     });
   });
