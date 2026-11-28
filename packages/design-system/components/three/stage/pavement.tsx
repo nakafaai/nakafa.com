@@ -1,8 +1,9 @@
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { useStage } from "@repo/design-system/components/three/stage/context";
 import {
-  paintDashes,
+  paintLine,
   paintVerge,
+  paintWorn,
 } from "@repo/design-system/components/three/stage/marks";
 import { drape } from "@repo/design-system/components/three/stage/relief";
 import {
@@ -19,6 +20,7 @@ import {
   useRelief,
 } from "@repo/design-system/components/three/stage/terrain";
 import { getColor } from "@repo/design-system/lib/color";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useEffect, useMemo } from "react";
 import { BufferAttribute, BufferGeometry } from "three";
@@ -32,6 +34,29 @@ const LAYER = 0.004;
 
 /** How wide a painted line is, in scene units. */
 const LINE_WIDTH = 0.07;
+
+/** How wide one tile of the asphalt's grain lies, in scene units, so its stones stay the size of real aggregate. */
+const GRAIN = 0.6;
+
+/** How far a solid line runs before the wear on its paint repeats, in scene units. */
+const LINE_SPAN = 3.7;
+
+/** How far a wheel path runs before its wear repeats, in scene units. */
+const WORN_SPAN = 11;
+
+/**
+ * Where the wheels of the traffic in each lane run, in road widths from the
+ * middle of the road, and how wide the path they polish is.
+ */
+const WHEELS = { inner: 0.16, outer: 0.34, width: 0.1 } as const;
+
+/** The four wheel paths of a two-lane road, from one side to the other. */
+const WHEEL_KEYS = [
+  "near-outer",
+  "near-inner",
+  "far-inner",
+  "far-outer",
+] as const;
 
 /** A place on the ground: across and along, in scene units. */
 type Place = readonly [x: number, z: number];
@@ -111,8 +136,11 @@ export function Band({
   );
 }
 
-/** The paint of a road line, drawn nearer the camera than the asphalt under it. */
-function Paint({ dashes }: { readonly dashes?: ReturnType<typeof verge> }) {
+/**
+ * The paint of a road line, worn by traffic and weather, drawn nearer the
+ * camera than the asphalt under it.
+ */
+function Paint({ worn }: { readonly worn: ReturnType<typeof verge> }) {
   const { reach } = useStage();
   const horizonFade = useHorizonFade(
     HORIZON_FADE_INNER * reach,
@@ -121,8 +149,8 @@ function Paint({ dashes }: { readonly dashes?: ReturnType<typeof verge> }) {
 
   return (
     <meshStandardMaterial
-      alphaMap={dashes ?? null}
-      alphaTest={dashes === undefined ? 0 : 0.5}
+      alphaMap={worn}
+      alphaTest={0.5}
       color={getColor("ZINC", 100)}
       depthWrite={false}
       polygonOffset
@@ -136,9 +164,38 @@ function Paint({ dashes }: { readonly dashes?: ReturnType<typeof verge> }) {
 }
 
 /**
- * Asphalt along any path on the lab's ground: a gravel shoulder that fades
- * into the ground on both sides, the asphalt, its two edge lines and its
- * dashed centre line, all laid on the ground's relief. The camera leaves it
+ * The path wheels have polished into the asphalt of a lane: darker with
+ * rubber and smoother than the road beside it, so it catches the sky.
+ */
+function Wear({ worn }: { readonly worn: ReturnType<typeof verge> }) {
+  const { reach } = useStage();
+  const horizonFade = useHorizonFade(
+    HORIZON_FADE_INNER * reach,
+    HORIZON_FADE_OUTER * reach
+  );
+
+  return (
+    <meshStandardMaterial
+      alphaMap={worn}
+      color={getColor("ZINC", 900)}
+      depthWrite={false}
+      opacity={0.7}
+      polygonOffset
+      polygonOffsetFactor={-3}
+      polygonOffsetUnits={-12}
+      ref={horizonFade}
+      roughness={0.48}
+      transparent
+    />
+  );
+}
+
+/**
+ * Asphalt along any path on the lab's ground, flush with it: a shoulder
+ * that fades into the ground on both sides and that grass grows through,
+ * the asphalt with the paths wheels have polished into each lane, and its
+ * two edge lines and dashed centre line in worn paint, all laid on the
+ * ground's relief. The camera leaves it
  * out when it frames the lab.
  *
  * @param path - The places the middle of the pavement passes
@@ -162,12 +219,14 @@ export function Pavement({
 }) {
   const marks = useMemo(
     () => ({
-      dashes: groundTexture(paintDashes(64, dash / spacing), 64, 1, [
+      dashes: groundTexture(paintLine(256, 16, dash / spacing), 256, 16, [
         1 / spacing,
         1,
       ]),
       inner: verge(0),
       outer: verge(0.5),
+      solid: groundTexture(paintLine(256, 16, 1), 256, 16, [1 / LINE_SPAN, 1]),
+      worn: groundTexture(paintWorn(64), 64, 64, [1 / WORN_SPAN, 1]),
     }),
     [dash, spacing]
   );
@@ -177,12 +236,41 @@ export function Pavement({
       marks.dashes.dispose();
       marks.inner.dispose();
       marks.outer.dispose();
+      marks.solid.dispose();
+      marks.worn.dispose();
     },
     [marks]
   );
 
   const way = useWay(path, closed);
   const edge = width / 2 - LINE_WIDTH * 1.6;
+  const wheel = (WHEELS.width * width) / 2;
+  const paths = [
+    useBand(
+      way,
+      closed,
+      -WHEELS.outer * width - wheel,
+      -WHEELS.outer * width + wheel
+    ),
+    useBand(
+      way,
+      closed,
+      -WHEELS.inner * width - wheel,
+      -WHEELS.inner * width + wheel
+    ),
+    useBand(
+      way,
+      closed,
+      WHEELS.inner * width - wheel,
+      WHEELS.inner * width + wheel
+    ),
+    useBand(
+      way,
+      closed,
+      WHEELS.outer * width - wheel,
+      WHEELS.outer * width + wheel
+    ),
+  ] as const;
   const bands = {
     near: useBand(way, closed, -width * 0.85, -width * 0.5),
     far: useBand(way, closed, width * 0.5, width * 0.85),
@@ -221,17 +309,22 @@ export function Pavement({
         <GroundMaterial
           kind="asphalt"
           layer={2}
-          repeat={[1 / (width * 0.8), 1.25]}
+          repeat={[1 / GRAIN, width / GRAIN]}
         />
       </Band>
+      {Arr.map(paths, (path, index) => (
+        <Band geometry={path} key={WHEEL_KEYS[index]} layer={3}>
+          <Wear worn={marks.worn} />
+        </Band>
+      ))}
       <Band geometry={bands.dashes} layer={3}>
-        <Paint dashes={marks.dashes} />
+        <Paint worn={marks.dashes} />
       </Band>
       <Band geometry={bands.farLine} layer={3}>
-        <Paint />
+        <Paint worn={marks.solid} />
       </Band>
       <Band geometry={bands.nearLine} layer={3}>
-        <Paint />
+        <Paint worn={marks.solid} />
       </Band>
     </CameraBounds>
   );

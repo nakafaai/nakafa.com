@@ -1,10 +1,13 @@
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { useStage } from "@repo/design-system/components/three/stage/context";
+import type { Sward } from "@repo/design-system/components/three/stage/cover";
+import { layCover } from "@repo/design-system/components/three/stage/cover";
 import type { Ground } from "@repo/design-system/components/three/stage/land";
 import {
   GROUNDS,
   paintSweep,
 } from "@repo/design-system/components/three/stage/land";
+import { useLawn } from "@repo/design-system/components/three/stage/lawn";
 import {
   FLAT_REACHES,
   landGrid,
@@ -51,8 +54,12 @@ const ROOM = { inner: 1.8, outer: 7.5, spread: 9 } as const;
 /** How far a top inside a room lies under the floor, so nothing that stands on the floor flickers through it. */
 const TOP_DROP = 0.0004;
 
-/** A material ref callback that lays a ground's program on the material it is given. */
-function useLay({ inner, outer, sweep }: Lay) {
+/**
+ * A material ref callback that lays a ground's program on the material it
+ * is given, and over it the cover of the lawn that grows there, when one
+ * does.
+ */
+function useLay({ inner, outer, sweep }: Lay, sward?: Sward | null) {
   return useCallback(
     (material: Material | null) => {
       if (material === null) {
@@ -60,11 +67,15 @@ function useLay({ inner, outer, sweep }: Lay) {
       }
       material.onBeforeCompile = (program) => {
         layGround(program, { inner, outer, sweep });
+        if (sward) {
+          layCover(program, sward);
+        }
       };
-      material.customProgramCacheKey = () => layKey({ inner, outer, sweep });
+      material.customProgramCacheKey = () =>
+        `${layKey({ inner, outer, sweep })}${sward ? "-lawn" : ""}`;
       material.needsUpdate = true;
     },
-    [inner, outer, sweep]
+    [inner, outer, sweep, sward]
   );
 }
 
@@ -149,11 +160,15 @@ export function GroundMaterial({
   const { bump, coat, indoor, rough, surface } = GROUNDS[kind];
   const maps = useSurfaceMaps(surface, repeat[0], repeat[1]);
   const sweep = useSweep(kind);
-  const lay = useLay({
-    inner: (indoor ? ROOM.inner : HORIZON_FADE_INNER) * reach,
-    outer: (indoor ? ROOM.outer : HORIZON_FADE_OUTER) * reach,
-    sweep,
-  });
+  const lawn = useLawn();
+  const lay = useLay(
+    {
+      inner: (indoor ? ROOM.inner : HORIZON_FADE_INNER) * reach,
+      outer: (indoor ? ROOM.outer : HORIZON_FADE_OUTER) * reach,
+      sweep,
+    },
+    kind === "grass" ? lawn : null
+  );
 
   return (
     <meshPhysicalMaterial
