@@ -73,8 +73,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "8.17.1",
-    "nakafa.com declares 8.17.1, which peers effect 4.1.5 exactly, the adopted cohort. 8.17.1 keeps the 366-visual catalog of 8.17.0 and adds one formula scope rule from aksara#1070: every slider must drive at least one object in its visual scene. Aksara publishes content releases against 8.17.1, and release catalog-20261127d failed target verification with CONTENT_RELEASE_INTEGRITY while nakafa.com still declared 8.17.0. Every catalog figure renders in lessons and try-outs through one renderer, whose registry equals the catalog. Checked 27 November 2026.",
+    "8.17.2",
+    "nakafa.com declares 8.17.2, which peers effect 4.1.5 exactly, the adopted cohort. 8.17.2 keeps the 366-visual catalog and every verdict of 8.17.1 and changes only how the assessment closure check holds its rows (aksara#1080): it keeps each explanation's identity instead of its body, so proving the 32,901-row assessment snapshot peaks at 330 MB instead of 860 MB. Under the 512 MB of a Convex Node action, the old check ran out its 600 seconds, which failed every assessment release of 31,000 or more rows. Checked 28 November 2026.",
   ],
   [
     "tsrs@latest",
