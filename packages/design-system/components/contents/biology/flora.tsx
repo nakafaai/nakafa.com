@@ -2,6 +2,11 @@ import {
   hashUnit,
   valueNoise,
 } from "@repo/design-system/components/contents/simulation/grain";
+import type { Outline } from "@repo/design-system/components/three/flora/blade";
+import {
+  bladeMesh,
+  veinAt,
+} from "@repo/design-system/components/three/flora/blade";
 import { BIOME_COLORS } from "@repo/design-system/lib/material/biome";
 import { Array as Arr } from "effect";
 import { useEffect, useMemo } from "react";
@@ -12,7 +17,9 @@ import {
   Color,
   CylinderGeometry,
   DoubleSide,
+  Float32BufferAttribute,
   LatheGeometry,
+  Matrix4,
   MeshPhysicalMaterial,
   SphereGeometry,
   TubeGeometry,
@@ -52,6 +59,94 @@ export function colorizeGeometry(
   }
   geom.setAttribute("color", new BufferAttribute(colors, 3));
   return geom;
+}
+
+/** The golden angle, by which each next leaf turns about its stem. */
+export const TURN = Math.PI * (3 - Math.sqrt(5));
+
+/**
+ * One veined blade of the flora engine, set in the world and coloured vertex
+ * by vertex: darker at its base, lighter to its tip and along every vein, and
+ * `mark` may paint what one species carries, such as the pale chevron of a
+ * clover leaflet.
+ */
+export function placeBlade({
+  base,
+  columns = 6,
+  droop,
+  heading,
+  length,
+  mark,
+  origin,
+  outline,
+  pitch,
+  rows,
+  tip,
+  width,
+}: {
+  readonly base: Color;
+  readonly columns?: number;
+  readonly droop: number;
+  readonly heading: number;
+  readonly length: number;
+  readonly mark?: {
+    readonly at: (along: number, across: number) => number;
+    readonly color: Color;
+  };
+  readonly origin: Vector3;
+  readonly outline: Outline;
+  readonly pitch: number;
+  readonly rows: number;
+  readonly tip: Color;
+  readonly width: number;
+}): BufferGeometry {
+  const mesh = bladeMesh({
+    arch: droop * 0.7,
+    columns,
+    fold: 0.3,
+    length,
+    outline,
+    relief: 0.02,
+    rows,
+    teeth: 0,
+    veins: 6,
+    wave: 0.1,
+    width,
+  });
+  const along = new Vector3(
+    Math.cos(pitch) * Math.cos(heading),
+    Math.sin(pitch),
+    Math.cos(pitch) * Math.sin(heading)
+  );
+  const side = new Vector3().crossVectors(along, UP);
+  if (side.lengthSq() < 1e-4) {
+    side.set(1, 0, 0);
+  }
+  side.normalize();
+  const face = new Vector3().crossVectors(side, along).normalize();
+  const turn = new Matrix4().makeBasis(along, face, side).setPosition(origin);
+  const geom = new BufferGeometry();
+  geom.setAttribute("position", new Float32BufferAttribute(mesh.positions, 3));
+  geom.setAttribute("normal", new Float32BufferAttribute(mesh.normals, 3));
+  geom.setIndex([...mesh.indices]);
+  geom.applyMatrix4(turn);
+  const colors = new Float32Array((mesh.uvs.length / 2) * 3);
+  const shade = new Color();
+  for (let i = 0; i < mesh.uvs.length / 2; i += 1) {
+    const across = Number(mesh.uvs[i * 2]) * 2 - 1;
+    const run = Number(mesh.uvs[i * 2 + 1]);
+    const vein = veinAt(run, across, 6);
+    shade.copy(base).lerp(tip, Math.min(1, run * 0.8 + vein * 0.35));
+    if (mark !== undefined) {
+      shade.lerp(mark.color, mark.at(run, across));
+    }
+    shade.multiplyScalar(0.82 + 0.18 * (1 - across * across));
+    colors[i * 3] = shade.r;
+    colors[i * 3 + 1] = shade.g;
+    colors[i * 3 + 2] = shade.b;
+  }
+  geom.setAttribute("color", new BufferAttribute(colors, 3));
+  return geom.toNonIndexed();
 }
 
 /** Builds one folded, arching botanical leaf blade or frond segment. */
