@@ -5,7 +5,7 @@ import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
 import { decodeReleaseJson } from "@repo/backend/confect/contentRelease/parse";
 import { loadSnapshot } from "@repo/backend/confect/contentRelease/snapshot/manifest";
-import { Array as Arr, Effect, Order, Schema } from "effect";
+import { Array as Arr, Effect, Option, Order, Schema } from "effect";
 
 const StoredRowSchema = Schema.Struct({
   index: Schema.Finite,
@@ -122,6 +122,30 @@ export const manifestProgram = Effect.fn("contentRelease.readSnapshotManifest")(
     return snapshot.snapshotJson;
   }
 );
+
+/**
+ * Counts the batches one release staged for one family, from its last ledger
+ * entry. The row pages still prove every batch contiguous and complete, so a
+ * wrong count can only make the proof fail, never pass.
+ */
+export const batchCountProgram = Effect.fn(
+  "contentRelease.readSnapshotBatchCount"
+)(function* (releaseId: string, family: SnapshotFamily) {
+  const database = yield* DatabaseReader;
+  const last = yield* database
+    .table("snapshotBatches")
+    .index(
+      "by_releaseId_and_family_and_batchIndex",
+      (query) => query.eq("releaseId", releaseId).eq("family", family),
+      "desc"
+    )
+    .first()
+    .pipe(Effect.orDie);
+  return Option.match(last, {
+    onNone: () => 0,
+    onSome: (batch) => batch.batchIndex + 1,
+  });
+});
 
 /** Total UTF-16 length of row JSON, the budget a run of batches spends. */
 function runBytes(rowJson: readonly string[]) {

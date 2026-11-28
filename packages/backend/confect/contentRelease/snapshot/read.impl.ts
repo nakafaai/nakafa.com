@@ -1,6 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
+  batchCountProgram,
   manifestProgram,
   rowPageProgram,
 } from "@repo/backend/confect/contentRelease/snapshot/read";
@@ -13,6 +14,14 @@ const manifest = FunctionImpl.make(
   "manifest",
   Effect.fn("contentRelease.snapshot.read.manifest")(function* (args) {
     return yield* manifestProgram(args.releaseId, args.family);
+  })
+);
+const batchCount = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "batchCount",
+  Effect.fn("contentRelease.snapshot.read.batchCount")(function* (args) {
+    return yield* batchCountProgram(args.releaseId, args.family);
   })
 );
 const rows = FunctionImpl.make(
@@ -30,6 +39,7 @@ const rows = FunctionImpl.make(
   })
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
+  Layer.provide(batchCount),
   Layer.provide(manifest),
   Layer.provide(rows),
   GroupImpl.finalize

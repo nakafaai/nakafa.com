@@ -4,3 +4,4 @@ import registeredFunctions from "../../../confect/_generated/registeredFunctions
 
 export const verifyArtifacts = registeredFunctions.verifyArtifacts;
 export const verifyRelease = registeredFunctions.verifyRelease;
+export const verifySnapshots = registeredFunctions.verifySnapshots;

@@ -2,6 +2,7 @@ import { assert } from "@effect/vitest";
 import {
   CorpusSourcePathSchema,
   PublicPathSchema,
+  ReleaseIdSchema,
 } from "@nakafa/aksara-contracts/ids";
 import type {
   ActiveAppLocale,
@@ -28,6 +29,7 @@ import {
   LearningProgramKeySchema,
   LearningProgramSchema,
 } from "@nakafa/aksara-contracts/program/spec";
+import { ContentReleaseManifestSchema } from "@nakafa/aksara-contracts/release";
 import type {
   ContentSnapshotManifest,
   ContentSnapshotRow,
@@ -52,8 +54,13 @@ import type {
   QueryCtx,
 } from "@repo/backend/convex/_generated/server";
 import {
+  testEmptyManifest,
+  testSignedRelease,
+} from "@repo/backend/test/content/proof";
+import {
   TEST_MANIFEST_HASH,
   TEST_RELEASE_ID,
+  testPublicationScope,
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { Array as Arr, Effect, Option, Order, pipe, Stream } from "effect";
@@ -362,3 +369,43 @@ export async function readProgramStage(ctx: QueryCtx) {
     routes: await ctx.db.query("curriculumRoutes").collect(),
   };
 }
+
+/** Signs one genesis release that replaces the technical program snapshot. */
+export const signProgramRelease = Effect.fn("TestProgram.signRelease")(
+  function* (data: ProgramSnapshotData, releaseId: string) {
+    const emptyManifest = yield* testEmptyManifest(
+      ReleaseIdSchema.make(releaseId)
+    );
+    return yield* testSignedRelease(
+      ContentReleaseManifestSchema.make({
+        ...emptyManifest,
+        scope: testPublicationScope({
+          snapshots: data.snapshots,
+        }),
+        snapshots: data.snapshots,
+      })
+    );
+  }
+);
+
+/** Signs the next release, which inherits every snapshot family of its base. */
+export const signInheritingRelease = Effect.fn(
+  "TestProgram.signInheritingRelease"
+)(function* (base: Effect.Success<ReturnType<typeof signProgramRelease>>) {
+  const snapshots = inheritContentSnapshots(base.manifest.snapshots);
+  const nextEmpty = yield* testEmptyManifest(
+    ReleaseIdSchema.make("release-next")
+  );
+  return yield* testSignedRelease(
+    ContentReleaseManifestSchema.make({
+      ...nextEmpty,
+      baseReleaseId: base.manifest.releaseId,
+      baseManifestHash: base.manifestHash,
+      baseActiveAppLocales: base.manifest.activeAppLocales,
+      baseResultCount: base.manifest.resultCount,
+      baseResultDigest: base.manifest.resultDigest,
+      scope: testPublicationScope({ snapshots }),
+      snapshots,
+    })
+  );
+});

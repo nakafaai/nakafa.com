@@ -4,115 +4,61 @@ import confectSchema from "@repo/backend/confect/_generated/schema";
 
 import { assert, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import type { SignedContentRelease } from "@nakafa/aksara-contracts/release";
 import {
   ContentReleaseManifestSchema,
   SignedContentReleaseSchema,
 } from "@nakafa/aksara-contracts/release";
+import { ContentSnapshotKindSchema } from "@nakafa/aksara-contracts/release/snapshot/scope";
 import {
   inheritContentSnapshots,
   invertContentSnapshots,
   replaceContentSnapshot,
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
-import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
-import { verifyReleaseSnapshots } from "@repo/backend/confect/contentRelease/proof/snapshot";
-import { releaseReachability } from "@repo/backend/confect/contentRelease/reachability";
+import type { ReleaseRole } from "@repo/backend/confect/contentRelease/model";
+import {
+  proveSnapshotFamily,
+  verifyReleaseSnapshots,
+} from "@repo/backend/confect/contentRelease/proof/snapshot";
 import { encodeSnapshotJson } from "@repo/backend/confect/contentRelease/wire";
 import { convexModules } from "@repo/backend/confect/test.setup";
-import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import {
-  TEST_PROOF_RENDERER,
   testEmptyManifest,
   testSignedRelease,
 } from "@repo/backend/test/content/proof";
 import { testPublicationScope } from "@repo/backend/test/content/release";
-import type { ProgramSnapshotData } from "@repo/backend/test/program/snapshot";
+import { insertCompletedRelease } from "@repo/backend/test/content/stage";
 import {
   makeProgramSnapshotData,
+  signInheritingRelease,
+  signProgramRelease,
   stageProgramSnapshot,
 } from "@repo/backend/test/program/snapshot";
 import { makeQuranSnapshot } from "@repo/backend/test/quran/snapshot";
 import { convexTest } from "convex-test";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Predicate, Schema } from "effect";
 
-/** Signs one genesis release that replaces the technical program snapshot. */
-const programRelease = Effect.fn("test.contentRelease.programRelease")(
-  function* (data: ProgramSnapshotData, releaseId: string) {
-    const emptyManifest = yield* testEmptyManifest(
-      ReleaseIdSchema.make(releaseId)
-    );
-    return yield* testSignedRelease(
-      ContentReleaseManifestSchema.make({
-        ...emptyManifest,
-        scope: testPublicationScope({
-          snapshots: data.snapshots,
-        }),
-        snapshots: data.snapshots,
-      })
-    );
-  }
-);
-
-/** Signs the next release, which inherits every snapshot family of its base. */
-const inheritingRelease = Effect.fn("test.contentRelease.inheritingRelease")(
-  function* (base: Effect.Success<ReturnType<typeof programRelease>>) {
-    const snapshots = inheritContentSnapshots(base.manifest.snapshots);
-    const nextEmpty = yield* testEmptyManifest(
-      ReleaseIdSchema.make("release-next")
-    );
-    return yield* testSignedRelease(
-      ContentReleaseManifestSchema.make({
-        ...nextEmpty,
-        baseReleaseId: base.manifest.releaseId,
-        baseManifestHash: base.manifestHash,
-        baseActiveAppLocales: base.manifest.activeAppLocales,
-        baseResultCount: base.manifest.resultCount,
-        baseResultDigest: base.manifest.resultDigest,
-        scope: testPublicationScope({ snapshots }),
-        snapshots,
-      })
-    );
-  }
-);
-
-/** Inserts one completed signed release used as a recovery proof base. */
-function insertCompletedRelease(
-  ctx: MutationCtx,
-  release: Effect.Success<ReturnType<typeof programRelease>>,
+/** Proves each family in its own step, as the proof workflow does, then joins the proofs. */
+const proveRelease = Effect.fn("test.contentRelease.proveRelease")(function* (
+  release: SignedContentRelease,
+  role: ReleaseRole,
+  stagedSnapshotBatches: number,
   stagedSnapshotRows: number
 ) {
-  return ctx.db.insert("contentReleases", {
-    ...releaseReachability(release),
-    baseFamilies: [],
-    checkedIndex: -1,
-    checkedItems: 0,
-    completedAt: 1,
-    createdAt: 1,
-    proofAt: 1,
-    proofJson: "{}",
-    releaseId: release.manifest.releaseId,
-    releaseJson: Schema.encodeSync(
-      Schema.fromJsonString(SignedContentReleaseSchema)
-    )(release),
-    rendererJson: Schema.encodeSync(
-      Schema.fromJsonString(RendererManifestEnvelopeSchema)
-    )(TEST_PROOF_RENDERER),
-    resultFamilies: [...release.manifest.scope.families],
-    role: "candidate",
-    sequence: 1,
-    stagedArtifacts: 0,
-    stagedDeletes: 0,
-    stagedItems: 0,
-    stagedProjections: 0,
-    stagedRoutes: 0,
-    stagedSnapshotBatches: 1,
+  const proofs = yield* Effect.forEach(
+    ContentSnapshotKindSchema.literals,
+    (family) => proveSnapshotFamily(release, role, family)
+  );
+  return yield* verifyReleaseSnapshots(
+    release,
+    role,
+    stagedSnapshotBatches,
     stagedSnapshotRows,
-    stagedUpserts: 0,
-    status: "completed",
-    updatedAt: 1,
-    verifiedAt: 1,
-  });
-}
+    Arr.filter(proofs, Predicate.isNotNull)
+  );
+});
+
 describe("contentRelease/proof/snapshot", () => {
   it.live(
     "rejects a Quran manifest whose provenance became blocked in storage",
@@ -166,7 +112,7 @@ describe("contentRelease/proof/snapshot", () => {
           await expect(
             t.action((ctx) =>
               Effect.runPromiseWith(runtimeServices)(
-                verifyReleaseSnapshots(
+                proveRelease(
                   release,
                   "candidate",
                   1,
@@ -188,7 +134,7 @@ describe("contentRelease/proof/snapshot", () => {
     Effect.gen(function* () {
       const runtimeServices = yield* Effect.context<never>();
       const data = yield* makeProgramSnapshotData();
-      const release = yield* programRelease(data, "release-test");
+      const release = yield* signProgramRelease(data, "release-test");
       const t = convexTest(schema, convexModules);
       const batchSize = 3;
       const batchCount = Math.ceil(data.rowJson.length / batchSize);
@@ -207,7 +153,7 @@ describe("contentRelease/proof/snapshot", () => {
         expect(
           t.action((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              verifyReleaseSnapshots(
+              proveRelease(
                 release,
                 "candidate",
                 batchCount,
@@ -228,7 +174,7 @@ describe("contentRelease/proof/snapshot", () => {
         expect(
           t.action((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              verifyReleaseSnapshots(
+              proveRelease(
                 release,
                 "candidate",
                 batchCount,
@@ -244,13 +190,49 @@ describe("contentRelease/proof/snapshot", () => {
           code: "CONTENT_RELEASE_INTEGRITY",
         })
       );
+      // Missing, duplicated, and misnamed proofs never stand in for the replaced family.
+      const proof = yield* Effect.promise(() =>
+        t.action((ctx) =>
+          Effect.runPromiseWith(runtimeServices)(
+            proveSnapshotFamily(release, "candidate", "program").pipe(
+              Effect.provide(RegisteredFunction.actionLayer(confectSchema, ctx))
+            )
+          )
+        )
+      );
+      assert(proof);
+      for (const proofs of [
+        [],
+        [proof, proof],
+        [{ ...proof, family: "quran" as const }],
+      ]) {
+        yield* Effect.promise(() =>
+          expect(
+            t.action((ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                verifyReleaseSnapshots(
+                  release,
+                  "candidate",
+                  batchCount,
+                  data.rowJson.length,
+                  proofs
+                ).pipe(
+                  Effect.provide(
+                    RegisteredFunction.actionLayer(confectSchema, ctx)
+                  )
+                )
+              )
+            )
+          ).rejects.toMatchObject({ code: "CONTENT_RELEASE_INTEGRITY" })
+        );
+      }
     })
   );
   it.live("rejects tampered physical rows during canonical proof replay", () =>
     Effect.gen(function* () {
       const runtimeServices = yield* Effect.context<never>();
       const data = yield* makeProgramSnapshotData();
-      const release = yield* programRelease(data, "release-test");
+      const release = yield* signProgramRelease(data, "release-test");
       const t = convexTest(schema, convexModules);
       yield* Effect.promise(() =>
         t.mutation((ctx) =>
@@ -287,12 +269,7 @@ describe("contentRelease/proof/snapshot", () => {
         expect(
           t.action((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              verifyReleaseSnapshots(
-                release,
-                "candidate",
-                1,
-                data.rowJson.length
-              ).pipe(
+              proveRelease(release, "candidate", 1, data.rowJson.length).pipe(
                 Effect.provide(
                   RegisteredFunction.actionLayer(confectSchema, ctx)
                 )
@@ -311,7 +288,7 @@ describe("contentRelease/proof/snapshot", () => {
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
         const data = yield* makeProgramSnapshotData();
-        const base = yield* programRelease(data, "release-base");
+        const base = yield* signProgramRelease(data, "release-base");
         const rollbackSnapshots = invertContentSnapshots(
           base.manifest.snapshots
         );
@@ -355,7 +332,7 @@ describe("contentRelease/proof/snapshot", () => {
           expect(
             t.action((ctx) =>
               Effect.runPromiseWith(runtimeServices)(
-                verifyReleaseSnapshots(rollback, "candidate", 0, 0).pipe(
+                proveRelease(rollback, "candidate", 0, 0).pipe(
                   Effect.provide(
                     RegisteredFunction.actionLayer(confectSchema, ctx)
                   )
@@ -371,7 +348,7 @@ describe("contentRelease/proof/snapshot", () => {
           expect(
             t.action((ctx) =>
               Effect.runPromiseWith(runtimeServices)(
-                verifyReleaseSnapshots(rollback, "candidate", 1, 0).pipe(
+                proveRelease(rollback, "candidate", 1, 0).pipe(
                   Effect.provide(
                     RegisteredFunction.actionLayer(confectSchema, ctx)
                   )
@@ -386,7 +363,7 @@ describe("contentRelease/proof/snapshot", () => {
           expect(
             t.action((ctx) =>
               Effect.runPromiseWith(runtimeServices)(
-                verifyReleaseSnapshots(rollback, "recovery", 0, 0).pipe(
+                proveRelease(rollback, "recovery", 0, 0).pipe(
                   Effect.provide(
                     RegisteredFunction.actionLayer(confectSchema, ctx)
                   )
@@ -398,11 +375,33 @@ describe("contentRelease/proof/snapshot", () => {
             stagedRows: 0,
           })
         );
+        // A restoring release stages no rows, so it accepts no family proof.
         yield* Effect.promise(() =>
           expect(
             t.action((ctx) =>
               Effect.runPromiseWith(runtimeServices)(
-                verifyReleaseSnapshots(drift, "recovery", 0, 0).pipe(
+                verifyReleaseSnapshots(rollback, "recovery", 0, 0, [
+                  {
+                    family: "program",
+                    stagedRows: 0,
+                    state: rollback.manifest.snapshots.program,
+                  },
+                ]).pipe(
+                  Effect.provide(
+                    RegisteredFunction.actionLayer(confectSchema, ctx)
+                  )
+                )
+              )
+            )
+          ).rejects.toMatchObject({
+            code: "CONTENT_RELEASE_INTEGRITY",
+          })
+        );
+        yield* Effect.promise(() =>
+          expect(
+            t.action((ctx) =>
+              Effect.runPromiseWith(runtimeServices)(
+                proveRelease(drift, "recovery", 0, 0).pipe(
                   Effect.provide(
                     RegisteredFunction.actionLayer(confectSchema, ctx)
                   )
@@ -421,9 +420,9 @@ describe("contentRelease/proof/snapshot", () => {
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
         const data = yield* makeProgramSnapshotData();
-        const base = yield* programRelease(data, "release-base");
-        const release = yield* inheritingRelease(base);
-        const other = yield* programRelease(data, "release-other");
+        const base = yield* signProgramRelease(data, "release-base");
+        const release = yield* signInheritingRelease(base);
+        const other = yield* signProgramRelease(data, "release-other");
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
@@ -444,7 +443,7 @@ describe("contentRelease/proof/snapshot", () => {
           expect(
             t.action((ctx) =>
               Effect.runPromiseWith(runtimeServices)(
-                verifyReleaseSnapshots(release, "candidate", 0, 0).pipe(
+                proveRelease(release, "candidate", 0, 0).pipe(
                   Effect.provide(
                     RegisteredFunction.actionLayer(confectSchema, ctx)
                   )
@@ -463,8 +462,8 @@ describe("contentRelease/proof/snapshot", () => {
       Effect.gen(function* () {
         const runtimeServices = yield* Effect.context<never>();
         const data = yield* makeProgramSnapshotData();
-        const base = yield* programRelease(data, "release-base");
-        const release = yield* inheritingRelease(base);
+        const base = yield* signProgramRelease(data, "release-base");
+        const release = yield* signInheritingRelease(base);
         const t = convexTest(schema, convexModules);
         yield* Effect.promise(() =>
           t.mutation(async (ctx) => {
@@ -474,7 +473,7 @@ describe("contentRelease/proof/snapshot", () => {
         const verified = yield* Effect.promise(() =>
           t.action((ctx) =>
             Effect.runPromiseWith(runtimeServices)(
-              verifyReleaseSnapshots(release, "candidate", 0, 0).pipe(
+              proveRelease(release, "candidate", 0, 0).pipe(
                 Effect.provide(
                   RegisteredFunction.actionLayer(confectSchema, ctx)
                 )

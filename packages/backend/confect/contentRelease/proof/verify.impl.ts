@@ -4,6 +4,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   recomputeProgram,
   verifyArtifactBatchProgram,
+  verifySnapshotFamilyProgram,
 } from "@repo/backend/confect/contentRelease/proof/verify";
 import spec from "@repo/backend/confect/contentRelease/proof/verify.spec";
 import { contentKeyResolver } from "@repo/backend/content/trust";
@@ -23,6 +24,20 @@ const verifyArtifacts = FunctionImpl.make(
     );
   })
 );
+const verifySnapshots = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "verifySnapshots",
+  Effect.fn("contentRelease.proof.verify.verifySnapshots")(function* (args) {
+    return yield* verifySnapshotFamilyProgram(
+      args.manifestHash,
+      args.releaseId,
+      args.family
+    ).pipe(
+      Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver)
+    );
+  })
+);
 const verifyRelease = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -31,7 +46,8 @@ const verifyRelease = FunctionImpl.make(
     return yield* recomputeProgram(
       args.manifestHash,
       args.releaseId,
-      args.verifiedArtifacts
+      args.verifiedArtifacts,
+      args.snapshotProofs
     ).pipe(
       Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver),
       Effect.as(null)
@@ -40,6 +56,7 @@ const verifyRelease = FunctionImpl.make(
 );
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(verifyArtifacts),
+  Layer.provide(verifySnapshots),
   Layer.provide(verifyRelease),
   GroupImpl.finalize
 );
