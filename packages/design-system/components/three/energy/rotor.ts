@@ -12,6 +12,9 @@ export const ROTOR = { hub: 2, overhang: 0.15 } as const;
 /** How many times faster than the wind a modern rotor's blade tips move. */
 const TIP_SPEED_RATIO = 7;
 
+/** The share of its speed the wind has lost by the time it reaches a rotor working at the Betz optimum. */
+const INDUCTION = 1 / 3;
+
 /**
  * How fast a rotor turns in a steady wind, in radians per second: its tips
  * run at seven times the wind speed, so a longer blade turns more slowly.
@@ -21,6 +24,31 @@ const TIP_SPEED_RATIO = 7;
  */
 export function rotorRate(wind: number, metres: number) {
   return (TIP_SPEED_RATIO * wind) / metres;
+}
+
+/**
+ * The share of the free wind's speed the air inside the rotor's stream tube
+ * still has at a distance `downstream` of the rotor's plane, negative
+ * upwind of it: all of it far upwind, two thirds at the rotor and a third
+ * far behind, as the air gives its energy to the blades.
+ */
+export function windShare(downstream: number) {
+  return (
+    1 - INDUCTION * (1 + downstream / Math.sqrt(1 + downstream * downstream))
+  );
+}
+
+/**
+ * How far from the rotor's axis a parcel of air flows at a distance
+ * `downstream` of the rotor's plane, when it crosses that plane at `radius`
+ * from the axis. Slower air needs more room, so the stream tube through the
+ * rotor widens behind it and pushes the air round it outward.
+ */
+export function streamRadius(radius: number, downstream: number) {
+  const tube = Math.sqrt((1 - INDUCTION) / windShare(downstream));
+  return radius < 1
+    ? radius * tube
+    : Math.sqrt(radius * radius - 1 + tube * tube);
 }
 
 /** How many points draw the spinner's nose. */
