@@ -7,10 +7,10 @@ import {
   MODEL_ORIGIN,
 } from "@repo/design-system/components/contents/chemistry/isomer/geometry";
 import type { IsomerCompound } from "@repo/design-system/components/contents/chemistry/isomer/model";
-import { evaluateIsomerGeometry } from "@repo/design-system/components/contents/chemistry/isomer/model";
+import { isUnsaturated } from "@repo/design-system/components/contents/chemistry/isomer/model";
 import {
   BromineStation,
-  MoleculeModel,
+  IsomerModel,
   SpecimenPlinth,
 } from "@repo/design-system/components/contents/chemistry/isomer/parts";
 import {
@@ -74,7 +74,7 @@ export function AlkaneAlkeneScene({
   const rippleRef = useRef<Mesh>(null);
   const phaseRef = useRef(0);
 
-  const geom = evaluateIsomerGeometry(compound);
+  const unsaturated = isUnsaturated(compound);
   const dropGeo = useMemo(createBromineDropGeometry, []);
   useEffect(() => () => dropGeo.dispose(), [dropGeo]);
 
@@ -124,7 +124,7 @@ export function AlkaneAlkeneScene({
         dropRef.current.scale.set(1, 1 + fall * 0.18, 1);
         // Decolourise droplet as it contacts the clear alkene solution
         dropMatRef.current.opacity =
-          geom.unsaturated && fall > 0.72
+          unsaturated && fall > 0.72
             ? Math.max(0.15, 0.92 - ((fall - 0.72) / 0.28) * 0.77)
             : 0.92;
       } else {
@@ -159,10 +159,10 @@ export function AlkaneAlkeneScene({
 
       <SpecimenPlinth />
       <group position={MODEL_ORIGIN} ref={molRef}>
-        <MoleculeModel compound={compound} />
+        <IsomerModel compound={compound} />
       </group>
 
-      <BromineStation unsaturated={geom.unsaturated} />
+      <BromineStation unsaturated={unsaturated} />
 
       {/* Animated reddish-brown bromine teardrop and surface ripple */}
       <mesh
@@ -193,29 +193,30 @@ export function AlkaneAlkeneScene({
       {/* Clean adaptive-ink labels */}
       <ThreeLabel
         color={labelInk}
-        fontSize="compact"
-        position={[-0.175, 0.215, 0.02]}
+        fontSize="marker"
+        position={[-0.15, 0.262, 0.02]}
       >
         <span>{parts.carbonAtom}</span>
       </ThreeLabel>
       <ThreeLabel
         color={labelInk}
-        fontSize="compact"
-        position={[0.045, 0.245, 0.02]}
+        fontSize="marker"
+        position={[0.0, 0.295, 0.02]}
       >
         <span>{parts.hydrogenAtom}</span>
       </ThreeLabel>
       <ThreeLabel
         color={labelInk}
-        fontSize="compact"
+        fontSize="marker"
         position={[-0.055, 0.042, 0.095]}
       >
-        <span>{geom.unsaturated ? parts.doubleBond : parts.singleBond}</span>
+        <span>{unsaturated ? parts.doubleBond : parts.singleBond}</span>
       </ThreeLabel>
       <ThreeLabel
+        anchorX="right"
         color={labelInk}
-        fontSize="compact"
-        position={[BROMINE_ORIGIN[0], 0.295, BROMINE_ORIGIN[2]]}
+        fontSize="marker"
+        position={[BROMINE_ORIGIN[0] + 0.03, 0.31, BROMINE_ORIGIN[2]]}
       >
         <span>{parts.bromineDrop}</span>
       </ThreeLabel>
