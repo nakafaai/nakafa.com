@@ -73,8 +73,8 @@ export const REGISTRY_REVIEWS = [
   ],
   [
     "@nakafa/aksara-contracts@latest",
-    "8.17.2",
-    "nakafa.com declares 8.17.2, which peers effect 4.1.5 exactly, the adopted cohort. 8.17.2 keeps the 366-visual catalog and every verdict of 8.17.1 and changes only how the assessment closure check holds its rows (aksara#1080): it keeps each explanation's identity instead of its body, so proving the 32,901-row assessment snapshot peaks at 330 MB instead of 860 MB. Under the 512 MB of a Convex Node action, the old check ran out its 600 seconds, which failed every assessment release of 31,000 or more rows. Checked 28 November 2026.",
+    "8.17.3",
+    "nakafa.com declares 8.17.3, which peers effect 4.1.5 exactly, the adopted cohort. 8.17.3 keeps the 366-visual catalog, every verdict, digest and error order of 8.17.2, and proves structured snapshots in one replay of their rows instead of five, with canonical JSON written by one codec call per value (aksara#1081). The 32,901-row assessment proof inside a Convex Node action drops from timing out at 600 seconds to 52 seconds on a 3-CPU instance and about 250 seconds on a throttled 2-CPU one. Checked 28 November 2026.",
   ],
   [
     "tsrs@latest",
