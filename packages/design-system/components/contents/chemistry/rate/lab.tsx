@@ -107,9 +107,10 @@ export function GasRateLab({
         <ScienceStage floor={0} frameloop="always" reach={0.8} setting="lab">
           <Suspense fallback={null}>
             <CameraControls
-              cameraPosition={[0, 0.34, 1.05]}
-              cameraTarget={[0, 0.17, 0]}
+              cameraPosition={[0, 0.66, 1.2]}
+              cameraTarget={[0, 0.2, 0]}
               fov={36}
+              framing="content"
               maxDistance={2}
               minDistance={0.3}
             />
