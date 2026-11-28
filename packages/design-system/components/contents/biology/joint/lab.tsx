@@ -117,7 +117,7 @@ export function JointMovementLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        <ScienceStage floor={0} reach={2.2} setting="studio">
+        <ScienceStage reach={4} setting="studio">
           <Suspense fallback={null}>
             <JointScene
               joint={joint}
